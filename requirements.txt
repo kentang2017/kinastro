@@ -1,3 +1,2 @@
-streamlit == 1.30.0
-streamlit-aggrid==0.3.3
-streamlit-extras==0.7.1
+streamlit==1.31.0
+ollama==0.1.6
