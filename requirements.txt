@@ -1,2 +1,2 @@
-streamlit==1.31.0
-ollama==0.1.6
+streamlit==1.52.2
+ollama==0.6.1
