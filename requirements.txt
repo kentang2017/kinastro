@@ -1,2 +1,2 @@
 streamlit==1.52.2
-ollama==0.6.1
+pyswisseph==2.10.3.2
