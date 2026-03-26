@@ -21,12 +21,12 @@ from astro.chart_renderer import (
 # 頁面設定
 # ============================================================
 st.set_page_config(
-    page_title="七政四餘排盤",
+    page_title="堅七政四餘排盤",
     page_icon="⭐",
     layout="wide",
 )
 
-st.title("⭐ 七政四餘排盤")
+st.title("⭐ 堅七政四餘")
 st.markdown(
     "中國傳統占星術排盤系統 — "
     "計算日月五星（七政）及羅睺、計都、月孛、紫氣（四餘）的天文位置。"
