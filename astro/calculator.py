@@ -276,6 +276,13 @@ def get_mansion_for_degree(lon: float) -> dict:
 
     注意：這是簡化的對應方式，將 360° 平均分配給 28 宿。
     實際的二十八宿寬度不等，需要根據歷史星表進行精確計算。
+
+    Returns:
+        dict: 包含以下鍵值的字典:
+            - name (str): 宿名，例如 "角"、"亢"
+            - element (str): 七曜屬性，例如 "木"、"金"
+            - animal (str): 對應動物，例如 "蛟"、"龍"
+            - group (str): 所屬方位，例如 "東方青龍"、"北方玄武"
     """
     lon = _normalize_degree(lon)
     mansion_width = 360.0 / 28.0
