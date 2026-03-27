@@ -2,7 +2,7 @@
 堅占星 (Kin Astro) - 多體系占星排盤系統
 Multi-System Astrology Chart Application
 
-支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星四種體系，
+支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星、卡巴拉占星五種體系，
 使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
 """
 
@@ -20,6 +20,7 @@ from astro.chart_renderer import (
 from astro.western import compute_western_chart, render_western_chart
 from astro.indian import compute_vedic_chart, render_vedic_chart
 from astro.thai import compute_thai_chart, render_thai_chart
+from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 
 # ============================================================
 # 頁面設定
@@ -33,7 +34,7 @@ st.set_page_config(
 st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
-    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星。"
+    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星、卡巴拉占星。"
 )
 
 # ============================================================
@@ -108,8 +109,8 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_western, tab_indian, tab_thai = st.tabs(
-    ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星", "🐘 泰國占星"]
+tab_chinese, tab_western, tab_indian, tab_thai, tab_kabbalistic = st.tabs(
+    ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星", "🐘 泰國占星", "✡ 卡巴拉占星"]
 )
 
 if calculate:
@@ -151,6 +152,12 @@ if calculate:
         with st.spinner("正在計算泰國占星排盤..."):
             t_chart = compute_thai_chart(**_params)
         render_thai_chart(t_chart)
+
+    # --- 卡巴拉占星 ---
+    with tab_kabbalistic:
+        with st.spinner("正在計算卡巴拉占星排盤..."):
+            k_chart = compute_kabbalistic_chart(**_params)
+        render_kabbalistic_chart(k_chart)
 
 else:
     with tab_chinese:
@@ -208,5 +215,19 @@ else:
             - **十二星座 (ราศี)**：使用泰語命名的恆星黃道星座
             - **日主星 (ดาวประจำวัน)**：根據出生星期判定守護星
             - **泰式方盤 (ผังดวงชาตา)**
+            """
+        )
+    with tab_kabbalistic:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是卡巴拉占星？
+
+            **卡巴拉占星**結合猶太神祕主義（Kabbalah）與占星術：
+
+            - **生命之樹 (Tree of Life)**：十個質點（Sephiroth）對應不同行星
+            - **希伯來字母**：22 個字母分別對應黃道星座與行星
+            - **塔羅對應**：每個星座對應一張塔羅大牌
+            - **回歸黃道 (Tropical Zodiac)**：使用西洋占星的回歸黃道系統
             """
         )
