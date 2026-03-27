@@ -166,9 +166,8 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
     # Day of week: 0=Mon … 6=Sun in Python, but we need 0=Sun … 6=Sat
     import datetime as _dt
     dt = _dt.date(year, month, day)
-    # isoweekday: 1=Mon … 7=Sun → convert to 0=Sun
-    iso = dt.isoweekday()
-    dow = 0 if iso == 7 else iso  # 0=Sun,1=Mon,...,6=Sat
+    # isoweekday: 1=Mon … 7=Sun → convert to 0=Sun,1=Mon,...,6=Sat
+    dow = dt.isoweekday() % 7
     day_name, day_planet = THAI_DAY_PLANETS[dow]
 
     # Compute sidereal house cusps

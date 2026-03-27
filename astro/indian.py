@@ -320,10 +320,12 @@ def _render_south_indian_grid(chart):
     ]
 
     # Build rashi -> planets mapping
+    # Build rashi -> (short_name, full_name) mapping for grid display
     rashi_planets = {i: [] for i in range(12)}
     for p in chart.planets:
         idx = _sign_index(p.longitude)
-        rashi_planets[idx].append(p.name.split(" ")[0])
+        short = p.name.split(" ")[0]
+        rashi_planets[idx].append((short, p.name))
 
     # Find ascendant rashi for highlight
     asc_idx = _sign_index(chart.ascendant)
@@ -366,14 +368,12 @@ def _render_south_indian_grid(chart):
             else:
                 rashi = RASHIS[idx]
                 style = asc_cell_style if idx == asc_idx else cell_style
-                p_names = rashi_planets[idx]
+                p_list = rashi_planets[idx]
                 p_html = " ".join(
                     f'<span style="color:{PLANET_COLORS.get(full, "#000")};'
-                    f'font-weight:bold">{n}</span>'
-                    for n in p_names
-                    for full in [next(
-                        (k for k in PLANET_COLORS if k.startswith(n)), "")]
-                ) if p_names else '<span style="color:#999">—</span>'
+                    f'font-weight:bold">{short}</span>'
+                    for short, full in p_list
+                ) if p_list else '<span style="color:#999">—</span>'
                 marker = " 🔺" if idx == asc_idx else ""
                 cell_content = (
                     f"<b>{rashi[0]}{marker}</b><br/>"
