@@ -370,8 +370,6 @@ def render_vedic_chart(chart):
     _render_house_table(chart)
     st.divider()
     _render_nakshatra_graha_relation(chart)
-    st.divider()
-    sukkayodo.render_sukkayodo_chart(chart)
 
 
 def _render_info(chart):
