@@ -19,6 +19,7 @@ from astro.chart_renderer import (
 )
 from astro.western import compute_western_chart, render_western_chart
 from astro.indian import compute_vedic_chart, render_vedic_chart
+from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import compute_thai_chart, render_thai_chart
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 
@@ -34,7 +35,7 @@ st.set_page_config(
 st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
-    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星、卡巴拉占星。"
+    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、卡巴拉占星。"
 )
 
 # ============================================================
@@ -109,8 +110,9 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_western, tab_indian, tab_thai, tab_kabbalistic = st.tabs(
-    ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星", "🐘 泰國占星", "✡ 卡巴拉占星"]
+tab_chinese, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic = st.tabs(
+    ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星",
+     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星"]
 )
 
 if calculate:
@@ -120,6 +122,10 @@ if calculate:
         timezone=input_tz, latitude=input_lat, longitude=input_lon,
         location_name=location_name,
     )
+
+    # 印度占星/宿曜道共用的排盤（提前計算一次）
+    with st.spinner("正在計算印度占星排盤..."):
+        v_chart = compute_vedic_chart(**_params)
 
     # --- 七政四餘（中國） ---
     with tab_chinese:
@@ -143,9 +149,26 @@ if calculate:
 
     # --- 印度占星 ---
     with tab_indian:
-        with st.spinner("正在計算印度占星排盤..."):
-            v_chart = compute_vedic_chart(**_params)
         render_vedic_chart(v_chart)
+
+    # --- 宿曜道 ---
+    with tab_sukkayodo:
+        st.subheader("🈳 日本宿曜道 (Yojōdō)")
+        st.info("宿曜道建基於印度占星排盤，請至「🙏 印度占星」分頁查看完整印度占星排盤。")
+        st.markdown(
+            """
+            ### 什麼是宿曜道？
+
+            **宿曜道**由空海大師於 9 世紀自印度傳入日本，是融合佛密與道教的占星體系：
+
+            - **二十八宿 (Nakshatra)**：比印度 Jyotish 多出 **Abhijit（牛宿）**，共 28 宿
+            - **六曜 (Rokuyō)**：先勝・友引・先負・仏滅・大安・赤口，由 **Moon 所在宿** 決定
+            - **宿曜道方盤**：以 Moon 為中心，二十八宿沿圓環排列
+
+            宿曜道可用於擇日、占卜日常生活中各類事務的吉凶。
+            """
+        )
+        render_sukkayodo_chart(v_chart)
 
     # --- 泰國占星 ---
     with tab_thai:
@@ -201,6 +224,32 @@ else:
             - **十二星座 (Rashi)**：Mesha 至 Meena
             - **二十七宿 (Nakshatra)**：Ashwini 至 Revati，每宿分四足 (Pada)
             - **南印度式方盤 (South Indian Chart)**
+            - **七曜管宿**：每顆曜主管 3 個 Nakshatra，構成 27 宿體系
+
+            | 曜 | 主宿 |
+            |:--:|:-----|
+            | Sun | Krittika、Uttara Phalguni、Uttara Ashadha |
+            | Moon | Rohini、Hasta、Shravana |
+            | Mars | Mrigashira、Chitra、Dhanishta |
+            | Mercury | Ashlesha、Jyeshtha、Revati |
+            | Jupiter | Punarvasu、Vishakha、Purva Bhadrapada |
+            | Venus | Bharani、Purva Phalguni、Purva Ashadha |
+            | Saturn | Pushya、Anuradha、Uttara Bhadrapada |
+            | Rahu | Ardra、Swati、Shatabhisha |
+            | Ketu | Ashwini、Magha、Mula |
+            """
+        )
+    with tab_sukkayodo:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是宿曜道？
+
+            **宿曜道**由空海大師於 9 世紀自印度傳入日本，是融合佛密與道教的占星體系：
+
+            - **二十八宿 (Nakshatra)**：比印度 Jyotish 多出 **Abhijit（牛宿）**，共 28 宿
+            - **六曜 (Rokuyō)**：先勝・友引・先負・仏滅・大安・赤口，由 **Moon 所在宿** 決定
+            - **宿曜道方盤**：以 Moon 為中心，二十八宿沿圓環排列
             """
         )
     with tab_thai:

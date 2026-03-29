@@ -242,6 +242,8 @@ def render_western_chart(chart):
     """渲染完整的西洋占星排盤"""
     _render_info(chart)
     st.divider()
+    _render_wheel_chart(chart)
+    st.divider()
     _render_planet_table(chart)
     st.divider()
     _render_house_table(chart)
@@ -260,6 +262,83 @@ def _render_info(chart):
         st.write(f"**Location:** {chart.location_name}")
         st.write(f"**Ascendant:** {chart.asc_sign} {_format_deg(chart.ascendant)}")
         st.write(f"**Midheaven:** {chart.mc_sign} {_format_deg(chart.midheaven)}")
+
+
+def _render_wheel_chart(chart):
+    """渲染西洋占星輪圖 (Western Wheel Chart)"""
+    st.subheader("🔮 西洋占星輪盤 (Western Wheel)")
+
+    # 建立行星→星座映射
+    sign_planets = {i: [] for i in range(12)}
+    for p in chart.planets:
+        idx = _sign_index(p.longitude)
+        sign_planets[idx].append(p.name)
+
+    asc_idx = _sign_index(chart.ascendant)
+    mc_idx = _sign_index(chart.midheaven)
+
+    cell_style = (
+        "border:1px solid #ddd; padding:4px; text-align:center; "
+        "vertical-align:middle; font-size:12px;"
+    )
+    asc_style = cell_style + " background:#fffde7; font-weight:bold;"
+    mc_style = cell_style + " background:#e3f2fd;"
+
+    # 4x3 grid，順時針排列
+    wheel_grid = [
+        [9,  10, 11, 0],
+        [1,  -1,  -1,  2],
+        [3,  -1,  -1,  5],
+        [6,   7,   8,  4],
+    ]
+    # 宮序對照
+    house_map = {9: 1, 10: 2, 11: 3, 0: 4, 1: 5, 2: 6,
+                 3: 7, 4: 8, 5: 9, 6: 10, 7: 11, 8: 12}
+
+    html = (
+        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:600px;">'
+        '<tr><td colspan="4" style="text-align:center;padding:4px;font-size:14px;">'
+        '<b>Western Wheel Chart</b></td></tr>'
+    )
+    for row in wheel_grid:
+        html += "<tr>"
+        for idx in row:
+            if idx == -1:
+                asc_sign = ZODIAC_SIGNS[asc_idx]
+                mc_sign = ZODIAC_SIGNS[mc_idx]
+                html += (
+                    '<td rowspan="2" colspan="2" style="'
+                    'border:1px solid #666; padding:8px; text-align:center; '
+                    'vertical-align:middle; background:#f8f8f0; font-size:12px;">'
+                    f'<b>ASC</b> {asc_sign[1]}{asc_sign[0]}<br/>'
+                    f'<small>{_sign_degree(chart.ascendant):.1f}°</small><br/>'
+                    f'<b>MC</b> {mc_sign[1]}{mc_sign[0]}<br/>'
+                    f'<small>{_sign_degree(chart.midheaven):.1f}°</small>'
+                    '</td>'
+                )
+            else:
+                sign_info = ZODIAC_SIGNS[idx]
+                is_asc = (idx == asc_idx)
+                is_mc = (idx == mc_idx)
+                style = asc_style if is_asc else (mc_style if is_mc else cell_style)
+                planets_in_sign = sign_planets[idx]
+                p_html = " ".join(
+                    f'<span style="color:{PLANET_COLORS.get(p, "#000")};font-weight:bold">'
+                    f'{p.split(" ")[0]}</span>'
+                    for p in planets_in_sign
+                ) if planets_in_sign else ""
+                marker = " 🔺" if is_asc else (" ⬡" if is_mc else "")
+                html += (
+                    f'<td style="{style}">'
+                    f'<b>{sign_info[1]}{marker}</b><br/>'
+                    f'<small>{sign_info[2]}</small><br/>'
+                    f'{p_html}'
+                    '</td>'
+                )
+        html += "</tr>"
+    html += "</table>"
+    st.markdown(html, unsafe_allow_html=True)
+    st.caption("🔺 = Ascendant (命宮)   ⬡ = Midheaven (中天)")
 
 
 def _render_planet_table(chart):
