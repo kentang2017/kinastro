@@ -345,7 +345,7 @@ def _render_tree_of_life(chart):
         idx = PLANET_SEPHIRAH.get(p.name)
         if idx is not None:
             short_name = p.name.split(" (")[0]
-            color = PLANET_COLORS.get(p.name, "#000")
+            color = PLANET_COLORS.get(p.name, "#c8c8c8")
             seph_planets[idx].append(
                 f'<span style="color:{color};font-weight:bold">'
                 f'{short_name}</span> '
@@ -358,9 +358,9 @@ def _render_tree_of_life(chart):
         return (
             f'<td style="border:2px solid #9370DB; padding:8px; '
             f'text-align:center; vertical-align:top; width:{width}; '
-            f'background:#1a0d2e; border-radius:8px;">'
+            f'background:#1a0d2e; border-radius:8px; color:#e0d0ff;">'
             f'<b>{s[1]}</b><br/>'
-            f'<span style="font-size:16px">{s[0]}</span><br/>'
+            f'<span style="font-size:16px; color:#c8b8f0">{s[0]}</span><br/>'
             f'<small style="color:#a090c0">{s[2]} ({s[3]})</small><br/>'
             f'{planet_html}'
             f'</td>'
@@ -438,7 +438,7 @@ def _render_planet_table(chart):
     rows = [header, sep]
     for p in chart.planets:
         retro = "℞" if p.retrograde else ""
-        color = PLANET_COLORS.get(p.name, "#000000")
+        color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_html = (
             f'<span style="color:{color};font-weight:bold">{p.name}</span>'
         )

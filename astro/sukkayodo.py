@@ -176,7 +176,7 @@ def render_sukkayodo_chart(chart):
         nak_name, jp_name, chinese, lord_idx = m[0], m[1], m[2], m[3]
         symbol, deity, quality = m[4], m[5], m[6]
         lord_name = GRAHA_NAMES_BY_INDEX[lord_idx]
-        lord_color = PLANET_COLORS.get(lord_name, "#000000")
+        lord_color = PLANET_COLORS.get(lord_name, "#c8c8c8")
         is_moon = (i == moon_mansion_idx)
         rk = get_rokuyo(i)
         rows.append(
@@ -197,7 +197,7 @@ def render_sukkayodo_chart(chart):
     for p in chart.planets:
         if p.sukkayodo_mansion_index >= 0:
             m = SUKKAYODO_MANSION[p.sukkayodo_mansion_index]
-            color = PLANET_COLORS.get(p.name, "#000000")
+            color = PLANET_COLORS.get(p.name, "#c8c8c8")
             rows2.append(
                 f"| <span style='color:{color}'>{p.name}</span> | "
                 f"**{p.sukkayodo_mansion}** ({m[1]}) | "
@@ -233,7 +233,7 @@ def render_sukkayodo_chart(chart):
             style = moon_cell_style if is_moon else cell_style
             p_list = mansion_planets[idx]
             p_html = "".join(
-                f'<span style="color:{PLANET_COLORS.get(p, "#000")}">{p}</span> '
+                f'<span style="color:{PLANET_COLORS.get(p, "#c8c8c8")}">{p}</span> '
                 for p in p_list
             ) if p_list else ""
             rk = get_rokuyo(idx)

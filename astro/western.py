@@ -341,8 +341,9 @@ def _render_wheel_chart(chart):
                 # 中心格
                 html += (
                     '<td style="'
-                    'border:1px solid #666; padding:10px; text-align:center; '
-                    'vertical-align:middle; background:#2a2a2a; font-size:13px;">'
+                    'border:1px solid #444; padding:10px; text-align:center; '
+                    'vertical-align:middle; background:#2a2a2a; font-size:13px; '
+                    'color:#e0e0e0;">'
                     '<b>Kin<br/>Astro</b><br/>'
                     '<small>Western</small>'
                     '</td>'
@@ -356,7 +357,7 @@ def _render_wheel_chart(chart):
                 sign_info = ZODIAC_SIGNS[sign_idx]
                 planets_in_house = h.planets
                 p_html = " ".join(
-                    f'<span style="color:{PLANET_COLORS.get(p, "#000")};font-weight:bold">'
+                    f'<span style="color:{PLANET_COLORS.get(p, "#c8c8c8")};font-weight:bold">'
                     f'{p.split(" ")[0]}</span>'
                     for p in planets_in_house
                 ) if planets_in_house else '<span style="color:#ccc">—</span>'
@@ -385,7 +386,7 @@ def _render_planet_table(chart):
     rows = [header, sep]
     for p in chart.planets:
         retro = "℞" if p.retrograde else ""
-        color = PLANET_COLORS.get(p.name, "#000000")
+        color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_html = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
         rows.append(
             f"| {name_html} | {p.sign_glyph} {p.sign} ({p.sign_chinese}) "

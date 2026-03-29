@@ -46,7 +46,7 @@ def _render_planet_group(planets: list):
     for p in planets:
         mansion = get_mansion_for_degree(p.longitude)
         retro = "℞" if p.retrograde else ""
-        color = PLANET_COLORS.get(p.name, "#000000")
+        color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_styled = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
         rows.append(
             f"| {name_styled} | {p.element} | {format_degree(p.longitude)} "
@@ -126,8 +126,9 @@ def _build_grid_html(
         "vertical-align:top; min-width:120px; font-size:13px;"
     )
     center_style = (
-        "border:1px solid #555; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#2a2a2a;"
+        "border:1px solid #444; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
+        "color:#e0e0e0;"
     )
 
     html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
@@ -163,7 +164,7 @@ def _build_grid_html(
                     name, planets, sign = house_planets[idx]
                     planets_html = ""
                     for p_name in planets:
-                        color = PLANET_COLORS.get(p_name, "#000000")
+                        color = PLANET_COLORS.get(p_name, "#c8c8c8")
                         planets_html += (
                             f'<span style="color:{color};font-weight:bold">'
                             f'{p_name}</span> '

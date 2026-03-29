@@ -297,13 +297,14 @@ def _render_thai_grid(chart):
     asc_idx = _sign_index(chart.ascendant)
 
     cell_style = (
-        "border:1px solid #666; padding:6px; text-align:center; "
+        "border:1px solid #444; padding:6px; text-align:center; "
         "vertical-align:top; min-width:120px; font-size:13px;"
     )
     asc_cell_style = cell_style + " background:#3d3010;"
     center_style = (
         "border:1px solid #444; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#2a2a2a;"
+        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
+        "color:#e0e0e0;"
     )
 
     html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
@@ -336,10 +337,10 @@ def _render_thai_grid(chart):
                 style = asc_cell_style if idx == asc_idx else cell_style
                 p_list = rashi_planets[idx]
                 p_html = " ".join(
-                    f'<span style="color:{PLANET_COLORS.get(full, "#000")};'
+                    f'<span style="color:{PLANET_COLORS.get(full, "#e0e0e0")};'
                     f'font-weight:bold">{short}</span>'
                     for short, full in p_list
-                ) if p_list else '<span style="color:#999">—</span>'
+                ) if p_list else '<span style="color:#666">—</span>'
                 marker = " 🔺" if idx == asc_idx else ""
                 cell_content = (
                     f"<b>{rashi[0]}{marker}</b><br/>"
@@ -360,7 +361,7 @@ def _render_planet_table(chart):
     rows = [header, sep]
     for p in chart.planets:
         retro = "℞" if p.retrograde else ""
-        color = PLANET_COLORS.get(p.name, "#000000")
+        color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_html = (
             f'<span style="color:{color};font-weight:bold">{p.name}</span>'
         )
