@@ -1,129 +1,179 @@
+# ⭐ 堅占星 Kin Astro
+
+<!-- Logo / Hero -->
 <div align="center">
 
-# ⭐ kinastro — 堅占星排盤
+![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
+[![Python](https://img.shields.io/badge/Python-3.10+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.35-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
+[![License](https://img.shields.io/badge/License-MIT-8B5CF6?style=flat-badge)](LICENSE)
 
-**七政四餘、西洋占、印占及卡巴拉占星排盤系統 ｜ Chinese, Vedic, Thai & Qabalah Traditional Astrology Chart Calculator**
+**六體系占星排盤系統 — 中國・西洋・印度・宿曜道・泰國・卡巴拉**
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-orange)](https://github.com/astrorigin/pyswisseph)
+*Multi-System Astrology Platform — Chinese, Western, Vedic, Japanese, Thai & Kabbalah*
 
 </div>
 
 ---
 
-## 🌏 中文說明
+## ✨ 特色亮點
 
-### 簡介
-
-**kinastro（堅七政四餘）** 是一個基於 [Streamlit](https://streamlit.io/) 的互動式中國傳統占星術排盤系統。使用 [pyswisseph](https://github.com/astrorigin/pyswisseph)（瑞士星曆表）進行精確的天文計算，提供日月五星（七政）及羅睺、計都、月孛、紫氣（四餘）的天文位置。
-
-### 什麼是七政四餘？
-
-**七政四餘**是中國傳統占星術的核心體系：
-
-- **七政（日月五星）**：太陽、太陰（月亮）、水星、金星、火星、木星、土星
-- **四餘（虛星）**：羅睺（北交點）、計都（南交點）、月孛（平均遠地點）、紫氣
-
-### 功能特色
-
-- 🪐 計算 **11 顆星曜**（七政 + 四餘）的精確天文位置
-- 🗺️ 支援全球多個城市預設（北京、上海、香港、台北、東京等）及自訂經緯度
-- 🏛️ 傳統 **十二宮位** 分布（命宮、財帛宮、兄弟宮等）
-- 🌟 **二十八宿** 對應系統（東方青龍、北方玄武、西方白虎、南方朱雀）
-- 🔄 **星曜相位** 分析（合、沖、刑、三合、六合）
-- 📐 黃道十二宮及中國十二星次對照
-- 🔙 逆行星曜自動檢測
-- 🎨 彩色顯示的傳統排盤方格圖
-
-### 快速開始
-
-```bash
-# 複製儲存庫
-git clone https://github.com/kentang2017/kinastro.git
-cd kinastro
-
-# 安裝相依套件
-pip install -r requirements.txt
-
-# 啟動應用
-streamlit run app.py
-```
+| | |
+|---|---|
+| 🔮 **六體系合一** | 在同一個介面中切換六種占星體系，無需來回切換工具 |
+| 🪐 **九曜精密計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 |
+| 🌏 **全球化支援** | 內建全球 10+ 個主要城市，亦支援自訂經緯度即時排盤 |
+| 🎨 **彩色互動介面** | Streamlit 驅動的現代化 Web UI，響應式排盤結果 |
+| 📱 **響應式設計** | 適配桌面與移動設備，隨時隨地查閱星盤 |
+| 🆓 **開源免費** | MIT 授權，完整原始碼可自由使用與擴展 |
 
 ---
 
-## 🌐 English Description
+## 🧭 支援的占星體系
 
-### Introduction
+### 🀄 七政四餘（中國傳統占星）
 
-**kinastro** is an interactive **Chinese Traditional Astrology (七政四餘) Chart Calculator** built with [Streamlit](https://streamlit.io/). It uses [pyswisseph](https://github.com/astrorigin/pyswisseph) (Swiss Ephemeris) for precise astronomical calculations, computing the positions of the Seven Governors (七政) and Four Remainders (四餘).
+中國千年傳承的占星術，以恆星黃道為基礎。
 
-### What is Seven Governors and Four Remainders (七政四餘)?
-
-This is the core system of traditional Chinese astrology:
-
-- **Seven Governors (七政)**: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn
-- **Four Remainders (四餘)**: Rahu (North Node), Ketu (South Node), Yuebei (Mean Apogee/Lilith), Ziqi (Purple Gas)
-
-### Features
-
-- 🪐 Precise positions for **11 celestial bodies** (7 governors + 4 remainders)
-- 🗺️ Preset cities worldwide (Beijing, Shanghai, Hong Kong, Taipei, Tokyo, etc.) and custom coordinates
-- 🏛️ Traditional **Twelve Houses/Palaces** (命宮, 財帛宮, 兄弟宮, etc.)
-- 🌟 **28 Lunar Mansions** mapping (Azure Dragon, Black Tortoise, White Tiger, Vermilion Bird)
-- 🔄 **Aspect analysis** (conjunction, opposition, square, trine, sextile)
-- 📐 Western zodiac and Chinese Star Stations cross-reference
-- 🔙 Automatic retrograde detection
-- 🎨 Color-coded traditional square chart grid
-
-### Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/kentang2017/kinastro.git
-cd kinastro
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run app.py
-```
+- **七政**：太陽、太陰（月亮）、水星、金星、火星、木星、土星
+- **四餘**：羅睺（北交點）、計都（南交點）、月孛（遠地點）、紫氣
+- **十二宮**：命宮、財帛宮、兄弟宮、夫妻宮、子女宮、僕役宮
+- **二十八宿**：東方青龍、北方玄武、西方白虎、南方朱雀
+- **十二星次**：星紀、玄枵、娵訾、降婁、大梁、實沈
+- **相位**：合、沖、刑、三合、六合
 
 ---
 
-## 📁 Project Structure / 項目結構
+### 🌍 西洋占星（Western Astrology）
+
+全球最流行的占星體系，以回歸黃道為基準。
+
+- **十大星曜**：太陽、月亮、水星、金星、火星、木星、土星、天王星、海王星、冥王星、 北交點
+- **十二星座**：白羊座至雙魚座（含守護星與元素屬性）
+- **十二宮位**：Placidus 等分宮制，自動計算宮首度數
+- **五大相位**：合、沖、刑、三合、六合
+- **逆行檢測**：自動標記逆行中的星曜
+- **輪盤圖**：視覺化星盤輪圖
+
+---
+
+### 🙏 印度占星 Jyotish（Vedic Astrology）
+
+源於印度的古老占星體系，使用恆星黃道與 Lahiri 歲差。
+
+- **九曜 Navagraha**：太陽、月亮、火星、水星、木星、金星、土星、羅睺、計都
+- **十二星座 Rashi**：Mesha（白羊）至 Meena（雙魚）
+- **二十七宿 Nakshatra**：Ashwini 至 Revati，每宿 13°20'，各分四足 (Pada)
+- **七曜管宿**：每顆曜主管 3 個 Nakshatra（太陽管 Krittika 等）
+- **南印度方盤**：宮位固定・行星流動的 4×4 網格
+- **北印度方盤**：以 Lagna 為起點的旋轉宮系統
+- **歲差修正**：內建 Lahiri Ayanamsa 自動校正
+
+---
+
+### 🈳 宿曜道（日本 Yojōdō）
+
+9 世紀由空海大師自印度傳入日本，融合佛教密宗與道家思想。
+
+- **二十八宿**：比印度多出 Abhijit（牛宿），共 28 宿
+- **六曜 Rokuyō**：先勝・友引・先負・仏滅・大安・赤口
+- **Moon 定曜**：六曜由 Moon 所在宿決定
+- **宿曜道方盤**：4×7 網格，二十八宿沿圓環排列
+- **象徵符號**：每宿有獨特漢字符號（馬、彡、卍、兔、蚯…）
+
+---
+
+### 🐘 泰國占星（Thai Astrology）
+
+以印度 Jyotish 為基礎，融合泰國佛教文化與本土占星傳統。
+
+- **九曜**：與印度 Jyotish 相同（太陽至計都）
+- **十二星座**：泰語命名的恆星黃道星座
+- **日主星**：根據出生星期判定守護星（星期日=太陽，星期一=月亮…）
+- **泰式方盤**：泰語標示的占星盤面
+
+---
+
+### ✡ 卡巴拉占星（Kabbalah Astrology）
+
+結合猶太神祕主義與占星術，以回歸黃道呈現。
+
+- **生命之樹**：十個質點（Sephiroth）對應不同行星能量
+- **二十二希伯來字母**：對應黃道星座與行星
+- **塔羅對應**：每個星座對應一張塔羅大牌
+- **回歸黃道**：與西洋占星相同的黃道系統
+
+---
+
+## 🚀 快速開始
+
+```bash
+# 1. 複製儲存庫
+git clone https://github.com/kentang2017/kinastro.git
+cd kinastro
+
+# 2. 安裝相依套件
+pip install -r requirements.txt
+
+# 3. 啟動應用
+streamlit run app.py
+```
+
+> **需求**：Python 3.10+
+
+---
+
+## 📁 專案結構
 
 ```
 kinastro/
-├── app.py                  # Streamlit main app / 主應用程式
+├── app.py                      # Streamlit 主應用程式
 ├── astro/
-│   ├── calculator.py       # Core computation engine / 核心計算引擎
-│   ├── chart_renderer.py   # UI rendering functions / 介面渲染函數
-│   └── constants.py        # Constants & reference data / 常量與參考資料
+│   ├── calculator.py           # 七政四餘核心計算引擎
+│   ├── chart_renderer.py       # 中國占星 UI 渲染函數
+│   ├── constants.py            # 常量與參考資料
+│   ├── indian.py               # 印度占星 (Jyotish) 排盤模組
+│   ├── sukkayodo.py            # 日本宿曜道 (Yojōdō) 排盤模組
+│   ├── thai.py                 # 泰國占星排盤模組
+│   ├── western.py              # 西洋占星排盤模組
+│   └── kabbalistic.py          # 卡巴拉占星排盤模組
 ├── tests/
-│   └── test_calculator.py  # Unit tests / 單元測試
-├── requirements.txt        # Python dependencies / 相依套件
-└── README.md
+│   ├── test_calculator.py      # 計算模組單元測試
+│   └── test_new_astrology.py  # 新增功能測試
+├── requirements.txt            # Python 相依套件
+├── README.md                   # 本說明文件
+└── LICENSE                     # MIT 授權
 ```
 
-## 🛠️ Tech Stack / 技術棧
+---
 
-| Component | Technology |
-|-----------|-----------|
-| Frontend / 前端 | [Streamlit](https://streamlit.io/) |
-| Ephemeris / 星曆計算 | [pyswisseph](https://github.com/astrorigin/pyswisseph) (Swiss Ephemeris) |
-| Language / 語言 | Python 3.10+ |
+## 🛠️ 技術棧
 
-## 🧪 Running Tests / 運行測試
+| 元件 | 技術 |
+|------|------|
+| 前端框架 | [Streamlit](https://streamlit.io/) — 互動式 Python Web 框架 |
+| 星曆計算 | [pyswisseph](https://github.com/astrorigin/pyswisseph) — 瑞士星曆表 |
+| 語言 | Python 3.10+ |
+| 黃道系統 | 恆星黃道（Lahiri 歲差）& 回歸黃道 |
+
+---
+
+## 🧪 執行測試
 
 ```bash
 pip install pytest
 pytest tests/
 ```
 
-## 🤝 Contributing / 貢獻
+---
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+## 🤝 貢獻
 
-歡迎貢獻！請隨時提交 Issue 或 Pull Request。
+歡迎提交 Issue 或 Pull Request！所有貢獻都會被感謝。
+
+---
+
+## 📜 授權
+
+本專案採用 [MIT License](LICENSE) 授權。
