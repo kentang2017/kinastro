@@ -300,10 +300,10 @@ def _render_thai_grid(chart):
         "border:1px solid #666; padding:6px; text-align:center; "
         "vertical-align:top; min-width:120px; font-size:13px;"
     )
-    asc_cell_style = cell_style + " background:#fff3e0;"
+    asc_cell_style = cell_style + " background:#3d3010;"
     center_style = (
-        "border:1px solid #666; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#f8f8f0;"
+        "border:1px solid #444; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a2a;"
     )
 
     html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'

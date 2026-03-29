@@ -358,10 +358,10 @@ def _render_tree_of_life(chart):
         return (
             f'<td style="border:2px solid #9370DB; padding:8px; '
             f'text-align:center; vertical-align:top; width:{width}; '
-            f'background:#f8f0ff; border-radius:8px;">'
+            f'background:#1a0d2e; border-radius:8px;">'
             f'<b>{s[1]}</b><br/>'
             f'<span style="font-size:16px">{s[0]}</span><br/>'
-            f'<small style="color:#666">{s[2]} ({s[3]})</small><br/>'
+            f'<small style="color:#a090c0">{s[2]} ({s[3]})</small><br/>'
             f'{planet_html}'
             f'</td>'
         )

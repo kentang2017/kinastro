@@ -283,11 +283,11 @@ def _render_wheel_chart(chart):
         house_signs[h.number] = _sign_index(h.cusp)
 
     cell_style = (
-        "border:1px solid #ddd; padding:6px 4px; text-align:center; "
+        "border:1px solid #444; padding:6px 4px; text-align:center; "
         "vertical-align:top; font-size:11px; min-width:90px;"
     )
-    asc_cell = cell_style + " background:#fffde7;"
-    mc_cell = cell_style + " background:#e3f2fd;"
+    asc_cell = cell_style + " background:#3d3010;"
+    mc_cell = cell_style + " background:#1a2a3d;"
 
     # wheel_grid: 順時針從左側 ASC 開始
     # 左列→右列對應 house 1→12 順時針
@@ -342,7 +342,7 @@ def _render_wheel_chart(chart):
                 html += (
                     '<td style="'
                     'border:1px solid #666; padding:10px; text-align:center; '
-                    'vertical-align:middle; background:#f8f8f0; font-size:13px;">'
+                    'vertical-align:middle; background:#2a2a2a; font-size:13px;">'
                     '<b>Kin<br/>Astro</b><br/>'
                     '<small>Western</small>'
                     '</td>'

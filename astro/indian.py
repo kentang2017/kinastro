@@ -413,10 +413,10 @@ def _render_south_indian_grid(chart):
         "border:1px solid #666; padding:6px; text-align:center; "
         "vertical-align:top; min-width:120px; font-size:13px;"
     )
-    asc_cell_style = cell_style + " background:#fffde7;"
+    asc_cell_style = cell_style + " background:#3d3010;"
     center_style = (
-        "border:1px solid #666; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#f8f8f0;"
+        "border:1px solid #555; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a2a;"
     )
 
     html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
@@ -507,14 +507,14 @@ def _render_north_indian_grid(chart):
     ]
 
     # 標記 Lagna 位置
-    lagna_style = " background:#fffde7;"
+    lagna_style = " background:#3d3010;"
     cell_style = (
-        "border:1px solid #666; padding:6px; text-align:center; "
+        "border:1px solid #444; padding:6px; text-align:center; "
         "vertical-align:top; min-width:110px; font-size:13px;"
     )
     center_style = (
-        "border:1px solid #666; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#f8f8f0;"
+        "border:1px solid #444; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a2a;"
     )
 
     html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
@@ -546,7 +546,7 @@ def _render_north_indian_grid(chart):
                 rashi = RASHIS[idx]
                 # 判斷是否為 Lagna (Ascendant) 所在的宫
                 is_lagna = (idx == asc_idx)
-                style = cell_style + (" background:#fffde7;" if is_lagna else "")
+                style = cell_style + (" background:#3d3010;" if is_lagna else "")
                 p_list = rashi_planets[idx]
                 p_html = " ".join(
                     f'<span style="color:{PLANET_COLORS.get(full, "#000")};'

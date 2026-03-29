@@ -144,8 +144,8 @@ def render_sukkayodo_chart(chart):
     cols = st.columns(6)
     for i, (jp, romaji, meaning, color) in enumerate(ROKUYO):
         active = (rokuyo and rokuyo[0] == jp)
-        bg = color if active else "#f0f0f0"
-        fg = "#fff" if active else "#333"
+        bg = color if active else "#2a2a2a"
+        fg = "#fff" if active else "#ccc"
         style = (
             f"background:{bg}; color:{fg}; padding:10px; "
             f"border-radius:8px; text-align:center;"
@@ -208,10 +208,10 @@ def render_sukkayodo_chart(chart):
     # 方盤
     st.markdown("### 宿曜道方盤")
     cell_style = (
-        "border:1px solid #ccc; padding:4px 2px; text-align:center; "
+        "border:1px solid #444; padding:4px 2px; text-align:center; "
         "vertical-align:top; font-size:11px;"
     )
-    moon_cell_style = cell_style + " background:#fffde7; font-weight:bold;"
+    moon_cell_style = cell_style + " background:#3d3010; font-weight:bold;"
 
     mansion_planets = {i: [] for i in range(28)}
     for p in chart.planets:
