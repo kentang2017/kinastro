@@ -277,68 +277,105 @@ def _render_wheel_chart(chart):
     asc_idx = _sign_index(chart.ascendant)
     mc_idx = _sign_index(chart.midheaven)
 
-    cell_style = (
-        "border:1px solid #ddd; padding:4px; text-align:center; "
-        "vertical-align:middle; font-size:12px;"
-    )
-    asc_style = cell_style + " background:#fffde7; font-weight:bold;"
-    mc_style = cell_style + " background:#e3f2fd;"
+    # 宮位 → 星座 mapping
+    house_signs = {}
+    for h in chart.houses:
+        house_signs[h.number] = _sign_index(h.cusp)
 
-    # 4x3 grid，順時針排列
+    cell_style = (
+        "border:1px solid #ddd; padding:6px 4px; text-align:center; "
+        "vertical-align:top; font-size:11px; min-width:90px;"
+    )
+    asc_cell = cell_style + " background:#fffde7;"
+    mc_cell = cell_style + " background:#e3f2fd;"
+
+    # wheel_grid: 順時針從左側 ASC 開始
+    # 左列→右列對應 house 1→12 順時針
+    # row0: [1(left/top), 10(top), 11(top), 12(top), 2(right/top)]
+    # row1: [center col span, house 11, 12, house 3]
+    # row2: [center col span, house 9, 8, house 5]
+    # row3: [6, 7, 8, 9]
+    # 使用 5 列讓佈局更均匀
+
+    # 重新設計：每個 cell = 一個宮位
+    # 宮位沿順時針排列：左上(1) → 上(10) → 右上(11) → 右(12) → 右下(2) → 下(3) → 左下(4) → 左(5,6,7,8,9)
+    # 4x4 grid 佈局
+    #        col0   col1   col2   col3
+    # row0   10     11     12      1
+    # row1    9    center   2      3
+    # row2    8    center   4      5
+    # row3    7      6      5      4   <- 這個不對
+
+    # 標準西占輪盤佈局（從上方俯視，北方在上）：
+    #               house2
+    #         house3  house1  house11
+    #      house4              house12
+    #         house5    house6    house7
+    #               house8
+    # 4x3 表格，宮位分佈：
+    #   [10, 11, 12, 1]
+    #   [ 9, --,  --, 2]
+    #   [ 8, --,  --, 3]
+    #   [ 7,  6,   5, 4]
     wheel_grid = [
-        [9,  10, 11, 0],
-        [1,  -1,  -1,  2],
-        [3,  -1,  -1,  5],
-        [6,   7,   8,  4],
+        [10, 11, 12,  1],
+        [ 9, -1,  -1,  2],
+        [ 8, -1,  -1,  3],
+        [ 7,  6,   5,  4],
     ]
-    # 宮序對照
-    house_map = {9: 1, 10: 2, 11: 3, 0: 4, 1: 5, 2: 6,
-                 3: 7, 4: 8, 5: 9, 6: 10, 7: 11, 8: 12}
 
     html = (
-        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:600px;">'
-        '<tr><td colspan="4" style="text-align:center;padding:4px;font-size:14px;">'
-        '<b>Western Wheel Chart</b></td></tr>'
+        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:560px;">'
+        '<caption style="caption-side:top; font-size:14px; padding:4px;">'
+        '<b>Western Wheel Chart</b> — '
+        '🔺 ASC ' + ZODIAC_SIGNS[asc_idx][1] + ZODIAC_SIGNS[asc_idx][0] + ' '
+        + f'{_sign_degree(chart.ascendant):.1f}° &nbsp; '
+        '⬡ MC ' + ZODIAC_SIGNS[mc_idx][1] + ZODIAC_SIGNS[mc_idx][0] + ' '
+        + f'{_sign_degree(chart.midheaven):.1f}°'
+        '</caption>'
     )
     for row in wheel_grid:
         html += "<tr>"
         for idx in row:
             if idx == -1:
-                asc_sign = ZODIAC_SIGNS[asc_idx]
-                mc_sign = ZODIAC_SIGNS[mc_idx]
+                # 中心格
                 html += (
-                    '<td rowspan="2" colspan="2" style="'
-                    'border:1px solid #666; padding:8px; text-align:center; '
-                    'vertical-align:middle; background:#f8f8f0; font-size:12px;">'
-                    f'<b>ASC</b> {asc_sign[1]}{asc_sign[0]}<br/>'
-                    f'<small>{_sign_degree(chart.ascendant):.1f}°</small><br/>'
-                    f'<b>MC</b> {mc_sign[1]}{mc_sign[0]}<br/>'
-                    f'<small>{_sign_degree(chart.midheaven):.1f}°</small>'
+                    '<td style="'
+                    'border:1px solid #666; padding:10px; text-align:center; '
+                    'vertical-align:middle; background:#f8f8f0; font-size:13px;">'
+                    '<b>Kin<br/>Astro</b><br/>'
+                    '<small>Western</small>'
                     '</td>'
                 )
             else:
-                sign_info = ZODIAC_SIGNS[idx]
-                is_asc = (idx == asc_idx)
-                is_mc = (idx == mc_idx)
-                style = asc_style if is_asc else (mc_style if is_mc else cell_style)
-                planets_in_sign = sign_planets[idx]
+                h = next((x for x in chart.houses if x.number == idx), None)
+                if h is None:
+                    html += '<td style="' + cell_style + '"></td>'
+                    continue
+                sign_idx = house_signs.get(idx, _sign_index(h.cusp))
+                sign_info = ZODIAC_SIGNS[sign_idx]
+                planets_in_house = h.planets
                 p_html = " ".join(
                     f'<span style="color:{PLANET_COLORS.get(p, "#000")};font-weight:bold">'
                     f'{p.split(" ")[0]}</span>'
-                    for p in planets_in_sign
-                ) if planets_in_sign else ""
-                marker = " 🔺" if is_asc else (" ⬡" if is_mc else "")
+                    for p in planets_in_house
+                ) if planets_in_house else '<span style="color:#ccc">—</span>'
+                is_asc_house = (idx == 1)
+                is_mc_house = (idx == 10)
+                style = asc_cell if is_asc_house else (mc_cell if is_mc_house else cell_style)
+                marker = " 🔺" if is_asc_house else (" ⬡" if is_mc_house else "")
                 html += (
                     f'<td style="{style}">'
-                    f'<b>{sign_info[1]}{marker}</b><br/>'
-                    f'<small>{sign_info[2]}</small><br/>'
+                    f'<b>{idx}</b>{marker}<br/>'
+                    f'{sign_info[1]} {sign_info[0]}<br/>'
+                    f'<small>{_format_deg(h.cusp)}</small><br/>'
                     f'{p_html}'
                     '</td>'
                 )
         html += "</tr>"
     html += "</table>"
     st.markdown(html, unsafe_allow_html=True)
-    st.caption("🔺 = Ascendant (命宮)   ⬡ = Midheaven (中天)")
+    st.caption("🔺 = House 1 (Ascendant)   ⬡ = House 10 (Midheaven)")
 
 
 def _render_planet_table(chart):

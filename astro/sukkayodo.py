@@ -173,8 +173,8 @@ def render_sukkayodo_chart(chart):
         "|:--:|:-----|:-----|:-----|:--:|:-----|:-----|:----:|",
     ]
     for i, m in enumerate(SUKKAYODO_MANSION):
-        nak_name, jp_name, chinese, lord_idx = m[0], m[1], m[3], m[4]
-        symbol, deity, quality = m[5], m[6], m[7]
+        nak_name, jp_name, chinese, lord_idx = m[0], m[1], m[2], m[3]
+        symbol, deity, quality = m[4], m[5], m[6]
         lord_name = GRAHA_NAMES_BY_INDEX[lord_idx]
         lord_color = PLANET_COLORS.get(lord_name, "#000000")
         is_moon = (i == moon_mansion_idx)
@@ -227,8 +227,8 @@ def render_sukkayodo_chart(chart):
                 html += "<td></td>"
                 continue
             m = SUKKAYODO_MANSION[idx]
-            nak_name, jp_name, chinese = m[0], m[1], m[3]
-            symbol = m[5]
+            nak_name, jp_name, chinese = m[0], m[1], m[2]
+            symbol = m[4]
             is_moon = (idx == moon_mansion_idx)
             style = moon_cell_style if is_moon else cell_style
             p_list = mansion_planets[idx]
