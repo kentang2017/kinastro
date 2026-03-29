@@ -2,7 +2,7 @@
 
 # ⭐ kinastro — 堅占星排盤
 
-**七政四餘、西洋占、印占排盤系統 ｜ Chinese, Vedic & Thai Traditional Astrology Chart Calculator**
+**七政四餘、西洋占、印占及卡巴拉占星排盤系統 ｜ Chinese, Vedic, Thai & Qabalah Traditional Astrology Chart Calculator**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
