@@ -280,7 +280,7 @@ def compute_vedic_chart(year, month, day, hour, minute, timezone,
             nakshatra=nak[0], nakshatra_chinese=nak[1],
             nakshatra_lord=nak[2], nakshatra_pada=pada,
             retrograde=speed < 0,
-            sukkayodo_mansion=sukk[0], sukkayodo_mansion_chinese=sukk[3],
+            sukkayodo_mansion=sukk[0], sukkayodo_mansion_chinese=sukk[2],
             sukkayodo_mansion_index=sukk_idx, sukkayodo_pada=sukk_pada,
         ))
 
@@ -300,7 +300,7 @@ def compute_vedic_chart(year, month, day, hour, minute, timezone,
         nakshatra=nak[0], nakshatra_chinese=nak[1],
         nakshatra_lord=nak[2], nakshatra_pada=pada,
         retrograde=False,
-        sukkayodo_mansion=sukk[0], sukkayodo_mansion_chinese=sukk[3],
+        sukkayodo_mansion=sukk[0], sukkayodo_mansion_chinese=sukk[2],
         sukkayodo_mansion_index=sukk_idx, sukkayodo_pada=sukk_pada,
     ))
 
@@ -319,7 +319,7 @@ def compute_vedic_chart(year, month, day, hour, minute, timezone,
         nakshatra=nak[0], nakshatra_chinese=nak[1],
         nakshatra_lord=nak[2], nakshatra_pada=pada,
         retrograde=False,
-        sukkayodo_mansion=sukk[0], sukkayodo_mansion_chinese=sukk[3],
+        sukkayodo_mansion=sukk[0], sukkayodo_mansion_chinese=sukk[2],
         sukkayodo_mansion_index=sukk_idx, sukkayodo_pada=sukk_pada,
     ))
 
