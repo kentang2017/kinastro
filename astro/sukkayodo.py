@@ -20,8 +20,8 @@ GRAHA_NAMES_BY_INDEX = [
 # (nak_name, japanese_name, chinese_name, lord_graha_index, symbol, deity, quality)
 # lord: 0=Ketu, 1=Venus, 2=Sun, 3=Moon, 4=Mars, 5=Rahu, 6=Jupiter, 7=Saturn, 8=Mercury
 SUKKAYODO_MANSION = [
-    ("Ashwini",          "アシュヴィニ", "馬頭",   0, "馬", "Aswini Twins",   "Cheerful"),
-    ("Bharani",          "バラニ",       "大陵",   1, "彡", "Yami",            "Passionate"),
+    ("Ashwini",          "アシュヴィニ", "婁宿",   0, "馬", "Aswini Twins",   "Cheerful"),
+    ("Bharani",          "バラニ",       "胃宿",   1, "彡", "Yami",            "Passionate"),
     ("Krittika",         "クリティカー", "昴宿",   2, "卍", "Agni",            "Fierce"),
     ("Rohini",           "ロヒニー",     "畢宿",   3, "兔", "Brahma",          "Stable"),
     ("Mrigashira",       "ミルガシラ",   "觜宿",   4, "蚯", "Soma",            "Curious"),
@@ -94,26 +94,26 @@ PLANET_COLORS = {
     "Ketu (計都)": "#9B59B6",
 }
 
-# 十二宮（地支宮位）與二十八宿對應
+# 十二宮（黃道宮位）與二十八宿對應
 # 每個宮包含 2-3 宿，索引對應 SUKKAYODO_MANSION
 TWELVE_PALACES = [
-    ("子宮", [22, 23, 24]),       # 女, 虛, 危
-    ("丑宮", [20, 21]),           # 斗, 牛
-    ("寅宮", [18, 19]),           # 尾, 箕
-    ("卯宮", [15, 16, 17]),       # 氐, 房, 心
-    ("辰宮", [13, 14]),           # 角, 亢
-    ("巳宮", [11, 12]),           # 翼, 軫
-    ("午宮", [8, 9, 10]),         # 柳, 星, 張
-    ("未宮", [6, 7]),             # 井, 鬼
-    ("申宮", [4, 5]),             # 觜, 參
-    ("酉宮", [2, 3]),             # 昴, 畢
-    ("戌宮", [27, 0, 1]),         # 奎, 馬頭(婁), 大陵(胃)
-    ("亥宮", [25, 26]),           # 室, 壁
+    ("羊宮", [0, 1]),             # 婁, 胃 (Aries)
+    ("牛宮", [2, 3]),             # 昴, 畢 (Taurus)
+    ("夫宮", [4, 5]),             # 觜, 參 (Gemini)
+    ("蟹宮", [6, 7, 8]),          # 井, 鬼, 柳 (Cancer)
+    ("獅宮", [9, 10]),            # 星, 張 (Leo)
+    ("女宮", [11, 12]),           # 翼, 軫 (Virgo)
+    ("秤宮", [13, 14, 15]),       # 角, 亢, 氐 (Libra)
+    ("蝎宮", [16, 17]),           # 房, 心 (Scorpio)
+    ("弓宮", [18, 19]),           # 尾, 箕 (Sagittarius)
+    ("磨宮", [20, 21]),           # 斗, 牛 (Capricorn)
+    ("瓶宮", [22, 23, 24]),       # 女, 虛, 危 (Aquarius)
+    ("魚宮", [25, 26, 27]),       # 室, 壁, 奎 (Pisces)
 ]
 
 # 各宮中心角度（SVG 座標系：0°=右, 順時鐘增加）
-# 子=底(90°), 午=頂(270°), 卯=左(180°), 酉=右(0°)
-PALACE_CENTER_ANGLES = [90, 120, 150, 180, 210, 240, 270, 300, 330, 0, 30, 60]
+# 牛宮(Taurus)在頂端(270°), 黃道逆時鐘排列
+PALACE_CENTER_ANGLES = [300, 270, 240, 210, 180, 150, 120, 90, 60, 30, 0, 330]
 
 # 九曜中文單字（對應 GRAHA_NAMES_BY_INDEX 索引 0-8）
 LORD_CHARS = ["計", "金", "日", "月", "火", "羅", "木", "土", "水"]
@@ -302,6 +302,13 @@ def _render_wheel(chart, moon_mansion_idx):
         rad = math.radians(angle_deg)
         return CX + r * math.cos(rad), CY + r * math.sin(rad)
 
+    def _text_rotation(a):
+        """計算文字旋轉角度（radial outward, 保持可讀）"""
+        rot = (a + 90) % 360
+        if 90 < rot < 270:
+            rot = (rot + 180) % 360
+        return rot
+
     def arc_path(r, a1, a2):
         """SVG 弧線路徑（從 a1 到 a2）"""
         x1, y1 = polar(r, a1)
@@ -382,11 +389,13 @@ def _render_wheel(chart, moon_mansion_idx):
         a = PALACE_CENTER_ANGLES[pi]
         r_label = (R_OUTER + R_PALACE) / 2
         x, y = polar(r_label, a)
+        rot = _text_rotation(a)
         svg_parts.append(
             f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="#e0e0e0" '
             f'font-size="15" font-weight="bold" '
-            f'font-family="serif">{name}</text>'
+            f'font-family="serif" '
+            f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">{name}</text>'
         )
 
     # --- 二十八宿名（宮名環與宿名環之間）---
@@ -418,7 +427,9 @@ def _render_wheel(chart, moon_mansion_idx):
             f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="{fill}" '
             f'font-size="{fsize}" font-weight="{weight}" '
-            f'font-family="serif">{char}</text>'
+            f'font-family="serif" '
+            f'transform="rotate({_text_rotation(a):.1f},{x:.1f},{y:.1f})">'
+            f'{char}</text>'
         )
 
     # --- 九曜主（宿名環與九曜環之間）---
@@ -437,7 +448,9 @@ def _render_wheel(chart, moon_mansion_idx):
         svg_parts.append(
             f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="{lord_color}" '
-            f'font-size="12" font-family="serif">{lord_char}</text>'
+            f'font-size="12" font-family="serif" '
+            f'transform="rotate({_text_rotation(a):.1f},{x:.1f},{y:.1f})">'
+            f'{lord_char}</text>'
         )
 
     # --- 月相（九曜環與月相環之間）---
@@ -490,21 +503,6 @@ def _render_wheel(chart, moon_mansion_idx):
 
     # --- 太極圖 (yin-yang) ---
     svg_parts.append(_yin_yang_svg(CX, CY, R_YINYANG))
-
-    # --- 四象標籤（四角） ---
-    symbol_labels = [
-        (180, "東方蒼龍", "#228B22"),   # 卯方=左
-        (90, "北方玄武", "#4169E1"),     # 子方=下
-        (0, "西方白虎", "#DC143C"),      # 酉方=右
-        (270, "南方朱雀", "#FF8C00"),    # 午方=上
-    ]
-    for a, label, color in symbol_labels:
-        x, y = polar(R_OUTER + 28, a)
-        svg_parts.append(
-            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
-            f'dominant-baseline="central" fill="{color}" '
-            f'font-size="11" font-family="serif">{label}</text>'
-        )
 
     svg_parts.append("</svg>")
     svg = "\n".join(svg_parts)

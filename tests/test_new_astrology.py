@@ -266,8 +266,8 @@ class TestTwelvePalaces:
 
     def test_palace_names(self):
         from astro.sukkayodo import TWELVE_PALACES
-        expected = ["子宮", "丑宮", "寅宮", "卯宮", "辰宮", "巳宮",
-                    "午宮", "未宮", "申宮", "酉宮", "戌宮", "亥宮"]
+        expected = ["羊宮", "牛宮", "夫宮", "蟹宮", "獅宮", "女宮",
+                    "秤宮", "蝎宮", "弓宮", "磨宮", "瓶宮", "魚宮"]
         names = [name for name, _ in TWELVE_PALACES]
         assert names == expected
 
