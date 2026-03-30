@@ -344,12 +344,10 @@ def _render_wheel(chart, moon_mansion_idx):
         f'<rect width="{SIZE}" height="{SIZE}" fill="#0a0a1a" rx="12"/>'
     )
 
-    # --- 十二邊形外框 ---
-    vertices = [polar(R_OUTER, a) for a in boundary_angles]
-    pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in vertices)
+    # --- 十二邊形外框改為圓形 ---
     svg_parts.append(
-        f'<polygon points="{pts}" fill="none" '
-        f'stroke="#c8c8c8" stroke-width="1.5"/>'
+        f'<circle cx="{CX}" cy="{CY}" r="{R_OUTER}" '
+        f'fill="none" stroke="#c8c8c8" stroke-width="1.5"/>'
     )
 
     # --- 同心圓 ---
