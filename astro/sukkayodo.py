@@ -251,6 +251,10 @@ def render_sukkayodo_chart(chart):
         )
     st.markdown("\n".join(rows), unsafe_allow_html=True)
 
+    # 三九秘宿法面板
+    sansanju_result = _get_sansanju_table(chart.month, chart.day)
+    _render_sansanju_panel(chart, sansanju_result)
+
 
 def _render_wheel(chart, moon_mansion_idx):
     """渲染宿曜道圓環圖 — 十二宮 SVG 圓盤"""
@@ -655,3 +659,278 @@ def _yin_yang_svg(cx, cy, r):
         # Black dot in white area
         f'<circle cx="{cx}" cy="{cy + hr}" r="{dr}" fill="#1a1a2e"/>'
     )
+
+
+# ============================================================
+# 三九秘宿法 (San-Jiu Bi-Su Method)
+# ============================================================
+
+# 三九秘宿法使用的二十七星宿（去除牛宿 Abhijit = index 20）
+# 按「室→璧→奎→婁→胃→昴→畢→觜→參→井→鬼→柳→星→張→翼→軫→角→亢→氐→房→心→尾→箕→斗→女→虛→危」排列
+# 對應 SUKKAYODO_MANSION 索引: 24,25,26,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23
+# 排序後索引: [24, 25, 26, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23]
+SANSANJU_27_MANSIONS = [
+    24, 25, 26, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+    9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    21, 22, 23,
+]
+
+# 每月起始宿 index（SANSANJU_27_MANSIONS 中的位置）
+# 正月=室(0), 二月=奎(3), 三月=胃(5), 四月=畢(7),
+# 五月=參(8), 六月=鬼(10), 七月=星(12), 八月=角(16),
+# 九月=氐(18), 十月=心(20), 十一月=斗(22), 十二月=虛(24)
+SANSANJU_MONTH_STARTS = [0, 3, 5, 7, 8, 10, 12, 16, 18, 20, 22, 24]
+
+# 命、業、胎三本
+THREE_ROOTS = ["命", "業", "胎"]
+
+# 十一類星宿含義
+SANSANJU_MEANINGS = {
+    "命": "百事不宜",
+    "業": "所作皆吉、吉祥",
+    "胎": "百事不宜",
+    "榮": "諸事適用，所作皆吉",
+    "衰": "解惡、治病等可，不宜遠行、遷移、買賣、裁衣、剃頭、剪甲",
+    "危": "歡聚吉利，宜交友、婚事、宴友，不宜遠行、遷移",
+    "成": "宜求學、問道、合藥、訪師、延壽",
+    "壞": "利於出征、討伐、壓鎮降伏，不宜同「衰」",
+    "安": "適於遷徙、移動、遠行、修園宅臥具，可啟建壇場",
+    "友": "結婚、交友大吉",
+    "親": "結婚、交友大吉",
+}
+
+# 十一類顏色
+SANSANJU_COLORS = {
+    "命": "#DC143C",
+    "業": "#228B22",
+    "胎": "#DC143C",
+    "榮": "#FFD700",
+    "衰": "#8B4513",
+    "危": "#FF4500",
+    "成": "#4169E1",
+    "壞": "#9B59B6",
+    "安": "#228B22",
+    "友": "#FF69B4",
+    "親": "#FF69B4",
+}
+
+
+def _get_sansanju_table(birth_month, birth_day):
+    """計算指定年月日的三九秘宿表。
+
+    Returns:
+        dict with keys:
+          - "table": list of (mansion_index_27, category) for all 27 positions
+          - "first_mansion_27": the starting 27-mansion index for this birth month
+          - "first_category": the category at position (birth_day - 1) in the full 33-slot list
+          - "day_category": the category for the birth day (命/業/胎/榮/...)
+          - "day_mansion_27": mansion index in SANSANJU_27_MANSIONS for the birth day
+          - "full_sequence": list of 33 categories (命/業/胎 + 8 + 命/業/胎 + 8 + 命/業/胎 + 8)
+    """
+    # 1. Find starting 27-mansion index for the birth month
+    start_27 = SANSANJU_MONTH_STARTS[birth_month - 1]
+
+    # 2. Build the 27-mansion list (circular) starting from birth month
+    mansions_27 = []
+    for i in range(27):
+        mansions_27.append(SANSANJU_27_MANSIONS[(start_27 + i) % 27])
+
+    # 3. Build the full 33-category sequence: [命/業/胎] + 8-categories repeated 3 times
+    CATEGORIES_8 = ["榮", "衰", "安", "危", "成", "壞", "友", "親"]
+    full_seq = THREE_ROOTS + CATEGORIES_8 + THREE_ROOTS + CATEGORIES_8 + THREE_ROOTS + CATEGORIES_8
+
+    # 4. Position in the full sequence corresponding to birth_day
+    # Count from 1 (1st day = first mansion's category = full_seq[0])
+    pos = (birth_day - 1) % 33
+    day_category = full_seq[pos]
+
+    # 5. The mansion at this day position (in 27-mansion list)
+    day_mansion_27 = mansions_27[pos % 27]
+
+    # 6. Build the full table: 33 entries mapping mansion → category
+    table = []
+    seq_len = len(full_seq)  # 33
+    for i in range(seq_len):
+        m_idx = mansions_27[i % 27]
+        cat = full_seq[i]
+        table.append((m_idx, cat))
+
+    return {
+        "table": table,
+        "first_mansion_27": mansions_27[0],
+        "full_sequence": full_seq,
+        "day_category": day_category,
+        "day_mansion_27": day_mansion_27,
+    }
+
+
+def _get_daily_sansanju_category(birth_month, birth_day, daily_mansion_27_idx):
+    """根據當日值日星宿，回推該日在三九秘宿表中的分類。
+
+    Args:
+        birth_month, birth_day: 出生月日
+        daily_mansion_27_idx: 當日值日星宿的 27 宿索引（0-26對應SANSANJU_27_MANSIONS）
+
+    Returns:
+        str: 該日對應的三九秘宿分類（命/業/胎/榮/衰/安/危/成/壞/友/親）
+    """
+    result = _get_sansanju_table(birth_month, birth_day)
+    for m27, cat in result["table"]:
+        if m27 == daily_mansion_27_idx:
+            return cat
+    return "?"
+
+
+def _get_sansanju_mansion_meaning(cat):
+    """取得三九秘宿分類的含義說明"""
+    return SANSANJU_MEANINGS.get(cat, "（含義待考）")
+
+
+def _render_sansanju_panel(chart, result):
+    """渲染三九秘宿法面板"""
+    st.markdown("### 三九秘宿法")
+
+    # 基本說明
+    birth_month = chart.month
+    birth_day = chart.day
+
+    mansions_27 = []
+    start_27 = SANSANJU_MONTH_STARTS[birth_month - 1]
+    for i in range(27):
+        mansions_27.append(SANSANJU_27_MANSIONS[(start_27 + i) % 27])
+
+    first_mansion_idx = mansions_27[0]  # SUKKAYODO_MANSION index
+    first_mansion = SUKKAYODO_MANSION[first_mansion_idx]
+    day_mansion_idx = result["day_mansion_27"]
+    day_mansion = SUKKAYODO_MANSION[day_mansion_idx]
+
+    st.markdown(
+        f"**命宿表（{birth_month}月）**：以 `{first_mansion[2]}` 宿為首，"
+        f"共 27 宿（去牛宿）。{birth_month}月{birth_day}日生，"
+        f"第一命宿為 `{day_mansion[2]}`（{result['day_category']}）。"
+    )
+
+    # ---- 分類說明 ----
+    st.markdown("#### 各宿含義")
+    meaning_cols = st.columns(3)
+    cats = list(SANSANJU_MEANINGS.keys())
+    for i, cat in enumerate(cats):
+        col = meaning_cols[i % 3]
+        color = SANSANJU_COLORS.get(cat, "#888")
+        with col:
+            st.markdown(
+                f"<div style='border-left:4px solid {color}; padding:4px 8px; "
+                f"background:#1a1a2e; border-radius:4px; margin-bottom:6px;'>"
+                f"<b style='color:{color}'>{cat}</b>：{SANSANJU_MEANINGS[cat]}"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
+    # ---- 27宿命宿表 ----
+    st.markdown("#### 27宿命宿表")
+    CATEGORIES_8 = ["榮", "衰", "安", "危", "成", "壞", "友", "親"]
+
+    # Build rows: 11 categories (命/業/胎 + 8) × shows mansion for each
+    categories_11 = THREE_ROOTS + CATEGORIES_8  # 11 items
+    rows = []
+
+    # Header: show months as row labels
+    # Table: rows=命/業/胎/榮/衰/安/危/成/壞/友/親 (11), cols=27 mansions
+    header = ["| 分類 |"] + [f" {SUKKAYODO_MANSION[SANSANJU_27_MANSIONS[(start_27 + i) % 27]][2]} |" for i in range(27)]
+    rows.append("".join(header))
+    rows.append("|:---:" + ":---:" * 27)
+
+    # ---- 27宿命宿表 ----
+    # Position i (0-26) → mansion index in SANSANJU_27_MANSIONS (0-26) + category
+    # Categories repeat: [命,業,胎,榮,衰,安,危,成,壞,友,親, 榮,衰,..., 榮,...]
+    # full_seq has 33 entries (3 × 11), cycling through 27 mansions
+    full_seq_33 = THREE_ROOTS + CATEGORIES_8 + THREE_ROOTS + CATEGORIES_8 + THREE_ROOTS + CATEGORIES_8
+
+    # Build position-based table: pos (0-26) → (m27_pos, category)
+    # At position i: mansion is mansions_27[i], category is full_seq_33[i]
+    pos_table = [(mansions_27[i % 27], full_seq_33[i]) for i in range(27)]
+
+    # For each category, find which 27-position(s) carry it
+    cat_to_pos = {cat: [] for cat in categories_11}
+    for i, (m27, cat) in enumerate(pos_table):
+        cat_to_pos[cat].append(i)
+
+    st.markdown("#### 27宿命宿表")
+    # Header: column 0 = "分類", columns 1-27 = 27 宿名
+    col_count = 28  # label + 27 mansions
+    header_cells = ["| **分類** |"] + [
+        f"**{SUKKAYODO_MANSION[mansions_27[(start_27 + i) % 27]][2]}** |"
+        for i in range(27)
+    ]
+    st.markdown("".join(header_cells), unsafe_allow_html=True)
+    sep = "|:" + ":---:" + ":---:" * 27
+    st.markdown(sep, unsafe_allow_html=True)
+
+    for cat in categories_11:
+        row_cells = [f"| **{cat}** |"]
+        for i in range(27):
+            if i in cat_to_pos[cat]:
+                color = SANSANJU_COLORS.get(cat, "#888")
+                cell = f" <span style='color:{color};font-weight:bold'>{cat}</span> |"
+            else:
+                cell = " · |"
+            row_cells.append(cell)
+        st.markdown("".join(row_cells), unsafe_allow_html=True)
+
+    # ---- 當日分類高亮 ----
+    day_cat = result["day_category"]
+    day_color = SANSANJU_COLORS.get(day_cat, "#888")
+    st.markdown(
+        f"**今日（{birth_month}月{birth_day}日）命宿："
+        f"<span style='color:{day_color}'>{day_mansion[2]}（{day_cat}）</span>**"
+        f" — {_get_sansanju_mansion_meaning(day_cat)}",
+        unsafe_allow_html=True,
+    )
+
+    # ---- 择日参考：查找某日属于哪个分类 ----
+    st.markdown("#### 择日参考")
+    st.caption("输入值日星宿（农民历记载的当日值日星宿），查询对命主之吉凶")
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        daily_input = st.text_input(
+            "值日星宿（中國名）",
+            placeholder="如：斗、室、壁",
+            key="sansanju_daily_mansion",
+        )
+    if daily_input:
+        # Find matching mansion by Chinese name (去除「宿」字)
+        found_m27 = None
+        found_m27_pos = None
+        for pos_i, m28_idx in enumerate(mansions_27):
+            sukk = SUKKAYODO_MANSION[m28_idx]
+            # 去除「宿」後比對
+            if sukk[2].replace("宿", "") == daily_input.replace("宿", "").strip():
+                found_m28_idx = m28_idx
+                found_m27_pos = pos_i
+                found_sukk = sukk
+                break
+        if found_m27_pos is not None:
+            # Find all category entries for this mansion at each occurrence
+            entries = []
+            for i, (m27, cat) in enumerate(pos_table):
+                if m27 == found_m27_pos:
+                    entries.append((i, cat))
+            # Show each occurrence
+            parts = []
+            for i, cat in entries:
+                color = SANSANJU_COLORS.get(cat, "#888")
+                parts.append(
+                    f"<span style='color:{color};font-weight:bold'>{cat}</span>"
+                    f"（第{i+1}命宿 {_get_sansanju_mansion_meaning(cat)}）"
+                )
+            st.markdown(
+                f"值日星宿 **`{found_sukk[2]}`** 在命宿表中為："
+                f"{' | '.join(parts)}",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.warning(
+                f"未找到星宿：「{daily_input}」。"
+                f"請輸入中國星名（如：斗、室、壁、婁、胃、昴、畢、參、井、鬼、柳、星、張、翼、軫、角、亢、氐、房、心、尾、箕、女、虛、危）。"
+            )
