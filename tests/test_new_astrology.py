@@ -181,6 +181,114 @@ class TestNakshatraInfo:
 
 
 # ============================================================
+# Sukkayodo (宿曜道) Tests
+# ============================================================
+
+class TestSukkayodo:
+    """宿曜道排盤測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_vedic_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=39.9042, longitude=116.4074,
+            location_name="北京",
+        )
+
+    def test_sukkayodo_mansion_index_valid(self, sample_chart):
+        for p in sample_chart.planets:
+            assert 0 <= p.sukkayodo_mansion_index < 28
+
+    def test_sukkayodo_pada_valid(self, sample_chart):
+        for p in sample_chart.planets:
+            assert 1 <= p.sukkayodo_pada <= 4
+
+    def test_sukkayodo_mansion_name_is_string(self, sample_chart):
+        for p in sample_chart.planets:
+            assert isinstance(p.sukkayodo_mansion, str)
+            assert len(p.sukkayodo_mansion) > 0
+
+    def test_sukkayodo_mansion_chinese_is_string(self, sample_chart):
+        """Bug fix test: sukkayodo_mansion_chinese should be a Chinese
+        name string, not an integer lord index."""
+        for p in sample_chart.planets:
+            assert isinstance(p.sukkayodo_mansion_chinese, str)
+            assert len(p.sukkayodo_mansion_chinese) > 0
+
+    def test_sukkayodo_mansion_chinese_matches_data(self, sample_chart):
+        """Verify mansion_chinese matches SUKKAYODO_MANSION[idx][2]."""
+        from astro.sukkayodo import SUKKAYODO_MANSION
+        for p in sample_chart.planets:
+            expected = SUKKAYODO_MANSION[p.sukkayodo_mansion_index][2]
+            assert p.sukkayodo_mansion_chinese == expected
+
+
+class TestSukkayodoInfo:
+    """sukkayodo_info calculation tests"""
+
+    def test_first_mansion(self):
+        from astro.sukkayodo import sukkayodo_info
+        idx, pada = sukkayodo_info(0.0)
+        assert idx == 0
+        assert pada == 1
+
+    def test_last_mansion(self):
+        from astro.sukkayodo import sukkayodo_info
+        idx, pada = sukkayodo_info(359.9)
+        assert idx == 27
+
+    def test_pada_range(self):
+        from astro.sukkayodo import sukkayodo_info
+        for deg in range(0, 360, 5):
+            _, pada = sukkayodo_info(float(deg))
+            assert 1 <= pada <= 4
+
+    def test_mansion_index_range(self):
+        from astro.sukkayodo import sukkayodo_info
+        for deg in range(0, 360, 5):
+            idx, _ = sukkayodo_info(float(deg))
+            assert 0 <= idx < 28
+
+
+class TestTwelvePalaces:
+    """十二宮 mapping tests"""
+
+    def test_all_28_mansions_mapped(self):
+        from astro.sukkayodo import TWELVE_PALACES
+        all_indices = []
+        for _, indices in TWELVE_PALACES:
+            all_indices.extend(indices)
+        assert sorted(all_indices) == list(range(28))
+
+    def test_twelve_palaces_count(self):
+        from astro.sukkayodo import TWELVE_PALACES
+        assert len(TWELVE_PALACES) == 12
+
+    def test_palace_names(self):
+        from astro.sukkayodo import TWELVE_PALACES
+        expected = ["羊宮", "牛宮", "夫宮", "蟹宮", "獅宮", "女宮",
+                    "秤宮", "蝎宮", "弓宮", "磨宮", "瓶宮", "魚宮"]
+        names = [name for name, _ in TWELVE_PALACES]
+        assert names == expected
+
+
+class TestGetRokuyo:
+    """六曜 lookup tests"""
+
+    def test_valid_index(self):
+        from astro.sukkayodo import get_rokuyo
+        for i in range(28):
+            rk = get_rokuyo(i)
+            assert rk is not None
+            assert len(rk) == 4
+
+    def test_invalid_index_returns_none(self):
+        from astro.sukkayodo import get_rokuyo
+        assert get_rokuyo(-1) is None
+        assert get_rokuyo(28) is None
+
+
+# ============================================================
 # Thai Astrology Tests
 # ============================================================
 

@@ -6,6 +6,8 @@
 以 Moon 所在宿計算六曜 (Rokuyō)。
 """
 
+import math
+
 import streamlit as st
 
 # 七曜名稱索引對照 (lord index → name string)
@@ -18,8 +20,8 @@ GRAHA_NAMES_BY_INDEX = [
 # (nak_name, japanese_name, chinese_name, lord_graha_index, symbol, deity, quality)
 # lord: 0=Ketu, 1=Venus, 2=Sun, 3=Moon, 4=Mars, 5=Rahu, 6=Jupiter, 7=Saturn, 8=Mercury
 SUKKAYODO_MANSION = [
-    ("Ashwini",          "アシュヴィニ", "馬頭",   0, "馬", "Aswini Twins",   "Cheerful"),
-    ("Bharani",          "バラニ",       "大陵",   1, "彡", "Yami",            "Passionate"),
+    ("Ashwini",          "アシュヴィニ", "婁宿",   0, "馬", "Aswini Twins",   "Cheerful"),
+    ("Bharani",          "バラニ",       "胃宿",   1, "彡", "Yami",            "Passionate"),
     ("Krittika",         "クリティカー", "昴宿",   2, "卍", "Agni",            "Fierce"),
     ("Rohini",           "ロヒニー",     "畢宿",   3, "兔", "Brahma",          "Stable"),
     ("Mrigashira",       "ミルガシラ",   "觜宿",   4, "蚯", "Soma",            "Curious"),
@@ -91,6 +93,38 @@ PLANET_COLORS = {
     "Rahu (羅睺)": "#8E44AD",
     "Ketu (計都)": "#9B59B6",
 }
+
+# 十二宮（黃道宮位）與二十八宿對應
+# 每個宮包含 2-3 宿，索引對應 SUKKAYODO_MANSION
+TWELVE_PALACES = [
+    ("羊宮", [0, 1]),             # 婁, 胃 (Aries)
+    ("牛宮", [2, 3]),             # 昴, 畢 (Taurus)
+    ("夫宮", [4, 5]),             # 觜, 參 (Gemini)
+    ("蟹宮", [6, 7, 8]),          # 井, 鬼, 柳 (Cancer)
+    ("獅宮", [9, 10]),            # 星, 張 (Leo)
+    ("女宮", [11, 12]),           # 翼, 軫 (Virgo)
+    ("秤宮", [13, 14, 15]),       # 角, 亢, 氐 (Libra)
+    ("蝎宮", [16, 17]),           # 房, 心 (Scorpio)
+    ("弓宮", [18, 19]),           # 尾, 箕 (Sagittarius)
+    ("磨宮", [20, 21]),           # 斗, 牛 (Capricorn)
+    ("瓶宮", [22, 23, 24]),       # 女, 虛, 危 (Aquarius)
+    ("魚宮", [25, 26, 27]),       # 室, 壁, 奎 (Pisces)
+]
+
+# 各宮中心角度（SVG 座標系：0°=右, 順時鐘增加）
+# 牛宮(Taurus)在頂端(270°), 黃道逆時鐘排列
+PALACE_CENTER_ANGLES = [300, 270, 240, 210, 180, 150, 120, 90, 60, 30, 0, 330]
+
+# 九曜中文單字（對應 GRAHA_NAMES_BY_INDEX 索引 0-8）
+LORD_CHARS = ["計", "金", "日", "月", "火", "羅", "木", "土", "水"]
+
+# 四象分組（使用中國天文正統排序）
+FOUR_SYMBOLS = [
+    ("🌿 東方蒼龍", [13, 14, 15, 16, 17, 18, 19], "#228B22"),  # 角亢氐房心尾箕
+    ("🐢 北方玄武", [20, 21, 22, 23, 24, 25, 26], "#4169E1"),  # 斗牛女虛危室壁
+    ("🐅 西方白虎", [27, 0, 1, 2, 3, 4, 5],       "#DC143C"),  # 奎婁胃昴畢觜參
+    ("🐦 南方朱雀", [6, 7, 8, 9, 10, 11, 12],     "#FF8C00"),  # 井鬼柳星張翼軫
+]
 
 
 # ============================================================
@@ -219,129 +253,274 @@ def render_sukkayodo_chart(chart):
 
 
 def _render_wheel(chart, moon_mansion_idx):
-    """渲染宿曜道圓環圖 — 三層同心結構"""
+    """渲染宿曜道圓環圖 — 十二宮 SVG 圓盤"""
+
+    CX, CY = 350, 350
+    SIZE = 700
+
+    # 同心圓環半徑
+    R_OUTER = 310       # 十二宮標籤環
+    R_PALACE = 280      # 宮名與宿名分界
+    R_MANSION = 230     # 宿名環
+    R_LORD = 185        # 九曜主環
+    R_PHASE = 145       # 月相環
+    R_CENTER = 105      # 太極圓
+    R_YINYANG = 70      # 太極圖半徑
 
     # 建立每宿行星列表
     mansion_planets = {i: [] for i in range(28)}
     for p in chart.planets:
         if p.sukkayodo_mansion_index >= 0:
-            mansion_planets[p.sukkayodo_mansion_index].append(p.name.split(" ")[0])
+            short = p.name.split(" ")[0]
+            mansion_planets[p.sukkayodo_mansion_index].append(short)
 
-    # 28 個扇形，每個 360/28 ≈ 12.857°
-    # 用 HTML table 模擬：外圈 (宿名+符號) / 中圈 (主曜) / 內圈 (六曜)
+    # 計算每個宿的中心角度
+    mansion_angles = {}
+    for pi, (_, indices) in enumerate(TWELVE_PALACES):
+        center = PALACE_CENTER_ANGLES[pi]
+        n = len(indices)
+        span = 30.0
+        sub_span = span / n
+        start = center - span / 2
+        for mi, idx in enumerate(indices):
+            mansion_angles[idx] = start + sub_span * (mi + 0.5)
 
-    CELL_STYLE = (
-        "border:1px solid #333; padding:3px 0; text-align:center; "
-        "vertical-align:middle; font-size:11px; background:#1a1a2e; color:#c8c8c8;"
-    )
-    MOON_CELL = (
-        "border:1px solid #FFD700; padding:3px 0; text-align:center; "
-        "vertical-align:middle; font-size:11px; background:#3d3010; color:#FFD700; font-weight:bold;"
-    )
-    ROKUYO_CELL = (
-        "border:1px solid #333; padding:2px 0; text-align:center; "
-        "vertical-align:middle; font-size:10px; color:#aaa;"
-    )
-    ROKUYO_CELL_ACTIVE = (
-        "border:1px solid #FFD700; padding:2px 0; text-align:center; "
-        "vertical-align:middle; font-size:10px; color:#FFD700; font-weight:bold;"
-    )
-    CENTER_STYLE = (
-        "border:2px solid #555; border-radius:50%; padding:12px; "
-        "text-align:center; vertical-align:middle; background:#1a1a2e; color:#e0e0e0;"
+    # 計算每個宿的邊界角度
+    mansion_boundaries = {}
+    for pi, (_, indices) in enumerate(TWELVE_PALACES):
+        center = PALACE_CENTER_ANGLES[pi]
+        n = len(indices)
+        span = 30.0
+        sub_span = span / n
+        start = center - span / 2
+        for mi, idx in enumerate(indices):
+            mansion_boundaries[idx] = (start + sub_span * mi,
+                                       start + sub_span * (mi + 1))
+
+    def polar(r, angle_deg):
+        """角度 → SVG 座標"""
+        rad = math.radians(angle_deg)
+        return CX + r * math.cos(rad), CY + r * math.sin(rad)
+
+    def _text_rotation(a):
+        """計算文字旋轉角度（radial outward, 保持可讀）"""
+        rot = (a + 90) % 360
+        if 90 < rot < 270:
+            rot = (rot + 180) % 360
+        return rot
+
+    def arc_path(r, a1, a2):
+        """SVG 弧線路徑（從 a1 到 a2）"""
+        x1, y1 = polar(r, a1)
+        x2, y2 = polar(r, a2)
+        sweep = a2 - a1
+        if sweep < 0:
+            sweep += 360
+        large = 1 if sweep > 180 else 0
+        return f"M {x1:.1f},{y1:.1f} A {r},{r} 0 {large},1 {x2:.1f},{y2:.1f}"
+
+    def dodecagon_point(angle_deg):
+        """取得正十二邊形上的點（與角度最近的頂點插值）"""
+        return polar(R_OUTER, angle_deg)
+
+    # 十二邊形頂點（宮界）
+    boundary_angles = [PALACE_CENTER_ANGLES[i] - 15 for i in range(12)]
+
+    # ==================== 開始 SVG ====================
+    svg_parts = []
+    svg_parts.append(
+        f'<svg viewBox="0 0 {SIZE} {SIZE}" '
+        f'xmlns="http://www.w3.org/2000/svg" '
+        f'style="max-width:620px; margin:auto; display:block; '
+        f'background:#0a0a1a; border-radius:12px;">'
     )
 
-    # 每個宿 3 個格子（外→中→內），共 28 列
-    html = (
-        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:900px; '
-        'table-layout:fixed;">'
+    # 背景
+    svg_parts.append(
+        f'<rect width="{SIZE}" height="{SIZE}" fill="#0a0a1a" rx="12"/>'
     )
 
-    # --- Header Row: 28 個外圈格子（宿名+符號）---
-    html += "<tr>"
-    for i in range(28):
-        m = SUKKAYODO_MANSION[i]
-        nak_name, jp_name, chinese = m[0], m[1], m[2]
-        symbol = m[4]
-        is_moon = (i == moon_mansion_idx)
-        style = MOON_CELL if is_moon else CELL_STYLE
-        rk = get_rokuyo(i)
-        p_list = mansion_planets[i]
-        planets_html = "".join(
-            f'<span style="color:{PLANET_COLORS.get(pp, "#c8c8c8")};font-size:9px">{pp}</span> '
-            for pp in p_list
-        ) if p_list else ""
-        html += (
-            f'<td style="{style}">'
-            f'<b style="font-size:12px">{"⭐" if is_moon else ""}{nak_name[:3]}</b><br/>'
-            f'<span style="font-size:13px">{symbol}</span><br/>'
-            f'<small style="color:#888">{chinese}</small><br/>'
-            f'{planets_html}'
-            f'</td>'
+    # --- 十二邊形外框 ---
+    vertices = [polar(R_OUTER, a) for a in boundary_angles]
+    pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in vertices)
+    svg_parts.append(
+        f'<polygon points="{pts}" fill="none" '
+        f'stroke="#c8c8c8" stroke-width="1.5"/>'
+    )
+
+    # --- 同心圓 ---
+    for r in [R_PALACE, R_MANSION, R_LORD, R_PHASE, R_CENTER]:
+        svg_parts.append(
+            f'<circle cx="{CX}" cy="{CY}" r="{r}" '
+            f'fill="none" stroke="#444" stroke-width="0.8"/>'
         )
-    html += "</tr>"
 
-    # --- Middle Row: 28 個中圈格子（主曜名）---
-    html += "<tr>"
-    for i in range(28):
-        m = SUKKAYODO_MANSION[i]
+    # --- 十二宮分界線（R_CENTER → R_OUTER）---
+    for ba in boundary_angles:
+        x1, y1 = polar(R_CENTER, ba)
+        x2, y2 = polar(R_OUTER, ba)
+        svg_parts.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+            f'x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="#666" stroke-width="0.8"/>'
+        )
+
+    # --- 宿分界線（R_CENTER → R_PALACE，虛線）---
+    for pi, (_, indices) in enumerate(TWELVE_PALACES):
+        center = PALACE_CENTER_ANGLES[pi]
+        n = len(indices)
+        if n <= 1:
+            continue
+        span = 30.0
+        sub_span = span / n
+        start = center - span / 2
+        for mi in range(1, n):
+            a = start + sub_span * mi
+            x1, y1 = polar(R_CENTER, a)
+            x2, y2 = polar(R_PALACE, a)
+            svg_parts.append(
+                f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+                f'x2="{x2:.1f}" y2="{y2:.1f}" '
+                f'stroke="#333" stroke-width="0.5" stroke-dasharray="4,3"/>'
+            )
+
+    # --- 十二宮標籤（十二邊形外框與宮名環之間）---
+    for pi, (name, _) in enumerate(TWELVE_PALACES):
+        a = PALACE_CENTER_ANGLES[pi]
+        r_label = (R_OUTER + R_PALACE) / 2
+        x, y = polar(r_label, a)
+        rot = _text_rotation(a)
+        svg_parts.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#e0e0e0" '
+            f'font-size="15" font-weight="bold" '
+            f'font-family="serif" '
+            f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">{name}</text>'
+        )
+
+    # --- 二十八宿名（宮名環與宿名環之間）---
+    for idx in range(28):
+        if idx not in mansion_angles:
+            continue
+        a = mansion_angles[idx]
+        m = SUKKAYODO_MANSION[idx]
+        chinese = m[2]
+        char = chinese[0] if chinese else "?"
+
+        r_text = (R_PALACE + R_MANSION) / 2
+        x, y = polar(r_text, a)
+
+        is_moon = (idx == moon_mansion_idx)
+        fill = "#FFD700" if is_moon else "#e0e0e0"
+        weight = "bold" if is_moon else "normal"
+        fsize = "16" if is_moon else "14"
+
+        # 月亮所在宿的背景高亮
+        if is_moon:
+            ba1, ba2 = mansion_boundaries[idx]
+            svg_parts.append(
+                f'<path d="{_annular_sector(CX, CY, R_PALACE, R_MANSION, ba1, ba2)}" '
+                f'fill="#3d3010" fill-opacity="0.6"/>'
+            )
+
+        svg_parts.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{fill}" '
+            f'font-size="{fsize}" font-weight="{weight}" '
+            f'font-family="serif" '
+            f'transform="rotate({_text_rotation(a):.1f},{x:.1f},{y:.1f})">'
+            f'{char}</text>'
+        )
+
+    # --- 九曜主（宿名環與九曜環之間）---
+    for idx in range(28):
+        if idx not in mansion_angles:
+            continue
+        a = mansion_angles[idx]
+        m = SUKKAYODO_MANSION[idx]
         lord_idx = m[3]
+        lord_char = LORD_CHARS[lord_idx]
         lord_name = GRAHA_NAMES_BY_INDEX[lord_idx]
         lord_color = GRAHA_COLORS.get(lord_name, "#c8c8c8")
-        is_moon = (i == moon_mansion_idx)
-        style = MOON_CELL if is_moon else (
-            "border:1px solid #333; padding:4px 0; text-align:center; "
-            "vertical-align:middle; font-size:10px; background:#12122a; "
-            f"color:{lord_color};"
-        )
-        html += (
-            f'<td style="{style}">'
-            f'<span style="color:{lord_color}">{lord_name}</span>'
-            f'</td>'
-        )
-    html += "</tr>"
 
-    # --- Inner Row: 28 個內圈格子（六曜）---
-    html += "<tr>"
-    for i in range(28):
-        rk = get_rokuyo(i)
-        is_moon = (i == moon_mansion_idx)
-        rk_bg = "#2a1a00" if is_moon else "transparent"
-        style = (
-            "border:1px solid #333; padding:3px 0; text-align:center; "
-            f"vertical-align:middle; font-size:10px; background:{rk_bg}; "
-            f"color:{rk[3]};"
+        r_text = (R_MANSION + R_LORD) / 2
+        x, y = polar(r_text, a)
+        svg_parts.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{lord_color}" '
+            f'font-size="12" font-family="serif" '
+            f'transform="rotate({_text_rotation(a):.1f},{x:.1f},{y:.1f})">'
+            f'{lord_char}</text>'
         )
-        html += (
-            f'<td style="{style}">'
-            f'<span style="color:{rk[3]};font-weight:bold">{rk[0]}</span>'
-            f'<br/><small>{rk[2]}</small>'
-            f'</td>'
-        )
-    html += "</tr>"
-    html += "</table>"
 
-    # 說明
-    html += (
-        '<p style="text-align:center; color:#666; font-size:12px; margin-top:8px;">'
-        "外圈：宿名 + 符號 + 中國星名 + 行星　"
-        "中圈：主曜（七曜）　"
-        "內圈：六曜"
-        "</p>"
+    # --- 月相（九曜環與月相環之間）---
+    for idx in range(28):
+        if idx not in mansion_angles:
+            continue
+        a = mansion_angles[idx]
+        r_circ = (R_LORD + R_PHASE) / 2
+        x, y = polar(r_circ, a)
+        phase_r = 7
+
+        # 28 宿對應月亮盈虧週期
+        # 0-6: 新月→上弦, 7-13: 上弦→滿月, 14-20: 滿月→下弦, 21-27: 下弦→新月
+        quarter = idx // 7
+        pos = idx % 7
+        if quarter == 0:  # 新月→上弦：逐漸填滿右半
+            fill_pct = pos / 7.0
+            svg_parts.append(_moon_phase_svg(x, y, phase_r, fill_pct, "waxing"))
+        elif quarter == 1:  # 上弦→滿月
+            fill_pct = 0.5 + pos / 14.0
+            svg_parts.append(_moon_phase_svg(x, y, phase_r, fill_pct, "waxing"))
+        elif quarter == 2:  # 滿月→下弦
+            fill_pct = 1.0 - pos / 7.0
+            svg_parts.append(_moon_phase_svg(x, y, phase_r, fill_pct, "waning"))
+        else:  # 下弦→新月
+            fill_pct = 0.5 - pos / 14.0
+            svg_parts.append(_moon_phase_svg(x, y, phase_r, fill_pct, "waning"))
+
+    # --- 行星標記（在宿名環外緣標記）---
+    for idx in range(28):
+        p_list = mansion_planets.get(idx, [])
+        if not p_list or idx not in mansion_angles:
+            continue
+        a = mansion_angles[idx]
+        # 在宿名文字外側放置行星符號
+        for pi_offset, pname in enumerate(p_list):
+            r_p = R_PALACE + 2
+            # 同一宿多顆行星時，以 2.5° 間距排列避免重疊
+            offset_angle = (pi_offset - (len(p_list) - 1) / 2) * 2.5
+            px, py = polar(r_p, a + offset_angle)
+            pcolor = "#c8c8c8"
+            for key, val in PLANET_COLORS.items():
+                if pname in key:
+                    pcolor = val
+                    break
+            svg_parts.append(
+                f'<circle cx="{px:.1f}" cy="{py:.1f}" r="3" '
+                f'fill="{pcolor}" stroke="#fff" stroke-width="0.5"/>'
+            )
+
+    # --- 太極圖 (yin-yang) ---
+    svg_parts.append(_yin_yang_svg(CX, CY, R_YINYANG))
+
+    svg_parts.append("</svg>")
+    svg = "\n".join(svg_parts)
+    st.markdown(svg, unsafe_allow_html=True)
+
+    # 圖例說明
+    st.markdown(
+        '<p style="text-align:center; color:#888; font-size:12px; margin-top:6px;">'
+        "外圈：十二宮　第二圈：二十八宿　第三圈：九曜主　"
+        "內圈：月相　中心：太極"
+        "</p>",
+        unsafe_allow_html=True,
     )
 
-    st.markdown(html, unsafe_allow_html=True)
-
-    # 二十八宿分組（四象）
+    # 四象二十八宿
     st.markdown("### 四象二十八宿")
     cols = st.columns(4)
-    groups = [
-        ("🌿 東宮蒼龍", list(range(0, 7)),   "#228B22"),
-        ("🌑 北宮玄武", list(range(7, 14)),  "#4169E1"),
-        ("🌾 西宮白虎", list(range(14, 21)), "#DC143C"),
-        ("🔥 南宮朱雀", list(range(21, 28)), "#FF8C00"),
-    ]
-    for ci, (name, indices, color) in enumerate(groups):
+    for ci, (name, indices, color) in enumerate(FOUR_SYMBOLS):
         with cols[ci]:
             items = []
             for i in indices:
@@ -350,10 +529,13 @@ def _render_wheel(chart, moon_mansion_idx):
                 rk = get_rokuyo(i)
                 is_moon = (i == moon_mansion_idx)
                 star = "⭐" if is_moon else ""
-                lord_color = GRAHA_COLORS.get(GRAHA_NAMES_BY_INDEX[m[3]], "#c8c8c8")
+                lord_color = GRAHA_COLORS.get(
+                    GRAHA_NAMES_BY_INDEX[m[3]], "#c8c8c8"
+                )
                 items.append(
-                    f"<b>{star}{symbol}</b> "
-                    f'<span style="color:{lord_color}">{GRAHA_NAMES_BY_INDEX[m[3]]}</span> '
+                    f"<b>{star}{chinese[0] if chinese else '?'}</b> "
+                    f'<span style="color:{lord_color}">'
+                    f"{LORD_CHARS[m[3]]}</span> "
                     f'<span style="color:{rk[3]}">({rk[0]})</span>'
                 )
             st.markdown(
@@ -364,3 +546,112 @@ def _render_wheel(chart, moon_mansion_idx):
                 f'</div>',
                 unsafe_allow_html=True,
             )
+
+
+def _annular_sector(cx, cy, r_outer, r_inner, a1, a2):
+    """SVG path for an annular sector between two radii and two angles."""
+    rad1 = math.radians(a1)
+    rad2 = math.radians(a2)
+    sweep = a2 - a1
+    if sweep < 0:
+        sweep += 360
+    large = 1 if sweep > 180 else 0
+
+    ox1 = cx + r_outer * math.cos(rad1)
+    oy1 = cy + r_outer * math.sin(rad1)
+    ox2 = cx + r_outer * math.cos(rad2)
+    oy2 = cy + r_outer * math.sin(rad2)
+    ix1 = cx + r_inner * math.cos(rad1)
+    iy1 = cy + r_inner * math.sin(rad1)
+    ix2 = cx + r_inner * math.cos(rad2)
+    iy2 = cy + r_inner * math.sin(rad2)
+
+    return (
+        f"M {ox1:.1f},{oy1:.1f} "
+        f"A {r_outer},{r_outer} 0 {large},1 {ox2:.1f},{oy2:.1f} "
+        f"L {ix2:.1f},{iy2:.1f} "
+        f"A {r_inner},{r_inner} 0 {large},0 {ix1:.1f},{iy1:.1f} Z"
+    )
+
+
+def _moon_phase_svg(cx, cy, r, fill_pct, direction):
+    """Generate SVG for a moon phase circle.
+
+    fill_pct: 0.0 = new moon, 1.0 = full moon
+    direction: 'waxing' or 'waning'
+    """
+    parts = []
+    # Outer circle (dark background)
+    parts.append(
+        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" '
+        f'fill="#1a1a2e" stroke="#555" stroke-width="0.5"/>'
+    )
+
+    if fill_pct <= 0.02:
+        # New moon — empty circle
+        return "\n".join(parts)
+    if fill_pct >= 0.98:
+        # Full moon — filled circle
+        parts.append(
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" '
+            f'fill="#e8e8d0" stroke="#555" stroke-width="0.5"/>'
+        )
+        return "\n".join(parts)
+
+    # Partial moon using two arcs
+    # Map fill_pct to the terminator curve
+    # When fill=0.5, the terminator is a straight line (half moon)
+    # When fill<0.5, the lit area is a crescent
+    # When fill>0.5, the lit area is gibbous
+    t = (fill_pct - 0.5) * 2  # -1 to 1
+    # t=-1: new, t=0: half, t=1: full
+    # The terminator ellipse x-radius = abs(t) * r
+    tx = t * r
+
+    top_y = cy - r
+    bot_y = cy + r
+
+    if direction == "waxing":
+        # Lit area on the right side
+        lit_edge_x = cx + r  # right edge
+        # Terminator at cx + tx
+        sweep_outer = 1  # right arc (convex)
+        # The lit path: from top, right arc to bottom, then terminator back
+        parts.append(
+            f'<path d="M {cx:.1f},{top_y:.1f} '
+            f'A {r},{r} 0 0,1 {cx:.1f},{bot_y:.1f} '
+            f'A {abs(tx) if tx != 0 else 0.01:.1f},{r} 0 0,'
+            f'{"1" if tx >= 0 else "0"} {cx:.1f},{top_y:.1f}" '
+            f'fill="#e8e8d0"/>'
+        )
+    else:
+        # Lit area on the left side
+        parts.append(
+            f'<path d="M {cx:.1f},{top_y:.1f} '
+            f'A {r},{r} 0 0,0 {cx:.1f},{bot_y:.1f} '
+            f'A {abs(tx) if tx != 0 else 0.01:.1f},{r} 0 0,'
+            f'{"0" if tx >= 0 else "1"} {cx:.1f},{top_y:.1f}" '
+            f'fill="#e8e8d0"/>'
+        )
+
+    return "\n".join(parts)
+
+
+def _yin_yang_svg(cx, cy, r):
+    """Generate SVG for a yin-yang (太極) symbol."""
+    hr = r / 2  # half radius
+    dr = r / 6  # dot radius
+
+    return (
+        # White half (right/bottom)
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#e8e8e0" '
+        f'stroke="#888" stroke-width="1"/>'
+        # Black half (left/top)
+        f'<path d="M {cx},{cy - r} A {r},{r} 0 0,0 {cx},{cy + r} '
+        f'A {hr},{hr} 0 0,0 {cx},{cy} '
+        f'A {hr},{hr} 0 0,1 {cx},{cy - r}" fill="#1a1a2e"/>'
+        # White dot in black area
+        f'<circle cx="{cx}" cy="{cy - hr}" r="{dr}" fill="#e8e8e0"/>'
+        # Black dot in white area
+        f'<circle cx="{cx}" cy="{cy + hr}" r="{dr}" fill="#1a1a2e"/>'
+    )
