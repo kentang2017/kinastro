@@ -1,5 +1,5 @@
 """
-Tests for Western, Indian (Vedic), and Thai astrology calculator modules.
+Tests for Western, Indian (Vedic), Thai, and Arabic astrology calculator modules.
 """
 
 import pytest
@@ -21,6 +21,13 @@ from astro.thai import (
     compute_thai_chart,
     THAI_RASHIS,
     THAI_DAY_PLANETS,
+)
+from astro.arabic import (
+    compute_arabic_chart,
+    ARABIC_PARTS,
+    ZODIAC_SIGNS as ARABIC_ZODIAC_SIGNS,
+    _get_dignity,
+    _is_day_chart,
 )
 
 
@@ -235,3 +242,127 @@ class TestThaiChart:
         chart = compute_thai_chart(1990, 1, 7, 12, 0, 7.0, 13.7563, 100.5018)
         assert chart.day_of_week == 0
         assert chart.day_planet == "พระอาทิตย์"
+
+
+# ============================================================
+# Arabic Astrology Tests
+# ============================================================
+
+class TestArabicChart:
+    """阿拉伯占星排盤測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_arabic_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=39.9042, longitude=116.4074,
+            location_name="北京",
+        )
+
+    def test_chart_metadata(self, sample_chart):
+        assert sample_chart.year == 1990
+        assert sample_chart.location_name == "北京"
+
+    def test_has_eight_planets(self, sample_chart):
+        """7 classical planets + North Node = 8"""
+        assert len(sample_chart.planets) == 8
+
+    def test_planet_names(self, sample_chart):
+        names = [p.name for p in sample_chart.planets]
+        assert "Sun ☉ (太陽)" in names
+        assert "Moon ☽ (月亮)" in names
+        assert "Mars ♂ (火星)" in names
+        assert "Saturn ♄ (土星)" in names
+        assert "North Node ☊ (北交點)" in names
+
+    def test_twelve_houses(self, sample_chart):
+        assert len(sample_chart.houses) == 12
+
+    def test_planet_longitudes_in_range(self, sample_chart):
+        for p in sample_chart.planets:
+            assert 0 <= p.longitude < 360
+
+    def test_planet_sign_degrees_in_range(self, sample_chart):
+        for p in sample_chart.planets:
+            assert 0 <= p.sign_degree < 30
+
+    def test_all_planets_have_house(self, sample_chart):
+        for p in sample_chart.planets:
+            assert 1 <= p.house <= 12
+
+    def test_sun_in_capricorn_for_jan1(self, sample_chart):
+        sun = next(p for p in sample_chart.planets if "Sun" in p.name)
+        assert sun.sign == "Capricorn"
+
+    def test_ascendant_and_mc(self, sample_chart):
+        assert 0 <= sample_chart.ascendant < 360
+        assert 0 <= sample_chart.midheaven < 360
+        assert sample_chart.asc_sign in [s[0] for s in ARABIC_ZODIAC_SIGNS]
+        assert sample_chart.mc_sign in [s[0] for s in ARABIC_ZODIAC_SIGNS]
+
+    def test_is_day_chart_boolean(self, sample_chart):
+        assert isinstance(sample_chart.is_day_chart, bool)
+
+    def test_arabic_parts_count(self, sample_chart):
+        """Should have as many parts as defined in ARABIC_PARTS"""
+        assert len(sample_chart.arabic_parts) == len(ARABIC_PARTS)
+
+    def test_arabic_parts_longitudes_in_range(self, sample_chart):
+        for part in sample_chart.arabic_parts:
+            assert 0 <= part.longitude < 360
+
+    def test_arabic_parts_sign_degrees_in_range(self, sample_chart):
+        for part in sample_chart.arabic_parts:
+            assert 0 <= part.sign_degree < 30
+
+    def test_arabic_parts_have_house(self, sample_chart):
+        for part in sample_chart.arabic_parts:
+            assert 1 <= part.house <= 12
+
+    def test_part_of_fortune_present(self, sample_chart):
+        names = [part.english_name for part in sample_chart.arabic_parts]
+        assert "Part of Fortune" in names
+
+    def test_part_of_spirit_present(self, sample_chart):
+        names = [part.english_name for part in sample_chart.arabic_parts]
+        assert "Part of Spirit" in names
+
+    def test_arabic_sign_names_populated(self, sample_chart):
+        for p in sample_chart.planets:
+            assert p.arabic_sign != ""
+
+    def test_dignity_is_string(self, sample_chart):
+        for p in sample_chart.planets:
+            assert isinstance(p.dignity, str)
+
+    def test_different_dates_produce_different_results(self):
+        c1 = compute_arabic_chart(2000, 6, 15, 12, 0, 8.0, 39.9, 116.4)
+        c2 = compute_arabic_chart(2020, 12, 25, 8, 30, 8.0, 39.9, 116.4)
+        sun1 = next(p for p in c1.planets if "Sun" in p.name).longitude
+        sun2 = next(p for p in c2.planets if "Sun" in p.name).longitude
+        assert abs(sun1 - sun2) > 1.0
+
+
+class TestArabicDignity:
+    """Essential dignity calculation tests"""
+
+    def test_sun_domicile_in_leo(self):
+        # Leo is sign index 4, Sun domicile
+        assert "入廟" in _get_dignity("Sun ☉ (太陽)", 4)
+
+    def test_sun_exaltation_in_aries(self):
+        # Aries is sign index 0, Sun exaltation
+        assert "入旺" in _get_dignity("Sun ☉ (太陽)", 0)
+
+    def test_sun_detriment_in_aquarius(self):
+        # Aquarius (index 10) is opposite Leo (domicile)
+        assert "落陷" in _get_dignity("Sun ☉ (太陽)", 10)
+
+    def test_sun_fall_in_libra(self):
+        # Libra (index 6) is opposite Aries (exaltation)
+        assert "入弱" in _get_dignity("Sun ☉ (太陽)", 6)
+
+    def test_no_dignity(self):
+        # Jupiter in Aries has no special dignity
+        result = _get_dignity("Jupiter ♃ (木星)", 0)
+        assert result == "—"

@@ -22,6 +22,7 @@ from astro.indian import compute_vedic_chart, render_vedic_chart
 from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import compute_thai_chart, render_thai_chart
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
+from astro.arabic import compute_arabic_chart, render_arabic_chart
 
 # ============================================================
 # 頁面設定
@@ -35,7 +36,8 @@ st.set_page_config(
 st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
-    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、卡巴拉占星。"
+    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
+    "卡巴拉占星、阿拉伯占星。"
 )
 
 # ============================================================
@@ -110,9 +112,9 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic = st.tabs(
+tab_chinese, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic = st.tabs(
     ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星",
-     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星"]
+     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星"]
 )
 
 if calculate:
@@ -181,6 +183,12 @@ if calculate:
         with st.spinner("正在計算卡巴拉占星排盤..."):
             k_chart = compute_kabbalistic_chart(**_params)
         render_kabbalistic_chart(k_chart)
+
+    # --- 阿拉伯占星 ---
+    with tab_arabic:
+        with st.spinner("正在計算阿拉伯占星排盤..."):
+            a_chart = compute_arabic_chart(**_params)
+        render_arabic_chart(a_chart)
 
 else:
     with tab_chinese:
@@ -278,5 +286,20 @@ else:
             - **希伯來字母**：22 個字母分別對應黃道星座與行星
             - **塔羅對應**：每個星座對應一張塔羅大牌
             - **回歸黃道 (Tropical Zodiac)**：使用西洋占星的回歸黃道系統
+            """
+        )
+    with tab_arabic:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是阿拉伯占星？
+
+            **阿拉伯占星**源自中世紀伊斯蘭黃金時代，融合希臘與波斯天文傳統：
+
+            - **阿拉伯點 (Arabic Parts / Lots)**：透過上升點與行星經度加減運算，
+              推導出幸運點、精神點、愛情點等各生活主題的敏感度數
+            - **日夜盤 (Sect)**：根據太陽位置區分日盤與夜盤，影響阿拉伯點公式
+            - **行星廟旺落陷 (Essential Dignities)**：入廟、入旺、落陷、入弱
+            - **回歸黃道 (Tropical Zodiac)**：使用 Placidus 宮位制
             """
         )
