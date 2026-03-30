@@ -23,6 +23,7 @@ from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import compute_thai_chart, render_thai_chart
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.arabic import compute_arabic_chart, render_arabic_chart
+from astro.maya import compute_maya_chart, render_maya_chart
 
 # ============================================================
 # 頁面設定
@@ -37,7 +38,7 @@ st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
     "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
-    "卡巴拉占星、阿拉伯占星。"
+    "卡巴拉占星、阿拉伯占星、瑪雅占星。"
 )
 
 # ============================================================
@@ -112,9 +113,9 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic = st.tabs(
+tab_chinese, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya = st.tabs(
     ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星",
-     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星"]
+     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星"]
 )
 
 if calculate:
@@ -189,6 +190,12 @@ if calculate:
         with st.spinner("正在計算阿拉伯占星排盤..."):
             a_chart = compute_arabic_chart(**_params)
         render_arabic_chart(a_chart)
+
+    # --- 瑪雅占星 ---
+    with tab_maya:
+        with st.spinner("正在計算瑪雅占星排盤..."):
+            m_chart = compute_maya_chart(**_params)
+        render_maya_chart(m_chart)
 
 else:
     with tab_chinese:
@@ -301,5 +308,20 @@ else:
             - **日夜盤 (Sect)**：根據太陽位置區分日盤與夜盤，影響阿拉伯點公式
             - **行星廟旺落陷 (Essential Dignities)**：入廟、入旺、落陷、入弱
             - **回歸黃道 (Tropical Zodiac)**：使用 Placidus 宮位制
+            """
+        )
+    with tab_maya:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是瑪雅占星？
+
+            **瑪雅占星**源自瓜地馬拉瑪雅文明的天文與曆法傳統：
+
+            - **Long Count（長紀年）**：以 B'ak'tun、Ka'tun、Tu'n、Winal、K'in 計算天數
+            - **Tzolkin（神聖曆）**：260 天循環，13 數字 × 20 神明名
+            - **Haab（民用曆）**：365 天，18 月 × 20 日 + 5 Wayeb 無日
+            - **Calendar Round**：Tzolkin × Haab 同步循環，約 52 年一輪
+            - **行星疊加**：結合西方占星行星位置對應 Tzolkin 能量
             """
         )
