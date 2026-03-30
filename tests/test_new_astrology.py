@@ -28,6 +28,8 @@ from astro.arabic import (
     ZODIAC_SIGNS as ARABIC_ZODIAC_SIGNS,
     _get_dignity,
     _is_day_chart,
+    _compute_aspects,
+    ASPECT_TYPES,
 )
 
 
@@ -366,3 +368,55 @@ class TestArabicDignity:
         # Jupiter in Aries has no special dignity
         result = _get_dignity("Jupiter ♃ (木星)", 0)
         assert result == "—"
+
+
+class TestArabicAspects:
+    """阿拉伯占星相位測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_arabic_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=39.9042, longitude=116.4074,
+            location_name="北京",
+        )
+
+    def test_aspects_is_list(self, sample_chart):
+        assert isinstance(sample_chart.aspects, list)
+
+    def test_aspects_not_empty(self, sample_chart):
+        # With 7 classical planets, there should be at least some aspects
+        assert len(sample_chart.aspects) > 0
+
+    def test_aspect_has_required_fields(self, sample_chart):
+        for a in sample_chart.aspects:
+            assert hasattr(a, "planet1")
+            assert hasattr(a, "planet2")
+            assert hasattr(a, "aspect_name")
+            assert hasattr(a, "arabic_name")
+            assert hasattr(a, "chinese_name")
+            assert hasattr(a, "angle")
+            assert hasattr(a, "orb")
+
+    def test_aspect_names_are_valid(self, sample_chart):
+        valid_names = {eng for eng, _, _, _, _ in ASPECT_TYPES}
+        for a in sample_chart.aspects:
+            assert a.aspect_name in valid_names
+
+    def test_aspect_orb_within_limit(self, sample_chart):
+        orb_limits = {eng: orb for eng, _, _, _, orb in ASPECT_TYPES}
+        for a in sample_chart.aspects:
+            assert a.orb <= orb_limits[a.aspect_name]
+
+    def test_aspect_angle_positive(self, sample_chart):
+        for a in sample_chart.aspects:
+            assert 0 <= a.angle <= 180
+
+    def test_no_self_aspects(self, sample_chart):
+        for a in sample_chart.aspects:
+            assert a.planet1 != a.planet2
+
+    def test_no_north_node_in_aspects(self, sample_chart):
+        for a in sample_chart.aspects:
+            assert "North Node" not in a.planet1
+            assert "North Node" not in a.planet2
