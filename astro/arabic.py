@@ -255,7 +255,13 @@ def _get_dignity(planet_name, sign_idx):
 
 
 def _is_day_chart(sun_lon, cusps):
-    """Determine if this is a day chart (Sun above horizon)."""
+    """Determine if this is a day chart (Sun above horizon).
+
+    In the Placidus house system, houses 7-12 lie above the horizon
+    (from the Descendant through the Midheaven back to the Ascendant),
+    while houses 1-6 lie below.  When the Sun falls in houses 7-12 it
+    is above the horizon, making this a day chart.
+    """
     sun_house = _find_house(sun_lon, cusps)
     return sun_house >= 7
 
