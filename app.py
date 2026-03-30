@@ -146,8 +146,14 @@ if calculate:
 
     # --- 西洋占星 ---
     with tab_western:
+        sidereal_mode = st.checkbox(
+            "🌟 使用恆星黃道 (Sidereal Zodiac / Lahiri Ayanamsa)",
+            value=False,
+            help="恆星黃道以實際星座位置計算，含歲差修正（印度占星用同一體系）"
+        )
         with st.spinner("正在計算西洋占星排盤..."):
-            w_chart = compute_western_chart(**_params)
+            w_params = dict(**_params, sidereal=sidereal_mode)
+            w_chart = compute_western_chart(**w_params)
         render_western_chart(w_chart)
 
     # --- 印度占星 ---
