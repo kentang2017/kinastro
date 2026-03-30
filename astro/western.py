@@ -842,9 +842,13 @@ def _render_chart_ruler(chart):
         st.markdown(f"**助產星 (Exaltation):** "
                     f"{ruler_info.get('exaltation', '—') or '—'}")
     with sig_cols[2]:
+        first_house_planets = next(
+            (", ".join(h.planets) for h in chart.houses if h.number == 1), "空"
+        )
+        moon_name = next((p.name for p in chart.planets if "Moon" in p.name), "—")
         st.markdown(
-            f"**命宮 (1st House):** {', '.join(next((h.planets for h in chart.houses if h.number == 1), ['—'])) or '空'}
-            **身宮 (Body/Moon):** {next((p.name for p in chart.planets if 'Moon' in p.name), '—')}"
+            f"**命宮行星:** {first_house_planets}\n\n"
+            f"**身宮 (Moon):** {moon_name}"
         )
 
 
