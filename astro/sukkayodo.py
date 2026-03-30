@@ -475,9 +475,10 @@ def _render_wheel(chart, moon_mansion_idx):
         # 在宿名文字外側放置行星符號
         for pi_offset, pname in enumerate(p_list):
             r_p = R_PALACE + 2
+            # 同一宿多顆行星時，以 2.5° 間距排列避免重疊
             offset_angle = (pi_offset - (len(p_list) - 1) / 2) * 2.5
             px, py = polar(r_p, a + offset_angle)
-            pcolor = "#FFD700"  # 預設金色
+            pcolor = "#c8c8c8"
             for key, val in PLANET_COLORS.items():
                 if pname in key:
                     pcolor = val
