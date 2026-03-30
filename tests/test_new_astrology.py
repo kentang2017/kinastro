@@ -288,6 +288,61 @@ class TestGetRokuyo:
         assert get_rokuyo(28) is None
 
 
+class TestSansanjuMansions:
+    """三九秘宿法 (San-Jiu Bi-Su) data and calculation tests"""
+
+    def test_sansanju_27_mansions_length(self):
+        """SANSANJU_27_MANSIONS must have exactly 27 elements."""
+        from astro.sukkayodo import SANSANJU_27_MANSIONS
+        assert len(SANSANJU_27_MANSIONS) == 27
+
+    def test_sansanju_27_mansions_excludes_abhijit(self):
+        """Abhijit (牛宿, index 21) must not appear in the 27-mansion list."""
+        from astro.sukkayodo import SANSANJU_27_MANSIONS
+        assert 21 not in SANSANJU_27_MANSIONS
+
+    def test_sansanju_27_mansions_covers_all_others(self):
+        """All 28 mansions except Abhijit (21) must appear exactly once."""
+        from astro.sukkayodo import SANSANJU_27_MANSIONS
+        expected = sorted(set(range(28)) - {21})
+        assert sorted(SANSANJU_27_MANSIONS) == expected
+
+    def test_get_sansanju_table_all_months(self):
+        """_get_sansanju_table must not raise IndexError for any birth month."""
+        from astro.sukkayodo import _get_sansanju_table
+        for month in range(1, 13):
+            result = _get_sansanju_table(month, 1)
+            assert "table" in result
+            assert "day_category" in result
+            assert len(result["table"]) == 33
+
+    def test_get_sansanju_table_all_days(self):
+        """_get_sansanju_table must not raise IndexError for any birth day."""
+        from astro.sukkayodo import _get_sansanju_table
+        for day in range(1, 32):
+            result = _get_sansanju_table(1, day)
+            assert result["day_category"] in [
+                "命", "業", "胎", "榮", "衰", "安", "危", "成", "壞", "友", "親"
+            ]
+
+    def test_sansanju_month_starts_length(self):
+        """SANSANJU_MONTH_STARTS must have exactly 12 entries (one per month)."""
+        from astro.sukkayodo import SANSANJU_MONTH_STARTS
+        assert len(SANSANJU_MONTH_STARTS) == 12
+
+    def test_sansanju_month_starts_first_is_zero(self):
+        """正月 (January) must start at position 0 (室宿)."""
+        from astro.sukkayodo import SANSANJU_MONTH_STARTS, SANSANJU_27_MANSIONS, SUKKAYODO_MANSION
+        pos = SANSANJU_MONTH_STARTS[0]
+        assert pos == 0
+        mansion_idx = SANSANJU_27_MANSIONS[pos]
+        assert mansion_idx < len(SUKKAYODO_MANSION), (
+            f"mansion_idx {mansion_idx} is out of range for SUKKAYODO_MANSION "
+            f"(len={len(SUKKAYODO_MANSION)})"
+        )
+        assert SUKKAYODO_MANSION[mansion_idx][2] == "室宿"
+
+
 # ============================================================
 # Thai Astrology Tests
 # ============================================================
