@@ -24,6 +24,7 @@ from astro.thai import compute_thai_chart, render_thai_chart
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
+from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 
 # ============================================================
 # 頁面設定
@@ -37,7 +38,7 @@ st.set_page_config(
 st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
-    "支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
+    "支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
     "卡巴拉占星、阿拉伯占星、瑪雅占星。"
 )
 
@@ -113,8 +114,8 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya = st.tabs(
-    ["🀄 七政四餘（中國）", "🌍 西洋占星", "🙏 印度占星",
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya = st.tabs(
+    ["🀄 七政四餘（中國）", "🌟 紫微斗數", "🌍 西洋占星", "🙏 印度占星",
      "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星"]
 )
 
@@ -143,6 +144,12 @@ if calculate:
         render_house_table(chart)
         st.divider()
         render_aspect_summary(chart)
+
+    # --- 紫微斗數 ---
+    with tab_ziwei:
+        with st.spinner("正在計算紫微斗數命盤..."):
+            zw_chart = compute_ziwei_chart(**_params)
+        render_ziwei_chart(zw_chart)
 
     # --- 西洋占星 ---
     with tab_western:
@@ -217,6 +224,24 @@ else:
 
             本系統使用 **pyswisseph**（瑞士星曆表）進行精確的天文計算，
             提供星曜的黃經位置、所在星次、二十八宿對應、十二宮位分布等資訊。
+            """
+        )
+    with tab_ziwei:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是紫微斗數？
+
+            **紫微斗數**是中國傳統命理學最重要的排盤體系之一，相傳由五代末宋初的
+            **陳希夷**（陳摶）整理創立：
+
+            - **十四主星**：紫微（帝王星）、天機、太陽、武曲、天同、廉貞（紫微六系）；
+              天府、太陰、貪狼、巨門、天相、天梁、七殺、破軍（天府八系）
+            - **十二宮位**：命宮、兄弟宮、夫妻宮、子女宮、財帛宮、疾厄宮、
+              遷移宮、交友宮、官祿宮、田宅宮、福德宮、父母宮
+            - **五行局**：由命宮天干決定，分水二、木三、金四、土五、火六局，
+              影響紫微星安星方式
+            - **農曆排盤**：以農曆生辰（年、月、日、時辰）為基礎
             """
         )
     with tab_western:

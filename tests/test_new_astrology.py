@@ -583,3 +583,243 @@ class TestArabicAspects:
         for a in sample_chart.aspects:
             assert "North Node" not in a.planet1
             assert "North Node" not in a.planet2
+
+
+# ============================================================
+# Zi Wei Dou Shu (紫微斗數) Tests
+# ============================================================
+
+from astro.ziwei import (
+    compute_ziwei_chart,
+    _get_hour_branch,
+    _get_year_stem,
+    _get_year_branch,
+    _get_ming_gong_branch,
+    _get_shen_gong_branch,
+    _get_wu_xing_ju,
+    _get_ziwei_branch,
+    _get_tianfu_branch,
+    _get_ming_gong_stem,
+    _solar_to_lunar,
+    EARTHLY_BRANCHES,
+    HEAVENLY_STEMS,
+    WU_XING_JU_NAMES,
+    PALACE_SEQUENCE,
+)
+
+
+class TestZiweiHelpers:
+    """紫微斗數輔助函數測試"""
+
+    def test_hour_branch_zi_midnight(self):
+        assert _get_hour_branch(0, 0) == 0   # 子時
+
+    def test_hour_branch_zi_late_night(self):
+        assert _get_hour_branch(23, 30) == 0  # 子時
+
+    def test_hour_branch_chou(self):
+        assert _get_hour_branch(1, 0) == 1   # 丑時
+
+    def test_hour_branch_yin(self):
+        assert _get_hour_branch(3, 0) == 2   # 寅時
+
+    def test_hour_branch_noon(self):
+        assert _get_hour_branch(12, 0) == 6  # 午時
+
+    def test_hour_branch_hai(self):
+        assert _get_hour_branch(21, 30) == 11  # 亥時
+
+    def test_hour_branch_range(self):
+        for h in range(24):
+            b = _get_hour_branch(h, 0)
+            assert 0 <= b <= 11
+
+    def test_year_stem_1990(self):
+        # 1990 = 庚午年；庚 = index 6
+        assert _get_year_stem(1990) == 6
+
+    def test_year_stem_2000(self):
+        # 2000 = 庚辰年；庚 = index 6
+        assert _get_year_stem(2000) == 6
+
+    def test_year_stem_2024(self):
+        # 2024 = 甲辰年；甲 = index 0
+        assert _get_year_stem(2024) == 0
+
+    def test_year_branch_1990(self):
+        # 1990 庚午年；午 = index 6
+        assert _get_year_branch(1990) == 6
+
+    def test_year_branch_2000(self):
+        # 2000 庚辰年；辰 = index 4
+        assert _get_year_branch(2000) == 4
+
+    def test_ming_gong_branch_in_range(self):
+        for m in range(1, 13):
+            for h in range(12):
+                b = _get_ming_gong_branch(m, h)
+                assert 0 <= b <= 11
+
+    def test_shen_gong_branch_in_range(self):
+        for m in range(1, 13):
+            for h in range(12):
+                b = _get_shen_gong_branch(m, h)
+                assert 0 <= b <= 11
+
+    def test_wu_xing_ju_range(self):
+        for stem in range(10):
+            ming_stem = _get_ming_gong_stem(stem, 2)
+            ju = _get_wu_xing_ju(ming_stem)
+            assert 2 <= ju <= 6
+
+    def test_wu_xing_ju_names_coverage(self):
+        assert set(WU_XING_JU_NAMES.keys()) == {2, 3, 4, 5, 6}
+
+    def test_ziwei_branch_in_range(self):
+        for day in range(1, 31):
+            for n in range(2, 7):
+                b = _get_ziwei_branch(day, n)
+                assert 0 <= b <= 11
+
+    def test_tianfu_branch_formula(self):
+        # 天府 = (14 - 紫微) % 12
+        for ziwei in range(12):
+            tianfu = _get_tianfu_branch(ziwei)
+            assert tianfu == (14 - ziwei) % 12
+
+    def test_ziwei_day1_water2(self):
+        # 水二局，初一 → 寅 (index 2)
+        assert _get_ziwei_branch(1, 2) == 2
+
+
+class TestZiweiSolarToLunar:
+    """農曆轉換測試"""
+
+    def test_known_date_2000_02_05(self):
+        # 2000-02-05 = 農曆正月初一（庚辰年春節）
+        import swisseph as swe
+        jd = swe.julday(2000, 2, 5, 12.0)
+        ly, lm, ld, leap = _solar_to_lunar(jd)
+        assert ly == 2000
+        assert lm == 1
+        assert ld == 1
+
+    def test_result_types(self):
+        import swisseph as swe
+        jd = swe.julday(1990, 6, 15, 12.0)
+        ly, lm, ld, leap = _solar_to_lunar(jd)
+        assert isinstance(ly, int)
+        assert 1 <= lm <= 12
+        assert 1 <= ld <= 30
+        assert isinstance(leap, bool)
+
+    def test_month_range(self):
+        import swisseph as swe
+        for m in range(1, 13):
+            jd = swe.julday(2000, m, 15, 12.0)
+            _, lm, ld, _ = _solar_to_lunar(jd)
+            assert 1 <= lm <= 12
+            assert 1 <= ld <= 30
+
+    def test_13th_month_year_returns_valid_month(self):
+        # 2020 had a leap 4th month (閏四月); test that the result is in 1–12
+        import swisseph as swe
+        # 2020-06-21 falls during 閏四月 in the Chinese calendar
+        jd = swe.julday(2020, 6, 21, 12.0)
+        _, lm, ld, _ = _solar_to_lunar(jd)
+        assert 1 <= lm <= 12
+        assert 1 <= ld <= 30
+
+
+class TestZiweiChart:
+    """紫微斗數命盤排盤測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_ziwei_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=39.9042, longitude=116.4074,
+            location_name="北京",
+        )
+
+    def test_chart_metadata(self, sample_chart):
+        assert sample_chart.year == 1990
+        assert sample_chart.month == 1
+        assert sample_chart.day == 1
+        assert sample_chart.location_name == "北京"
+
+    def test_twelve_palaces(self, sample_chart):
+        assert len(sample_chart.palaces) == 12
+
+    def test_palace_names_cover_all(self, sample_chart):
+        names = [p.name for p in sample_chart.palaces]
+        for name in PALACE_SEQUENCE:
+            assert name in names
+
+    def test_palace_branches_unique(self, sample_chart):
+        branches = [p.branch for p in sample_chart.palaces]
+        assert len(set(branches)) == 12
+
+    def test_palace_branches_cover_all(self, sample_chart):
+        branches = set(p.branch for p in sample_chart.palaces)
+        assert branches == set(range(12))
+
+    def test_ming_gong_in_range(self, sample_chart):
+        assert 0 <= sample_chart.ming_gong_branch <= 11
+
+    def test_shen_gong_in_range(self, sample_chart):
+        assert 0 <= sample_chart.shen_gong_branch <= 11
+
+    def test_wu_xing_ju_valid(self, sample_chart):
+        assert sample_chart.wu_xing_ju in WU_XING_JU_NAMES
+
+    def test_ziwei_branch_in_range(self, sample_chart):
+        assert 0 <= sample_chart.ziwei_branch <= 11
+
+    def test_lunar_month_in_range(self, sample_chart):
+        assert 1 <= sample_chart.lunar_month <= 12
+
+    def test_lunar_day_in_range(self, sample_chart):
+        assert 1 <= sample_chart.lunar_day <= 30
+
+    def test_hour_branch_in_range(self, sample_chart):
+        assert 0 <= sample_chart.hour_branch <= 11
+
+    def test_ziwei_star_in_palaces(self, sample_chart):
+        all_stars = [s for p in sample_chart.palaces for s in p.stars]
+        assert "紫微" in all_stars
+
+    def test_tianfu_star_in_palaces(self, sample_chart):
+        all_stars = [s for p in sample_chart.palaces for s in p.stars]
+        assert "天府" in all_stars
+
+    def test_exactly_14_main_stars(self, sample_chart):
+        all_stars = [s for p in sample_chart.palaces for s in p.stars]
+        assert len(all_stars) == 14
+
+    def test_all_14_main_stars_present(self, sample_chart):
+        expected = {
+            "紫微", "天機", "太陽", "武曲", "天同", "廉貞",
+            "天府", "太陰", "貪狼", "巨門", "天相", "天梁", "七殺", "破軍",
+        }
+        all_stars = {s for p in sample_chart.palaces for s in p.stars}
+        assert all_stars == expected
+
+    def test_different_dates_produce_different_ziwei_branches(self):
+        c1 = compute_ziwei_chart(1990, 1, 1, 12, 0, 8.0, 39.9, 116.4)
+        c2 = compute_ziwei_chart(1985, 6, 15, 8, 0, 8.0, 39.9, 116.4)
+        assert c1.ziwei_branch != c2.ziwei_branch
+
+    def test_different_dates_produce_different_ming_gong(self):
+        c1 = compute_ziwei_chart(1990, 1, 1, 12, 0, 8.0, 39.9, 116.4)
+        c2 = compute_ziwei_chart(1990, 1, 1, 3, 0, 8.0, 39.9, 116.4)
+        # Same date, different hour → different 命宮
+        assert c1.ming_gong_branch != c2.ming_gong_branch
+
+    def test_stem_names_valid(self, sample_chart):
+        for p in sample_chart.palaces:
+            assert p.stem_name in HEAVENLY_STEMS
+
+    def test_branch_names_valid(self, sample_chart):
+        for p in sample_chart.palaces:
+            assert p.branch_name in EARTHLY_BRANCHES
