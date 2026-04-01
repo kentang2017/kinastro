@@ -555,18 +555,20 @@ def _day_to_chinese(day: int) -> str:
     return "三十"
 
 
-def _palace_box_html(palace: ZiweiPalace, is_ming: bool, is_shen: bool) -> str:
-    """產生單一宮位的 HTML 卡片。"""
+def _palace_cell_html(
+    palace: ZiweiPalace, is_ming: bool, is_shen: bool
+) -> str:
+    """產生單一宮位的 HTML 卡片（用於 CSS Grid 命盤方格）。"""
     bg = "#1a1a2e"
-    border_style = ""
+    border_style = "border:1px solid #444;"
     if is_ming and is_shen:
-        border_style = "border: 3px solid #FFD700;"
+        border_style = "border:3px solid #FFD700;"
         bg = "#2d1b00"
     elif is_ming:
-        border_style = "border: 3px solid #FF6B6B;"
+        border_style = "border:3px solid #FF6B6B;"
         bg = "#2d0000"
     elif is_shen:
-        border_style = "border: 3px solid #4ECDC4;"
+        border_style = "border:3px solid #4ECDC4;"
         bg = "#001a1a"
 
     label = ""
@@ -583,21 +585,21 @@ def _palace_box_html(palace: ZiweiPalace, is_ming: bool, is_shen: bool) -> str:
         stars_html += (
             f'<div style="color:{color};font-size:13px;font-weight:bold">'
             f'{star}</div>'
-            f'<div style="color:#888;font-size:10px">{alias}</div>'
+            f'<div style="color:#999;font-size:10px">{alias}</div>'
         )
     if not stars_html:
-        stars_html = '<div style="color:#555;font-size:11px">─</div>'
+        stars_html = '<div style="color:#666;font-size:11px">─</div>'
 
     return (
-        f'<div style="background:{bg};padding:8px 6px;border-radius:8px;'
-        f'min-height:110px;{border_style}">'
+        f'<div style="background:{bg};padding:8px 6px;border-radius:6px;'
+        f'min-height:120px;{border_style}">'
         f'<div style="display:flex;justify-content:space-between;align-items:center">'
         f'<span style="color:#c8a96e;font-size:11px">'
         f'{palace.stem_name}{palace.branch_name}</span>'
         f'{label}'
         f'</div>'
         f'<div style="color:#e0e0e0;font-size:12px;font-weight:bold;'
-        f'border-bottom:1px solid #444;margin-bottom:4px;padding-bottom:2px">'
+        f'border-bottom:1px solid #555;margin-bottom:4px;padding-bottom:2px">'
         f'{palace.name}</div>'
         f'{stars_html}'
         f'</div>'
@@ -614,7 +616,8 @@ def _center_info_html(chart: ZiweiChart) -> str:
     yb = EARTHLY_BRANCHES[chart.lunar_year_branch]
     return (
         f'<div style="background:#0d0d1a;border:2px solid #c8a96e;border-radius:10px;'
-        f'padding:12px;text-align:center;height:100%;color:#e0d5b0;">'
+        f'padding:16px;text-align:center;height:100%;color:#e0d5b0;'
+        f'display:flex;flex-direction:column;justify-content:center;">'
         f'<div style="font-size:22px;font-weight:bold;color:#c8a96e;margin-bottom:6px">'
         f'紫微斗數命盤</div>'
         f'<div style="font-size:13px;margin:3px 0">'
@@ -635,47 +638,63 @@ def _center_info_html(chart: ZiweiChart) -> str:
 
 def _render_palace_grid(chart: ZiweiChart) -> None:
     """
-    渲染南式紫微斗數命盤方格。
+    渲染南式紫微斗數命盤方格（使用 CSS Grid 單一 HTML 元素）。
 
-    佈局（地支序）：
-      上排：巳(5) 午(6) 未(7) 申(8)
-      中左：辰(4)           酉(9)
-      中左：卯(3)           戌(10)
-      下排：寅(2) 丑(1) 子(0) 亥(11)
+    佈局（4×4 方格，中央 2×2 為命盤資訊）：
+      巳(5)  午(6)  未(7)  申(8)
+      辰(4)  [中宮 info]   酉(9)
+      卯(3)  [中宮 info]   戌(10)
+      寅(2)  丑(1)  子(0)  亥(11)
     """
     st.markdown("#### 🀄 十二宮命盤方格")
 
-    # 依地支索引找到對應宮位資料
     branch_to_palace: dict[int, ZiweiPalace] = {p.branch: p for p in chart.palaces}
 
     def cell(branch: int) -> str:
         p = branch_to_palace[branch]
-        return _palace_box_html(
+        return _palace_cell_html(
             p,
             is_ming=(p.branch == chart.ming_gong_branch),
             is_shen=(p.branch == chart.shen_gong_branch),
         )
 
-    # 上排：巳5, 午6, 未7, 申8
-    row1 = st.columns(4)
-    for col, b in zip(row1, [5, 6, 7, 8]):
-        col.markdown(cell(b), unsafe_allow_html=True)
+    # 4×4 grid 佈局，中央 2×2 合併為命盤資訊
+    # Grid positions (row, col): 1-indexed
+    grid_layout = [
+        # Row 1: 巳5, 午6, 未7, 申8
+        (1, 1, 5), (1, 2, 6), (1, 3, 7), (1, 4, 8),
+        # Row 2 left + right: 辰4, 酉9
+        (2, 1, 4), (2, 4, 9),
+        # Row 3 left + right: 卯3, 戌10
+        (3, 1, 3), (3, 4, 10),
+        # Row 4: 寅2, 丑1, 子0, 亥11
+        (4, 1, 2), (4, 2, 1), (4, 3, 0), (4, 4, 11),
+    ]
 
-    # 中間兩行：左右各一格，中央 2 格合併顯示命盤資訊
-    row2 = st.columns([1, 2, 1])
-    with row2[0]:
-        st.markdown(cell(4), unsafe_allow_html=True)   # 辰4
-        st.markdown(cell(3), unsafe_allow_html=True)   # 卯3
-    with row2[1]:
-        st.markdown(_center_info_html(chart), unsafe_allow_html=True)
-    with row2[2]:
-        st.markdown(cell(9), unsafe_allow_html=True)   # 酉9
-        st.markdown(cell(10), unsafe_allow_html=True)  # 戌10
+    cells_html = ""
+    for row, col, branch in grid_layout:
+        cells_html += (
+            f'<div style="grid-row:{row};grid-column:{col}">'
+            f'{cell(branch)}</div>'
+        )
 
-    # 下排：寅2, 丑1, 子0, 亥11
-    row3 = st.columns(4)
-    for col, b in zip(row3, [2, 1, 0, 11]):
-        col.markdown(cell(b), unsafe_allow_html=True)
+    # 中宮（rows 2-3, cols 2-3）
+    center_html = (
+        f'<div style="grid-row:2/4;grid-column:2/4">'
+        f'{_center_info_html(chart)}</div>'
+    )
+
+    full_html = (
+        f'<div style="display:grid;grid-template-columns:repeat(4,1fr);'
+        f'grid-template-rows:repeat(4,auto);gap:4px;'
+        f'background:#111;padding:6px;border-radius:10px;'
+        f'border:2px solid #c8a96e;">'
+        f'{cells_html}'
+        f'{center_html}'
+        f'</div>'
+    )
+
+    st.markdown(full_html, unsafe_allow_html=True)
 
 
 def _render_star_table(chart: ZiweiChart) -> None:
