@@ -385,3 +385,397 @@ def _render_house_table(chart):
             f"| {h.rashi_glyph} {h.rashi} | {planets_str} |"
         )
     st.markdown("\n".join(rows))
+
+
+# ============================================================
+# Thai Numerology 9-Box Grid (ตาราง 9 ช่อง)
+# ============================================================
+
+# Navagraha number → planet correspondence (Thai Numerology)
+THAI_NUMEROLOGY_PLANETS = {
+    1: ("พระอาทิตย์ (太陽)", "☀️", "#FF8C00"),
+    2: ("พระจันทร์ (月亮)", "🌙", "#C0C0C0"),
+    3: ("พระอังคาร (火星)", "🔴", "#DC143C"),
+    4: ("พระพุธ (水星)", "💚", "#4169E1"),
+    5: ("พระพฤหัสบดี (木星)", "💛", "#FFD700"),
+    6: ("พระศุกร์ (金星)", "💗", "#FF69B4"),
+    7: ("พระเสาร์ (土星)", "🟤", "#8B4513"),
+    8: ("ราหู (羅睺)", "🟣", "#800080"),
+    9: ("เกตุ (計都)", "🔵", "#4B0082"),
+}
+
+# Grid layout: 3 rows × 3 cols, each cell holds the number shown
+# [1, 4, 7]
+# [2, 5, 8]
+# [3, 6, 9]
+_NINE_GRID_LAYOUT = [
+    [1, 4, 7],
+    [2, 5, 8],
+    [3, 6, 9],
+]
+
+# Line definitions: name → list of numbers in that line
+_NINE_GRID_LINES = {
+    "147": [1, 4, 7],
+    "258": [2, 5, 8],
+    "369": [3, 6, 9],
+    "123": [1, 2, 3],
+    "456": [4, 5, 6],
+    "789": [7, 8, 9],
+    "159": [1, 5, 9],
+    "357": [3, 5, 7],
+}
+
+# Line meaning descriptions (Thai + Chinese)
+_LINE_MEANINGS = {
+    "147": {
+        "name_th": "เส้นพลังงาน (行動力線)",
+        "name_zh": "行動力線",
+        "desc": "意志力強、物質成就、行動果斷。此線完整代表您具備堅定的意志和實現目標的能力。",
+        "desc_th": "ความแข็งแกร่งของความตั้งใจ ความสำเร็จทางวัตถุ ความเด็ดขาด",
+        "remedy": "配戴橙色或棕色寶石，增強太陽與土星的力量。",
+    },
+    "258": {
+        "name_th": "เส้นความสมดุลทางอารมณ์ (情感平衡線)",
+        "name_zh": "情感平衡線",
+        "desc": "情感豐富、同理心強、人際關係和諧。此線完整代表您在情感上非常均衡。",
+        "desc_th": "อารมณ์อ่อนไหว ความเห็นอกเห็นใจ ความสัมพันธ์ที่ดี",
+        "remedy": "配戴白色或銀色寶石，加強月亮能量；以薰衣草精油平衡情緒。",
+    },
+    "369": {
+        "name_th": "เส้นสติปัญญา (思維線)",
+        "name_zh": "思維線",
+        "desc": "思維敏捷、創意十足、學習能力強。此線完整代表您擁有卓越的智力與創造力。",
+        "desc_th": "ความฉลาด ความคิดสร้างสรรค์ ทักษะการเรียนรู้",
+        "remedy": "配戴紅色或珊瑚色寶石，增強火星與計都的創意能量。",
+    },
+    "123": {
+        "name_th": "เส้นเป้าหมาย (目標線)",
+        "name_zh": "目標線",
+        "desc": "目標明確、行動力強、勇於突破。此線完整代表您具備強烈的成就動機。",
+        "desc_th": "เป้าหมายชัดเจน พลังงานสูง กล้าที่จะก้าวข้ามขีดจำกัด",
+        "remedy": "選擇以1、2、3結尾的車牌，或在名字中加入對應數字的筆畫。",
+    },
+    "456": {
+        "name_th": "เส้นการทำงานและความสามัคคี (工作和諧線)",
+        "name_zh": "工作和諧線",
+        "desc": "勤奮努力、工作穩定、人際和諧。此線完整代表您在職場中表現出色。",
+        "desc_th": "ความขยันหมั่นเพียร ความมั่นคง ความสามัคคี",
+        "remedy": "配戴藍色或深藍色寶石，增強水星與金星的職場能量。",
+    },
+    "789": {
+        "name_th": "เส้นวิญญาณ (靈性線)",
+        "name_zh": "靈性線",
+        "desc": "靈性覺知高、智慧深厚、直覺敏銳。此線完整代表您具備深刻的靈性洞察力。",
+        "desc_th": "จิตวิญญาณที่สูง ปัญญา สัญชาตญาณที่เฉียบแหลม",
+        "remedy": "冥想與靜心修行，配戴紫色或靛藍色水晶，強化土星、羅睺、計都能量。",
+    },
+    "159": {
+        "name_th": "เส้นผู้นำ (領導力線)",
+        "name_zh": "領導力線",
+        "desc": "天生領袖氣質、決策能力強、有遠見。此線完整代表您具備天賦的領導才能。",
+        "desc_th": "ความเป็นผู้นำโดยธรรมชาติ ความสามารถในการตัดสินใจ วิสัยทัศน์",
+        "remedy": "選擇以5結尾的手機號碼，配戴黃色寶石（黃玉或黃水晶）。",
+    },
+    "357": {
+        "name_th": "เส้นสมาธิ (專注力線)",
+        "name_zh": "專注力線",
+        "desc": "專注力強、毅力持久、不輕易放棄。此線完整代表您具備超強的耐力與執行力。",
+        "desc_th": "สมาธิสูง ความอดทน ไม่ยอมแพ้ง่าย",
+        "remedy": "冥想訓練，配戴紅色或橙色寶石，增強火星與土星的持久力。",
+    },
+}
+
+# Missing number remedies
+_MISSING_NUMBER_REMEDIES = {
+    1: "缺少太陽能量：可選擇以1結尾的車牌或電話號碼，多穿橙色衣物，配戴紅寶石或石榴石。",
+    2: "缺少月亮能量：多親近水域，配戴珍珠或月光石，以白色或銀色為幸運色。",
+    3: "缺少火星能量：多運動，配戴珊瑚或紅色寶石，增強行動力與決斷力。",
+    4: "缺少水星能量：多閱讀與溝通，配戴祖母綠或綠色寶石，增強學習與表達能力。",
+    5: "缺少木星能量：多行善積德，配戴黃色蛋白石或黃玉，增強幸運與擴展能量。",
+    6: "缺少金星能量：注重美感與人際關係，配戴鑽石或白水晶，增強魅力與財運。",
+    7: "缺少土星能量：培養耐心與紀律，配戴藍寶石或紫水晶，增強持久力與責任感。",
+    8: "缺少羅睺能量：注意業力課題，配戴赫松石或灰色寶石，轉化羅睺帶來的考驗。",
+    9: "缺少計都能量：深化靈性修行，配戴貓眼石或深色寶石，融化過去世業障。",
+}
+
+
+def _digit_reduce(n):
+    """Reduce integer to single digit 1–9 (no master numbers in Thai system)."""
+    while n > 9:
+        n = sum(int(d) for d in str(n))
+    return n
+
+
+def calculate_thai_nine_grid(day, month, year):
+    """計算泰國 Numerology 9宮格數據 (Thai Numerology 9-Box Grid)
+
+    Args:
+        day (int): 出生日 (1–31)
+        month (int): 出生月 (1–12)
+        year (int): 出生年 (e.g. 1990)
+
+    Returns:
+        dict with keys:
+            - counts (dict[int, int]): digit 1–9 occurrence counts
+            - birth_number (int): 出生日數字（Birth Number, 1–9）
+            - life_path (int): 生命靈數（Life Path Number, 1–9）
+            - complete_lines (list[str]): list of complete line keys, e.g. ["147", "159"]
+            - strongest (list[int]): digit(s) with highest count (>0)
+            - missing (list[int]): digits with count 0
+            - day, month, year (int): original inputs
+    """
+    # Collect all digits from DD/MM/YYYY, ignoring zeros
+    date_str = f"{day:02d}{month:02d}{year:04d}"
+    raw_digits = [int(c) for c in date_str if c != "0"]
+
+    # Count raw occurrences of digits 1–9
+    counts = {i: 0 for i in range(1, 10)}
+    for d in raw_digits:
+        if 1 <= d <= 9:
+            counts[d] += 1
+
+    # Birth Number: reduce birth day to single digit 1–9
+    birth_number = _digit_reduce(day if day > 0 else 1)
+
+    # Life Path Number: sum all non-zero digits then reduce
+    total = sum(raw_digits)
+    life_path = _digit_reduce(total) if total > 0 else 1
+
+    # Add derived numbers to the grid counts
+    counts[birth_number] += 1
+    counts[life_path] += 1
+
+    # If birth_number == life_path, it was counted twice — that is intentional
+    # (both are independent derived numbers)
+
+    # Detect complete lines (all 3 numbers in the line have count > 0)
+    complete_lines = [
+        line_name
+        for line_name, nums in _NINE_GRID_LINES.items()
+        if all(counts[n] > 0 for n in nums)
+    ]
+
+    # Strongest number(s)
+    max_count = max(counts.values())
+    strongest = [n for n, c in counts.items() if c == max_count and c > 0]
+
+    # Missing numbers
+    missing = [n for n, c in counts.items() if c == 0]
+
+    return {
+        "counts": counts,
+        "birth_number": birth_number,
+        "life_path": life_path,
+        "complete_lines": complete_lines,
+        "strongest": strongest,
+        "missing": missing,
+        "day": day,
+        "month": month,
+        "year": year,
+    }
+
+
+def render_nine_grid(result):
+    """渲染泰國 Numerology 9宮格圖譜 (Thai Numerology 9-Box Grid UI)
+
+    Args:
+        result (dict): output from calculate_thai_nine_grid()
+    """
+    counts = result["counts"]
+    complete_lines = result["complete_lines"]
+    strongest = result["strongest"]
+    missing = result["missing"]
+    birth_number = result["birth_number"]
+    life_path = result["life_path"]
+
+    st.subheader("🔢 ตาราง 9 ช่อง — Thai Numerology 9宮格圖譜")
+
+    # ── Summary row ──────────────────────────────────────────
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown(
+            f"**เลขวันเกิด (Birth Number / 出生日數):** "
+            f"**{birth_number}** &nbsp; "
+            f"{THAI_NUMEROLOGY_PLANETS[birth_number][1]} "
+            f"{THAI_NUMEROLOGY_PLANETS[birth_number][0]}"
+        )
+    with col_b:
+        st.markdown(
+            f"**เลขชีวิต (Life Path / 生命靈數):** "
+            f"**{life_path}** &nbsp; "
+            f"{THAI_NUMEROLOGY_PLANETS[life_path][1]} "
+            f"{THAI_NUMEROLOGY_PLANETS[life_path][0]}"
+        )
+
+    st.markdown("")
+
+    # ── 3×3 grid ─────────────────────────────────────────────
+    # Determine which cells are part of a complete line for highlighting
+    highlighted = set()
+    for line_name in complete_lines:
+        for n in _NINE_GRID_LINES[line_name]:
+            highlighted.add(n)
+
+    cell_base = (
+        "display:flex; flex-direction:column; align-items:center; "
+        "justify-content:center; border:2px solid #555; border-radius:8px; "
+        "padding:10px 6px; min-width:90px; min-height:90px; "
+        "font-size:15px; text-align:center;"
+    )
+
+    grid_html = (
+        '<div style="display:grid; grid-template-columns:repeat(3,1fr); '
+        'gap:8px; max-width:360px; margin:0 auto 16px auto;">'
+    )
+
+    for row in _NINE_GRID_LAYOUT:
+        for num in row:
+            cnt = counts[num]
+            planet_name, planet_emoji, planet_color = THAI_NUMEROLOGY_PLANETS[num]
+            is_highlighted = num in highlighted
+            is_missing = cnt == 0
+
+            if is_missing:
+                bg = "#1a1a2e"
+                text_color = "#555"
+                border_color = "#333"
+                count_str = "—"
+            elif is_highlighted:
+                bg = "#1e3a1e"
+                text_color = planet_color
+                border_color = planet_color
+                count_str = f"×{cnt}"
+            else:
+                bg = "#1a1a1a"
+                text_color = planet_color
+                border_color = "#555"
+                count_str = f"×{cnt}"
+
+            cell_style = (
+                f"{cell_base} background:{bg}; "
+                f"border-color:{border_color}; color:{text_color};"
+            )
+
+            num_display = (
+                f'<span style="font-size:22px; font-weight:bold;">{num}</span>'
+            )
+            count_display = (
+                f'<span style="font-size:13px; color:{text_color};">'
+                f"{count_str}</span>"
+            )
+            emoji_display = (
+                f'<span style="font-size:16px;">{planet_emoji}</span>'
+            )
+
+            grid_html += (
+                f'<div style="{cell_style}">'
+                f"{num_display}{count_display}{emoji_display}"
+                f"</div>"
+            )
+
+    grid_html += "</div>"
+    st.markdown(grid_html, unsafe_allow_html=True)
+
+    # ── Planet legend ─────────────────────────────────────────
+    with st.expander("🪐 行星數字對應 (Navagraha Correspondence)", expanded=False):
+        legend_cols = st.columns(3)
+        for i, (num, (pname, pemoji, pcolor)) in enumerate(
+            THAI_NUMEROLOGY_PLANETS.items()
+        ):
+            with legend_cols[i % 3]:
+                st.markdown(
+                    f'<span style="color:{pcolor}; font-weight:bold;">'
+                    f"{pemoji} {num} = {pname}</span>",
+                    unsafe_allow_html=True,
+                )
+
+    # ── Complete lines ────────────────────────────────────────
+    st.markdown("### 🌟 完整線條 (เส้นที่สมบูรณ์ — Complete Lines)")
+    if complete_lines:
+        for line_name in complete_lines:
+            meaning = _LINE_MEANINGS[line_name]
+            nums = _NINE_GRID_LINES[line_name]
+            emojis = "→".join(
+                f"{THAI_NUMEROLOGY_PLANETS[n][1]}{n}" for n in nums
+            )
+            st.markdown(
+                f"**{emojis} &nbsp; {line_name} {meaning['name_th']}**  \n"
+                f"{meaning['desc']}  \n"
+                f"*{meaning['desc_th']}*  \n"
+                f"💊 後天化解：{meaning['remedy']}"
+            )
+            st.markdown("---")
+    else:
+        st.info("目前沒有完整的長線。透過補數字（改名、選車牌號碼、佩戴對應護符）可逐步形成能量線條。")
+
+    # ── Strongest numbers ─────────────────────────────────────
+    st.markdown("### 💪 最強數字 (ตัวเลขที่แข็งแกร่งที่สุด — Strongest Numbers)")
+    if strongest:
+        max_cnt = counts[strongest[0]]
+        for n in strongest:
+            pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[n]
+            st.markdown(
+                f'<span style="color:{pcolor}; font-size:16px; font-weight:bold;">'
+                f"{pemoji} {n} — {pname}</span>  \n"
+                f"出現 **{max_cnt}** 次。您的主要能量中心。",
+                unsafe_allow_html=True,
+            )
+    else:
+        st.info("數字分布均勻，無特別突出的主導數字。")
+
+    # ── Missing numbers ───────────────────────────────────────
+    st.markdown("### 🎯 缺失數字 (ตัวเลขที่ขาดหาย — Missing Numbers / 人生課題)")
+    if missing:
+        for n in missing:
+            pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[n]
+            remedy = _MISSING_NUMBER_REMEDIES[n]
+            st.markdown(
+                f'<span style="color:{pcolor}; font-size:16px; font-weight:bold;">'
+                f"{pemoji} {n} — {pname}</span>  \n"
+                f"此生課題：{remedy}",
+                unsafe_allow_html=True,
+            )
+    else:
+        st.success("🎉 您的生日包含所有數字 1–9，能量非常完整！")
+
+    # ── Personality summary ───────────────────────────────────
+    _render_numerology_summary(result)
+
+    # ── Future expansion placeholder ──────────────────────────
+    # TODO: 姓名 Numerology (Name Numerology)
+    # 未來可加入以泰文/中文姓名字母對應數字的計算，
+    # 進一步補強缺失數字，或強化現有優勢數字。
+
+
+def _render_numerology_summary(result):
+    """渲染數字學性格總結 (Personality summary based on Life Path and Birth Number)"""
+    birth_number = result["birth_number"]
+    life_path = result["life_path"]
+
+    # Template personality summaries (to be refined in future)
+    _personality = {
+        1: "您是天生的先驅者與領導者，獨立自主、意志堅定。您喜歡開創新局，不畏挑戰。",
+        2: "您具備敏感細膩的情感與強大的同理心，擅長協調與合作，是優秀的和平使者。",
+        3: "您充滿創意與活力，表達能力強，天生樂觀，能為周圍帶來歡樂與靈感。",
+        4: "您腳踏實地、勤奮努力，注重細節與秩序，是建設與穩定的力量。",
+        5: "您愛好自由、適應力強，充滿好奇心，擅長交際，渴望多樣化的生命體驗。",
+        6: "您富有責任感與愛心，重視家庭與和諧，是照顧者與守護者的典型。",
+        7: "您深思熟慮、富有哲思，喜歡獨處與研究，具有深刻的靈性與分析能力。",
+        8: "您具備強大的執行力與野心，擅長掌控資源，追求物質與精神的雙重成就。",
+        9: "您慈悲博愛、視野寬廣，有強烈的使命感，渴望為世界帶來正面改變。",
+    }
+
+    st.markdown("### 🌸 性格總結 (สรุปบุคลิกภาพ — Personality Summary)")
+    pname_bn, pemoji_bn, pcolor_bn = THAI_NUMEROLOGY_PLANETS[birth_number]
+    pname_lp, pemoji_lp, pcolor_lp = THAI_NUMEROLOGY_PLANETS[life_path]
+
+    st.markdown(
+        f"**{pemoji_bn} 出生日數 {birth_number} — {pname_bn}**  \n"
+        f"{_personality[birth_number]}"
+    )
+    if life_path != birth_number:
+        st.markdown(
+            f"**{pemoji_lp} 生命靈數 {life_path} — {pname_lp}**  \n"
+            f"{_personality[life_path]}"
+        )

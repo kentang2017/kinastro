@@ -20,7 +20,10 @@ from astro.chart_renderer import (
 from astro.western import compute_western_chart, render_western_chart
 from astro.indian import compute_vedic_chart, render_vedic_chart
 from astro.sukkayodo import render_sukkayodo_chart
-from astro.thai import compute_thai_chart, render_thai_chart
+from astro.thai import (
+    compute_thai_chart, render_thai_chart,
+    calculate_thai_nine_grid, render_nine_grid,
+)
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
@@ -190,7 +193,16 @@ if calculate:
     with tab_thai:
         with st.spinner("正在計算泰國占星排盤..."):
             t_chart = compute_thai_chart(**_params)
-        render_thai_chart(t_chart)
+        thai_tab_chart, thai_tab_numerology = st.tabs(
+            ["🐘 ผังดวงชาตา (占星排盤)", "🔢 ตาราง 9 ช่อง (9宮格數字學)"]
+        )
+        with thai_tab_chart:
+            render_thai_chart(t_chart)
+        with thai_tab_numerology:
+            nine_grid_result = calculate_thai_nine_grid(
+                birth_date.day, birth_date.month, birth_date.year
+            )
+            render_nine_grid(nine_grid_result)
 
     # --- 卡巴拉占星 ---
     with tab_kabbalistic:

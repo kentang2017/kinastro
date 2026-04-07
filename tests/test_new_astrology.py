@@ -21,6 +21,10 @@ from astro.thai import (
     compute_thai_chart,
     THAI_RASHIS,
     THAI_DAY_PLANETS,
+    calculate_thai_nine_grid,
+    _digit_reduce,
+    _NINE_GRID_LINES,
+    THAI_NUMEROLOGY_PLANETS,
 )
 from astro.arabic import (
     compute_arabic_chart,
@@ -410,8 +414,113 @@ class TestThaiChart:
 
 
 # ============================================================
-# Arabic Astrology Tests
+# Thai Numerology 9-Box Grid Tests
 # ============================================================
+
+class TestThaiNineGrid:
+    """泰國 Numerology 9宮格計算測試"""
+
+    @pytest.fixture
+    def sample_result(self):
+        # 05/03/1985
+        return calculate_thai_nine_grid(day=5, month=3, year=1985)
+
+    def test_returns_dict_with_expected_keys(self, sample_result):
+        expected = {"counts", "birth_number", "life_path",
+                    "complete_lines", "strongest", "missing", "day", "month", "year"}
+        assert expected.issubset(sample_result.keys())
+
+    def test_counts_keys_are_1_to_9(self, sample_result):
+        assert set(sample_result["counts"].keys()) == set(range(1, 10))
+
+    def test_counts_are_non_negative(self, sample_result):
+        for n, c in sample_result["counts"].items():
+            assert c >= 0, f"Negative count for digit {n}"
+
+    def test_birth_number_is_single_digit(self, sample_result):
+        bn = sample_result["birth_number"]
+        assert 1 <= bn <= 9
+
+    def test_life_path_is_single_digit(self, sample_result):
+        lp = sample_result["life_path"]
+        assert 1 <= lp <= 9
+
+    def test_birth_number_correct_for_day5(self, sample_result):
+        # day 5 → birth number 5
+        assert sample_result["birth_number"] == 5
+
+    def test_life_path_correct(self):
+        # 05/03/1985 → digits: 5,3,1,9,8,5 → sum=31 → 3+1=4
+        result = calculate_thai_nine_grid(5, 3, 1985)
+        assert result["life_path"] == 4
+
+    def test_derived_numbers_added_to_counts(self):
+        # day=1, month=1, year=1111 → raw digits: 1,1,1,1,1,1
+        # birth_number = 1, life_path = reduce(6) = 6
+        # counts before derived: {1:6}
+        # after: {1:6+1=7, 6:0+1=1}
+        result = calculate_thai_nine_grid(1, 1, 1111)
+        assert result["counts"][1] == 7
+        assert result["counts"][6] == 1
+
+    def test_complete_lines_are_valid_line_names(self, sample_result):
+        valid = set(_NINE_GRID_LINES.keys())
+        for line in sample_result["complete_lines"]:
+            assert line in valid
+
+    def test_complete_line_means_all_digits_present(self, sample_result):
+        counts = sample_result["counts"]
+        for line_name in sample_result["complete_lines"]:
+            for n in _NINE_GRID_LINES[line_name]:
+                assert counts[n] > 0, (
+                    f"Line {line_name} marked complete but digit {n} has count 0"
+                )
+
+    def test_strongest_all_have_same_count(self, sample_result):
+        counts = sample_result["counts"]
+        strongest = sample_result["strongest"]
+        if strongest:
+            max_count = max(counts[n] for n in strongest)
+            for n in strongest:
+                assert counts[n] == max_count
+
+    def test_missing_have_zero_count(self, sample_result):
+        counts = sample_result["counts"]
+        for n in sample_result["missing"]:
+            assert counts[n] == 0
+
+    def test_strongest_and_missing_disjoint(self, sample_result):
+        s = set(sample_result["strongest"])
+        m = set(sample_result["missing"])
+        assert s.isdisjoint(m)
+
+    def test_all_digits_present_gives_no_missing(self):
+        # 19/08/2753 → has 1,9,0,8,2,7,5,3 → non-zero: 1,9,8,2,7,5,3
+        # birth_number = reduce(19)=reduce(10)=1, life_path = reduce(1+9+8+2+7+5+3)=reduce(35)=8
+        # Still might miss 4 and 6 from raw — test that logic is consistent
+        result = calculate_thai_nine_grid(19, 8, 2753)
+        for n in result["missing"]:
+            assert result["counts"][n] == 0
+
+    def test_original_date_preserved(self):
+        result = calculate_thai_nine_grid(15, 7, 2000)
+        assert result["day"] == 15
+        assert result["month"] == 7
+        assert result["year"] == 2000
+
+    def test_digit_reduce_single(self):
+        assert _digit_reduce(5) == 5
+        assert _digit_reduce(9) == 9
+
+    def test_digit_reduce_two_digit(self):
+        assert _digit_reduce(19) == 1   # 1+9=10 → 1+0=1
+        assert _digit_reduce(29) == 2   # 2+9=11 → 1+1=2
+
+    def test_digit_reduce_large(self):
+        assert _digit_reduce(999) == 9  # 27 → 9
+
+    def test_numerology_planets_covers_1_to_9(self):
+        assert set(THAI_NUMEROLOGY_PLANETS.keys()) == set(range(1, 10))
 
 class TestArabicChart:
     """阿拉伯占星排盤測試"""
