@@ -950,6 +950,8 @@ from astro.mahabote import (
     _is_wednesday_evening,
     _compute_periods,
     WEEKDAY_PLANETS,
+    WEEKDAY_ANIMALS,
+    RAHU_ANIMAL,
     MAHABOTE_HOUSES,
     PLANET_PERIOD_YEARS,
 )
@@ -1161,3 +1163,93 @@ class TestPlanetPeriods:
         current = [p for p in periods if p.is_current]
         assert len(current) == 1
         assert current[0].start_age <= 20 < current[0].end_age
+
+
+class TestMahaboteAnimalSigns:
+    """動物標誌 (Animal Signs) 測試"""
+
+    def test_weekday_animals_count(self):
+        """Should have 7 weekday animal signs."""
+        assert len(WEEKDAY_ANIMALS) == 7
+
+    def test_weekday_animals_tuple_format(self):
+        """Each animal should be (English, Myanmar, Chinese, emoji)."""
+        for animal in WEEKDAY_ANIMALS:
+            assert len(animal) == 4
+
+    def test_rahu_animal_tuple_format(self):
+        """Rahu animal should be (English, Myanmar, Chinese, emoji)."""
+        assert len(RAHU_ANIMAL) == 4
+        assert RAHU_ANIMAL[0] == "Tuskless Elephant"
+
+    def test_sunday_garuda(self):
+        """Sunday → Garuda."""
+        assert WEEKDAY_ANIMALS[0][0] == "Garuda"
+
+    def test_monday_tiger(self):
+        """Monday → Tiger."""
+        assert WEEKDAY_ANIMALS[1][0] == "Tiger"
+
+    def test_tuesday_lion(self):
+        """Tuesday → Lion."""
+        assert WEEKDAY_ANIMALS[2][0] == "Lion"
+
+    def test_wednesday_tusked_elephant(self):
+        """Wednesday → Tusked Elephant."""
+        assert WEEKDAY_ANIMALS[3][0] == "Tusked Elephant"
+
+    def test_thursday_rat(self):
+        """Thursday → Rat."""
+        assert WEEKDAY_ANIMALS[4][0] == "Rat"
+
+    def test_friday_guinea_pig(self):
+        """Friday → Guinea Pig."""
+        assert WEEKDAY_ANIMALS[5][0] == "Guinea Pig"
+
+    def test_saturday_naga(self):
+        """Saturday → Naga."""
+        assert WEEKDAY_ANIMALS[6][0] == "Naga"
+
+    def test_chart_birth_animal_monday(self):
+        """Monday birth → Tiger."""
+        chart = compute_mahabote_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        assert chart.weekday == 1  # Monday
+        assert chart.birth_animal_en == "Tiger"
+        assert chart.birth_animal_cn == "虎"
+        assert chart.birth_animal_emoji == "🐅"
+
+    def test_chart_rahu_animal(self):
+        """Wednesday evening → Tuskless Elephant."""
+        chart = compute_mahabote_chart(
+            year=2023, month=1, day=4, hour=20, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        assert chart.is_rahu is True
+        assert chart.birth_animal_en == "Tuskless Elephant"
+        assert chart.birth_animal_cn == "象(無牙)"
+
+    def test_house_has_animal_and_weekday(self):
+        """Each house should have animal sign and weekday fields."""
+        chart = compute_mahabote_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        for h in chart.houses:
+            assert h.animal_en != ""
+            assert h.animal_cn != ""
+            assert h.animal_emoji != ""
+            assert h.animal_myanmar != ""
+            assert h.weekday_en != ""
+            assert h.weekday_cn != ""
+
+    def test_houses_have_distinct_animals(self):
+        """All 7 houses should have 7 distinct animal signs."""
+        chart = compute_mahabote_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        animals = {h.animal_en for h in chart.houses}
+        assert len(animals) == 7

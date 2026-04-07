@@ -37,6 +37,20 @@ WEEKDAY_PLANETS = [
 # Rahu (pseudo-planet for Wednesday evening, after 18:00)
 RAHU_INFO = ("Rahu", "ရာဟု", "羅睺", "☊", "—", "SW 西南")
 
+# Weekday animal signs: (English, Myanmar, Chinese, emoji)
+WEEKDAY_ANIMALS = [
+    ("Garuda",          "ဂဠုန်",    "迦樓羅",   "🦅"),  # Sunday=0
+    ("Tiger",           "ကျား",     "虎",       "🐅"),  # Monday=1
+    ("Lion",            "ခြင်္သေ့",  "獅",       "🦁"),  # Tuesday=2
+    ("Tusked Elephant", "ဆင်စွယ်",  "象(有牙)",  "🐘"),  # Wednesday=3
+    ("Rat",             "ကြွက်",    "鼠",       "🐀"),  # Thursday=4
+    ("Guinea Pig",      "ပူးရွှေ",   "天竺鼠",   "🐹"),  # Friday=5
+    ("Naga",            "နဂါး",     "龍/那伽",   "🐉"),  # Saturday=6
+]
+
+# Rahu animal sign (Wednesday evening)
+RAHU_ANIMAL = ("Tuskless Elephant", "ဆင်", "象(無牙)", "🐘")
+
 # Mahabote 7 Houses
 # (English, Myanmar, Chinese, meaning, description)
 MAHABOTE_HOUSES = [
@@ -107,6 +121,12 @@ class MahaboteHouse:
     planet_cn: str         # Planet Chinese name
     planet_symbol: str
     is_birth_house: bool   # Whether this is the birth planet's house
+    weekday_en: str        # Weekday English name (e.g. "Sunday")
+    weekday_cn: str        # Weekday Chinese name (e.g. "星期日")
+    animal_en: str         # Animal sign English name
+    animal_myanmar: str    # Animal sign Myanmar name
+    animal_cn: str         # Animal sign Chinese name
+    animal_emoji: str      # Animal sign emoji
 
 
 @dataclass
@@ -153,6 +173,12 @@ class MahaboteChart:
 
     # Wednesday evening → Rahu?
     is_rahu: bool
+
+    # Birth animal sign
+    birth_animal_en: str
+    birth_animal_myanmar: str
+    birth_animal_cn: str
+    birth_animal_emoji: str
 
     # Mahabote calculation
     mahabote_value: int        # (ME + weekday_num) mod 7
@@ -247,18 +273,21 @@ def compute_mahabote_chart(year, month, day, hour, minute,
 
     # Birth planet
     planet_info = WEEKDAY_PLANETS[weekday]
+    animal_info = WEEKDAY_ANIMALS[weekday]
     if is_rahu:
         birth_planet = RAHU_INFO[0]
         birth_planet_cn = RAHU_INFO[2]
         birth_planet_symbol = RAHU_INFO[3]
         birth_planet_element = RAHU_INFO[4]
         birth_direction = RAHU_INFO[5]
+        birth_animal = RAHU_ANIMAL
     else:
         birth_planet = planet_info[0]
         birth_planet_cn = planet_info[2]
         birth_planet_symbol = planet_info[3]
         birth_planet_element = planet_info[4]
         birth_direction = planet_info[5]
+        birth_animal = animal_info
 
     # Mahabote value: use 1-based weekday (Sunday=1 … Saturday=7)
     weekday_num = weekday + 1
@@ -275,6 +304,7 @@ def compute_mahabote_chart(year, month, day, hour, minute,
         planet_offset = (i - mahabote_value) % 7
         planet_weekday = (weekday + planet_offset) % 7
         p_info = WEEKDAY_PLANETS[planet_weekday]
+        a_info = WEEKDAY_ANIMALS[planet_weekday]
 
         houses.append(MahaboteHouse(
             index=i,
@@ -287,6 +317,12 @@ def compute_mahabote_chart(year, month, day, hour, minute,
             planet_cn=p_info[2],
             planet_symbol=p_info[3],
             is_birth_house=(i == mahabote_value),
+            weekday_en=WEEKDAY_NAMES_EN[planet_weekday],
+            weekday_cn=WEEKDAY_NAMES_CN[planet_weekday],
+            animal_en=a_info[0],
+            animal_myanmar=a_info[1],
+            animal_cn=a_info[2],
+            animal_emoji=a_info[3],
         ))
 
     # Atar periods
@@ -309,6 +345,10 @@ def compute_mahabote_chart(year, month, day, hour, minute,
         birth_planet_element=birth_planet_element,
         birth_direction=birth_direction,
         is_rahu=is_rahu,
+        birth_animal_en=birth_animal[0],
+        birth_animal_myanmar=birth_animal[1],
+        birth_animal_cn=birth_animal[2],
+        birth_animal_emoji=birth_animal[3],
         mahabote_value=mahabote_value,
         birth_house_name_en=birth_house[0],
         birth_house_name_myanmar=birth_house[1],
@@ -361,6 +401,11 @@ def _render_info(chart):
             f"**出生行星:** {chart.birth_planet_symbol} "
             f"{chart.birth_planet} ({chart.birth_planet_cn}){rahu_note}"
         )
+        st.write(
+            f"**生肖動物:** {chart.birth_animal_emoji} "
+            f"{chart.birth_animal_en} ({chart.birth_animal_cn} / "
+            f"{chart.birth_animal_myanmar})"
+        )
 
     # Highlight box
     color = PLANET_COLORS.get(chart.birth_planet, "#888")
@@ -370,7 +415,8 @@ def _render_info(chart):
         f'<b style="font-size:18px;">'
         f'{chart.birth_planet_symbol} {chart.birth_planet_cn} '
         f'({chart.birth_planet})</b> — '
-        f'方位 {chart.birth_direction} · 元素 {chart.birth_planet_element}<br/>'
+        f'方位 {chart.birth_direction} · 元素 {chart.birth_planet_element} · '
+        f'動物 {chart.birth_animal_emoji} {chart.birth_animal_cn}<br/>'
         f'<b>Mahabote 宮位:</b> '
         f'{chart.birth_house_name_cn} {chart.birth_house_name_myanmar} '
         f'({chart.birth_house_name_en}) — {chart.birth_house_meaning}<br/>'
@@ -387,16 +433,18 @@ def _render_compass(chart):
     """Render an 8-direction compass showing weekday-planet associations."""
     st.subheader("🧭 八方位行星羅盤 (Planetary Compass)")
 
-    # Directions in display order
+    # Directions in display order:
+    # (direction, weekday_idx, planet_en, symbol, planet_cn, weekday_cn, animal_emoji, animal_cn)
+    # weekday_idx=-1 for Rahu (Wednesday evening)
     directions = [
-        ("N 北",   6, "Saturn",  "♄", "土星"),
-        ("NE 東北", 0, "Sun",    "☉", "太陽"),
-        ("E 東",   1, "Moon",    "☽", "月亮"),
-        ("SE 東南", 2, "Mars",   "♂", "火星"),
-        ("S 南",   3, "Mercury", "☿", "水星"),
-        ("SW 西南", -1, "Rahu",  "☊", "羅睺"),
-        ("W 西",   4, "Jupiter", "♃", "木星"),
-        ("NW 西北", 5, "Venus",  "♀", "金星"),
+        ("N 北",    6, "Saturn",  "♄", "土星", "星期六", "🐉", "龍/那伽"),
+        ("NE 東北", 0, "Sun",     "☉", "太陽", "星期日", "🦅", "迦樓羅"),
+        ("E 東",    1, "Moon",    "☽", "月亮", "星期一", "🐅", "虎"),
+        ("SE 東南", 2, "Mars",    "♂", "火星", "星期二", "🦁", "獅"),
+        ("S 南",    3, "Mercury", "☿", "水星", "星期三", "🐘", "象(有牙)"),
+        ("SW 西南", -1, "Rahu",   "☊", "羅睺", "星期三夜", "🐘", "象(無牙)"),
+        ("W 西",    4, "Jupiter", "♃", "木星", "星期四", "🐀", "鼠"),
+        ("NW 西北", 5, "Venus",   "♀", "金星", "星期五", "🐹", "天竺鼠"),
     ]
 
     # Build a 3×5 compass layout:
@@ -431,7 +479,8 @@ def _render_compass(chart):
 
 def _compass_cell(direction_info, birth_planet):
     """Build one compass cell."""
-    dir_label, _, planet_en, symbol, planet_cn = direction_info
+    (dir_label, _, planet_en, symbol,
+     planet_cn, weekday_cn, animal_emoji, animal_cn) = direction_info
     is_birth = (planet_en == birth_planet)
     color = PLANET_COLORS.get(planet_en, "#888")
     border = f"3px solid {color}" if is_birth else "1px solid #555"
@@ -440,10 +489,12 @@ def _compass_cell(direction_info, birth_planet):
         f'<td style="background:{bg};border:{border};padding:10px;'
         f'border-radius:8px;text-align:center;color:white;width:33%;">'
         f'<div style="font-size:10px;color:#aaa;">{dir_label}</div>'
+        f'<div style="font-size:10px;color:#ccc;">{weekday_cn}</div>'
         f'<div style="font-size:24px;">{symbol}</div>'
         f'<div style="font-size:13px;font-weight:bold;color:{color};">'
         f'{planet_en}</div>'
         f'<div style="font-size:12px;">{planet_cn}</div>'
+        f'<div style="font-size:11px;">{animal_emoji} {animal_cn}</div>'
         f'</td>'
     )
 
@@ -501,9 +552,12 @@ def _house_cell(house):
         f'{house.name_en} ({house.meaning})</div>'
         f'<div style="font-size:16px;font-weight:bold;">'
         f'{star}{house.name_cn} {house.name_myanmar}</div>'
+        f'<div style="font-size:10px;color:#ccc;">{house.weekday_cn}</div>'
         f'<div style="font-size:26px;margin:4px 0;">{house.planet_symbol}</div>'
         f'<div style="font-size:13px;color:{color};font-weight:bold;">'
         f'{house.planet} ({house.planet_cn})</div>'
+        f'<div style="font-size:12px;">'
+        f'{house.animal_emoji} {house.animal_cn}</div>'
         f'</td>'
     )
 
@@ -532,9 +586,9 @@ def _render_house_table(chart):
     st.subheader("📊 七宮詳表 (House Details)")
     header = (
         "| # | 宮位 (House) | 緬甸文 | 含義 (Meaning) "
-        "| 行星 | 說明 |"
+        "| 星期 | 行星 | 動物 | 說明 |"
     )
-    sep = "|:---:|:---:|:---:|:---:|:---:|:---|"
+    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|"
     rows = [header, sep]
     for h in chart.houses:
         star = "⭐" if h.is_birth_house else ""
@@ -543,12 +597,15 @@ def _render_house_table(chart):
             f'<span style="color:{color};font-weight:bold;">'
             f'{h.planet_symbol} {h.planet} ({h.planet_cn})</span>'
         )
+        animal_html = f'{h.animal_emoji} {h.animal_cn}'
         rows.append(
             f"| {h.index} "
             f"| {star} {h.name_cn} ({h.name_en}) "
             f"| {h.name_myanmar} "
             f"| {h.meaning} "
+            f"| {h.weekday_cn} "
             f"| {planet_html} "
+            f"| {animal_html} "
             f"| {h.description} |"
         )
     st.markdown("\n".join(rows), unsafe_allow_html=True)
