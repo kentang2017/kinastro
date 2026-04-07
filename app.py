@@ -2,8 +2,8 @@
 堅占星 (Kin Astro) - 多體系占星排盤系統
 Multi-System Astrology Chart Application
 
-支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星、卡巴拉占星、
-緬甸占星（Mahabote）五種體系，
+支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
+卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）十種體系，
 使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
 """
 
