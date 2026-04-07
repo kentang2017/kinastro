@@ -4,10 +4,17 @@
 使用 Streamlit 元件渲染七政四餘排盤結果。
 """
 
+import math
+
 import streamlit as st
 
-from .calculator import ChartData, format_degree, get_mansion_for_degree
-from .constants import PLANET_COLORS, TWELVE_PALACES
+from .calculator import (
+    ChartData, format_degree, get_mansion_for_degree, _normalize_degree,
+)
+from .constants import (
+    PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
+    TWELVE_SIGNS_CHINESE,
+)
 
 
 def render_chart_info(chart: ChartData):
@@ -239,3 +246,270 @@ def _calculate_aspects(planets: list) -> list:
                     break
 
     return aspects
+
+
+# ============================================================
+# 二十八宿圓環圖 (28 Lunar Mansions Ring Chart)
+# ============================================================
+
+# 四象顏色 (Four Symbols / Directional Colors)
+_GROUP_COLORS = {
+    "東方青龍": ("#1a3a1a", "#4caf50"),   # (background, text/border) green
+    "北方玄武": ("#1a1a3a", "#5c6bc0"),   # blue/indigo
+    "西方白虎": ("#3a3a1a", "#e0e0e0"),   # white/light
+    "南方朱雀": ("#3a1a1a", "#ef5350"),   # red
+}
+
+# 四象標記
+_GROUP_SYMBOLS = {
+    "東方青龍": "🐉",
+    "北方玄武": "🐢",
+    "西方白虎": "🐅",
+    "南方朱雀": "🐦",
+}
+
+
+def render_mansion_ring(chart: ChartData):
+    """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現 28 宿 + 十二星次 + 星曜位置"""
+    st.subheader("🌕 二十八宿圓環盤")
+
+    SIZE = 700
+    CX, CY = SIZE / 2, SIZE / 2
+
+    # 同心圓半徑
+    R_OUTER = 310        # 最外圈
+    R_MANSION_OUT = 310  # 28 宿環外沿
+    R_MANSION_IN = 260   # 28 宿環內沿
+    R_SIGN_OUT = 260     # 十二星次環外沿
+    R_SIGN_IN = 220      # 十二星次環內沿
+    R_PLANET = 185       # 星曜環
+    R_CENTER = 110       # 中央圓
+
+    MANSION_W = 360.0 / 28.0  # 每宿約 12.857°
+
+    def polar(r, angle_deg):
+        rad = math.radians(angle_deg)
+        return CX + r * math.cos(rad), CY + r * math.sin(rad)
+
+    def annular_sector(r_in, r_out, a1, a2):
+        """SVG path for an annular sector (donut slice)."""
+        a1r, a2r = math.radians(a1), math.radians(a2)
+        x1o = CX + r_out * math.cos(a1r)
+        y1o = CY + r_out * math.sin(a1r)
+        x2o = CX + r_out * math.cos(a2r)
+        y2o = CY + r_out * math.sin(a2r)
+        x1i = CX + r_in * math.cos(a2r)
+        y1i = CY + r_in * math.sin(a2r)
+        x2i = CX + r_in * math.cos(a1r)
+        y2i = CY + r_in * math.sin(a1r)
+        sweep = a2 - a1
+        large = 1 if sweep > 180 else 0
+        return (
+            f"M {x1o:.1f},{y1o:.1f} "
+            f"A {r_out},{r_out} 0 {large},1 {x2o:.1f},{y2o:.1f} "
+            f"L {x1i:.1f},{y1i:.1f} "
+            f"A {r_in},{r_in} 0 {large},0 {x2i:.1f},{y2i:.1f} Z"
+        )
+
+    def text_rotation(a):
+        rot = (a + 90) % 360
+        if 90 < rot < 270:
+            rot = (rot + 180) % 360
+        return rot
+
+    svg = []
+    svg.append(
+        f'<svg viewBox="0 0 {SIZE} {SIZE}" '
+        f'xmlns="http://www.w3.org/2000/svg" '
+        f'style="max-width:640px; margin:auto; display:block; '
+        f'background:#0a0a1a; border-radius:12px;">'
+    )
+    svg.append(f'<rect width="{SIZE}" height="{SIZE}" fill="#0a0a1a" rx="12"/>')
+
+    # --- 28 宿環 (outermost ring) ---
+    for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
+        a1 = i * MANSION_W
+        a2 = (i + 1) * MANSION_W
+        bg, fg = _GROUP_COLORS[m["group"]]
+        # Background sector
+        svg.append(
+            f'<path d="{annular_sector(R_MANSION_IN, R_MANSION_OUT, a1, a2)}" '
+            f'fill="{bg}" stroke="#555" stroke-width="0.5"/>'
+        )
+        # Mansion name
+        mid_a = (a1 + a2) / 2
+        r_text = (R_MANSION_IN + R_MANSION_OUT) / 2
+        x, y = polar(r_text, mid_a)
+        rot = text_rotation(mid_a)
+        svg.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{fg}" '
+            f'font-size="12" font-weight="bold" font-family="serif" '
+            f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
+            f'{m["name"]}</text>'
+        )
+
+    # --- 四象標記 (group labels at four corners) ---
+    group_centers = {
+        "東方青龍": 0 * MANSION_W + 3.5 * MANSION_W,   # mansions 0-6
+        "北方玄武": 7 * MANSION_W + 3.5 * MANSION_W,   # mansions 7-13
+        "西方白虎": 14 * MANSION_W + 3.5 * MANSION_W,  # mansions 14-20
+        "南方朱雀": 21 * MANSION_W + 3.5 * MANSION_W,  # mansions 21-27
+    }
+    for grp, center_a in group_centers.items():
+        _, fg = _GROUP_COLORS[grp]
+        x, y = polar(R_OUTER + 16, center_a)
+        symbol = _GROUP_SYMBOLS[grp]
+        svg.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-size="16">'
+            f'{symbol}</text>'
+        )
+
+    # --- 十二星次環 (12 Chinese zodiac stations ring) ---
+    for i in range(12):
+        a1 = i * 30.0
+        a2 = (i + 1) * 30.0
+        # Thin background
+        svg.append(
+            f'<path d="{annular_sector(R_SIGN_IN, R_SIGN_OUT, a1, a2)}" '
+            f'fill="#111122" stroke="#444" stroke-width="0.5"/>'
+        )
+        # Sign name (short form)
+        mid_a = a1 + 15.0
+        r_text = (R_SIGN_IN + R_SIGN_OUT) / 2
+        x, y = polar(r_text, mid_a)
+        rot = text_rotation(mid_a)
+        sign_name = TWELVE_SIGNS_CHINESE[i]
+        # Use the palace name part (e.g. "戌宮")
+        short_name = sign_name.split("(")[0] if "(" in sign_name else sign_name
+        svg.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#b0b0d0" '
+            f'font-size="13" font-weight="bold" font-family="serif" '
+            f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
+            f'{short_name}</text>'
+        )
+
+    # --- Division lines for 12 signs (from center to mansion ring) ---
+    for i in range(12):
+        a = i * 30.0
+        x1, y1 = polar(R_CENTER, a)
+        x2, y2 = polar(R_MANSION_OUT, a)
+        svg.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+            f'x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="#555" stroke-width="0.8"/>'
+        )
+
+    # --- 28 宿分界線 (from sign ring inner to mansion ring outer) ---
+    for i in range(28):
+        a = i * MANSION_W
+        x1, y1 = polar(R_MANSION_IN, a)
+        x2, y2 = polar(R_MANSION_OUT, a)
+        svg.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+            f'x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="#555" stroke-width="0.5"/>'
+        )
+
+    # --- Inner circles ---
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_CENTER}" '
+        f'fill="#1a1a2e" stroke="#555" stroke-width="1"/>'
+    )
+
+    # --- 星曜位置 (planet positions in the planet ring) ---
+    # Group planets by mansion to handle overlaps
+    planet_offsets = {}
+    for p in chart.planets:
+        lon = _normalize_degree(p.longitude)
+        mansion_idx = int(lon / MANSION_W) % 28
+        if mansion_idx not in planet_offsets:
+            planet_offsets[mansion_idx] = []
+        planet_offsets[mansion_idx].append(p)
+
+    for mansion_idx, planets in planet_offsets.items():
+        n = len(planets)
+        base_a = mansion_idx * MANSION_W + MANSION_W / 2
+        for pi, p in enumerate(planets):
+            # Spread multiple planets within the mansion
+            if n == 1:
+                a = base_a
+            else:
+                span = MANSION_W * 0.7
+                a = base_a - span / 2 + span * pi / (n - 1)
+
+            color = PLANET_COLORS.get(p.name, "#c8c8c8")
+            x, y = polar(R_PLANET, a)
+
+            # Planet dot
+            svg.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" '
+                f'fill="{color}" stroke="#fff" stroke-width="0.5"/>'
+            )
+            # Planet name
+            x_t, y_t = polar(R_PLANET - 20, a)
+            rot = text_rotation(a)
+            retro = "℞" if p.retrograde else ""
+            svg.append(
+                f'<text x="{x_t:.1f}" y="{y_t:.1f}" text-anchor="middle" '
+                f'dominant-baseline="central" fill="{color}" '
+                f'font-size="11" font-weight="bold" font-family="serif" '
+                f'transform="rotate({rot:.1f},{x_t:.1f},{y_t:.1f})">'
+                f'{p.name}{retro}</text>'
+            )
+
+    # --- 中央資訊 (center info) ---
+    svg.append(
+        f'<text x="{CX}" y="{CY - 40}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#e0e0e0" '
+        f'font-size="15" font-weight="bold" font-family="serif">'
+        f'七政四餘</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY - 18}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#b0b0b0" '
+        f'font-size="12" font-family="serif">'
+        f'{chart.year}年{chart.month}月{chart.day}日</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 2}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#b0b0b0" '
+        f'font-size="12" font-family="serif">'
+        f'{chart.hour:02d}:{chart.minute:02d} '
+        f'UTC{chart.timezone:+.1f}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 22}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#b0b0b0" '
+        f'font-size="12" font-family="serif">'
+        f'{chart.location_name}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 44}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#d4af37" '
+        f'font-size="11" font-family="serif">'
+        f'命度 {format_degree(chart.ascendant)}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 62}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#7ec8e3" '
+        f'font-size="11" font-family="serif">'
+        f'中天 {format_degree(chart.midheaven)}</text>'
+    )
+
+    svg.append("</svg>")
+
+    st.markdown("\n".join(svg), unsafe_allow_html=True)
+
+    # Legend
+    legend_cols = st.columns(4)
+    for i, (grp, (_, fg)) in enumerate(_GROUP_COLORS.items()):
+        with legend_cols[i]:
+            symbol = _GROUP_SYMBOLS[grp]
+            st.markdown(
+                f'<span style="color:{fg};font-weight:bold">'
+                f'{symbol} {grp}</span>',
+                unsafe_allow_html=True,
+            )
