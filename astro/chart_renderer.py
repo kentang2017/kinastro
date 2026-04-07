@@ -285,7 +285,9 @@ def render_mansion_ring(chart: ChartData):
     R_PLANET = 185       # 星曜環
     R_CENTER = 110       # 中央圓
 
-    MANSION_W = 360.0 / 28.0  # 每宿約 12.857°
+    NUM_MANSIONS = len(TWENTY_EIGHT_MANSIONS)
+    MANSION_W = 360.0 / NUM_MANSIONS  # 每宿約 12.857°
+    PLANET_SPREAD_FACTOR = 0.7  # 同宿多星的散佈範圍比例
 
     def polar(r, angle_deg):
         rad = math.radians(angle_deg)
@@ -350,13 +352,14 @@ def render_mansion_ring(chart: ChartData):
         )
 
     # --- 四象標記 (group labels at four corners) ---
-    group_centers = {
-        "東方青龍": 0 * MANSION_W + 3.5 * MANSION_W,   # mansions 0-6
-        "北方玄武": 7 * MANSION_W + 3.5 * MANSION_W,   # mansions 7-13
-        "西方白虎": 14 * MANSION_W + 3.5 * MANSION_W,  # mansions 14-20
-        "南方朱雀": 21 * MANSION_W + 3.5 * MANSION_W,  # mansions 21-27
-    }
-    for grp, center_a in group_centers.items():
+    # Dynamically compute the center angle for each group
+    group_angles: dict[str, list[float]] = {}
+    for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
+        mid = i * MANSION_W + MANSION_W / 2
+        group_angles.setdefault(m["group"], []).append(mid)
+
+    for grp, angles in group_angles.items():
+        center_a = sum(angles) / len(angles)
         _, fg = _GROUP_COLORS[grp]
         x, y = polar(R_OUTER + 16, center_a)
         symbol = _GROUP_SYMBOLS[grp]
@@ -424,7 +427,7 @@ def render_mansion_ring(chart: ChartData):
     planet_offsets = {}
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
-        mansion_idx = int(lon / MANSION_W) % 28
+        mansion_idx = int(lon / MANSION_W) % NUM_MANSIONS
         if mansion_idx not in planet_offsets:
             planet_offsets[mansion_idx] = []
         planet_offsets[mansion_idx].append(p)
@@ -437,7 +440,7 @@ def render_mansion_ring(chart: ChartData):
             if n == 1:
                 a = base_a
             else:
-                span = MANSION_W * 0.7
+                span = MANSION_W * PLANET_SPREAD_FACTOR
                 a = base_a - span / 2 + span * pi / (n - 1)
 
             color = PLANET_COLORS.get(p.name, "#c8c8c8")
