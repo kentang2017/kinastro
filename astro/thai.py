@@ -585,6 +585,149 @@ def calculate_thai_nine_grid(day, month, year):
     }
 
 
+def _build_nine_grid_svg(counts, complete_lines):
+    """Build an SVG representation of the 9-box grid with line overlays.
+
+    Args:
+        counts (dict[int, int]): digit 1–9 occurrence counts.
+        complete_lines (list[str]): list of complete line keys.
+
+    Returns:
+        str: SVG markup string.
+    """
+    cell_size = 110
+    gap = 12
+    total = cell_size * 3 + gap * 2  # 354
+    pad = 20  # padding for line overshoot
+    svg_w = total + pad * 2
+    svg_h = total + pad * 2
+
+    # Number → (col, row) in the grid layout
+    _num_pos = {}
+    for ri, row in enumerate(_NINE_GRID_LAYOUT):
+        for ci, num in enumerate(row):
+            _num_pos[num] = (ci, ri)
+
+    def _center(num):
+        c, r = _num_pos[num]
+        cx = pad + c * (cell_size + gap) + cell_size // 2
+        cy = pad + r * (cell_size + gap) + cell_size // 2
+        return cx, cy
+
+    highlighted = set()
+    for line_name in complete_lines:
+        for n in _NINE_GRID_LINES[line_name]:
+            highlighted.add(n)
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {svg_w} {svg_h}" '
+        f'style="max-width:380px; width:100%; height:auto; '
+        f'display:block; margin:0 auto;">',
+    ]
+
+    # Draw cells
+    for num in range(1, 10):
+        col, row = _num_pos[num]
+        x = pad + col * (cell_size + gap)
+        y = pad + row * (cell_size + gap)
+        cnt = counts[num]
+        _pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[num]
+        is_highlighted = num in highlighted
+        is_missing = cnt == 0
+
+        if is_missing:
+            fill, stroke, txt_fill = "#1a1a2e", "#444", "#555"
+        elif is_highlighted:
+            fill, stroke, txt_fill = "#1e3a1e", pcolor, pcolor
+        else:
+            fill, stroke, txt_fill = "#1a1a1a", "#666", pcolor
+
+        parts.append(
+            f'<rect x="{x}" y="{y}" width="{cell_size}" height="{cell_size}" '
+            f'rx="10" fill="{fill}" stroke="{stroke}" stroke-width="2.5"/>'
+        )
+        cx, cy = _center(num)
+        # Number
+        parts.append(
+            f'<text x="{cx}" y="{cy - 16}" text-anchor="middle" '
+            f'font-size="26" font-weight="bold" fill="{txt_fill}">{num}</text>'
+        )
+        # Count
+        count_str = "—" if is_missing else f"×{cnt}"
+        parts.append(
+            f'<text x="{cx}" y="{cy + 8}" text-anchor="middle" '
+            f'font-size="14" fill="{txt_fill}">{count_str}</text>'
+        )
+        # Planet emoji
+        parts.append(
+            f'<text x="{cx}" y="{cy + 30}" text-anchor="middle" '
+            f'font-size="18">{pemoji}</text>'
+        )
+
+    # Line endpoints and colours for complete lines
+    _line_colors = {
+        "147": "#FF8C00", "258": "#C0C0C0", "369": "#DC143C",
+        "123": "#32CD32", "456": "#4169E1", "789": "#FFD700",
+        "159": "#FF69B4", "357": "#9370DB",
+    }
+    for line_name in complete_lines:
+        nums = _NINE_GRID_LINES[line_name]
+        x1, y1 = _center(nums[0])
+        x2, y2 = _center(nums[-1])
+        color = _line_colors.get(line_name, "#888")
+        parts.append(
+            f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
+            f'stroke="{color}" stroke-width="3" stroke-linecap="round" '
+            f'opacity="0.55"/>'
+        )
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def _build_frequency_bars_html(counts):
+    """Build HTML for a horizontal bar chart showing digit frequency.
+
+    Args:
+        counts (dict[int, int]): digit 1–9 occurrence counts.
+
+    Returns:
+        str: HTML markup string.
+    """
+    max_cnt = max(counts.values()) if counts else 1
+    if max_cnt == 0:
+        max_cnt = 1
+
+    rows = []
+    for num in range(1, 10):
+        cnt = counts[num]
+        _pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[num]
+        pct = int(cnt / max_cnt * 100) if max_cnt else 0
+        bar_color = pcolor if cnt > 0 else "#333"
+        text_opacity = "1" if cnt > 0 else "0.35"
+        rows.append(
+            f'<div style="display:flex; align-items:center; gap:6px; '
+            f'margin:2px 0; opacity:{text_opacity};">'
+            f'<span style="min-width:28px; text-align:right; font-weight:bold; '
+            f'color:{pcolor};">{pemoji}{num}</span>'
+            f'<div style="flex:1; background:#222; border-radius:4px; '
+            f'height:16px; overflow:hidden;">'
+            f'<div style="width:{pct}%; background:{bar_color}; height:100%; '
+            f'border-radius:4px; min-width:{2 if cnt > 0 else 0}px;"></div>'
+            f'</div>'
+            f'<span style="min-width:24px; font-size:13px; color:{pcolor};">'
+            f'{cnt}</span>'
+            f'</div>'
+        )
+
+    return (
+        '<div style="max-width:340px; margin:0 auto; font-size:14px;">'
+        + "".join(rows)
+        + "</div>"
+    )
+
+
 def render_nine_grid(result):
     """渲染泰國 Numerology 9宮格圖譜 (Thai Numerology 9-Box Grid UI)
 
@@ -600,161 +743,142 @@ def render_nine_grid(result):
 
     st.subheader("🔢 ตาราง 9 ช่อง — Thai Numerology 9宮格圖譜")
 
-    # ── Summary row ──────────────────────────────────────────
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.markdown(
-            f"**เลขวันเกิด (Birth Number / 出生日數):** "
-            f"**{birth_number}** &nbsp; "
-            f"{THAI_NUMEROLOGY_PLANETS[birth_number][1]} "
-            f"{THAI_NUMEROLOGY_PLANETS[birth_number][0]}"
-        )
-    with col_b:
-        st.markdown(
-            f"**เลขชีวิต (Life Path / 生命靈數):** "
-            f"**{life_path}** &nbsp; "
-            f"{THAI_NUMEROLOGY_PLANETS[life_path][1]} "
-            f"{THAI_NUMEROLOGY_PLANETS[life_path][0]}"
-        )
+    # ── Summary cards ────────────────────────────────────────
+    _pname_bn, _pemoji_bn, _pcolor_bn = THAI_NUMEROLOGY_PLANETS[birth_number]
+    _pname_lp, _pemoji_lp, _pcolor_lp = THAI_NUMEROLOGY_PLANETS[life_path]
 
-    st.markdown("")
-
-    # ── 3×3 grid ─────────────────────────────────────────────
-    # Determine which cells are part of a complete line for highlighting
-    highlighted = set()
-    for line_name in complete_lines:
-        for n in _NINE_GRID_LINES[line_name]:
-            highlighted.add(n)
-
-    cell_base = (
-        "display:flex; flex-direction:column; align-items:center; "
-        "justify-content:center; border:2px solid #555; border-radius:8px; "
-        "padding:10px 6px; min-width:90px; min-height:90px; "
-        "font-size:15px; text-align:center;"
+    card_style = (
+        "border-radius:10px; padding:12px 16px; text-align:center; "
+        "min-height:80px; display:flex; flex-direction:column; "
+        "align-items:center; justify-content:center;"
     )
-
-    grid_html = (
-        '<div style="display:grid; grid-template-columns:repeat(3,1fr); '
-        'gap:8px; max-width:360px; margin:0 auto 16px auto;">'
+    summary_html = (
+        '<div style="display:grid; grid-template-columns:1fr 1fr; '
+        'gap:12px; max-width:500px; margin:0 auto 18px auto;">'
+        # Birth Number card
+        f'<div style="{card_style} border:2px solid {_pcolor_bn}; '
+        f'background:rgba(0,0,0,0.15);">'
+        f'<div style="font-size:13px; color:#aaa;">เลขวันเกิด · Birth Number · 出生日數</div>'
+        f'<div style="font-size:32px; font-weight:bold; color:{_pcolor_bn};">'
+        f'{_pemoji_bn} {birth_number}</div>'
+        f'<div style="font-size:13px; color:{_pcolor_bn};">{_pname_bn}</div>'
+        f'</div>'
+        # Life Path card
+        f'<div style="{card_style} border:2px solid {_pcolor_lp}; '
+        f'background:rgba(0,0,0,0.15);">'
+        f'<div style="font-size:13px; color:#aaa;">เลขชีวิต · Life Path · 生命靈數</div>'
+        f'<div style="font-size:32px; font-weight:bold; color:{_pcolor_lp};">'
+        f'{_pemoji_lp} {life_path}</div>'
+        f'<div style="font-size:13px; color:{_pcolor_lp};">{_pname_lp}</div>'
+        f'</div>'
+        '</div>'
     )
+    st.markdown(summary_html, unsafe_allow_html=True)
 
-    for row in _NINE_GRID_LAYOUT:
-        for num in row:
-            cnt = counts[num]
-            planet_name, planet_emoji, planet_color = THAI_NUMEROLOGY_PLANETS[num]
-            is_highlighted = num in highlighted
-            is_missing = cnt == 0
+    # ── SVG 3×3 grid with line overlays ──────────────────────
+    grid_col, freq_col = st.columns([3, 2])
+    with grid_col:
+        svg_html = _build_nine_grid_svg(counts, complete_lines)
+        st.markdown(svg_html, unsafe_allow_html=True)
+    with freq_col:
+        st.markdown(
+            '<div style="font-size:14px; font-weight:bold; text-align:center; '
+            'margin-bottom:6px; color:#ccc;">📊 數字頻率 (Digit Frequency)</div>',
+            unsafe_allow_html=True,
+        )
+        freq_html = _build_frequency_bars_html(counts)
+        st.markdown(freq_html, unsafe_allow_html=True)
 
-            if is_missing:
-                bg = "#1a1a2e"
-                text_color = "#555"
-                border_color = "#333"
-                count_str = "—"
-            elif is_highlighted:
-                bg = "#1e3a1e"
-                text_color = planet_color
-                border_color = planet_color
-                count_str = f"×{cnt}"
-            else:
-                bg = "#1a1a1a"
-                text_color = planet_color
-                border_color = "#555"
-                count_str = f"×{cnt}"
-
-            cell_style = (
-                f"{cell_base} background:{bg}; "
-                f"border-color:{border_color}; color:{text_color};"
-            )
-
-            num_display = (
-                f'<span style="font-size:22px; font-weight:bold;">{num}</span>'
-            )
-            count_display = (
-                f'<span style="font-size:13px; color:{text_color};">'
-                f"{count_str}</span>"
-            )
-            emoji_display = (
-                f'<span style="font-size:16px;">{planet_emoji}</span>'
-            )
-
-            grid_html += (
-                f'<div style="{cell_style}">'
-                f"{num_display}{count_display}{emoji_display}"
-                f"</div>"
-            )
-
-    grid_html += "</div>"
-    st.markdown(grid_html, unsafe_allow_html=True)
-
-    # ── Planet legend ─────────────────────────────────────────
+    # ── Planet legend (collapsed) ─────────────────────────────
     with st.expander("🪐 行星數字對應 (Navagraha Correspondence)", expanded=False):
-        legend_cols = st.columns(3)
-        for i, (num, (pname, pemoji, pcolor)) in enumerate(
-            THAI_NUMEROLOGY_PLANETS.items()
-        ):
-            with legend_cols[i % 3]:
-                st.markdown(
-                    f'<span style="color:{pcolor}; font-weight:bold;">'
-                    f"{pemoji} {num} = {pname}</span>",
-                    unsafe_allow_html=True,
-                )
+        legend_parts = []
+        for num, (pname, pemoji, pcolor) in THAI_NUMEROLOGY_PLANETS.items():
+            legend_parts.append(
+                f'<span style="color:{pcolor}; font-weight:bold; '
+                f'display:inline-block; min-width:180px; margin:2px 8px;">'
+                f"{pemoji} {num} = {pname}</span>"
+            )
+        st.markdown(
+            '<div style="line-height:1.8;">' + "".join(legend_parts) + "</div>",
+            unsafe_allow_html=True,
+        )
 
     # ── Complete lines ────────────────────────────────────────
     st.markdown("### 🌟 完整線條 (เส้นที่สมบูรณ์ — Complete Lines)")
     if complete_lines:
+        lines_html_parts = []
         for line_name in complete_lines:
             meaning = _LINE_MEANINGS[line_name]
             nums = _NINE_GRID_LINES[line_name]
-            emojis = "→".join(
+            emojis = " → ".join(
                 f"{THAI_NUMEROLOGY_PLANETS[n][1]}{n}" for n in nums
             )
-            st.markdown(
-                f"**{emojis} &nbsp; {line_name} {meaning['name_th']}**  \n"
-                f"{meaning['desc']}  \n"
-                f"*{meaning['desc_th']}*  \n"
-                f"💊 後天化解：{meaning['remedy']}"
+            lines_html_parts.append(
+                f'<div style="border-left:4px solid '
+                f'{THAI_NUMEROLOGY_PLANETS[nums[0]][2]}; '
+                f'padding:8px 12px; margin:8px 0; '
+                f'background:rgba(0,0,0,0.1); border-radius:0 8px 8px 0;">'
+                f'<div style="font-weight:bold; font-size:15px;">'
+                f'{emojis} &nbsp; {line_name} {meaning["name_th"]}</div>'
+                f'<div style="margin:4px 0;">{meaning["desc"]}</div>'
+                f'<div style="font-style:italic; color:#aaa;">'
+                f'{meaning["desc_th"]}</div>'
+                f'<div style="margin-top:4px; font-size:13px;">'
+                f'💊 後天化解：{meaning["remedy"]}</div>'
+                f'</div>'
             )
-            st.markdown("---")
+        st.markdown("".join(lines_html_parts), unsafe_allow_html=True)
     else:
-        st.info("目前沒有完整的長線。透過補數字（改名、選車牌號碼、佩戴對應護符）可逐步形成能量線條。")
+        st.info(
+            "目前沒有完整的長線。透過補數字（改名、選車牌號碼、佩戴對應護符）"
+            "可逐步形成能量線條。"
+        )
 
-    # ── Strongest numbers ─────────────────────────────────────
-    st.markdown("### 💪 最強數字 (ตัวเลขที่แข็งแกร่งที่สุด — Strongest Numbers)")
-    if strongest:
-        max_cnt = counts[strongest[0]]
-        for n in strongest:
-            pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[n]
-            st.markdown(
-                f'<span style="color:{pcolor}; font-size:16px; font-weight:bold;">'
-                f"{pemoji} {n} — {pname}</span>  \n"
-                f"出現 **{max_cnt}** 次。您的主要能量中心。",
-                unsafe_allow_html=True,
-            )
-    else:
-        st.info("數字分布均勻，無特別突出的主導數字。")
+    # ── Strongest & Missing in two columns ────────────────────
+    str_col, miss_col = st.columns(2)
+    with str_col:
+        st.markdown(
+            "### 💪 最強數字\n"
+            "##### ตัวเลขที่แข็งแกร่งที่สุด — Strongest"
+        )
+        if strongest:
+            max_cnt = counts[strongest[0]]
+            parts = []
+            for n in strongest:
+                pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[n]
+                parts.append(
+                    f'<div style="margin:4px 0;">'
+                    f'<span style="color:{pcolor}; font-size:16px; '
+                    f'font-weight:bold;">{pemoji} {n} — {pname}</span><br>'
+                    f'<span style="font-size:13px;">出現 <b>{max_cnt}</b> 次 · '
+                    f'主要能量中心</span></div>'
+                )
+            st.markdown("".join(parts), unsafe_allow_html=True)
+        else:
+            st.info("數字分布均勻，無特別突出的主導數字。")
 
-    # ── Missing numbers ───────────────────────────────────────
-    st.markdown("### 🎯 缺失數字 (ตัวเลขที่ขาดหาย — Missing Numbers / 人生課題)")
-    if missing:
-        for n in missing:
-            pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[n]
-            remedy = _MISSING_NUMBER_REMEDIES[n]
-            st.markdown(
-                f'<span style="color:{pcolor}; font-size:16px; font-weight:bold;">'
-                f"{pemoji} {n} — {pname}</span>  \n"
-                f"此生課題：{remedy}",
-                unsafe_allow_html=True,
-            )
-    else:
-        st.success("🎉 您的生日包含所有數字 1–9，能量非常完整！")
+    with miss_col:
+        st.markdown(
+            "### 🎯 缺失數字\n"
+            "##### ตัวเลขที่ขาดหาย — Missing / 人生課題"
+        )
+        if missing:
+            parts = []
+            for n in missing:
+                pname, pemoji, pcolor = THAI_NUMEROLOGY_PLANETS[n]
+                remedy = _MISSING_NUMBER_REMEDIES[n]
+                parts.append(
+                    f'<div style="margin:4px 0;">'
+                    f'<span style="color:{pcolor}; font-size:16px; '
+                    f'font-weight:bold;">{pemoji} {n} — {pname}</span><br>'
+                    f'<span style="font-size:13px;">此生課題：{remedy}</span></div>'
+                )
+            st.markdown("".join(parts), unsafe_allow_html=True)
+        else:
+            st.success("🎉 您的生日包含所有數字 1–9，能量非常完整！")
 
     # ── Personality summary ───────────────────────────────────
     _render_numerology_summary(result)
-
-    # ── Future expansion placeholder ──────────────────────────
-    # TODO: 姓名 Numerology (Name Numerology)
-    # 未來可加入以泰文/中文姓名字母對應數字的計算，
-    # 進一步補強缺失數字，或強化現有優勢數字。
 
 
 def _render_numerology_summary(result):
