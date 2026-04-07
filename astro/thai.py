@@ -815,6 +815,8 @@ _PALACE_GRID = [
 ]
 
 # Palace number → (direction zh, direction th, element)
+# Keys 1–9 correspond to the Lo Shu magic-square numbers.
+# Values: (Chinese direction with trigram, Thai direction, Five-Element)
 _PALACE_DIRECTIONS = {
     1: ("北 (坎)", "ทิศเหนือ", "水"),
     2: ("西南 (坤)", "ทิศตะวันตกเฉียงใต้", "土"),
@@ -938,6 +940,10 @@ def calculate_nine_palace_divination(chart):
                 break
 
         planet = planet_map.get(planet_name)
+        # _sign_index is defined earlier in this module (line ~125).
+        # Fallback sign_idx=0 is only reached if planet_map lookup fails,
+        # which should not happen since compute_thai_chart always produces
+        # all nine Navagraha planets.
         sign_idx = _sign_index(planet.longitude) if planet else 0
         dignity = _get_planet_dignity(planet_name, sign_idx) if planet else "neutral"
         label, icon, fortune = _DIGNITY_LABELS[dignity]
