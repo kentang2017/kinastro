@@ -937,3 +937,227 @@ class TestZiweiChart:
     def test_branch_names_valid(self, sample_chart):
         for p in sample_chart.palaces:
             assert p.branch_name in EARTHLY_BRANCHES
+
+
+# ============================================================
+# Myanmar Mahabote Tests
+# ============================================================
+
+from astro.mahabote import (
+    compute_mahabote_chart,
+    _get_myanmar_year,
+    _get_weekday,
+    _is_wednesday_evening,
+    _compute_periods,
+    WEEKDAY_PLANETS,
+    MAHABOTE_HOUSES,
+    PLANET_PERIOD_YEARS,
+)
+
+
+class TestMyanmarYear:
+    """緬甸年 (Myanmar Era) 計算測試"""
+
+    def test_after_thingyan(self):
+        """April 17 or later → ME = year - 638"""
+        assert _get_myanmar_year(2000, 5, 1) == 2000 - 638
+
+    def test_before_thingyan(self):
+        """Before April 17 → ME = year - 639"""
+        assert _get_myanmar_year(2000, 3, 1) == 2000 - 639
+
+    def test_on_thingyan(self):
+        """April 17 exactly → ME = year - 638"""
+        assert _get_myanmar_year(2000, 4, 17) == 2000 - 638
+
+    def test_april_16_before(self):
+        """April 16 → still before Thingyan"""
+        assert _get_myanmar_year(2000, 4, 16) == 2000 - 639
+
+    def test_january_1_1990(self):
+        assert _get_myanmar_year(1990, 1, 1) == 1990 - 639
+
+
+class TestWeekday:
+    """星期計算測試"""
+
+    def test_known_monday(self):
+        """1990-01-01 was a Monday → weekday=1"""
+        assert _get_weekday(1990, 1, 1) == 1
+
+    def test_known_sunday(self):
+        """2023-01-01 was a Sunday → weekday=0"""
+        assert _get_weekday(2023, 1, 1) == 0
+
+    def test_known_saturday(self):
+        """2023-01-07 was a Saturday → weekday=6"""
+        assert _get_weekday(2023, 1, 7) == 6
+
+    def test_known_wednesday(self):
+        """2023-01-04 was a Wednesday → weekday=3"""
+        assert _get_weekday(2023, 1, 4) == 3
+
+    def test_weekday_range(self):
+        for d in range(1, 8):
+            w = _get_weekday(2023, 1, d)
+            assert 0 <= w <= 6
+
+
+class TestWednesdayRahu:
+    """星期三傍晚 → 羅睺 測試"""
+
+    def test_wednesday_evening_is_rahu(self):
+        assert _is_wednesday_evening(3, 18) is True
+
+    def test_wednesday_night_is_rahu(self):
+        assert _is_wednesday_evening(3, 23) is True
+
+    def test_wednesday_morning_not_rahu(self):
+        assert _is_wednesday_evening(3, 10) is False
+
+    def test_wednesday_17_not_rahu(self):
+        assert _is_wednesday_evening(3, 17) is False
+
+    def test_thursday_evening_not_rahu(self):
+        assert _is_wednesday_evening(4, 18) is False
+
+
+class TestMahaboteValue:
+    """Mahabote 值計算測試"""
+
+    def test_known_calculation(self):
+        """1990-01-01 (Mon): ME=1351, weekday_num=2, (1351+2)%7=2"""
+        chart = compute_mahabote_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+            location_name="仰光",
+        )
+        assert chart.myanmar_year == 1351
+        assert chart.weekday == 1  # Monday
+        assert chart.mahabote_value == (1351 + 2) % 7  # = 2
+
+    def test_mahabote_value_range(self):
+        chart = compute_mahabote_chart(
+            year=2000, month=6, day=15, hour=10, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        assert 0 <= chart.mahabote_value <= 6
+
+
+class TestMahaboteChart:
+    """Mahabote 完整排盤測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_mahabote_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+            location_name="仰光",
+        )
+
+    def test_chart_metadata(self, sample_chart):
+        assert sample_chart.year == 1990
+        assert sample_chart.month == 1
+        assert sample_chart.day == 1
+        assert sample_chart.location_name == "仰光"
+
+    def test_birth_planet_monday(self, sample_chart):
+        """Monday → Moon"""
+        assert sample_chart.birth_planet == "Moon"
+        assert sample_chart.birth_planet_cn == "月亮"
+        assert sample_chart.birth_planet_symbol == "☽"
+
+    def test_not_rahu(self, sample_chart):
+        assert sample_chart.is_rahu is False
+
+    def test_seven_houses(self, sample_chart):
+        assert len(sample_chart.houses) == 7
+
+    def test_birth_house_marked(self, sample_chart):
+        birth_houses = [h for h in sample_chart.houses if h.is_birth_house]
+        assert len(birth_houses) == 1
+
+    def test_birth_planet_in_birth_house(self, sample_chart):
+        """Birth planet should be placed in the mahabote_value house."""
+        birth_house = sample_chart.houses[sample_chart.mahabote_value]
+        assert birth_house.is_birth_house is True
+        assert birth_house.planet == sample_chart.birth_planet
+
+    def test_all_seven_planets_placed(self, sample_chart):
+        planets = {h.planet for h in sample_chart.houses}
+        assert len(planets) == 7
+        expected = {"Sun", "Moon", "Mars", "Mercury",
+                    "Jupiter", "Venus", "Saturn"}
+        assert planets == expected
+
+    def test_house_names_match_constants(self, sample_chart):
+        for i, h in enumerate(sample_chart.houses):
+            assert h.name_en == MAHABOTE_HOUSES[i][0]
+            assert h.name_myanmar == MAHABOTE_HOUSES[i][1]
+            assert h.name_cn == MAHABOTE_HOUSES[i][2]
+
+    def test_birth_house_fields(self, sample_chart):
+        idx = sample_chart.mahabote_value
+        expected = MAHABOTE_HOUSES[idx]
+        assert sample_chart.birth_house_name_en == expected[0]
+        assert sample_chart.birth_house_name_myanmar == expected[1]
+        assert sample_chart.birth_house_name_cn == expected[2]
+
+    def test_periods_not_empty(self, sample_chart):
+        assert len(sample_chart.periods) > 0
+
+    def test_periods_start_with_birth_planet(self, sample_chart):
+        first = sample_chart.periods[0]
+        # The first period planet should correspond to the birth weekday
+        expected_planet = WEEKDAY_PLANETS[sample_chart.weekday][0]
+        assert first.planet == expected_planet
+
+    def test_periods_sequential(self, sample_chart):
+        """Period ages should be sequential and non-overlapping."""
+        for i in range(1, len(sample_chart.periods)):
+            assert sample_chart.periods[i].start_age == \
+                   sample_chart.periods[i - 1].end_age
+
+
+class TestMahaboteRahu:
+    """Wednesday evening (Rahu) test"""
+
+    def test_wednesday_evening_rahu(self):
+        """Wednesday at 20:00 → birth planet should be Rahu."""
+        chart = compute_mahabote_chart(
+            year=2023, month=1, day=4, hour=20, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        assert chart.weekday == 3  # Wednesday
+        assert chart.is_rahu is True
+        assert chart.birth_planet == "Rahu"
+        assert chart.birth_planet_cn == "羅睺"
+
+    def test_wednesday_morning_mercury(self):
+        """Wednesday at 10:00 → birth planet should be Mercury."""
+        chart = compute_mahabote_chart(
+            year=2023, month=1, day=4, hour=10, minute=0,
+            timezone=6.5, latitude=16.8661, longitude=96.1951,
+        )
+        assert chart.is_rahu is False
+        assert chart.birth_planet == "Mercury"
+
+
+class TestPlanetPeriods:
+    """行星大運 (Atar) 計算測試"""
+
+    def test_total_cycle_96_years(self):
+        total = sum(PLANET_PERIOD_YEARS.values())
+        assert total == 96
+
+    def test_periods_cover_first_cycle(self):
+        periods = _compute_periods(0, 2000, 2020)  # Sunday birth
+        # First cycle should sum to 96
+        cycle_total = sum(p.years for p in periods[:7])
+        assert cycle_total == 96
+
+    def test_current_period_marked(self):
+        periods = _compute_periods(0, 2000, 2020)
+        current = [p for p in periods if p.is_current]
+        assert len(current) == 1
+        assert current[0].start_age <= 20 < current[0].end_age

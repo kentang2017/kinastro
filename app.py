@@ -2,7 +2,8 @@
 堅占星 (Kin Astro) - 多體系占星排盤系統
 Multi-System Astrology Chart Application
 
-支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星、卡巴拉占星五種體系，
+支援七政四餘（中國）、西洋占星、印度占星（Jyotish）、泰國占星、卡巴拉占星、
+緬甸占星（Mahabote）五種體系，
 使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
 """
 
@@ -28,6 +29,7 @@ from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_char
 from astro.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
+from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 
 # ============================================================
 # 頁面設定
@@ -42,7 +44,7 @@ st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
     "支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
-    "卡巴拉占星、阿拉伯占星、瑪雅占星。"
+    "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）。"
 )
 
 # ============================================================
@@ -59,6 +61,7 @@ CITY_PRESETS = {
     "新加坡": (1.3521, 103.8198, 8.0),
     "倫敦": (51.5074, -0.1278, 0.0),
     "紐約": (40.7128, -74.0060, -5.0),
+    "仰光": (16.8661, 96.1951, 6.5),
 }
 
 # ============================================================
@@ -117,9 +120,10 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote = st.tabs(
     ["🀄 七政四餘（中國）", "🌟 紫微斗數", "🌍 西洋占星", "🙏 印度占星",
-     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星"]
+     "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星",
+     "🇲🇲 緬甸占星"]
 )
 
 if calculate:
@@ -221,6 +225,12 @@ if calculate:
         with st.spinner("正在計算瑪雅占星排盤..."):
             m_chart = compute_maya_chart(**_params)
         render_maya_chart(m_chart)
+
+    # --- 緬甸占星 (Mahabote) ---
+    with tab_mahabote:
+        with st.spinner("正在計算緬甸 Mahabote 排盤..."):
+            mb_chart = compute_mahabote_chart(**_params)
+        render_mahabote_chart(mb_chart)
 
 else:
     with tab_chinese:
@@ -366,5 +376,21 @@ else:
             - **Haab（民用曆）**：365 天，18 月 × 20 日 + 5 Wayeb 無日
             - **Calendar Round**：Tzolkin × Haab 同步循環，約 52 年一輪
             - **行星疊加**：結合西方占星行星位置對應 Tzolkin 能量
+            """
+        )
+    with tab_mahabote:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是緬甸 Mahabote 占星？
+
+            **Mahabote** (မဟာဘုတ်) 是緬甸傳統占星術，意為「大創造」：
+
+            - **七曜行星**：日、月、火、水、木、金、土，對應星期日至星期六
+            - **羅睺 (Rahu)**：星期三傍晚出生者歸羅睺管轄
+            - **八方位**：每顆行星對應一個羅盤方位（東北至北）
+            - **七宮位**：本命、壽命、意識、身體、權勢、死亡、道德
+            - **行星大運 (Atar)**：七星循環共 96 年，主宰人生各階段
+            - **計算公式**：Mahabote 值 = (緬甸年 + 星期數) mod 7
             """
         )
