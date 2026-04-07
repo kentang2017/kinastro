@@ -17,6 +17,7 @@ from astro.chart_renderer import (
     render_house_table,
     render_chart_grid,
     render_aspect_summary,
+    render_mansion_ring,
 )
 from astro.western import compute_western_chart, render_western_chart
 from astro.indian import compute_vedic_chart, render_vedic_chart
@@ -146,6 +147,8 @@ if calculate:
         render_chart_info(chart)
         st.divider()
         render_chart_grid(chart)
+        st.divider()
+        render_mansion_ring(chart)
         st.divider()
         render_planet_table(chart)
         st.divider()
