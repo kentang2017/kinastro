@@ -9,9 +9,9 @@
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6?style=flat-badge)](LICENSE)
 
-**六體系占星排盤系統 — 中國・西洋・印度・宿曜道・泰國・卡巴拉**
+**十體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸**
 
-*Multi-System Astrology Platform — Chinese, Western, Vedic, Japanese, Thai & Kabbalah*
+*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic, Maya & Myanmar*
 
 </div>
 
@@ -21,7 +21,7 @@
 
 | | |
 |---|---|
-| 🔮 **六體系合一** | 在同一個介面中切換六種占星體系，無需來回切換工具 |
+| 🔮 **十體系合一** | 在同一個介面中切換十種占星體系，無需來回切換工具 |
 | 🪐 **九曜精密計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 |
 | 🌏 **全球化支援** | 內建全球 10+ 個主要城市，亦支援自訂經緯度即時排盤 |
 | 🎨 **彩色互動介面** | Streamlit 驅動的現代化 Web UI，響應式排盤結果 |
@@ -106,6 +106,53 @@
 
 ---
 
+### ☪ 阿拉伯占星（Arabic Astrology）
+
+源自中世紀伊斯蘭黃金時代，融合希臘與波斯天文傳統。
+
+- **阿拉伯點 (Arabic Parts / Lots)**：透過上升點與行星經度加減運算，推導幸運點、精神點等敏感度數
+- **日夜盤 (Sect)**：根據太陽位置區分日盤與夜盤，影響阿拉伯點公式
+- **行星廟旺落陷 (Essential Dignities)**：入廟、入旺、落陷、入弱
+- **回歸黃道 (Tropical Zodiac)**：使用 Placidus 宮位制
+
+---
+
+### 🌟 紫微斗數（Zi Wei Dou Shu）
+
+中國傳統命理學最重要的排盤體系之一，相傳由陳希夷整理創立。
+
+- **十四主星**：紫微、天機、太陽、武曲、天同、廉貞；天府、太陰、貪狼、巨門、天相、天梁、七殺、破軍
+- **十二宮位**：命宮、兄弟宮、夫妻宮、子女宮、財帛宮、疾厄宮、遷移宮、交友宮、官祿宮、田宅宮、福德宮、父母宮
+- **五行局**：水二局、木三局、金四局、土五局、火六局
+- **農曆排盤**：以農曆生辰（年、月、日、時辰）為基礎
+
+---
+
+### 🏺 瑪雅占星（Maya Astrology）
+
+源自瓜地馬拉瑪雅文明的天文與曆法傳統。
+
+- **Long Count（長紀年）**：以 B'ak'tun、Ka'tun、Tu'n、Winal、K'in 計算天數
+- **Tzolkin（神聖曆）**：260 天循環，13 數字 × 20 神明名
+- **Haab（民用曆）**：365 天，18 月 × 20 日 + 5 Wayeb 無日
+- **Calendar Round**：Tzolkin × Haab 同步循環，約 52 年一輪
+- **行星疊加**：結合西方占星行星位置對應 Tzolkin 能量
+
+---
+
+### 🇲🇲 緬甸占星（Mahabote / Myanmar Astrology）
+
+緬甸傳統占星術，Mahabote (မဟာဘုတ်) 意為「大創造」。
+
+- **七曜行星**：日、月、火、水、木、金、土，對應星期日至星期六
+- **羅睺 (Rahu)**：星期三傍晚出生者歸羅睺管轄
+- **八方位**：每顆行星對應一個羅盤方位
+- **七宮位**：本命、壽命、意識、身體、權勢、死亡、道德
+- **行星大運 (Atar)**：七星循環共 96 年，主宰人生各階段
+- **計算公式**：Mahabote 值 = (緬甸年 + 星期數) mod 7
+
+---
+
 ## 🚀 快速開始
 
 ```bash
@@ -137,7 +184,11 @@ kinastro/
 │   ├── sukkayodo.py            # 日本宿曜道 (Yojōdō) 排盤模組
 │   ├── thai.py                 # 泰國占星排盤模組
 │   ├── western.py              # 西洋占星排盤模組
-│   └── kabbalistic.py          # 卡巴拉占星排盤模組
+│   ├── kabbalistic.py          # 卡巴拉占星排盤模組
+│   ├── arabic.py               # 阿拉伯占星排盤模組
+│   ├── ziwei.py                # 紫微斗數排盤模組
+│   ├── maya.py                 # 瑪雅占星排盤模組
+│   └── mahabote.py             # 緬甸占星 (Mahabote) 排盤模組
 ├── tests/
 │   ├── test_calculator.py      # 計算模組單元測試
 │   └── test_new_astrology.py  # 新增功能測試
