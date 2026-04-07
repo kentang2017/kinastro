@@ -23,6 +23,7 @@ from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import (
     compute_thai_chart, render_thai_chart,
     calculate_thai_nine_grid, render_nine_grid,
+    calculate_nine_palace_divination, render_nine_palace_divination,
 )
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.arabic import compute_arabic_chart, render_arabic_chart
@@ -193,8 +194,9 @@ if calculate:
     with tab_thai:
         with st.spinner("正在計算泰國占星排盤..."):
             t_chart = compute_thai_chart(**_params)
-        thai_tab_chart, thai_tab_numerology = st.tabs(
-            ["🐘 ผังดวงชาตา (占星排盤)", "🔢 ตาราง 9 ช่อง (9宮格數字學)"]
+        thai_tab_chart, thai_tab_numerology, thai_tab_divination = st.tabs(
+            ["🐘 ผังดวงชาตา (占星排盤)", "🔢 ตาราง 9 ช่อง (9宮格數字學)",
+             "🏯 ดวง 9 ทิศ (九宮占)"]
         )
         with thai_tab_chart:
             render_thai_chart(t_chart)
@@ -203,6 +205,9 @@ if calculate:
                 birth_date.day, birth_date.month, birth_date.year
             )
             render_nine_grid(nine_grid_result)
+        with thai_tab_divination:
+            divination_result = calculate_nine_palace_divination(t_chart)
+            render_nine_palace_divination(divination_result)
 
     # --- 卡巴拉占星 ---
     with tab_kabbalistic:
