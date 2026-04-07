@@ -195,8 +195,7 @@ if calculate:
         with st.spinner("正在計算泰國占星排盤..."):
             t_chart = compute_thai_chart(**_params)
         thai_tab_chart, thai_tab_numerology, thai_tab_divination = st.tabs(
-            ["🐘 ผังดวงชาตา (占星排盤)", "🔢 ตาราง 9 ช่อง (9宮格數字學)",
-             "🏯 ดวง 9 ทิศ (九宮占)"]
+            ["🐘 ผังดวงชาตา (占星排盤)", "🔢 ตาราง 9 ช่อง (9宮格數字學)"]
         )
         with thai_tab_chart:
             render_thai_chart(t_chart)
