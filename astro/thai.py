@@ -788,3 +788,254 @@ def _render_numerology_summary(result):
             f"**{pemoji_lp} 生命靈數 {life_path} — {pname_lp}**  \n"
             f"{_personality[life_path]}"
         )
+
+
+# ============================================================
+# 九宮占 — Nine Palace Divination (ดวง 9 ทิศ)
+# ============================================================
+
+# Planet name → (palace number, life domain zh, life domain th, emoji)
+_PALACE_PLANETS = {
+    "พระอาทิตย์ (太陽)": (1, "權勢 — 地位與健康", "สถานะและสุขภาพ", "☀️"),
+    "พระจันทร์ (月亮)": (2, "情感 — 心靈與家庭", "อารมณ์และครอบครัว", "🌙"),
+    "พระอังคาร (火星)": (3, "行動 — 勇氣與競爭", "พลังงานและการแข่งขัน", "🔴"),
+    "พระพุธ (水星)": (4, "智慧 — 溝通與學習", "สติปัญญาและการสื่อสาร", "💚"),
+    "พระพฤหัสบดี (木星)": (5, "福德 — 智慧與幸運", "โชคลาภและปัญญา", "💛"),
+    "พระศุกร์ (金星)": (6, "愛情 — 姻緣與財富", "ความรักและทรัพย์สิน", "💗"),
+    "พระเสาร์ (土星)": (7, "事業 — 紀律與長壽", "การงานและอายุยืน", "🟤"),
+    "ราหู (羅睺)": (8, "變化 — 野心與挑戰", "การเปลี่ยนแปลงและความทะเยอทะยาน", "🟣"),
+    "เกตุ (計都)": (9, "靈性 — 解脫與前世", "จิตวิญญาณและกรรมเก่า", "🔵"),
+}
+
+# 3×3 palace grid layout (row × col), each cell is a palace number
+_PALACE_GRID = [
+    [4, 9, 2],
+    [3, 5, 7],
+    [8, 1, 6],
+]
+
+# Palace number → (direction zh, direction th, element)
+_PALACE_DIRECTIONS = {
+    1: ("北 (坎)", "ทิศเหนือ", "水"),
+    2: ("西南 (坤)", "ทิศตะวันตกเฉียงใต้", "土"),
+    3: ("東 (震)", "ทิศตะวันออก", "木"),
+    4: ("東南 (巽)", "ทิศตะวันออกเฉียงใต้", "木"),
+    5: ("中宮", "ศูนย์กลาง", "土"),
+    6: ("西北 (乾)", "ทิศตะวันตกเฉียงเหนือ", "金"),
+    7: ("西 (兌)", "ทิศตะวันตก", "金"),
+    8: ("東北 (艮)", "ทิศตะวันออกเฉียงเหนือ", "土"),
+    9: ("南 (離)", "ทิศใต้", "火"),
+}
+
+# Planetary dignities: planet name → {"own": [sign_indices], "exalted": [sign_indices],
+#                                      "debilitated": [sign_indices]}
+# Sign indices: 0=Aries,1=Taurus,...,11=Pisces
+_DIGNITIES = {
+    "พระอาทิตย์ (太陽)": {"own": [4], "exalted": [0], "debilitated": [6]},
+    "พระจันทร์ (月亮)": {"own": [3], "exalted": [1], "debilitated": [7]},
+    "พระอังคาร (火星)": {"own": [0, 7], "exalted": [9], "debilitated": [3]},
+    "พระพุธ (水星)": {"own": [2, 5], "exalted": [5], "debilitated": [11]},
+    "พระพฤหัสบดี (木星)": {"own": [8, 11], "exalted": [3], "debilitated": [9]},
+    "พระศุกร์ (金星)": {"own": [1, 6], "exalted": [11], "debilitated": [5]},
+    "พระเสาร์ (土星)": {"own": [9, 10], "exalted": [6], "debilitated": [0]},
+    "ราหู (羅睺)": {"own": [10], "exalted": [1, 2], "debilitated": [7, 8]},
+    "เกตุ (計都)": {"own": [7], "exalted": [7, 8], "debilitated": [1, 2]},
+}
+
+# Detailed palace readings keyed by (palace_number, status)
+# status: "exalted", "own", "neutral", "debilitated"
+_PALACE_READINGS = {
+    (1, "exalted"): "權勢極旺，領導力超群，事業順遂，貴人提攜，社會地位崇高。",
+    (1, "own"): "權勢穩固，自信充足，健康良好，受人尊重。",
+    (1, "neutral"): "地位平穩，需更努力以提升影響力，健康尚可。",
+    (1, "debilitated"): "權勢受損，自信不足，注意健康問題，宜低調行事。",
+    (2, "exalted"): "情感豐盈，內心安寧，家庭幸福和睦，母親福澤深厚。",
+    (2, "own"): "心靈穩定，感受力強，家庭關係和諧。",
+    (2, "neutral"): "情感起伏不定，需注意調適心緒，家庭關係尚可。",
+    (2, "debilitated"): "情緒波動大，易焦慮不安，家庭或感情恐有波折。",
+    (3, "exalted"): "行動力極強，勇敢果斷，競爭中必勝，事業突飛猛進。",
+    (3, "own"): "精力充沛，果斷有力，面對挑戰不畏縮。",
+    (3, "neutral"): "行動力一般，需加強決斷力與執行力。",
+    (3, "debilitated"): "行動受阻，容易猶豫，注意與人衝突，慎防意外。",
+    (4, "exalted"): "智慧超群，口才出眾，學業與考試大吉，貿易獲利。",
+    (4, "own"): "思維敏捷，溝通順暢，學習能力強。",
+    (4, "neutral"): "智慧平平，溝通時需多加留意，學業需勤奮。",
+    (4, "debilitated"): "思維混亂，溝通不暢，注意合約文書問題。",
+    (5, "exalted"): "福德最旺，智慧與幸運兼備，子女賢孝，師長庇護。",
+    (5, "own"): "福德深厚，心懷善念，好運連連。",
+    (5, "neutral"): "福德尚可，宜多行善積德以增福報。",
+    (5, "debilitated"): "福德不足，諸事不順，宜修心養性，廣結善緣。",
+    (6, "exalted"): "姻緣極佳，感情甜蜜，財運亨通，生活舒適奢華。",
+    (6, "own"): "感情穩定，審美出眾，財運不錯。",
+    (6, "neutral"): "感情平淡，財運一般，需多經營人際關係。",
+    (6, "debilitated"): "感情波折，破財之虞，注意奢侈浪費。",
+    (7, "exalted"): "事業大成，紀律嚴明，持久耐勞，長壽安康。",
+    (7, "own"): "事業穩健，責任心強，有恆心毅力。",
+    (7, "neutral"): "事業平穩，需更多耐心與紀律。",
+    (7, "debilitated"): "事業受阻，壓力沉重，注意健康與過勞問題。",
+    (8, "exalted"): "變化中逢吉，野心得以實現，海外發展大利。",
+    (8, "own"): "善於應變，抓住機遇，適合跨領域發展。",
+    (8, "neutral"): "變化不定，需謹慎應對新局面。",
+    (8, "debilitated"): "變動頻繁，幻想多於實際，慎防欺詐與迷惑。",
+    (9, "exalted"): "靈性覺悟高，直覺敏銳，修行有成，前世善緣深。",
+    (9, "own"): "靈性穩定，善於內觀，適合靈修與研究。",
+    (9, "neutral"): "靈性尚淺，宜多靜心冥想以提升覺知。",
+    (9, "debilitated"): "靈性迷茫，執念較重，需放下過去，向前邁進。",
+}
+
+
+def _get_planet_dignity(planet_name, sign_index):
+    """Determine a planet's dignity status from its zodiac sign index.
+
+    Returns one of: "exalted", "own", "debilitated", "neutral".
+    """
+    d = _DIGNITIES.get(planet_name)
+    if d is None:
+        return "neutral"
+    if sign_index in d["exalted"]:
+        return "exalted"
+    if sign_index in d["own"]:
+        return "own"
+    if sign_index in d["debilitated"]:
+        return "debilitated"
+    return "neutral"
+
+
+_DIGNITY_LABELS = {
+    "exalted": ("入廟 (สูง)", "🔥", "大吉"),
+    "own": ("居旺 (เรือน)", "✨", "吉"),
+    "neutral": ("平和 (ปกติ)", "☁️", "平"),
+    "debilitated": ("落陷 (ต่ำ)", "💧", "凶"),
+}
+
+
+def calculate_nine_palace_divination(chart):
+    """Calculate Nine Palace Divination (九宮占) from a ThaiChart.
+
+    Maps each of the nine Navagraha planets to its corresponding palace,
+    evaluates dignity based on zodiac sign, and returns palace data with
+    divination readings.
+
+    Args:
+        chart (ThaiChart): computed Thai astrology chart.
+
+    Returns:
+        dict: keys include "palaces" (list of 9 palace dicts) and
+              "ascendant_rashi" (str).
+    """
+    # Build planet lookup: name → ThaiPlanet
+    planet_map = {p.name: p for p in chart.planets}
+
+    palaces = []
+    for palace_num in range(1, 10):
+        # Find the planet assigned to this palace
+        planet_name = None
+        palace_meta = None
+        for pname, meta in _PALACE_PLANETS.items():
+            if meta[0] == palace_num:
+                planet_name = pname
+                palace_meta = meta
+                break
+
+        planet = planet_map.get(planet_name)
+        sign_idx = _sign_index(planet.longitude) if planet else 0
+        dignity = _get_planet_dignity(planet_name, sign_idx) if planet else "neutral"
+        label, icon, fortune = _DIGNITY_LABELS[dignity]
+        direction_zh, direction_th, element = _PALACE_DIRECTIONS[palace_num]
+        reading = _PALACE_READINGS.get((palace_num, dignity), "")
+
+        palaces.append({
+            "number": palace_num,
+            "planet_name": planet_name,
+            "emoji": palace_meta[3] if palace_meta else "",
+            "domain_zh": palace_meta[1] if palace_meta else "",
+            "domain_th": palace_meta[2] if palace_meta else "",
+            "rashi": planet.rashi if planet else "",
+            "rashi_chinese": planet.rashi_chinese if planet else "",
+            "rashi_glyph": planet.rashi_glyph if planet else "",
+            "sign_degree": planet.sign_degree if planet else 0.0,
+            "retrograde": planet.retrograde if planet else False,
+            "dignity": dignity,
+            "dignity_label": label,
+            "dignity_icon": icon,
+            "fortune": fortune,
+            "direction_zh": direction_zh,
+            "direction_th": direction_th,
+            "element": element,
+            "reading": reading,
+        })
+
+    return {
+        "palaces": palaces,
+        "ascendant_rashi": chart.asc_rashi,
+    }
+
+
+def render_nine_palace_divination(result):
+    """Render Nine Palace Divination (九宮占) using Streamlit.
+
+    Displays a 3×3 grid of palaces with planet positions, dignity,
+    fortune indicators, and divination readings.
+
+    Args:
+        result (dict): output of :func:`calculate_nine_palace_divination`.
+    """
+    st.markdown("### 🏯 九宮占 (ดวง 9 ทิศ — Nine Palace Divination)")
+    st.markdown(
+        "九宮占以洛書九宮為基礎，將九曜分佈於九方位宮位，"
+        "依行星廟旺落陷判斷各宮位的吉凶。"
+    )
+
+    palace_map = {p["number"]: p for p in result["palaces"]}
+
+    # Render 3×3 grid
+    for row in _PALACE_GRID:
+        cols = st.columns(3)
+        for ci, palace_num in enumerate(row):
+            p = palace_map[palace_num]
+            fortune_color = {
+                "大吉": "#D4AF37", "吉": "#4CAF50",
+                "平": "#888888", "凶": "#E53935",
+            }.get(p["fortune"], "#888888")
+            retro = " (逆行 ℞)" if p["retrograde"] else ""
+            with cols[ci]:
+                st.markdown(
+                    f"<div style='border:2px solid {fortune_color}; "
+                    f"border-radius:10px; padding:10px; text-align:center; "
+                    f"min-height:180px; background:rgba(0,0,0,0.02);'>"
+                    f"<div style='font-size:0.8em; color:#666;'>"
+                    f"{p['direction_zh']} · {p['element']}</div>"
+                    f"<div style='font-size:1.3em;'>{p['emoji']} "
+                    f"<b>第{p['number']}宮</b></div>"
+                    f"<div style='font-size:0.9em;'>{p['domain_zh']}</div>"
+                    f"<div style='margin:4px 0; font-size:0.85em;'>"
+                    f"{p['rashi_glyph']} {p['rashi_chinese']} "
+                    f"{p['sign_degree']:.1f}°{retro}</div>"
+                    f"<div style='font-size:1.1em; color:{fortune_color}; "
+                    f"font-weight:bold;'>"
+                    f"{p['dignity_icon']} {p['fortune']} · {p['dignity_label']}</div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+    # Detailed readings
+    st.markdown("---")
+    st.markdown("### 📖 九宮詳解 (คำอธิบาย 9 ทิศ)")
+    for palace_num in range(1, 10):
+        p = palace_map[palace_num]
+        fortune_color = {
+            "大吉": "#D4AF37", "吉": "#4CAF50",
+            "平": "#888888", "凶": "#E53935",
+        }.get(p["fortune"], "#888888")
+        retro = " ℞" if p["retrograde"] else ""
+        st.markdown(
+            f"**{p['emoji']} 第{p['number']}宮 — "
+            f"{p['domain_zh']}** ({p['direction_zh']})  \n"
+            f"行星：{p['planet_name']}　"
+            f"星座：{p['rashi_glyph']} {p['rashi_chinese']} "
+            f"{p['sign_degree']:.1f}°{retro}　"
+            f"<span style='color:{fortune_color}; font-weight:bold;'>"
+            f"{p['dignity_icon']} {p['fortune']} · {p['dignity_label']}</span>  \n"
+            f"{p['reading']}",
+            unsafe_allow_html=True,
+        )
