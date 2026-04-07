@@ -198,17 +198,17 @@ if calculate:
     with tab_thai:
         with st.spinner("正在計算泰國占星排盤..."):
             t_chart = compute_thai_chart(**_params)
-        thai_tab_chart, thai_tab_numerology = st.tabs(
-            ["🐘 ผังดวงชาตา (占星排盤)", "🔢 ตาราง 9 ช่อง (9宮格數字學)"]
+        thai_tab_chart, thai_tab_nine = st.tabs(
+            ["🐘 ผังดวงชาตา (占星排盤)", "🔮 ตาราง 9 ช่อง & 九宮占卜 (9宮格數字學 · 九宮占卜)"]
         )
         with thai_tab_chart:
             render_thai_chart(t_chart)
-        with thai_tab_numerology:
+        with thai_tab_nine:
             nine_grid_result = calculate_thai_nine_grid(
                 birth_date.day, birth_date.month, birth_date.year
             )
             render_nine_grid(nine_grid_result)
-        with thai_tab_divination:
+            st.markdown("---")
             divination_result = calculate_nine_palace_divination(t_chart)
             render_nine_palace_divination(divination_result)
 
