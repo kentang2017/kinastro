@@ -501,7 +501,16 @@ _MISSING_NUMBER_REMEDIES = {
 
 
 def _digit_reduce(n):
-    """Reduce integer to single digit 1–9 (no master numbers in Thai system)."""
+    """Reduce integer to single digit 1–9 (no master numbers in Thai system).
+
+    Args:
+        n (int): non-negative integer to reduce.
+
+    Returns:
+        int: value in range 1–9.  Returns 9 for multiples of 9, and 1 for 0.
+    """
+    if n <= 0:
+        return 1
     while n > 9:
         n = sum(int(d) for d in str(n))
     return n

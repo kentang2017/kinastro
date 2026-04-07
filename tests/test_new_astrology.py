@@ -519,6 +519,11 @@ class TestThaiNineGrid:
     def test_digit_reduce_large(self):
         assert _digit_reduce(999) == 9  # 27 → 9
 
+    def test_digit_reduce_zero(self):
+        # 0 and negatives should return 1 (fallback)
+        assert _digit_reduce(0) == 1
+        assert _digit_reduce(-5) == 1
+
     def test_numerology_planets_covers_1_to_9(self):
         assert set(THAI_NUMEROLOGY_PLANETS.keys()) == set(range(1, 10))
 
