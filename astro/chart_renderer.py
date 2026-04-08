@@ -9,7 +9,8 @@ import math
 import streamlit as st
 
 from .calculator import (
-    ChartData, format_degree, get_mansion_for_degree, _normalize_degree,
+    ChartData, format_degree, get_mansion_for_degree,
+    get_mansion_index_for_degree, _normalize_degree,
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
@@ -314,8 +315,18 @@ def render_mansion_ring(chart: ChartData):
     R_CENTER = 100       # 中央圓
 
     NUM_MANSIONS = len(TWENTY_EIGHT_MANSIONS)
-    MANSION_W = 360.0 / NUM_MANSIONS  # 每宿約 12.857°
     PLANET_SPREAD_FACTOR = 0.7  # 同宿多星的散佈範圍比例
+
+    def _mansion_width(i):
+        """Return angular width of mansion i in degrees."""
+        s = TWENTY_EIGHT_MANSIONS[i]["start_lon"]
+        e = TWENTY_EIGHT_MANSIONS[(i + 1) % NUM_MANSIONS]["start_lon"]
+        return (e - s) % 360.0
+
+    def _mansion_chart_start(i):
+        """Return chart-angle of the start edge for mansion i."""
+        e = TWENTY_EIGHT_MANSIONS[(i + 1) % NUM_MANSIONS]["start_lon"]
+        return ecl_to_chart(e)
 
     def polar(r, angle_deg):
         rad = math.radians(angle_deg)
@@ -367,8 +378,9 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 28 宿環 (outermost ring) ---
     for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
-        a1 = ecl_to_chart((i + 1) * MANSION_W)
-        a2 = a1 + MANSION_W
+        w = _mansion_width(i)
+        a1 = _mansion_chart_start(i)
+        a2 = a1 + w
         bg, fg = _GROUP_COLORS[m["group"]]
         # Background sector
         svg.append(
@@ -376,7 +388,7 @@ def render_mansion_ring(chart: ChartData):
             f'fill="{bg}" stroke="#555" stroke-width="0.5"/>'
         )
         # Mansion name
-        mid_a = a1 + MANSION_W / 2
+        mid_a = a1 + w / 2
         r_text = (R_MANSION_IN + R_MANSION_OUT) / 2
         x, y = polar(r_text, mid_a)
         rot = text_rotation(mid_a)
@@ -389,15 +401,15 @@ def render_mansion_ring(chart: ChartData):
         )
 
     # --- 四象標記 (group labels at four corners) ---
-    # Compute ecliptic center for each group, then transform to chart angle
-    group_ecl_angles: dict[str, list[float]] = {}
+    # Compute ecliptic center for each group using actual mansion boundaries
+    group_chart_angles: dict[str, list[float]] = {}
     for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
-        mid = i * MANSION_W + MANSION_W / 2
-        group_ecl_angles.setdefault(m["group"], []).append(mid)
+        w = _mansion_width(i)
+        mid = _mansion_chart_start(i) + w / 2
+        group_chart_angles.setdefault(m["group"], []).append(mid)
 
-    for grp, angles in group_ecl_angles.items():
-        ecl_center = sum(angles) / len(angles)
-        center_a = ecl_to_chart(ecl_center)
+    for grp, angles in group_chart_angles.items():
+        center_a = sum(angles) / len(angles)
         _, fg = _GROUP_COLORS[grp]
         x, y = polar(R_OUTER + 16, center_a)
         symbol = _GROUP_SYMBOLS[grp]
@@ -460,14 +472,13 @@ def render_mansion_ring(chart: ChartData):
         palace_name = branch_to_palace.get(branch_idx, "")
         # Short palace name (remove 宮 suffix for compactness)
         short_palace = palace_name.replace("宮", "") if palace_name else ""
-        branch_label = EARTHLY_BRANCHES[branch_idx]
         text_color = "#d4af37" if is_ming else "#c8b888"
         svg.append(
             f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="{text_color}" '
             f'font-size="11" font-weight="bold" font-family="serif" '
             f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
-            f'{branch_label} {short_palace}</text>'
+            f'{short_palace}</text>'
         )
 
     # --- Division lines for 12 signs (from center to mansion ring) ---
@@ -483,7 +494,7 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 28 宿分界線 (from sign ring inner to mansion ring outer) ---
     for i in range(28):
-        a = ecl_to_chart(i * MANSION_W)
+        a = ecl_to_chart(TWENTY_EIGHT_MANSIONS[i]["start_lon"])
         x1, y1 = polar(R_MANSION_IN, a)
         x2, y2 = polar(R_MANSION_OUT, a)
         svg.append(
@@ -503,22 +514,23 @@ def render_mansion_ring(chart: ChartData):
     mansion_planets: dict[int, list] = {}
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
-        mansion_idx = int(lon / MANSION_W) % NUM_MANSIONS
+        mansion_idx = get_mansion_index_for_degree(lon)
         if mansion_idx not in mansion_planets:
             mansion_planets[mansion_idx] = []
         mansion_planets[mansion_idx].append((p, lon))
 
     for mansion_idx, planet_data in mansion_planets.items():
         n = len(planet_data)
+        w = _mansion_width(mansion_idx)
         # Mansion sector in chart space
-        a1_chart = ecl_to_chart((mansion_idx + 1) * MANSION_W)
-        base_a = a1_chart + MANSION_W / 2
+        a1_chart = _mansion_chart_start(mansion_idx)
+        base_a = a1_chart + w / 2
         for pi, (p, lon) in enumerate(planet_data):
             # Single planet: use exact longitude; multiple: spread within mansion
             if n == 1:
                 a = ecl_to_chart(lon)
             else:
-                span = MANSION_W * PLANET_SPREAD_FACTOR
+                span = w * PLANET_SPREAD_FACTOR
                 a = base_a - span / 2 + span * pi / (n - 1)
 
             color = PLANET_COLORS.get(p.name, "#c8c8c8")

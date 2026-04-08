@@ -356,12 +356,34 @@ def format_degree(deg: float) -> str:
     return f"{d}°{m:02d}'{s:02d}\""
 
 
+def get_mansion_index_for_degree(lon: float) -> int:
+    """
+    根據黃經度數取得對應的二十八宿索引 (0-27)
+
+    使用各宿距星（determinative star）的 J2000 黃經作為宿界，
+    每宿從其距星黃經延伸到下一宿的距星黃經（寬度不等）。
+    """
+    lon = _normalize_degree(lon)
+    n = len(TWENTY_EIGHT_MANSIONS)
+    for i in range(n):
+        start = TWENTY_EIGHT_MANSIONS[i]["start_lon"]
+        end = TWENTY_EIGHT_MANSIONS[(i + 1) % n]["start_lon"]
+        if start < end:
+            if start <= lon < end:
+                return i
+        else:
+            # 跨越 0° 的情況
+            if lon >= start or lon < end:
+                return i
+    return 0
+
+
 def get_mansion_for_degree(lon: float) -> dict:
     """
     根據黃經度數取得對應的二十八宿
 
-    注意：這是簡化的對應方式，將 360° 平均分配給 28 宿。
-    實際的二十八宿寬度不等，需要根據歷史星表進行精確計算。
+    使用各宿距星（determinative star）的 J2000 黃經作為宿界，
+    每宿從其距星黃經延伸到下一宿的距星黃經（寬度不等）。
 
     Returns:
         dict: 包含以下鍵值的字典:
@@ -369,8 +391,6 @@ def get_mansion_for_degree(lon: float) -> dict:
             - element (str): 七曜屬性，例如 "木"、"金"
             - animal (str): 對應動物，例如 "蛟"、"龍"
             - group (str): 所屬方位，例如 "東方青龍"、"北方玄武"
+            - start_lon (float): 距星黃經度數
     """
-    lon = _normalize_degree(lon)
-    mansion_width = 360.0 / 28.0
-    idx = int(lon / mansion_width) % 28
-    return TWENTY_EIGHT_MANSIONS[idx]
+    return TWENTY_EIGHT_MANSIONS[get_mansion_index_for_degree(lon)]
