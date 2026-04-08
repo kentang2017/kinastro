@@ -19,6 +19,7 @@
 重要決定請諮詢合格的蒙古占星師 (Zurkhaič) 或喇嘛。
 """
 
+import math
 import streamlit as st
 from dataclasses import dataclass, field
 from datetime import date, timedelta
@@ -711,6 +712,8 @@ def render_zurkhai_chart(chart: ZurkhaiChart) -> None:
     """渲染蒙古祖爾海排盤 Streamlit 介面。"""
     _render_info(chart)
     st.divider()
+    _render_zurkhai_wheel(chart)
+    st.divider()
     _render_element_balance(chart)
     st.divider()
     _render_year_forecast(chart)
@@ -724,6 +727,263 @@ def render_zurkhai_chart(chart: ZurkhaiChart) -> None:
     _render_history()
     st.divider()
     _render_cultural_note()
+
+
+# --- 星盤圖 (Star Chart / Wheel) ---
+
+# Element color map for the 12 animals in the 60-year cycle.
+# Each animal position (0-11) in the cycle has an associated element color
+# determined by the cycle year element.
+_WHEEL_ELEMENT_COLORS = [e[4] for e in ELEMENTS]  # Wood, Fire, Earth, Metal, Water
+
+
+def _build_zurkhai_wheel_svg(chart: ZurkhaiChart) -> str:
+    """Build an SVG circular star chart for the Zurkhai system.
+
+    The wheel displays:
+    - Outer ring: 12 animal signs arranged clockwise, starting from Rat at top
+    - Middle ring: element color + polarity for each animal position
+    - Birth year animal highlighted with a gold border
+    - Current year animal highlighted with a cyan marker
+    - Conflict (沖) / Harmony (合) relationship lines
+    - Center: birth year element and animal summary
+
+    Returns:
+        SVG markup string.
+    """
+    cx, cy = 250, 250       # center
+    r_outer = 230            # outer ring radius
+    r_mid = 180              # middle ring (element band)
+    r_inner = 130            # inner boundary
+    r_text = 205             # animal text radius
+    r_elem = 155             # element text radius
+    n = 12                   # 12 animals
+    slice_angle = 360 / n    # 30° per slice
+
+    birth_idx = chart.birth_animal.index
+    current_idx = chart.current_animal.index
+
+    # Start SVG
+    parts = [
+        '<svg xmlns="http://www.w3.org/2000/svg" '
+        'viewBox="0 0 500 500" '
+        'style="width:100%;max-width:500px;margin:auto;display:block;" '
+        'font-family="sans-serif">',
+        # Background
+        '<rect width="500" height="500" rx="16" '
+        'fill="#1a1a2e" stroke="#333" stroke-width="1"/>',
+    ]
+
+    # --- Draw 12 segments ---
+    for i in range(n):
+        # Angles: 0° = top (12 o'clock), clockwise
+        # SVG angles are measured from 3 o'clock, so offset by -90°
+        start_deg = i * slice_angle - 90 - slice_angle / 2
+        end_deg = start_deg + slice_angle
+        start_rad = math.radians(start_deg)
+        end_rad = math.radians(end_deg)
+
+        # Arc endpoints for outer ring
+        ox1 = cx + r_outer * math.cos(start_rad)
+        oy1 = cy + r_outer * math.sin(start_rad)
+        ox2 = cx + r_outer * math.cos(end_rad)
+        oy2 = cy + r_outer * math.sin(end_rad)
+        # Arc endpoints for middle ring
+        mx1 = cx + r_mid * math.cos(start_rad)
+        my1 = cy + r_mid * math.sin(start_rad)
+        mx2 = cx + r_mid * math.cos(end_rad)
+        my2 = cy + r_mid * math.sin(end_rad)
+        # Arc endpoints for inner ring
+        ix1 = cx + r_inner * math.cos(start_rad)
+        iy1 = cy + r_inner * math.sin(start_rad)
+        ix2 = cx + r_inner * math.cos(end_rad)
+        iy2 = cy + r_inner * math.sin(end_rad)
+
+        large_arc = 0  # Each slice is 30° < 180°
+
+        # Determine element color for this animal's birth-year element
+        # Use the element of the year when this animal last appeared
+        # For display purposes, use the element of the cycle position
+        elem_idx = ((i - (chart.year - CYCLE_BASE_YEAR) % 12 +
+                     (chart.year - CYCLE_BASE_YEAR)) // 2) % 5
+        # Simplify: compute element for a year that has animal index i
+        # nearest to the birth year
+        year_for_animal = chart.year + (i - birth_idx) % 12
+        anim_elem_idx = ((year_for_animal - CYCLE_BASE_YEAR) // 2) % 5
+        elem_color = _WHEEL_ELEMENT_COLORS[anim_elem_idx]
+
+        # Outer ring segment (animal names)
+        is_birth = (i == birth_idx)
+        is_current = (i == current_idx)
+        fill_outer = f"{elem_color}33"
+        if is_birth:
+            fill_outer = f"{elem_color}66"
+        stroke_outer = "gold" if is_birth else (
+            "#00e5ff" if is_current else "#444")
+        sw_outer = "3" if is_birth or is_current else "1"
+
+        # Outer ring path: arc from ox1,oy1 to ox2,oy2, lines to mx2,my2
+        # and arc back to mx1,my1
+        parts.append(
+            f'<path d="M{ox1:.1f},{oy1:.1f} '
+            f'A{r_outer},{r_outer} 0 {large_arc} 1 {ox2:.1f},{oy2:.1f} '
+            f'L{mx2:.1f},{my2:.1f} '
+            f'A{r_mid},{r_mid} 0 {large_arc} 0 {mx1:.1f},{my1:.1f} Z" '
+            f'fill="{fill_outer}" stroke="{stroke_outer}" '
+            f'stroke-width="{sw_outer}"/>'
+        )
+
+        # Middle ring path (element band): arc from mx1 to mx2, line to ix2,
+        # arc back to ix1
+        fill_mid = f"{elem_color}44"
+        parts.append(
+            f'<path d="M{mx1:.1f},{my1:.1f} '
+            f'A{r_mid},{r_mid} 0 {large_arc} 1 {mx2:.1f},{my2:.1f} '
+            f'L{ix2:.1f},{iy2:.1f} '
+            f'A{r_inner},{r_inner} 0 {large_arc} 0 {ix1:.1f},{iy1:.1f} Z" '
+            f'fill="{fill_mid}" stroke="#555" stroke-width="0.5"/>'
+        )
+
+        # Animal emoji + name text
+        mid_deg = i * slice_angle - 90
+        mid_rad = math.radians(mid_deg)
+        tx = cx + r_text * math.cos(mid_rad)
+        ty = cy + r_text * math.sin(mid_rad)
+        a_info = ANIMALS[i]
+        emoji = a_info[4]
+        cn_name = a_info[3]
+
+        # Birth / current markers
+        marker = ""
+        if is_birth:
+            marker = "🎂"
+        elif is_current:
+            marker = "📅"
+
+        parts.append(
+            f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-size="16" fill="white">'
+            f'{emoji}</text>'
+        )
+        # Chinese name below emoji
+        ty2 = ty + 16
+        parts.append(
+            f'<text x="{tx:.1f}" y="{ty2:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-size="9" fill="#ddd">'
+            f'{cn_name}{marker}</text>'
+        )
+
+        # Element text in middle ring
+        ex = cx + r_elem * math.cos(mid_rad)
+        ey = cy + r_elem * math.sin(mid_rad)
+        elem_info = ELEMENTS[anim_elem_idx]
+        elem_emoji = elem_info[5]
+        elem_cn = elem_info[3]
+        parts.append(
+            f'<text x="{ex:.1f}" y="{ey:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-size="10" '
+            f'fill="{elem_color}">'
+            f'{elem_emoji}{elem_cn}</text>'
+        )
+
+    # --- Conflict / Harmony lines ---
+    # Draw conflict line (red dashed) if exists
+    if chart.is_conflict_year:
+        _add_relation_line(parts, cx, cy, r_inner - 10,
+                           birth_idx, current_idx, n, "#ff4444", "4,3")
+    # Draw harmony line (green) if exists
+    if chart.is_harmony_year:
+        _add_relation_line(parts, cx, cy, r_inner - 10,
+                           birth_idx, current_idx, n, "#44ff88", "")
+
+    # --- Center circle ---
+    parts.append(
+        f'<circle cx="{cx}" cy="{cy}" r="75" '
+        f'fill="#1a1a2e" stroke="#666" stroke-width="1.5"/>'
+    )
+
+    # Center content: birth year info
+    a = chart.birth_animal
+    e = chart.birth_element
+    p = chart.birth_polarity
+
+    parts.append(
+        f'<text x="{cx}" y="{cy - 35}" text-anchor="middle" '
+        f'font-size="28" fill="white">{a.emoji}</text>'
+    )
+    parts.append(
+        f'<text x="{cx}" y="{cy - 10}" text-anchor="middle" '
+        f'font-size="14" fill="white" font-weight="bold">'
+        f'{p.name_cn}{e.name_cn}{a.name_cn}</text>'
+    )
+    parts.append(
+        f'<text x="{cx}" y="{cy + 8}" text-anchor="middle" '
+        f'font-size="10" fill="#aaa">'
+        f'{p.name_en} {e.name_en} {a.name_en}</text>'
+    )
+    parts.append(
+        f'<text x="{cx}" y="{cy + 24}" text-anchor="middle" '
+        f'font-size="10" fill="#888">'
+        f'{p.name_mn} {e.name_mn} {a.name_mn}</text>'
+    )
+    parts.append(
+        f'<text x="{cx}" y="{cy + 42}" text-anchor="middle" '
+        f'font-size="10" fill="{e.color}">'
+        f'{e.emoji} {chart.year} · {p.symbol}</text>'
+    )
+
+    # Legend (bottom)
+    parts.append(
+        f'<text x="{cx}" y="485" text-anchor="middle" '
+        f'font-size="9" fill="#888">'
+        f'🎂 = 出生年 Birth Year &nbsp; '
+        f'📅 = 今年 Current Year</text>'
+    )
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def _add_relation_line(parts: list, cx: float, cy: float, r: float,
+                       idx1: int, idx2: int, n: int,
+                       color: str, dash: str) -> None:
+    """Add a line between two animal positions on the wheel."""
+    slice_angle = 360 / n
+    rad1 = math.radians(idx1 * slice_angle - 90)
+    rad2 = math.radians(idx2 * slice_angle - 90)
+    x1 = cx + r * math.cos(rad1)
+    y1 = cy + r * math.sin(rad1)
+    x2 = cx + r * math.cos(rad2)
+    y2 = cy + r * math.sin(rad2)
+    dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
+    parts.append(
+        f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+        f'x2="{x2:.1f}" y2="{y2:.1f}" '
+        f'stroke="{color}" stroke-width="2" opacity="0.7"{dash_attr}/>'
+    )
+
+
+def _render_zurkhai_wheel(chart: ZurkhaiChart) -> None:
+    """渲染祖爾海星盤圖 (Zurkhai Star Chart Wheel)。"""
+    st.subheader("🔮 祖爾海星盤 / Zurkhai Star Chart")
+
+    svg = _build_zurkhai_wheel_svg(chart)
+    st.markdown(svg, unsafe_allow_html=True)
+
+    # Legend below the chart
+    legend_parts = ["🎂 = 出生年 (Birth Year)", "📅 = 今年 (Current Year)"]
+    if chart.is_conflict_year:
+        legend_parts.append(
+            '<span style="color:#ff4444;">⚡ 紅色虛線 = 沖 (Conflict)</span>')
+    if chart.is_harmony_year:
+        legend_parts.append(
+            '<span style="color:#44ff88;">✨ 綠色線 = 三合 (Harmony)</span>')
+    st.markdown(
+        '<div style="text-align:center;font-size:12px;color:#aaa;">'
+        + " &nbsp;|&nbsp; ".join(legend_parts)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 # --- 基本資料 ---
