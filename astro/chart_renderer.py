@@ -110,16 +110,17 @@ def render_chart_grid(chart: ChartData):
 
     # 方盤排列 (外圈12格，按傳統排列)
     # 格子位置: [top row] [left col] [right col] [bottom row]
+    # 命宮(0)在寅位，逆時針排列: 寅(0)→卯(1)→辰(2)→巳(3)→午(4)→未(5)→申(6)→酉(7)→戌(8)→亥(9)→子(10)→丑(11)
     grid_order = [
-        [5, 4, 3, 2],          # 上排: 巳午未申
-        [6, -1, -1, 1],        # 中上: 辰 [中央] 酉
-        [7, -1, -1, 0],        # 中下: 卯 [中央] 戌 (命宮位置調整)
-        [8, 9, 10, 11],        # 下排: 寅丑子亥
+        [3, 4, 5, 6],          # 上排: 巳午未申
+        [2, -1, -1, 7],        # 中上: 辰 [中央] 酉
+        [1, -1, -1, 8],        # 中下: 卯 [中央] 戌
+        [0, 11, 10, 9],        # 下排: 寅丑子亥
     ]
 
     # 使用 HTML/CSS 渲染方盤
     html = _build_grid_html(chart, house_planets, grid_order)
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def _build_grid_html(
@@ -129,16 +130,20 @@ def _build_grid_html(
 ) -> str:
     """建構排盤 HTML"""
     cell_style = (
-        "border:1px solid #666; padding:6px; text-align:center; "
-        "vertical-align:top; min-width:120px; font-size:13px;"
+        "border:1px solid #555; padding:6px; text-align:center; "
+        "vertical-align:top; min-width:120px; font-size:13px; "
+        "background:#1a1a2e; color:#e0e0e0;"
     )
     center_style = (
-        "border:1px solid #444; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
+        "border:1px solid #666; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a3e; "
         "color:#e0e0e0;"
     )
 
-    html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
+    html = (
+        '<table style="border-collapse:collapse; margin:auto; width:100%; '
+        'background:#1a1a2e; color:#e0e0e0;">'
+    )
 
     for row_idx, row in enumerate(grid_order):
         html += "<tr>"
@@ -430,15 +435,15 @@ def render_mansion_ring(chart: ChartData):
         mansion_idx = int(lon / MANSION_W) % NUM_MANSIONS
         if mansion_idx not in planet_offsets:
             planet_offsets[mansion_idx] = []
-        planet_offsets[mansion_idx].append(p)
+        planet_offsets[mansion_idx].append((p, lon))
 
-    for mansion_idx, planets in planet_offsets.items():
-        n = len(planets)
+    for mansion_idx, planet_lons in planet_offsets.items():
+        n = len(planet_lons)
         base_a = mansion_idx * MANSION_W + MANSION_W / 2
-        for pi, p in enumerate(planets):
-            # Spread multiple planets within the mansion
+        for pi, (p, lon) in enumerate(planet_lons):
+            # Single planet: use exact longitude; multiple: spread within mansion
             if n == 1:
-                a = base_a
+                a = lon
             else:
                 span = MANSION_W * PLANET_SPREAD_FACTOR
                 a = base_a - span / 2 + span * pi / (n - 1)
@@ -504,7 +509,7 @@ def render_mansion_ring(chart: ChartData):
 
     svg.append("</svg>")
 
-    st.markdown("\n".join(svg), unsafe_allow_html=True)
+    st.html("\n".join(svg))
 
     # Legend
     legend_cols = st.columns(4)
