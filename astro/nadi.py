@@ -394,6 +394,109 @@ def _nadi_badge(nadi_type: int) -> str:
     return f"**{info['symbol']} {info['chinese']} ({info['element']})**"
 
 
+def _render_nadi_south_indian_grid(chart: NadiChart) -> None:
+    """渲染納迪占星南印度式方盤，行星以納迪脈輪色標示。"""
+    st.subheader("📊 納迪星盤 (Nadi Chart — South Indian Style)")
+
+    # South Indian chart: fixed rashi positions in 4×4 grid
+    si_grid = [
+        [3, 2, 1, 0],       # Cancer  Gemini  Taurus  Aries
+        [4, -1, -1, 11],    # Leo     [center]        Pisces
+        [5, -1, -1, 10],    # Virgo   [center]        Aquarius
+        [6, 7, 8, 9],       # Libra   Scorpio Sagitt  Capricorn
+    ]
+
+    # Group planets by rashi index
+    rashi_planets: dict[int, list] = {i: [] for i in range(12)}
+    for p in chart.planets:
+        idx = _sign_index(p.longitude)
+        short = p.name.split(" ")[0]
+        rashi_planets[idx].append((short, p.name, p.nadi_type, p.retrograde))
+
+    asc_idx = _sign_index(chart.ascendant_lon)
+
+    cell_style = (
+        "border:1px solid #444; padding:6px; text-align:center; "
+        "vertical-align:top; font-size:13px; word-break:break-word;"
+    )
+    asc_cell_style = cell_style + " background:#3d3010;"
+    center_style = (
+        "border:1px solid #444; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
+        "color:#e0e0e0;"
+    )
+
+    html = '<table style="border-collapse:collapse; margin:auto; width:100%; table-layout:fixed;">'
+    for row_idx, row in enumerate(si_grid):
+        html += "<tr>"
+        col_idx = 0
+        while col_idx < len(row):
+            idx = row[col_idx]
+            if idx == -1:
+                if row_idx == 1 and col_idx == 1:
+                    # Center cell: chart info
+                    asc_nadi = NADI_NAMES[chart.asc_nadi_type]
+                    j_nadi = NADI_NAMES[chart.janma_nadi_type]
+                    center_content = (
+                        f"<b>🔱 Nadi Jyotish</b><br/>"
+                        f"{chart.year}/{chart.month}/{chart.day} "
+                        f"{chart.hour:02d}:{chart.minute:02d}<br/>"
+                        f"UTC{chart.timezone:+.1f} {chart.location_name}<br/>"
+                        f"<small>Ayanamsa: {chart.ayanamsa:.2f}°</small><br/>"
+                        f"<small>命主: {j_nadi['symbol']}{j_nadi['chinese']} "
+                        f"上升: {asc_nadi['symbol']}{asc_nadi['chinese']}</small>"
+                    )
+                    html += (
+                        f'<td colspan="2" rowspan="2" '
+                        f'style="{center_style}">{center_content}</td>'
+                    )
+                    col_idx += 2
+                    continue
+                else:
+                    col_idx += 1
+                    continue
+            else:
+                rashi = RASHIS[idx]
+                style = asc_cell_style if idx == asc_idx else cell_style
+                p_list = rashi_planets[idx]
+                if p_list:
+                    p_parts = []
+                    for short, full, nadi_type, retro in p_list:
+                        nadi_color = NADI_NAMES[nadi_type]["color"]
+                        retro_mark = "℞" if retro else ""
+                        p_parts.append(
+                            f'<span style="color:{nadi_color};font-weight:bold">'
+                            f'{short}{retro_mark}</span>'
+                        )
+                    p_html = " ".join(p_parts)
+                else:
+                    p_html = '<span style="color:#999">—</span>'
+                marker = " 🔺" if idx == asc_idx else ""
+                cell_content = (
+                    f"<b>{rashi[0]}{marker}</b><br/>"
+                    f'<small style="color:#888">{rashi[1]} {rashi[2]}</small>'
+                    f"<br/>{p_html}"
+                )
+                html += f'<td style="{style}">{cell_content}</td>'
+            col_idx += 1
+        html += "</tr>"
+    html += "</table>"
+
+    # Nadi color legend
+    legend_parts = []
+    for nadi in NADI_NAMES:
+        legend_parts.append(
+            f'<span style="color:{nadi["color"]};font-weight:bold">'
+            f'{nadi["symbol"]} {nadi["chinese"]} ({nadi["english"]})</span>'
+        )
+    html += (
+        '<p style="text-align:center;margin-top:6px;font-size:13px">'
+        f'行星色彩：{" &nbsp;|&nbsp; ".join(legend_parts)}</p>'
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
+
+
 def render_nadi_chart(chart: NadiChart) -> None:
     """在 Streamlit 中渲染納迪占星命盤。"""
 
@@ -420,6 +523,11 @@ def render_nadi_chart(chart: NadiChart) -> None:
             f"{lnadi['symbol']} {lnadi['chinese']}",
             help="由上升點星宿決定"
         )
+
+    st.divider()
+
+    # ---- 納迪星盤（南印度式） ----
+    _render_nadi_south_indian_grid(chart)
 
     st.divider()
 
