@@ -801,12 +801,7 @@ def _build_zurkhai_wheel_svg(chart: ZurkhaiChart) -> str:
 
         large_arc = 0  # Each slice is 30° < 180°
 
-        # Determine element color for this animal's birth-year element
-        # Use the element of the year when this animal last appeared
-        # For display purposes, use the element of the cycle position
-        elem_idx = ((i - (chart.year - CYCLE_BASE_YEAR) % 12 +
-                     (chart.year - CYCLE_BASE_YEAR)) // 2) % 5
-        # Simplify: compute element for a year that has animal index i
+        # Compute element for a year that has animal index i
         # nearest to the birth year
         year_for_animal = chart.year + (i - birth_idx) % 12
         anim_elem_idx = ((year_for_animal - CYCLE_BASE_YEAR) // 2) % 5
@@ -930,14 +925,6 @@ def _build_zurkhai_wheel_svg(chart: ZurkhaiChart) -> str:
         f'<text x="{cx}" y="{cy + 42}" text-anchor="middle" '
         f'font-size="10" fill="{e.color}">'
         f'{e.emoji} {chart.year} · {p.symbol}</text>'
-    )
-
-    # Legend (bottom)
-    parts.append(
-        f'<text x="{cx}" y="485" text-anchor="middle" '
-        f'font-size="9" fill="#888">'
-        f'🎂 = 出生年 Birth Year &nbsp; '
-        f'📅 = 今年 Current Year</text>'
     )
 
     parts.append("</svg>")
