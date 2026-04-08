@@ -305,11 +305,13 @@ def render_mansion_ring(chart: ChartData):
     # 同心圓半徑
     R_OUTER = 310        # 最外圈
     R_MANSION_OUT = 310  # 28 宿環外沿
-    R_MANSION_IN = 260   # 28 宿環內沿
-    R_SIGN_OUT = 260     # 十二星次環外沿
-    R_SIGN_IN = 220      # 十二星次環內沿
-    R_PLANET = 185       # 星曜環
-    R_CENTER = 110       # 中央圓
+    R_MANSION_IN = 265   # 28 宿環內沿
+    R_SIGN_OUT = 265     # 十二星次環外沿
+    R_SIGN_IN = 235      # 十二星次環內沿
+    R_PALACE_OUT = 235   # 十二宮名環外沿
+    R_PALACE_IN = 200    # 十二宮名環內沿
+    R_PLANET = 170       # 星曜環
+    R_CENTER = 100       # 中央圓
 
     NUM_MANSIONS = len(TWENTY_EIGHT_MANSIONS)
     MANSION_W = 360.0 / NUM_MANSIONS  # 每宿約 12.857°
@@ -348,10 +350,9 @@ def render_mansion_ring(chart: ChartData):
     svg = []
     svg.append(
         f'<svg viewBox="0 0 {SIZE} {SIZE}" '
-        f'width="{SIZE}" height="{SIZE}" '
         f'xmlns="http://www.w3.org/2000/svg" '
-        f'style="max-width:640px; margin:auto; display:block; '
-        f'background:#0a0a1a; border-radius:12px;">'
+        f'style="width:100%; max-width:700px; height:auto; margin:auto; '
+        f'display:block; background:#0a0a1a; border-radius:12px;">'
     )
     svg.append(f'<rect width="{SIZE}" height="{SIZE}" fill="#0a0a1a" rx="12"/>')
 
@@ -419,6 +420,44 @@ def render_mansion_ring(chart: ChartData):
             f'font-size="13" font-weight="bold" font-family="serif" '
             f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
             f'{short_name}</text>'
+        )
+
+    # --- 十二宮名環 (12 Palace Names ring) ---
+    # Build branch → palace name mapping from chart houses
+    branch_to_palace: dict[int, str] = {}
+    for house in chart.houses:
+        branch_to_palace[house.branch] = house.name
+
+    for i in range(12):
+        a1 = i * 30.0
+        a2 = (i + 1) * 30.0
+        # Determine which earthly branch this segment corresponds to
+        branch_idx = (10 - i) % 12
+        is_ming = (branch_idx == chart.ming_gong_branch)
+        # Background sector
+        bg_fill = "#2a2a1e" if is_ming else "#0f0f22"
+        stroke_col = "#d4af37" if is_ming else "#444"
+        stroke_w = "1" if is_ming else "0.5"
+        svg.append(
+            f'<path d="{annular_sector(R_PALACE_IN, R_PALACE_OUT, a1, a2)}" '
+            f'fill="{bg_fill}" stroke="{stroke_col}" stroke-width="{stroke_w}"/>'
+        )
+        # Palace name text
+        mid_a = a1 + 15.0
+        r_text = (R_PALACE_IN + R_PALACE_OUT) / 2
+        x, y = polar(r_text, mid_a)
+        rot = text_rotation(mid_a)
+        palace_name = branch_to_palace.get(branch_idx, "")
+        # Short palace name (remove 宮 suffix for compactness)
+        short_palace = palace_name.replace("宮", "") if palace_name else ""
+        branch_label = EARTHLY_BRANCHES[branch_idx]
+        text_color = "#d4af37" if is_ming else "#c8b888"
+        svg.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{text_color}" '
+            f'font-size="11" font-weight="bold" font-family="serif" '
+            f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
+            f'{branch_label} {short_palace}</text>'
         )
 
     # --- Division lines for 12 signs (from center to mansion ring) ---
