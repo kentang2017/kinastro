@@ -429,18 +429,18 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 星曜位置 (planet positions in the planet ring) ---
     # Group planets by mansion to handle overlaps
-    planet_offsets = {}
+    mansion_planets: dict[int, list] = {}
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
         mansion_idx = int(lon / MANSION_W) % NUM_MANSIONS
-        if mansion_idx not in planet_offsets:
-            planet_offsets[mansion_idx] = []
-        planet_offsets[mansion_idx].append((p, lon))
+        if mansion_idx not in mansion_planets:
+            mansion_planets[mansion_idx] = []
+        mansion_planets[mansion_idx].append((p, lon))
 
-    for mansion_idx, planet_lons in planet_offsets.items():
-        n = len(planet_lons)
+    for mansion_idx, planet_data in mansion_planets.items():
+        n = len(planet_data)
         base_a = mansion_idx * MANSION_W + MANSION_W / 2
-        for pi, (p, lon) in enumerate(planet_lons):
+        for pi, (p, lon) in enumerate(planet_data):
             # Single planet: use exact longitude; multiple: spread within mansion
             if n == 1:
                 a = lon
