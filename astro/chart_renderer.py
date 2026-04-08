@@ -341,6 +341,15 @@ def render_mansion_ring(chart: ChartData):
             f"A {r_in},{r_in} 0 {large},0 {x2i:.1f},{y2i:.1f} Z"
         )
 
+    def ecl_to_chart(ecl_deg):
+        """Convert ecliptic longitude to SVG chart angle.
+
+        Positions earthly branches at traditional compass directions:
+        午(South) at top, 子(North) at bottom, 卯(East) at left, 酉(West) at right.
+        Branches increase clockwise around the chart.
+        """
+        return (45.0 - ecl_deg) % 360.0
+
     def text_rotation(a):
         rot = (a + 90) % 360
         if 90 < rot < 270:
@@ -358,8 +367,8 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 28 宿環 (outermost ring) ---
     for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
-        a1 = i * MANSION_W
-        a2 = (i + 1) * MANSION_W
+        a1 = ecl_to_chart((i + 1) * MANSION_W)
+        a2 = a1 + MANSION_W
         bg, fg = _GROUP_COLORS[m["group"]]
         # Background sector
         svg.append(
@@ -367,7 +376,7 @@ def render_mansion_ring(chart: ChartData):
             f'fill="{bg}" stroke="#555" stroke-width="0.5"/>'
         )
         # Mansion name
-        mid_a = (a1 + a2) / 2
+        mid_a = a1 + MANSION_W / 2
         r_text = (R_MANSION_IN + R_MANSION_OUT) / 2
         x, y = polar(r_text, mid_a)
         rot = text_rotation(mid_a)
@@ -380,14 +389,15 @@ def render_mansion_ring(chart: ChartData):
         )
 
     # --- 四象標記 (group labels at four corners) ---
-    # Dynamically compute the center angle for each group
-    group_angles: dict[str, list[float]] = {}
+    # Compute ecliptic center for each group, then transform to chart angle
+    group_ecl_angles: dict[str, list[float]] = {}
     for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
         mid = i * MANSION_W + MANSION_W / 2
-        group_angles.setdefault(m["group"], []).append(mid)
+        group_ecl_angles.setdefault(m["group"], []).append(mid)
 
-    for grp, angles in group_angles.items():
-        center_a = sum(angles) / len(angles)
+    for grp, angles in group_ecl_angles.items():
+        ecl_center = sum(angles) / len(angles)
+        center_a = ecl_to_chart(ecl_center)
         _, fg = _GROUP_COLORS[grp]
         x, y = polar(R_OUTER + 16, center_a)
         symbol = _GROUP_SYMBOLS[grp]
@@ -399,8 +409,8 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 十二星次環 (12 Chinese zodiac stations ring) ---
     for i in range(12):
-        a1 = i * 30.0
-        a2 = (i + 1) * 30.0
+        a1 = ecl_to_chart((i + 1) * 30.0)
+        a2 = a1 + 30.0
         # Thin background
         svg.append(
             f'<path d="{annular_sector(R_SIGN_IN, R_SIGN_OUT, a1, a2)}" '
@@ -429,8 +439,8 @@ def render_mansion_ring(chart: ChartData):
         branch_to_palace[house.branch] = house.name
 
     for i in range(12):
-        a1 = i * 30.0
-        a2 = (i + 1) * 30.0
+        a1 = ecl_to_chart((i + 1) * 30.0)
+        a2 = a1 + 30.0
         # Determine which earthly branch this segment corresponds to
         branch_idx = (10 - i) % 12
         is_ming = (branch_idx == chart.ming_gong_branch)
@@ -462,7 +472,7 @@ def render_mansion_ring(chart: ChartData):
 
     # --- Division lines for 12 signs (from center to mansion ring) ---
     for i in range(12):
-        a = i * 30.0
+        a = ecl_to_chart(i * 30.0)
         x1, y1 = polar(R_CENTER, a)
         x2, y2 = polar(R_MANSION_OUT, a)
         svg.append(
@@ -473,7 +483,7 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 28 宿分界線 (from sign ring inner to mansion ring outer) ---
     for i in range(28):
-        a = i * MANSION_W
+        a = ecl_to_chart(i * MANSION_W)
         x1, y1 = polar(R_MANSION_IN, a)
         x2, y2 = polar(R_MANSION_OUT, a)
         svg.append(
@@ -500,11 +510,13 @@ def render_mansion_ring(chart: ChartData):
 
     for mansion_idx, planet_data in mansion_planets.items():
         n = len(planet_data)
-        base_a = mansion_idx * MANSION_W + MANSION_W / 2
+        # Mansion sector in chart space
+        a1_chart = ecl_to_chart((mansion_idx + 1) * MANSION_W)
+        base_a = a1_chart + MANSION_W / 2
         for pi, (p, lon) in enumerate(planet_data):
             # Single planet: use exact longitude; multiple: spread within mansion
             if n == 1:
-                a = lon
+                a = ecl_to_chart(lon)
             else:
                 span = MANSION_W * PLANET_SPREAD_FACTOR
                 a = base_a - span / 2 + span * pi / (n - 1)
