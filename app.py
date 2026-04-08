@@ -3,8 +3,9 @@
 Multi-System Astrology Chart Application
 
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
-卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）
-十一種體系，使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
+卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
+納迪占星（Nadi Jyotish）十二種體系，使用 pyswisseph 進行天文計算，
+以 Streamlit 提供互動式排盤介面。
 """
 
 import streamlit as st
@@ -33,6 +34,7 @@ from astro.maya import compute_maya_chart, render_maya_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.decans import compute_decan_chart, render_decan_chart, render_decan_browse
+from astro.nadi import compute_nadi_chart, render_nadi_chart
 
 # ============================================================
 # 頁面設定
@@ -47,7 +49,8 @@ st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
     "支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
-    "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）。"
+    "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、"
+    "納迪占星（Nadi Jyotish）。"
 )
 
 # ============================================================
@@ -133,10 +136,10 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi = st.tabs(
     ["🀄 七政四餘（中國）", "🌟 紫微斗數", "🌍 西洋占星", "🙏 印度占星",
      "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星",
-     "🇲🇲 緬甸占星", "🏛️ 古埃及十度區間"]
+     "🇲🇲 緬甸占星", "🏛️ 古埃及十度區間", "🔱 納迪占星"]
 )
 
 if calculate:
@@ -255,6 +258,12 @@ if calculate:
         with st.spinner("正在計算古埃及十度區間排盤..."):
             dc_chart = compute_decan_chart(**_params)
         render_decan_chart(dc_chart)
+
+    # --- 納迪占星 (Nadi Jyotish) ---
+    with tab_nadi:
+        with st.spinner("正在計算納迪占星排盤..."):
+            nadi_chart = compute_nadi_chart(**_params)
+        render_nadi_chart(nadi_chart)
 
 else:
     with tab_chinese:
@@ -421,3 +430,21 @@ else:
     with tab_decans:
         st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看個人十度區間排盤。下方可先瀏覽古埃及 36 Decans 總覽。")
         render_decan_browse()
+    with tab_nadi:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是納迪占星 (Nadi Jyotish)？
+
+            **納迪占星**源自南印度泰米爾那德邦數千年前的古代棕櫚葉手稿（Nadi Granthas）：
+
+            - **三大納迪脈輪**：每顆行星依其所在星宿歸屬三種脈輪能量
+              - 🌬️ **Aadi Nadi（初脈）**：風型 (Vata)，主神經與思維
+              - 🔥 **Madhya Nadi（中脈）**：火型 (Pitta)，主代謝與意志
+              - 💧 **Antya Nadi（末脈）**：水型 (Kapha)，主免疫與耐力
+            - **命主納迪 (Janma Nadi)**：由出生月亮所在星宿決定，影響體質與性格
+            - **上升納迪 (Lagna Nadi)**：由上升點所在星宿決定，影響外在表現
+            - **納迪宮分 (Nadi Amsha)**：每宮 30° 分成 150 份（每份 12'），提供最精細分析
+            - **Nadi Dosha（脈衝衝突）**：婚配雙方若同屬一種納迪，傳統認為需特別注意
+            """
+        )
