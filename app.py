@@ -119,6 +119,16 @@ with st.sidebar:
     # 排盤按鈕
     calculate = st.button("🔮 開始排盤", use_container_width=True, type="primary")
 
+    # 性別（用於七政四餘宮位方向）
+    st.subheader("性別")
+    gender_choice = st.radio(
+        "性別（影響七政四餘宮位排列方向）",
+        options=["男命", "女命"],
+        index=0,
+        horizontal=True,
+    )
+    gender = "male" if gender_choice == "男命" else "female"
+
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
@@ -143,7 +153,7 @@ if calculate:
     # --- 七政四餘（中國） ---
     with tab_chinese:
         with st.spinner("正在計算七政四餘位置..."):
-            chart = compute_chart(**_params)
+            chart = compute_chart(**_params, gender=gender)
         render_chart_info(chart)
         st.divider()
         render_chart_grid(chart)

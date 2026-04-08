@@ -19,6 +19,7 @@ from .constants import (
     TWELVE_PALACES,
     FIVE_ELEMENTS,
     TWENTY_EIGHT_MANSIONS,
+    EARTHLY_BRANCHES,
 )
 
 
@@ -39,8 +40,10 @@ class PlanetPosition:
 @dataclass
 class HouseData:
     """宮位資料"""
-    index: int              # 宮位序號 (0-11)
+    index: int              # 宮位序號 (0-11): 命宮=0, 財帛=1, ...
     name: str               # 宮位名稱
+    branch: int             # 地支索引 (0-11): 子=0, 丑=1, ..., 亥=11
+    branch_name: str        # 地支名稱
     cusp: float             # 宮頭度數
     sign_western: str       # 所在西方星座
     sign_chinese: str       # 所在中國星次
@@ -64,6 +67,10 @@ class ChartData:
     houses: list            # List[HouseData]
     ascendant: float        # 上升點度數
     midheaven: float        # 中天度數
+    solar_month: int        # 節氣月 (1-12)
+    hour_branch: int        # 時辰地支索引 (0-11)
+    ming_gong_branch: int   # 命宮地支索引 (0-11)
+    gender: str             # 性別 ("male" / "female")
 
 
 def _normalize_degree(deg: float) -> float:
@@ -91,6 +98,54 @@ def _get_chinese_sign(deg: float) -> str:
     return TWELVE_SIGNS_CHINESE[_degree_to_sign_index(deg)]
 
 
+def _get_hour_branch(hour: int, minute: int) -> int:
+    """
+    根據出生時間取得時辰地支索引（子=0, 丑=1, ..., 亥=11）。
+    子時跨越午夜：23:00-01:00 為子時。
+    """
+    total_minutes = hour * 60 + minute
+    if total_minutes < 60 or total_minutes >= 23 * 60:
+        return 0   # 子時 (23:00–01:00)
+    return (total_minutes + 60) // 120  # 每 2 小時一個時辰
+
+
+def _get_solar_month(sun_longitude: float) -> int:
+    """
+    根據太陽黃經取得節氣月 (1-12)。
+
+    正月(寅)起於立春 (太陽黃經 ≈ 315°)，每 30° 為一個月：
+      月1(寅): 315°–345°   月7(申): 135°–165°
+      月2(卯): 345°–15°    月8(酉): 165°–195°
+      月3(辰): 15°–45°     月9(戌): 195°–225°
+      月4(巳): 45°–75°     月10(亥): 225°–255°
+      月5(午): 75°–105°    月11(子): 255°–285°
+      月6(未): 105°–135°   月12(丑): 285°–315°
+    """
+    return int((sun_longitude - 315) % 360 / 30) + 1
+
+
+def _get_ming_gong_branch(solar_month: int, hour_branch: int) -> int:
+    """
+    計算命宮地支索引。
+
+    規則（虎月法）：
+      以寅宮（地支索引2）為正月所在，逐月順數；
+      再由出生時辰逆數。
+    公式：(1 + solar_month - hour_branch) % 12
+    """
+    return (1 + solar_month - hour_branch) % 12
+
+
+def _branch_to_cusp(branch: int) -> float:
+    """
+    地支索引 → 對應的黃經起始度數。
+
+    每個地支佔 30° 等宮，戌宮(10)=0°–30°, 酉宮(9)=30°–60°, ...
+    """
+    sign_index = (10 - branch) % 12
+    return sign_index * 30.0
+
+
 def compute_chart(
     year: int,
     month: int,
@@ -101,6 +156,7 @@ def compute_chart(
     latitude: float,
     longitude: float,
     location_name: str = "",
+    gender: str = "male",
 ) -> ChartData:
     """
     計算七政四餘排盤
@@ -115,6 +171,7 @@ def compute_chart(
         latitude: 緯度
         longitude: 經度
         location_name: 地點名稱
+        gender: 性別 ("male" 男命 / "female" 女命)
 
     Returns:
         ChartData: 排盤結果資料
@@ -206,13 +263,36 @@ def compute_chart(
         retrograde=False,
     ))
 
-    # 建立宮位資料
+    # ---- 計算命宮 (Life Palace) ----
+    # 太陽黃經 → 節氣月
+    sun_lon = planets[0].longitude  # 太陽 is first
+    solar_month = _get_solar_month(sun_lon)
+
+    # 時辰地支
+    hour_branch = _get_hour_branch(hour, minute)
+
+    # 命宮地支
+    ming_gong_branch = _get_ming_gong_branch(solar_month, hour_branch)
+
+    # ---- 建立宮位資料 (按命宮地支及性別方向排列) ----
+    # 男命：順時針 (地支遞減)；女命：逆時針 (地支遞增)
+    direction = 1 if gender == "female" else -1
+
+    # 建立 branch → palace_index 映射
+    branch_to_palace: dict[int, int] = {}
+    for palace_idx in range(12):
+        branch = (ming_gong_branch + direction * palace_idx) % 12
+        branch_to_palace[branch] = palace_idx
+
     houses = []
-    for i in range(12):
-        cusp = cusps[i]
+    for palace_idx in range(12):
+        branch = (ming_gong_branch + direction * palace_idx) % 12
+        cusp = _branch_to_cusp(branch)
         house = HouseData(
-            index=i,
-            name=TWELVE_PALACES[i],
+            index=palace_idx,
+            name=TWELVE_PALACES[palace_idx],
+            branch=branch,
+            branch_name=EARTHLY_BRANCHES[branch],
             cusp=cusp,
             sign_western=_get_western_sign(cusp),
             sign_chinese=_get_chinese_sign(cusp),
@@ -220,9 +300,11 @@ def compute_chart(
         )
         houses.append(house)
 
-    # 將星曜分配到宮位
+    # 將星曜分配到宮位（按黃經度數對應地支）
     for planet in planets:
-        palace_idx = _find_house(planet.longitude, cusps)
+        planet_sign_idx = _degree_to_sign_index(planet.longitude)
+        planet_branch = (10 - planet_sign_idx) % 12
+        palace_idx = branch_to_palace.get(planet_branch, 0)
         planet.palace_index = palace_idx
         houses[palace_idx].planets.append(planet.name)
 
@@ -241,6 +323,10 @@ def compute_chart(
         houses=houses,
         ascendant=ascendant,
         midheaven=midheaven,
+        solar_month=solar_month,
+        hour_branch=hour_branch,
+        ming_gong_branch=ming_gong_branch,
+        gender=gender,
     )
 
 
