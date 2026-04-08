@@ -531,7 +531,7 @@ def render_mansion_ring(chart: ChartData):
 
     svg.append("</svg>")
 
-    st.html("\n".join(svg))
+    st.markdown("\n".join(svg), unsafe_allow_html=True)
 
     # Legend
     legend_cols = st.columns(4)
