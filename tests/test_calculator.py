@@ -253,7 +253,7 @@ class TestGetMingGongBranch:
         assert _get_ming_gong_branch(7, 0) == 8
 
     def test_month1_wu_hour(self):
-        # 正月午時: (1+1-6)%12 = -4%12 = 8 (申)
+        # 正月午時: (1+1-6)%12 = (-4)%12 = 8 (申) — Python mod always non-negative
         assert _get_ming_gong_branch(1, 6) == 8
 
     def test_month12_hai_hour(self):
