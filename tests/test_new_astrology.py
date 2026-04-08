@@ -1487,6 +1487,7 @@ from astro.zurkhai import (
     _check_harmony,
     _check_obstacle_age,
     _compute_auspicious,
+    _build_zurkhai_wheel_svg,
     ANIMALS,
     ELEMENTS,
     POLARITIES,
@@ -1854,3 +1855,58 @@ class TestZurkhaiKnownYears:
         assert a.name_en == "Dragon"
         assert e.name_en == "Metal"
         assert p.name_en == "Yang"
+
+
+class TestZurkhaiWheelSVG:
+    """Test the Zurkhai star chart SVG wheel generation."""
+
+    @pytest.fixture
+    def chart_1990(self):
+        return compute_zurkhai_chart(
+            1990, 1, 1, 12, 0,
+            timezone=8.0, latitude=39.9, longitude=116.4,
+            location_name="Beijing",
+        )
+
+    @pytest.fixture
+    def chart_conflict(self):
+        """Rat born in conflict with Horse year (2026)."""
+        return compute_zurkhai_chart(
+            1984, 6, 15, 8, 30,
+            timezone=8.0, latitude=39.9, longitude=116.4,
+            location_name="Beijing",
+        )
+
+    def test_svg_is_valid(self, chart_1990):
+        svg = _build_zurkhai_wheel_svg(chart_1990)
+        assert svg.startswith("<svg")
+        assert svg.strip().endswith("</svg>")
+
+    def test_svg_contains_all_animals(self, chart_1990):
+        svg = _build_zurkhai_wheel_svg(chart_1990)
+        for _, _, _, cn, emoji in ANIMALS:
+            assert emoji in svg, f"Missing animal emoji: {emoji} ({cn})"
+
+    def test_svg_contains_birth_marker(self, chart_1990):
+        svg = _build_zurkhai_wheel_svg(chart_1990)
+        assert "🎂" in svg
+
+    def test_svg_contains_birth_animal_info_in_center(self, chart_1990):
+        svg = _build_zurkhai_wheel_svg(chart_1990)
+        assert chart_1990.birth_animal.name_cn in svg
+        assert chart_1990.birth_element.name_cn in svg
+
+    def test_svg_contains_element_colors(self, chart_1990):
+        svg = _build_zurkhai_wheel_svg(chart_1990)
+        for _, _, _, _, color, _ in ELEMENTS:
+            assert color in svg, f"Missing element color: {color}"
+
+    def test_svg_conflict_year_has_red_line(self, chart_conflict):
+        """If chart has conflict year, SVG should contain a red dashed line."""
+        svg = _build_zurkhai_wheel_svg(chart_conflict)
+        if chart_conflict.is_conflict_year:
+            assert "#ff4444" in svg
+
+    def test_svg_dimensions(self, chart_1990):
+        svg = _build_zurkhai_wheel_svg(chart_1990)
+        assert 'viewBox="0 0 500 500"' in svg
