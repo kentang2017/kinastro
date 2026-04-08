@@ -16,7 +16,6 @@ from astro.chart_renderer import (
     render_chart_info,
     render_planet_table,
     render_house_table,
-    render_chart_grid,
     render_aspect_summary,
     render_mansion_ring,
 )
@@ -159,8 +158,6 @@ if calculate:
         with st.spinner("正在計算七政四餘位置..."):
             chart = compute_chart(**_params, gender=gender)
         render_chart_info(chart)
-        st.divider()
-        render_chart_grid(chart)
         st.divider()
         render_mansion_ring(chart)
         st.divider()
