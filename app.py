@@ -3,8 +3,8 @@
 Multi-System Astrology Chart Application
 
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
-卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）十種體系，
-使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
+卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）
+十一種體系，使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
 """
 
 import streamlit as st
@@ -32,6 +32,7 @@ from astro.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
+from astro.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 
 # ============================================================
 # 頁面設定
@@ -46,7 +47,7 @@ st.title("⭐ 堅占星 Kin Astro")
 st.markdown(
     "多體系占星排盤系統 — "
     "支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
-    "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）。"
+    "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）。"
 )
 
 # ============================================================
@@ -132,10 +133,10 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans = st.tabs(
     ["🀄 七政四餘（中國）", "🌟 紫微斗數", "🌍 西洋占星", "🙏 印度占星",
      "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星",
-     "🇲🇲 緬甸占星"]
+     "🇲🇲 緬甸占星", "🏛️ 古埃及十度區間"]
 )
 
 if calculate:
@@ -248,6 +249,12 @@ if calculate:
         with st.spinner("正在計算緬甸 Mahabote 排盤..."):
             mb_chart = compute_mahabote_chart(**_params)
         render_mahabote_chart(mb_chart)
+
+    # --- 古埃及十度區間 (Decans) ---
+    with tab_decans:
+        with st.spinner("正在計算古埃及十度區間排盤..."):
+            dc_chart = compute_decan_chart(**_params)
+        render_decan_chart(dc_chart)
 
 else:
     with tab_chinese:
@@ -411,3 +418,6 @@ else:
             - **計算公式**：Mahabote 值 = (緬甸年 + 星期數) mod 7
             """
         )
+    with tab_decans:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看個人十度區間排盤。下方可先瀏覽古埃及 36 Decans 總覽。")
+        render_decan_browse()
