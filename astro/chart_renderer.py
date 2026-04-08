@@ -9,7 +9,8 @@ import math
 import streamlit as st
 
 from .calculator import (
-    ChartData, format_degree, get_mansion_for_degree, _normalize_degree,
+    ChartData, format_degree, get_mansion_for_degree,
+    get_mansion_index_for_degree, _normalize_degree,
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
@@ -509,25 +510,11 @@ def render_mansion_ring(chart: ChartData):
     )
 
     # --- 星曜位置 (planet positions in the planet ring) ---
-    # Helper: find mansion index for a given ecliptic longitude
-    def _find_mansion_idx(lon_deg):
-        lon_deg = _normalize_degree(lon_deg)
-        for i in range(NUM_MANSIONS):
-            s = TWENTY_EIGHT_MANSIONS[i]["start_lon"]
-            e = TWENTY_EIGHT_MANSIONS[(i + 1) % NUM_MANSIONS]["start_lon"]
-            if s < e:
-                if s <= lon_deg < e:
-                    return i
-            else:
-                if lon_deg >= s or lon_deg < e:
-                    return i
-        return 0
-
     # Group planets by mansion to handle overlaps
     mansion_planets: dict[int, list] = {}
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
-        mansion_idx = _find_mansion_idx(lon)
+        mansion_idx = get_mansion_index_for_degree(lon)
         if mansion_idx not in mansion_planets:
             mansion_planets[mansion_idx] = []
         mansion_planets[mansion_idx].append((p, lon))
