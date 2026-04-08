@@ -111,7 +111,6 @@ MONTH_ANIMALS = [
 
 # Day animal cycle (repeats every 12 days from a reference)
 # Reference: Jan 1, 1924 = Rat day (index 0) — simplified approximation
-DAY_CYCLE_REF_JD = 2423873  # Julian Day for 1924-01-01 (approx)
 
 # ============================================================
 # 障礙年 (Obstacle Years / Jiltei Jil)
