@@ -333,7 +333,8 @@ def _render_decan_wheel(highlight_index: int | None = None):
         hover_texts.append(
             f"{d['sign_en']} ({d['sign_cn']}) Decan {d['decan_number']}<br>"
             f"{d['degree_start']}°–{d['degree_end']}°<br>"
-            f"Egyptian: {d['egyptian_name']}<br>"
+            f"Egyptian: {d['egyptian_hieroglyphic']} {d['egyptian_name']}"
+            f" ({d['egyptian_transliteration']})<br>"
             f"Deity: {d['egyptian_deity']}<br>"
             f"Chaldean Ruler: {d['chaldean_ruler_en']} {d['chaldean_ruler_glyph']}"
         )
@@ -399,7 +400,9 @@ def _render_today_card(sun_lon: float, decan: dict, lang: str = "cn"):
            {decan['degree_start']}°–{decan['degree_end']}°</p>
         <p><b>{"迦勒底主星" if lang == "cn" else "Chaldean Ruler"}:</b> {ruler} &nbsp;
            <b>{"三分主星" if lang == "cn" else "Triplicity Ruler"}:</b> {trip}</p>
-        <p><b>{"埃及名稱" if lang == "cn" else "Egyptian Name"}:</b> {decan['egyptian_name']}
+        <p><b>{"埃及名稱" if lang == "cn" else "Egyptian Name"}:</b>
+           <span style="font-size:1.3em;">{decan['egyptian_hieroglyphic']}</span>
+           {decan['egyptian_name']} ({decan['egyptian_transliteration']})
            &nbsp; <b>{"守護神" if lang == "cn" else "Deity"}:</b> {decan['egyptian_deity']}</p>
         <p><b>{"塔羅" if lang == "cn" else "Tarot"}:</b>
            {decan['tarot_card_cn'] if lang == "cn" else decan['tarot_card_en']}</p>
@@ -445,7 +448,9 @@ def _render_decan_grid(lang: str = "cn", highlight_index: int | None = None):
                     <b>{"迦勒底" if lang == "cn" else "Chaldean"}:</b> {ruler}<br/>
                     <b>{"三分" if lang == "cn" else "Triplicity"}:</b> {trip}<br/>
                     <b>{"埃及" if lang == "cn" else "Egyptian"}:</b>
-                    {d['egyptian_name']} ({d['egyptian_deity']})<br/>
+                    <span style="font-size:1.2em;">{d['egyptian_hieroglyphic']}</span>
+                    {d['egyptian_name']} ({d['egyptian_transliteration']})
+                    · {d['egyptian_deity']}<br/>
                     <b>{"礦石" if lang == "cn" else "Mineral"}:</b> {d['mineral']}
                     &nbsp; <b>{"植物" if lang == "cn" else "Plant"}:</b> {d['plant']}<br/>
                     <b>{"塔羅" if lang == "cn" else "Tarot"}:</b> {tarot}
@@ -547,7 +552,9 @@ def _render_ascendant_card(chart: DecanChart, lang: str = "cn"):
             <b>ASC:</b> {deg_str} &nbsp;
             <b>{"迦勒底主星" if lang == "cn" else "Chaldean Ruler"}:</b> {ruler}<br/>
             <b>{"埃及" if lang == "cn" else "Egyptian"}:</b>
-            {d['egyptian_name']} ({d['egyptian_deity']})<br/>
+            <span style="font-size:1.2em;">{d['egyptian_hieroglyphic']}</span>
+            {d['egyptian_name']} ({d['egyptian_transliteration']})
+            · {d['egyptian_deity']}<br/>
             <b>{"塔羅" if lang == "cn" else "Tarot"}:</b>
             {d['tarot_card_cn'] if lang == "cn" else d['tarot_card_en']}<br/>
             <p style="font-style:italic; margin-top:6px;">{personality}</p>
