@@ -1253,3 +1253,265 @@ class TestMahaboteAnimalSigns:
         )
         animals = {h.animal_en for h in chart.houses}
         assert len(animals) == 7
+
+
+# ============================================================
+# Nadi Amsha (D150) Tests
+# ============================================================
+
+from astro.nadi_amsha import (
+    NADI_NAMES,
+    NADI_ARC_DEGREES,
+    EPSILON,
+    NadiAmshaResult,
+    get_sign_modality,
+    get_nadi_amsha,
+    get_nadi_amsha_by_sign_index,
+)
+
+
+class TestNadiAmshaConstants:
+    """納迪常數正確性測試 (Nadi Amsha constants correctness)"""
+
+    def test_nadi_names_length(self):
+        """NADI_NAMES must contain exactly 150 entries."""
+        assert len(NADI_NAMES) == 150
+
+    def test_first_nadi_name(self):
+        """First Nadi must be Vasudha (Deva Keralam tradition)."""
+        assert NADI_NAMES[0] == "Vasudha"
+
+    def test_last_nadi_name(self):
+        """Last Nadi must be Parameshwari (Deva Keralam tradition)."""
+        assert NADI_NAMES[149] == "Parameshwari"
+
+    def test_nadi_arc_is_12_arcmin(self):
+        """Each Nadi must span exactly 12 arc-minutes (0.2°)."""
+        assert abs(NADI_ARC_DEGREES - 0.2) < 1e-12
+
+    def test_150_nadis_fill_30_degrees(self):
+        """150 Nadis must fill one complete 30° Rashi sign."""
+        assert abs(150 * NADI_ARC_DEGREES - 30.0) < 1e-10
+
+    def test_all_nadi_names_are_strings(self):
+        """All Nadi names must be non-empty strings."""
+        for name in NADI_NAMES:
+            assert isinstance(name, str) and len(name) > 0
+
+    def test_epsilon_value(self):
+        """EPSILON must be 1e-9 (boundary guard)."""
+        assert abs(EPSILON - 1e-9) < 1e-15
+
+
+class TestGetSignModality:
+    """星座性質識別測試 (Sign modality detection)"""
+
+    def test_movable_signs(self):
+        """Aries(0), Cancer(3), Libra(6), Capricorn(9) are Movable (Chara)."""
+        for idx in (0, 3, 6, 9):
+            assert get_sign_modality(idx) == "Movable"
+
+    def test_fixed_signs(self):
+        """Taurus(1), Leo(4), Scorpio(7), Aquarius(10) are Fixed (Sthira)."""
+        for idx in (1, 4, 7, 10):
+            assert get_sign_modality(idx) == "Fixed"
+
+    def test_dual_signs(self):
+        """Gemini(2), Virgo(5), Sagittarius(8), Pisces(11) are Dual (Dwiswabhava)."""
+        for idx in (2, 5, 8, 11):
+            assert get_sign_modality(idx) == "Dual"
+
+    def test_all_12_signs_have_modality(self):
+        """Every sign index 0–11 must return a valid modality."""
+        valid = {"Movable", "Fixed", "Dual"}
+        for i in range(12):
+            assert get_sign_modality(i) in valid
+
+    def test_invalid_index_raises(self):
+        """Out-of-range sign indices must raise ValueError."""
+        with pytest.raises(ValueError):
+            get_sign_modality(-1)
+        with pytest.raises(ValueError):
+            get_sign_modality(12)
+
+
+class TestGetNadiAmsha:
+    """getNadiAmsha 核心函數測試 (Core Nadi Amsha function tests)"""
+
+    # ── 邊界案例 (Boundary cases from requirements) ──────────
+
+    def test_aries_0_0_1_is_nadi_1(self):
+        """牡羊座 0°0'1\" (Movable) → Nadi 1 (Vasudha)."""
+        deg = 1 / 3600  # 0°0'1"
+        result = get_nadi_amsha(deg, "Movable")
+        assert result.nadi_index == 1
+        assert result.nadi_name == "Vasudha"
+
+    def test_aries_29_59_59_is_nadi_150(self):
+        """牡羊座 29°59'59\" (Movable) → Nadi 150 (Parameshwari)."""
+        deg = 29 + 59 / 60 + 59 / 3600
+        result = get_nadi_amsha(deg, "Movable")
+        assert result.nadi_index == 150
+        assert result.nadi_name == "Parameshwari"
+
+    def test_taurus_0_0_1_is_nadi_150(self):
+        """金牛座 0°0'1\" (Fixed) → 逆序，應返回 Nadi 150 (Parameshwari)."""
+        deg = 1 / 3600  # 0°0'1"
+        result = get_nadi_amsha(deg, "Fixed")
+        assert result.nadi_index == 150
+        assert result.nadi_name == "Parameshwari"
+
+    def test_taurus_29_59_59_is_nadi_1(self):
+        """金牛座 29°59'59\" (Fixed) → 逆序末尾，應返回 Nadi 1 (Vasudha)."""
+        deg = 29 + 59 / 60 + 59 / 3600
+        result = get_nadi_amsha(deg, "Fixed")
+        assert result.nadi_index == 1
+        assert result.nadi_name == "Vasudha"
+
+    def test_gemini_0_0_1_is_nadi_76(self):
+        """雙子座 0°0'1\" (Dual) → 從第 76 個 Nadi 開始."""
+        deg = 1 / 3600
+        result = get_nadi_amsha(deg, "Dual")
+        assert result.nadi_index == 76
+
+    def test_gemini_14_59_59_is_nadi_150(self):
+        """雙子座 14°59'59\" (Dual) → 第一段末尾應為 Nadi 150."""
+        deg = 14 + 59 / 60 + 59 / 3600
+        result = get_nadi_amsha(deg, "Dual")
+        assert result.nadi_index == 150
+
+    def test_gemini_15_0_1_is_nadi_1(self):
+        """雙子座 15°0'1\" (Dual) → 第二段起始應為 Nadi 1."""
+        deg = 15 + 0 / 60 + 1 / 3600
+        result = get_nadi_amsha(deg, "Dual")
+        assert result.nadi_index == 1
+
+    def test_gemini_29_59_59_is_nadi_75(self):
+        """雙子座 29°59'59\" (Dual) → 第二段末尾應為 Nadi 75."""
+        deg = 29 + 59 / 60 + 59 / 3600
+        result = get_nadi_amsha(deg, "Dual")
+        assert result.nadi_index == 75
+
+    # ── 結果結構 (Result structure) ──────────────────────────
+
+    def test_returns_nadi_amsha_result(self):
+        """Result must be a NadiAmshaResult dataclass."""
+        result = get_nadi_amsha(0.1, "Movable")
+        assert isinstance(result, NadiAmshaResult)
+
+    def test_result_fields_populated(self):
+        """All fields of NadiAmshaResult must be populated."""
+        result = get_nadi_amsha(5.0, "Movable")
+        assert 1 <= result.nadi_index <= 150
+        assert result.nadi_name in NADI_NAMES
+        assert result.modality == "Movable"
+        assert result.sign_degree == 5.0
+
+    def test_nadi_index_range_movable(self):
+        """All nadi_index values for Movable signs must be in 1–150."""
+        for i in range(150):
+            deg = i * NADI_ARC_DEGREES + NADI_ARC_DEGREES / 2
+            result = get_nadi_amsha(deg, "Movable")
+            assert 1 <= result.nadi_index <= 150
+
+    def test_nadi_index_range_fixed(self):
+        """All nadi_index values for Fixed signs must be in 1–150."""
+        for i in range(150):
+            deg = i * NADI_ARC_DEGREES + NADI_ARC_DEGREES / 2
+            result = get_nadi_amsha(deg, "Fixed")
+            assert 1 <= result.nadi_index <= 150
+
+    def test_nadi_index_range_dual(self):
+        """All nadi_index values for Dual signs must be in 1–150."""
+        for i in range(150):
+            deg = i * NADI_ARC_DEGREES + NADI_ARC_DEGREES / 2
+            result = get_nadi_amsha(deg, "Dual")
+            assert 1 <= result.nadi_index <= 150
+
+    def test_movable_all_150_nadis_covered(self):
+        """Movable signs must map to all 150 distinct Nadi indices."""
+        indices = set()
+        for i in range(150):
+            deg = i * NADI_ARC_DEGREES + NADI_ARC_DEGREES / 2
+            indices.add(get_nadi_amsha(deg, "Movable").nadi_index)
+        assert indices == set(range(1, 151))
+
+    def test_fixed_all_150_nadis_covered(self):
+        """Fixed signs must map to all 150 distinct Nadi indices."""
+        indices = set()
+        for i in range(150):
+            deg = i * NADI_ARC_DEGREES + NADI_ARC_DEGREES / 2
+            indices.add(get_nadi_amsha(deg, "Fixed").nadi_index)
+        assert indices == set(range(1, 151))
+
+    def test_dual_all_150_nadis_covered(self):
+        """Dual signs must map to all 150 distinct Nadi indices."""
+        indices = set()
+        for i in range(150):
+            deg = i * NADI_ARC_DEGREES + NADI_ARC_DEGREES / 2
+            indices.add(get_nadi_amsha(deg, "Dual").nadi_index)
+        assert indices == set(range(1, 151))
+
+    # ── 輸入驗證 (Input validation) ──────────────────────────
+
+    def test_invalid_sign_degree_negative_raises(self):
+        """Negative sign_degree must raise ValueError."""
+        with pytest.raises(ValueError):
+            get_nadi_amsha(-0.1, "Movable")
+
+    def test_invalid_sign_degree_30_raises(self):
+        """sign_degree = 30 (out of [0,30)) must raise ValueError."""
+        with pytest.raises(ValueError):
+            get_nadi_amsha(30.0, "Movable")
+
+    def test_invalid_modality_raises(self):
+        """Unrecognised modality must raise ValueError."""
+        with pytest.raises(ValueError):
+            get_nadi_amsha(5.0, "Unknown")
+
+    # ── 精度 (Precision / epsilon guard) ─────────────────────
+
+    def test_exact_boundary_at_0_2_movable(self):
+        """Degree exactly at 0.2° boundary (Movable) must map to Nadi 2."""
+        result = get_nadi_amsha(0.2, "Movable")
+        assert result.nadi_index == 2
+
+    def test_just_below_boundary_epsilon_bumps_to_next(self):
+        """Degree within epsilon below 0.2° is bumped to Nadi 2 (epsilon guard)."""
+        # 0.2 - 1e-9 + epsilon(1e-9) = 0.2 → treated as start of Nadi 2
+        result = get_nadi_amsha(0.2 - 1e-9, "Movable")
+        assert result.nadi_index == 2
+
+    def test_clearly_below_boundary_stays_in_nadi_1(self):
+        """Degree clearly below 0.2° (by more than epsilon) stays in Nadi 1."""
+        result = get_nadi_amsha(0.2 - 2e-9, "Movable")
+        assert result.nadi_index == 1
+
+
+class TestGetNadiAmshaBySignIndex:
+    """便利函數測試 (Convenience wrapper tests)"""
+
+    def test_sign_index_0_aries_movable(self):
+        """sign_index 0 (Aries/Mesha) must use Movable ordering."""
+        result = get_nadi_amsha_by_sign_index(1 / 3600, 0)
+        assert result.nadi_index == 1
+        assert result.modality == "Movable"
+
+    def test_sign_index_1_taurus_fixed(self):
+        """sign_index 1 (Taurus/Vrishabha) must use Fixed ordering."""
+        result = get_nadi_amsha_by_sign_index(1 / 3600, 1)
+        assert result.nadi_index == 150
+        assert result.modality == "Fixed"
+
+    def test_sign_index_2_gemini_dual(self):
+        """sign_index 2 (Gemini/Mithuna) must use Dual ordering."""
+        result = get_nadi_amsha_by_sign_index(1 / 3600, 2)
+        assert result.nadi_index == 76
+        assert result.modality == "Dual"
+
+    def test_all_sign_indices_return_valid_result(self):
+        """All 12 sign indices must return valid NadiAmshaResult."""
+        for i in range(12):
+            result = get_nadi_amsha_by_sign_index(5.0, i)
+            assert isinstance(result, NadiAmshaResult)
+            assert 1 <= result.nadi_index <= 150
