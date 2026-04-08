@@ -572,8 +572,10 @@ def _render_dignities_table(chart: DecanChart, lang: str = "cn"):
     sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
     rows = [hdr, sep]
 
+    def yn(v):
+        return "✓" if v else "—"
+
     for row in chart.essential_dignities_summary:
-        yn = lambda v: "✓" if v else "—"  # noqa: E731
         rows.append(
             f"| {row['planet']} "
             f"| {yn(row['domicile'])} "
