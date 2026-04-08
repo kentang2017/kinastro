@@ -59,7 +59,7 @@ def _render_planet_group(planets: list):
         rows.append(
             f"| {name_styled} | {p.element} | {format_degree(p.longitude)} "
             f"| {p.sign_western} | {p.sign_degree:.2f}° "
-            f"| {p.sign_chinese} | {mansion['name']}({mansion['group']}) | {retro} |"
+            f"| {p.sign_chinese} | {mansion['name']} | {retro} |"
         )
 
     st.markdown("\n".join(rows), unsafe_allow_html=True)
@@ -287,14 +287,6 @@ _GROUP_COLORS = {
     "南方朱雀": ("#3a1a1a", "#ef5350"),   # red
 }
 
-# 四象標記
-_GROUP_SYMBOLS = {
-    "東方青龍": "🐉",
-    "北方玄武": "🐢",
-    "西方白虎": "🐅",
-    "南方朱雀": "🐦",
-}
-
 
 def render_mansion_ring(chart: ChartData):
     """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現 28 宿 + 十二星次 + 星曜位置"""
@@ -398,25 +390,6 @@ def render_mansion_ring(chart: ChartData):
             f'font-size="12" font-weight="bold" font-family="serif" '
             f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
             f'{m["name"]}</text>'
-        )
-
-    # --- 四象標記 (group labels at four corners) ---
-    # Compute ecliptic center for each group using actual mansion boundaries
-    group_chart_angles: dict[str, list[float]] = {}
-    for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
-        w = _mansion_width(i)
-        mid = _mansion_chart_start(i) + w / 2
-        group_chart_angles.setdefault(m["group"], []).append(mid)
-
-    for grp, angles in group_chart_angles.items():
-        center_a = sum(angles) / len(angles)
-        _, fg = _GROUP_COLORS[grp]
-        x, y = polar(R_OUTER + 16, center_a)
-        symbol = _GROUP_SYMBOLS[grp]
-        svg.append(
-            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
-            f'dominant-baseline="central" font-size="16">'
-            f'{symbol}</text>'
         )
 
     # --- 十二星次環 (12 Chinese zodiac stations ring) ---
@@ -596,13 +569,4 @@ def render_mansion_ring(chart: ChartData):
 
     st.markdown("\n".join(svg), unsafe_allow_html=True)
 
-    # Legend
-    legend_cols = st.columns(4)
-    for i, (grp, (_, fg)) in enumerate(_GROUP_COLORS.items()):
-        with legend_cols[i]:
-            symbol = _GROUP_SYMBOLS[grp]
-            st.markdown(
-                f'<span style="color:{fg};font-weight:bold">'
-                f'{symbol} {grp}</span>',
-                unsafe_allow_html=True,
-            )
+
