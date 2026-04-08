@@ -1253,3 +1253,218 @@ class TestMahaboteAnimalSigns:
         )
         animals = {h.animal_en for h in chart.houses}
         assert len(animals) == 7
+
+
+# ============================================================
+# Decan Astrology Tests
+# ============================================================
+
+from astro.decans_data import (
+    DECANS_DATA,
+    get_decan_by_longitude,
+    get_decan_by_sign_and_degree,
+    CHALDEAN_ORDER,
+    ZODIAC_SIGNS_DECAN,
+    ESSENTIAL_DIGNITIES,
+    FACE_DIGNITY_SCORE,
+)
+from astro.decans import compute_decan_chart, DecanChart, DecanPlanetInfo
+
+
+SIGN_ELEMENT = {s[0]: s[3] for s in ZODIAC_SIGNS_DECAN}
+
+REQUIRED_DECAN_KEYS = {
+    "index", "sign_en", "sign_cn", "sign_glyph",
+    "decan_number", "degree_start", "degree_end",
+    "degree_in_sign_start", "degree_in_sign_end",
+    "chaldean_ruler_en", "chaldean_ruler_cn", "chaldean_ruler_glyph",
+    "triplicity_ruler_en", "triplicity_ruler_cn",
+    "egyptian_name", "egyptian_deity",
+    "color", "mineral", "plant",
+    "tarot_card_en", "tarot_card_cn",
+    "personality_en", "personality_cn",
+    "strengths_en", "strengths_cn",
+    "challenges_en", "challenges_cn",
+    "history_en", "history_cn",
+    "element",
+}
+
+# Golden Dawn tarot order: each sign uses one suit (by element),
+# numbers run 2-10 across the 36 decans with suit changing per sign.
+ELEMENT_SUIT_MAP = {
+    "Fire": "Wands", "Earth": "Pentacles",
+    "Air": "Swords", "Water": "Cups",
+}
+
+
+class TestDecansData:
+    """古埃及十度區間資料測試"""
+
+    def test_36_decans_exist(self):
+        """Should have exactly 36 decans"""
+        assert len(DECANS_DATA) == 36
+
+    def test_decan_indices(self):
+        """Each decan index should be 0-35"""
+        for i, d in enumerate(DECANS_DATA):
+            assert d["index"] == i
+
+    def test_chaldean_order_cycle(self):
+        """Chaldean rulers should cycle in correct order"""
+        for i, d in enumerate(DECANS_DATA):
+            expected = CHALDEAN_ORDER[i % 7]
+            assert d["chaldean_ruler_en"] == expected, (
+                f"Decan {i}: expected {expected}, got {d['chaldean_ruler_en']}"
+            )
+
+    def test_tarot_mapping_golden_dawn(self):
+        """Tarot cards should follow Golden Dawn order"""
+        # Golden Dawn assigns pip cards 2-10 sequentially across the
+        # 36 decans (index % 9 + 2), suit determined by element.
+        for d in DECANS_DATA:
+            suit = ELEMENT_SUIT_MAP[d["element"]]
+            expected_pip = (d["index"] % 9) + 2
+            expected_card = f"{expected_pip} of {suit}"
+            assert d["tarot_card_en"] == expected_card, (
+                f"Decan {d['index']}: expected '{expected_card}', "
+                f"got '{d['tarot_card_en']}'"
+            )
+
+    def test_degree_ranges_continuous(self):
+        """Degree ranges should be continuous 0-360"""
+        for i, d in enumerate(DECANS_DATA):
+            assert d["degree_start"] == i * 10
+            assert d["degree_end"] == (i + 1) * 10
+
+    def test_each_sign_has_three_decans(self):
+        """Each zodiac sign should have exactly 3 decans"""
+        from collections import Counter
+        counts = Counter(d["sign_en"] for d in DECANS_DATA)
+        for sign, count in counts.items():
+            assert count == 3, f"{sign} has {count} decans, expected 3"
+        assert len(counts) == 12
+
+    def test_get_decan_by_longitude_boundaries(self):
+        """Test boundary conditions for longitude lookup"""
+        # First decan: 0°
+        d = get_decan_by_longitude(0.0)
+        assert d["index"] == 0
+        # Just before 10°
+        d = get_decan_by_longitude(9.999)
+        assert d["index"] == 0
+        # Exactly 10° -> second decan
+        d = get_decan_by_longitude(10.0)
+        assert d["index"] == 1
+        # Last decan: 350°
+        d = get_decan_by_longitude(350.0)
+        assert d["index"] == 35
+        # Wrap-around: 360° -> first decan
+        d = get_decan_by_longitude(360.0)
+        assert d["index"] == 0
+        # Negative normalisation
+        d = get_decan_by_longitude(-10.0)
+        assert d["index"] == 35
+
+    def test_get_decan_by_sign_and_degree(self):
+        """Test sign+degree lookup"""
+        # Aries 0° -> decan 0
+        d = get_decan_by_sign_and_degree(0, 0.0)
+        assert d["index"] == 0
+        assert d["sign_en"] == "Aries"
+        # Aries 15° -> decan 1
+        d = get_decan_by_sign_and_degree(0, 15.0)
+        assert d["index"] == 1
+        # Pisces 25° -> decan 35
+        d = get_decan_by_sign_and_degree(11, 25.0)
+        assert d["index"] == 35
+        # Invalid sign should raise
+        with pytest.raises(ValueError):
+            get_decan_by_sign_and_degree(12, 0.0)
+        # Invalid degree should raise
+        with pytest.raises(ValueError):
+            get_decan_by_sign_and_degree(0, 30.0)
+
+    def test_all_required_keys_present(self):
+        """Every decan dict should have all required keys"""
+        for d in DECANS_DATA:
+            missing = REQUIRED_DECAN_KEYS - d.keys()
+            assert not missing, f"Decan {d.get('index')}: missing keys {missing}"
+
+    def test_elements_match_signs(self):
+        """Decan element should match its zodiac sign's element"""
+        for d in DECANS_DATA:
+            expected = SIGN_ELEMENT[d["sign_en"]]
+            assert d["element"] == expected, (
+                f"Decan {d['index']} ({d['sign_en']}): "
+                f"element {d['element']} != expected {expected}"
+            )
+
+
+class TestDecanChart:
+    """古埃及十度區間排盤測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_decan_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=25.033, longitude=121.565,
+            location_name="台北",
+        )
+
+    def test_chart_has_planets(self, sample_chart):
+        """Chart should have planet entries"""
+        assert len(sample_chart.planets) > 0
+        assert all(
+            isinstance(p, DecanPlanetInfo) for p in sample_chart.planets
+        )
+
+    def test_chart_has_ascendant(self, sample_chart):
+        """Chart should have ascendant decan"""
+        asc = sample_chart.ascendant_decan
+        assert isinstance(asc, dict)
+        assert "index" in asc
+        assert 0 <= asc["index"] <= 35
+
+    def test_planet_decan_numbers_valid(self, sample_chart):
+        """All decan numbers should be 1, 2, or 3"""
+        for p in sample_chart.planets:
+            assert p.decan_number in (1, 2, 3), (
+                f"{p.planet_name} has decan_number={p.decan_number}"
+            )
+
+    def test_sun_in_capricorn(self, sample_chart):
+        """Sun on 1990-01-01 should be in Capricorn"""
+        sun = next(p for p in sample_chart.planets if "Sun" in p.planet_name)
+        assert sun.sign_en == "Capricorn"
+
+    def test_face_dignity_boolean(self, sample_chart):
+        """face_dignity should be boolean for all planets"""
+        for p in sample_chart.planets:
+            assert isinstance(p.face_dignity, bool), (
+                f"{p.planet_name}: face_dignity is {type(p.face_dignity)}"
+            )
+
+    def test_today_sun_decan_present(self, sample_chart):
+        """today_sun_decan should be a valid decan dict"""
+        d = sample_chart.today_sun_decan
+        assert isinstance(d, dict)
+        assert "index" in d
+        assert 0 <= d["index"] <= 35
+
+    def test_essential_dignities_summary(self, sample_chart):
+        """Should have dignity summary entries"""
+        summary = sample_chart.essential_dignities_summary
+        assert len(summary) == len(sample_chart.planets)
+        for row in summary:
+            assert "planet" in row
+            assert "score" in row
+            assert isinstance(row["score"], (int, float))
+
+    def test_chart_metadata(self, sample_chart):
+        """Chart should store input metadata correctly"""
+        assert sample_chart.year == 1990
+        assert sample_chart.month == 1
+        assert sample_chart.day == 1
+        assert sample_chart.hour == 12
+        assert sample_chart.minute == 0
+        assert sample_chart.location_name == "台北"
