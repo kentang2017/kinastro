@@ -12,6 +12,10 @@ from astro.calculator import (
     _degree_to_sign_degree,
     _get_western_sign,
     _get_chinese_sign,
+    _get_hour_branch,
+    _get_solar_month,
+    _get_ming_gong_branch,
+    _branch_to_cusp,
 )
 
 
@@ -186,3 +190,176 @@ class TestComputeChart:
         sun1 = chart1.planets[0].longitude
         sun2 = chart2.planets[0].longitude
         assert abs(sun1 - sun2) > 1.0
+
+
+class TestGetHourBranch:
+    """測試時辰地支計算"""
+
+    def test_zi_hour_midnight(self):
+        assert _get_hour_branch(0, 0) == 0   # 子時
+
+    def test_zi_hour_2300(self):
+        assert _get_hour_branch(23, 0) == 0  # 子時
+
+    def test_chou_hour(self):
+        assert _get_hour_branch(1, 0) == 1   # 丑時
+
+    def test_yin_hour(self):
+        assert _get_hour_branch(3, 0) == 2   # 寅時
+
+    def test_wu_hour_noon(self):
+        assert _get_hour_branch(12, 0) == 6  # 午時
+
+    def test_hai_hour(self):
+        assert _get_hour_branch(21, 0) == 11  # 亥時
+
+
+class TestGetSolarMonth:
+    """測試節氣月計算"""
+
+    def test_month1_lichun(self):
+        # 立春 ~ 315° ecliptic
+        assert _get_solar_month(315.0) == 1
+
+    def test_month1_upper(self):
+        assert _get_solar_month(344.9) == 1
+
+    def test_month2_jingzhe(self):
+        # 驚蟄 ~ 345°
+        assert _get_solar_month(345.0) == 2
+
+    def test_month2_crosses_zero(self):
+        # 0° ecliptic is within month 2
+        assert _get_solar_month(0.0) == 2
+
+    def test_month7_liqiu(self):
+        # 立秋 ~ 135°
+        assert _get_solar_month(135.0) == 7
+
+    def test_month12_xiaohan(self):
+        # 小寒 ~ 285°
+        assert _get_solar_month(285.0) == 12
+
+
+class TestGetMingGongBranch:
+    """測試命宮地支計算"""
+
+    def test_month1_zi_hour(self):
+        # 正月子時: (1+1-0)%12 = 2 (寅)
+        assert _get_ming_gong_branch(1, 0) == 2
+
+    def test_month7_zi_hour(self):
+        # 七月子時: (1+7-0)%12 = 8 (申) — user's example
+        assert _get_ming_gong_branch(7, 0) == 8
+
+    def test_month1_wu_hour(self):
+        # 正月午時: (1+1-6)%12 = (-4)%12 = 8 (申) — Python mod always non-negative
+        assert _get_ming_gong_branch(1, 6) == 8
+
+    def test_month12_hai_hour(self):
+        # 十二月亥時: (1+12-11)%12 = 2 (寅)
+        assert _get_ming_gong_branch(12, 11) == 2
+
+
+class TestBranchToCusp:
+    """測試地支到宮頭度數轉換"""
+
+    def test_xu_branch(self):
+        # 戌(10) → 0°
+        assert _branch_to_cusp(10) == 0.0
+
+    def test_you_branch(self):
+        # 酉(9) → 30°
+        assert _branch_to_cusp(9) == 30.0
+
+    def test_shen_branch(self):
+        # 申(8) → 60°
+        assert _branch_to_cusp(8) == 60.0
+
+    def test_yin_branch(self):
+        # 寅(2) → 240°
+        assert _branch_to_cusp(2) == 240.0
+
+    def test_zi_branch(self):
+        # 子(0) → 300°
+        assert _branch_to_cusp(0) == 300.0
+
+
+class TestComputeChartMingGong:
+    """測試排盤命宮計算與性別方向"""
+
+    def test_1985_aug26_zi_hour_ming_gong_shen(self):
+        """1985-8-26 子時 命宮應在申"""
+        chart = compute_chart(
+            1985, 8, 26, 0, 0, 8.0, 22.3193, 114.1694, "香港",
+        )
+        assert chart.ming_gong_branch == 8  # 申
+
+    def test_male_clockwise_direction(self):
+        """男命宮位按順時針(地支遞減)排列"""
+        chart = compute_chart(
+            1985, 8, 26, 0, 0, 8.0, 22.3193, 114.1694, "香港",
+            gender="male",
+        )
+        for i, h in enumerate(chart.houses):
+            assert h.branch == (chart.ming_gong_branch - i) % 12
+
+    def test_female_counterclockwise_direction(self):
+        """女命宮位按逆時針(地支遞增)排列"""
+        chart = compute_chart(
+            1985, 8, 26, 0, 0, 8.0, 22.3193, 114.1694, "香港",
+            gender="female",
+        )
+        for i, h in enumerate(chart.houses):
+            assert h.branch == (chart.ming_gong_branch + i) % 12
+
+    def test_houses_have_branch_info(self):
+        """每個宮位應有地支資訊"""
+        chart = compute_chart(
+            1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        for h in chart.houses:
+            assert 0 <= h.branch <= 11
+            assert h.branch_name in [
+                "子", "丑", "寅", "卯", "辰", "巳",
+                "午", "未", "申", "酉", "戌", "亥",
+            ]
+
+    def test_all_branches_covered(self):
+        """十二個宮位應覆蓋所有十二地支"""
+        chart = compute_chart(
+            1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        branches = {h.branch for h in chart.houses}
+        assert branches == set(range(12))
+
+    def test_default_gender_is_male(self):
+        """預設性別應為男"""
+        chart = compute_chart(
+            1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        assert chart.gender == "male"
+
+    def test_chart_has_solar_month(self):
+        """排盤結果應包含節氣月"""
+        chart = compute_chart(
+            1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        assert 1 <= chart.solar_month <= 12
+
+    def test_chart_has_hour_branch(self):
+        """排盤結果應包含時辰"""
+        chart = compute_chart(
+            1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        assert 0 <= chart.hour_branch <= 11
+
+    def test_different_hours_different_ming_gong(self):
+        """不同時辰應產生不同命宮"""
+        chart_zi = compute_chart(
+            1990, 6, 15, 0, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        chart_wu = compute_chart(
+            1990, 6, 15, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        assert chart_zi.ming_gong_branch != chart_wu.ming_gong_branch

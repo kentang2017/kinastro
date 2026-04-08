@@ -13,7 +13,7 @@ from .calculator import (
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
-    TWELVE_SIGNS_CHINESE,
+    TWELVE_SIGNS_CHINESE, EARTHLY_BRANCHES,
 )
 
 
@@ -68,14 +68,15 @@ def render_house_table(chart: ChartData):
     """渲染十二宮位表格"""
     st.subheader("🏛️ 十二宮位")
 
-    header = "| 宮位 | 宮頭度數 | 星座 | 星次 | 入宮星曜 |"
-    separator = "|:----:|:--------:|:----:|:----:|:--------:|"
+    header = "| 宮位 | 地支 | 宮頭度數 | 星座 | 星次 | 入宮星曜 |"
+    separator = "|:----:|:----:|:--------:|:----:|:----:|:--------:|"
     rows = [header, separator]
 
     for house in chart.houses:
         planet_str = "、".join(house.planets) if house.planets else "—"
         rows.append(
-            f"| {house.name} | {format_degree(house.cusp)} "
+            f"| {house.name} | {house.branch_name} "
+            f"| {format_degree(house.cusp)} "
             f"| {house.sign_western} | {house.sign_chinese} | {planet_str} |"
         )
 
@@ -95,65 +96,83 @@ def render_chart_grid(chart: ChartData):
         卯宮  |                  |  戌宮
         ------+--------+--------+------
         寅宮  |  丑宮  |  子宮  |  亥宮
+
+    十二宮名稱根據命宮地支和性別方向輪轉到對應的地支位置。
     """
     st.subheader("📊 七政四餘盤")
 
-    # 傳統方盤的宮位排列（按照中國傳統方盤的順序）
-    # 宮位索引對應: 命宮(0)在寅位開始按逆時針排列
-    # 這裡按照十二地支排列宮位
-
-    # 建立宮位到星曜的映射
-    house_planets = {}
+    # 建立 地支 → 宮位資料 的映射
+    branch_data: dict[int, tuple[str, list, str]] = {}
     for house in chart.houses:
         planet_list = house.planets if house.planets else []
-        house_planets[house.index] = (house.name, planet_list, house.sign_western)
+        branch_data[house.branch] = (house.name, planet_list, house.sign_western)
 
-    # 方盤排列 (外圈12格，按傳統排列)
-    # 格子位置: [top row] [left col] [right col] [bottom row]
+    # 方盤排列 (外圈12格，按固定地支位置排列)
+    # 格子中的數字是地支索引: 子=0, 丑=1, 寅=2, ..., 亥=11
     grid_order = [
-        [5, 4, 3, 2],          # 上排: 巳午未申
-        [6, -1, -1, 1],        # 中上: 辰 [中央] 酉
-        [7, -1, -1, 0],        # 中下: 卯 [中央] 戌 (命宮位置調整)
-        [8, 9, 10, 11],        # 下排: 寅丑子亥
+        [5, 6, 7, 8],          # 上排: 巳午未申
+        [4, -1, -1, 9],        # 中上: 辰 [中央] 酉
+        [3, -1, -1, 10],       # 中下: 卯 [中央] 戌
+        [2, 1, 0, 11],         # 下排: 寅丑子亥
     ]
 
     # 使用 HTML/CSS 渲染方盤
-    html = _build_grid_html(chart, house_planets, grid_order)
-    st.markdown(html, unsafe_allow_html=True)
+    html = _build_grid_html(chart, branch_data, grid_order)
+    st.html(html)
 
 
 def _build_grid_html(
     chart: ChartData,
-    house_planets: dict,
+    branch_data: dict,
     grid_order: list,
 ) -> str:
-    """建構排盤 HTML"""
+    """建構排盤 HTML
+
+    Parameters:
+        chart: 排盤資料
+        branch_data: 地支索引 → (宮名, 星曜列表, 西方星座) 映射
+        grid_order: 4×4 格局，值為地支索引 (0-11)，-1 為中央
+    """
     cell_style = (
-        "border:1px solid #666; padding:6px; text-align:center; "
-        "vertical-align:top; min-width:120px; font-size:13px;"
+        "border:1px solid #555; padding:6px; text-align:center; "
+        "vertical-align:top; min-width:120px; font-size:13px; "
+        "background:#1a1a2e; color:#e0e0e0;"
+    )
+    ming_cell_style = (
+        "border:2px solid #d4af37; padding:6px; text-align:center; "
+        "vertical-align:top; min-width:120px; font-size:13px; "
+        "background:#2a2a1e; color:#e0e0e0;"
     )
     center_style = (
-        "border:1px solid #444; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
+        "border:1px solid #666; padding:10px; text-align:center; "
+        "vertical-align:middle; font-size:14px; background:#2a2a3e; "
         "color:#e0e0e0;"
     )
 
-    html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
+    gender_label = "男命" if chart.gender == "male" else "女命"
+    direction_label = "順時針" if chart.gender == "male" else "逆時針"
+
+    html = (
+        '<table style="border-collapse:collapse; margin:auto; width:100%; '
+        'background:#1a1a2e; color:#e0e0e0;">'
+    )
 
     for row_idx, row in enumerate(grid_order):
         html += "<tr>"
         col_idx = 0
         while col_idx < len(row):
-            idx = row[col_idx]
-            if idx == -1:
+            branch_idx = row[col_idx]
+            if branch_idx == -1:
                 # 中央區域（只在第一次遇到時渲染）
                 if row_idx == 1 and col_idx == 1:
+                    branch_name = EARTHLY_BRANCHES[chart.ming_gong_branch]
                     center_content = (
                         f"<b>七政四餘排盤</b><br/>"
                         f"{chart.year}年{chart.month}月{chart.day}日<br/>"
                         f"{chart.hour:02d}:{chart.minute:02d} "
                         f"UTC{chart.timezone:+.1f}<br/>"
-                        f"{chart.location_name}<br/>"
+                        f"{chart.location_name} ({gender_label})<br/>"
+                        f"命宮: {branch_name} ({direction_label})<br/>"
                         f"命度: {format_degree(chart.ascendant)}<br/>"
                         f"中天: {format_degree(chart.midheaven)}"
                     )
@@ -167,8 +186,11 @@ def _build_grid_html(
                     col_idx += 1
                     continue
             else:
-                if idx in house_planets:
-                    name, planets, sign = house_planets[idx]
+                is_ming = (branch_idx == chart.ming_gong_branch)
+                style = ming_cell_style if is_ming else cell_style
+                branch_label = EARTHLY_BRANCHES[branch_idx]
+                if branch_idx in branch_data:
+                    name, planets, sign = branch_data[branch_idx]
                     planets_html = ""
                     for p_name in planets:
                         color = PLANET_COLORS.get(p_name, "#c8c8c8")
@@ -178,14 +200,18 @@ def _build_grid_html(
                         )
                     if not planets_html:
                         planets_html = '<span style="color:#999">—</span>'
+                    ming_mark = "【命】" if is_ming else ""
                     cell_content = (
-                        f"<b>{name}</b><br/>"
+                        f'<small style="color:#888">{branch_label}</small> '
+                        f'<b>{name}</b>'
+                        f'<span style="color:#d4af37">{ming_mark}</span>'
+                        f"<br/>"
                         f'<small style="color:#888">{sign}</small><br/>'
                         f"{planets_html}"
                     )
                 else:
-                    cell_content = ""
-                html += f'<td style="{cell_style}">{cell_content}</td>'
+                    cell_content = f'<small style="color:#888">{branch_label}</small>'
+                html += f'<td style="{style}">{cell_content}</td>'
             col_idx += 1
         html += "</tr>"
 
@@ -424,21 +450,21 @@ def render_mansion_ring(chart: ChartData):
 
     # --- 星曜位置 (planet positions in the planet ring) ---
     # Group planets by mansion to handle overlaps
-    planet_offsets = {}
+    mansion_planets: dict[int, list] = {}
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
         mansion_idx = int(lon / MANSION_W) % NUM_MANSIONS
-        if mansion_idx not in planet_offsets:
-            planet_offsets[mansion_idx] = []
-        planet_offsets[mansion_idx].append(p)
+        if mansion_idx not in mansion_planets:
+            mansion_planets[mansion_idx] = []
+        mansion_planets[mansion_idx].append((p, lon))
 
-    for mansion_idx, planets in planet_offsets.items():
-        n = len(planets)
+    for mansion_idx, planet_data in mansion_planets.items():
+        n = len(planet_data)
         base_a = mansion_idx * MANSION_W + MANSION_W / 2
-        for pi, p in enumerate(planets):
-            # Spread multiple planets within the mansion
+        for pi, (p, lon) in enumerate(planet_data):
+            # Single planet: use exact longitude; multiple: spread within mansion
             if n == 1:
-                a = base_a
+                a = lon
             else:
                 span = MANSION_W * PLANET_SPREAD_FACTOR
                 a = base_a - span / 2 + span * pi / (n - 1)
@@ -504,7 +530,7 @@ def render_mansion_ring(chart: ChartData):
 
     svg.append("</svg>")
 
-    st.markdown("\n".join(svg), unsafe_allow_html=True)
+    st.html("\n".join(svg))
 
     # Legend
     legend_cols = st.columns(4)
