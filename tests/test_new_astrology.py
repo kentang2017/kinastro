@@ -1468,3 +1468,388 @@ class TestDecanChart:
         assert sample_chart.hour == 12
         assert sample_chart.minute == 0
         assert sample_chart.location_name == "台北"
+
+
+# ============================================================
+# 蒙古祖爾海 (Zurkhai) Tests
+# ============================================================
+
+from astro.zurkhai import (
+    compute_zurkhai_chart,
+    _get_animal,
+    _get_element,
+    _get_polarity,
+    _get_cycle_year,
+    _get_day_animal,
+    _get_element_relation,
+    _check_conflict,
+    _check_harmony,
+    _check_obstacle_age,
+    _compute_auspicious,
+    ANIMALS,
+    ELEMENTS,
+    POLARITIES,
+    GENERATING_CYCLE,
+    OVERCOMING_CYCLE,
+    ANIMAL_CONFLICTS,
+    ANIMAL_HARMONIES,
+    ACTIVITY_TYPES,
+)
+
+
+class TestZurkhaiConstants:
+    """Test Zurkhai data constants."""
+
+    def test_animals_count(self):
+        assert len(ANIMALS) == 12
+
+    def test_elements_count(self):
+        assert len(ELEMENTS) == 5
+
+    def test_polarities_count(self):
+        assert len(POLARITIES) == 2
+
+    def test_animal_indices(self):
+        for i, a in enumerate(ANIMALS):
+            assert a[0] == i
+
+    def test_element_indices(self):
+        for i, e in enumerate(ELEMENTS):
+            assert e[0] == i
+
+    def test_generating_cycle_complete(self):
+        """Generating cycle must cover all 5 elements."""
+        assert set(GENERATING_CYCLE.keys()) == {0, 1, 2, 3, 4}
+        assert set(GENERATING_CYCLE.values()) == {0, 1, 2, 3, 4}
+
+    def test_overcoming_cycle_complete(self):
+        """Overcoming cycle must cover all 5 elements."""
+        assert set(OVERCOMING_CYCLE.keys()) == {0, 1, 2, 3, 4}
+        assert set(OVERCOMING_CYCLE.values()) == {0, 1, 2, 3, 4}
+
+    def test_animal_conflicts_symmetric(self):
+        """If A conflicts with B, B must conflict with A."""
+        for a, conflicts in ANIMAL_CONFLICTS.items():
+            for b in conflicts:
+                assert a in ANIMAL_CONFLICTS[b], (
+                    f"Conflict {a}->{b} not symmetric")
+
+    def test_animal_harmonies_symmetric(self):
+        """If A harmonizes with B, B must harmonize with A."""
+        for a, harmonies in ANIMAL_HARMONIES.items():
+            for b in harmonies:
+                assert a in ANIMAL_HARMONIES[b], (
+                    f"Harmony {a}->{b} not symmetric")
+
+    def test_activity_types(self):
+        assert len(ACTIVITY_TYPES) == 8
+        keys = [a[0] for a in ACTIVITY_TYPES]
+        assert len(set(keys)) == 8  # All unique
+
+
+class TestZurkhaiAnimal:
+    """Test animal sign calculation."""
+
+    def test_1924_wood_rat(self):
+        a = _get_animal(1924)
+        assert a.index == 0
+        assert a.name_en == "Rat"
+        assert a.name_mn == "Hulgana"
+        assert a.name_cn == "鼠"
+
+    def test_1990_horse(self):
+        a = _get_animal(1990)
+        assert a.index == 6
+        assert a.name_en == "Horse"
+        assert a.name_mn == "Mori"
+
+    def test_2000_dragon(self):
+        a = _get_animal(2000)
+        assert a.index == 4
+        assert a.name_en == "Dragon"
+        assert a.name_mn == "Luu"
+
+    def test_2023_rabbit(self):
+        a = _get_animal(2023)
+        assert a.index == 3
+        assert a.name_en == "Rabbit"
+
+    def test_cycle_repeats(self):
+        """Same animal every 12 years."""
+        a1 = _get_animal(1990)
+        a2 = _get_animal(2002)
+        assert a1.index == a2.index
+
+
+class TestZurkhaiElement:
+    """Test element calculation."""
+
+    def test_1924_wood(self):
+        e = _get_element(1924)
+        assert e.index == 0
+        assert e.name_en == "Wood"
+        assert e.name_mn == "Mod"
+
+    def test_1925_wood(self):
+        """Same element spans 2 years."""
+        e = _get_element(1925)
+        assert e.index == 0
+        assert e.name_en == "Wood"
+
+    def test_1926_fire(self):
+        e = _get_element(1926)
+        assert e.index == 1
+        assert e.name_en == "Fire"
+
+    def test_1990_metal(self):
+        e = _get_element(1990)
+        assert e.index == 3
+        assert e.name_en == "Metal"
+        assert e.name_mn == "Temür"
+
+    def test_element_cycle(self):
+        """Element repeats every 10 years."""
+        e1 = _get_element(1990)
+        e2 = _get_element(2000)
+        assert e1.index == e2.index
+
+
+class TestZurkhaiPolarity:
+    """Test polarity (yin/yang) calculation."""
+
+    def test_1924_yang(self):
+        p = _get_polarity(1924)
+        assert p.index == 0
+        assert p.name_en == "Yang"
+
+    def test_1925_yin(self):
+        p = _get_polarity(1925)
+        assert p.index == 1
+        assert p.name_en == "Yin"
+
+    def test_1990_yang(self):
+        p = _get_polarity(1990)
+        assert p.index == 0
+        assert p.name_en == "Yang"
+
+
+class TestZurkhaiCycleYear:
+    """Test 60-year cycle position."""
+
+    def test_1924_is_zero(self):
+        assert _get_cycle_year(1924) == 0
+
+    def test_1984_is_zero(self):
+        assert _get_cycle_year(1984) == 0
+
+    def test_1990_is_six(self):
+        assert _get_cycle_year(1990) == 6
+
+    def test_range(self):
+        for y in range(1900, 2100):
+            cy = _get_cycle_year(y)
+            assert 0 <= cy < 60
+
+
+class TestZurkhaiElementRelation:
+    """Test element relationship calculations."""
+
+    def test_same_element(self):
+        key, cn, en = _get_element_relation(0, 0)
+        assert key == "same"
+
+    def test_generating(self):
+        key, cn, en = _get_element_relation(0, 1)  # Wood -> Fire
+        assert key == "generating"
+
+    def test_overcoming(self):
+        key, cn, en = _get_element_relation(0, 2)  # Wood -> Earth
+        assert key == "overcoming"
+
+    def test_weakening(self):
+        key, cn, en = _get_element_relation(1, 0)  # Fire <- Wood
+        assert key == "weakening"
+
+    def test_resisting(self):
+        key, cn, en = _get_element_relation(2, 0)  # Earth <- Wood overcomes
+        assert key == "resisting"
+
+
+class TestZurkhaiConflict:
+    """Test animal conflict detection."""
+
+    def test_rat_horse_conflict(self):
+        is_c, cn, en = _check_conflict(0, 6)
+        assert is_c is True
+
+    def test_no_conflict(self):
+        is_c, cn, en = _check_conflict(0, 4)  # Rat, Dragon - no conflict
+        assert is_c is False
+
+    def test_all_conflicts_detected(self):
+        for a_idx, conflicts in ANIMAL_CONFLICTS.items():
+            for c_idx in conflicts:
+                is_c, _, _ = _check_conflict(a_idx, c_idx)
+                assert is_c is True
+
+
+class TestZurkhaiHarmony:
+    """Test animal harmony detection."""
+
+    def test_rat_dragon_harmony(self):
+        is_h, cn, en = _check_harmony(0, 4)
+        assert is_h is True
+
+    def test_rat_monkey_harmony(self):
+        is_h, cn, en = _check_harmony(0, 8)
+        assert is_h is True
+
+    def test_no_harmony(self):
+        is_h, cn, en = _check_harmony(0, 1)  # Rat, Ox - not in harmony list
+        assert is_h is False
+
+
+class TestZurkhaiObstacleAge:
+    """Test obstacle year detection."""
+
+    def test_age_9_obstacle(self):
+        age, is_o, cn, en = _check_obstacle_age(2000, 2008)
+        assert age == 9
+        assert is_o is True
+
+    def test_age_21_obstacle(self):
+        age, is_o, cn, en = _check_obstacle_age(2000, 2020)
+        assert age == 21
+        assert is_o is True
+
+    def test_non_obstacle_age(self):
+        age, is_o, cn, en = _check_obstacle_age(2000, 2010)
+        assert age == 11
+        assert is_o is False
+
+
+class TestZurkhaiAuspicious:
+    """Test auspicious timing calculations."""
+
+    def test_returns_all_activities(self):
+        results = _compute_auspicious(0)  # Rat day
+        assert len(results) == len(ACTIVITY_TYPES)
+
+    def test_rat_day_marriage_favorable(self):
+        results = _compute_auspicious(0)  # Rat day
+        marriage = [r for r in results if r.activity_key == "marriage"][0]
+        assert marriage.is_favorable is True
+
+    def test_tiger_day_travel_favorable(self):
+        results = _compute_auspicious(2)  # Tiger day
+        travel = [r for r in results if r.activity_key == "travel"][0]
+        assert travel.is_favorable is True
+
+
+class TestZurkhaiChart:
+    """Test full chart computation."""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_zurkhai_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=47.9077, longitude=106.8832,
+            location_name="烏蘭巴托",
+        )
+
+    def test_metadata(self, sample_chart):
+        assert sample_chart.year == 1990
+        assert sample_chart.month == 1
+        assert sample_chart.day == 1
+        assert sample_chart.location_name == "烏蘭巴托"
+
+    def test_birth_animal(self, sample_chart):
+        assert sample_chart.birth_animal.name_en == "Horse"
+        assert sample_chart.birth_animal.name_mn == "Mori"
+        assert sample_chart.birth_animal.name_cn == "馬"
+
+    def test_birth_element(self, sample_chart):
+        assert sample_chart.birth_element.name_en == "Metal"
+        assert sample_chart.birth_element.name_mn == "Temür"
+        assert sample_chart.birth_element.name_cn == "金"
+
+    def test_birth_polarity(self, sample_chart):
+        assert sample_chart.birth_polarity.name_en == "Yang"
+        assert sample_chart.birth_polarity.name_cn == "陽"
+
+    def test_cycle_year(self, sample_chart):
+        assert sample_chart.cycle_year == 6
+
+    def test_current_year_populated(self, sample_chart):
+        assert sample_chart.current_animal is not None
+        assert sample_chart.current_element is not None
+        assert sample_chart.current_polarity is not None
+
+    def test_day_info(self, sample_chart):
+        d = sample_chart.day_info
+        assert d.animal is not None
+        assert d.element is not None
+        assert d.polarity is not None
+        assert d.month_name != ""
+
+    def test_element_relation(self, sample_chart):
+        assert sample_chart.year_element_relation in (
+            "generating", "overcoming", "same", "weakening", "resisting")
+
+    def test_auspicious_results(self, sample_chart):
+        assert len(sample_chart.auspicious_results) == 8
+        for r in sample_chart.auspicious_results:
+            assert r.activity_key in [a[0] for a in ACTIVITY_TYPES]
+
+    def test_day_rating(self, sample_chart):
+        assert sample_chart.day_rating in ("吉", "凶", "平")
+        assert sample_chart.day_rating_en in (
+            "Auspicious", "Inauspicious", "Neutral")
+
+    def test_age_positive(self, sample_chart):
+        assert sample_chart.age > 0
+
+    def test_day_animal_cycles_every_12(self):
+        """Day animal should repeat every 12 days."""
+        from datetime import date
+        d1 = date(2024, 1, 1)
+        d2 = date(2024, 1, 13)
+        a1 = _get_day_animal(d1)
+        a2 = _get_day_animal(d2)
+        assert a1.index == a2.index
+
+
+class TestZurkhaiKnownYears:
+    """Test with historically known animal-element-polarity combinations."""
+
+    def test_2024_wood_dragon_yang(self):
+        a = _get_animal(2024)
+        e = _get_element(2024)
+        p = _get_polarity(2024)
+        assert a.name_en == "Dragon"
+        assert e.name_en == "Wood"
+        assert p.name_en == "Yang"
+
+    def test_2025_wood_snake_yin(self):
+        a = _get_animal(2025)
+        e = _get_element(2025)
+        p = _get_polarity(2025)
+        assert a.name_en == "Snake"
+        assert e.name_en == "Wood"
+        assert p.name_en == "Yin"
+
+    def test_1984_wood_rat_yang(self):
+        a = _get_animal(1984)
+        e = _get_element(1984)
+        p = _get_polarity(1984)
+        assert a.name_en == "Rat"
+        assert e.name_en == "Wood"
+        assert p.name_en == "Yang"
+
+    def test_2000_metal_dragon_yang(self):
+        a = _get_animal(2000)
+        e = _get_element(2000)
+        p = _get_polarity(2000)
+        assert a.name_en == "Dragon"
+        assert e.name_en == "Metal"
+        assert p.name_en == "Yang"

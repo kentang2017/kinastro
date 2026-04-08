@@ -4,7 +4,7 @@ Multi-System Astrology Chart Application
 
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
 卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
-納迪占星（Nadi Jyotish）十二種體系，使用 pyswisseph 進行天文計算，
+納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）十三種體系，使用 pyswisseph 進行天文計算，
 以 Streamlit 提供互動式排盤介面。
 """
 
@@ -34,6 +34,7 @@ from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.nadi import compute_nadi_chart, render_nadi_chart
+from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
 
 # ============================================================
 # 頁面設定
@@ -49,7 +50,7 @@ st.markdown(
     "多體系占星排盤系統 — "
     "支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
     "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、"
-    "納迪占星（Nadi Jyotish）。"
+    "納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）。"
 )
 
 # ============================================================
@@ -67,6 +68,7 @@ CITY_PRESETS = {
     "倫敦": (51.5074, -0.1278, 0.0),
     "紐約": (40.7128, -74.0060, -5.0),
     "仰光": (16.8661, 96.1951, 6.5),
+    "烏蘭巴托": (47.9077, 106.8832, 8.0),
 }
 
 # ============================================================
@@ -135,10 +137,10 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai = st.tabs(
     ["🀄 七政四餘（中國）", "🌟 紫微斗數", "🌍 西洋占星", "🙏 印度占星",
      "🈳 宿曜道", "🐘 泰國占星", "✡ 卡巴拉占星", "☪ 阿拉伯占星", "🏺 瑪雅占星",
-     "🇲🇲 緬甸占星", "🏛️ 古埃及十度區間", "🔱 納迪占星"]
+     "🇲🇲 緬甸占星", "🏛️ 古埃及十度區間", "🔱 納迪占星", "🇲🇳 蒙古祖爾海"]
 )
 
 if calculate:
@@ -261,6 +263,12 @@ if calculate:
         with st.spinner("正在計算納迪占星排盤..."):
             nadi_chart = compute_nadi_chart(**_params)
         render_nadi_chart(nadi_chart)
+
+    # --- 蒙古祖爾海 (Zurkhai) ---
+    with tab_zurkhai:
+        with st.spinner("正在計算蒙古祖爾海排盤..."):
+            zk_chart = compute_zurkhai_chart(**_params)
+        render_zurkhai_chart(zk_chart)
 
 else:
     with tab_chinese:
@@ -443,5 +451,24 @@ else:
             - **上升納迪 (Lagna Nadi)**：由上升點所在星宿決定，影響外在表現
             - **納迪宮分 (Nadi Amsha)**：每宮 30° 分成 150 份（每份 12'），提供最精細分析
             - **Nadi Dosha（脈衝衝突）**：婚配雙方若同屬一種納迪，傳統認為需特別注意
+            """
+        )
+    with tab_zurkhai:
+        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.markdown(
+            """
+            ### 什麼是蒙古祖爾海 (Zurkhai)？
+
+            **祖爾海 (Зурхай / Zurkhai)** 是蒙古傳統占星術，源自藏傳佛教曆算體系：
+
+            - **12 生肖**：鼠（Hulgana）、牛（Ükher）、虎（Bar）、兔（Tuulai）、
+              龍（Luu）、蛇（Mogoi）、馬（Mori）、羊（Honi）、猴（Bich）、
+              雞（Tahia）、狗（Nokhoi）、豬（Gakhai）
+            - **五行 (元素)**：木（Mod）、火（Gal）、土（Shoroo）、
+              金（Temür）、水（Us），各分陰陽
+            - **60 年循環**：12 生肖 × 5 元素的大循環
+            - **擇吉**：結婚、出行、建屋、醫療等活動的吉日計算
+            - **松巴堪布體系**：基於 Sumpa Khenpo Yeshe Peljor 的
+              德古斯布揚圖祖爾海 (Tegus Buyantu Zurkhai)
             """
         )
