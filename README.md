@@ -9,9 +9,9 @@
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6?style=flat-badge)](LICENSE)
 
-**十體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸**
+**十一體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸・古埃及十度區間**
 
-*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic, Maya & Myanmar*
+*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic, Maya, Myanmar & Egyptian Decans*
 
 </div>
 
@@ -21,7 +21,7 @@
 
 | | |
 |---|---|
-| 🔮 **十體系合一** | 在同一個介面中切換十種占星體系，無需來回切換工具 |
+| 🔮 **十一體系合一** | 在同一個介面中切換十一種占星體系，無需來回切換工具 |
 | 🪐 **九曜精密計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 |
 | 🌏 **全球化支援** | 內建全球 10+ 個主要城市，亦支援自訂經緯度即時排盤 |
 | 🎨 **彩色互動介面** | Streamlit 驅動的現代化 Web UI，響應式排盤結果 |
@@ -153,6 +153,24 @@
 
 ---
 
+### 🏛️ 古埃及十度區間（Decanic Astrology / 36 Decans）
+
+源自古埃及數千年前的天文計時系統，是西洋占星學最古老的分區技法之一。
+
+- **36 個 Decans**：黃道 360° 每 10° 劃分為一個 Decan（十度區間），每個星座含 3 個 Decan
+- **古埃及星神**：每個 Decan 對應一位古埃及神靈（來自棺蓋對角星表、Dendera Zodiac 等文獻）
+- **迦勒底行星統治 (Chaldean Order)**：Mars → Sun → Venus → Mercury → Moon → Saturn → Jupiter 循環
+- **三重統治 (Triplicity)**：根據元素分配行星統治權
+- **塔羅小阿卡納 (Minor Arcana)**：Golden Dawn 傳統，36 Decans 對應塔羅牌 2–10 號
+- **本質尊貴 (Essential Dignities)**：Face/Decan 尊貴計分（+1 分），含完整廟旺落陷摘要
+- **今日 Decan**：根據當前太陽位置自動顯示今日十度區間
+- **Plotly 輪盤圖**：視覺化 36 Decans 的 Dendera Zodiac 外環
+- **文化尊重提示**：說明古埃及 Decans 的歷史起源與現代詮釋差異
+
+> 📖 此工具為文化、歷史與占星學習用途。古埃及 Decans 起源於數千年前的天文計時系統，現代解讀僅供參考。
+
+---
+
 ## 🚀 快速開始
 
 ```bash
@@ -188,7 +206,9 @@ kinastro/
 │   ├── arabic.py               # 阿拉伯占星排盤模組
 │   ├── ziwei.py                # 紫微斗數排盤模組
 │   ├── maya.py                 # 瑪雅占星排盤模組
-│   └── mahabote.py             # 緬甸占星 (Mahabote) 排盤模組
+│   ├── mahabote.py             # 緬甸占星 (Mahabote) 排盤模組
+│   ├── decans_data.py          # 古埃及十度區間 36 Decans 資料庫
+│   └── decans.py               # 古埃及十度區間排盤模組
 ├── tests/
 │   ├── test_calculator.py      # 計算模組單元測試
 │   └── test_new_astrology.py  # 新增功能測試
@@ -205,6 +225,7 @@ kinastro/
 |------|------|
 | 前端框架 | [Streamlit](https://streamlit.io/) — 互動式 Python Web 框架 |
 | 星曆計算 | [pyswisseph](https://github.com/astrorigin/pyswisseph) — 瑞士星曆表 |
+| 視覺化 | [Plotly](https://plotly.com/) — 互動式圖表（Decan 輪盤圖）|
 | 語言 | Python 3.10+ |
 | 黃道系統 | 恆星黃道（Lahiri 歲差）& 回歸黃道 |
 
