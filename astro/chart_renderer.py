@@ -348,6 +348,7 @@ def render_mansion_ring(chart: ChartData):
     svg = []
     svg.append(
         f'<svg viewBox="0 0 {SIZE} {SIZE}" '
+        f'width="{SIZE}" height="{SIZE}" '
         f'xmlns="http://www.w3.org/2000/svg" '
         f'style="max-width:640px; margin:auto; display:block; '
         f'background:#0a0a1a; border-radius:12px;">'

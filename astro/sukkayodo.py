@@ -334,6 +334,7 @@ def _render_wheel(chart, moon_mansion_idx):
     svg_parts = []
     svg_parts.append(
         f'<svg viewBox="0 0 {SIZE} {SIZE}" '
+        f'width="{SIZE}" height="{SIZE}" '
         f'xmlns="http://www.w3.org/2000/svg" '
         f'style="max-width:620px; margin:auto; display:block; '
         f'background:#0a0a1a; border-radius:12px;">'
