@@ -12,7 +12,8 @@ Do NOT modify without consulting primary sources.
 """
 
 from __future__ import annotations
-
+import json
+from pathlib import Path
 # ============================================================
 # 28 Lunar Mansions — Picatrix Complete Data
 # (Manazil al-Qamar / 阿拉伯月宿)
@@ -607,6 +608,36 @@ PICATRIX_MANSIONS: list[dict] = [
     },
 ]
 
+# ====================== 載入 Greer 版詳細 JSON ======================
+def load_greer_mansions() -> dict:
+    json_path = Path(__file__).parent / "data" / "picatrix_mansions.json"
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    return {m["number"]: m for m in data["mansions"]}
+
+GREER_MANSIONS = load_greer_mansions()
+
+# ====================== 自動合併函式 ======================
+def enrich_picatrix_mansions():
+    """把 Greer 版的詳細用途、圖像、注意事項合併到原有資料中"""
+    for mansion in PICATRIX_MANSIONS:
+        num = mansion["index"] + 1                     # 你的 index 是 0~27
+        if num in GREER_MANSIONS:
+            g = GREER_MANSIONS[num]
+            mansion.update({
+                "greer_name_en": g["name_en"],         # Alnat, Albotain...
+                "greer_name_zh": g["name_zh"],
+                "good_uses": g["good_uses"],           # 詳細善用
+                "bad_uses": g["bad_uses"],             # 詳細惡用
+                "detailed_image": g["image"],          # Greer 版圖像描述
+                "notes": g.get("notes", ""),           # 特別注意事項
+                "start_degree": g["start_deg"],        # 精確度數
+                "end_degree": g["end_deg"],
+            })
+    return PICATRIX_MANSIONS
+
+# 執行合併
+PICATRIX_MANSIONS = enrich_picatrix_mansions()
 
 # ============================================================
 # Planetary Hours — Chaldean Order
