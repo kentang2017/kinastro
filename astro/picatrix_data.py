@@ -624,7 +624,12 @@ GREER_MANSIONS = _load_json("picatrix_mansions_greer.json")["mansions"]
 TALISMANS = _load_json("picatrix_talismans.json")["talismans"]
 CORRESPONDENCES = _load_json("picatrix_planetary_correspondences.json")["planets"]
 NATURAL_RECIPES = _load_json("picatrix_natural_recipes.json")["recipes"]
-
+INCENSES = _load_json("picatrix_incenses.json")
+PICATRIX_INCENSES = {
+    "planets": INCENSES["planets"],
+    "special_ointments": INCENSES["special_ointments"],
+    "general_rules": INCENSES["general_rules"]
+}
 # ====================== 自動合併 Greer 詳細資料 ======================
 def enrich_mansions():
     """把 Greer 版的詳細用途、圖像、注意事項合併到原有 Mansions"""
