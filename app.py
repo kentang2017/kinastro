@@ -42,6 +42,7 @@ from astro.picatrix_mansions import (
     render_talisman_generator,
     render_picatrix_browse,
     get_mansion_index,
+    compute_moon_longitude,
 )
 
 # ============================================================
@@ -321,39 +322,6 @@ if calculate:
             zk_chart = compute_zurkhai_chart(**_params)
         render_zurkhai_chart(zk_chart)
 
-    # --- Picatrix 星體魔法 ---
-    with tab_picatrix:
-        st.subheader(t("picatrix_subheader"))
-        st.info(t("picatrix_source"))
-        # Get Moon longitude from birth chart parameters
-        import swisseph as _swe
-        _decimal_hour = birth_time.hour + birth_time.minute / 60.0 - input_tz
-        _jd = _swe.julday(
-            birth_date.year, birth_date.month, birth_date.day, _decimal_hour
-        )
-        _moon_result, _ = _swe.calc_ut(_jd, _swe.MOON)
-        moon_lon = float(_moon_result[0]) % 360.0
-
-        ptab_mansions, ptab_hours, ptab_talisman, ptab_browse = st.tabs(
-            [t("picatrix_subtab_mansion"), t("picatrix_subtab_hours"),
-             t("picatrix_subtab_talisman"), t("picatrix_subtab_browse")]
-        )
-        with ptab_mansions:
-            render_mansion_lookup(moon_lon=moon_lon)
-        with ptab_hours:
-            render_planetary_hours_tool(
-                year=birth_date.year,
-                month=birth_date.month,
-                day=birth_date.day,
-                timezone=input_tz,
-                latitude=input_lat,
-                longitude=input_lon,
-            )
-        with ptab_talisman:
-            render_talisman_generator()
-        with ptab_browse:
-            render_picatrix_browse()
-
 else:
     with tab_chinese:
         st.info(t("info_calc_prompt"))
@@ -394,10 +362,58 @@ else:
     with tab_zurkhai:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_zurkhai"))
-    with tab_picatrix:
-        st.info(t("info_picatrix_prompt"))
-        st.markdown(t("desc_picatrix"))
+
+# ============================================================
+# Picatrix tab — always visible (tools work without a birth chart)
+# ============================================================
+with tab_picatrix:
+    st.subheader(t("picatrix_subheader"))
+    st.caption(t("picatrix_source"))
+
+    # When the user has clicked Calculate, use birth-chart moon longitude;
+    # otherwise the sub-tools default to the current date / current moon.
+    _birth_moon_lon: float | None = None
+    if calculate:
+        _birth_moon_lon = compute_moon_longitude(
+            year=birth_date.year,
+            month=birth_date.month,
+            day=birth_date.day,
+            hour=birth_time.hour,
+            minute=birth_time.minute,
+            timezone=input_tz,
+        )
+
+    ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
+        t("picatrix_subtab_browse"),
+        t("picatrix_subtab_mansion"),
+        t("picatrix_subtab_hours"),
+        t("picatrix_subtab_talisman"),
+    ])
+
+    with ptab_browse:
         render_picatrix_browse()
-        st.divider()
-        st.subheader(t("picatrix_talisman_subheader"))
+
+    with ptab_mansions:
+        if _birth_moon_lon is not None:
+            st.info(f"🌙 使用出生月亮黃經 (Birth Moon Longitude)：{_birth_moon_lon:.2f}°")
+        render_mansion_lookup(moon_lon=_birth_moon_lon)
+
+    with ptab_hours:
+        if calculate:
+            render_planetary_hours_tool(
+                year=birth_date.year,
+                month=birth_date.month,
+                day=birth_date.day,
+                timezone=input_tz,
+                latitude=input_lat,
+                longitude=input_lon,
+            )
+        else:
+            render_planetary_hours_tool(
+                timezone=input_tz,
+                latitude=input_lat,
+                longitude=input_lon,
+            )
+
+    with ptab_talisman:
         render_talisman_generator()
