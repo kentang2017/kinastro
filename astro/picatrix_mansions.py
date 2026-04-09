@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import datetime, date, time, timedelta, timezone
+from datetime import datetime, date, time, timedelta
+from datetime import timezone as timezone_module
 
 import swisseph as swe
 import streamlit as st
@@ -30,6 +31,8 @@ from astro.picatrix_data import (
     DAY_NAMES_EN,
     DAY_NAMES_CN,
     TALISMAN_INTENTS,
+    PICATRIX_TALISMANS,
+    PICATRIX_CORRESPONDENCES,
 )
 
 
@@ -42,6 +45,7 @@ class PicatrixMansion:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
     A Picatrix lunar mansion with all classical attributes.
+    Enriched with Greer & Warnock 2011 detailed notes.
     """
     index: int
     arabic_name: str
@@ -59,6 +63,10 @@ class PicatrixMansion:
     metal: str
     invocation_summary: str
     start_degree: float
+    end_degree: float = field(default=0.0)
+    good_uses: list = field(default_factory=list)
+    bad_uses: list = field(default_factory=list)
+    greer_notes: str = ""
 
 
 @dataclass
@@ -117,6 +125,32 @@ class TalismanRecommendation:
     hour_planet: str
     description_cn: str
     description_en: str
+
+
+# ============================================================
+# 月亮黃經計算 (Moon Longitude Computation)
+# ============================================================
+
+def compute_moon_longitude(
+    year: int, month: int, day: int,
+    hour: int, minute: int, timezone: float,
+) -> float:
+    """
+    計算指定出生時間的月亮黃道經度。
+
+    Args:
+        year, month, day: 出生日期
+        hour, minute: 出生時間（當地時間）
+        timezone: 時區偏移（UTC+N）
+
+    Returns:
+        float: 月亮黃經度數（0–360°）
+    """
+    swe.set_ephe_path("")
+    decimal_hour = hour + minute / 60.0 - timezone
+    jd = swe.julday(year, month, day, decimal_hour)
+    result, _ = swe.calc_ut(jd, swe.MOON)
+    return float(result[0]) % 360.0
 
 
 # ============================================================
@@ -188,9 +222,12 @@ def get_all_mansions() -> list:
 
 
 def _build_mansion(d: dict) -> PicatrixMansion:
-    """Build a PicatrixMansion dataclass from a raw dict."""
+    """Build a PicatrixMansion dataclass from a raw dict (with enriched Greer fields)."""
+    mansion_width = 360.0 / 28
+    idx = d["index"]
+    default_end = (idx + 1) * mansion_width
     return PicatrixMansion(
-        index=d["index"],
+        index=idx,
         arabic_name=d["arabic_name"],
         arabic_script=d["arabic_script"],
         english_name=d["english_name"],
@@ -206,6 +243,10 @@ def _build_mansion(d: dict) -> PicatrixMansion:
         metal=d["metal"],
         invocation_summary=d["invocation_summary"],
         start_degree=d["start_degree"],
+        end_degree=d.get("end_degree", default_end),
+        good_uses=d.get("good_uses", []),
+        bad_uses=d.get("bad_uses", []),
+        greer_notes=d.get("notes", ""),
     )
 
 
@@ -522,157 +563,306 @@ def render_mansion_lookup(moon_lon: float | None = None) -> None:
 
 
 def _render_single_mansion(m: PicatrixMansion) -> None:
-    """Render a detailed card for a single mansion."""
-    fortune_icon = "✨ 吉宿" if m.fortunate else "⚠️ 凶宿"
-    st.markdown(
-        f"### {m.index + 1}. {m.arabic_name} — {m.chinese_name} {fortune_icon}"
-    )
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write(f"**阿拉伯文 (Arabic):** {m.arabic_script}")
-        st.write(f"**英文名 (English):** {m.english_name}")
-        st.write(f"**統治行星 (Ruling Planet):** "
-                 f"{PLANET_GLYPHS[m.ruling_planet]} {m.ruling_planet} "
-                 f"({PLANET_NAMES_CN[m.ruling_planet]})")
-        st.write(f"**起始度數 (Start Degree):** {m.start_degree:.3f}°")
-    with col2:
-        st.write(f"**顏色 (Color):** {m.color}")
-        st.write(f"**金屬 (Metal):** {m.metal}")
-        st.write(f"**香料 (Incense):** {m.incense}")
+    """Render a styled HTML card for a single mansion."""
+    fortune_text = "✨ 吉宿" if m.fortunate else "⚠️ 凶宿"
+    fortune_bg = "#1a5c35" if m.fortunate else "#6b1a1a"
+    border_color = "#2e8b57" if m.fortunate else "#8b0000"
+    planet_color = {
+        "Saturn": "#4169E1", "Jupiter": "#9400D3", "Mars": "#DC143C",
+        "Sun": "#FFD700", "Venus": "#228B22", "Mercury": "#FF8C00", "Moon": "#C0C0C0",
+    }.get(m.ruling_planet, "#c8c8c8")
 
-    st.write(f"**魔法圖像 (Magic Image):** {m.magic_image}")
-    st.write(f"**魔法圖像（中文）:** {m.magic_image_cn}")
-    st.write(
-        f"**用途 (Purposes):** {'; '.join(m.purposes_cn)} "
-        f"/ {'; '.join(m.purposes)}"
+    good_html = "".join(
+        f'<li style="color:#a8d8a8;">{u}</li>' for u in m.good_uses
+    ) if m.good_uses else ""
+    bad_html = "".join(
+        f'<li style="color:#f08080;">{u}</li>' for u in m.bad_uses
+    ) if m.bad_uses else ""
+    purposes_html = "".join(
+        f'<span style="background:rgba(255,255,255,0.1);border-radius:4px;'
+        f'padding:2px 8px;margin:2px;display:inline-block;color:#e0e0e0;">{p}</span>'
+        for p in m.purposes_cn
     )
-    st.write(f"**咒語摘要 (Invocation):** {m.invocation_summary}")
+
+    notes_html = (
+        f'<div style="background:rgba(255,215,0,0.08);border-left:3px solid #FFD700;'
+        f'padding:8px 12px;border-radius:0 6px 6px 0;margin-top:10px;">'
+        f'<span style="color:#aaa;font-size:0.85em;">📖 注意事項：</span>'
+        f'<span style="color:#ddd;font-size:0.9em;"> {m.greer_notes}</span></div>'
+        if m.greer_notes else ""
+    )
+
+    html = f"""
+    <div style="
+        background:linear-gradient(135deg,#1a1a2e 0%,#0d1117 100%);
+        border:2px solid {border_color};border-radius:12px;
+        padding:20px;margin:8px 0;
+        box-shadow:0 4px 20px rgba(0,0,0,0.5);
+        font-family:'Segoe UI',sans-serif;
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="color:#FFD700;margin:0;font-size:1.2em;">
+          {m.index+1}. {m.arabic_name}
+          <span style="color:#aaa;font-size:0.8em;margin-left:8px;">{m.arabic_script}</span>
+        </h3>
+        <span style="background:{fortune_bg};color:#fff;padding:3px 12px;
+                     border-radius:20px;font-size:0.85em;">{fortune_text}</span>
+      </div>
+      <p style="color:#ccc;margin:0 0 12px 0;font-size:1em;">
+        <strong style="color:#ddd;">{m.chinese_name}</strong>
+        &nbsp;·&nbsp; {m.english_name}
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;">
+          <p style="margin:4px 0;color:#aaa;font-size:0.85em;">統治行星</p>
+          <p style="margin:0;color:{planet_color};font-size:1.1em;font-weight:bold;">
+            {PLANET_GLYPHS[m.ruling_planet]} {m.ruling_planet} ({PLANET_NAMES_CN[m.ruling_planet]})
+          </p>
+          <p style="margin:8px 0 4px 0;color:#aaa;font-size:0.85em;">起始度數</p>
+          <p style="margin:0;color:#e0e0e0;">{m.start_degree:.3f}° → {m.end_degree:.3f}°</p>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;">
+          <p style="margin:4px 0 2px 0;color:#aaa;font-size:0.85em;">
+            🎨 顏色：<span style="color:#e0e0e0;">{m.color}</span>
+          </p>
+          <p style="margin:4px 0 2px 0;color:#aaa;font-size:0.85em;">
+            ⚙️ 金屬：<span style="color:#e0e0e0;">{m.metal}</span>
+          </p>
+          <p style="margin:4px 0 2px 0;color:#aaa;font-size:0.85em;">
+            🌿 香料：<span style="color:#e0e0e0;">{m.incense}</span>
+          </p>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:12px;margin-bottom:10px;">
+        <p style="color:#aaa;margin:0 0 6px 0;font-size:0.85em;">🖼️ 魔法圖像</p>
+        <p style="color:#e0e0e0;margin:0 0 4px 0;">{m.magic_image_cn}</p>
+        <p style="color:#888;margin:0;font-style:italic;font-size:0.9em;">{m.magic_image}</p>
+      </div>
+      <div style="margin-bottom:10px;">
+        <p style="color:#aaa;margin:0 0 6px 0;font-size:0.85em;">✦ 用途</p>
+        <div>{purposes_html}</div>
+      </div>
+      {'<div style="margin-bottom:10px;"><p style="color:#aaa;margin:0 0 4px 0;font-size:0.85em;">✅ 吉用</p><ul style="margin:0;padding-left:18px;">' + good_html + '</ul></div>' if good_html else ''}
+      {'<div style="margin-bottom:10px;"><p style="color:#aaa;margin:0 0 4px 0;font-size:0.85em;">⚠️ 凶用</p><ul style="margin:0;padding-left:18px;">' + bad_html + '</ul></div>' if bad_html else ''}
+      <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:10px;margin-bottom:8px;">
+        <span style="color:#aaa;font-size:0.85em;">📜 咒語摘要：</span>
+        <span style="color:#ddd;">{m.invocation_summary}</span>
+      </div>
+      {notes_html}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def _render_mansion_wheel(mansions: list, highlight_index: int = -1) -> None:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
-    使用 Plotly 繪製 28 月宿輪圖。
+    使用 Plotly Barpolar 繪製 28 月宿輪圖（正圓扇形佈局）。
     """
     st.subheader("🌐 月宿輪圖 (Lunar Mansion Wheel)")
     st.caption("資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)")
 
     n = 28
     angle_step = 360.0 / n
-    # Each mansion as a sector
-    labels = [f"{m.arabic_name}<br>{m.chinese_name}" for m in mansions]
-    parents = [""] * n
-    values = [1] * n
+
     colors = []
+    line_colors = []
     for m in mansions:
         if m.index == highlight_index:
-            colors.append("#FFD700")  # gold highlight
+            colors.append("#FFD700")
+            line_colors.append("#fff")
         elif m.fortunate:
-            colors.append("#2E8B57")  # sea green for fortunate
+            colors.append("#2E8B57")
+            line_colors.append("#1a5c35")
         else:
-            colors.append("#8B0000")  # dark red for unfortunate
+            colors.append("#8B0000")
+            line_colors.append("#4a0000")
 
-    fig = go.Figure(go.Pie(
-        labels=[f"{m.index + 1}. {m.arabic_name} ({m.chinese_name})" for m in mansions],
-        values=values,
-        hole=0.4,
-        marker=dict(colors=colors),
-        textinfo="label",
-        hovertemplate=(
-            "<b>%{label}</b><br>"
-            "Ruling Planet: %{customdata[0]}<br>"
-            "Fortune: %{customdata[1]}<br>"
-            "Metal: %{customdata[2]}<br>"
-            "<extra></extra>"
-        ),
-        customdata=[
-            [
-                f"{PLANET_GLYPHS[m.ruling_planet]} {m.ruling_planet}",
-                "✨ 吉" if m.fortunate else "⚠️ 凶",
-                m.metal,
-            ]
-            for m in mansions
-        ],
-        direction="clockwise",
-    ))
-    fig.update_layout(
-        title="Picatrix 28 Lunar Mansions (阿拉伯月宿輪圖)",
+    thetas = [m.start_degree + angle_step / 2 for m in mansions]
+    hover_texts = [
+        f"<b>{m.index+1}. {m.arabic_name}</b><br>{m.chinese_name}<br>"
+        f"Planet: {PLANET_GLYPHS[m.ruling_planet]} {PLANET_NAMES_CN[m.ruling_planet]}<br>"
+        f"{'✨ 吉宿' if m.fortunate else '⚠️ 凶宿'}<br>"
+        f"{m.start_degree:.2f}° – {m.end_degree:.2f}°<extra></extra>"
+        for m in mansions
+    ]
+
+    fig = go.Figure(go.Barpolar(
+        r=[1] * n,
+        theta=thetas,
+        width=[angle_step * 0.92] * n,
+        marker_color=colors,
+        marker_line_color=line_colors,
+        marker_line_width=1.5,
+        hovertemplate=hover_texts,
         showlegend=False,
-        height=600,
+    ))
+
+    fig.update_layout(
+        title="Picatrix 28 Lunar Mansions — 阿拉伯月宿輪圖",
+        polar=dict(
+            radialaxis=dict(
+                showticklabels=False, ticks="", range=[0, 1.4],
+                showgrid=False, showline=False,
+            ),
+            angularaxis=dict(
+                tickvals=thetas,
+                ticktext=[
+                    f"{m.index+1}.<br>{m.chinese_name}" for m in mansions
+                ],
+                direction="clockwise",
+                rotation=90,
+                tickfont=dict(size=8, color="#c8c8c8"),
+                gridcolor="rgba(255,255,255,0.08)",
+            ),
+            bgcolor="#0d1117",
+        ),
+        showlegend=False,
+        height=620,
         paper_bgcolor="#1a1a2e",
         font=dict(color="#e0e0e0", size=9),
-        annotations=[dict(
-            text="月宿輪",
-            x=0.5, y=0.5,
-            font_size=14,
-            showarrow=False,
-            font_color="#e0e0e0",
-        )],
+        margin=dict(t=60, b=30, l=30, r=30),
+    )
+
+    # Legend
+    fig.add_trace(go.Scatterpolar(
+        r=[None], theta=[None], mode="markers",
+        marker=dict(color="#2E8B57", size=10, symbol="square"),
+        name="✨ 吉宿", showlegend=True,
+    ))
+    fig.add_trace(go.Scatterpolar(
+        r=[None], theta=[None], mode="markers",
+        marker=dict(color="#8B0000", size=10, symbol="square"),
+        name="⚠️ 凶宿", showlegend=True,
+    ))
+    if highlight_index >= 0:
+        fig.add_trace(go.Scatterpolar(
+            r=[None], theta=[None], mode="markers",
+            marker=dict(color="#FFD700", size=10, symbol="square"),
+            name="📍 當前月宿", showlegend=True,
+        ))
+    fig.update_layout(
+        showlegend=True,
+        legend=dict(
+            orientation="h", yanchor="bottom", y=-0.12,
+            xanchor="center", x=0.5,
+            font=dict(color="#e0e0e0", size=10),
+        ),
     )
     st.plotly_chart(fig, use_container_width=True)
 
 
 def render_planetary_hours_tool(
-    year: int, month: int, day: int,
-    timezone: float, latitude: float, longitude: float,
+    year: int | None = None,
+    month: int | None = None,
+    day: int | None = None,
+    timezone: float = 8.0,
+    latitude: float = 25.0,
+    longitude: float = 121.5,
 ) -> None:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book III, Ch. 9
     渲染行星時計算器（Planetary Hours Tool）。
 
+    若未提供 year/month/day，使用今日日期。
+
     Args:
-        year, month, day: Date
-        timezone: UTC offset
+        year, month, day: Date (optional; defaults to today)
+        timezone: UTC offset (default 8.0)
         latitude, longitude: Location coordinates
     """
     st.subheader("⏰ 行星時計算器 (Planetary Hours Calculator)")
     st.caption("資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book III, Ch. 9")
 
+    today = datetime.now(tz=timezone_module.utc)
+    year = year or today.year
+    month = month or today.month
+    day = day or today.day
+
     with st.spinner("正在計算行星時..."):
         result = get_planetary_hours(year, month, day, timezone, latitude, longitude)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write(f"**日期 (Date):** {result.date_str}")
-        st.write(f"**星期 (Weekday):** {result.weekday_cn} ({result.weekday_en})")
-        st.write(
-            f"**當日主星 (Day Planet):** "
-            f"{PLANET_GLYPHS[result.day_planet]} {result.day_planet} "
-            f"({PLANET_NAMES_CN[result.day_planet]})"
-        )
-    with col2:
-        st.write(f"**日出 (Sunrise):** {result.sunrise.strftime('%H:%M:%S')}")
-        st.write(f"**日落 (Sunset):** {result.sunset.strftime('%H:%M:%S')}")
-        st.write(f"**日間時長 (Day Hour):** {result.day_length_minutes / 12:.1f} 分鐘")
-        st.write(f"**夜間時長 (Night Hour):** {result.night_length_minutes / 12:.1f} 分鐘")
-
-    # Table
-    header = (
-        "| # | 日/夜 | 行星 (Planet) | 時辰 | 開始時間 | 結束時間 | 時長(分) |"
-    )
-    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
-    rows = [header, sep]
     planet_colors = {
         "Saturn": "#4169E1", "Jupiter": "#9400D3", "Mars": "#DC143C",
         "Sun": "#FFD700", "Venus": "#228B22", "Mercury": "#FF8C00", "Moon": "#C0C0C0",
     }
+    day_planet_color = planet_colors.get(result.day_planet, "#c8c8c8")
+
+    # Summary header card
+    st.markdown(f"""
+    <div style="
+        background:linear-gradient(135deg,#1a1a2e 0%,#0d1117 100%);
+        border:1px solid #333;border-radius:10px;padding:16px 20px;margin-bottom:12px;
+        display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+    ">
+      <div>
+        <p style="color:#888;margin:0 0 2px 0;font-size:0.82em;">📅 日期</p>
+        <p style="color:#e0e0e0;margin:0;font-size:1em;font-weight:bold;">{result.date_str}</p>
+        <p style="color:#aaa;margin:2px 0 0 0;font-size:0.85em;">{result.weekday_cn} ({result.weekday_en})</p>
+      </div>
+      <div>
+        <p style="color:#888;margin:0 0 2px 0;font-size:0.82em;">🪐 當日主星</p>
+        <p style="color:{day_planet_color};margin:0;font-size:1.1em;font-weight:bold;">
+          {PLANET_GLYPHS[result.day_planet]} {result.day_planet} ({PLANET_NAMES_CN[result.day_planet]})
+        </p>
+      </div>
+      <div>
+        <p style="color:#888;margin:0 0 2px 0;font-size:0.82em;">🌅 日出 / 日落</p>
+        <p style="color:#e0e0e0;margin:0;">
+          {result.sunrise.strftime('%H:%M:%S')} → {result.sunset.strftime('%H:%M:%S')}
+        </p>
+        <p style="color:#aaa;margin:2px 0 0 0;font-size:0.82em;">
+          日時 {result.day_length_minutes/12:.1f} 分 · 夜時 {result.night_length_minutes/12:.1f} 分
+        </p>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Build styled HTML table
+    rows_html = ""
     for h in result.hours:
+        bg = "rgba(255,255,255,0.03)" if h.is_day else "rgba(0,0,0,0.3)"
+        icon = "☀️" if h.is_day else "🌙"
         color = planet_colors.get(h.planet, "#c8c8c8")
-        p_html = (
-            f'<span style="color:{color};font-weight:bold">'
-            f"{h.planet_glyph} {h.planet} ({h.planet_cn})</span>"
-        )
-        day_night = "☀️ 日" if h.is_day else "🌙 夜"
-        rows.append(
-            f"| {h.hour_number} "
-            f"| {day_night} "
-            f"| {p_html} "
-            f"| {h.hour_number if h.is_day else h.hour_number - 12} "
-            f"| {h.start_time.strftime('%H:%M')} "
-            f"| {h.end_time.strftime('%H:%M')} "
-            f"| {h.duration_minutes:.1f} |"
-        )
-    st.markdown("\n".join(rows), unsafe_allow_html=True)
+        session_num = h.hour_number if h.is_day else h.hour_number - 12
+        rows_html += f"""
+        <tr style="background:{bg};border-bottom:1px solid #2a2a3e;">
+          <td style="text-align:center;padding:6px 8px;color:#888;font-size:0.85em;">{h.hour_number}</td>
+          <td style="text-align:center;padding:6px 8px;">{icon}</td>
+          <td style="text-align:center;padding:6px 8px;color:{color};font-weight:bold;font-size:1.1em;">
+            {h.planet_glyph}
+          </td>
+          <td style="padding:6px 10px;color:{color};font-weight:600;">{h.planet} ({h.planet_cn})</td>
+          <td style="text-align:center;padding:6px 8px;color:#aaa;font-size:0.85em;">{session_num}</td>
+          <td style="text-align:center;padding:6px 8px;color:#e0e0e0;">{h.start_time.strftime('%H:%M')}</td>
+          <td style="text-align:center;padding:6px 8px;color:#e0e0e0;">{h.end_time.strftime('%H:%M')}</td>
+          <td style="text-align:center;padding:6px 8px;color:#aaa;font-size:0.85em;">{h.duration_minutes:.1f}</td>
+        </tr>"""
+
+    table_html = f"""
+    <div style="overflow-x:auto;margin:8px 0;">
+    <table style="
+        width:100%;border-collapse:collapse;
+        background:#0d1117;border-radius:8px;overflow:hidden;
+        font-family:'Segoe UI',sans-serif;font-size:0.9em;
+    ">
+      <thead>
+        <tr style="background:#1a1a2e;border-bottom:2px solid #333;">
+          <th style="padding:8px;color:#888;font-weight:600;">#</th>
+          <th style="padding:8px;color:#888;font-weight:600;">日/夜</th>
+          <th style="padding:8px;color:#888;font-weight:600;">符</th>
+          <th style="padding:8px;color:#888;font-weight:600;text-align:left;">行星 (Planet)</th>
+          <th style="padding:8px;color:#888;font-weight:600;">時辰</th>
+          <th style="padding:8px;color:#888;font-weight:600;">開始</th>
+          <th style="padding:8px;color:#888;font-weight:600;">結束</th>
+          <th style="padding:8px;color:#888;font-weight:600;">時長(分)</th>
+        </tr>
+      </thead>
+      <tbody>{rows_html}</tbody>
+    </table>
+    </div>
+    """
+    st.markdown(table_html, unsafe_allow_html=True)
 
     # Plotly bar chart
     _render_planetary_hours_chart(result)
@@ -823,7 +1013,7 @@ def render_picatrix_browse() -> None:
 
     # --- 今日月宿 ---
     swe.set_ephe_path("")
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=timezone_module.utc)
     now_jd = swe.julday(now.year, now.month, now.day,
                         now.hour + now.minute / 60.0)
     moon_now, _ = swe.calc_ut(now_jd, swe.MOON)
