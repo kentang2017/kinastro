@@ -1910,3 +1910,260 @@ class TestZurkhaiWheelSVG:
     def test_svg_dimensions(self, chart_1990):
         svg = _build_zurkhai_wheel_svg(chart_1990)
         assert 'viewBox="0 0 500 500"' in svg
+
+
+# ============================================================
+# Picatrix Mansions Tests
+# ============================================================
+
+class TestPicatrixData:
+    """Picatrix 月宿資料完整性測試"""
+
+    def test_mansion_count(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS
+        assert len(PICATRIX_MANSIONS) == 28
+
+    def test_mansion_indices_sequential(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS
+        for i, m in enumerate(PICATRIX_MANSIONS):
+            assert m["index"] == i
+
+    def test_mansion_start_degrees_monotone(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS
+        for i, m in enumerate(PICATRIX_MANSIONS):
+            expected = i * (360.0 / 28)
+            assert abs(m["start_degree"] - expected) < 0.001
+
+    def test_mansion_required_keys(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS
+        required = {
+            "index", "arabic_name", "arabic_script", "english_name",
+            "chinese_name", "ruling_planet", "fortunate",
+            "magic_image", "magic_image_cn", "purposes", "purposes_cn",
+            "incense", "color", "metal", "invocation_summary", "start_degree",
+        }
+        for m in PICATRIX_MANSIONS:
+            assert required.issubset(m.keys()), f"Mansion {m['index']} missing keys"
+
+    def test_ruling_planets_valid(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS, CHALDEAN_ORDER
+        for m in PICATRIX_MANSIONS:
+            assert m["ruling_planet"] in CHALDEAN_ORDER
+
+    def test_fortunate_is_bool(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS
+        for m in PICATRIX_MANSIONS:
+            assert isinstance(m["fortunate"], bool)
+
+    def test_purposes_are_lists(self):
+        from astro.picatrix_data import PICATRIX_MANSIONS
+        for m in PICATRIX_MANSIONS:
+            assert isinstance(m["purposes"], list)
+            assert isinstance(m["purposes_cn"], list)
+            assert len(m["purposes"]) > 0
+            assert len(m["purposes_cn"]) > 0
+
+    def test_talisman_intents_count(self):
+        from astro.picatrix_data import TALISMAN_INTENTS
+        assert len(TALISMAN_INTENTS) == 8
+
+    def test_talisman_required_keys(self):
+        from astro.picatrix_data import TALISMAN_INTENTS
+        required = {
+            "intent_key", "intent_cn", "intent_en", "planet",
+            "mansion_indices", "metal", "incense", "color",
+            "hour_planet", "description_cn", "description_en",
+        }
+        for t in TALISMAN_INTENTS:
+            assert required.issubset(t.keys())
+
+    def test_talisman_mansion_indices_in_range(self):
+        from astro.picatrix_data import TALISMAN_INTENTS
+        for t in TALISMAN_INTENTS:
+            for idx in t["mansion_indices"]:
+                assert 0 <= idx <= 27
+
+
+class TestPicatrixMansionLookup:
+    """月宿查詢函數測試"""
+
+    def test_mansion_index_at_zero(self):
+        from astro.picatrix_mansions import get_mansion_index
+        assert get_mansion_index(0.0) == 0
+
+    def test_mansion_index_at_359(self):
+        from astro.picatrix_mansions import get_mansion_index
+        assert get_mansion_index(359.9) == 27
+
+    def test_mansion_index_full_coverage(self):
+        from astro.picatrix_mansions import get_mansion_index
+        for deg in range(0, 360, 5):
+            idx = get_mansion_index(float(deg))
+            assert 0 <= idx <= 27
+
+    def test_mansion_index_boundary(self):
+        """Each mansion starts at index * 360/28 degrees (with epsilon tolerance)."""
+        from astro.picatrix_mansions import get_mansion_index
+        for i in range(28):
+            # Use a degree slightly above the start of each mansion to avoid
+            # floating-point precision issues at exact boundaries.
+            lon = i * (360.0 / 28) + 0.001
+            assert get_mansion_index(lon) == i
+
+    def test_get_mansion_returns_object(self):
+        from astro.picatrix_mansions import get_mansion, PicatrixMansion
+        m = get_mansion(0.0)
+        assert isinstance(m, PicatrixMansion)
+        assert m.index == 0
+        assert m.arabic_name == "Al-Sharatain"
+
+    def test_get_mansion_by_index(self):
+        from astro.picatrix_mansions import get_mansion_by_index
+        for i in range(28):
+            m = get_mansion_by_index(i)
+            assert m.index == i
+
+    def test_get_mansion_by_index_out_of_range(self):
+        from astro.picatrix_mansions import get_mansion_by_index
+        with pytest.raises(IndexError):
+            get_mansion_by_index(-1)
+        with pytest.raises(IndexError):
+            get_mansion_by_index(28)
+
+    def test_get_all_mansions(self):
+        from astro.picatrix_mansions import get_all_mansions
+        mansions = get_all_mansions()
+        assert len(mansions) == 28
+
+
+class TestPlanetaryHours:
+    """行星時計算測試"""
+
+    @pytest.fixture
+    def hk_monday(self):
+        """HK 2024-01-01 (Monday)"""
+        from astro.picatrix_mansions import get_planetary_hours
+        return get_planetary_hours(2024, 1, 1, 8.0, 22.3193, 114.1694)
+
+    def test_returns_result_object(self, hk_monday):
+        from astro.picatrix_mansions import PlanetaryHoursResult
+        assert isinstance(hk_monday, PlanetaryHoursResult)
+
+    def test_hours_count_is_24(self, hk_monday):
+        assert len(hk_monday.hours) == 24
+
+    def test_day_hours_count(self, hk_monday):
+        day_hours = [h for h in hk_monday.hours if h.is_day]
+        assert len(day_hours) == 12
+
+    def test_night_hours_count(self, hk_monday):
+        night_hours = [h for h in hk_monday.hours if not h.is_day]
+        assert len(night_hours) == 12
+
+    def test_monday_day_planet_is_moon(self, hk_monday):
+        """Monday (星期一) should have Moon as day planet."""
+        assert hk_monday.day_planet == "Moon"
+
+    def test_first_hour_planet_is_day_planet(self, hk_monday):
+        """First planetary hour should be ruled by the day planet."""
+        assert hk_monday.hours[0].planet == hk_monday.day_planet
+
+    def test_planets_are_from_chaldean_order(self, hk_monday):
+        from astro.picatrix_data import CHALDEAN_ORDER
+        for h in hk_monday.hours:
+            assert h.planet in CHALDEAN_ORDER
+
+    def test_chaldean_sequence(self, hk_monday):
+        """Hours should follow Chaldean order cyclically."""
+        from astro.picatrix_data import CHALDEAN_ORDER
+        start_idx = CHALDEAN_ORDER.index(hk_monday.day_planet)
+        for i, h in enumerate(hk_monday.hours):
+            expected = CHALDEAN_ORDER[(start_idx + i) % 7]
+            assert h.planet == expected
+
+    def test_hour_numbers_sequential(self, hk_monday):
+        for i, h in enumerate(hk_monday.hours):
+            assert h.hour_number == i + 1
+
+    def test_sunrise_before_sunset(self, hk_monday):
+        assert hk_monday.sunrise < hk_monday.sunset
+
+    def test_day_length_positive(self, hk_monday):
+        assert hk_monday.day_length_minutes > 0
+
+    def test_night_length_positive(self, hk_monday):
+        assert hk_monday.night_length_minutes > 0
+
+    def test_hk_sunrise_reasonable(self, hk_monday):
+        """HK sunrise should be between 6:00 and 8:00 in January."""
+        h = hk_monday.sunrise.hour
+        assert 6 <= h <= 8
+
+    def test_hour_planet_cn_not_empty(self, hk_monday):
+        for h in hk_monday.hours:
+            assert h.planet_cn != ""
+
+    def test_start_times_ordered(self, hk_monday):
+        """Day hours should have ascending start times."""
+        day_hours = [h for h in hk_monday.hours if h.is_day]
+        for i in range(len(day_hours) - 1):
+            assert day_hours[i].start_time < day_hours[i + 1].start_time
+
+
+class TestTalismanRecommendation:
+    """護符推薦測試"""
+
+    def test_love_recommendation(self):
+        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        rec = get_picatrix_talisman_recommendation("love")
+        assert rec is not None
+        assert rec.planet == "Venus"
+        assert rec.metal == "copper"
+
+    def test_wealth_recommendation(self):
+        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        rec = get_picatrix_talisman_recommendation("wealth")
+        assert rec is not None
+        assert rec.planet == "Jupiter"
+
+    def test_chinese_intent_mapping(self):
+        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        rec = get_picatrix_talisman_recommendation("愛情")
+        assert rec is not None
+        assert rec.planet == "Venus"
+        rec2 = get_picatrix_talisman_recommendation("財富")
+        assert rec2 is not None
+        assert rec2.planet == "Jupiter"
+
+    def test_unknown_intent_returns_none(self):
+        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        assert get_picatrix_talisman_recommendation("unknown_xyz") is None
+
+    def test_all_intents_return_recommendation(self):
+        from astro.picatrix_mansions import (
+            get_picatrix_talisman_recommendation,
+            get_all_talisman_intents,
+        )
+        for key in get_all_talisman_intents():
+            rec = get_picatrix_talisman_recommendation(key)
+            assert rec is not None, f"No recommendation for intent: {key}"
+
+    def test_recommendation_mansion_names_populated(self):
+        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        rec = get_picatrix_talisman_recommendation("love")
+        assert len(rec.mansion_names_cn) > 0
+        for name in rec.mansion_names_cn:
+            assert isinstance(name, str)
+            assert len(name) > 0
+
+    def test_arabic_wrapper_functions(self):
+        """arabic.py wrapper functions should delegate correctly."""
+        from astro.arabic import (
+            get_planetary_hours,
+            get_picatrix_talisman_recommendation,
+        )
+        hours = get_planetary_hours(2024, 1, 1, 8.0, 22.3193, 114.1694)
+        assert len(hours.hours) == 24
+        rec = get_picatrix_talisman_recommendation("love")
+        assert rec is not None
+        assert rec.planet == "Venus"

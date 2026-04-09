@@ -694,3 +694,57 @@ def _render_aspects(chart):
             f"| {a.orb:.2f}° |"
         )
     st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+
+# ============================================================
+# Picatrix 擴充函數 (Picatrix Extension Functions)
+# 資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
+# ============================================================
+
+def get_planetary_hours(
+    year: int,
+    month: int,
+    day: int,
+    timezone: float,
+    latitude: float,
+    longitude: float,
+):
+    """
+    資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book III, Ch. 9
+    計算指定日期和地點的 24 行星時（12 日間時 + 12 夜間時）。
+
+    整合阿拉伯占星的 Arabic Parts、Essential Dignities 與 Sect 概念。
+
+    Args:
+        year: 年
+        month: 月
+        day: 日
+        timezone: 時區偏移（UTC+N）
+        latitude: 緯度
+        longitude: 經度
+
+    Returns:
+        PlanetaryHoursResult: 行星時計算結果
+    """
+    from astro.picatrix_mansions import get_planetary_hours as _get_hours
+    return _get_hours(year, month, day, timezone, latitude, longitude)
+
+
+def get_picatrix_talisman_recommendation(intent: str):
+    """
+    資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book II, Ch. 10-12
+    根據使用者意圖推薦 Picatrix 護符配方。
+
+    整合現有的 Arabic Parts、Essential Dignities、Sect 技法。
+
+    Args:
+        intent: 意圖關鍵字（中英文均可），支援：
+            "love"/"愛情", "wealth"/"財富", "health"/"治病",
+            "travel"/"旅行", "protection"/"保護",
+            "knowledge"/"知識", "power"/"權力", "agriculture"/"農業"
+
+    Returns:
+        TalismanRecommendation | None: 護符推薦，若意圖不識別則回傳 None
+    """
+    from astro.picatrix_mansions import get_picatrix_talisman_recommendation as _get_rec
+    return _get_rec(intent)
