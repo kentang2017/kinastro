@@ -648,6 +648,14 @@ def load_talismans():
 
 PICATRIX_TALISMANS = load_talismans()
 
+
+def load_planetary_correspondences():
+    json_path = Path(__file__).parent / "data" / "picatrix_planetary_correspondences.json"
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["planets"]
+
+PICATRIX_CORRESPONDENCES = load_planetary_correspondences()
 # ============================================================
 # Planetary Hours — Chaldean Order
 # 行星時序 (Chaldean Order: Saturn → Jupiter → Mars → Sun → Venus → Mercury → Moon)
