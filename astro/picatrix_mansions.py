@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 
 import swisseph as swe
 import streamlit as st
@@ -815,9 +815,6 @@ def render_picatrix_browse() -> None:
     渲染 Picatrix 完整參考瀏覽器（不需要排盤資料）。
     包含：今日月宿、28 月宿總覽表、月宿輪圖、迦勒底行星序、護符意圖總覽。
     """
-    import swisseph as _swe
-    from datetime import datetime as _dt, timezone as _tz
-
     st.subheader("📜 Picatrix 星體魔法參考 (Reference)")
     st.caption(
         "資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) "
@@ -825,11 +822,11 @@ def render_picatrix_browse() -> None:
     )
 
     # --- 今日月宿 ---
-    _swe.set_ephe_path("")
-    now = _dt.now(tz=_tz.utc)
-    now_jd = _swe.julday(now.year, now.month, now.day,
-                         now.hour + now.minute / 60.0)
-    moon_now, _ = _swe.calc_ut(now_jd, _swe.MOON)
+    swe.set_ephe_path("")
+    now = datetime.now(tz=timezone.utc)
+    now_jd = swe.julday(now.year, now.month, now.day,
+                        now.hour + now.minute / 60.0)
+    moon_now, _ = swe.calc_ut(now_jd, swe.MOON)
     today_moon_lon = float(moon_now[0]) % 360.0
     today_idx = get_mansion_index(today_moon_lon)
     today_mansion = get_mansion_by_index(today_idx)
