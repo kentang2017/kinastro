@@ -14,6 +14,17 @@ Do NOT modify without consulting primary sources.
 from __future__ import annotations
 import json
 from pathlib import Path
+from typing import Any
+
+
+# ====================== 資料載入函式 ======================
+def _load_json(filename: str) -> dict[str, Any]:
+    """從 data/ 資料夾載入 JSON"""
+    json_path = Path(__file__).parent / "data" / filename
+    if not json_path.exists():
+        raise FileNotFoundError(f"找不到 Picatrix 資料檔：{json_path}")
+    with open(json_path, encoding="utf-8") as f:
+        return json.load(f)
 # ============================================================
 # 28 Lunar Mansions — Picatrix Complete Data
 # (Manazil al-Qamar / 阿拉伯月宿)
@@ -608,62 +619,56 @@ PICATRIX_MANSIONS: list[dict] = [
     },
 ]
 
-# ====================== 載入 Greer 版詳細 JSON ======================
-def load_greer_mansions() -> dict:
-    json_path = Path(__file__).parent / "data" / "picatrix_mansions.json"
-    with open(json_path, encoding="utf-8") as f:
-        data = json.load(f)
-    return {m["number"]: m for m in data["mansions"]}
+# ====================== 載入各 JSON ======================
+GREER_MANSIONS = _load_json("picatrix_mansions_greer.json")["mansions"]
+TALISMANS = _load_json("picatrix_talismans.json")["talismans"]
+CORRESPONDENCES = _load_json("picatrix_planetary_correspondences.json")["planets"]
+NATURAL_RECIPES = _load_json("picatrix_natural_recipes.json")["recipes"]
 
-GREER_MANSIONS = load_greer_mansions()
-
-def load_planetary_prayers():
-    json_path = Path(__file__).parent / "data" / "picatrix_planetary_prayers.json"
-    with open(json_path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data["prayers"]
-
-PICATRIX_PRAYERS = load_planetary_prayers()
-
-# ====================== 自動合併函式 ======================
-def enrich_picatrix_mansions():
-    """把 Greer 版的詳細用途、圖像、注意事項合併到原有資料中"""
+# ====================== 自動合併 Greer 詳細資料 ======================
+def enrich_mansions():
+    """把 Greer 版的詳細用途、圖像、注意事項合併到原有 Mansions"""
+    greer_dict = {m["number"]: m for m in GREER_MANSIONS}
     for mansion in PICATRIX_MANSIONS:
-        num = mansion["index"] + 1                     # 你的 index 是 0~27
-        if num in GREER_MANSIONS:
-            g = GREER_MANSIONS[num]
+        num = mansion.get("index", 0) + 1
+        if num in greer_dict:
+            g = greer_dict[num]
             mansion.update({
-                "greer_name_en": g["name_en"],         # Alnat, Albotain...
+                "greer_name_en": g["name_en"],
                 "greer_name_zh": g["name_zh"],
-                "good_uses": g["good_uses"],           # 詳細善用
-                "bad_uses": g["bad_uses"],             # 詳細惡用
-                "detailed_image": g["image"],          # Greer 版圖像描述
-                "notes": g.get("notes", ""),           # 特別注意事項
-                "start_degree": g["start_deg"],        # 精確度數
+                "good_uses": g.get("good_uses", []),
+                "bad_uses": g.get("bad_uses", []),
+                "detailed_image": g.get("image", ""),
+                "notes": g.get("notes", ""),
+                "start_degree": g["start_deg"],
                 "end_degree": g["end_deg"],
             })
     return PICATRIX_MANSIONS
 
 # 執行合併
-PICATRIX_MANSIONS = enrich_picatrix_mansions()
+PICATRIX_MANSIONS = enrich_mansions()
 
-# 在 picatrix_data.py 加入
-def load_talismans():
-    json_path = Path(__file__).parent / "data" / "picatrix_talismans.json"
-    with open(json_path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data["talismans"]
+# ====================== 公開變數（直接 import 使用）======================
+PICATRIX_TALISMANS = TALISMANS
+PICATRIX_CORRESPONDENCES = CORRESPONDENCES
+PICATRIX_NATURAL_RECIPES = NATURAL_RECIPES
 
-PICATRIX_TALISMANS = load_talismans()
+# ====================== 輔助函式 ======================
+def get_mansion_by_degree(longitude: float) -> dict | None:
+    """根據月亮黃道經度回傳目前月宮"""
+    lon = longitude % 360
+    for m in PICATRIX_MANSIONS:
+        if m.get("start_degree") <= lon < m.get("end_degree", 360):
+            return m
+    return None
+
+def get_talismans_by_purpose(keyword: str) -> list[dict]:
+    """依用途關鍵字搜尋圖像配方"""
+    keyword = keyword.lower()
+    return [t for t in PICATRIX_TALISMANS if keyword in t["purpose"].lower()]
 
 
-def load_planetary_correspondences():
-    json_path = Path(__file__).parent / "data" / "picatrix_planetary_correspondences.json"
-    with open(json_path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data["planets"]
 
-PICATRIX_CORRESPONDENCES = load_planetary_correspondences()
 # ============================================================
 # Planetary Hours — Chaldean Order
 # 行星時序 (Chaldean Order: Saturn → Jupiter → Mars → Sun → Venus → Mercury → Moon)
