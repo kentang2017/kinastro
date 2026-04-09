@@ -639,6 +639,15 @@ def enrich_picatrix_mansions():
 # 執行合併
 PICATRIX_MANSIONS = enrich_picatrix_mansions()
 
+# 在 picatrix_data.py 加入
+def load_talismans():
+    json_path = Path(__file__).parent / "data" / "picatrix_talismans.json"
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["talismans"]
+
+PICATRIX_TALISMANS = load_talismans()
+
 # ============================================================
 # Planetary Hours — Chaldean Order
 # 行星時序 (Chaldean Order: Saturn → Jupiter → Mars → Sun → Venus → Mercury → Moon)
