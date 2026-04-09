@@ -617,6 +617,14 @@ def load_greer_mansions() -> dict:
 
 GREER_MANSIONS = load_greer_mansions()
 
+def load_planetary_prayers():
+    json_path = Path(__file__).parent / "data" / "picatrix_planetary_prayers.json"
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["prayers"]
+
+PICATRIX_PRAYERS = load_planetary_prayers()
+
 # ====================== 自動合併函式 ======================
 def enrich_picatrix_mansions():
     """把 Greer 版的詳細用途、圖像、注意事項合併到原有資料中"""
