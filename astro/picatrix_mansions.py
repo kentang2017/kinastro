@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 
 import swisseph as swe
 import streamlit as st
@@ -803,3 +803,269 @@ def render_talisman_generator() -> None:
         )
         st.write(f"  🖼️ {m['magic_image_cn']}")
         st.write(f"  🖼️ _{m['magic_image']}_")
+
+
+# ============================================================
+# 瀏覽函數 (Browse / Reference Functions)
+# ============================================================
+
+def render_picatrix_browse() -> None:
+    """
+    資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
+    渲染 Picatrix 完整參考瀏覽器（不需要排盤資料）。
+    包含：今日月宿、28 月宿總覽表、月宿輪圖、迦勒底行星序、護符意圖總覽。
+    """
+    st.subheader("📜 Picatrix 星體魔法參考 (Reference)")
+    st.caption(
+        "資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) "
+        "— Greer & Warnock 2011 / Attrell & Porreca 2019"
+    )
+
+    # --- 今日月宿 ---
+    swe.set_ephe_path("")
+    now = datetime.now(tz=timezone.utc)
+    now_jd = swe.julday(now.year, now.month, now.day,
+                        now.hour + now.minute / 60.0)
+    moon_now, _ = swe.calc_ut(now_jd, swe.MOON)
+    today_moon_lon = float(moon_now[0]) % 360.0
+    today_idx = get_mansion_index(today_moon_lon)
+    today_mansion = get_mansion_by_index(today_idx)
+
+    _render_today_mansion_card(today_moon_lon, today_mansion)
+
+    # Sub-tabs for browsing
+    browse_tabs = st.tabs([
+        "🌐 月宿輪圖", "📋 28 月宿總覽", "🪐 迦勒底行星序",
+        "🔮 護符意圖總覽",
+    ])
+
+    all_mansions = get_all_mansions()
+
+    with browse_tabs[0]:
+        _render_mansion_wheel(all_mansions, highlight_index=today_idx)
+
+    with browse_tabs[1]:
+        _render_mansion_grid(all_mansions, highlight_index=today_idx)
+
+    with browse_tabs[2]:
+        _render_chaldean_reference()
+
+    with browse_tabs[3]:
+        _render_talisman_intents_table()
+
+
+def _render_today_mansion_card(
+    moon_lon: float, mansion: PicatrixMansion
+) -> None:
+    """渲染今日月宿速覽卡片。"""
+    fortune_icon = "✨ 吉宿" if mansion.fortunate else "⚠️ 凶宿"
+    st.markdown(
+        f"### 🌙 今日月宿：{mansion.index + 1}. {mansion.arabic_name} "
+        f"— {mansion.chinese_name} {fortune_icon}"
+    )
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("月亮黃經", f"{moon_lon:.2f}°")
+    with col2:
+        st.metric(
+            "統治行星",
+            f"{PLANET_GLYPHS[mansion.ruling_planet]} "
+            f"{PLANET_NAMES_CN[mansion.ruling_planet]}",
+        )
+    with col3:
+        st.metric("吉凶", fortune_icon)
+    st.write(f"**魔法圖像:** {mansion.magic_image_cn}")
+    st.write(
+        f"**用途:** {' · '.join(mansion.purposes_cn)}"
+    )
+    st.divider()
+
+
+def _render_mansion_grid(
+    mansions: list, highlight_index: int = -1
+) -> None:
+    """渲染 28 月宿總覽表格。"""
+    st.subheader("📋 28 月宿總覽 (Complete Mansions Reference)")
+    st.caption(
+        "資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book I, Ch. 4"
+    )
+
+    # Summary table
+    header = (
+        "| # | 中文名 | 阿拉伯名 (Arabic) | 英文名 | "
+        "統治行星 | 吉凶 | 顏色 | 金屬 | 香料 |"
+    )
+    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+    rows = [header, sep]
+    for m in mansions:
+        fortune = "✨ 吉" if m.fortunate else "⚠️ 凶"
+        highlight = " **→**" if m.index == highlight_index else ""
+        rows.append(
+            f"| {m.index + 1}{highlight} "
+            f"| {m.chinese_name} "
+            f"| {m.arabic_name} ({m.arabic_script}) "
+            f"| {m.english_name} "
+            f"| {PLANET_GLYPHS[m.ruling_planet]} {PLANET_NAMES_CN[m.ruling_planet]} "
+            f"| {fortune} "
+            f"| {m.color} "
+            f"| {m.metal} "
+            f"| {m.incense} |"
+        )
+    st.markdown("\n".join(rows))
+
+    # Expandable detail cards
+    st.divider()
+    st.subheader("🔍 月宿詳細資料 (Detailed Mansion Cards)")
+    for m in mansions:
+        fortune_icon = "✨ 吉宿" if m.fortunate else "⚠️ 凶宿"
+        with st.expander(
+            f"{m.index + 1}. {m.arabic_name} — {m.chinese_name} "
+            f"({m.english_name}) {fortune_icon}",
+            expanded=(m.index == highlight_index),
+        ):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(f"**阿拉伯文:** {m.arabic_script}")
+                st.write(
+                    f"**統治行星:** {PLANET_GLYPHS[m.ruling_planet]} "
+                    f"{m.ruling_planet} ({PLANET_NAMES_CN[m.ruling_planet]})"
+                )
+                st.write(f"**起始度數:** {m.start_degree:.3f}°")
+                st.write(f"**顏色:** {m.color}")
+            with col2:
+                st.write(f"**金屬:** {m.metal}")
+                st.write(f"**香料:** {m.incense}")
+                st.write(f"**吉凶:** {fortune_icon}")
+            st.write(f"**魔法圖像:** {m.magic_image_cn}")
+            st.write(f"**Magic Image:** _{m.magic_image}_")
+            st.write(
+                f"**用途:** {' · '.join(m.purposes_cn)} "
+                f"/ {' · '.join(m.purposes)}"
+            )
+            st.write(f"**咒語摘要:** {m.invocation_summary}")
+
+
+def _render_chaldean_reference() -> None:
+    """渲染迦勒底行星序參考表。"""
+    st.subheader("🪐 迦勒底行星序 (Chaldean Planetary Order)")
+    st.caption(
+        "資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book III, Ch. 9"
+    )
+    st.markdown(
+        """
+        **迦勒底序**是古代占星術中行星的基本排列順序，由最慢（土星）
+        到最快（月亮），用於決定每日每時辰的行星主宰：
+
+        > ♄ 土星 → ♃ 木星 → ♂ 火星 → ☉ 太陽 → ♀ 金星 → ☿ 水星 → ☽ 月亮
+
+        每一日的**第一時辰**由該日的主星管轄，之後每時辰按迦勒底序輪轉。
+        """
+    )
+
+    # Planet table
+    st.markdown("#### 七曜與星期對應 (Planets & Weekdays)")
+    header = "| 星期 | Weekday | 主星 | 符號 | 金屬 | 顏色 |"
+    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|"
+    planet_metals = {
+        "Saturn": "鉛 (Lead)", "Jupiter": "錫 (Tin)",
+        "Mars": "鐵 (Iron)", "Sun": "金 (Gold)",
+        "Venus": "銅 (Copper)", "Mercury": "水銀 (Quicksilver)",
+        "Moon": "銀 (Silver)",
+    }
+    planet_colors = {
+        "Saturn": "黑色 (Black)", "Jupiter": "藍紫色 (Purple)",
+        "Mars": "紅色 (Red)", "Sun": "金色 (Golden)",
+        "Venus": "綠色 (Green)", "Mercury": "橙色 (Orange)",
+        "Moon": "銀白色 (Silver)",
+    }
+    rows = [header, sep]
+    for i in range(7):
+        planet = DAY_PLANETS[i]
+        rows.append(
+            f"| {DAY_NAMES_CN[i]} "
+            f"| {DAY_NAMES_EN[i]} "
+            f"| {PLANET_NAMES_CN[planet]} ({planet}) "
+            f"| {PLANET_GLYPHS[planet]} "
+            f"| {planet_metals[planet]} "
+            f"| {planet_colors[planet]} |"
+        )
+    st.markdown("\n".join(rows))
+
+    # Chaldean order visual
+    st.markdown("#### 迦勒底序環 (Chaldean Circle)")
+    order_display = " → ".join(
+        f"{PLANET_GLYPHS[p]} {PLANET_NAMES_CN[p]}" for p in CHALDEAN_ORDER
+    )
+    st.markdown(f"> {order_display} → (循環)")
+
+
+def _render_talisman_intents_table() -> None:
+    """渲染護符意圖總覽表。"""
+    st.subheader("🔮 護符意圖總覽 (Talisman Intents Reference)")
+    st.caption(
+        "資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book II, Ch. 10-12"
+    )
+    st.markdown(
+        """
+        Picatrix 記載了八種主要護符意圖，每種有對應的守護行星、
+        適合施作的月宿、使用材質和儀式指引：
+        """
+    )
+
+    header = (
+        "| 意圖 | Intent | 守護行星 | 金屬 | 香料 | 顏色 | "
+        "適合月宿 | 施作時辰 |"
+    )
+    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+    rows = [header, sep]
+    for t in TALISMAN_INTENTS:
+        planet = t["planet"]
+        mansion_names = [
+            f"{PICATRIX_MANSIONS[i]['chinese_name']}({i + 1})"
+            for i in t["mansion_indices"]
+        ]
+        rows.append(
+            f"| {t['intent_cn']} "
+            f"| {t['intent_en']} "
+            f"| {PLANET_GLYPHS[planet]} {PLANET_NAMES_CN[planet]} "
+            f"| {t['metal']} "
+            f"| {t['incense']} "
+            f"| {t['color']} "
+            f"| {'、'.join(mansion_names)} "
+            f"| {PLANET_GLYPHS[t['hour_planet']]} "
+            f"{PLANET_NAMES_CN[t['hour_planet']]} |"
+        )
+    st.markdown("\n".join(rows))
+
+    # Detailed expanders for each intent
+    st.divider()
+    st.markdown("#### 📖 護符詳細指引 (Detailed Talisman Instructions)")
+    for t in TALISMAN_INTENTS:
+        planet = t["planet"]
+        with st.expander(
+            f"{PLANET_GLYPHS[planet]} {t['intent_cn']} — {t['intent_en']}"
+        ):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(
+                    f"**守護行星:** {PLANET_GLYPHS[planet]} "
+                    f"{planet} ({PLANET_NAMES_CN[planet]})"
+                )
+                st.write(f"**金屬:** {t['metal']}")
+                st.write(f"**香料:** {t['incense']}")
+                st.write(f"**顏色:** {t['color']}")
+                st.write(
+                    f"**施咒時辰:** {PLANET_GLYPHS[t['hour_planet']]} "
+                    f"{t['hour_planet']} ({PLANET_NAMES_CN[t['hour_planet']]})"
+                )
+            with col2:
+                st.write("**適合月宿:**")
+                for i in t["mansion_indices"]:
+                    m = PICATRIX_MANSIONS[i]
+                    fortune = "✨" if m["fortunate"] else "⚠️"
+                    st.write(
+                        f"  {fortune} 第 {i + 1} 宿："
+                        f"{m['arabic_name']} ({m['chinese_name']})"
+                    )
+            st.markdown(f"**施作指引（中文）:** {t['description_cn']}")
+            st.markdown(f"**Instructions:** {t['description_en']}")

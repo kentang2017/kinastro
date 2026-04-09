@@ -39,6 +39,7 @@ from astro.picatrix_mansions import (
     render_mansion_lookup,
     render_planetary_hours_tool,
     render_talisman_generator,
+    render_picatrix_browse,
     get_mansion_index,
 )
 
@@ -293,8 +294,9 @@ if calculate:
         _moon_result, _ = _swe.calc_ut(_jd, _swe.MOON)
         moon_lon = float(_moon_result[0]) % 360.0
 
-        ptab_mansions, ptab_hours, ptab_talisman = st.tabs(
-            ["🌙 月宿查詢器", "⏰ 行星時計算器", "🔮 護符生成器"]
+        ptab_mansions, ptab_hours, ptab_talisman, ptab_browse = st.tabs(
+            ["🌙 月宿查詢器", "⏰ 行星時計算器", "🔮 護符生成器",
+             "📚 Picatrix 參考總覽"]
         )
         with ptab_mansions:
             render_mansion_lookup(moon_lon=moon_lon)
@@ -309,6 +311,8 @@ if calculate:
             )
         with ptab_talisman:
             render_talisman_generator()
+        with ptab_browse:
+            render_picatrix_browse()
 
 else:
     with tab_chinese:
@@ -513,7 +517,10 @@ else:
             """
         )
     with tab_picatrix:
-        st.info("👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。")
+        st.info(
+            "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看個人月宿排盤。"
+            "下方可先瀏覽 Picatrix 28 月宿完整參考。"
+        )
         st.markdown(
             """
             ### 什麼是 Picatrix 星體魔法？
@@ -532,9 +539,7 @@ else:
             — Greer & Warnock 2011 translation / Attrell & Porreca 2019
             """
         )
-        # Show static mansion wheel without chart calculation
-        from astro.picatrix_mansions import get_all_mansions, _render_mansion_wheel
-        _render_mansion_wheel(get_all_mansions())
+        render_picatrix_browse()
         st.divider()
         st.subheader("🔮 護符生成器（無需排盤）")
         render_talisman_generator()
