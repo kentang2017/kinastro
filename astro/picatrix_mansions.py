@@ -264,8 +264,16 @@ def _sun_rise_set(
         ret_set, t_set = swe.rise_trans(
             t_rise[0], swe.SUN, swe.CALC_SET, geopos
         )
-    except Exception:
-        # Fallback: approximate sunrise at 6:00, sunset at 18:00 UT
+    except Exception as exc:  # noqa: BLE001
+        # Fallback for polar regions or ephemeris errors:
+        # approximate sunrise at 06:00 UT, sunset at 18:00 UT.
+        import warnings
+        warnings.warn(
+            f"Sunrise/sunset calculation failed ({exc}); "
+            "using fallback values (06:00/18:00 UT).",
+            RuntimeWarning,
+            stacklevel=2,
+        )
         t_rise = [jd_date_start + 6.0 / 24.0]
         t_set = [jd_date_start + 18.0 / 24.0]
 
@@ -326,7 +334,15 @@ def get_planetary_hours(
     try:
         _, t_next = swe.rise_trans(jd_set, swe.SUN, swe.CALC_RISE, geopos)
         jd_next_rise = float(t_next[0])
-    except Exception:
+    except Exception as exc:  # noqa: BLE001
+        # Fallback for polar regions or ephemeris errors.
+        import warnings
+        warnings.warn(
+            f"Next sunrise calculation failed ({exc}); "
+            "using sunset + 12h as fallback.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
         jd_next_rise = jd_set + 0.5
     if jd_next_rise <= jd_set:
         jd_next_rise = jd_set + 0.5
