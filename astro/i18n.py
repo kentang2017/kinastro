@@ -14,13 +14,15 @@ TRANSLATIONS = {
             "多體系占星排盤系統 — "
             "支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、"
             "卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、"
-            "納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、Picatrix 星體魔法。"
+            "納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、Picatrix 星體魔法、"
+            "太陽知識大全（Shams al-Maʻārif）。"
         ),
         "en": (
             "Multi-System Astrology — "
             "Chinese (Seven Governors), Zi Wei Dou Shu, Western, Indian (Jyotish), "
             "Sukkayodo, Thai, Kabbalistic, Arabic, Maya, Myanmar (Mahabote), "
-            "Egyptian Decans, Nadi Jyotish, Mongolian Zurkhai, Picatrix Stellar Magic."
+            "Egyptian Decans, Nadi Jyotish, Mongolian Zurkhai, Picatrix Stellar Magic, "
+            "Shams al-Maʻārif."
         ),
     },
     # ── Sidebar ─────────────────────────────────────────────────────────────
@@ -157,6 +159,10 @@ TRANSLATIONS = {
         "zh": "📜 Picatrix 星體魔法",
         "en": "📜 Picatrix Stellar Magic",
     },
+    "tab_shams": {
+        "zh": "☪ 太陽知識大全",
+        "en": "☪ Shams al-Maʻārif",
+    },
     # ── Spinner messages ──────────────────────────────────────────────────────
     "spinner_indian": {
         "zh": "正在計算印度占星排盤...",
@@ -292,6 +298,14 @@ TRANSLATIONS = {
             "👈 Enter birth data on the left and click 'Calculate Chart' to view your personal Moon Mansion chart. "
             "Browse all 28 Picatrix Mansions below."
         ),
+    },
+    "shams_subheader": {
+        "zh": "☪ 《太陽知識大全》 (Shams al-Maʻārif al-Kubrā)",
+        "en": "☪ Shams al-Maʻārif al-Kubrā",
+    },
+    "shams_source": {
+        "zh": "資料來源：《Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif》— 1927 McGill 版",
+        "en": "Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill edition",
     },
     # ── Tab description markdown ────────────────────────────────────────────
     "desc_chinese": {
@@ -650,6 +664,39 @@ text, compiled around the 10th–11th century:
   talismans for specific intentions (love, wealth, healing, etc.)
 
 Source: Picatrix (Ghayat al-Hakim) — Greer & Warnock 2011 / Attrell & Porreca 2019
+""",
+    },
+    "desc_shams": {
+        "zh": """
+### 什麼是《太陽知識大全》(Shams al-Maʻārif)？
+
+**《شمس المعارف الكبرى》(Shams al-Maʻārif al-Kubrā)**
+是伊斯蘭神秘學最重要的經典之一，由 Aḥmad ibn ʿAlī al-Būnī（1225年卒）所著：
+
+- **七大行星特性**：日、月、水、金、火、木、土的體質、元素、顏色與護符用途
+- **十二星座徵兆**：各星座在護符與預言中的意義
+- **方陣 (Wafq)**：3×3 至 9×9 魔方方陣，用於護符製作
+- **九十九美名 (Asmāʼ al-Ḥusnā)**：每個美名對應行星、用途與時辰
+- **修持法 (Riyāḍa)**：結合誦念、香料、齋戒的靈性修行
+- **祈禱文 (Du'a)**：各種場景的咒語與祈禱
+
+資料來源：《Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif》— 1927 McGill 版
+""",
+        "en": """
+### What is Shams al-Maʻārif?
+
+**Shams al-Maʻārif al-Kubrā (شمس المعارف الكبرى, "The Great Sun of Gnosis")**
+is one of the most important texts in Islamic esoteric tradition, attributed to
+Aḥmad ibn ʿAlī al-Būnī (d. 1225):
+
+- **Seven Planetary Properties**: Temperaments, elements, colours, and talisman uses for each planet
+- **Twelve Zodiac Sign Omens**: Significance of each sign in talismanic and divinatory contexts
+- **Wafq (Magic Squares)**: 3×3 to 9×9 magic squares for talisman construction
+- **99 Beautiful Names (Asmāʼ al-Ḥusnā)**: Each Name mapped to a planet, purpose, and timing
+- **Riyāḍa (Spiritual Exercises)**: Practices combining recitation, incense, and fasting
+- **Du'a (Invocations)**: Prayers and invocations for various purposes
+
+Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill edition
 """,
     },
 }
