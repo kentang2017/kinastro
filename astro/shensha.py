@@ -170,11 +170,35 @@ SUIJIA = {i: i for i in range(12)}
 def get_suidian(year_branch: int, year_stem: int) -> int:
     return (year_branch + year_stem) % 12
 
-# 化曜十星（天干化曜）—— 根據年干直接對應（位置通常落在命宮或特定宮，暫以年干索引表示，後續可改成命宮落點）
+
+# 三元禄 + 天经地纬（五虎遁）
+def get_tianyuan_lu(year_stem: int, ming_branch: int) -> int:
+    """天元禄：五虎遁到命宮的干 → 該干化禄"""
+    return (year_stem + ming_branch) % 10
+
+
+def get_diyuan_lu(year_stem: int, ming_branch: int) -> int:
+    """地元禄：卦氣逆數到命宮的干 → 所屬五行"""
+    return (year_stem - ming_branch) % 10
+
+
+def get_renyuan_lu(year_stem: int, guan_lu_branch: int) -> int:
+    """人元禄：五虎遁到官禄宮的干 → 該干受克五行"""
+    return (year_stem + guan_lu_branch) % 10
+
+# 變曜十星（年干化曜 + 所屬宮位）
 # 順序：甲→天禄、乙→天暗、丙→天福、丁→天耗、戊→天荫、己→天贵、庚→天刑、辛→天印、壬→天囚、癸→天权
 HUA_YAO = {
-    0: "天禄", 1: "天暗", 2: "天福", 3: "天耗", 4: "天荫",
-    5: "天贵", 6: "天刑", 7: "天印", 8: "天囚", 9: "天权"
+    0: ("天禄", "火", "官禄"),   # 甲
+    1: ("天暗", "孛", "相貌"),   # 乙
+    2: ("天福", "木", "财帛福德迁移"),   # 丙
+    3: ("天耗", "金", "兄弟"),   # 丁
+    4: ("天荫", "土", "妻妾"),   # 戊
+    5: ("天贵", "月", "男女"),   # 己
+    6: ("天刑", "水", "奴仆"),   # 庚
+    7: ("天印", "气", "田宅"),   # 辛
+    8: ("天囚", "计", "疾厄"),   # 壬
+    9: ("天权", "罗", "命宫"),   # 癸
 }
 
 # 其他張果星宗神煞（年干/年支系，位置簡化為對應索引）
@@ -198,9 +222,10 @@ GUXU = {0: 8, 1: 9, 2: 10, 3: 11, 4: 0, 5: 1, 6: 2, 7: 3, 8: 4, 9: 5, 10: 6, 11:
 # 玉堂
 YUTANG = {0: 7, 1: 0, 2: 9, 3: 9, 4: 7, 5: 0, 6: 7, 7: 2, 8: 5, 9: 5} # 簡化參考
 
-# 天馬、地驛（年支系）
-TIANMA = {i: (i + 2) % 12 for i in range(12)} # 張果特有馬星
-DIPI = {i: (i + 8) % 12 for i in range(12)} # 地驛
+# 天马、地驿（果老原法）
+# 申子辰→寅, 寅午戌→申, 巳酉丑→亥, 亥卯未→巳
+TIANMA = {0: 2, 1: 11, 2: 8, 3: 5, 4: 2, 5: 11, 6: 8, 7: 5, 8: 2, 9: 11, 10: 8, 11: 5}
+DIPI = {0: 8, 1: 5, 2: 2, 3: 11, 4: 8, 5: 5, 6: 2, 7: 11, 8: 8, 9: 5, 10: 2, 11: 11}
 
 # 三元祿、天經地緯（年干系）
 TIANYUAN_LU = {0: 2, 1: 3, 2: 5, 3: 6, 4: 5, 5: 6, 6: 8, 7: 9, 8: 11, 9: 0}
@@ -211,12 +236,36 @@ DIWEI = {k: (v + 6) % 12 for k, v in TIANJING.items()}
 
 
 # 符耗兇煞
-NIANFU = {i: (i + 6) % 12 for i in range(12)} # 年符
-YUEFU = {i: (i + 3) % 12 for i in range(12)} # 月符
-DAHAO = {i: (i + 6) % 12 for i in range(12)} # 大耗
-XIAOHAO = {i: (i + 9) % 12 for i in range(12)} # 小耗
-DIHAO = {i: (i + 6) % 12 for i in range(12)} # 地耗
-DASHA = {i: (i + 7) % 12 for i in range(12)} # 大煞
+NIANFU = {i: (i + 5) % 12 for i in range(12)}  # 年符
+YUEFU = {i: (i + 3) % 12 for i in range(12)}  # 月符
+DAHAO = {i: (i + 6) % 12 for i in range(12)}  # 大耗
+XIAOHAO = {i: (i + 9) % 12 for i in range(12)}  # 小耗
+TIANHAO = {i: (i + 2) % 12 for i in range(12)}  # 天耗
+DIHAO = {i: (i + 8) % 12 for i in range(12)}  # 地耗
+YUELIAN = {i: (i + 8) % 12 for i in range(12)}  # 月廉
+DASHA = {i: (i + 7) % 12 for i in range(12)}  # 大煞
+
+# 科名/文星/官星/印星/催官/禄神/喜神/爵星（以年干為主）
+KEMING = {0: 2, 1: 3, 2: 5, 3: 6, 4: 5, 5: 6, 6: 8, 7: 9, 8: 11, 9: 0}
+WENXING = {0: 5, 1: 6, 2: 8, 3: 9, 4: 8, 5: 9, 6: 11, 7: 0, 8: 2, 9: 3}
+GUANXING = WENXING.copy()
+YINXING = WENXING.copy()
+CUIGUAN = WENXING.copy()
+LUSHEN_ZG = LUXUN.copy()
+XISHEN = {0: 11, 1: 0, 2: 9, 3: 9, 4: 7, 5: 0, 6: 7, 7: 2, 8: 5, 9: 5}
+JUEXING = {i: (i + 2) % 12 for i in range(12)}
+
+# 三刑、六害（張果版，簡化）
+SANXING = {i: (i + 6) % 12 for i in range(12)}
+LIUHAI = {i: (i + 6) % 12 for i in range(12)}
+
+# 劫殺、亡神（張果版）
+JIESHA_ZG = {0: 5, 1: 2, 2: 11, 3: 8, 4: 5, 5: 2, 6: 11, 7: 8, 8: 5, 9: 2, 10: 11, 11: 8}
+WANGSHEN_ZG = {0: 11, 1: 8, 2: 5, 3: 2, 4: 11, 5: 8, 6: 5, 7: 2, 8: 11, 9: 8, 10: 5, 11: 2}
+
+# 天羅地網
+TIANLUO = {i: (i + 4) % 12 for i in range(12)}
+DIWANG = {i: (i + 8) % 12 for i in range(12)}
 
 
 # ============================================================
@@ -381,49 +430,79 @@ def compute_shensha(
     _add("天官", TIANGUAN[year_stem], "吉", "年干")
     _add("天廚", TIANCHU[year_stem], "吉", "年干")
 
-    # 化曜十星（年干化）
-    hua_name = HUA_YAO[year_stem]
-    hua_cat = "吉" if "禄" in hua_name or "福" in hua_name or "荫" in hua_name or "贵" in hua_name else "凶"
-    _add(hua_name, year_branch, hua_cat, "年干-化曜")   # 暫落年支，可後續改成命宮
+    # ==== 張果星宗「诸星起例」完整實現（卷二）====
+    ming_branch = year_branch   # 未來改成真命宮
 
-    # 其他張果專屬
-    _add("禄勛", LUXUN[year_stem], "吉", "年干-張果")
-    _add("唐符", TANGFU[year_stem], "吉", "年干-張果")
-    _add("國印", GUOYIN[year_stem], "吉", "年干-張果")
+    # 變曜十星
+    hua_name, hua_star, hua_palace = HUA_YAO[year_stem]
+    hua_cat = "吉" if hua_name in ["天禄", "天福", "天荫", "天贵", "天印", "天权"] else "凶"
+    _add(hua_name, ming_branch, hua_cat, "年干-變曜")
+
+    # 三元禄 + 天经地纬
+    _add("天元禄", get_tianyuan_lu(year_stem, ming_branch), "吉", "年干-張果")
+    _add("地元禄", get_diyuan_lu(year_stem, ming_branch), "吉", "年干-張果")
+    _add("人元禄", get_renyuan_lu(year_stem, ming_branch), "吉", "年干-張果")
+    _add("天经", year_branch, "中", "年干-張果")
+    _add("地纬", (year_branch + 6) % 12, "中", "年干-張果")
+
+    # 禄勋、阳刃、唐符、国印、天雄、地雌
+    _add("禄勋", LUXUN[year_stem], "吉", "年干-張果")
+    _add("阳刃", YANGREN[year_stem], "凶", "年干-張果")
+    _add("唐符", TANGFU[year_stem], "凶", "年干-張果")
+    _add("国印", GUOYIN[year_stem], "吉", "年干-張果")
     _add("天雄", TIANXIONG[year_branch], "凶", "年支-張果")
     _add("地雌", DICI[year_branch], "凶", "年支-張果")
-    _add("月廉", YUESHA_ZG[year_branch], "凶", "年支-張果")
+
+    # 天马地驿
+    _add("天马", TIANMA[year_branch], "中", "年支-張果")
+    _add("地驿", DIPI[year_branch], "中", "年支-張果")
+
+    # 文科官印喜爵類（年干起）
+    _add("科名", KEMING[year_stem], "吉", "年干-張果")
+    _add("科甲", KEMING[year_stem], "吉", "年干-張果")
+    _add("文星", WENXING[year_stem], "吉", "年干-張果")
+    _add("魁星", WENXING[year_stem], "吉", "年干-張果")
+    _add("官星", GUANXING[year_stem], "吉", "年干-張果")
+    _add("印星", YINXING[year_stem], "吉", "年干-張果")
+    _add("催官", CUIGUAN[year_stem], "吉", "年干-張果")
+    _add("禄神", LUSHEN_ZG[year_stem], "吉", "年干-張果")
+    _add("喜神", XISHEN[year_stem], "吉", "年干-張果")
+    _add("爵星", JUEXING[year_branch], "吉", "年支-張果")
+
+    # 耗煞類
+    _add("年符", NIANFU[year_branch], "凶", "年支-張果")
+    _add("月符", YUEFU[get_month_branch(solar_month)], "凶", "月支-張果")
+    _add("大耗", DAHAO[year_branch], "凶", "年支-張果")
+    _add("小耗", XIAOHAO[year_branch], "凶", "年支-張果")
+    _add("天耗", TIANHAO[year_branch], "凶", "年支-張果")
+    _add("地耗", DIHAO[year_branch], "凶", "年支-張果")
+    _add("月廉", YUELIAN[year_branch], "凶", "年支-張果")
+    _add("月煞", YUESHA_ZG[year_branch], "凶", "年支-張果")
+
+    # 凶煞類
     _add("值難", ZHINAN[year_branch], "凶", "年支-張果")
     _add("的殺", DESHA[year_branch], "凶", "年支-張果")
+    _add("咸池", TAOHUA[year_branch], "中", "年支-張果")
+    _add("大煞", DASHA[year_branch], "凶", "年支-張果")
     _add("空亡", KONGWANG[year_branch], "凶", "年支-張果")
     _add("孤虛", GUXU[year_branch], "凶", "年支-張果")
-
-    # 文科官印吉神類 
-    _add("科名", year_branch, "吉", "年幹-張果") 
-    _add("科甲", year_branch, "吉", "年幹-張果") 
-    _add("文星", year_branch, "吉", "年幹-張果") 
-    _add("魁星", year_branch, "吉", "年幹-張果") 
-    _add("官星", year_branch, "吉", "年幹-張果") 
-    _add("印星", year_branch, "吉", "年幹-張果") 
-    _add("催官", year_branch, "吉", "年幹-張果") 
-    _add("喜神", year_branch, "吉", "年幹-張果") 
-    _add("爵星", year_branch, "吉", "年幹-張果") 
-    _add("玉堂", YUTANG[year_stem], "吉", "年幹-張果")
-    # 馬星與三元祿 
-    _add("天馬", TIANMA[year_branch], "中", "年支-張果") 
-    _add("地驛", DIPI[year_branch], "中", "年支-張果") 
-# 符耗凶煞
-    _add("年符", NIANFU[year_branch], "凶", "年支-張果") 
-    _add("月符", YUEFU[month_branch], "凶", "月支-張果") 
-    _add("大耗", DAHAO[year_branch], "凶", "年支-張果") 
-    _add("小耗", XIAOHAO[year_branch], "凶", "年支-張果") 
-    _add("地耗", DIHAO[year_branch], "凶", "年支-張果") 
-    _add("大煞", DASHA[year_branch], "凶", "年支-張果")
-# 刑害（條件型，可後續改成更精確邏輯） 
-    _add("三刑", year_branch, "凶", "地支關係-張果") 
-    _add("六害", year_branch, "凶", "地支關係-張果")
-    _add("反吟", year_branch, "凶", "柱重複-張果") 
+    _add("孤辰", GUCHEN[year_branch], "凶", "年支-張果")
+    _add("寡宿", GUASU[year_branch], "凶", "年支-張果")
+    _add("三刑", SANXING[year_branch], "凶", "地支關係-張果")
+    _add("六害", LIUHAI[year_branch], "凶", "地支關係-張果")
+    _add("劫殺", JIESHA_ZG[year_branch], "凶", "年支-張果")
+    _add("亡神", WANGSHEN_ZG[year_branch], "凶", "年支-張果")
+    _add("天羅", TIANLUO[year_branch], "凶", "年支-張果")
+    _add("地網", DIWANG[year_branch], "凶", "年支-張果")
+    _add("反吟", year_branch, "凶", "柱重複-張果")
     _add("伏吟", year_branch, "凶", "柱重複-張果")
+
+    # 天乙貴人、玉堂、文昌、天厨（張果版）
+    for b in TIANYI_GUIREN[year_stem]:
+        _add("天乙貴人", b, "吉", "年干-張果")
+    _add("玉堂", YUTANG.get(year_stem, 0), "吉", "年干-張果")
+    _add("文昌", WENCHANG[year_stem], "吉", "年干-張果")
+    _add("天厨", TIANCHU[year_stem], "吉", "年干-張果")
 
 
   
