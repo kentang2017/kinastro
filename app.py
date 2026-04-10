@@ -3,9 +3,9 @@
 Multi-System Astrology Chart Application
 
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
-卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
-納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、Picatrix 星體魔法、
-太陽知識大全（Shams al-Maʻārif）十五種體系，
+卡巴拉占星、阿拉伯占星（含 Picatrix 星體魔法、太陽知識大全 Shams al-Maʻārif）、
+瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
+納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）十三種體系，
 使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
 """
 
@@ -202,11 +202,10 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai, tab_picatrix, tab_shams = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai = st.tabs(
     [t("tab_chinese"), t("tab_ziwei"), t("tab_western"), t("tab_indian"),
      t("tab_sukkayodo"), t("tab_thai"), t("tab_kabbalistic"), t("tab_arabic"), t("tab_maya"),
-     t("tab_mahabote"), t("tab_decans"), t("tab_nadi"), t("tab_zurkhai"),
-     t("tab_picatrix"), t("tab_shams")]
+     t("tab_mahabote"), t("tab_decans"), t("tab_nadi"), t("tab_zurkhai")]
 )
 
 if calculate:
@@ -290,9 +289,74 @@ if calculate:
 
     # --- 阿拉伯占星 ---
     with tab_arabic:
-        with st.spinner(t("spinner_arabic")):
-            a_chart = compute_arabic_chart(**_params)
-        render_arabic_chart(a_chart)
+        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams = st.tabs([
+            t("arabic_subtab_chart"),
+            t("arabic_subtab_picatrix"),
+            t("arabic_subtab_shams"),
+        ])
+
+        with arabic_subtab_chart:
+            with st.spinner(t("spinner_arabic")):
+                a_chart = compute_arabic_chart(**_params)
+            render_arabic_chart(a_chart)
+
+        # --- Picatrix 星體魔法 ---
+        with arabic_subtab_picatrix:
+            st.subheader(t("picatrix_subheader"))
+            st.caption(t("picatrix_source"))
+
+            _birth_moon_lon: float | None = compute_moon_longitude(
+                year=birth_date.year,
+                month=birth_date.month,
+                day=birth_date.day,
+                hour=birth_time.hour,
+                minute=birth_time.minute,
+                timezone=input_tz,
+            )
+
+            ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
+                t("picatrix_subtab_browse"),
+                t("picatrix_subtab_mansion"),
+                t("picatrix_subtab_hours"),
+                t("picatrix_subtab_talisman"),
+            ])
+
+            with ptab_browse:
+                render_picatrix_browse()
+
+            with ptab_mansions:
+                st.info(f"🌙 使用出生月亮黃經 (Birth Moon Longitude)：{_birth_moon_lon:.2f}°")
+                render_mansion_lookup(moon_lon=_birth_moon_lon)
+
+            with ptab_hours:
+                render_planetary_hours_tool(
+                    year=birth_date.year,
+                    month=birth_date.month,
+                    day=birth_date.day,
+                    timezone=input_tz,
+                    latitude=input_lat,
+                    longitude=input_lon,
+                )
+
+            with ptab_talisman:
+                render_talisman_generator()
+
+        # --- 太陽知識大全 (Shams al-Maʻārif) ---
+        with arabic_subtab_shams:
+            st.subheader(t("shams_subheader"))
+            st.caption(t("shams_source"))
+
+            _shams_planets = {
+                p.name.split("(")[0].strip().split()[-1]: p.longitude
+                for p in a_chart.planets
+            }
+            _shams_sun_idx: int | None = None
+            for p in a_chart.planets:
+                if "Sun" in p.name:
+                    _shams_sun_idx = int(p.longitude / 30.0)
+                    break
+            render_shams_chart(chart_planets=_shams_planets,
+                               birth_sign_idx=_shams_sun_idx)
 
     # --- 瑪雅占星 ---
     with tab_maya:
@@ -347,8 +411,48 @@ else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_kabbalistic"))
     with tab_arabic:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_arabic"))
+        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams = st.tabs([
+            t("arabic_subtab_chart"),
+            t("arabic_subtab_picatrix"),
+            t("arabic_subtab_shams"),
+        ])
+
+        with arabic_subtab_chart:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_arabic"))
+
+        with arabic_subtab_picatrix:
+            st.subheader(t("picatrix_subheader"))
+            st.caption(t("picatrix_source"))
+
+            ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
+                t("picatrix_subtab_browse"),
+                t("picatrix_subtab_mansion"),
+                t("picatrix_subtab_hours"),
+                t("picatrix_subtab_talisman"),
+            ])
+
+            with ptab_browse:
+                render_picatrix_browse()
+
+            with ptab_mansions:
+                render_mansion_lookup(moon_lon=None)
+
+            with ptab_hours:
+                render_planetary_hours_tool(
+                    timezone=input_tz,
+                    latitude=input_lat,
+                    longitude=input_lon,
+                )
+
+            with ptab_talisman:
+                render_talisman_generator()
+
+        with arabic_subtab_shams:
+            st.subheader(t("shams_subheader"))
+            st.caption(t("shams_source"))
+            st.markdown(t("desc_shams"))
+            render_shams_browse()
     with tab_maya:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_maya"))
@@ -364,84 +468,3 @@ else:
     with tab_zurkhai:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_zurkhai"))
-
-# ============================================================
-# Picatrix tab — always visible (tools work without a birth chart)
-# ============================================================
-with tab_picatrix:
-    st.subheader(t("picatrix_subheader"))
-    st.caption(t("picatrix_source"))
-
-    # When the user has clicked Calculate, use birth-chart moon longitude;
-    # otherwise the sub-tools default to the current date / current moon.
-    _birth_moon_lon: float | None = None
-    if calculate:
-        _birth_moon_lon = compute_moon_longitude(
-            year=birth_date.year,
-            month=birth_date.month,
-            day=birth_date.day,
-            hour=birth_time.hour,
-            minute=birth_time.minute,
-            timezone=input_tz,
-        )
-
-    ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
-        t("picatrix_subtab_browse"),
-        t("picatrix_subtab_mansion"),
-        t("picatrix_subtab_hours"),
-        t("picatrix_subtab_talisman"),
-    ])
-
-    with ptab_browse:
-        render_picatrix_browse()
-
-    with ptab_mansions:
-        if _birth_moon_lon is not None:
-            st.info(f"🌙 使用出生月亮黃經 (Birth Moon Longitude)：{_birth_moon_lon:.2f}°")
-        render_mansion_lookup(moon_lon=_birth_moon_lon)
-
-    with ptab_hours:
-        if calculate:
-            render_planetary_hours_tool(
-                year=birth_date.year,
-                month=birth_date.month,
-                day=birth_date.day,
-                timezone=input_tz,
-                latitude=input_lat,
-                longitude=input_lon,
-            )
-        else:
-            render_planetary_hours_tool(
-                timezone=input_tz,
-                latitude=input_lat,
-                longitude=input_lon,
-            )
-
-    with ptab_talisman:
-        render_talisman_generator()
-
-# ============================================================
-# Shams al-Maʻārif tab — always visible (reference tools work without a birth chart)
-# ============================================================
-with tab_shams:
-    st.subheader(t("shams_subheader"))
-    st.caption(t("shams_source"))
-
-    if calculate:
-        # Extract planet names and sun sign index from the Arabic chart
-        # for contextual highlighting in the Shams sub-tabs.
-        _shams_planets = {
-            p.name.split("(")[0].strip().split()[-1]: p.longitude
-            for p in a_chart.planets
-        } if "a_chart" in dir() else None
-        _shams_sun_idx: int | None = None
-        if _shams_planets:
-            for p in a_chart.planets:
-                if "Sun" in p.name:
-                    _shams_sun_idx = int(p.longitude / 30.0)
-                    break
-        render_shams_chart(chart_planets=_shams_planets,
-                           birth_sign_idx=_shams_sun_idx)
-    else:
-        st.markdown(t("desc_shams"))
-        render_shams_browse()
