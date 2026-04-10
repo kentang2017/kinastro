@@ -1472,8 +1472,361 @@ class TestDecanChart:
 
 
 # ============================================================
-# 蒙古祖爾海 (Zurkhai) Tests
+# Egyptian Calendar & Astronomical Features Tests
 # ============================================================
+
+from astro.egyptian_calendar import (
+    gregorian_to_egyptian,
+    get_night_hours,
+    build_diagonal_star_table,
+    get_heliacal_rising_approx,
+    get_visibility_cycle,
+    get_sothic_info,
+    MODERN_STAR_IDS,
+    build_transit_star_table,
+    SOTHIC_CYCLE_YEARS,
+)
+
+
+class TestEgyptianCalendar:
+    """Tests for the Egyptian civil calendar conversion."""
+
+    def test_new_year_day(self):
+        """July 20 should be Thoth 1 (day 1 of the year)"""
+        r = gregorian_to_egyptian(7, 20)
+        assert r["season_en"] == "Akhet"
+        assert r["month_number"] == 1
+        assert r["month_name_en"] == "Thoth"
+        assert r["day_in_month"] == 1
+        assert r["day_of_year"] == 1
+        assert r["is_epagomenal"] is False
+
+    def test_season_classification(self):
+        """Month numbers should map to correct seasons"""
+        # Akhet: months 1-4 (Jul 20 - Nov 15)
+        r = gregorian_to_egyptian(8, 1)
+        assert r["season_en"] == "Akhet"
+        # Peret: months 5-8
+        r = gregorian_to_egyptian(12, 15)
+        assert r["season_en"] == "Peret"
+        # Shemu: months 9-12
+        r = gregorian_to_egyptian(5, 1)
+        assert r["season_en"] == "Shemu"
+
+    def test_decade_calculation(self):
+        """Days 1-10 should be decade 1, 11-20 decade 2, 21-30 decade 3"""
+        r = gregorian_to_egyptian(7, 20)  # Day 1 of Thoth
+        assert r["decade"] == 1
+        r = gregorian_to_egyptian(7, 30)  # Day 11 of Thoth
+        assert r["decade"] == 2
+        r = gregorian_to_egyptian(8, 8)   # Day 20 of Thoth
+        assert r["decade"] == 2
+        r = gregorian_to_egyptian(8, 9)   # Day 21 of Thoth
+        assert r["decade"] == 3
+
+    def test_month_names_present(self):
+        """All 12 Egyptian months should have names"""
+        seen_months = set()
+        # Sample dates across the year
+        for greg_m, greg_d in [(7, 20), (8, 20), (9, 20), (10, 20),
+                               (11, 20), (12, 20), (1, 20), (2, 20),
+                               (3, 20), (4, 20), (5, 20), (6, 20)]:
+            r = gregorian_to_egyptian(greg_m, greg_d)
+            if not r["is_epagomenal"]:
+                seen_months.add(r["month_name_en"])
+        assert len(seen_months) == 12
+
+    def test_epagomenal_days(self):
+        """July 15-19 should be the 5 epagomenal days"""
+        for i, d in enumerate(range(15, 20)):
+            r = gregorian_to_egyptian(7, d)
+            assert r["is_epagomenal"] is True
+            assert r["epagomenal_day"] == i + 1
+            assert r["epagomenal_deity_en"] is not None
+            assert r["epagomenal_deity_cn"] is not None
+            assert r["epagomenal_story_en"] is not None
+            assert r["epagomenal_story_cn"] is not None
+
+    def test_epagomenal_deities(self):
+        """Epagomenal days should have correct deity order"""
+        expected = ["Osiris", "Horus the Elder", "Set", "Isis", "Nephthys"]
+        for i, d in enumerate(range(15, 20)):
+            r = gregorian_to_egyptian(7, d)
+            assert r["epagomenal_deity_en"] == expected[i]
+
+    def test_non_epagomenal_has_no_deity(self):
+        """Regular days should have no epagomenal deity"""
+        r = gregorian_to_egyptian(1, 1)
+        assert r["is_epagomenal"] is False
+        assert r["epagomenal_deity_en"] is None
+
+    def test_day_of_year_range(self):
+        """Day of year should be 1-365"""
+        r = gregorian_to_egyptian(7, 20)
+        assert r["day_of_year"] == 1
+        r = gregorian_to_egyptian(7, 19)
+        assert r["day_of_year"] == 365
+
+    def test_bilingual_fields(self):
+        """All results should have both EN and CN fields"""
+        r = gregorian_to_egyptian(1, 1)
+        assert "season_en" in r and "season_cn" in r
+        assert "month_name_en" in r and "month_name_cn" in r
+
+    def test_last_regular_day(self):
+        """July 14 should be Mesore 30 (last regular day)"""
+        r = gregorian_to_egyptian(7, 14)
+        assert r["month_name_en"] == "Mesore"
+        assert r["day_in_month"] == 30
+        assert r["month_number"] == 12
+        assert r["is_epagomenal"] is False
+
+
+class TestNightHours:
+    """Tests for the 12-hour night decan system."""
+
+    def test_returns_12_hours(self):
+        """Should return exactly 12 night hours"""
+        hours = get_night_hours(0)
+        assert len(hours) == 12
+
+    def test_first_hour_matches_decan(self):
+        """First hour should be ruled by the input decan"""
+        hours = get_night_hours(5)
+        assert hours[0]["decan_index"] == 5
+        assert hours[0]["hour"] == 1
+
+    def test_sequential_decan_indices(self):
+        """Decan indices should increment sequentially (mod 36)"""
+        hours = get_night_hours(30)
+        for i in range(12):
+            assert hours[i]["decan_index"] == (30 + i) % 36
+
+    def test_wraps_around_36(self):
+        """Decan indices should wrap around at 36"""
+        hours = get_night_hours(33)
+        assert hours[0]["decan_index"] == 33
+        assert hours[3]["decan_index"] == 0  # 33+3=36 -> 0
+        assert hours[4]["decan_index"] == 1
+
+    def test_hour_names_bilingual(self):
+        """Each hour should have EN and CN names"""
+        hours = get_night_hours(0)
+        for h in hours:
+            assert "hour_name_en" in h
+            assert "hour_name_cn" in h
+            assert "Night" in h["hour_name_en"]
+            assert "夜" in h["hour_name_cn"]
+
+    def test_decan_name_present(self):
+        """Each hour should have a decan_name"""
+        hours = get_night_hours(0)
+        for h in hours:
+            assert len(h["decan_name"]) > 0
+
+
+class TestDiagonalStarTable:
+    """Tests for the diagonal star table."""
+
+    def test_table_dimensions(self):
+        """Table should be 12 rows x 36 columns"""
+        table = build_diagonal_star_table()
+        assert len(table) == 12
+        for row in table:
+            assert len(row) == 36
+
+    def test_values_in_range(self):
+        """All values should be valid decan indices (0-35)"""
+        table = build_diagonal_star_table()
+        for row in table:
+            for val in row:
+                assert 0 <= val <= 35
+
+    def test_diagonal_pattern(self):
+        """Table should follow the formula: table[h][d] = (d - (11-h)) % 36"""
+        table = build_diagonal_star_table()
+        for h in range(12):
+            for d in range(36):
+                expected = (d - (11 - h)) % 36
+                assert table[h][d] == expected
+
+    def test_last_hour_equals_decade(self):
+        """In the last hour row (h=11), value should equal decade index"""
+        table = build_diagonal_star_table()
+        for d in range(36):
+            assert table[11][d] == d
+
+
+class TestHeliacalRising:
+    """Tests for heliacal rising date approximations."""
+
+    def test_returns_month_day(self):
+        """Should return a (month, day) tuple"""
+        result = get_heliacal_rising_approx(0)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        assert 1 <= result[0] <= 12
+        assert 1 <= result[1] <= 31
+
+    def test_decan_0_around_july(self):
+        """Decan 0 should rise around late July"""
+        m, d = get_heliacal_rising_approx(0)
+        assert m == 7
+
+    def test_all_36_decans_valid(self):
+        """All 36 decans should return valid dates"""
+        for i in range(36):
+            m, d = get_heliacal_rising_approx(i)
+            assert 1 <= m <= 12
+            assert 1 <= d <= 31
+
+    def test_10_day_spacing(self):
+        """Consecutive decans should rise approximately 10 days apart"""
+        from datetime import date
+        dates = []
+        for i in range(36):
+            m, d = get_heliacal_rising_approx(i)
+            dates.append(date(2000, m, d))
+        for i in range(35):
+            diff = (dates[i+1] - dates[i]).days
+            if diff < 0:
+                diff += 365
+            assert 9 <= diff <= 11, f"Decan {i}->{i+1}: {diff} days apart"
+
+
+class TestVisibilityCycle:
+    """Tests for decan visibility cycles."""
+
+    def test_required_keys(self):
+        """Should have all required keys"""
+        vc = get_visibility_cycle(0)
+        required = {"heliacal_rising", "visible_start", "visible_end",
+                     "invisible_start", "invisible_end",
+                     "visible_days", "invisible_days",
+                     "duat_meaning_en", "duat_meaning_cn",
+                     "rebirth_meaning_en", "rebirth_meaning_cn"}
+        assert required.issubset(vc.keys())
+
+    def test_visibility_days(self):
+        """Visible period should be ~270 days, invisible ~70 days"""
+        vc = get_visibility_cycle(0)
+        assert vc["visible_days"] == 270
+        assert vc["invisible_days"] == 70
+
+    def test_heliacal_rising_matches(self):
+        """Heliacal rising should match the separate function"""
+        for i in range(36):
+            vc = get_visibility_cycle(i)
+            rising = get_heliacal_rising_approx(i)
+            assert vc["heliacal_rising"] == rising
+
+    def test_duat_meaning_bilingual(self):
+        """Duat meanings should be non-empty in both languages"""
+        vc = get_visibility_cycle(0)
+        assert len(vc["duat_meaning_en"]) > 0
+        assert len(vc["duat_meaning_cn"]) > 0
+        assert len(vc["rebirth_meaning_en"]) > 0
+        assert len(vc["rebirth_meaning_cn"]) > 0
+
+
+class TestSothicCycle:
+    """Tests for the Sothic cycle data."""
+
+    def test_cycle_length(self):
+        """Sothic cycle should be 1461 Egyptian years"""
+        assert SOTHIC_CYCLE_YEARS == 1461
+
+    def test_info_structure(self):
+        """get_sothic_info should return correct structure"""
+        info = get_sothic_info()
+        assert "cycle_years" in info
+        assert info["cycle_years"] == 1461
+        assert "description_en" in info
+        assert "description_cn" in info
+        assert "significance_en" in info
+        assert "significance_cn" in info
+        assert "known_cycles" in info
+
+    def test_known_cycles(self):
+        """Should have at least 3 known Sothic cycle records"""
+        info = get_sothic_info()
+        assert len(info["known_cycles"]) >= 3
+
+    def test_censorinus_record(self):
+        """Should include the Censorinus 139 CE record"""
+        info = get_sothic_info()
+        has_139 = any(
+            rec.get("year_ce") == 139 for rec in info["known_cycles"]
+        )
+        assert has_139
+
+
+class TestModernStarIDs:
+    """Tests for modern star identifications."""
+
+    def test_all_36_decans_covered(self):
+        """Should have entries for all 36 decans"""
+        assert len(MODERN_STAR_IDS) == 36
+        for i in range(36):
+            assert i in MODERN_STAR_IDS
+
+    def test_required_keys(self):
+        """Each entry should have required keys"""
+        required = {"star_en", "star_cn", "constellation_en",
+                     "constellation_cn", "certainty"}
+        for i, data in MODERN_STAR_IDS.items():
+            assert required.issubset(data.keys()), f"Decan {i}: missing keys"
+
+    def test_certainty_values(self):
+        """Certainty should be one of the defined levels"""
+        valid = {"confirmed", "probable", "uncertain", "debated"}
+        for i, data in MODERN_STAR_IDS.items():
+            assert data["certainty"] in valid, (
+                f"Decan {i}: invalid certainty '{data['certainty']}'"
+            )
+
+    def test_sirius_confirmed(self):
+        """Decan 35 (Tepy-a-Sapet) should be confirmed as Sirius"""
+        d35 = MODERN_STAR_IDS[35]
+        assert d35["certainty"] == "confirmed"
+        assert "Sirius" in d35["star_en"]
+
+    def test_orion_confirmed(self):
+        """Decan 34 (Sah) should be confirmed as Orion"""
+        d34 = MODERN_STAR_IDS[34]
+        assert d34["certainty"] == "confirmed"
+        assert "Orion" in d34["star_en"]
+
+
+class TestTransitStarTable:
+    """Tests for Ramesside transit star clocks."""
+
+    def test_returns_dict(self):
+        """Should return a dict with expected keys"""
+        result = build_transit_star_table()
+        assert isinstance(result, dict)
+        required = {"description_en", "description_cn",
+                     "method_en", "method_cn",
+                     "date_range_en", "date_range_cn",
+                     "differences_en", "differences_cn",
+                     "sample_table"}
+        assert required.issubset(result.keys())
+
+    def test_sample_table_dimensions(self):
+        """Sample table should be 13 × 24"""
+        result = build_transit_star_table()
+        table = result["sample_table"]
+        assert len(table) == 13
+        for row in table:
+            assert len(row) == 24
+
+    def test_bilingual_descriptions(self):
+        """Descriptions should be non-empty in both languages"""
+        result = build_transit_star_table()
+        assert len(result["description_en"]) > 0
+        assert len(result["description_cn"]) > 0
+        assert len(result["method_en"]) > 0
+        assert len(result["method_cn"]) > 0
 
 from astro.zurkhai import (
     compute_zurkhai_chart,

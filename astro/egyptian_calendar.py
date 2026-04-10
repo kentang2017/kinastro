@@ -530,8 +530,9 @@ def get_heliacal_rising_approx(decan_index: int) -> tuple[int, int]:
 
 
 def _add_days_to_month_day(month: int, day: int, days: int) -> tuple[int, int]:
-    """Add *days* to a (month, day) using a non-leap reference year."""
-    ref = date(2023, month, day) + timedelta(days=days)
+    """Add *days* to a (month, day) using a leap-year reference to avoid
+    missing Feb 29 edge cases."""
+    ref = date(2000, month, day) + timedelta(days=days)
     return (ref.month, ref.day)
 
 
