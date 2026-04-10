@@ -349,13 +349,12 @@ if calculate:
             _shams_planets = {
                 p.name.split("(")[0].strip().split()[-1]: p.longitude
                 for p in a_chart.planets
-            } if "a_chart" in dir() else None
+            }
             _shams_sun_idx: int | None = None
-            if _shams_planets:
-                for p in a_chart.planets:
-                    if "Sun" in p.name:
-                        _shams_sun_idx = int(p.longitude / 30.0)
-                        break
+            for p in a_chart.planets:
+                if "Sun" in p.name:
+                    _shams_sun_idx = int(p.longitude / 30.0)
+                    break
             render_shams_chart(chart_planets=_shams_planets,
                                birth_sign_idx=_shams_sun_idx)
 
