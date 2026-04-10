@@ -2660,12 +2660,13 @@ class TestZhangguoStarReadings:
         assert "月入月垣" in names
 
     def test_planet_name_mapping(self):
-        """All 11 chart planets should have mappings"""
+        """All 11 chart planets should have mappings and no extras"""
         from astro.zhangguo import PLANET_TO_ZHANGGUO
         expected = ["太陽", "太陰", "水星", "金星", "火星", "木星", "土星",
                     "羅睺", "計都", "月孛", "紫氣"]
         for name in expected:
             assert name in PLANET_TO_ZHANGGUO
+        assert len(PLANET_TO_ZHANGGUO) == len(expected)
 
     def test_compute_zhangguo_with_chart(self):
         """Integration test: compute_zhangguo with real chart data"""

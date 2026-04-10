@@ -163,7 +163,7 @@ def match_chart_readings(planets, houses, gender="both"):
         if zg_name is None:
             continue
         branch_idx = palace_to_branch.get(planet.palace_index)
-        if branch_idx is None:
+        if branch_idx is None or not (0 <= branch_idx < 12):
             continue
         branch_name = EARTHLY_BRANCHES[branch_idx]
         readings = lookup_star_in_branch(zg_name, branch_name, gender)

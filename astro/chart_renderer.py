@@ -888,7 +888,8 @@ def render_zhangguo(chart: ChartData, result: ZhangguoResult):
         xiong_bg = "#ffebee"
 
         for star_key, items in grouped.items():
-            with st.expander(f"{'🟢' if items[0].reading_type == '合格' else '🔴'} {star_key}  ({len(items)}條)", expanded=False):
+            first_is_ji = items[0].reading_type == "合格"
+            with st.expander(f"{'🟢' if first_is_ji else '🔴'} {star_key}  ({len(items)}條)", expanded=False):
                 for r in items:
                     is_ji = r.reading_type == "合格"
                     color = ji_color if is_ji else xiong_color
