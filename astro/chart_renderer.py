@@ -886,9 +886,9 @@ def render_zhangguo(chart: ChartData, result: ZhangguoResult):
             grouped.setdefault(key, []).append(r)
 
         ji_color = "#4caf50"
-        ji_bg = "#e8f5e9"
+        ji_bg = "#1b3a1b"
         xiong_color = "#ef5350"
-        xiong_bg = "#ffebee"
+        xiong_bg = "#3a1a1a"
 
         for star_key, items in grouped.items():
             first_is_ji = items[0].reading_type == "合格"
@@ -898,14 +898,14 @@ def render_zhangguo(chart: ChartData, result: ZhangguoResult):
                     color = ji_color if is_ji else xiong_color
                     bg = ji_bg if is_ji else xiong_bg
                     badge = f'<span style="color:white;background:{color};padding:1px 6px;border-radius:3px;font-size:0.8em">{r.reading_type}</span>'
-                    note_tag = f' <span style="color:#888;font-size:0.85em">({r.note})</span>' if r.note else ""
+                    note_tag = f' <span style="color:#bbb;font-size:0.85em">({r.note})</span>' if r.note else ""
                     gender_tag = ""
                     if r.gender == "male":
                         gender_tag = ' <span style="color:#42a5f5;font-size:0.8em">♂男命</span>'
                     elif r.gender == "female":
                         gender_tag = ' <span style="color:#ec407a;font-size:0.8em">♀女命</span>'
                     st.markdown(
-                        f'<div style="background:{bg};padding:8px 12px;border-radius:6px;margin:4px 0">'
+                        f'<div style="background:{bg};color:#fff;padding:8px 12px;border-radius:6px;margin:4px 0">'
                         f'{badge}{gender_tag}{note_tag}<br/>'
                         f'<span style="font-size:0.95em">{r.description}</span>'
                         f'</div>',
