@@ -2,9 +2,11 @@
 七政四餘排盤渲染模組 (Chart Renderer for Seven Governors and Four Remainders)
 
 使用 Streamlit 元件渲染七政四餘排盤結果。
+包含神煞、年限大運、流時對盤等功能。
 """
 
 import math
+from datetime import datetime
 
 import streamlit as st
 
@@ -16,6 +18,12 @@ from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
     TWELVE_SIGNS_CHINESE, EARTHLY_BRANCHES,
 )
+from .shensha import (
+    ShenShaResult, compute_shensha, get_bazi_stems_branches,
+    HEAVENLY_STEMS, TWELVE_LIFE_STAGES,
+)
+from .qizheng_dasha import DashaResult, compute_dasha, PLANET_PERIOD_YEARS
+from .qizheng_transit import TransitData, compute_transit, compute_transit_now
 
 
 def render_chart_info(chart: ChartData):
@@ -108,6 +116,14 @@ def render_chart_grid(chart: ChartData):
         planet_list = house.planets if house.planets else []
         branch_data[house.branch] = (house.name, planet_list, house.sign_western)
 
+    # 計算神煞
+    shensha = compute_shensha(
+        year=chart.year,
+        solar_month=chart.solar_month,
+        julian_day=chart.julian_day,
+        hour_branch=chart.hour_branch,
+    )
+
     # 方盤排列 (外圈12格，按固定地支位置排列)
     # 格子中的數字是地支索引: 子=0, 丑=1, 寅=2, ..., 亥=11
     grid_order = [
@@ -118,7 +134,7 @@ def render_chart_grid(chart: ChartData):
     ]
 
     # 使用 HTML/CSS 渲染方盤
-    html = _build_grid_html(chart, branch_data, grid_order)
+    html = _build_grid_html(chart, branch_data, grid_order, shensha)
     st.html(html)
 
 
@@ -126,6 +142,7 @@ def _build_grid_html(
     chart: ChartData,
     branch_data: dict,
     grid_order: list,
+    shensha: ShenShaResult | None = None,
 ) -> str:
     """建構排盤 HTML
 
@@ -202,6 +219,30 @@ def _build_grid_html(
                     if not planets_html:
                         planets_html = '<span style="color:#999">—</span>'
                     ming_mark = "【命】" if is_ming else ""
+                    # 神煞
+                    sha_html = ""
+                    if shensha and branch_idx in shensha.branch_map:
+                        sha_names = shensha.branch_map[branch_idx]
+                        sha_parts = []
+                        for sn in sha_names:
+                            cat = "中"
+                            for item in shensha.items:
+                                if item.name == sn and item.branch == branch_idx:
+                                    cat = item.category
+                                    break
+                            sc = ("#4caf50" if cat == "吉"
+                                  else "#ef5350" if cat == "凶"
+                                  else "#ffc107")
+                            if sn in TWELVE_LIFE_STAGES:
+                                sc = "#90caf9"
+                            sha_parts.append(
+                                f'<span style="color:{sc};font-size:10px">'
+                                f'{sn}</span>'
+                            )
+                        sha_html = (
+                            '<br/><span style="font-size:10px">'
+                            + " ".join(sha_parts) + '</span>'
+                        )
                     cell_content = (
                         f'<small style="color:#888">{branch_label}</small> '
                         f'<b>{name}</b>'
@@ -209,6 +250,7 @@ def _build_grid_html(
                         f"<br/>"
                         f'<small style="color:#888">{sign}</small><br/>'
                         f"{planets_html}"
+                        f"{sha_html}"
                     )
                 else:
                     cell_content = f'<small style="color:#888">{branch_label}</small>'
@@ -276,6 +318,163 @@ def _calculate_aspects(planets: list) -> list:
 
 
 # ============================================================
+# 八字四柱 (Four Pillars / Ba Zi)
+# ============================================================
+
+def render_bazi(chart: ChartData):
+    """渲染八字四柱"""
+    bazi = get_bazi_stems_branches(
+        year=chart.year,
+        solar_month=chart.solar_month,
+        julian_day=chart.julian_day,
+        hour_branch=chart.hour_branch,
+    )
+    st.subheader("📜 八字四柱")
+    header = "| 柱 | 天干 | 地支 | 干支 |"
+    sep = "|:----:|:----:|:----:|:----:|"
+    rows = [header, sep]
+    for label, key_prefix in [("年柱", "year"), ("月柱", "month"),
+                              ("日柱", "day"), ("時柱", "hour")]:
+        s = HEAVENLY_STEMS[bazi[f"{key_prefix}_stem"]]
+        b = EARTHLY_BRANCHES[bazi[f"{key_prefix}_branch"]]
+        rows.append(f"| {label} | {s} | {b} | {bazi[f'{key_prefix}_pillar']} |")
+    st.markdown("\n".join(rows))
+    return bazi
+
+
+# ============================================================
+# 神煞 (Shen Sha / Divine Stars)
+# ============================================================
+
+def render_shensha(chart: ChartData, shensha: ShenShaResult):
+    """渲染神煞表格（按宮位分組）"""
+    st.subheader("🔮 神煞")
+
+    # 按吉凶分色
+    ji_color = "#4caf50"
+    xiong_color = "#ef5350"
+    zhong_color = "#ffc107"
+
+    header = "| 地支 | 宮位 | 神煞 |"
+    sep = "|:----:|:----:|:-----|"
+    rows = [header, sep]
+
+    branch_to_palace = {}
+    for h in chart.houses:
+        branch_to_palace[h.branch] = h.name
+
+    for branch_idx in range(12):
+        branch_name = EARTHLY_BRANCHES[branch_idx]
+        palace = branch_to_palace.get(branch_idx, "")
+        sha_names = shensha.branch_map.get(branch_idx, [])
+        if sha_names:
+            # Color-code by category
+            styled = []
+            for sname in sha_names:
+                # Find category
+                cat = "中"
+                for item in shensha.items:
+                    if item.name == sname and item.branch == branch_idx:
+                        cat = item.category
+                        break
+                color = ji_color if cat == "吉" else xiong_color if cat == "凶" else zhong_color
+                if sname in TWELVE_LIFE_STAGES:
+                    color = "#90caf9"
+                styled.append(
+                    f'<span style="color:{color}">{sname}</span>'
+                )
+            sha_str = " ".join(styled)
+        else:
+            sha_str = "—"
+        rows.append(f"| {branch_name} | {palace} | {sha_str} |")
+
+    st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+    # Legend
+    st.caption(
+        f'<span style="color:{ji_color}">■ 吉星</span> '
+        f'<span style="color:{xiong_color}">■ 凶煞</span> '
+        f'<span style="color:{zhong_color}">■ 中性</span> '
+        f'<span style="color:#90caf9">■ 十二長生</span>',
+        unsafe_allow_html=True,
+    )
+
+
+# ============================================================
+# 年限大運 (Planetary Period / Dasha)
+# ============================================================
+
+def render_dasha(chart: ChartData, dasha: DashaResult):
+    """渲染年限大運表"""
+    st.subheader("📅 年限大運")
+
+    # 當前大運高亮
+    if dasha.current_period_idx >= 0 and dasha.current_age >= 0:
+        p = dasha.periods[dasha.current_period_idx]
+        st.info(
+            f"📍 現年 **{dasha.current_age}歲** — "
+            f"行 **{p.palace_name}** ({p.branch_name}) 限 "
+            f"({p.start_age}–{p.end_age}歲 / "
+            f"{p.start_year}–{p.end_year}年)，"
+            f"主星 **{p.lord}** ({PLANET_PERIOD_YEARS[p.lord]}年)"
+        )
+
+    if dasha.flow_year_branch >= 0:
+        st.success(
+            f"🗓️ 流年太歲: **{EARTHLY_BRANCHES[dasha.flow_year_branch]}** "
+            f"→ **{dasha.flow_year_palace}**"
+        )
+
+    header = "| # | 宮位 | 地支 | 主星 | 年限 | 起始歲 | 結束歲 | 起始年 | 結束年 |"
+    sep = "|:--:|:----:|:----:|:----:|:----:|:------:|:------:|:------:|:------:|"
+    rows = [header, sep]
+
+    for idx, p in enumerate(dasha.periods):
+        mark = " 👈" if idx == dasha.current_period_idx else ""
+        rows.append(
+            f"| {idx+1} | {p.palace_name} | {p.branch_name} "
+            f"| {p.lord} | {p.years} | {p.start_age} | {p.end_age} "
+            f"| {p.start_year} | {p.end_year} |{mark}"
+        )
+
+    st.markdown("\n".join(rows))
+
+
+# ============================================================
+# 流時對盤 (Transit Chart Comparison)
+# ============================================================
+
+def render_transit_comparison(chart: ChartData, transit: TransitData):
+    """渲染流時對盤（本命 vs 流時星曜位置對照表）"""
+    st.subheader("🔄 流時對盤")
+    st.caption(
+        f"流時: {transit.year}年{transit.month}月{transit.day}日 "
+        f"{transit.hour:02d}:{transit.minute:02d} UTC{transit.timezone:+.1f}"
+    )
+
+    header = "| 星曜 | 本命黃經 | 本命星座 | 流時黃經 | 流時星座 | 差距 |"
+    sep = "|:----:|:--------:|:--------:|:--------:|:--------:|:----:|"
+    rows = [header, sep]
+
+    for np, tp in zip(chart.planets, transit.planets):
+        diff = abs(np.longitude - tp.longitude)
+        if diff > 180:
+            diff = 360 - diff
+        n_retro = "℞" if np.retrograde else ""
+        t_retro = "℞" if tp.retrograde else ""
+        color = PLANET_COLORS.get(np.name, "#c8c8c8")
+        name_styled = f'<span style="color:{color};font-weight:bold">{np.name}</span>'
+        rows.append(
+            f"| {name_styled} "
+            f"| {format_degree(np.longitude)}{n_retro} | {np.sign_chinese} "
+            f"| {format_degree(tp.longitude)}{t_retro} | {tp.sign_chinese} "
+            f"| {diff:.1f}° |"
+        )
+
+    st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+
+# ============================================================
 # 二十八宿圓環圖 (28 Lunar Mansions Ring Chart)
 # ============================================================
 
@@ -288,23 +487,34 @@ _GROUP_COLORS = {
 }
 
 
-def render_mansion_ring(chart: ChartData):
-    """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現 28 宿 + 十二星次 + 星曜位置"""
+def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
+    """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現 28 宿 + 十二星次 + 星曜 + 神煞 + 流時"""
     st.subheader("🌕 二十八宿圓環盤")
 
-    SIZE = 700
+    # Compute shensha for the chart
+    shensha = compute_shensha(
+        year=chart.year,
+        solar_month=chart.solar_month,
+        julian_day=chart.julian_day,
+        hour_branch=chart.hour_branch,
+    )
+
+    SIZE = 800
     CX, CY = SIZE / 2, SIZE / 2
 
-    # 同心圓半徑
-    R_OUTER = 310        # 最外圈
-    R_MANSION_OUT = 310  # 28 宿環外沿
-    R_MANSION_IN = 265   # 28 宿環內沿
-    R_SIGN_OUT = 265     # 十二星次環外沿
-    R_SIGN_IN = 235      # 十二星次環內沿
-    R_PALACE_OUT = 235   # 十二宮名環外沿
-    R_PALACE_IN = 200    # 十二宮名環內沿
-    R_PLANET = 170       # 星曜環
-    R_CENTER = 100       # 中央圓
+    # 同心圓半徑 (expanded for shensha ring)
+    R_SHENSHA_OUT = 390  # 神煞環外沿
+    R_SHENSHA_IN = 345   # 神煞環內沿
+    R_OUTER = 345        # 最外圈 (previously 310)
+    R_MANSION_OUT = 345  # 28 宿環外沿
+    R_MANSION_IN = 305   # 28 宿環內沿
+    R_SIGN_OUT = 305     # 十二星次環外沿
+    R_SIGN_IN = 275      # 十二星次環內沿
+    R_PALACE_OUT = 275   # 十二宮名環外沿
+    R_PALACE_IN = 245    # 十二宮名環內沿
+    R_PLANET = 210       # 星曜環 (natal)
+    R_TRANSIT = 155      # 流時星曜環
+    R_CENTER = 115       # 中央圓
 
     NUM_MANSIONS = len(TWENTY_EIGHT_MANSIONS)
     PLANET_SPREAD_FACTOR = 0.7  # 同宿多星的散佈範圍比例
@@ -363,10 +573,44 @@ def render_mansion_ring(chart: ChartData):
     svg.append(
         f'<svg viewBox="0 0 {SIZE} {SIZE}" '
         f'xmlns="http://www.w3.org/2000/svg" '
-        f'style="width:100%; max-width:700px; height:auto; margin:auto; '
+        f'style="width:100%; max-width:800px; height:auto; margin:auto; '
         f'display:block; background:#0a0a1a; border-radius:12px;">'
     )
     svg.append(f'<rect width="{SIZE}" height="{SIZE}" fill="#0a0a1a" rx="12"/>')
+
+    # --- 神煞環 (outermost: Shen Sha ring) ---
+    for i in range(12):
+        a1 = ecl_to_chart((i + 1) * 30.0)
+        a2 = a1 + 30.0
+        branch_idx = (10 - i) % 12
+        # Background sector
+        svg.append(
+            f'<path d="{annular_sector(R_SHENSHA_IN, R_SHENSHA_OUT, a1, a2)}" '
+            f'fill="#0d0d1a" stroke="#333" stroke-width="0.5"/>'
+        )
+        # Shen sha names in this branch
+        sha_names = shensha.branch_map.get(branch_idx, [])
+        if sha_names:
+            # Show up to 6 names to fit, split into 2 rows
+            display_names = sha_names[:6]
+            mid_a = a1 + 15.0
+            r_text = (R_SHENSHA_IN + R_SHENSHA_OUT) / 2
+            # Compute row offsets
+            n_rows = (len(display_names) + 2) // 3
+            for row_i in range(n_rows):
+                row_names = display_names[row_i * 3: (row_i + 1) * 3]
+                offset = (row_i - (n_rows - 1) / 2) * 10
+                r_adj = r_text + offset
+                x, y = polar(r_adj, mid_a)
+                rot = text_rotation(mid_a)
+                txt = " ".join(row_names)
+                svg.append(
+                    f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" fill="#c0a0a0" '
+                    f'font-size="8" font-family="serif" '
+                    f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
+                    f'{txt}</text>'
+                )
 
     # --- 28 宿環 (outermost ring) ---
     for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
@@ -454,11 +698,11 @@ def render_mansion_ring(chart: ChartData):
             f'{short_palace}</text>'
         )
 
-    # --- Division lines for 12 signs (from center to mansion ring) ---
+    # --- Division lines for 12 signs (from center to shensha ring) ---
     for i in range(12):
         a = ecl_to_chart(i * 30.0)
         x1, y1 = polar(R_CENTER, a)
-        x2, y2 = polar(R_MANSION_OUT, a)
+        x2, y2 = polar(R_SHENSHA_OUT, a)
         svg.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
             f'x2="{x2:.1f}" y2="{y2:.1f}" '
@@ -525,6 +769,53 @@ def render_mansion_ring(chart: ChartData):
                 f'transform="rotate({rot:.1f},{x_t:.1f},{y_t:.1f})">'
                 f'{p.name}{retro}</text>'
             )
+
+    # --- 流時星曜環 (transit planet positions — inner ring) ---
+    if transit is not None:
+        # Separator circle for transit ring
+        svg.append(
+            f'<circle cx="{CX}" cy="{CY}" r="{R_TRANSIT + 25}" '
+            f'fill="none" stroke="#444" stroke-width="0.5" stroke-dasharray="4,4"/>'
+        )
+        t_mansion_planets: dict[int, list] = {}
+        for p in transit.planets:
+            lon = _normalize_degree(p.longitude)
+            mansion_idx = get_mansion_index_for_degree(lon)
+            if mansion_idx not in t_mansion_planets:
+                t_mansion_planets[mansion_idx] = []
+            t_mansion_planets[mansion_idx].append((p, lon))
+
+        for mansion_idx, planet_data in t_mansion_planets.items():
+            n = len(planet_data)
+            w = _mansion_width(mansion_idx)
+            a1_chart = _mansion_chart_start(mansion_idx)
+            base_a = a1_chart + w / 2
+            for pi, (p, lon) in enumerate(planet_data):
+                if n == 1:
+                    a = ecl_to_chart(lon)
+                else:
+                    span = w * PLANET_SPREAD_FACTOR
+                    a = base_a - span / 2 + span * pi / (n - 1)
+
+                color = PLANET_COLORS.get(p.name, "#c8c8c8")
+                x, y = polar(R_TRANSIT, a)
+
+                # Transit planet dot (hollow/outlined)
+                svg.append(
+                    f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" '
+                    f'fill="none" stroke="{color}" stroke-width="1.5"/>'
+                )
+                # Transit planet name
+                x_t, y_t = polar(R_TRANSIT - 18, a)
+                rot = text_rotation(a)
+                retro = "℞" if p.retrograde else ""
+                svg.append(
+                    f'<text x="{x_t:.1f}" y="{y_t:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" fill="{color}" '
+                    f'font-size="9" font-family="serif" opacity="0.8" '
+                    f'transform="rotate({rot:.1f},{x_t:.1f},{y_t:.1f})">'
+                    f'{p.name}{retro}</text>'
+                )
 
     # --- 中央資訊 (center info) ---
     svg.append(
