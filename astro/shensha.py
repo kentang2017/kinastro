@@ -335,8 +335,8 @@ def get_month_branch(solar_month: int) -> int:
 def get_day_stem_branch(jd: float, timezone: float = 0.0):
     """
     由儒略日計算日干支。
-    基準: JD 2451911 (day_num) = 2001-01-01 = 辛巳年庚子月甲子日
-    甲=0(干), 子=0(支)
+
+    以 2001-01-01 (JDN 2451911) = 甲子日 為基準。
 
     Parameters:
         jd: 儒略日 (UT)
