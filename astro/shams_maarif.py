@@ -5,7 +5,7 @@ Renders all data from the five Shams al-Maʻārif modules as interactive
 Streamlit sub-tabs:
   1. 七大行星特性 (Planetary Properties)
   2. 十二星座徵兆 (Zodiac Signs)
-  3. 方陣與神名 (Wafq & Asma al-Husna)
+  3. 方陣與神名 (Wafq & Asmāʼ al-Ḥusnā)
   4. 修持法 (Riyāḍa)
   5. 祈禱文 (Duas)
 """
