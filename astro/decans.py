@@ -1227,17 +1227,6 @@ def _render_dendera_map(lang: str = "cn"):
         hoverinfo="text",
     ))
 
-    # Add zodiac sign annotations
-    for i, (sign_en, sign_cn, glyph, _) in enumerate(ZODIAC_SIGNS_DECAN):
-        angle = i * 30 + 15
-        fig.add_annotation(
-            x=0.5 + 0.35 * go.Figure()._data if False else None,
-            text=glyph,
-            showarrow=False,
-            font=dict(size=16, color=EGYPTIAN_GOLD),
-            xref="paper", yref="paper",
-        ) if False else None
-
     fig.update_layout(
         polar=dict(
             radialaxis=dict(visible=False),
