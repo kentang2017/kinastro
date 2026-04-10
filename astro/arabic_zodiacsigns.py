@@ -1,3 +1,6 @@
+from typing import List, Dict, Optional
+
+
 # ====================== 十二星座徵兆 (Zahr al-Murūj fī Dalā'il al-Burūj) ======================
 class ZodiacSigns:
     """《Shams al-Maʻārif al-Kubrā》附錄《زهر المروج في دلائل البروج》完整十二星座徵兆表

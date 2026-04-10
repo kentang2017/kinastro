@@ -4,7 +4,8 @@ Multi-System Astrology Chart Application
 
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
 卡巴拉占星、阿拉伯占星、瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
-納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、Picatrix 星體魔法十四種體系，
+納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、Picatrix 星體魔法、
+太陽知識大全（Shams al-Maʻārif）十五種體系，
 使用 pyswisseph 進行天文計算，以 Streamlit 提供互動式排盤介面。
 """
 
@@ -44,6 +45,7 @@ from astro.picatrix_mansions import (
     get_mansion_index,
     compute_moon_longitude,
 )
+from astro.shams_maarif import render_shams_browse, render_shams_chart
 
 # ============================================================
 # 頁面設定
@@ -200,11 +202,11 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai, tab_picatrix = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai, tab_picatrix, tab_shams = st.tabs(
     [t("tab_chinese"), t("tab_ziwei"), t("tab_western"), t("tab_indian"),
      t("tab_sukkayodo"), t("tab_thai"), t("tab_kabbalistic"), t("tab_arabic"), t("tab_maya"),
      t("tab_mahabote"), t("tab_decans"), t("tab_nadi"), t("tab_zurkhai"),
-     t("tab_picatrix")]
+     t("tab_picatrix"), t("tab_shams")]
 )
 
 if calculate:
@@ -417,3 +419,29 @@ with tab_picatrix:
 
     with ptab_talisman:
         render_talisman_generator()
+
+# ============================================================
+# Shams al-Maʻārif tab — always visible (reference tools work without a birth chart)
+# ============================================================
+with tab_shams:
+    st.subheader(t("shams_subheader"))
+    st.caption(t("shams_source"))
+
+    if calculate:
+        # Extract planet names and sun sign index from the Arabic chart
+        # for contextual highlighting in the Shams sub-tabs.
+        _shams_planets = {
+            p.name.split("(")[0].strip().split()[-1]: p.longitude
+            for p in a_chart.planets
+        } if "a_chart" in dir() else None
+        _shams_sun_idx: int | None = None
+        if _shams_planets:
+            for p in a_chart.planets:
+                if "Sun" in p.name:
+                    _shams_sun_idx = int(p.longitude / 30.0)
+                    break
+        render_shams_chart(chart_planets=_shams_planets,
+                           birth_sign_idx=_shams_sun_idx)
+    else:
+        st.markdown(t("desc_shams"))
+        render_shams_browse()

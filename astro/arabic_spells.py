@@ -1,3 +1,6 @@
+from typing import List, Dict, Optional
+
+
 # ====================== Shams al-Maʻārif 咒語 / دعوات 資料庫 ======================
 class IslamicDuas:
     """《大光明之書》經典咒語資料庫（直接來自原文）"""

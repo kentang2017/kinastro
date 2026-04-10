@@ -1,3 +1,6 @@
+from typing import List, Dict, Optional
+
+
 class ShamsRiyada:
     """《Shams al-Maʻārif al-Kubrā》修持法 (Riyāḍa) 與香料配方完整資料庫"""
 

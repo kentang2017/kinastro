@@ -1,3 +1,6 @@
+from typing import List, Dict, Optional
+
+
 # ====================== 七大行星詳細特性 (Laṭāʼif al-Ishāra) ======================
 class PlanetaryProperties:
     """《Shams al-Maʻārif al-Kubrā》附錄《لطائف الإشارة في خصائص الكواكب السيارة》完整七大行星特性表"""

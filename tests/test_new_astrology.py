@@ -2167,3 +2167,205 @@ class TestTalismanRecommendation:
         rec = get_picatrix_talisman_recommendation("love")
         assert rec is not None
         assert rec.planet == "Venus"
+
+
+# ============================================================
+# Shams al-Maʻārif Tests
+# ============================================================
+
+class TestPlanetaryProperties:
+    """Tests for astro.arabic_planetaries.PlanetaryProperties."""
+
+    def setup_method(self):
+        from astro.arabic_planetaries import PlanetaryProperties
+        self.pp = PlanetaryProperties()
+
+    def test_list_all_returns_seven_planets(self):
+        planets = self.pp.list_all()
+        assert len(planets) == 7
+
+    def test_all_planets_have_required_keys(self):
+        required = {"planet", "arabic", "english", "temp", "element", "color",
+                     "omens", "talisman_use", "timing", "letter", "wafq_size", "note"}
+        for p in self.pp.list_all():
+            assert required.issubset(p.keys()), f"Missing keys in {p['english']}"
+
+    def test_get_planet_by_english(self):
+        saturn = self.pp.get_planet("Saturn")
+        assert saturn is not None
+        assert saturn["arabic"] == "زحل"
+        assert saturn["wafq_size"] == 3
+
+    def test_get_planet_by_english_case_insensitive(self):
+        jupiter = self.pp.get_planet("jupiter")
+        assert jupiter is not None
+        assert jupiter["english"] == "Jupiter"
+
+    def test_get_planet_by_arabic(self):
+        venus = self.pp.get_planet("الزهرة")
+        assert venus is not None
+        assert venus["english"] == "Venus"
+
+    def test_get_planet_nonexistent_returns_none(self):
+        assert self.pp.get_planet("Pluto") is None
+
+    def test_wafq_sizes_3_to_9(self):
+        sizes = [p["wafq_size"] for p in self.pp.list_all()]
+        assert sorted(sizes) == [3, 4, 5, 6, 7, 8, 9]
+
+
+class TestZodiacSigns:
+    """Tests for astro.arabic_zodiacsigns.ZodiacSigns."""
+
+    def setup_method(self):
+        from astro.arabic_zodiacsigns import ZodiacSigns
+        self.zs = ZodiacSigns()
+
+    def test_list_all_returns_twelve_signs(self):
+        assert len(self.zs.list_all()) == 12
+
+    def test_all_signs_have_required_keys(self):
+        required = {"no", "arabic", "english", "element", "ruler",
+                     "omens", "talisman_use", "timing"}
+        for s in self.zs.list_all():
+            assert required.issubset(s.keys()), f"Missing keys in {s['english']}"
+
+    def test_sign_numbers_sequential(self):
+        numbers = [s["no"] for s in self.zs.list_all()]
+        assert numbers == list(range(1, 13))
+
+    def test_get_sign_by_number(self):
+        aries = self.zs.get_sign(1)
+        assert aries is not None
+        assert aries["english"] == "Aries"
+
+    def test_get_by_english(self):
+        libra = self.zs.get_by_english("Libra")
+        assert libra is not None
+        assert libra["no"] == 7
+
+    def test_get_by_arabic(self):
+        pisces = self.zs.get_by_arabic("الحوت")
+        assert pisces is not None
+        assert pisces["english"] == "Pisces"
+
+
+class TestShamsRiyada:
+    """Tests for astro.riyada.ShamsRiyada."""
+
+    def setup_method(self):
+        from astro.riyada import ShamsRiyada
+        self.sr = ShamsRiyada()
+
+    def test_list_riyada_not_empty(self):
+        riyadas = self.sr.list_all_riyada()
+        assert len(riyadas) >= 5
+
+    def test_riyada_has_required_keys(self):
+        required = {"name", "chapter", "description", "arabic", "steps",
+                     "incense", "use", "note"}
+        for r in self.sr.list_all_riyada():
+            assert required.issubset(r.keys()), f"Missing keys in {r['name']}"
+
+    def test_riyada_steps_is_list(self):
+        for r in self.sr.list_all_riyada():
+            assert isinstance(r["steps"], list)
+            assert len(r["steps"]) >= 1
+
+    def test_get_riyada_by_keyword(self):
+        result = self.sr.get_riyada("كريم")
+        assert result is not None
+
+    def test_get_riyada_nonexistent_returns_none(self):
+        assert self.sr.get_riyada("nonexistent_xyz") is None
+
+    def test_incense_formulas_not_empty(self):
+        formulas = self.sr.list_all_incense()
+        assert len(formulas) >= 4
+
+    def test_incense_has_required_keys(self):
+        required = {"name", "formula", "use", "note"}
+        for inc in self.sr.list_all_incense():
+            assert required.issubset(inc.keys())
+
+
+class TestIslamicDuas:
+    """Tests for astro.arabic_spells.IslamicDuas."""
+
+    def setup_method(self):
+        from astro.arabic_spells import IslamicDuas
+        self.dua = IslamicDuas()
+
+    def test_list_all_not_empty(self):
+        assert len(self.dua.list_all()) >= 10
+
+    def test_get_dua_returns_dict(self):
+        keys = self.dua.list_all()
+        if keys:
+            result = self.dua.get_dua(keys[0])
+            assert isinstance(result, dict)
+
+    def test_get_dua_nonexistent_returns_none(self):
+        assert self.dua.get_dua("nonexistent_key_xyz") is None
+
+
+class TestIslamicWafq:
+    """Tests for astro.wafq.IslamicWafqGenerator."""
+
+    def setup_method(self):
+        from astro.wafq import IslamicWafqGenerator
+        self.wafq = IslamicWafqGenerator()
+
+    def test_abjad_value_known(self):
+        # 'ودود' = و(6) + د(4) + و(6) + د(4) = 20
+        val = self.wafq.get_abjad_value("ودود")
+        assert val == 20
+
+    def test_abjad_empty_string(self):
+        assert self.wafq.get_abjad_value("") == 0
+
+    def test_magic_square_3x3(self):
+        sq = self.wafq.generate_magic_square(3)
+        assert len(sq) == 3
+        assert all(len(row) == 3 for row in sq)
+        # magic constant for 3×3 = 15
+        for row in sq:
+            assert sum(row) == 15
+
+    def test_magic_square_4x4(self):
+        sq = self.wafq.generate_magic_square(4)
+        assert len(sq) == 4
+        # magic constant for 4×4 = 34
+        for row in sq:
+            assert sum(row) == 34
+
+    def test_magic_square_odd_sizes(self):
+        for n in [5, 7, 9]:
+            sq = self.wafq.generate_magic_square(n)
+            assert len(sq) == n
+            magic_const = n * (n * n + 1) // 2
+            for row in sq:
+                assert sum(row) == magic_const
+
+    def test_magic_square_invalid_even_raises(self):
+        with pytest.raises(ValueError):
+            self.wafq.generate_magic_square(6)
+
+    def test_asma_husna_count(self):
+        assert len(self.wafq.ASMA_HUSNA) >= 90
+
+    def test_asma_husna_has_required_keys(self):
+        required = {"roman", "planet", "use", "timing"}
+        for name, info in self.wafq.ASMA_HUSNA.items():
+            assert required.issubset(info.keys()), f"Missing keys for {name}"
+
+    def test_get_asma_info(self):
+        info = self.wafq.get_asma_info("الودود")
+        assert info is not None
+        assert info["roman"] == "al-Wadud"
+        assert info["planet"] == "Venus"
+
+    def test_planetary_hours_returns_24(self):
+        from datetime import datetime
+        hours = self.wafq.planetary_hours(datetime(2024, 1, 1))
+        assert len(hours) == 24
