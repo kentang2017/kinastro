@@ -2594,3 +2594,105 @@ class TestQizhengTransit:
         result = compute_transit_now(timezone=8.0)
         assert result is not None
         assert len(result.planets) == 11
+
+
+# ============================================================
+# 張果星宗 Tests
+# ============================================================
+
+class TestZhangguoStarReadings:
+    """Tests for 張果星宗 module"""
+
+    def test_load_star_data(self):
+        from astro.zhangguo import _load_star_data
+        entries = _load_star_data()
+        assert len(entries) > 100
+        # Check first entry has required fields
+        e = entries[0]
+        assert "star" in e
+        assert "branch" in e
+        assert "type" in e
+        assert "description" in e
+
+    def test_load_pattern_data(self):
+        from astro.zhangguo import _load_pattern_data
+        entries = _load_pattern_data()
+        assert len(entries) > 50
+        e = entries[0]
+        assert "name" in e
+        assert "type" in e
+        assert "category" in e
+
+    def test_lookup_sun_in_wu(self):
+        """日在午宮 should return readings"""
+        from astro.zhangguo import lookup_star_in_branch
+        readings = lookup_star_in_branch("日", "午")
+        assert len(readings) > 0
+        for r in readings:
+            assert r.star == "日"
+            assert r.branch == "午"
+            assert r.reading_type in ("合格", "忌格")
+
+    def test_lookup_nonexistent(self):
+        """Non-standard star should return empty"""
+        from astro.zhangguo import lookup_star_in_branch
+        readings = lookup_star_in_branch("不存在的星", "子")
+        assert len(readings) == 0
+
+    def test_lookup_gender_filter(self):
+        """Female-specific readings should appear for female, not male"""
+        from astro.zhangguo import lookup_star_in_branch
+        female_readings = lookup_star_in_branch("金星", "酉", "female")
+        male_readings = lookup_star_in_branch("金星", "酉", "male")
+        # Female should include female-only + both
+        female_only = [r for r in female_readings if r.gender == "female"]
+        assert len(female_only) > 0
+        # Male should NOT include female-only entries
+        male_genders = {r.gender for r in male_readings}
+        assert "female" not in male_genders
+
+    def test_get_all_patterns(self):
+        from astro.zhangguo import get_all_patterns
+        patterns = get_all_patterns()
+        assert len(patterns) > 50
+        names = [p.name for p in patterns]
+        assert "日居日位" in names
+        assert "月入月垣" in names
+
+    def test_planet_name_mapping(self):
+        """All 11 chart planets should have mappings"""
+        from astro.zhangguo import PLANET_TO_ZHANGGUO
+        expected = ["太陽", "太陰", "水星", "金星", "火星", "木星", "土星",
+                    "羅睺", "計都", "月孛", "紫氣"]
+        for name in expected:
+            assert name in PLANET_TO_ZHANGGUO
+
+    def test_compute_zhangguo_with_chart(self):
+        """Integration test: compute_zhangguo with real chart data"""
+        from astro.calculator import compute_chart
+        from astro.zhangguo import compute_zhangguo
+        import swisseph as swe
+        swe.set_ephe_path("")
+        chart = compute_chart(
+            year=1990, month=6, day=15,
+            hour=12, minute=0,
+            timezone=8.0, latitude=22.3, longitude=114.2,
+            location_name="Hong Kong",
+            gender="male",
+        )
+        result = compute_zhangguo(chart.planets, chart.houses, "male")
+        assert result is not None
+        assert len(result.matched_readings) > 0
+        assert len(result.all_patterns) > 0
+
+    def test_reading_fields(self):
+        """Check that ZhangguoReading has all expected fields"""
+        from astro.zhangguo import lookup_star_in_branch
+        readings = lookup_star_in_branch("木星", "寅")
+        assert len(readings) > 0
+        r = readings[0]
+        assert isinstance(r.entry_id, int)
+        assert isinstance(r.star, str)
+        assert isinstance(r.branch, str)
+        assert isinstance(r.description, str)
+        assert isinstance(r.note, str)

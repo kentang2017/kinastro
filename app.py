@@ -24,10 +24,12 @@ from astro.chart_renderer import (
     render_shensha,
     render_dasha,
     render_transit_comparison,
+    render_zhangguo,
 )
 from astro.shensha import compute_shensha
 from astro.qizheng_dasha import compute_dasha
 from astro.qizheng_transit import compute_transit, compute_transit_now
+from astro.zhangguo import compute_zhangguo
 from astro.western import compute_western_chart, render_western_chart
 from astro.indian import compute_vedic_chart, render_vedic_chart
 from astro.sukkayodo import render_sukkayodo_chart
@@ -233,11 +235,12 @@ if calculate:
             chart = compute_chart(**_params, gender=gender)
 
         # 子 tabs for the Chinese chart
-        _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit = st.tabs([
+        _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo = st.tabs([
             t("ch_subtab_natal"),
             t("ch_subtab_shensha"),
             t("ch_subtab_dasha"),
             t("ch_subtab_transit"),
+            t("ch_subtab_zhangguo"),
         ])
 
         with _ch_tab_natal:
@@ -314,6 +317,14 @@ if calculate:
                 timezone=_t_tz,
             )
             render_transit_comparison(chart, _transit_custom)
+
+        with _ch_tab_zhangguo:
+            _zhangguo = compute_zhangguo(
+                planets=chart.planets,
+                houses=chart.houses,
+                gender=gender,
+            )
+            render_zhangguo(chart, _zhangguo)
 
     # --- 紫微斗數 ---
     with tab_ziwei:
