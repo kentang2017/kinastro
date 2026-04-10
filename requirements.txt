@@ -1,3 +1,4 @@
 streamlit==1.52.2
 pyswisseph==2.10.3.2
 plotly>=6.0.1
+svgwrite==1.4.3
