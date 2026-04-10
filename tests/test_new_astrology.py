@@ -2386,7 +2386,7 @@ class TestShenSha:
         from astro.shensha import compute_shensha
         import swisseph as swe
         swe.set_ephe_path("")
-        jd = swe.julday(1990, 1, 1, 4.0)  # 1990-01-01 12:00 UTC+8
+        jd = swe.julday(1990, 1, 1, 4.0)  # 1990-01-01 04:00 UTC
         result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
         assert result is not None
         assert len(result.items) > 0

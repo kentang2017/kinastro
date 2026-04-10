@@ -113,7 +113,6 @@ def compute_dasha(
 
     periods = []
     age = 0
-    current_branch = ming_gong_branch
 
     for i in range(12):
         branch = (ming_gong_branch + direction * i) % 12

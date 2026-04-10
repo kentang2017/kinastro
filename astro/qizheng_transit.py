@@ -122,7 +122,6 @@ def compute_transit(
 
 def compute_transit_now(timezone: float = 8.0) -> TransitData:
     """計算當前時間的流時盤"""
-    now = datetime.now(tz=None)  # local time concept; we use UTC offset
     from datetime import timedelta, timezone as tz_cls
     utc_now = datetime.now(tz=tz_cls.utc)
     local_now = utc_now + timedelta(hours=timezone)
