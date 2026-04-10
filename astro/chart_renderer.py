@@ -24,6 +24,7 @@ from .shensha import (
 )
 from .qizheng_dasha import DashaResult, compute_dasha, PLANET_PERIOD_YEARS
 from .qizheng_transit import TransitData, compute_transit, compute_transit_now
+from .zhangguo import ZhangguoResult, PLANET_TO_ZHANGGUO
 
 
 def render_chart_info(chart: ChartData):
@@ -859,5 +860,87 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     svg.append("</svg>")
 
     st.markdown("\n".join(svg), unsafe_allow_html=True)
+
+
+# ============================================================
+# 張果星宗 (Zhang Guo Xing Zong Star Readings)
+# ============================================================
+
+def render_zhangguo(chart: ChartData, result: ZhangguoResult):
+    """渲染張果星宗斷語與格局。"""
+    st.subheader("📜 張果星宗")
+
+    # --- 1. 星曜落宮斷語 ---
+    readings = result.matched_readings
+    if readings:
+        st.markdown(f"**十一曜宮位斷語** — 共匹配 {len(readings)} 條")
+
+        # Group by star
+        from collections import OrderedDict
+        grouped: dict[str, list] = OrderedDict()
+        for r in readings:
+            key = f"{r.star}（{r.branch}宮）"
+            grouped.setdefault(key, []).append(r)
+
+        ji_color = "#4caf50"
+        ji_bg = "#e8f5e9"
+        xiong_color = "#ef5350"
+        xiong_bg = "#ffebee"
+
+        for star_key, items in grouped.items():
+            first_is_ji = items[0].reading_type == "合格"
+            with st.expander(f"{'🟢' if first_is_ji else '🔴'} {star_key}  ({len(items)}條)", expanded=False):
+                for r in items:
+                    is_ji = r.reading_type == "合格"
+                    color = ji_color if is_ji else xiong_color
+                    bg = ji_bg if is_ji else xiong_bg
+                    badge = f'<span style="color:white;background:{color};padding:1px 6px;border-radius:3px;font-size:0.8em">{r.reading_type}</span>'
+                    note_tag = f' <span style="color:#888;font-size:0.85em">({r.note})</span>' if r.note else ""
+                    gender_tag = ""
+                    if r.gender == "male":
+                        gender_tag = ' <span style="color:#42a5f5;font-size:0.8em">♂男命</span>'
+                    elif r.gender == "female":
+                        gender_tag = ' <span style="color:#ec407a;font-size:0.8em">♀女命</span>'
+                    st.markdown(
+                        f'<div style="background:{bg};padding:8px 12px;border-radius:6px;margin:4px 0">'
+                        f'{badge}{gender_tag}{note_tag}<br/>'
+                        f'<span style="font-size:0.95em">{r.description}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+    else:
+        st.info("此命盤暫無匹配的張果星宗宮位斷語。")
+
+    st.divider()
+
+    # --- 2. 格局總表 ---
+    patterns = result.all_patterns
+    if patterns:
+        st.markdown("**格局總表** — 張果星宗十一曜定格·諸格·八格賦")
+
+        # Group patterns by category
+        cat_order = []
+        cat_map: dict[str, list] = {}
+        for p in patterns:
+            if p.category not in cat_map:
+                cat_order.append(p.category)
+                cat_map[p.category] = []
+            cat_map[p.category].append(p)
+
+        for cat in cat_order:
+            items = cat_map[cat]
+            with st.expander(f"📋 {cat}（{len(items)}格）", expanded=False):
+                header = "| # | 格名 | 類型 | 條件 | 說明 |"
+                sep = "|:--:|:-----|:----:|:-----|:-----|"
+                rows = [header, sep]
+                for p in items:
+                    ptype_color = "#4caf50" if p.pattern_type == "合格" else (
+                        "#ef5350" if p.pattern_type == "忌格" else "#ffc107"
+                    )
+                    ptype_html = f'<span style="color:{ptype_color}">{p.pattern_type}</span>'
+                    rows.append(
+                        f"| {p.pattern_id} | {p.name} | {ptype_html} | {p.condition} | {p.note} |"
+                    )
+                st.markdown("\n".join(rows), unsafe_allow_html=True)
 
 

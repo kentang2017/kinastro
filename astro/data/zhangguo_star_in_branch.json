@@ -322,7 +322,7 @@
     {"id": 316, "star": "火星", "branch": "觜", "gender": "both", "type": "合格", "description": "玉猴啸月，火星在觜宮與月畢同度，火月度夜生貴。", "note": "諸星次格"},
     {"id": 317, "star": "水星", "branch": "軫", "gender": "both", "type": "合格", "description": "玉女嫦娥，水星在軫宮與月張同度，命箕主貴，女貌傾國。", "note": "諸星次格"},
     {"id": 318, "star": "金星", "branch": "亢", "gender": "both", "type": "合格", "description": "龍躍天池，金星在亢宮立命，金亥從日月，主榮顯。", "note": "諸星次格"},
-    {"id": 319, "star": "木星", "branch": "角", "gender": "both", "type": "合格", "description": "蒼龍入井，木星在角宮與金同度，坐命金木躔井合格。", "note": "諸星次格"}
+    {"id": 319, "star": "木星", "branch": "角", "gender": "both", "type": "合格", "description": "蒼龍入井，木星在角宮與金同度，坐命金木躔井合格。", "note": "諸星次格"},
     {"id": 320, "star": "日", "branch": "午", "gender": "both", "type": "合格", "description": "日在午宮，太陽居垣，日居日位，大貴之格，主權高位重，富貴雙全。", "note": "日月合格"},
     {"id": 321, "star": "月", "branch": "未", "gender": "both", "type": "合格", "description": "月在未宮，太陰升殿，月入月垣，主福壽雙全，富貴雙全。", "note": "日月合格"},
     {"id": 322, "star": "金星", "branch": "酉", "gender": "both", "type": "合格", "description": "金星在酉宮，金居垣，夜生金月同宮，主奇才冠天下，富貴權高。", "note": "五星合格 + 靈台星格"},

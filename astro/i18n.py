@@ -193,6 +193,10 @@ TRANSLATIONS = {
         "zh": "🔄 流時對盤",
         "en": "🔄 Transit Chart",
     },
+    "ch_subtab_zhangguo": {
+        "zh": "📜 張果星宗",
+        "en": "📜 Zhang Guo Star Readings",
+    },
     "show_transit_overlay": {
         "zh": "在圓盤上顯示流時星曜",
         "en": "Show transit planets on ring chart",
