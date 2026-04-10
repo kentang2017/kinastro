@@ -749,7 +749,7 @@ def _render_mansion_wheel(mansions: list, highlight_index: int = -1) -> None:
             font=dict(color="#e0e0e0", size=10),
         ),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 
 def render_planetary_hours_tool(
@@ -918,7 +918,7 @@ def _render_planetary_hours_chart(result: PlanetaryHoursResult) -> None:
         plot_bgcolor="#1a1a2e",
         font=dict(color="#e0e0e0"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 
 def render_talisman_generator() -> None:

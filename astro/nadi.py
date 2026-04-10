@@ -631,7 +631,7 @@ def render_nadi_chart(chart: NadiChart) -> None:
 
     import pandas as pd
     df = pd.DataFrame(table_rows)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width='stretch', hide_index=True)
 
     st.divider()
 
