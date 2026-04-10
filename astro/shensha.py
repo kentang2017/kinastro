@@ -163,6 +163,40 @@ TIANGUAN = {0: 7, 1: 4, 2: 5, 3: 2, 4: 3, 5: 0, 6: 1, 7: 10, 8: 11, 9: 8}
 # 甲→巳, 乙→午, 丙→巳, 丁→未, 戊→巳, 己→午, 庚→申, 辛→未, 壬→申, 癸→酉
 TIANCHU = {0: 5, 1: 6, 2: 5, 3: 7, 4: 5, 5: 6, 6: 8, 7: 7, 8: 8, 9: 9}
 
+SUIJIA = {i: i for i in range(12)}
+
+# 歲殿（以歲駕宮起甲，順數至生年干）
+# 例如甲年（year_stem=0）→ 歲駕宮本身即歲殿
+def get_suidian(year_branch: int, year_stem: int) -> int:
+    return (year_branch + year_stem) % 12
+
+# 化曜十星（天干化曜）—— 根據年干直接對應（位置通常落在命宮或特定宮，暫以年干索引表示，後續可改成命宮落點）
+# 順序：甲→天禄、乙→天暗、丙→天福、丁→天耗、戊→天荫、己→天贵、庚→天刑、辛→天印、壬→天囚、癸→天权
+HUA_YAO = {
+    0: "天禄", 1: "天暗", 2: "天福", 3: "天耗", 4: "天荫",
+    5: "天贵", 6: "天刑", 7: "天印", 8: "天囚", 9: "天权"
+}
+
+# 其他張果星宗神煞（年干/年支系，位置簡化為對應索引）
+LUXUN = {0: 2, 1: 3, 2: 5, 3: 6, 4: 5, 5: 6, 6: 8, 7: 9, 8: 11, 9: 0}   # 禄勛（近似禄神）
+TANGFU = {0: 7, 1: 4, 2: 5, 3: 2, 4: 3, 5: 0, 6: 1, 7: 10, 8: 11, 9: 8}   # 唐符（參考天官）
+GUOYIN = {0: 5, 1: 6, 2: 8, 3: 9, 4: 8, 5: 9, 6: 11, 7: 0, 8: 2, 9: 3}    # 國印（近似文昌）
+TIANXIONG = {i: (i + 6) % 12 for i in range(12)}   # 天雄（對沖位）
+DICI = {i: (i + 6) % 12 for i in range(12)}        # 地雌（同對沖位）
+YUESHA_ZG = {i: (i + 6) % 12 for i in range(12)}   # 月廉（月煞變體）
+ZHINAN = {0: 5, 1: 2, 2: 11, 3: 8, 4: 5, 5: 2, 6: 11, 7: 8, 8: 5, 9: 2, 10: 11, 11: 8}  # 值難（近似劫煞）
+
+# 的殺（地支吉凶星例）
+DESHA = {0: 9, 1: 10, 2: 11, 3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7, 11: 8}  # 根據原文重複規律簡化
+
+# 空亡（年支系常見空亡）
+KONGWANG = {i: (i + 2) % 12 for i in range(12)}   # 簡化版，可依實際八字調整
+
+# 孤虛（年支系）
+GUXU = {0: 8, 1: 9, 2: 10, 3: 11, 4: 0, 5: 1, 6: 2, 7: 3, 8: 4, 9: 5, 10: 6, 11: 7}
+
+
+
 # ============================================================
 # 日支系神煞
 # ============================================================
@@ -308,6 +342,9 @@ def compute_shensha(
     _add("天狗", TIANGOU[year_branch], "凶", "年支")
     _add("弔客", DIAOKE[year_branch], "凶", "年支")
     _add("白虎", BAIHU[year_branch], "凶", "年支")
+    _add("歲駕", SUIJIA[year_branch], "中", "年支-張果")
+    _add("歲殿", get_suidian(year_branch, year_stem), "吉", "年支-張果")
+  
 
     # ---- 年支系 (吉) ----
     _add("紅鸞", HONGLUAN[year_branch], "吉", "年支")
@@ -322,6 +359,22 @@ def compute_shensha(
     _add("天官", TIANGUAN[year_stem], "吉", "年干")
     _add("天廚", TIANCHU[year_stem], "吉", "年干")
 
+    # 化曜十星（年干化）
+    hua_name = HUA_YAO[year_stem]
+    hua_cat = "吉" if "禄" in hua_name or "福" in hua_name or "荫" in hua_name or "贵" in hua_name else "凶"
+    _add(hua_name, year_branch, hua_cat, "年干-化曜")   # 暫落年支，可後續改成命宮
+
+    # 其他張果專屬
+    _add("禄勛", LUXUN[year_stem], "吉", "年干-張果")
+    _add("唐符", TANGFU[year_stem], "吉", "年干-張果")
+    _add("國印", GUOYIN[year_stem], "吉", "年干-張果")
+    _add("天雄", TIANXIONG[year_branch], "凶", "年支-張果")
+    _add("地雌", DICI[year_branch], "凶", "年支-張果")
+    _add("月廉", YUESHA_ZG[year_branch], "凶", "年支-張果")
+    _add("值難", ZHINAN[year_branch], "凶", "年支-張果")
+    _add("的殺", DESHA[year_branch], "凶", "年支-張果")
+    _add("空亡", KONGWANG[year_branch], "凶", "年支-張果")
+    _add("孤虛", GUXU[year_branch], "凶", "年支-張果")
     # ---- 月支系 ----
     td = TIANDE_BY_MONTH.get(month_branch)
     if td is not None:
