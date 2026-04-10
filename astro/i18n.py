@@ -163,6 +163,19 @@ TRANSLATIONS = {
         "zh": "☪ 太陽知識大全",
         "en": "☪ Shams al-Maʻārif",
     },
+    # ── Arabic sub-tab labels ─────────────────────────────────────────────────
+    "arabic_subtab_chart": {
+        "zh": "☪ 阿拉伯占星",
+        "en": "☪ Arabic Astrology",
+    },
+    "arabic_subtab_picatrix": {
+        "zh": "📜 Picatrix 星體魔法",
+        "en": "📜 Picatrix Stellar Magic",
+    },
+    "arabic_subtab_shams": {
+        "zh": "☪ 太陽知識大全",
+        "en": "☪ Shams al-Maʻārif",
+    },
     # ── Spinner messages ──────────────────────────────────────────────────────
     "spinner_indian": {
         "zh": "正在計算印度占星排盤...",
