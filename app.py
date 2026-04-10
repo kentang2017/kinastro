@@ -194,7 +194,7 @@ with st.sidebar:
         location_name = t("custom_location")
 
     # 排盤按鈕
-    calculate = st.button(t("calculate_btn"), use_container_width=True, type="primary")
+    calculate = st.button(t("calculate_btn"), width='stretch', type="primary")
 
     # 性別（用於七政四餘宮位方向）
     st.subheader(t("gender_header"))
