@@ -123,6 +123,7 @@ def render_chart_grid(chart: ChartData):
         solar_month=chart.solar_month,
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
+        timezone=chart.timezone,
     )
 
     # 方盤排列 (外圈12格，按固定地支位置排列)
@@ -329,6 +330,7 @@ def render_bazi(chart: ChartData):
         solar_month=chart.solar_month,
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
+        timezone=chart.timezone,
     )
     st.subheader("📜 八字四柱")
     header = "| 柱 | 天干 | 地支 | 干支 |"
@@ -498,6 +500,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         solar_month=chart.solar_month,
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
+        timezone=chart.timezone,
     )
 
     SIZE = 800

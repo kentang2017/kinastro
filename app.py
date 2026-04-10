@@ -272,6 +272,7 @@ if calculate:
                 solar_month=chart.solar_month,
                 julian_day=chart.julian_day,
                 hour_branch=chart.hour_branch,
+                timezone=chart.timezone,
             )
             render_shensha(chart, _shensha)
 

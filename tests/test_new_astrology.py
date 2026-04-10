@@ -2442,6 +2442,23 @@ class TestShenSha:
         assert "day_pillar" in bazi
         assert "hour_pillar" in bazi
 
+    def test_bazi_1985_aug26(self):
+        """Test Ba Zi for 1985-08-26 02:55 CST = 乙丑年甲申月丁酉日辛丑時."""
+        from astro.shensha import get_bazi_stems_branches
+        import swisseph as swe
+        swe.set_ephe_path("")
+        # 1985-08-26 02:55 CST (UTC+8) → UT = 1985-08-25 18:55
+        tz = 8.0
+        jd = swe.julday(1985, 8, 26, 2.0 + 55.0 / 60.0 - tz)
+        bazi = get_bazi_stems_branches(
+            year=1985, solar_month=7, julian_day=jd,
+            hour_branch=1, timezone=tz,
+        )
+        assert bazi["year_pillar"] == "乙丑"
+        assert bazi["month_pillar"] == "甲申"
+        assert bazi["day_pillar"] == "丁酉"
+        assert bazi["hour_pillar"] == "辛丑"
+
     def test_year_stem_branch(self):
         """Test year stem and branch calculation."""
         from astro.shensha import get_year_stem, get_year_branch

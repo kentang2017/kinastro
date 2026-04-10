@@ -332,17 +332,22 @@ def get_month_branch(solar_month: int) -> int:
     return (solar_month + 1) % 12
 
 
-def get_day_stem_branch(jd: float):
+def get_day_stem_branch(jd: float, timezone: float = 0.0):
     """
     由儒略日計算日干支。
-    基準: JD 2451911.0 = 2001-01-01 = 辛巳年庚子月丙午日
-    丙=2(干), 午=6(支)
+
+    以 2001-01-01 (JDN 2451911) = 甲子日 為基準。
+
+    Parameters:
+        jd: 儒略日 (UT)
+        timezone: 時區偏移 (小時), 用於將 UT 轉換為當地時間以確定日期
     """
-    day_num = int(jd + 0.5)
+    local_jd = jd + timezone / 24.0
+    day_num = int(local_jd + 0.5)
     base_jd = 2451911  # 2001-01-01
     diff = day_num - base_jd
-    day_stem = (2 + diff) % 10
-    day_branch = (6 + diff) % 12
+    day_stem = (0 + diff) % 10
+    day_branch = (0 + diff) % 12
     return day_stem, day_branch
 
 
@@ -374,6 +379,7 @@ def compute_shensha(
     solar_month: int,
     julian_day: float,
     hour_branch: int,
+    timezone: float = 0.0,
 ) -> ShenShaResult:
     """
     計算神煞。
@@ -383,6 +389,7 @@ def compute_shensha(
         solar_month: 節氣月 (1-12)
         julian_day: 儒略日
         hour_branch: 時辰地支索引 (0-11)
+        timezone: 時區偏移 (小時)
 
     Returns:
         ShenShaResult: 包含所有神煞及其宮位分配
@@ -390,7 +397,7 @@ def compute_shensha(
     year_stem = get_year_stem(year)
     year_branch = get_year_branch(year)
     month_branch = get_month_branch(solar_month)
-    day_stem, day_branch = get_day_stem_branch(julian_day)
+    day_stem, day_branch = get_day_stem_branch(julian_day, timezone)
 
     items = []
 
@@ -534,6 +541,7 @@ def get_bazi_stems_branches(
     solar_month: int,
     julian_day: float,
     hour_branch: int,
+    timezone: float = 0.0,
 ):
     """
     計算八字四柱天干地支。
@@ -549,7 +557,7 @@ def get_bazi_stems_branches(
     # 月干 = 年干 * 2 + 月支偏移 (虎月起法)
     yin_stem = (2 * (ys % 5) + 2) % 10
     ms = (yin_stem + (mb - 2 + 12) % 12) % 10
-    ds, db = get_day_stem_branch(julian_day)
+    ds, db = get_day_stem_branch(julian_day, timezone)
     hs = get_hour_stem(ds, hour_branch)
 
     return {
