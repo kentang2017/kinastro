@@ -41,6 +41,9 @@ from astro.decans_data import DECANS_DATA
 _EGYPTIAN_NEW_YEAR_MONTH = 7
 _EGYPTIAN_NEW_YEAR_DAY = 20
 
+# Non-leap reference year used to keep the civil year exactly 365 days.
+_REFERENCE_YEAR = 2023
+
 # Sothic cycle length
 SOTHIC_CYCLE_YEARS = 1461  # Egyptian civil years (= 1460 Julian years)
 
@@ -358,7 +361,7 @@ def gregorian_to_egyptian(month: int, day: int) -> dict:
         day-of-year, and epagomenal-day details when applicable.
     """
     # Use a non-leap reference year so the civil year is exactly 365 days.
-    ref_year = 2023
+    ref_year = _REFERENCE_YEAR
     target = date(ref_year, month, day)
     new_year = _egyptian_new_year(ref_year)
 
