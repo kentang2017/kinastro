@@ -176,6 +176,43 @@ TRANSLATIONS = {
         "zh": "☪ 太陽知識大全",
         "en": "☪ Shams al-Maʻārif",
     },
+    # ── Chinese (七政四餘) sub-tab labels ──────────────────────────────────────
+    "ch_subtab_natal": {
+        "zh": "🎯 本命盤",
+        "en": "🎯 Natal Chart",
+    },
+    "ch_subtab_shensha": {
+        "zh": "🔮 神煞",
+        "en": "🔮 Shen Sha",
+    },
+    "ch_subtab_dasha": {
+        "zh": "📅 年限大運",
+        "en": "📅 Planetary Periods",
+    },
+    "ch_subtab_transit": {
+        "zh": "🔄 流時對盤",
+        "en": "🔄 Transit Chart",
+    },
+    "show_transit_overlay": {
+        "zh": "在圓盤上顯示流時星曜",
+        "en": "Show transit planets on ring chart",
+    },
+    "transit_header": {
+        "zh": "🔄 流時對盤",
+        "en": "🔄 Transit Chart Comparison",
+    },
+    "transit_date": {
+        "zh": "流時日期",
+        "en": "Transit date",
+    },
+    "transit_time": {
+        "zh": "流時時間",
+        "en": "Transit time",
+    },
+    "transit_tz": {
+        "zh": "流時時區",
+        "en": "Transit TZ",
+    },
     # ── Spinner messages ──────────────────────────────────────────────────────
     "spinner_indian": {
         "zh": "正在計算印度占星排盤...",

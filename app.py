@@ -20,7 +20,14 @@ from astro.chart_renderer import (
     render_house_table,
     render_aspect_summary,
     render_mansion_ring,
+    render_bazi,
+    render_shensha,
+    render_dasha,
+    render_transit_comparison,
 )
+from astro.shensha import compute_shensha
+from astro.qizheng_dasha import compute_dasha
+from astro.qizheng_transit import compute_transit, compute_transit_now
 from astro.western import compute_western_chart, render_western_chart
 from astro.indian import compute_vedic_chart, render_vedic_chart
 from astro.sukkayodo import render_sukkayodo_chart
@@ -224,15 +231,89 @@ if calculate:
     with tab_chinese:
         with st.spinner(t("spinner_chinese")):
             chart = compute_chart(**_params, gender=gender)
-        render_chart_info(chart)
-        st.divider()
-        render_mansion_ring(chart)
-        st.divider()
-        render_planet_table(chart)
-        st.divider()
-        render_house_table(chart)
-        st.divider()
-        render_aspect_summary(chart)
+
+        # 子 tabs for the Chinese chart
+        _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit = st.tabs([
+            t("ch_subtab_natal"),
+            t("ch_subtab_shensha"),
+            t("ch_subtab_dasha"),
+            t("ch_subtab_transit"),
+        ])
+
+        with _ch_tab_natal:
+            render_chart_info(chart)
+            st.divider()
+
+            # 計算流時盤 for overlay
+            _transit_now = compute_transit_now(timezone=input_tz)
+
+            # 選擇是否顯示流時對盤
+            _show_transit_overlay = st.checkbox(
+                t("show_transit_overlay"), value=False,
+            )
+            _transit_for_ring = _transit_now if _show_transit_overlay else None
+
+            render_mansion_ring(chart, transit=_transit_for_ring)
+            st.divider()
+            render_bazi(chart)
+            st.divider()
+            render_planet_table(chart)
+            st.divider()
+            render_house_table(chart)
+            st.divider()
+            render_aspect_summary(chart)
+
+        with _ch_tab_shensha:
+            _shensha = compute_shensha(
+                year=chart.year,
+                solar_month=chart.solar_month,
+                julian_day=chart.julian_day,
+                hour_branch=chart.hour_branch,
+            )
+            render_shensha(chart, _shensha)
+
+        with _ch_tab_dasha:
+            from datetime import datetime as _dt
+            _current_year = _dt.now().year
+            _dasha = compute_dasha(
+                birth_year=chart.year,
+                ming_gong_branch=chart.ming_gong_branch,
+                gender=gender,
+                houses=chart.houses,
+                current_year=_current_year,
+            )
+            render_dasha(chart, _dasha)
+
+        with _ch_tab_transit:
+            st.subheader(t("transit_header"))
+            _t_col1, _t_col2, _t_col3 = st.columns(3)
+            with _t_col1:
+                _t_date = st.date_input(
+                    t("transit_date"),
+                    value=datetime.now().date(),
+                    key="transit_date_input",
+                )
+            with _t_col2:
+                _t_time = st.time_input(
+                    t("transit_time"),
+                    value=datetime.now().time(),
+                    key="transit_time_input",
+                )
+            with _t_col3:
+                _t_tz = st.number_input(
+                    t("transit_tz"),
+                    value=input_tz,
+                    format="%.1f",
+                    min_value=-12.0, max_value=14.0, step=0.5,
+                    key="transit_tz_input",
+                )
+
+            _transit_custom = compute_transit(
+                year=_t_date.year, month=_t_date.month, day=_t_date.day,
+                hour=_t_time.hour, minute=_t_time.minute,
+                timezone=_t_tz,
+            )
+            render_transit_comparison(chart, _transit_custom)
 
     # --- 紫微斗數 ---
     with tab_ziwei:

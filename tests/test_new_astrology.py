@@ -2369,3 +2369,228 @@ class TestIslamicWafq:
         from datetime import datetime
         hours = self.wafq.planetary_hours(datetime(2024, 1, 1))
         assert len(hours) == 24
+
+
+# ============================================================
+# 神煞 (Shen Sha) Tests
+# ============================================================
+
+class TestShenSha:
+    """Tests for the Shen Sha divine stars module."""
+
+    def test_import(self):
+        from astro.shensha import compute_shensha, ShenShaResult
+        assert callable(compute_shensha)
+
+    def test_compute_shensha_returns_result(self):
+        from astro.shensha import compute_shensha
+        import swisseph as swe
+        swe.set_ephe_path("")
+        jd = swe.julday(1990, 1, 1, 4.0)  # 1990-01-01 04:00 UTC
+        result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
+        assert result is not None
+        assert len(result.items) > 0
+        assert isinstance(result.branch_map, dict)
+
+    def test_shensha_has_key_stars(self):
+        """Ensure key divine stars are present."""
+        from astro.shensha import compute_shensha
+        import swisseph as swe
+        swe.set_ephe_path("")
+        jd = swe.julday(1990, 1, 1, 4.0)
+        result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
+        all_names = [item.name for item in result.items]
+        assert "驛馬" in all_names
+        assert "桃花" in all_names
+        assert "華蓋" in all_names
+        assert "天乙貴人" in all_names
+        assert "文昌" in all_names
+        assert "祿神" in all_names
+        assert "長生" in all_names
+
+    def test_shensha_branches_valid(self):
+        """All branch indices should be 0-11."""
+        from astro.shensha import compute_shensha
+        import swisseph as swe
+        swe.set_ephe_path("")
+        jd = swe.julday(1985, 8, 26, -2.167)  # ~ UTC+8
+        result = compute_shensha(year=1985, solar_month=7, julian_day=jd, hour_branch=1)
+        for item in result.items:
+            assert 0 <= item.branch <= 11, f"{item.name} has invalid branch {item.branch}"
+
+    def test_shensha_categories(self):
+        """Categories should be 吉, 凶, or 中."""
+        from astro.shensha import compute_shensha
+        import swisseph as swe
+        swe.set_ephe_path("")
+        jd = swe.julday(2000, 6, 15, 4.0)
+        result = compute_shensha(year=2000, solar_month=5, julian_day=jd, hour_branch=6)
+        for item in result.items:
+            assert item.category in ("吉", "凶", "中"), f"{item.name} has invalid category {item.category}"
+
+    def test_bazi_stems_branches(self):
+        """Test Ba Zi four pillars calculation."""
+        from astro.shensha import get_bazi_stems_branches, HEAVENLY_STEMS, EARTHLY_BRANCHES
+        import swisseph as swe
+        swe.set_ephe_path("")
+        jd = swe.julday(1990, 1, 1, 4.0)
+        bazi = get_bazi_stems_branches(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
+        # Year pillar for 1990 = 庚午
+        assert bazi["year_pillar"] == "庚午"
+        # Validate structure
+        assert "year_stem" in bazi
+        assert "day_pillar" in bazi
+        assert "hour_pillar" in bazi
+
+    def test_year_stem_branch(self):
+        """Test year stem and branch calculation."""
+        from astro.shensha import get_year_stem, get_year_branch
+        # 1984 = 甲子
+        assert get_year_stem(1984) == 0   # 甲
+        assert get_year_branch(1984) == 0  # 子
+        # 2024 = 甲辰
+        assert get_year_stem(2024) == 0   # 甲
+        assert get_year_branch(2024) == 4  # 辰
+
+    def test_twelve_life_stages(self):
+        """Test twelve life stages calculation."""
+        from astro.shensha import compute_twelve_life_stages
+        stages = compute_twelve_life_stages(0)  # 甲: 亥起順
+        assert stages[11] == "長生"  # 亥
+        assert stages[0] == "沐浴"   # 子
+
+
+# ============================================================
+# 年限大運 (Dasha) Tests
+# ============================================================
+
+class TestQizhengDasha:
+    """Tests for the planetary period/dasha module."""
+
+    def test_import(self):
+        from astro.qizheng_dasha import compute_dasha, DashaResult
+        assert callable(compute_dasha)
+
+    def test_compute_dasha_returns_12_periods(self):
+        from astro.qizheng_dasha import compute_dasha
+        from astro.calculator import compute_chart
+        chart = compute_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=22.3193, longitude=114.1694,
+            location_name="Hong Kong", gender="male",
+        )
+        result = compute_dasha(
+            birth_year=1990,
+            ming_gong_branch=chart.ming_gong_branch,
+            gender="male",
+            houses=chart.houses,
+            current_year=2026,
+        )
+        assert len(result.periods) == 12
+
+    def test_dasha_ages_are_contiguous(self):
+        """Ages should cover continuously from 0."""
+        from astro.qizheng_dasha import compute_dasha
+        from astro.calculator import compute_chart
+        chart = compute_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=22.3193, longitude=114.1694,
+            location_name="Hong Kong", gender="male",
+        )
+        result = compute_dasha(
+            birth_year=1990,
+            ming_gong_branch=chart.ming_gong_branch,
+            gender="male",
+            houses=chart.houses,
+            current_year=2026,
+        )
+        assert result.periods[0].start_age == 0
+        for i in range(1, len(result.periods)):
+            assert result.periods[i].start_age == result.periods[i - 1].end_age + 1
+
+    def test_dasha_current_period(self):
+        """Current period should be correctly identified."""
+        from astro.qizheng_dasha import compute_dasha
+        from astro.calculator import compute_chart
+        chart = compute_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=22.3193, longitude=114.1694,
+            location_name="Hong Kong", gender="male",
+        )
+        result = compute_dasha(
+            birth_year=1990,
+            ming_gong_branch=chart.ming_gong_branch,
+            gender="male",
+            houses=chart.houses,
+            current_year=2026,
+        )
+        assert result.current_age == 36
+        assert result.current_period_idx >= 0
+        p = result.periods[result.current_period_idx]
+        assert p.start_age <= 36 <= p.end_age
+
+    def test_dasha_flow_year(self):
+        """Flow year branch should be valid."""
+        from astro.qizheng_dasha import compute_dasha
+        from astro.calculator import compute_chart
+        chart = compute_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=22.3193, longitude=114.1694,
+            location_name="Hong Kong", gender="male",
+        )
+        result = compute_dasha(
+            birth_year=1990,
+            ming_gong_branch=chart.ming_gong_branch,
+            gender="male",
+            houses=chart.houses,
+            current_year=2026,
+        )
+        # 2026 = 丙午 → branch = (2026 - 4) % 12 = 2022 % 12 = 6 (午)
+        assert result.flow_year_branch == 6
+
+
+# ============================================================
+# 流時對盤 (Transit) Tests
+# ============================================================
+
+class TestQizhengTransit:
+    """Tests for the transit chart module."""
+
+    def test_import(self):
+        from astro.qizheng_transit import compute_transit, TransitData
+        assert callable(compute_transit)
+
+    def test_compute_transit_returns_11_planets(self):
+        from astro.qizheng_transit import compute_transit
+        result = compute_transit(
+            year=2026, month=4, day=10,
+            hour=10, minute=30, timezone=8.0,
+        )
+        assert len(result.planets) == 11  # 7 governors + 4 remainders
+
+    def test_transit_planets_have_valid_longitudes(self):
+        from astro.qizheng_transit import compute_transit
+        result = compute_transit(
+            year=2026, month=4, day=10,
+            hour=10, minute=30, timezone=8.0,
+        )
+        for p in result.planets:
+            assert 0 <= p.longitude < 360, f"{p.name} longitude out of range: {p.longitude}"
+
+    def test_transit_planet_names(self):
+        from astro.qizheng_transit import compute_transit
+        result = compute_transit(
+            year=2026, month=4, day=10,
+            hour=10, minute=30, timezone=8.0,
+        )
+        names = [p.name for p in result.planets]
+        assert "太陽" in names
+        assert "太陰" in names
+        assert "羅睺" in names
+        assert "計都" in names
+
+    def test_compute_transit_now(self):
+        from astro.qizheng_transit import compute_transit_now
+        result = compute_transit_now(timezone=8.0)
+        assert result is not None
+        assert len(result.planets) == 11
