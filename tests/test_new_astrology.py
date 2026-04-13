@@ -2714,3 +2714,174 @@ class TestZhangguoStarReadings:
         assert isinstance(r.branch, str)
         assert isinstance(r.description, str)
         assert isinstance(r.note, str)
+
+
+# ============================================================
+# Greek Horoscope SVG (Hellenistic θέμα Chart)
+# ============================================================
+
+class TestGreekHoroscopeSVG:
+    """Tests for Greek horoscope SVG chart generation."""
+
+    @pytest.fixture
+    def h_chart(self):
+        from astro.western import compute_western_chart
+        from astro.hellenistic import compute_hellenistic_chart
+        w = compute_western_chart(
+            year=1990, month=6, day=15,
+            hour=14, minute=30, timezone=8.0,
+            latitude=22.3, longitude=114.2,
+            location_name="Hong Kong",
+        )
+        return compute_hellenistic_chart(w, birth_year=1990, current_year=2026)
+
+    def test_svg_is_valid_markup(self, h_chart):
+        """SVG output is well-formed with opening and closing tags."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(
+            h_chart, year=1990, month=6, day=15,
+            hour=14, minute=30, tz=8.0, location="Hong Kong",
+        )
+        assert "<svg" in svg
+        assert "</svg>" in svg
+        assert 'xmlns="http://www.w3.org/2000/svg"' in svg
+
+    def test_svg_contains_all_zodiac_glyphs(self, h_chart):
+        """All 12 zodiac sign glyphs appear in the SVG."""
+        from astro.hellenistic import build_greek_horoscope_svg, ZODIAC_GLYPHS
+        svg = build_greek_horoscope_svg(h_chart)
+        for glyph in ZODIAC_GLYPHS:
+            assert glyph in svg, f"Missing zodiac glyph: {glyph}"
+
+    def test_svg_contains_all_house_numbers(self, h_chart):
+        """All 12 Roman numeral house numbers appear."""
+        from astro.hellenistic import build_greek_horoscope_svg, HOUSE_ROMAN
+        svg = build_greek_horoscope_svg(h_chart)
+        for roman in HOUSE_ROMAN:
+            assert roman in svg, f"Missing house number: {roman}"
+
+    def test_svg_contains_cardinal_labels(self, h_chart):
+        """ASC, MC, DESC, IC labels and their Greek names appear."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(h_chart)
+        for label in ["ASC", "MC", "DESC", "IC"]:
+            assert label in svg
+        for greek in ["Ὡροσκόπος", "Μεσουράνημα", "Δύσις", "Ὑπόγειον"]:
+            assert greek in svg
+
+    def test_svg_contains_thema_title(self, h_chart):
+        """Centre shows ΘΕΜΑ title."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(h_chart)
+        assert "ΘΕΜΑ" in svg
+
+    def test_svg_contains_planet_glyphs(self, h_chart):
+        """Planet glyphs for Sun and Moon appear."""
+        from astro.hellenistic import build_greek_horoscope_svg, PLANET_GLYPHS
+        svg = build_greek_horoscope_svg(h_chart)
+        assert PLANET_GLYPHS["Sun"] in svg
+        assert PLANET_GLYPHS["Moon"] in svg
+
+    def test_svg_contains_birth_info(self, h_chart):
+        """Birth date/time/location appear when provided."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(
+            h_chart, year=1990, month=6, day=15,
+            hour=14, minute=30, tz=8.0, location="Hong Kong",
+        )
+        assert "1990-06-15" in svg
+        assert "14:30" in svg
+        assert "Hong Kong" in svg
+
+    def test_svg_contains_sect_info(self, h_chart):
+        """Day/Night sect indicator appears."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(h_chart)
+        assert "Day" in svg or "Night" in svg
+
+    def test_svg_minimal_args(self, h_chart):
+        """SVG generates correctly with only the chart (no birth info)."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(h_chart)
+        assert "<svg" in svg
+        assert "</svg>" in svg
+        assert "None" not in svg
+
+    def test_svg_contains_greek_sign_names(self, h_chart):
+        """Greek zodiac sign names appear."""
+        from astro.hellenistic import build_greek_horoscope_svg, ZODIAC_GREEK
+        svg = build_greek_horoscope_svg(h_chart)
+        for name in ZODIAC_GREEK:
+            assert name in svg, f"Missing Greek sign name: {name}"
+
+    def test_ray_to_square_cardinal(self):
+        """Ray-to-square hits correct edges for cardinal directions."""
+        from astro.hellenistic import _ray_to_square
+        cx, cy, half = 300, 300, 250
+        x, y = _ray_to_square(cx, cy, half, 0)
+        assert abs(x - (cx + half)) < 1
+        assert abs(y - cy) < 1
+        x, y = _ray_to_square(cx, cy, half, 180)
+        assert abs(x - (cx - half)) < 1
+        assert abs(y - cy) < 1
+        x, y = _ray_to_square(cx, cy, half, 90)
+        assert abs(x - cx) < 1
+        assert abs(y - (cy + half)) < 1
+        x, y = _ray_to_square(cx, cy, half, 270)
+        assert abs(x - cx) < 1
+        assert abs(y - (cy - half)) < 1
+
+    def test_ray_to_square_corners(self):
+        """Ray-to-square hits corners at 45° multiples."""
+        from astro.hellenistic import _ray_to_square
+        cx, cy, half = 300, 300, 250
+        x, y = _ray_to_square(cx, cy, half, 45)
+        assert abs(x - (cx + half)) < 1
+        assert abs(y - (cy + half)) < 1
+        x, y = _ray_to_square(cx, cy, half, 135)
+        assert abs(x - (cx - half)) < 1
+        assert abs(y - (cy + half)) < 1
+        x, y = _ray_to_square(cx, cy, half, 225)
+        assert abs(x - (cx - half)) < 1
+        assert abs(y - (cy - half)) < 1
+        x, y = _ray_to_square(cx, cy, half, 315)
+        assert abs(x - (cx + half)) < 1
+        assert abs(y - (cy - half)) < 1
+
+    def test_svg_contains_lot_markers(self, h_chart):
+        """Lots of Fortune/Spirit markers appear in the SVG."""
+        from astro.hellenistic import build_greek_horoscope_svg
+        svg = build_greek_horoscope_svg(h_chart)
+        assert svg.count('fill-opacity="0.2"') > 0
+
+    def test_svg_different_charts(self):
+        """SVG generates for a night chart with different ASC sign."""
+        from astro.western import compute_western_chart
+        from astro.hellenistic import compute_hellenistic_chart, build_greek_horoscope_svg
+        w2 = compute_western_chart(
+            year=2000, month=12, day=21,
+            hour=23, minute=0, timezone=0.0,
+            latitude=51.5, longitude=-0.1,
+            location_name="London",
+        )
+        h2 = compute_hellenistic_chart(w2, birth_year=2000, current_year=2026)
+        svg = build_greek_horoscope_svg(h2)
+        assert "<svg" in svg
+        assert "Night" in svg
+
+    def test_constants_integrity(self):
+        """Verify all Greek horoscope constants have correct lengths."""
+        from astro.hellenistic import (
+            ZODIAC_GLYPHS, ZODIAC_GREEK, PLANET_GLYPHS,
+            PLANET_COLORS_GREEK, ELEMENT_OF_SIGN, ELEMENT_COLORS,
+            HOUSE_ROMAN, TOPOS_GREEK, TOPOS_CN,
+        )
+        assert len(ZODIAC_GLYPHS) == 12
+        assert len(ZODIAC_GREEK) == 12
+        assert len(PLANET_GLYPHS) == 7
+        assert len(PLANET_COLORS_GREEK) == 7
+        assert len(ELEMENT_OF_SIGN) == 12
+        assert len(ELEMENT_COLORS) == 4
+        assert len(HOUSE_ROMAN) == 12
+        assert len(TOPOS_GREEK) == 12
+        assert len(TOPOS_CN) == 12

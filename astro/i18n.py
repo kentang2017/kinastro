@@ -761,6 +761,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "en": "**Hellenistic Astrology**\n\nThe Greco-Roman tradition featuring Greek Lots, Egyptian Bounds, Annual Profections, Zodiacal Releasing, and Planetary Condition scoring.",
     },
     "spinner_hellenistic": {"zh": "計算希臘占星盤中...", "en": "Computing Hellenistic chart…"},
+    "hellen_subtab_chart": {"zh": "星盤圖", "en": "Chart"},
     "hellen_subtab_natal": {"zh": "本命盤", "en": "Natal"},
     "hellen_subtab_profections": {"zh": "年限推進", "en": "Profections"},
     "hellen_subtab_zr": {"zh": "黃道釋放", "en": "Zodiacal Releasing"},
