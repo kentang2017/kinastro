@@ -1122,15 +1122,21 @@ elif _selected_system == "tab_chinstar":
             _p = st.session_state["_calc_params"]
             _cs_jd = _swe_cs.julday(
                 _p["year"], _p["month"], _p["day"],
-                _p["hour"] + _p["minute"] / 60.0 - _p["timezone"] / 24.0,
+                _p["hour"] + _p["minute"] / 60.0 - _p["timezone"],
             )
             _cs_ly, _cs_lm, _cs_ld, _cs_leap = _cs_solar_to_lunar(_cs_jd)
             _chinstar_year = _cs_ly
             _chinstar_month = _cs_lm
             _chinstar_day = _cs_ld
             _chinstar_hour = _p["hour"]
+            _cs_branch_idx = ((int(_chinstar_hour) + 1) // 2) % 12
+            _cs_branches_list = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+            _cs_hour_branch = _cs_branches_list[_cs_branch_idx]
             st.info(
-                t("chinstar_auto_result").format(year=_cs_ly, month=_cs_lm, day=_cs_ld)
+                t("chinstar_auto_result").format(
+                    year=_cs_ly, month=_cs_lm, day=_cs_ld,
+                    hour=_cs_hour_branch,
+                )
                 + (t("chinstar_leap_month") if _cs_leap else "")
             )
             _auto_ok = True
