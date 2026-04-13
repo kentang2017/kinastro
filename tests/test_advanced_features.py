@@ -546,6 +546,25 @@ class TestExport:
         header = csv_str.strip().split("\n")[0].lower()
         assert "name" in header or "planet" in header
 
+    def test_generate_chart_pdf_cjk_text(self):
+        """PDF generation must not crash on CJK text (latin-1 safe)."""
+        from astro.export import generate_chart_pdf
+        chart_data = {
+            "system": "七政四餘",
+            "datetime": "2026-04-13",
+            "location": "台北市大安區",
+            "ascendant": "白羊座",
+            "planets": [
+                {"name": "太陽", "sign": "白羊座", "degree": 23.5, "retrograde": False},
+            ],
+            "extra_sections": [
+                {"title": "神煞分析", "content": "天乙貴人在子位"},
+            ],
+        }
+        pdf_bytes = generate_chart_pdf(chart_data)
+        assert isinstance(pdf_bytes, (bytes, bytearray))
+        assert len(pdf_bytes) > 0
+
 
 # ══════════════════════════════════════════════════════════════════════
 # 13. session_store
