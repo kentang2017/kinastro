@@ -63,17 +63,55 @@ FONT_FAMILY = "Arial, Helvetica, sans-serif"
 
 # ── Mobile responsive CSS ───────────────────────────────────────
 MOBILE_CSS = """<style>
+/* ── Global: prevent horizontal scroll ──────────────── */
+.stMainBlockContainer, .stMain, [data-testid="stAppViewBlockContainer"] {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
 /* ── Mobile ─────────────────────────────────────────── */
 @media (max-width: 768px) {
+    /* Tabs: wrap onto multiple lines */
     .stTabs [data-baseweb="tab-list"] { flex-wrap: wrap; gap: 2px; }
     .stTabs [data-baseweb="tab"] { font-size: 0.8rem; padding: 3px 6px; min-height: 32px; }
-    section[data-testid="stSidebar"] { min-width: 240px; }
-    .stDataFrame { font-size: 0.78rem; }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] { min-width: 200px; }
+
+    /* Columns: stack vertically on mobile
+       Note: data-testid selectors are Streamlit internal; verify on upgrades. */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* DataFrames: allow horizontal scroll within container */
+    .stDataFrame { font-size: 0.78rem; overflow-x: auto; }
     .stMetric { padding: 6px 8px !important; }
     .stExpander summary { font-size: 0.85rem; }
+
+    /* Headings */
     h1 { font-size: 1.4rem !important; }
     h2 { font-size: 1.15rem !important; }
     h3 { font-size: 1.0rem !important; }
+
+    /* HTML tables: constrain width and allow cell shrink */
+    table {
+        max-width: 100%;
+    }
+    table td, table th {
+        min-width: auto !important;
+        word-break: break-word;
+    }
+
+    /* SVG charts: fit within viewport */
+    svg {
+        max-width: 100% !important;
+        height: auto !important;
+    }
 }
 /* ── Tablet ─────────────────────────────────────────── */
 @media (min-width: 769px) and (max-width: 1024px) {

@@ -564,7 +564,7 @@ def _render_house_grid(chart):
 
     cell_style = (
         "border:1px solid #555; padding:6px 4px; text-align:center; "
-        "vertical-align:top; font-size:11px; min-width:90px;"
+        "vertical-align:top; font-size:11px;"
     )
     asc_cell = cell_style + " background:#3d3010;"
     mc_cell = cell_style + " background:#1a2a3d;"
@@ -579,6 +579,7 @@ def _render_house_grid(chart):
 
     sect_icon = "☀️" if chart.is_day_chart else "🌙"
     html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:collapse; margin:auto; '
         'width:100%; max-width:600px;">'
         '<caption style="caption-side:top; font-size:14px; padding:4px;">'
@@ -653,7 +654,7 @@ def _render_house_grid(chart):
                 )
             col_idx += 1
         html += "</tr>"
-    html += "</table>"
+    html += "</table></div>"
     st.markdown(html, unsafe_allow_html=True)
     st.caption(
         "🔺 = House 1 (上升點 Ascendant)　"

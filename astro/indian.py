@@ -357,26 +357,6 @@ def compute_vedic_chart(year, month, day, hour, minute, timezone,
 
 def render_vedic_chart(chart):
     """渲染完整的印度占星排盤"""
-    # 注入手機版響應式 CSS：在小螢幕上將雙欄改為單欄堆疊，避免橫向捲動。
-    # 此 CSS 套用於整個頁面所有欄位，使各排盤分頁在手機上均能正確顯示。
-    # 注意：data-testid 屬性為 Streamlit 內部實作細節，升級 Streamlit 時請確認仍有效。
-    st.markdown(
-        """
-        <style>
-        @media (max-width: 768px) {
-            [data-testid="stHorizontalBlock"] {
-                flex-wrap: wrap !important;
-            }
-            [data-testid="stHorizontalBlock"] > [data-testid="column"] {
-                width: 100% !important;
-                flex: 1 1 100% !important;
-                min-width: 100% !important;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
     _render_info(chart)
     st.divider()
     col1, col2 = st.columns(2)

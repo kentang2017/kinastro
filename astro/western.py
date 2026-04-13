@@ -616,7 +616,7 @@ def _render_wheel_chart(chart):
 
     cell_style = (
         "border:1px solid #444; padding:6px 4px; text-align:center; "
-        "vertical-align:top; font-size:11px; min-width:90px;"
+        "vertical-align:top; font-size:11px;"
     )
     asc_cell = cell_style + " background:#3d3010;"
     mc_cell = cell_style + " background:#1a2a3d;"
@@ -632,6 +632,7 @@ def _render_wheel_chart(chart):
     mc_info = ZODIAC_SIGNS[mc_idx]
 
     html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:560px;">'
         '<caption style="caption-side:top; font-size:14px; padding:4px;">'
         '<b>Western Wheel Chart</b> — '
@@ -680,7 +681,7 @@ def _render_wheel_chart(chart):
                     '</td>'
                 )
         html += "</tr>"
-    html += "</table>"
+    html += "</table></div>"
     st.markdown(html, unsafe_allow_html=True)
     st.caption("🔺 = House 1 (Ascendant)   ⬡ = House 10 (Midheaven)")
 
