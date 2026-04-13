@@ -204,36 +204,68 @@ def chinese_chart_to_dict(chart):
             "planets": planets, "houses": []}
 
 
+def generate_share_url(chart_data):
+    """Generate a share URL containing chart parameters as query string.
+
+    The URL encodes the basic chart parameters so others can reproduce the
+    same chart.  It uses base-64 encoded JSON to keep the URL compact.
+    """
+    import base64
+    import json as _json
+    params = {
+        "s": chart_data.get("system", ""),
+        "d": chart_data.get("datetime", ""),
+        "l": chart_data.get("location", ""),
+        "a": chart_data.get("ascendant", ""),
+    }
+    payload = base64.urlsafe_b64encode(
+        _json.dumps(params, ensure_ascii=False).encode("utf-8")
+    ).decode("ascii")
+    return f"?chart={payload}"
+
+
 def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
-    """Render download buttons in Streamlit (TXT, CSV, PDF, optional PNG)."""
+    """Render one-click export row: TXT · CSV · PDF · PNG · Share link."""
     import streamlit as st
 
-    n_cols = 4 if svg_string else 3
-    cols = st.columns(n_cols)
+    st.markdown('<div class="export-btn-row">', unsafe_allow_html=True)
+    cols = st.columns(5 if svg_string else 4)
+
     with cols[0]:
         txt = generate_chart_summary(chart_data)
-        st.download_button("📄 Text Summary", data=txt,
+        st.download_button("📄 TXT", data=txt,
                           file_name="chart_summary.txt",
                           mime="text/plain", key=f"{key_prefix}_txt")
     with cols[1]:
         csv_str = generate_planet_csv(chart_data.get("planets", []))
-        st.download_button("📊 Planet CSV", data=csv_str,
+        st.download_button("📊 CSV", data=csv_str,
                           file_name="planet_data.csv",
                           mime="text/csv", key=f"{key_prefix}_csv")
     with cols[2]:
         try:
             pdf_bytes = generate_chart_pdf(chart_data)
-            st.download_button("📑 PDF Report", data=pdf_bytes,
+            st.download_button("📑 PDF", data=pdf_bytes,
                               file_name="chart_report.pdf",
                               mime="application/pdf", key=f"{key_prefix}_pdf")
         except Exception:
-            st.caption("PDF export unavailable (fpdf2 missing or error)")
-    if svg_string and n_cols == 4:
-        with cols[3]:
+            st.caption("PDF unavailable")
+
+    _png_col_idx = 3 if svg_string else None
+    _share_col_idx = 4 if svg_string else 3
+
+    if svg_string:
+        with cols[_png_col_idx]:
             png_bytes = svg_to_png(svg_string)
             if png_bytes:
-                st.download_button("🖼️ PNG Image", data=png_bytes,
+                st.download_button("🖼️ PNG", data=png_bytes,
                                   file_name="chart_image.png",
                                   mime="image/png", key=f"{key_prefix}_png")
             else:
-                st.caption("PNG export unavailable")
+                st.caption("PNG unavailable")
+
+    with cols[_share_col_idx]:
+        share_url = generate_share_url(chart_data)
+        st.code(share_url, language=None)
+        st.caption("📋 Share link")
+
+    st.markdown('</div>', unsafe_allow_html=True)

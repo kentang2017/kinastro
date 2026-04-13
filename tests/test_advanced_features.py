@@ -602,3 +602,233 @@ class TestQizhengElectional:
         for criteria in ("marriage", "travel", "business"):
             result = find_auspicious_dates(2024, 6, 1, 2024, 6, 10, TZ, criteria)
             assert len(result.rated_dates) > 0
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 14. Ptolemy Dignities
+# ══════════════════════════════════════════════════════════════════════
+class TestPtolemyDignities:
+    def test_import(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        assert PtolemyDignityCalculator is not None
+
+    def test_sun_in_aries_exaltation(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.SUN, "Aries", 19.0, is_day_chart=True)
+        types = [d[0] for d in digs]
+        assert DignityType.EXALTATION in types
+
+    def test_sun_in_aries_triplicity_day(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.SUN, "Aries", 5.0, is_day_chart=True)
+        types = [d[0] for d in digs]
+        assert DignityType.TRIPLICITY in types
+
+    def test_mars_domicile_in_aries(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.MARS, "Aries", 10.0)
+        types = [d[0] for d in digs]
+        assert DignityType.DOMICILE in types
+
+    def test_venus_detriment_in_aries(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.VENUS, "Aries", 10.0)
+        types = [d[0] for d in digs]
+        assert DignityType.DETRIMENT in types
+
+    def test_saturn_fall_in_aries(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.SATURN, "Aries", 10.0)
+        types = [d[0] for d in digs]
+        assert DignityType.FALL in types
+
+    def test_peregrine_planet(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.MOON, "Aries", 10.0)
+        types = [d[0] for d in digs]
+        assert DignityType.PEREGRINE in types
+
+    def test_score_calculation(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.SUN, "Aries", 19.0, is_day_chart=True)
+        score = calc.calculate_total_score(digs)
+        assert score > 0
+
+    def test_dignity_to_chinese(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, dignity_to_chinese
+        calc = PtolemyDignityCalculator()
+        digs = calc.get_dignities(Planet.SUN, "Aries", 19.0)
+        text = dignity_to_chinese(digs)
+        assert isinstance(text, str)
+        assert len(text) > 0
+
+    def test_all_signs_covered(self):
+        from astro.ptolemy_dignities import PTOLEMY_DIGNITIES
+        signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+                 "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
+        for s in signs:
+            assert s in PTOLEMY_DIGNITIES
+
+    def test_terms_all_signs(self):
+        from astro.ptolemy_dignities import PTOLEMAIC_TERMS
+        assert len(PTOLEMAIC_TERMS) == 12
+
+    def test_term_ruler_coverage(self):
+        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet
+        calc = PtolemyDignityCalculator()
+        # Every degree in every sign should have a term ruler
+        for sign in ["Aries", "Taurus", "Gemini"]:
+            for deg in range(0, 30):
+                ruler = calc._get_term_ruler(sign, float(deg))
+                assert ruler is not None
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 15. Ptolemy Centiloquy
+# ══════════════════════════════════════════════════════════════════════
+class TestPtolemyCentiloquy:
+    def test_import(self):
+        from astro.classic.ptolemy_centiloquy import CENTILOQUY
+        assert len(CENTILOQUY) == 100
+
+    def test_all_ids(self):
+        from astro.classic.ptolemy_centiloquy import CENTILOQUY
+        ids = [a["id"] for a in CENTILOQUY]
+        assert ids == list(range(1, 101))
+
+    def test_get_random_aphorism(self):
+        from astro.classic.ptolemy_centiloquy import get_random_aphorism
+        a = get_random_aphorism()
+        assert "id" in a
+        assert "text" in a
+        assert 1 <= a["id"] <= 100
+
+    def test_search_aphorism(self):
+        from astro.classic.ptolemy_centiloquy import search_aphorism
+        results = search_aphorism("月亮")
+        assert len(results) > 0
+        for r in results:
+            assert "月亮" in r["text"]
+
+    def test_search_no_result(self):
+        from astro.classic.ptolemy_centiloquy import search_aphorism
+        results = search_aphorism("XYZNOTEXIST")
+        assert len(results) == 0
+
+    def test_get_by_id(self):
+        from astro.classic.ptolemy_centiloquy import get_aphorism_by_id
+        a = get_aphorism_by_id(1)
+        assert a is not None
+        assert a["id"] == 1
+
+    def test_get_by_invalid_id(self):
+        from astro.classic.ptolemy_centiloquy import get_aphorism_by_id
+        assert get_aphorism_by_id(999) is None
+
+    def test_get_all(self):
+        from astro.classic.ptolemy_centiloquy import get_all_aphorisms
+        all_a = get_all_aphorisms()
+        assert len(all_a) == 100
+
+    def test_format_aphorism(self):
+        from astro.classic.ptolemy_centiloquy import format_aphorism
+        result = format_aphorism({"id": 1, "text": "Test text"})
+        assert "第 1 條" in result
+        assert "Test text" in result
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 16. Export share URL
+# ══════════════════════════════════════════════════════════════════════
+class TestExportShareURL:
+    def test_generate_share_url(self):
+        from astro.export import generate_share_url
+        url = generate_share_url({
+            "system": "Western", "datetime": "1990-01-01",
+            "location": "Hong Kong", "ascendant": "Aries",
+        })
+        assert url.startswith("?chart=")
+
+    def test_share_url_decodable(self):
+        import base64, json
+        from astro.export import generate_share_url
+        url = generate_share_url({
+            "system": "Western", "datetime": "1990-01-01",
+            "location": "Hong Kong", "ascendant": "Aries",
+        })
+        payload = url.split("=", 1)[1]
+        decoded = json.loads(base64.urlsafe_b64decode(payload))
+        assert decoded["s"] == "Western"
+        assert decoded["l"] == "Hong Kong"
+
+    def test_share_url_cjk(self):
+        import base64, json
+        from astro.export import generate_share_url
+        url = generate_share_url({
+            "system": "七政四餘", "datetime": "1990-01-01",
+            "location": "台北", "ascendant": "白羊",
+        })
+        payload = url.split("=", 1)[1]
+        decoded = json.loads(base64.urlsafe_b64decode(payload))
+        assert decoded["s"] == "七政四餘"
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 17. FastAPI server imports
+# ══════════════════════════════════════════════════════════════════════
+class TestApiServer:
+    def test_import(self):
+        import api_server
+        assert hasattr(api_server, "app")
+
+    def test_health_endpoint_exists(self):
+        import api_server
+        routes = [r.path for r in api_server.app.routes]
+        assert "/api/health" in routes
+
+    def test_systems_endpoint_exists(self):
+        import api_server
+        routes = [r.path for r in api_server.app.routes]
+        assert "/api/systems" in routes
+
+    def test_compute_endpoint_exists(self):
+        import api_server
+        routes = [r.path for r in api_server.app.routes]
+        assert "/api/compute" in routes
+
+    def test_individual_system_endpoints(self):
+        import api_server
+        routes = [r.path for r in api_server.app.routes]
+        expected = ["/api/chinese", "/api/western", "/api/vedic",
+                    "/api/thai", "/api/kabbalistic", "/api/arabic",
+                    "/api/maya", "/api/ziwei", "/api/mahabote",
+                    "/api/decans", "/api/nadi", "/api/zurkhai",
+                    "/api/hellenistic"]
+        for ep in expected:
+            assert ep in routes, f"Missing endpoint: {ep}"
+
+    def test_birth_params_model(self):
+        from api_server import BirthParams
+        params = BirthParams(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=22.3, longitude=114.2,
+            location_name="Test",
+        )
+        assert params.year == 1990
+
+    def test_serialize_helper(self):
+        from api_server import _make_serializable
+        from dataclasses import dataclass
+        @dataclass
+        class Dummy:
+            x: int = 1
+            y: str = "test"
+        result = _make_serializable(Dummy())
+        assert result == {"x": 1, "y": "test"}

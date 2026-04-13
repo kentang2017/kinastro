@@ -6,9 +6,10 @@ Multi-System Astrology Chart Application
 卡巴拉占星、阿拉伯占星（含 Picatrix 星體魔法、太陽知識大全 Shams al-Maʻārif）、
 瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
 納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、希臘占星（Hellenistic）
-共十四種體系 + 跨體系比較，使用 pyswisseph 進行天文計算。
+共十四種體系，使用 pyswisseph 進行天文計算。
 """
 
+import os
 import streamlit as st
 from datetime import datetime, date, time
 
@@ -55,7 +56,7 @@ from astro.decans import compute_decan_chart, render_decan_chart, render_decan_b
 from astro.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
 from astro.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
-from astro.cross_compare import compute_cross_comparison, render_cross_comparison
+from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
 from astro.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.asteroids import compute_asteroids
 from astro.export import render_download_buttons, western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict
@@ -107,6 +108,24 @@ def t(key: str) -> str:
     if entry is None:
         return key
     return entry.get(lang, entry.get("zh", key))
+
+
+def _render_reference_library():
+    """Render the Arabic astrology reference library sub-tab content."""
+    import os
+    _ref_dir = os.path.join(os.path.dirname(__file__), "astro", "reference")
+    _ref_files = [
+        ("astrology_fortune.md", "占星與財富 / Astrology & Fortune"),
+        ("astrology_magic.md", "占星魔法 / Astrological Magic"),
+        ("astrology_military.md", "軍事占星 / Military Astrology"),
+    ]
+    for _fname, _title in _ref_files:
+        _fpath = os.path.join(_ref_dir, _fname)
+        if os.path.exists(_fpath):
+            with open(_fpath, "r", encoding="utf-8") as _f:
+                _content = _f.read()
+            with st.expander(_title, expanded=False):
+                st.markdown(_content)
 
 
 st.title(t("app_title"))
@@ -233,11 +252,11 @@ with st.sidebar:
 # ============================================================
 # 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai, tab_hellenistic, tab_cross_compare = st.tabs(
+tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai, tab_hellenistic = st.tabs(
     [t("tab_chinese"), t("tab_ziwei"), t("tab_western"), t("tab_indian"),
      t("tab_sukkayodo"), t("tab_thai"), t("tab_kabbalistic"), t("tab_arabic"), t("tab_maya"),
      t("tab_mahabote"), t("tab_decans"), t("tab_nadi"), t("tab_zurkhai"),
-     t("tab_hellenistic"), t("tab_cross_compare")]
+     t("tab_hellenistic")]
 )
 
 if calculate:
@@ -406,11 +425,12 @@ with tab_western:
                 w_params = dict(**_p, sidereal=sidereal_mode)
                 w_chart = compute_western_chart(**w_params)
 
-            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry = st.tabs([
+            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity = st.tabs([
                 t("western_subtab_natal"),
                 t("western_subtab_transit"),
                 t("western_subtab_return"),
                 t("western_subtab_synastry"),
+                t("western_subtab_dignity"),
             ])
 
             with _w_tab_natal:
@@ -531,6 +551,33 @@ with tab_western:
                         for _sa in syn.inter_aspects[:5]:
                             _reading = _sa.interpretation_cn if _lang == "zh" else _sa.interpretation_en
                             st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
+
+            with _w_tab_dignity:
+                st.subheader(t("western_subtab_dignity"))
+                _calc = PtolemyDignityCalculator()
+                _PLANET_MAP = {"Sun": PtolPlanet.SUN, "Moon": PtolPlanet.MOON, "Mercury": PtolPlanet.MERCURY,
+                               "Venus": PtolPlanet.VENUS, "Mars": PtolPlanet.MARS, "Jupiter": PtolPlanet.JUPITER, "Saturn": PtolPlanet.SATURN}
+                _dignity_rows = []
+                for p in w_chart.planets:
+                    _pname = p.name.split("(")[0].strip().split()[0]
+                    _ptol = _PLANET_MAP.get(_pname)
+                    if _ptol:
+                        _sign = getattr(p, 'sign', '') or ''
+                        _sign_key = _sign.split()[0] if _sign else ''
+                        _degree = getattr(p, 'sign_degree', p.longitude % 30)
+                        _digs = _calc.get_dignities(_ptol, _sign_key, _degree, is_day_chart=True)
+                        _score = _calc.calculate_total_score(_digs)
+                        _dignity_rows.append({
+                            "Planet": f"{_pname} ({_ptol.value})",
+                            "Sign": f"{_sign_key} ({SIGN_NAMES.get(_sign_key, '')})",
+                            "Degree": f"{_degree:.2f}°",
+                            "Dignities": dignity_to_chinese(_digs),
+                            "Score": _score,
+                        })
+                if _dignity_rows:
+                    st.dataframe(_dignity_rows, width="stretch")
+                else:
+                    st.info("No traditional planet dignity data available.")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
@@ -711,10 +758,11 @@ with tab_arabic:
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
-            arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams = st.tabs([
+            arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref = st.tabs([
                 t("arabic_subtab_chart"),
                 t("arabic_subtab_picatrix"),
                 t("arabic_subtab_shams"),
+                t("arabic_subtab_reference"),
             ])
 
             with arabic_subtab_chart:
@@ -786,14 +834,19 @@ with tab_arabic:
                 render_shams_chart(chart_planets=_shams_planets,
                                    birth_sign_idx=_shams_sun_idx)
 
+            with arabic_subtab_ref:
+                st.subheader(t("arabic_subtab_reference"))
+                _render_reference_library()
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
     else:
-        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams = st.tabs([
+        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref = st.tabs([
             t("arabic_subtab_chart"),
             t("arabic_subtab_picatrix"),
             t("arabic_subtab_shams"),
+            t("arabic_subtab_reference"),
         ])
 
         with arabic_subtab_chart:
@@ -832,6 +885,10 @@ with tab_arabic:
             st.caption(t("shams_source"))
             st.markdown(t("desc_shams"))
             render_shams_browse()
+
+        with arabic_subtab_ref:
+            st.subheader(t("arabic_subtab_reference"))
+            _render_reference_library()
 
 # --- 瑪雅占星 ---
 with tab_maya:
@@ -923,12 +980,13 @@ with tab_hellenistic:
                     birth_year=birth_date.year,
                     current_year=datetime.now().year,
                 )
-            _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots = st.tabs([
+            _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots, _h_tab_centiloquy = st.tabs([
                 t("hellen_subtab_chart"),
                 t("hellen_subtab_natal"),
                 t("hellen_subtab_profections"),
                 t("hellen_subtab_zr"),
                 t("hellen_subtab_lots"),
+                t("hellen_subtab_centiloquy"),
             ])
             with _h_tab_chart:
                 _greek_svg = build_greek_horoscope_svg(
@@ -977,29 +1035,28 @@ with tab_hellenistic:
                                   for l in _hellen_chart.lots],
                                  width="stretch")
 
+            with _h_tab_centiloquy:
+                st.subheader("托勒密《百論》 / Ptolemy's Centiloquy")
+                from astro.classic.ptolemy_centiloquy import get_random_aphorism, search_aphorism, get_all_aphorisms, format_aphorism
+                # Daily aphorism
+                st.info(format_aphorism(get_random_aphorism()))
+                # Search
+                _cent_query = st.text_input("🔍 搜尋關鍵字 / Search keyword", key="centiloquy_search")
+                if _cent_query:
+                    _results = search_aphorism(_cent_query)
+                    if _results:
+                        for _r in _results:
+                            st.markdown(format_aphorism(_r))
+                    else:
+                        st.warning("未找到匹配的格言 / No matching aphorisms found.")
+                else:
+                    for _a in get_all_aphorisms():
+                        with st.expander(f"第 {_a['id']} 條"):
+                            st.markdown(_a["text"])
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_hellenistic"))
-
-# --- 跨體系比較 (Cross-System Comparison) ---
-with tab_cross_compare:
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _g = st.session_state["_calc_gender"]
-            st.markdown(t("desc_cross_compare"))
-            with st.spinner(t("spinner_cross_compare")):
-                _cc_chart = compute_chart(**_p, gender=_g)
-                _cc_w = compute_western_chart(**_p)
-                _cc_v = compute_vedic_chart(**_p)
-                _cross = compute_cross_comparison(_cc_chart, _cc_w, _cc_v)
-            render_cross_comparison(_cross)
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_cross_compare"))

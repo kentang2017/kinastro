@@ -176,6 +176,7 @@ TRANSLATIONS = {
         "zh": "☪ 太陽知識大全",
         "en": "☪ Shams al-Maʻārif",
     },
+    "arabic_subtab_reference": {"zh": "古籍知識庫", "en": "Reference Library"},
     # ── Chinese (七政四餘) sub-tab labels ──────────────────────────────────────
     "ch_subtab_natal": {
         "zh": "🎯 本命盤",
@@ -766,20 +767,14 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "hellen_subtab_profections": {"zh": "年限推進", "en": "Profections"},
     "hellen_subtab_zr": {"zh": "黃道釋放", "en": "Zodiacal Releasing"},
     "hellen_subtab_lots": {"zh": "希臘點", "en": "Lots"},
-
-    # ── Cross-system comparison ─────────────────────────────
-    "tab_cross_compare": {"zh": "跨體系比較", "en": "Cross Compare"},
-    "desc_cross_compare": {
-        "zh": "**跨體系比較**\n\n在同一張出生圖中同時查看西洋、印度、中國三大體系的星位對比。",
-        "en": "**Cross-System Comparison**\n\nView planet positions side-by-side across Western, Vedic, and Chinese systems.",
-    },
-    "spinner_cross_compare": {"zh": "計算跨體系比較中...", "en": "Computing cross-system comparison…"},
+    "hellen_subtab_centiloquy": {"zh": "百論", "en": "Centiloquy"},
 
     # ── Western sub-tabs ────────────────────────────────────
     "western_subtab_natal": {"zh": "本命盤", "en": "Natal"},
     "western_subtab_transit": {"zh": "流年過運", "en": "Transits"},
     "western_subtab_return": {"zh": "返照盤", "en": "Solar Return"},
     "western_subtab_synastry": {"zh": "合盤", "en": "Synastry"},
+    "western_subtab_dignity": {"zh": "行星尊卑", "en": "Dignities"},
     "transit_target_date": {"zh": "過運日期", "en": "Transit Date"},
     "return_year_label": {"zh": "返照年份", "en": "Return Year"},
     "synastry_header": {"zh": "合盤比較", "en": "Synastry Comparison"},
