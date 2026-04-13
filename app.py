@@ -75,7 +75,7 @@ from astro.picatrix_mansions import (
     compute_moon_longitude,
 )
 from astro.shams_maarif import render_shams_browse, render_shams_chart
-from astro.world_map import render_world_map
+
 
 # ============================================================
 # 頁面設定
@@ -253,14 +253,12 @@ with st.sidebar:
     # ── Astrology system selector (dropdown in sidebar) ────────
     st.divider()
     _SYSTEM_KEYS = [
-        "home",
         "tab_chinese", "tab_ziwei", "tab_western", "tab_indian",
         "tab_sukkayodo", "tab_thai", "tab_kabbalistic", "tab_arabic",
         "tab_maya", "tab_mahabote", "tab_decans", "tab_nadi",
         "tab_zurkhai", "tab_hellenistic",
     ]
     _SYSTEM_LABELS = {
-        "home": t("sidebar_system_home"),
         "tab_chinese": t("tab_chinese"),
         "tab_ziwei": t("tab_ziwei"),
         "tab_western": t("tab_western"),
@@ -277,16 +275,11 @@ with st.sidebar:
         "tab_hellenistic": t("tab_hellenistic"),
     }
 
-    # Allow the world-map buttons to pre-select a system
-    _preselected = st.session_state.get("_selected_system", None)
-    if _preselected and _preselected in _SYSTEM_KEYS:
-        _default_idx = _SYSTEM_KEYS.index(_preselected)
-        # Clear after reading so the override is one-shot
-        del st.session_state["_selected_system"]
+    # Determine default index from session state
+    _current = st.session_state.get("_system_select", _SYSTEM_KEYS[0])
+    if _current in _SYSTEM_KEYS:
+        _default_idx = _SYSTEM_KEYS.index(_current)
     else:
-        _default_idx = int(st.session_state.get("_system_select", 0))
-
-    if _default_idx >= len(_SYSTEM_KEYS):
         _default_idx = 0
 
     _selected_system = st.selectbox(
@@ -316,14 +309,8 @@ if calculate:
 
 _is_calculated = st.session_state.get("_calculated", False)
 
-# ── Home page (world map) ──────────────────────────────────────
-if _selected_system == "home":
-    st.markdown(f"### {t('map_title')}")
-    st.caption(t("map_subtitle"))
-    render_world_map()
-
 # --- 七政四餘（中國） ---
-elif _selected_system == "tab_chinese":
+if _selected_system == "tab_chinese":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
