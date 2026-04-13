@@ -783,6 +783,18 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "chinstar_auto_result": {"zh": "換算結果：{year}年{month}月{day}日", "en": "Converted: {year}-{month}-{day}"},
     "chinstar_subtab_chart": {"zh": "起盤結果", "en": "Chart Result"},
     "chinstar_subtab_text": {"zh": "古籍全文", "en": "Classical Text"},
+    "chinstar_leap_month": {"zh": "（閏月）", "en": " (Leap Month)"},
+    "chinstar_auto_convert_failed": {"zh": "自動換算失敗，請手動輸入農曆日期：", "en": "Auto-conversion failed, please enter lunar date manually: "},
+    "chinstar_no_swallow": {"zh": "無吞啗關係", "en": "No swallow/bite relationship"},
+    "chinstar_text_not_found": {"zh": "古籍文本文件未找到", "en": "Classical text file not found"},
+    "chinstar_birth_info": {"zh": "**出生**：{year}年{month}月{day}日 {hour}時　{gender}命　{day_night}　{season}季　**三元**：{san_yuan}", "en": "**Birth**: {year}-{month}-{day} {hour}h　{gender}　{day_night}　{season}　**Three Cycles**: {san_yuan}"},
+    "chinstar_twelve_palaces_header": {"zh": "#### 十二宮排布（命宮起逆行）", "en": "#### Twelve Palaces (counter-clockwise from Life Palace)"},
+    "chinstar_derived_stars_header": {"zh": "#### 衍生星", "en": "#### Derived Stars"},
+    "chinstar_swallow_analysis_header": {"zh": "#### 吞啗 / 合戰分析", "en": "#### Swallow-Bite / Alliance-Battle Analysis"},
+    "chinstar_personality_header": {"zh": "#### 情性賦", "en": "#### Personality Verse"},
+    "chinstar_pattern_header": {"zh": "#### 格局：{grade}", "en": "#### Chart Pattern: {grade}"},
+    "chinstar_full_text_expander": {"zh": "📄 完整文字輸出", "en": "📄 Full Text Output"},
+    "chinstar_full_text_label": {"zh": "新刻劉伯溫萬化仙禽（全文）", "en": "WanHua XianQin Classical Text (Full)"},
 
     # ── Hellenistic Astrology ───────────────────────────────
     "tab_hellenistic": {"zh": "希臘占星", "en": "Hellenistic"},

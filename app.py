@@ -1131,11 +1131,11 @@ elif _selected_system == "tab_chinstar":
             _chinstar_hour = _p["hour"]
             st.info(
                 t("chinstar_auto_result").format(year=_cs_ly, month=_cs_lm, day=_cs_ld)
-                + ("（閏月）" if _cs_leap else "")
+                + (t("chinstar_leap_month") if _cs_leap else "")
             )
             _auto_ok = True
         except Exception as _cs_conv_e:
-            st.warning(f"自動換算失敗，請手動輸入農曆日期：{_cs_conv_e}")
+            st.warning(t("chinstar_auto_convert_failed") + str(_cs_conv_e))
 
     if not _auto_ok:
         _cs_col1, _cs_col2, _cs_col3 = st.columns(3)
@@ -1176,10 +1176,7 @@ elif _selected_system == "tab_chinstar":
 
             with _cs_tab_chart:
                 bi = _cs_chart["basic_info"]
-                st.markdown(
-                    f"**出生**：{bi['year']}年{bi['month']}月{bi['day']}日 "
-                    f"{bi['hour']}時　{bi['gender']}命　{bi['day_night']}　{bi['season']}季　**三元**：{bi['san_yuan']}"
-                )
+                st.markdown(t("chinstar_birth_info").format(**bi))
                 st.divider()
 
                 # 宮位
@@ -1189,7 +1186,7 @@ elif _selected_system == "tab_chinstar":
                 _cs_pcols[1].metric("命宮", p["ming_gong"]["branch"] + "宮")
                 _cs_pcols[2].metric("身宮", p["shen_gong"]["branch"] + "宮")
 
-                st.markdown("#### 十二宮排布（命宮起逆行）")
+                st.markdown(t("chinstar_twelve_palaces_header"))
                 _twelve = p["twelve"]
                 _twelve_rows = [{"宮位": k, "地支": v} for k, v in _twelve.items()]
                 st.dataframe(_twelve_rows, use_container_width=True, hide_index=True)
@@ -1202,34 +1199,34 @@ elif _selected_system == "tab_chinstar":
                 _cs_scols[1].metric("命星", s["ming_xing"])
                 _cs_scols[2].metric("身星", s["shen_xing"])
 
-                st.markdown("#### 衍生星")
+                st.markdown(t("chinstar_derived_stars_header"))
                 _derived_rows = [{"名稱": k, "禽星": v} for k, v in s["derived"].items()]
                 st.dataframe(_derived_rows, use_container_width=True, hide_index=True)
                 st.divider()
 
                 # 吞啗
-                st.markdown("#### 吞啗 / 合戰分析")
+                st.markdown(t("chinstar_swallow_analysis_header"))
                 _sw = _cs_chart["swallow_analysis"]
                 if _sw:
                     _sw_rows = [{"對照": k, "判斷": v} for k, v in _sw.items()]
                     st.dataframe(_sw_rows, use_container_width=True, hide_index=True)
                 else:
-                    st.info("無吞啗關係")
+                    st.info(t("chinstar_no_swallow"))
                 st.divider()
 
                 # 情性賦
-                st.markdown("#### 情性賦")
+                st.markdown(t("chinstar_personality_header"))
                 for _label, text in _cs_chart["personality"].items():
                     st.info(text)
                 st.divider()
 
                 # 格局
                 pat = _cs_chart["pattern"]
-                st.markdown(f"#### 格局：{pat['grade']}")
+                st.markdown(t("chinstar_pattern_header").format(grade=pat["grade"]))
                 st.write(pat["reason"])
 
                 # 完整文字輸出（可複製）
-                with st.expander("📄 完整文字輸出"):
+                with st.expander(t("chinstar_full_text_expander")):
                     st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
 
             with _cs_tab_text:
@@ -1241,9 +1238,9 @@ elif _selected_system == "tab_chinstar":
                 if _cs_os.path.exists(_txt_path):
                     with open(_txt_path, "r", encoding="utf-8") as _cs_f:
                         _cs_txt = _cs_f.read()
-                    st.text_area("新刻劉伯溫萬化仙禽（全文）", _cs_txt, height=600)
+                    st.text_area(t("chinstar_full_text_label"), _cs_txt, height=600)
                 else:
-                    st.warning("古籍文本文件未找到")
+                    st.warning(t("chinstar_text_not_found"))
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
