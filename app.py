@@ -1270,24 +1270,24 @@ elif _selected_system == "tab_chinstar":
                 )
 
                 # 大六壬式四列排盤
-                # Row 0: 亥(11) 子(0) 丑(1) 寅(2)
-                # Row 1: 戌(10) [CENTER]        卯(3)
-                # Row 2: 酉(9)  [CENTER]        辰(4)
-                # Row 3: 申(8)  未(7) 午(6) 巳(5)
+                # Row 0: 巳(5)  午(6)  未(7)  申(8)
+                # Row 1: 辰(4)  [CENTER]       酉(9)
+                # Row 2: 卯(3)  [CENTER]       戌(10)
+                # Row 3: 寅(2)  丑(1)  子(0)  亥(11)
                 _cs_br = _cs_branches
                 _cs_grid = (
                     '<table style="border-collapse:separate;border-spacing:4px;'
                     'margin:10px auto;font-family:\'Noto Serif TC\',serif;">'
                     "<tr>"
-                    + _cs_cell(_cs_br[11]) + _cs_cell(_cs_br[0])
-                    + _cs_cell(_cs_br[1])  + _cs_cell(_cs_br[2])
+                    + _cs_cell(_cs_br[5])  + _cs_cell(_cs_br[6])
+                    + _cs_cell(_cs_br[7])  + _cs_cell(_cs_br[8])
                     + "</tr><tr>"
-                    + _cs_cell(_cs_br[10]) + _cs_center_td + _cs_cell(_cs_br[3])
+                    + _cs_cell(_cs_br[4])  + _cs_center_td + _cs_cell(_cs_br[9])
                     + "</tr><tr>"
-                    + _cs_cell(_cs_br[9])  + _cs_cell(_cs_br[4])
+                    + _cs_cell(_cs_br[3])  + _cs_cell(_cs_br[10])
                     + "</tr><tr>"
-                    + _cs_cell(_cs_br[8])  + _cs_cell(_cs_br[7])
-                    + _cs_cell(_cs_br[6])  + _cs_cell(_cs_br[5])
+                    + _cs_cell(_cs_br[2])  + _cs_cell(_cs_br[1])
+                    + _cs_cell(_cs_br[0])  + _cs_cell(_cs_br[11])
                     + "</tr></table>"
                 )
                 st.markdown(_cs_grid, unsafe_allow_html=True)
