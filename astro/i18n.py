@@ -755,6 +755,35 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
 """,
     },
 
+    # ── 萬化仙禽 (WanHua XianQin) ───────────────────────────
+    "tab_chinstar": {"zh": "萬化仙禽", "en": "WanHua XianQin"},
+    "desc_chinstar": {
+        "zh": (
+            "**萬化仙禽（新刻劉伯溫萬化仙禽）**\n\n"
+            "依據明代古籍《新刻劉伯溫萬化仙禽》（朱國祥著）之演禽推算系統。\n"
+            "涵蓋三元起宿、推胎宮、推胎星、推命宮（時加至卯）、推身宮、"
+            "推命星、推身星、十二宮衍生星、吞啗合戰判斷、情性賦及格局分析。\n\n"
+            "⚠️ 本系統以**農曆**年月日起盤，請在下方輸入農曆出生資料。"
+        ),
+        "en": (
+            "**WanHua XianQin (萬化仙禽)**\n\n"
+            "Star-Animal Divination based on the classical Ming-dynasty text "
+            "«新刻劉伯溫萬化仙禽» by Zhu Guoxiang.\n"
+            "Covers 三元起宿, Fetus Palace, Natal Star, Life Palace, Body Palace, "
+            "12 Derived Stars, Swallow-Bite analysis, Personality verse and Chart Pattern.\n\n"
+            "⚠️ This system uses the **Lunar Calendar**. Please enter your lunar birth date below."
+        ),
+    },
+    "spinner_chinstar": {"zh": "計算萬化仙禽盤中...", "en": "Computing WanHua XianQin chart…"},
+    "chinstar_lunar_input_header": {"zh": "🗓️ 農曆出生資料", "en": "🗓️ Lunar Birth Data"},
+    "chinstar_lunar_year": {"zh": "農曆年（公曆年）", "en": "Lunar Year (solar year)"},
+    "chinstar_lunar_month": {"zh": "農曆月", "en": "Lunar Month"},
+    "chinstar_lunar_day": {"zh": "農曆日", "en": "Lunar Day"},
+    "chinstar_use_auto": {"zh": "自動從公曆換算農曆", "en": "Auto-convert from solar date"},
+    "chinstar_auto_result": {"zh": "換算結果：{year}年{month}月{day}日", "en": "Converted: {year}-{month}-{day}"},
+    "chinstar_subtab_chart": {"zh": "起盤結果", "en": "Chart Result"},
+    "chinstar_subtab_text": {"zh": "古籍全文", "en": "Classical Text"},
+
     # ── Hellenistic Astrology ───────────────────────────────
     "tab_hellenistic": {"zh": "希臘占星", "en": "Hellenistic"},
     "desc_hellenistic": {
