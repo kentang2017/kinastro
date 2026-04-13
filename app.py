@@ -1175,7 +1175,7 @@ elif _selected_system == "tab_chinstar":
             ])
 
             with _cs_tab_chart:
-                from astro.chinstar.chinstar import BRANCHES as _CS_BRANCHES, QIN_ELEMENT as _CS_QIN_ELEM
+                from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
 
                 bi = _cs_chart["basic_info"]
                 p = _cs_chart["palaces"]
@@ -1183,7 +1183,7 @@ elif _selected_system == "tab_chinstar":
                 pat = _cs_chart["pattern"]
 
                 # ── 宮位→禽 映射 ──────────────────────────────
-                _CS_PALACE_BIRD = {
+                _cs_palace_bird = {
                     "命宮":   s["ming_xing"],
                     "財帛宮": s["derived"].get("財帛星", ""),
                     "兄弟宮": s["derived"].get("兄弟星", ""),
@@ -1206,21 +1206,21 @@ elif _selected_system == "tab_chinstar":
                 _cs_tai_br  = p["tai_gong"]["branch"]
 
                 # 五行色彩
-                _CS_ELEM_BG = {
+                _cs_elem_bg = {
                     "木": "#d9f2d9", "火": "#ffe0d0",
                     "土": "#fffbcc", "金": "#e8e8e8", "水": "#cce5ff",
                 }
-                _CS_ELEM_BD = {
+                _cs_elem_bd = {
                     "木": "#388e3c", "火": "#c62828",
                     "土": "#f57f17", "金": "#616161", "水": "#1565c0",
                 }
 
                 def _cs_cell(branch_char: str) -> str:
                     palace = _cs_branch_to_palace.get(branch_char, "")
-                    bird   = _CS_PALACE_BIRD.get(palace, "")
-                    elem   = _CS_QIN_ELEM.get(bird, "")
-                    bg     = _CS_ELEM_BG.get(elem, "#f9f9f9")
-                    bd     = _CS_ELEM_BD.get(elem, "#999")
+                    bird   = _cs_palace_bird.get(palace, "")
+                    elem   = _cs_qin_elem.get(bird, "")
+                    bg     = _cs_elem_bg.get(elem, "#f9f9f9")
+                    bd     = _cs_elem_bd.get(elem, "#999")
                     badge  = ""
                     if branch_char == _cs_ming_br:
                         badge = '<span style="color:#c62828;font-size:10px;">★命</span> '
@@ -1248,7 +1248,7 @@ elif _selected_system == "tab_chinstar":
                     )
 
                 # 中央格（基本資料 + 三主星 + 格局）
-                _cs_center = (
+                _cs_center_td = (
                     '<td colspan="2" rowspan="2" style="text-align:center;'
                     'vertical-align:middle;border:2px solid #444;'
                     'background:#fffde7;padding:10px 8px;border-radius:6px;'
@@ -1274,7 +1274,7 @@ elif _selected_system == "tab_chinstar":
                 # Row 1: 戌(10) [CENTER]        卯(3)
                 # Row 2: 酉(9)  [CENTER]        辰(4)
                 # Row 3: 申(8)  未(7) 午(6) 巳(5)
-                _cs_br = _CS_BRANCHES
+                _cs_br = _cs_branches
                 _cs_grid = (
                     '<table style="border-collapse:separate;border-spacing:4px;'
                     'margin:10px auto;font-family:\'Noto Serif TC\',serif;">'
@@ -1282,7 +1282,7 @@ elif _selected_system == "tab_chinstar":
                     + _cs_cell(_cs_br[11]) + _cs_cell(_cs_br[0])
                     + _cs_cell(_cs_br[1])  + _cs_cell(_cs_br[2])
                     + "</tr><tr>"
-                    + _cs_cell(_cs_br[10]) + _cs_center + _cs_cell(_cs_br[3])
+                    + _cs_cell(_cs_br[10]) + _cs_center_td + _cs_cell(_cs_br[3])
                     + "</tr><tr>"
                     + _cs_cell(_cs_br[9])  + _cs_cell(_cs_br[4])
                     + "</tr><tr>"
