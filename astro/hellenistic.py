@@ -598,15 +598,15 @@ def build_greek_horoscope_svg(chart, year=None, month=None, day=None,
             f'{HOUSE_ROMAN[h - 1]}</text>'
         )
 
-        # Topos name (Greek place name, very small)
+        # Topos Chinese name (宮位名, small label in outer area)
         r_topos = d_edge * 0.86
         tx, ty = _polar(r_topos, ca)
-        topos_label = TOPOS_CN[h - 1]
+        topos_cn_label = TOPOS_CN[h - 1]
         svg.append(
             f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="#7a6a50" '
             f'font-size="8">'
-            f'{topos_label}</text>'
+            f'{topos_cn_label}</text>'
         )
 
         # Planets in this sign
