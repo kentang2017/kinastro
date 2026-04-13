@@ -165,8 +165,6 @@ def _build_map_html(lang: str) -> str:
     <path class="bg-land" d="M560,60 L620,50 L700,55 L760,65 L790,80 L800,100 L790,120 L760,130 L700,125 L640,130 L580,125 L560,110 L555,85 Z" />
     """
 
-    tooltip_label = "點擊進入" if lang == "zh" else "Click to enter"
-
     html = f"""
 <div id="kinastro-map-container" style="position:relative;width:100%;max-width:900px;margin:0 auto;">
   <svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg"
@@ -257,42 +255,15 @@ def _build_map_html(lang: str) -> str:
     const cx = pathRect.left + pathRect.width / 2 - svgRect.left;
     const cy = pathRect.top - svgRect.top;
 
-    // Build buttons
+    // Build tooltip content (informational labels only; actual navigation
+    // is handled by the Streamlit button grid below the map)
     tooltipTitle.textContent = info.label;
     tooltipButtons.innerHTML = '';
     info.systems.forEach(function(sys) {{
-      const btn = document.createElement('button');
-      btn.textContent = sys.label;
-      btn.addEventListener('click', function(e) {{
-        e.stopPropagation();
-        // Use Streamlit's setComponentValue or URL params approach
-        // We use a hidden text input approach for Streamlit communication
-        const input = document.querySelector('input[data-testid="km-map-pick"]');
-        if (input) {{
-          const nativeSetter = Object.getOwnPropertyDescriptor(
-            window.HTMLInputElement.prototype, 'value'
-          ).set;
-          nativeSetter.call(input, sys.key);
-          input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-          input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        }}
-        // Fallback: post to Streamlit via query params
-        const url = new URL(window.location);
-        url.searchParams.set('astro_system', sys.key);
-        window.history.replaceState(null, '', url);
-
-        // Trigger Streamlit rerun via a form submit approach
-        const stButtons = parent.document.querySelectorAll('button[kind="primary"]');
-        // Use streamlit messaging
-        if (window.parent && window.parent.postMessage) {{
-          window.parent.postMessage({{
-            type: 'streamlit:setComponentValue',
-            value: sys.key
-          }}, '*');
-        }}
-        tooltip.style.display = 'none';
-      }});
-      tooltipButtons.appendChild(btn);
+      const lbl = document.createElement('div');
+      lbl.textContent = sys.label;
+      lbl.style.cssText = 'padding:4px 8px;margin:3px 0;background:#3498db22;border-radius:4px;font-size:14px;';
+      tooltipButtons.appendChild(lbl);
     }});
 
     // Show tooltip
@@ -352,13 +323,13 @@ def _build_map_html(lang: str) -> str:
     return html
 
 
-def render_world_map() -> str | None:
-    """Render the interactive world map and return the selected system key
-    if a region button was clicked, otherwise ``None``.
+def render_world_map() -> None:
+    """Render the interactive world map and handle system selection.
 
-    Streamlit components communicate via ``st.session_state``.  The map uses
-    ``st.components.v1.html`` and button clicks are wired back via
-    individual ``st.button`` widgets rendered below the map as a fallback grid.
+    The map uses ``st.components.v1.html`` for the SVG visualisation and
+    ``st.button`` widgets below the map for reliable Streamlit integration.
+    Button clicks set ``st.session_state["_selected_system"]`` and trigger
+    a rerun.
     """
     lang = get_lang()
 

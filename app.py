@@ -278,11 +278,14 @@ with st.sidebar:
     }
 
     # Allow the world-map buttons to pre-select a system
-    _preselected = st.session_state.pop("_selected_system", None)
+    _preselected = st.session_state.get("_selected_system", None)
     if _preselected and _preselected in _SYSTEM_KEYS:
-        st.session_state["_system_select"] = _SYSTEM_KEYS.index(_preselected)
+        _default_idx = _SYSTEM_KEYS.index(_preselected)
+        # Clear after reading so the override is one-shot
+        del st.session_state["_selected_system"]
+    else:
+        _default_idx = int(st.session_state.get("_system_select", 0))
 
-    _default_idx = int(st.session_state.get("_system_select", 0))
     if _default_idx >= len(_SYSTEM_KEYS):
         _default_idx = 0
 
@@ -295,7 +298,8 @@ with st.sidebar:
     )
 
 # ============================================================
-# 主區域 - 根據側邊欄選擇顯示對應占星體系
+# Main Area — Render the selected astrology system
+# 主區域 — 根據側邊欄選擇顯示對應占星體系
 # ============================================================
 
 if calculate:
