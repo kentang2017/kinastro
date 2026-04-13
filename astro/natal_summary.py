@@ -82,6 +82,9 @@ def _element_distribution(planets, lang: str) -> str:
         return line
 
 
+HEMISPHERE_THRESHOLD = 0.7
+
+
 def _hemisphere_analysis(planets, lang: str) -> str:
     """Analyze hemisphere distribution based on longitudes."""
     upper = 0  # Libra–Pisces (180–360)
@@ -101,15 +104,15 @@ def _hemisphere_analysis(planets, lang: str) -> str:
         return ""
 
     if lang == "zh":
-        if lower > total * 0.7:
+        if lower > total * HEMISPHERE_THRESHOLD:
             return "**半球分布：** 行星集中於東半球（白羊─處女），個人意志和自我驅動力強。"
-        elif upper > total * 0.7:
+        elif upper > total * HEMISPHERE_THRESHOLD:
             return "**半球分布：** 行星集中於西半球（天秤─雙魚），注重他人關係和社會互動。"
         return "**半球分布：** 行星分布較為均勻，內外生活趨向平衡。"
     else:
-        if lower > total * 0.7:
+        if lower > total * HEMISPHERE_THRESHOLD:
             return "**Hemisphere:** Planets concentrated in eastern hemisphere — strong personal drive."
-        elif upper > total * 0.7:
+        elif upper > total * HEMISPHERE_THRESHOLD:
             return "**Hemisphere:** Planets concentrated in western hemisphere — relationship-oriented."
         return "**Hemisphere:** Planets fairly evenly distributed — balanced inner/outer life."
 

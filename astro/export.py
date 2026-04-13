@@ -167,7 +167,9 @@ def svg_to_png(svg_string: str, width: int = 800) -> bytes | None:
         )
     except ImportError:
         return None
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("SVG to PNG conversion failed: %s", exc)
         return None
 
 

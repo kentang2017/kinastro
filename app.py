@@ -768,16 +768,18 @@ with tab_arabic:
                 st.subheader(t("shams_subheader"))
                 st.caption(t("shams_source"))
 
-                # Need a_chart for shams — ensure it's computed
-                if 'a_chart' not in dir():
+                # Compute Arabic chart if not already done
+                try:
+                    _a_chart_for_shams = a_chart
+                except NameError:
                     with st.spinner(t("spinner_arabic")):
-                        a_chart = compute_arabic_chart(**_p)
+                        _a_chart_for_shams = compute_arabic_chart(**_p)
                 _shams_planets = {
                     p.name.split("(")[0].strip().split()[-1]: p.longitude
-                    for p in a_chart.planets
+                    for p in _a_chart_for_shams.planets
                 }
                 _shams_sun_idx: int | None = None
-                for p in a_chart.planets:
+                for p in _a_chart_for_shams.planets:
                     if "Sun" in p.name:
                         _shams_sun_idx = int(p.longitude / 30.0)
                         break
