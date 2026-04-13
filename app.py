@@ -213,8 +213,6 @@ with st.sidebar:
     # 排盤按鈕
     calculate = st.button(t("calculate_btn"), width='stretch', type="primary")
 
-
-
     # 性別（用於七政四餘宮位方向）
     st.subheader(t("gender_header"))
     _male_label = t("male")
