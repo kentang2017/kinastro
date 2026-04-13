@@ -759,7 +759,7 @@ def render_hellenistic_chart(chart):
             "Meaning": lot.meaning_cn,
         })
     if lot_data:
-        st.dataframe(lot_data, use_container_width=True)
+        st.dataframe(lot_data, width="stretch")
 
     # Bounds
     if chart.bounds:
@@ -782,7 +782,7 @@ def render_hellenistic_chart(chart):
                      "Ruler": p.ruler, "Years": p.years,
                      "Start": p.start_date, "End": p.end_date}
                     for p in chart.zodiacal_releasing]
-        st.dataframe(zr_data, use_container_width=True)
+        st.dataframe(zr_data, width="stretch")
 
     # Planet Conditions
     if chart.planet_conditions:
@@ -792,4 +792,4 @@ def render_hellenistic_chart(chart):
             detail_str = "; ".join(f"{f}: {p:+d}" for f, p, _ in pc.details)
             cond_data.append({"Planet": pc.planet, "Score": pc.score,
                               "Details": detail_str})
-        st.dataframe(cond_data, use_container_width=True)
+        st.dataframe(cond_data, width="stretch")

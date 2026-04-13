@@ -115,7 +115,7 @@ def render_cross_comparison(result):
             "Chinese": p.chinese_sign or "—",
         })
     if data:
-        st.dataframe(data, use_container_width=True)
+        st.dataframe(data, width="stretch")
 
     col1, col2 = st.columns(2)
     with col1:
