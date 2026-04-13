@@ -140,7 +140,7 @@ ZHENG_XIANG_DICT: Dict[str, str] = {
 
 NOBLE_DESC: str = (
     "蛟龍歸滄海，蘇秦佩六國之印。虎豹嘯鄭野，石奮封萬石之君。"
-    "井木犴行於壬申，太公八十遇文王。亢金龍坐于丙午，天河丼羅十二為宰相。"
+    "井木犴行於壬申，太公八十遇文王。亢金龍坐于丙午，天河井羅十二為宰相。"
     "危月燕飛于龍樓鳳閣，包龍圖為陰陽教化之臣。"
     "畢月烏飛于鳳閣鸞臺，配史丞相有潤澤生民之德。"
     "張月鹿瞻花座，翁首為二十四考書生。"
@@ -256,8 +256,15 @@ _KE_WO_MAP: Dict[str, str] = {  # 什麼剋我
 }
 
 # ==================== 日類分組（日/月/火/水/木/金/土） ====================
+# 每個禽名格式固定為「X Y Z」三字，第二字(index 1)即七曜類別
 
 _DAY_TYPE: Dict[str, str] = {qn: qn[1] for qn in QIN_NAMES}
+
+# 十二地支五行（子水丑土寅木…）
+BRANCH_ELEMENT: Dict[int, str] = {
+    0: "水", 1: "土", 2: "木", 3: "木", 4: "土", 5: "火",
+    6: "火", 7: "土", 8: "金", 9: "金", 10: "土", 11: "水",
+}
 
 
 # ==================================================================================
@@ -330,6 +337,7 @@ class WanHuaXianQin:
         pos = branch_idx
         pos = (pos + month - 1) % 12
         pos = (pos + day - 1) % 12
+        # 子時(23-1)=0, 丑時(1-3)=1, …, 巳時(9-11)=5 → ((hour+1)//2)%12
         hour_idx = ((hour + 1) // 2) % 12
         pos = (pos + hour_idx) % 12
         return pos
@@ -385,7 +393,7 @@ class WanHuaXianQin:
           ming_gong = (10 + (3 - 5)) % 12 = 8 = 申 ✓
         """
         sun_palace = self._sun_palace_idx(month)
-        hour_idx = ((hour + 1) // 2) % 12
+        hour_idx = ((hour + 1) // 2) % 12  # 24h → 地支索引
         mao_idx = 3  # 卯
         return (sun_palace + (mao_idx - hour_idx)) % 12
 
@@ -652,11 +660,7 @@ class WanHuaXianQin:
             reasons.append(f"{tai_xing}於{season}季得時")
 
         # 得地
-        branch_element_map = {
-            0: "水", 1: "土", 2: "木", 3: "木", 4: "土", 5: "火",
-            6: "火", 7: "土", 8: "金", 9: "金", 10: "土", 11: "水",
-        }
-        ming_elem = branch_element_map[ming_gong_idx]
+        ming_elem = BRANCH_ELEMENT[ming_gong_idx]
         qin_elem = QIN_ELEMENT[tai_xing]
         in_place = ming_elem == qin_elem or _SHENG_MAP.get(ming_elem) == qin_elem
         if in_place:
