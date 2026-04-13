@@ -167,7 +167,8 @@ def compute_yogas(planet_longitudes: dict, ascendant_lon: float) -> list:
     # 12. Vosi Yoga (planet in 12th from Sun)
     if sun_sign is not None:
         h12_from_sun = (sun_sign - 1) % 12
-        present = any(s == h12_from_sun for p, s in signs.items() if p not in excluded)
+        excluded_vosi = {"Moon", "Rahu", "Ketu", "Sun"}
+        present = any(s == h12_from_sun for p, s in signs.items() if p not in excluded_vosi)
         results.append(YogaResult(
             "Vosi Yoga", "日後瑜伽", present,
             "Moderate" if present else "—",

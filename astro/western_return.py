@@ -8,6 +8,9 @@ import swisseph as swe
 from dataclasses import dataclass
 from astro.western import compute_western_chart
 
+SUN_DAILY_MOTION = 0.9856   # degrees per day
+MOON_DAILY_MOTION = 13.2    # degrees per day
+
 
 def _normalize(deg):
     return deg % 360.0
@@ -56,7 +59,7 @@ def compute_solar_return(natal_sun_lon, target_year, latitude, longitude,
         diff = _angle_diff_signed(natal_sun_lon, current_lon)
         if abs(diff) < 0.00001:
             break
-        jd += diff / 0.9856  # Sun moves ~0.9856°/day
+        jd += diff / SUN_DAILY_MOTION
 
     # Convert JD to date components for chart
     y, m, d, h = swe.revjul(jd)
@@ -86,7 +89,7 @@ def compute_lunar_return(natal_moon_lon, after_jd, latitude, longitude,
         diff = _angle_diff_signed(natal_moon_lon, current_lon)
         if abs(diff) < 0.00001:
             break
-        jd += diff / 13.2  # Moon moves ~13.2°/day
+        jd += diff / MOON_DAILY_MOTION
 
     y, m, d, h = swe.revjul(jd)
     chart = compute_western_chart(
