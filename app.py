@@ -54,7 +54,7 @@ from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
-from astro.hellenistic import compute_hellenistic_chart, render_hellenistic_chart
+from astro.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
 from astro.cross_compare import compute_cross_comparison, render_cross_comparison
 from astro.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.asteroids import compute_asteroids
@@ -703,12 +703,32 @@ if calculate:
                 birth_year=birth_date.year,
                 current_year=datetime.now().year,
             )
-        _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots = st.tabs([
+        _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots = st.tabs([
+            t("hellen_subtab_chart"),
             t("hellen_subtab_natal"),
             t("hellen_subtab_profections"),
             t("hellen_subtab_zr"),
             t("hellen_subtab_lots"),
         ])
+        with _h_tab_chart:
+            _greek_svg = build_greek_horoscope_svg(
+                _hellen_chart,
+                year=birth_date.year,
+                month=birth_date.month,
+                day=birth_date.day,
+                hour=birth_time.hour,
+                minute=birth_time.minute,
+                tz=tz_offset,
+                location=location_name,
+            )
+            st.markdown(_greek_svg, unsafe_allow_html=True)
+            st.caption(
+                '<p style="text-align:center; color:#888; font-size:11px;">'
+                'Greek Horoscope (θέμα) — Square chart form after L 497 · '
+                'Whole-sign houses · ASC at left, MC at top'
+                '</p>',
+                unsafe_allow_html=True,
+            )
         with _h_tab_natal:
             render_hellenistic_chart(_hellen_chart)
         with _h_tab_prof:

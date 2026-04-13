@@ -2,8 +2,9 @@
 astro/hellenistic.py — 希臘占星 (Hellenistic Astrology)
 
 Lots, Egyptian Bounds, Annual Profections, Zodiacal Releasing,
-Planetary Condition scoring, Sect analysis.
+Planetary Condition scoring, Sect analysis, Greek horoscope SVG chart.
 """
+import math
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -323,6 +324,417 @@ def compute_hellenistic_chart(western_chart, birth_year=None,
         profection=profection, zodiacal_releasing=zr,
         planet_conditions=conditions, sect_analysis=sect,
     )
+
+
+# ============================================================
+# Greek Horoscope SVG — θέμα (Thema) Chart
+# ============================================================
+# Based on ancient Greek papyrus horoscope format (cf. L 497).
+# Square frame with 12 triangular house sections radiating from centre.
+# Whole-sign houses; ASC at left, MC at top.
+
+ZODIAC_GLYPHS = [
+    "♈", "♉", "♊", "♋", "♌", "♍",
+    "♎", "♏", "♐", "♑", "♒", "♓",
+]
+
+ZODIAC_GREEK = [
+    "Κριός", "Ταῦρος", "Δίδυμοι", "Καρκίνος",
+    "Λέων", "Παρθένος", "Ζυγός", "Σκορπίος",
+    "Τοξότης", "Αἰγόκερως", "Ὑδροχόος", "Ἰχθύες",
+]
+
+PLANET_GLYPHS = {
+    "Sun": "☉", "Moon": "☽", "Mercury": "☿",
+    "Venus": "♀", "Mars": "♂", "Jupiter": "♃", "Saturn": "♄",
+}
+
+PLANET_COLORS_GREEK = {
+    "Sun": "#b8860b", "Moon": "#556b7f", "Mercury": "#8b6914",
+    "Venus": "#2e7d32", "Mars": "#b71c1c", "Jupiter": "#1565c0",
+    "Saturn": "#4a4a4a",
+}
+
+ELEMENT_OF_SIGN = [
+    "fire", "earth", "air", "water",
+    "fire", "earth", "air", "water",
+    "fire", "earth", "air", "water",
+]
+
+ELEMENT_COLORS = {
+    "fire": "#b71c1c", "earth": "#2e7d32",
+    "air": "#1565c0", "water": "#00838f",
+}
+
+HOUSE_ROMAN = ["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ",
+               "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ", "Ⅺ", "Ⅻ"]
+
+# Greek names for the 12 topoi (places)
+TOPOS_GREEK = [
+    "Ὡροσκόπος",       # I   – Horoskopos (Ascendant)
+    "Πύλη Ἅιδου",      # II  – Gate of Hades
+    "Θεά",              # III – Goddess
+    "Ὑπόγειον",         # IV  – Subterranean (IC)
+    "Ἀγαθὴ Τύχη",      # V   – Good Fortune
+    "Κακὴ Τύχη",        # VI  – Bad Fortune
+    "Δύσις",            # VII – Setting (Descendant)
+    "Ἐπικαταφορά",      # VIII – Epicataphora
+    "Θεός",             # IX  – God
+    "Μεσουράνημα",      # X   – Midheaven (MC)
+    "Ἀγαθὸς Δαίμων",   # XI  – Good Daimon
+    "Κακὸς Δαίμων",     # XII – Bad Daimon
+]
+
+TOPOS_CN = [
+    "命宮", "財帛宮", "兄弟宮", "田宅宮",
+    "子女宮", "奴僕宮", "夫妻宮", "疾厄宮",
+    "遷移宮", "官祿宮", "福德宮", "玄秘宮",
+]
+
+
+def _ray_to_square(cx, cy, half, angle_deg):
+    """Where a ray from (cx, cy) at *angle_deg* meets a square boundary.
+
+    Angle convention: 0° = right, clockwise positive (SVG natural).
+    The square spans [cx-half, cx+half] × [cy-half, cy+half].
+    """
+    rad = math.radians(angle_deg % 360)
+    ca, sa = math.cos(rad), math.sin(rad)
+    candidates = []
+    if abs(ca) > 1e-9:
+        t = half / abs(ca)
+        if abs(sa * t) <= half + 0.5:
+            candidates.append(t)
+    if abs(sa) > 1e-9:
+        t = half / abs(sa)
+        if abs(ca * t) <= half + 0.5:
+            candidates.append(t)
+    t = min(candidates) if candidates else half
+    return cx + t * ca, cy + t * sa
+
+
+def build_greek_horoscope_svg(chart, year=None, month=None, day=None,
+                              hour=None, minute=None, tz=None,
+                              location=""):
+    """Build an SVG string for a Greek-style square horoscope chart (θέμα).
+
+    Layout based on the ancient Greek papyrus horoscope form (cf. L 497):
+    - Square outer frame with parchment colouring.
+    - 12 triangular whole-sign house sections radiating from centre.
+    - Ascendant (House I) at the left, MC (House X) at the top.
+    - Zodiac sign glyphs, Greek sign names, planet symbols, lots.
+    - Centre circle with birth data, sect, and ASC info.
+
+    Parameters
+    ----------
+    chart : HellenisticChart
+    year, month, day, hour, minute, tz : birth-data for centre display
+    location : location string for centre display
+
+    Returns
+    -------
+    str – complete ``<svg>`` markup.
+    """
+    SIZE = 620
+    CX, CY = SIZE / 2, SIZE / 2
+    HALF = 250                          # half-side of chart square
+
+    # ── angle helpers ──────────────────────────────────────────────
+    def _boundary(h):
+        """Angle of boundary line between house h-1 and house h (1-indexed).
+
+        Houses go counterclockwise (decreasing SVG angle) from ASC at 180°.
+        Offset by +15° so that square corners fall exactly on boundaries.
+        """
+        return (195 - (h - 1) * 30) % 360
+
+    def _centre_angle(h):
+        """Centre angle of house h."""
+        return (180 - (h - 1) * 30) % 360
+
+    def _polar(r, a):
+        """Polar → SVG coordinates."""
+        rad = math.radians(a)
+        return CX + r * math.cos(rad), CY + r * math.sin(rad)
+
+    def _edge(a):
+        return _ray_to_square(CX, CY, HALF, a)
+
+    # ── house data ─────────────────────────────────────────────────
+    asc_idx = _sign_idx(chart.ascendant)
+
+    houses = []
+    for h in range(1, 13):
+        sign_idx = (asc_idx + h - 1) % 12
+        planets = [(p, round(_sign_deg(lon), 1))
+                   for p, lon in chart.planet_longitudes.items()
+                   if _sign_idx(lon) == sign_idx]
+        lots = [l for l in chart.lots
+                if l.sign == ZODIAC_SIGNS[sign_idx]]
+        houses.append({
+            "h": h, "sign_idx": sign_idx,
+            "planets": planets, "lots": lots,
+            "angular": h in (1, 4, 7, 10),
+            "succedent": h in (2, 5, 8, 11),
+        })
+
+    # ── SVG construction ──────────────────────────────────────────
+    svg = []
+    svg.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {SIZE} {SIZE}" '
+        f'style="width:100%;max-width:620px;margin:auto;display:block;" '
+        f'font-family="serif">'
+    )
+
+    # Background (warm parchment)
+    svg.append(f'<rect width="{SIZE}" height="{SIZE}" fill="#f5e6c8" rx="6"/>')
+
+    # Double decorative border
+    svg.append(
+        f'<rect x="8" y="8" width="{SIZE-16}" height="{SIZE-16}" '
+        f'fill="none" stroke="#5c3a1e" stroke-width="2.5" rx="3"/>'
+    )
+    svg.append(
+        f'<rect x="14" y="14" width="{SIZE-28}" height="{SIZE-28}" '
+        f'fill="none" stroke="#8b7355" stroke-width="1" rx="2"/>'
+    )
+
+    # Greek-key meander top/bottom decorative strip
+    for row_y in (22, SIZE - 30):
+        for xi in range(10):
+            mx = 30 + xi * 56
+            if mx > SIZE - 50:
+                break
+            svg.append(
+                f'<path d="M{mx},{row_y} h12 v6 h-6 v-3 h-6 z" '
+                f'fill="none" stroke="#8b7355" stroke-width="0.8" opacity="0.5"/>'
+            )
+
+    # Chart square area
+    sq_x, sq_y = CX - HALF, CY - HALF
+    svg.append(
+        f'<rect x="{sq_x}" y="{sq_y}" width="{HALF*2}" height="{HALF*2}" '
+        f'fill="#efe0c0" stroke="#5c3a1e" stroke-width="2"/>'
+    )
+
+    # ── filled house-section triangles ──────────────────────────
+    for hd in houses:
+        h = hd["h"]
+        ba1 = _boundary(h)
+        ba2 = _boundary(h % 12 + 1)
+        p1 = _edge(ba1)
+        p2 = _edge(ba2)
+
+        if hd["angular"]:
+            fill = "#e0cfa0"
+        elif hd["succedent"]:
+            fill = "#ebe0c0"
+        else:
+            fill = "#f2e8d0"
+
+        pts = f"{CX},{CY} {p1[0]:.1f},{p1[1]:.1f} {p2[0]:.1f},{p2[1]:.1f}"
+        svg.append(
+            f'<polygon points="{pts}" fill="{fill}" '
+            f'stroke="#8b6914" stroke-width="0.5"/>'
+        )
+
+    # ── boundary lines ─────────────────────────────────────────
+    for h in range(1, 13):
+        p = _edge(_boundary(h))
+        svg.append(
+            f'<line x1="{CX}" y1="{CY}" x2="{p[0]:.1f}" y2="{p[1]:.1f}" '
+            f'stroke="#5c3a1e" stroke-width="1.2"/>'
+        )
+
+    # ── centre circle ──────────────────────────────────────────
+    CR = 68
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{CR}" '
+        f'fill="#f5e6c8" stroke="#5c3a1e" stroke-width="1.5"/>'
+    )
+
+    # ── house content ──────────────────────────────────────────
+    for hd in houses:
+        h = hd["h"]
+        si = hd["sign_idx"]
+        ca = _centre_angle(h)
+
+        # Distance from centre to the square edge along centre angle
+        ex, ey = _edge(ca)
+        d_edge = math.hypot(ex - CX, ey - CY)
+
+        # Zodiac glyph (outer area)
+        r_glyph = d_edge * 0.73
+        gx, gy = _polar(r_glyph, ca)
+        elem = ELEMENT_OF_SIGN[si]
+        svg.append(
+            f'<text x="{gx:.1f}" y="{gy:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{ELEMENT_COLORS[elem]}" '
+            f'font-size="22" font-weight="bold">'
+            f'{ZODIAC_GLYPHS[si]}</text>'
+        )
+
+        # Greek sign name (smaller, further in)
+        r_greek = d_edge * 0.60
+        gnx, gny = _polar(r_greek, ca)
+        svg.append(
+            f'<text x="{gnx:.1f}" y="{gny:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#5c3a1e" '
+            f'font-size="8" font-style="italic">'
+            f'{ZODIAC_GREEK[si]}</text>'
+        )
+
+        # House Roman numeral (near centre)
+        r_house = d_edge * 0.33
+        hx, hy = _polar(r_house, ca)
+        h_color = "#8b4513" if hd["angular"] else "#8b7355"
+        h_weight = "bold" if hd["angular"] else "normal"
+        h_fsize = "14" if hd["angular"] else "12"
+        svg.append(
+            f'<text x="{hx:.1f}" y="{hy:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{h_color}" '
+            f'font-size="{h_fsize}" font-weight="{h_weight}">'
+            f'{HOUSE_ROMAN[h - 1]}</text>'
+        )
+
+        # Topos Chinese name (宮位名, small label in outer area)
+        r_topos = d_edge * 0.86
+        tx, ty = _polar(r_topos, ca)
+        topos_cn_label = TOPOS_CN[h - 1]
+        svg.append(
+            f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#7a6a50" '
+            f'font-size="8">'
+            f'{topos_cn_label}</text>'
+        )
+
+        # Planets in this sign
+        if hd["planets"]:
+            n = len(hd["planets"])
+            r_planet = d_edge * 0.49
+            for pi, (pname, pdeg) in enumerate(hd["planets"]):
+                offset = (pi - (n - 1) / 2) * 7
+                pa = ca + offset
+                px, py = _polar(r_planet, pa)
+                pglyph = PLANET_GLYPHS.get(pname, pname[0])
+                pcolor = PLANET_COLORS_GREEK.get(pname, "#5c3a1e")
+                svg.append(
+                    f'<text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" fill="{pcolor}" '
+                    f'font-size="16" font-weight="bold">'
+                    f'{pglyph}</text>'
+                )
+                # Degree label
+                r_deg = d_edge * 0.41
+                dx, dy = _polar(r_deg, pa)
+                svg.append(
+                    f'<text x="{dx:.1f}" y="{dy:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" fill="#5c3a1e" '
+                    f'font-size="7">{pdeg:.0f}°</text>'
+                )
+
+        # Lots (small markers)
+        if hd["lots"]:
+            n_lots = len(hd["lots"])
+            r_lot = d_edge * 0.82
+            for li, lot in enumerate(hd["lots"]):
+                la = ca + (li - (n_lots - 1) / 2) * 6
+                lx, ly = _polar(r_lot, la)
+                lot_color = "#8b0000" if "Fortune" in lot.name else "#1a5276"
+                abbr = lot.name_cn[0] if lot.name_cn else "L"
+                svg.append(
+                    f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="8" '
+                    f'fill="{lot_color}" fill-opacity="0.2" '
+                    f'stroke="{lot_color}" stroke-width="0.8"/>'
+                )
+                svg.append(
+                    f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" fill="{lot_color}" '
+                    f'font-size="9" font-weight="bold">{abbr}</text>'
+                )
+
+    # ── cardinal point labels (outside the square) ─────────────
+    cardinal = [
+        (180, "ASC", "Ὡροσκόπος"),
+        (90, "IC", "Ὑπόγειον"),
+        (0, "DESC", "Δύσις"),
+        (270, "MC", "Μεσουράνημα"),
+    ]
+    for angle, eng, greek in cardinal:
+        lx, ly = _polar(HALF + 20, angle)
+        svg.append(
+            f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#5c3a1e" '
+            f'font-size="11" font-weight="bold">{eng}</text>'
+        )
+        lx2, ly2 = _polar(HALF + 33, angle)
+        svg.append(
+            f'<text x="{lx2:.1f}" y="{ly2:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#8b7355" '
+            f'font-size="7" font-style="italic">{greek}</text>'
+        )
+
+    # ── centre text ───────────────────────────────────────────
+    svg.append(
+        f'<text x="{CX}" y="{CY - 42}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#5c3a1e" '
+        f'font-size="16" font-weight="bold">ΘΕΜΑ</text>'
+    )
+
+    sect_label = "☉ Day / 日生" if chart.is_day_chart else "☽ Night / 夜生"
+    svg.append(
+        f'<text x="{CX}" y="{CY - 24}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#5c3a1e" '
+        f'font-size="9">{sect_label}</text>'
+    )
+
+    if year is not None and month is not None and day is not None:
+        date_str = f"{year}-{month:02d}-{day:02d}"
+        svg.append(
+            f'<text x="{CX}" y="{CY - 8}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#5c3a1e" '
+            f'font-size="9">{date_str}</text>'
+        )
+
+    if hour is not None and minute is not None:
+        tz_str = f" UTC{tz:+.1f}" if tz is not None else ""
+        time_str = f"{hour:02d}:{minute:02d}{tz_str}"
+        svg.append(
+            f'<text x="{CX}" y="{CY + 6}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#5c3a1e" '
+            f'font-size="9">{time_str}</text>'
+        )
+
+    # ASC sign + degree
+    asc_sign = ZODIAC_SIGNS[asc_idx]
+    asc_deg = round(_sign_deg(chart.ascendant), 1)
+    svg.append(
+        f'<text x="{CX}" y="{CY + 22}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#8b4513" '
+        f'font-size="9">ASC {ZODIAC_GLYPHS[asc_idx]} '
+        f'{asc_sign} {asc_deg}°</text>'
+    )
+
+    # Bound lord
+    if chart.bounds:
+        b = chart.bounds[0]
+        svg.append(
+            f'<text x="{CX}" y="{CY + 36}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#8b7355" '
+            f'font-size="8">Bound: {b.planet} '
+            f'({b.start_degree}°–{b.end_degree}°)</text>'
+        )
+
+    if location:
+        svg.append(
+            f'<text x="{CX}" y="{CY + 50}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#8b7355" '
+            f'font-size="7">{location[:25]}</text>'
+        )
+
+    svg.append("</svg>")
+    return "\n".join(svg)
 
 
 def render_hellenistic_chart(chart):
