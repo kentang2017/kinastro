@@ -17,7 +17,7 @@ import json
 import logging
 from datetime import date, datetime
 from functools import lru_cache
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -125,7 +125,7 @@ class WesternParams(BirthParams):
 class HellenisticParams(BirthParams):
     """Hellenistic system additionally needs birth_year and current_year."""
 
-    current_year: int | None = Field(
+    current_year: Optional[int] = Field(
         default=None,
         description="Current year for profections (defaults to now)",
     )
@@ -143,7 +143,7 @@ class ComputeAllParams(BirthParams):
         default=False,
         description="Use sidereal zodiac for the Western chart",
     )
-    current_year: int | None = Field(
+    current_year: Optional[int] = Field(
         default=None,
         description="Current year for Hellenistic profections",
     )
@@ -155,7 +155,7 @@ class ChartResponse(BaseModel):
     system: str
     ok: bool = True
     data: dict[str, Any] = Field(default_factory=dict)
-    error: str | None = None
+    error: Optional[str] = None
 
 
 class ComputeAllResponse(BaseModel):
@@ -359,7 +359,7 @@ def _cached_zurkhai(key: str, year: int, month: int, day: int, hour: int,
 
 # Hellenistic depends on a WesternChart object, so handle specially.
 def _compute_hellenistic(params: BirthParams,
-                         current_year: int | None) -> dict:
+                         current_year: Optional[int]) -> dict:
     """Compute Hellenistic chart (requires a Western chart first)."""
     w_chart = compute_western_chart(
         year=params.year, month=params.month, day=params.day,

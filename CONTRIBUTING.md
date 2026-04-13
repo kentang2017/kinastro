@@ -180,8 +180,8 @@ with tab_xx:
 @app.post("/api/xx")
 async def api_xx(params: BirthParams):
     try:
-        chart = compute_xx_chart(**params.to_compute_kwargs())
-        return {"status": "ok", "data": _serialize(chart)}
+        chart = compute_xx_chart(**_base_kwargs(params))
+        return {"status": "ok", "data": _make_serializable(chart)}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 ```

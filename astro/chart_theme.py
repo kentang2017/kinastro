@@ -66,7 +66,7 @@ MOBILE_CSS = """<style>
 /* ── Mobile ─────────────────────────────────────────── */
 @media (max-width: 768px) {
     .stTabs [data-baseweb="tab-list"] { flex-wrap: wrap; gap: 2px; }
-    .stTabs [data-baseweb="tab"] { font-size: 0.72rem; padding: 3px 6px; min-height: 32px; }
+    .stTabs [data-baseweb="tab"] { font-size: 0.8rem; padding: 3px 6px; min-height: 32px; }
     section[data-testid="stSidebar"] { min-width: 240px; }
     .stDataFrame { font-size: 0.78rem; }
     .stMetric { padding: 6px 8px !important; }

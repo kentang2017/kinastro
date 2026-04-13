@@ -110,6 +110,24 @@ def t(key: str) -> str:
     return entry.get(lang, entry.get("zh", key))
 
 
+def _render_reference_library():
+    """Render the Arabic astrology reference library sub-tab content."""
+    import os
+    _ref_dir = os.path.join(os.path.dirname(__file__), "astro", "reference")
+    _ref_files = [
+        ("astrology_fortune.md", "占星與財富 / Astrology & Fortune"),
+        ("astrology_magic.md", "占星魔法 / Astrological Magic"),
+        ("astrology_military.md", "軍事占星 / Military Astrology"),
+    ]
+    for _fname, _title in _ref_files:
+        _fpath = os.path.join(_ref_dir, _fname)
+        if os.path.exists(_fpath):
+            with open(_fpath, "r", encoding="utf-8") as _f:
+                _content = _f.read()
+            with st.expander(_title, expanded=False):
+                st.markdown(_content)
+
+
 st.title(t("app_title"))
 st.markdown(t("app_subtitle"))
 
@@ -818,19 +836,7 @@ with tab_arabic:
 
             with arabic_subtab_ref:
                 st.subheader(t("arabic_subtab_reference"))
-                _ref_dir = os.path.join(os.path.dirname(__file__), "astro", "reference")
-                _ref_files = [
-                    ("astrology_fortune.md", "占星與財富 / Astrology & Fortune"),
-                    ("astrology_magic.md", "占星魔法 / Astrological Magic"),
-                    ("astrology_military.md", "軍事占星 / Military Astrology"),
-                ]
-                for _fname, _title in _ref_files:
-                    _fpath = os.path.join(_ref_dir, _fname)
-                    if os.path.exists(_fpath):
-                        with open(_fpath, "r", encoding="utf-8") as _f:
-                            _content = _f.read()
-                        with st.expander(_title, expanded=False):
-                            st.markdown(_content)
+                _render_reference_library()
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
@@ -882,19 +888,7 @@ with tab_arabic:
 
         with arabic_subtab_ref:
             st.subheader(t("arabic_subtab_reference"))
-            _ref_dir = os.path.join(os.path.dirname(__file__), "astro", "reference")
-            _ref_files = [
-                ("astrology_fortune.md", "占星與財富 / Astrology & Fortune"),
-                ("astrology_magic.md", "占星魔法 / Astrological Magic"),
-                ("astrology_military.md", "軍事占星 / Military Astrology"),
-            ]
-            for _fname, _title in _ref_files:
-                _fpath = os.path.join(_ref_dir, _fname)
-                if os.path.exists(_fpath):
-                    with open(_fpath, "r", encoding="utf-8") as _f:
-                        _content = _f.read()
-                    with st.expander(_title, expanded=False):
-                        st.markdown(_content)
+            _render_reference_library()
 
 # --- 瑪雅占星 ---
 with tab_maya:
