@@ -77,7 +77,8 @@ MOBILE_CSS = """<style>
     /* Sidebar */
     section[data-testid="stSidebar"] { min-width: 200px; }
 
-    /* Columns: stack vertically on mobile */
+    /* Columns: stack vertically on mobile
+       Note: data-testid selectors are Streamlit internal; verify on upgrades. */
     [data-testid="stHorizontalBlock"] {
         flex-wrap: wrap !important;
     }
@@ -97,15 +98,13 @@ MOBILE_CSS = """<style>
     h2 { font-size: 1.15rem !important; }
     h3 { font-size: 1.0rem !important; }
 
-    /* HTML tables: allow shrink and horizontal scroll */
+    /* HTML tables: constrain width and allow cell shrink */
     table {
-        display: block;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
         max-width: 100%;
     }
     table td, table th {
         min-width: auto !important;
+        word-break: break-word;
     }
 
     /* SVG charts: fit within viewport */
