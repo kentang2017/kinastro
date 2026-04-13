@@ -11,6 +11,8 @@
 使用農曆新年查找表搭配 pyswisseph 朔望月計算確定農曆月份。
 """
 
+import math
+
 import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
@@ -122,6 +124,10 @@ _CHINESE_NEW_YEAR: dict[int, tuple[int, int]] = {
 # 平均朔望月長度（天）。此常數用於逼近下次朔望的初始估算；
 # 精確朔日時刻由 pyswisseph 的日月黃經迭代法確定。
 _SYNODIC_MONTH = 29.5305891
+
+# 北京時間（CST = UTC+8）偏移量（以 JD 天為單位）。
+# 農曆以北京時間為準，日期邊界為午夜零時。
+_CST_OFFSET = 8.0 / 24.0
 
 # ============================================================
 # 資料類 (Data Classes)
@@ -241,11 +247,6 @@ def _solar_to_lunar(jd: float) -> tuple[int, int, int, bool]:
         (lunar_year, lunar_month, lunar_day, is_leap_month)
         lunar_month: 1-12（閏月與正常月同編號，is_leap_month=True 區分）
     """
-    import math
-
-    # 北京時間（CST = UTC+8）偏移量（以 JD 天為單位）
-    _CST_OFFSET = 8.0 / 24.0
-
     # 先由儒略日推算公曆年份
     gd = swe.revjul(jd)  # (year, month, day, hour)
     gy = int(gd[0])

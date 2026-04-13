@@ -1129,9 +1129,9 @@ elif _selected_system == "tab_chinstar":
             _chinstar_month = _cs_lm
             _chinstar_day = _cs_ld
             _chinstar_hour = _p["hour"]
+            from astro.chinstar.chinstar import BRANCHES as _cs_br
             _cs_branch_idx = ((int(_chinstar_hour) + 1) // 2) % 12
-            _cs_branches_list = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
-            _cs_hour_branch = _cs_branches_list[_cs_branch_idx]
+            _cs_hour_branch = _cs_br[_cs_branch_idx]
             st.info(
                 t("chinstar_auto_result").format(
                     year=_cs_ly, month=_cs_lm, day=_cs_ld,
