@@ -13,6 +13,8 @@ Implements the complete 演禽 (Star-Animal Divination) system including:
 from __future__ import annotations
 
 import datetime
+import json
+import os
 from typing import Dict, List, Optional, Tuple
 
 # ==================== 二十八宿 + 禽名 + 五行數據（完全來自文本） ====================
@@ -846,6 +848,112 @@ class WanHuaXianQin:
         lines.append("")
         lines.append("=" * 56)
         return "\n".join(lines)
+
+
+# ==================== 相胎賦 & 貴賤格 JSON 數據 ====================
+
+_DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_json(filename: str) -> object:
+    """Load a JSON file from the data directory."""
+    path = os.path.join(_DATA_DIR, filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+_XIANGTAI_FU: Optional[List[Dict]] = None
+_GUI_JIAN_GE: Optional[Dict] = None
+
+
+def _get_xiangtai_fu() -> List[Dict]:
+    global _XIANGTAI_FU  # noqa: PLW0603
+    if _XIANGTAI_FU is None:
+        _XIANGTAI_FU = _load_json("xiangtai_fu.json")
+    return _XIANGTAI_FU
+
+
+def _get_gui_jian_ge() -> Dict:
+    global _GUI_JIAN_GE  # noqa: PLW0603
+    if _GUI_JIAN_GE is None:
+        _GUI_JIAN_GE = _load_json("gui_jian_ge.json")
+    return _GUI_JIAN_GE
+
+
+def lookup_xiangtai(zhu_xing: str, tai_xing: str) -> Optional[Dict]:
+    """查詢相胎賦 — 根據主星（命星）和胎星查找匹配的相胎賦讀解
+
+    Args:
+        zhu_xing: 主星（命星）禽名，如 "角木蛟"
+        tai_xing: 胎星禽名，如 "亢金龍"
+
+    Returns:
+        匹配的相胎賦 dict 或 None
+    """
+    for entry in _get_xiangtai_fu():
+        if entry["zhu"] == zhu_xing and entry["tai"] == tai_xing:
+            return entry
+    return None
+
+
+def lookup_gui_ge(qin_name: str) -> List[Dict]:
+    """查詢貴格（吉利格局）列表
+
+    Args:
+        qin_name: 禽名，如 "角木蛟"
+
+    Returns:
+        該禽星的貴格列表
+    """
+    data = _get_gui_jian_ge()
+    return data.get("貴格", {}).get(qin_name, [])
+
+
+def lookup_jian_ge(qin_name: str) -> List[Dict]:
+    """查詢賤格（凶煞格局）列表
+
+    Args:
+        qin_name: 禽名，如 "角木蛟"
+
+    Returns:
+        該禽星的賤格列表
+    """
+    data = _get_gui_jian_ge()
+    return data.get("賤格", {}).get(qin_name, [])
+
+
+def lookup_fulu_patterns(qin_name: str) -> List[Dict]:
+    """查詢福祿上格
+
+    Args:
+        qin_name: 禽名，如 "角木蛟"
+
+    Returns:
+        匹配的福祿上格列表
+    """
+    data = _get_gui_jian_ge()
+    results = []
+    for pat in data.get("福祿上格", []):
+        if qin_name in pat.get("stars", ""):
+            results.append(pat)
+    return results
+
+
+def lookup_pinjian_patterns(qin_name: str) -> List[Dict]:
+    """查詢貧賤下命
+
+    Args:
+        qin_name: 禽名，如 "角木蛟"
+
+    Returns:
+        匹配的貧賤下命列表
+    """
+    data = _get_gui_jian_ge()
+    results = []
+    for pat in data.get("貧賤下命", []):
+        if qin_name in pat.get("stars", ""):
+            results.append(pat)
+    return results
 
 
 # ==================== 使用示例（文本戊子年生人） ====================

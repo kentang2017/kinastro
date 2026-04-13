@@ -1175,8 +1175,10 @@ elif _selected_system == "tab_chinstar":
                     gender=_cs_gender,
                 )
 
-            _cs_tab_chart, _cs_tab_text = st.tabs([
+            _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian, _cs_tab_text = st.tabs([
                 t("chinstar_subtab_chart"),
+                t("chinstar_subtab_xiangtai"),
+                t("chinstar_subtab_gui_jian"),
                 t("chinstar_subtab_text"),
             ])
 
@@ -1322,6 +1324,99 @@ elif _selected_system == "tab_chinstar":
                 # ── 完整文字輸出（可複製） ──────────────────────
                 with st.expander(t("chinstar_full_text_expander")):
                     st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+
+            with _cs_tab_xiangtai:
+                from astro.chinstar.chinstar import lookup_xiangtai, _get_xiangtai_fu
+
+                st.markdown(t("chinstar_xiangtai_title"))
+
+                # 查找匹配的相胎賦
+                _xt_match = lookup_xiangtai(s["ming_xing"], s["tai_xing"])
+                if _xt_match:
+                    st.markdown(t("chinstar_xiangtai_match").format(
+                        zhu=s["ming_xing"], tai=s["tai_xing"],
+                    ))
+                    _xt_cols = st.columns(2)
+                    with _xt_cols[0]:
+                        st.metric(t("chinstar_xiangtai_xingpin"), _xt_match["xing_pin"])
+                    with _xt_cols[1]:
+                        st.metric(t("chinstar_xiangtai_xiji"), _xt_match["xi_ji"])
+                    st.info(f'**{t("chinstar_xiangtai_desc")}**：{_xt_match["desc"]}')
+                    st.success(f'**{t("chinstar_xiangtai_poem")}**：\n\n{_xt_match["poem"]}')
+                else:
+                    st.warning(t("chinstar_xiangtai_no_match"))
+
+                st.divider()
+
+                # 顯示相胎賦全覽
+                with st.expander(t("chinstar_xiangtai_ref")):
+                    _xt_all = _get_xiangtai_fu()
+                    _xt_rows = []
+                    for _xt_e in _xt_all:
+                        _xt_rows.append({
+                            "主星": _xt_e["zhu"],
+                            "胎星": _xt_e["tai"],
+                            "形品": _xt_e["xing_pin"],
+                            "喜忌": _xt_e["xi_ji"],
+                            "論斷": _xt_e["desc"][:50] + "…" if len(_xt_e["desc"]) > 50 else _xt_e["desc"],
+                        })
+                    st.dataframe(_xt_rows, use_container_width=True, hide_index=True)
+
+            with _cs_tab_gui_jian:
+                from astro.chinstar.chinstar import (
+                    lookup_gui_ge, lookup_jian_ge,
+                    lookup_fulu_patterns, lookup_pinjian_patterns,
+                )
+
+                # 取主要禽星（胎星、命星）
+                _gj_stars = [s["tai_xing"], s["ming_xing"]]
+                if s["shen_xing"] not in _gj_stars:
+                    _gj_stars.append(s["shen_xing"])
+
+                # ── 福祿上格 ──
+                st.markdown(t("chinstar_fulu_title"))
+                _fulu_found = False
+                for _gj_star in _gj_stars:
+                    _fl = lookup_fulu_patterns(_gj_star)
+                    if _fl:
+                        _fulu_found = True
+                        for _fl_e in _fl:
+                            st.success(f'**{_fl_e["name"]}**（{_fl_e["stars"]}）— {_fl_e["condition"]}')
+                if not _fulu_found:
+                    st.info("—")
+                st.divider()
+
+                # ── 貧賤下命 ──
+                st.markdown(t("chinstar_pinjian_title"))
+                _pj_found = False
+                for _gj_star in _gj_stars:
+                    _pj = lookup_pinjian_patterns(_gj_star)
+                    if _pj:
+                        _pj_found = True
+                        for _pj_e in _pj:
+                            st.error(f'**{_pj_e["name"]}**（{_pj_e["stars"]}）— {_pj_e["condition"]}')
+                if not _pj_found:
+                    st.info("—")
+                st.divider()
+
+                # ── 各星貴格 / 賤格 ──
+                for _gj_star in _gj_stars:
+                    st.markdown(t("chinstar_gui_for_star").format(star=_gj_star))
+                    _gui = lookup_gui_ge(_gj_star)
+                    if _gui:
+                        _gui_rows = [{"格局": g["name"], "干支": g["ganzhi"]} for g in _gui]
+                        st.dataframe(_gui_rows, use_container_width=True, hide_index=True)
+                    else:
+                        st.info(t("chinstar_no_gui"))
+
+                    st.markdown(t("chinstar_jian_for_star").format(star=_gj_star))
+                    _jian = lookup_jian_ge(_gj_star)
+                    if _jian:
+                        _jian_rows = [{"格局": j["name"], "干支": j["ganzhi"]} for j in _jian]
+                        st.dataframe(_jian_rows, use_container_width=True, hide_index=True)
+                    else:
+                        st.info(t("chinstar_no_jian"))
+                    st.divider()
 
             with _cs_tab_text:
                 import os as _cs_os
