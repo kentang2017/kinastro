@@ -91,7 +91,7 @@ def find_auspicious_dates(start_year, start_month, start_day,
         if branch_idx in (3, 9):  # 卯/酉 can be 破日
             score -= 15
             bad.append("破日")
-        if stem_idx == 6 and branch_idx == 7:  # 庚酉
+        if stem_idx == 6 and branch_idx == 7:  # 庚未
             score -= 10
             bad.append("天刑")
 
