@@ -467,12 +467,13 @@ def _render_compass(chart):
     )
 
     html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:separate;border-spacing:4px;'
         'margin:auto;width:80%;max-width:500px;">'
         f'<tr>{"".join(row0)}</tr>'
         f'<tr>{row1_l}{center_html}{row1_r}</tr>'
         f'<tr>{"".join(row2)}</tr>'
-        '</table>'
+        '</table></div>'
     )
     st.markdown(html, unsafe_allow_html=True)
 

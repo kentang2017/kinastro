@@ -298,7 +298,7 @@ def _render_thai_grid(chart):
 
     cell_style = (
         "border:1px solid #444; padding:6px; text-align:center; "
-        "vertical-align:top; min-width:120px; font-size:13px;"
+        "vertical-align:top; font-size:13px;"
     )
     asc_cell_style = cell_style + " background:#3d3010;"
     center_style = (
@@ -307,7 +307,7 @@ def _render_thai_grid(chart):
         "color:#e0e0e0;"
     )
 
-    html = '<table style="border-collapse:collapse; margin:auto; width:100%;">'
+    html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;"><table style="border-collapse:collapse; margin:auto; width:100%;">'
     for row_idx, row in enumerate(grid):
         html += "<tr>"
         col_idx = 0
@@ -350,7 +350,7 @@ def _render_thai_grid(chart):
                 html += f'<td style="{style}">{cell_content}</td>'
             col_idx += 1
         html += "</tr>"
-    html += "</table>"
+    html += "</table></div>"
     st.markdown(html, unsafe_allow_html=True)
 
 
