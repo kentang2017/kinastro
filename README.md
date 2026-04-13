@@ -5,15 +5,29 @@
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 [![Python](https://img.shields.io/badge/Python-3.10+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.35-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
-[![License](https://img.shields.io/badge/License-MIT-8B5CF6?style=flat-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**十四體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸・古埃及十度區間・納迪・蒙古祖爾海・Picatrix 星體魔法**
+**十四體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸・古埃及十度區間・納迪・蒙古祖爾海・希臘 + 跨體系比較**
 
-*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic, Maya, Myanmar, Egyptian Decans, Nadi, Mongolian Zurkhai & Picatrix Stellar Magic*
+*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic (incl. Picatrix & Shams al-Maʻārif), Maya, Myanmar, Egyptian Decans, Nadi, Mongolian Zurkhai, Hellenistic + Cross-System Comparison*
 
 </div>
+
+---
+
+## 📑 目錄 | Table of Contents
+
+- [✨ 特色亮點 | Highlights](#-特色亮點--highlights)
+- [🧭 體系總覽 | Systems at a Glance](#-體系總覽--systems-at-a-glance)
+- [🔍 各體系詳細介紹 | System Details](#-各體系詳細介紹--system-details)
+- [🚀 快速開始 | Quick Start](#-快速開始--quick-start)
+- [📁 專案結構 | Project Structure](#-專案結構--project-structure)
+- [🛠️ 技術棧 | Tech Stack](#️-技術棧--tech-stack)
+- [🧪 執行測試 | Run Tests](#-執行測試--run-tests)
+- [🤝 貢獻 | Contributing](#-貢獻--contributing)
+- [📜 授權 | License](#-授權--license)
 
 ---
 
@@ -21,17 +35,40 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **十四體系合一** | 在同一個介面中切換十四種占星體系，無需來回切換工具 | Switch between 14 astrology systems in one unified interface |
+| 🔮 **十四體系合一** | 在同一個介面中切換十四種占星體系＋跨體系比較，無需來回切換工具 | Switch between 14 astrology systems + cross-comparison in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
 | 🌐 **中英雙語** | 介面支援中文與英文切換 | Full Chinese and English bilingual interface |
 | 🎨 **彩色互動介面** | Streamlit 驅動的現代化 Web UI，響應式排盤結果 | Modern interactive Web UI powered by Streamlit |
 | 📱 **響應式設計** | 適配桌面與移動設備，隨時隨地查閱星盤 | Responsive design for desktop and mobile devices |
+| 💾 **儲存與匯出** | 儲存／載入排盤參數，支援 TXT、CSV、PDF 匯出 | Save/load chart parameters, export to TXT, CSV, PDF |
 | 🆓 **開源免費** | MIT 授權，完整原始碼可自由使用與擴展 | Open-source under MIT License, free to use and extend |
 
 ---
 
-## 🧭 支援的占星體系 | Supported Astrology Systems
+## 🧭 體系總覽 | Systems at a Glance
+
+| # | 體系 System | 黃道 Zodiac | 子功能 Sub-features |
+|:-:|---|---|---|
+| 1 | 🀄 七政四餘 Chinese | 恆星 Sidereal | 本命盤・神煞・年限大運・流時對盤・張果星宗・擇日 |
+| 2 | 🌟 紫微斗數 Zi Wei | 農曆 Lunar | 十四主星・十二宮位・五行局 |
+| 3 | 🌍 西洋占星 Western | 回歸 Tropical | 本命盤・行星過運・太陽回歸・合盤比較・恆星・小行星 |
+| 4 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas |
+| 5 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
+| 6 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜 |
+| 7 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
+| 8 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全 |
+| 9 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 10 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
+| 11 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 12 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
+| 13 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
+| 14 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing |
+| | 🔀 跨體系比較 Cross-Compare | — | 中／西／印三系行星位置統一對照 |
+
+---
+
+## 🔍 各體系詳細介紹 | System Details
 
 ### 🀄 七政四餘（中國傳統占星）| Chinese Traditional Astrology
 
@@ -45,6 +82,19 @@
 - **二十八宿 / 28 Mansions**：東方青龍、北方玄武、西方白虎、南方朱雀 — Azure Dragon, Black Tortoise, White Tiger, Vermilion Bird
 - **十二星次 / Twelve Jupiter Stations**：星紀、玄枵、娵訾、降婁、大梁、實沈 etc.
 - **相位 / Aspects**：合、沖、刑、三合、六合 — Conjunction, Opposition, Square, Trine, Sextile
+
+<details>
+<summary>📂 六個子分頁 | 6 Sub-tabs</summary>
+
+| 子分頁 | 功能 |
+|---|---|
+| **本命盤** | 二十八宿環形盤面、八字四柱、行星表、宮位表、相位摘要 |
+| **神煞** | 30+ 神煞（天乙貴人、文昌星、驛馬等）、十二長生 |
+| **年限大運** | 行星主運週期，以命宮地支與性別推算 |
+| **流時對盤** | 自選日期時間的流時盤與本命盤對照 |
+| **張果星宗** | 星入宮位解讀（1060 條星宮語句）、128 星組格局 |
+| **擇日** | 天干地支評分的日期挑選工具 |
+</details>
 
 ---
 
@@ -74,6 +124,17 @@
 - **逆行檢測 / Retrograde Detection**：自動標記逆行中的星曜 — Automatic retrograde planet labeling
 - **輪盤圖 / Wheel Chart**：視覺化星盤輪圖 — Interactive visual wheel chart
 
+<details>
+<summary>📂 四個子分頁 | 4 Sub-tabs</summary>
+
+| 子分頁 | 功能 |
+|---|---|
+| **本命盤 Natal** | 星盤輪圖、恆星合相（25 顆古典恆星）、小行星（Chiron、Ceres、Pallas、Juno、Vesta）、匯出 TXT/CSV/PDF |
+| **行星過運 Transit** | 即時過運行星與本命盤的相位分析 |
+| **太陽回歸 Solar Return** | Newton-Raphson 精密太陽回歸盤計算 |
+| **合盤比較 Synastry** | 雙人交叉相位、和諧分數、元素相容性分析 |
+</details>
+
 ---
 
 ### 🙏 印度占星 Jyotish（Vedic Astrology）
@@ -85,14 +146,24 @@
 - **九曜 Navagraha**：太陽、月亮、火星、水星、木星、金星、土星、羅睺、計都 — Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu
 - **十二星座 Rashi**：Mesha（白羊）至 Meena（雙魚）— Mesha (Aries) to Meena (Pisces)
 - **二十七宿 Nakshatra**：Ashwini 至 Revati，每宿 13°20'，各分四足 (Pada) — 27 lunar mansions, each 13°20', divided into 4 padas
-- **七曜管宿 / Nakshatra Lordship**：每顆曜主管 3 個 Nakshatra（太陽管 Krittika 等）
 - **南印度方盤 / South Indian Chart**：宮位固定・行星流動的 4×4 網格 — Fixed-house, planet-moving 4×4 grid
 - **北印度方盤 / North Indian Chart**：以 Lagna 為起點的旋轉宮系統 — Lagna-based rotating house system
 - **歲差修正 / Ayanamsa Correction**：內建 Lahiri Ayanamsa 自動校正
 
+<details>
+<summary>📂 四個子分頁 | 4 Sub-tabs</summary>
+
+| 子分頁 | 功能 |
+|---|---|
+| **星座盤 Rashi** | 南印度 / 北印度方盤、行星配置 |
+| **大運 Dasha** | Vimshottari 120 年大運（含 Antardasha 子期）、Yogini 36 年大運 |
+| **Ashtakavarga** | 七行星 Bhinnashtakavarga + Sarvashtakavarga 積分表 |
+| **Yogas** | 12 種瑜伽檢測（Gajakesari、Kemdruma、Gandanta、5 Mahapurusha 等） |
+</details>
+
 ---
 
-### 🈳 宿曜道（日本 Yojōdō）| Japanese Sukkayodo
+### 🈳 宿曜道（日本 Yōjōdō）| Japanese Sukkayodo
 
 9 世紀由空海大師自印度傳入日本，融合佛教密宗與道家思想。
 
@@ -116,7 +187,7 @@
 - **十二星座 / 12 Signs**：泰語命名的恆星黃道星座 — Sidereal zodiac signs with Thai names
 - **日主星 / Day Lord**：根據出生星期判定守護星（星期日=太陽，星期一=月亮…）— Ruling planet based on birth weekday
 - **泰式方盤 / Thai Chart**：泰語標示的占星盤面 — Thai-labeled astrological chart
-- **九宮格 / Nine Grid**：泰國傳統九宮格排盤 — Traditional Thai nine-grid divination
+- **九宮格 / Nine Grid**：泰國傳統九宮格排盤與占卜 — Traditional Thai nine-grid divination
 
 ---
 
@@ -143,6 +214,16 @@
 - **日夜盤 / Sect**：根據太陽位置區分日盤與夜盤，影響阿拉伯點公式 — Day/night chart distinction based on Sun's position
 - **行星廟旺落陷 / Essential Dignities**：入廟、入旺、落陷、入弱 — Domicile, Exaltation, Detriment, Fall
 - **回歸黃道 / Tropical Zodiac**：使用 Placidus 宮位制 — Using Placidus house system
+
+<details>
+<summary>📂 三個子分頁 | 3 Sub-tabs</summary>
+
+| 子分頁 | 功能 |
+|---|---|
+| **阿拉伯盤 Chart** | 阿拉伯點計算、行星尊貴、日夜盤判定 |
+| **Picatrix 星體魔法** | 28 月宿瀏覽、月宿查詢、行星時計算、護符推薦（資料來自 Greer & Warnock 2011、Attrell & Porreca 2019） |
+| **太陽知識大全 Shams al-Maʻārif** | 行星屬性、星座特質、Riyada 靈性修煉、伊斯蘭祈禱、Wafq 數字方陣 |
+</details>
 
 ---
 
@@ -172,6 +253,7 @@
 - **七宮位 / Seven Houses**：本命、壽命、意識、身體、權勢、死亡、道德 — Birth, Longevity, Consciousness, Body, Power, Death, Morality
 - **行星大運 / Atar (Planetary Periods)**：七星循環共 96 年，主宰人生各階段 — Seven-planet cycle totaling 96 years, governing life stages
 - **計算公式 / Formula**：Mahabote 值 = (緬甸年 + 星期數) mod 7 — Mahabote value = (Myanmar year + weekday number) mod 7
+- **動物守護 / Animal Signs**：每個星期對應守護動物（鳥翼獅、虎、獅、有牙象、鼠、天竺鼠、龍）— Weekday animal signs (Galon, Tiger, Lion, Tusked Elephant, Rat, Guinea Pig, Dragon)
 
 ---
 
@@ -181,13 +263,12 @@
 
 *Originating from ancient Egypt's astronomical timekeeping system thousands of years ago, one of the oldest division techniques in Western astrology.*
 
-- **36 個 Decans**：黃道 360° 每 10° 劃分為一個 Decan（十度區間），每個星座含 3 個 Decan — 360° zodiac divided into 36 segments of 10° each, 3 per sign
+- **36 個 Decans**：黃道 360° 每 10° 劃分為一個 Decan，每個星座含 3 個 Decan — 360° zodiac divided into 36 segments of 10° each, 3 per sign
 - **古埃及星神 / Egyptian Star Deities**：每個 Decan 對應一位古埃及神靈（來自棺蓋對角星表、Dendera Zodiac 等文獻）— Each Decan maps to an Egyptian deity (from coffin lid diagonal star tables, Dendera Zodiac, etc.)
 - **迦勒底行星統治 / Chaldean Order**：Mars → Sun → Venus → Mercury → Moon → Saturn → Jupiter 循環
 - **三重統治 / Triplicity**：根據元素分配行星統治權 — Planetary rulership by elemental triplicity
 - **塔羅小阿卡納 / Minor Arcana**：Golden Dawn 傳統，36 Decans 對應塔羅牌 2–10 號 — Golden Dawn tradition, 36 Decans mapped to Tarot cards 2–10
 - **本質尊貴 / Essential Dignities**：Face/Decan 尊貴計分（+1 分），含完整廟旺落陷摘要 — Face/Decan dignity scoring (+1), with full dignity summary
-- **今日 Decan / Today's Decan**：根據當前太陽位置自動顯示今日十度區間 — Automatically displays today's Decan based on current Sun position
 - **Plotly 輪盤圖 / Wheel Chart**：視覺化 36 Decans 的 Dendera Zodiac 外環 — Interactive Plotly visualization of the Dendera Zodiac outer ring
 
 > 📖 此工具為文化、歷史與占星學習用途。古埃及 Decans 起源於數千年前的天文計時系統，現代解讀僅供參考。
@@ -233,16 +314,42 @@
 
 ---
 
-### 📜 Picatrix 星體魔法（Picatrix Stellar Magic）
+### 🏺 希臘占星（Hellenistic Astrology）
 
-源自中世紀阿拉伯魔法典籍《賢者之目的》(Ghayat al-Hakim)，結合天文計算與古典星體魔法。
+古希臘羅馬時期的占星體系，是西洋占星的源頭，以整宮制（Whole-sign Houses）與希臘點為核心。
 
-*Based on the medieval Arabic grimoire "Ghayat al-Hakim" (The Aim of the Sage), combining astronomical calculations with classical stellar magic.*
+*The astrology of the Greco-Roman era — the root of modern Western astrology, centered on Whole-sign Houses and Greek Lots.*
 
-- **28 阿拉伯月宿 / 28 Lunar Mansions (Manazil al-Qamar)**：完整的月宿屬性與意象查詢 — Complete lunar mansion attributes and imagery lookup
-- **行星時 / Planetary Hours**：根據日出日落計算迦勒底行星時 — Chaldean planetary hours calculated from sunrise/sunset
-- **護符推薦 / Talisman Recommendation**：根據意圖推薦最佳製作時機與月宿 — Optimal creation timing and mansion recommendations based on intent
-- **古典文獻資料 / Classical Sources**：資料取自 Greer & Warnock (2011) 與 Attrell & Porreca (2019) 英譯本 — Data sourced from Greer & Warnock (2011) and Attrell & Porreca (2019) translations
+- **希臘點 / Greek Lots (Kleros)**：Fortune、Spirit、Eros、Necessity、Courage、Victory、Nemesis — 七大希臘點計算
+- **Egyptian Bounds / Terms**：古代行星界（Bounds）尊貴體系 — Ancient planetary boundaries dignity system
+- **年限推進 / Annual Profections**：每年宮位前進一個星座，決定年度時間主（Time Lord）
+- **黃道釋放 / Zodiacal Releasing (L1)**：以 Fortune Lot 為起點的主限週期推算 — Major period calculation from Lot of Fortune
+- **行星狀態評分 / Planetary Condition**：綜合尊貴、Sect、相位的行星狀態評分 — Composite scoring of dignity, sect, and aspects
+- **Sect 分析 / Sect Analysis**：日盤與夜盤的行星派別判定 — Diurnal/nocturnal sect classification
+- **希臘方盤 / Greek Horoscope (θέμα)**：仿古方盤（Whole-sign houses, ASC 左、MC 上）— Square chart after L 497
+
+<details>
+<summary>📂 五個子分頁 | 5 Sub-tabs</summary>
+
+| 子分頁 | 功能 |
+|---|---|
+| **Greek Chart θέμα** | SVG 方盤視覺化，仿古希臘碑文格式 |
+| **Natal Analysis** | 行星狀態、Sect、尊貴摘要 |
+| **Profections** | 年齡、推進星座、年度 Time Lord |
+| **Zodiacal Releasing** | L1 主限週期表（各星座與統治星） |
+| **Greek Lots** | 七大希臘點的星座、度數、宮位、含義 |
+</details>
+
+---
+
+### 🔀 跨體系比較 | Cross-System Comparison
+
+將中國七政四餘、西洋占星、印度占星三大系統的行星位置並排比較，一目了然。
+
+*Side-by-side comparison of planetary positions across Chinese, Western, and Vedic astrology systems.*
+
+- **三系行星位置 / Tri-System Planets**：同一星體在恆星黃道 vs 回歸黃道下的經度對照 — Longitude comparison of the same body under sidereal vs tropical zodiac
+- **歲差差異 / Ayanamsa Offset**：直觀展示恆星黃道與回歸黃道之間的歲差偏移 — Visual demonstration of ayanamsa offset between zodiac systems
 
 ---
 
@@ -268,48 +375,94 @@ streamlit run app.py
 
 ```
 kinastro/
-├── app.py                      # Streamlit 主應用程式 / Main Streamlit application
+├── app.py                          # Streamlit 主應用程式 / Main Streamlit application
 ├── astro/
-│   ├── i18n.py                 # 中英雙語國際化 / Chinese-English i18n module
-│   ├── calculator.py           # 七政四餘核心計算引擎 / Chinese astrology calculation engine
-│   ├── chart_renderer.py       # 中國占星 UI 渲染 / Chinese astrology UI renderer
-│   ├── constants.py            # 常量與參考資料 / Constants and reference data
-│   ├── ziwei.py                # 紫微斗數排盤模組 / Zi Wei Dou Shu module
-│   ├── western.py              # 西洋占星排盤模組 / Western astrology module
-│   ├── indian.py               # 印度占星 (Jyotish) 排盤模組 / Vedic astrology module
-│   ├── sukkayodo.py            # 日本宿曜道排盤模組 / Japanese Sukkayodo module
-│   ├── thai.py                 # 泰國占星排盤模組 / Thai astrology module
-│   ├── kabbalistic.py          # 卡巴拉占星排盤模組 / Kabbalistic astrology module
-│   ├── arabic.py               # 阿拉伯占星排盤模組 / Arabic astrology module
-│   ├── maya.py                 # 瑪雅占星排盤模組 / Maya astrology module
-│   ├── mahabote.py             # 緬甸占星排盤模組 / Myanmar (Mahabote) module
-│   ├── decans_data.py          # 古埃及十度區間資料庫 / Egyptian Decans data
-│   ├── decans.py               # 古埃及十度區間排盤模組 / Egyptian Decans module
-│   ├── nadi.py                 # 納迪占星排盤模組 / Nadi Jyotish module
-│   ├── zurkhai.py              # 蒙古祖爾海排盤模組 / Mongolian Zurkhai module
-│   ├── picatrix_data.py        # Picatrix 28 月宿資料庫 / Picatrix 28 mansions data
-│   ├── picatrix_mansions.py    # Picatrix 星體魔法模組 / Picatrix stellar magic module
-│   ├── talisman_generator.py   # 護符生成器 / Talisman generator
-│   └── data/                   # Picatrix JSON 資料檔 / Picatrix JSON data files
+│   ├── i18n.py                     # 中英雙語國際化 / Chinese-English i18n module
+│   ├── chart_theme.py              # 統一色彩主題 + 響應式 CSS / Unified theme + mobile CSS
+│   │
+│   │  ── 七政四餘（Chinese Traditional） ──
+│   ├── calculator.py               # 核心計算引擎 / Core calculation engine
+│   ├── chart_renderer.py           # UI 渲染（含 SVG 環形盤）/ UI renderer
+│   ├── constants.py                # 常量與參考資料 / Constants & reference data
+│   ├── shensha.py                  # 神煞計算 / Divine Stars
+│   ├── qizheng_dasha.py            # 年限大運 / Planetary Periods
+│   ├── qizheng_transit.py          # 流時對盤 / Transit Comparison
+│   ├── qizheng_electional.py       # 擇日工具 / Electional Tool
+│   ├── zhangguo.py                 # 張果星宗 / Zhangguo Star Readings
+│   │
+│   │  ── 紫微斗數（Zi Wei） ──
+│   ├── ziwei.py                    # 紫微斗數排盤 / Zi Wei Dou Shu module
+│   │
+│   │  ── 西洋占星（Western） ──
+│   ├── western.py                  # 本命盤 / Natal chart
+│   ├── western_transit.py          # 行星過運 / Transit analysis
+│   ├── western_return.py           # 太陽回歸 / Solar & Lunar Return
+│   ├── western_synastry.py         # 合盤比較 / Synastry
+│   ├── fixed_stars.py              # 恆星合相 / Fixed star conjunctions
+│   ├── asteroids.py                # 小行星 / Asteroids (Chiron, Ceres…)
+│   │
+│   │  ── 印度占星（Vedic） ──
+│   ├── indian.py                   # Vedic (Jyotish) 排盤 / Vedic chart
+│   ├── vedic_dasha.py              # Vimshottari & Yogini 大運 / Dasha cycles
+│   ├── ashtakavarga.py             # Ashtakavarga 積分 / Ashtakavarga scoring
+│   ├── vedic_yogas.py              # Yoga 檢測 / Yoga detections
+│   │
+│   │  ── 其他體系（Other Systems） ──
+│   ├── sukkayodo.py                # 宿曜道 / Japanese Sukkayodo
+│   ├── thai.py                     # 泰國占星 / Thai astrology
+│   ├── kabbalistic.py              # 卡巴拉占星 / Kabbalistic astrology
+│   ├── arabic.py                   # 阿拉伯占星 / Arabic astrology
+│   ├── maya.py                     # 瑪雅占星 / Maya astrology
+│   ├── mahabote.py                 # 緬甸占星 / Myanmar (Mahabote)
+│   ├── decans.py                   # 古埃及十度區間 / Egyptian Decans
+│   ├── decans_data.py              # Decans 資料庫 / Decans data
+│   ├── nadi.py                     # 納迪占星 / Nadi Jyotish
+│   ├── zurkhai.py                  # 蒙古祖爾海 / Mongolian Zurkhai
+│   ├── hellenistic.py              # 希臘占星 / Hellenistic astrology
+│   │
+│   │  ── 阿拉伯子模組（Arabic Sub-modules） ──
+│   ├── picatrix_data.py            # Picatrix 28 月宿資料 / Picatrix mansions data
+│   ├── picatrix_mansions.py        # Picatrix 月宿計算 / Picatrix calculations
+│   ├── talisman_generator.py       # 護符生成器 / Talisman generator
+│   ├── shams_maarif.py             # Shams al-Maʻārif 渲染 / Shams rendering
+│   ├── arabic_planetaries.py       # 行星屬性 / Planetary properties
+│   ├── arabic_zodiacsigns.py       # 星座屬性 / Zodiac sign properties
+│   ├── arabic_spells.py            # 伊斯蘭祈禱 / Islamic Duas
+│   ├── riyada.py                   # Riyada 靈性修煉 / Spiritual exercises
+│   ├── wafq.py                     # Wafq 數字方陣 / Numeric squares
+│   │
+│   │  ── 共用模組（Shared Modules） ──
+│   ├── cross_compare.py            # 跨體系比較 / Cross-system comparison
+│   ├── ptolemy_dignities.py        # Ptolemy 尊貴表 / Ptolemy dignities
+│   ├── export.py                   # TXT/CSV/PDF 匯出 / Chart export
+│   ├── session_store.py            # 排盤儲存管理 / Chart save/load
+│   └── data/                       # JSON 資料檔 / JSON data files
+│
 ├── tests/
-│   ├── test_calculator.py      # 計算模組單元測試 / Calculator unit tests
-│   └── test_new_astrology.py   # 新占星體系測試 / New astrology systems tests
-├── requirements.txt            # Python 相依套件 / Python dependencies
-├── README.md                   # 本說明文件 / This documentation
-└── LICENSE                     # MIT 授權 / MIT License
+│   ├── test_calculator.py          # 計算模組單元測試 / Calculator unit tests
+│   ├── test_new_astrology.py       # 多體系測試 / Multi-system tests
+│   └── test_advanced_features.py   # 進階功能測試 / Advanced feature tests
+├── docs/
+│   └── CONTRIBUTING.md             # 貢獻指南 / Contributing guide
+├── requirements.txt                # Python 相依套件 / Python dependencies
+├── pyproject.toml                  # 專案中繼資料 / Project metadata
+├── CHANGELOG.md                    # 變更日誌 / Changelog
+├── README.md                       # 本說明文件 / This documentation
+└── LICENSE                         # MIT 授權 / MIT License
 ```
 
 ---
 
 ## 🛠️ 技術棧 | Tech Stack
 
-| 元件 / Component | 技術 / Technology |
-|------|------|
-| 前端框架 / Frontend | [Streamlit](https://streamlit.io/) — 互動式 Python Web 框架 / Interactive Python Web framework |
-| 星曆計算 / Ephemeris | [pyswisseph](https://github.com/astrorigin/pyswisseph) — 瑞士星曆表 / Swiss Ephemeris |
-| 視覺化 / Visualization | [Plotly](https://plotly.com/) — 互動式圖表 / Interactive charts |
-| 語言 / Language | Python 3.10+ |
-| 黃道系統 / Zodiac | 恆星黃道（Lahiri 歲差）& 回歸黃道 / Sidereal (Lahiri ayanamsa) & Tropical zodiac |
+| 元件 Component | 技術 Technology |
+|---|---|
+| 前端框架 Frontend | [Streamlit](https://streamlit.io/) ≥ 1.52 — 互動式 Python Web 框架 |
+| 星曆計算 Ephemeris | [pyswisseph](https://github.com/astrorigin/pyswisseph) ≥ 2.10 — 瑞士星曆表 |
+| 視覺化 Visualization | [Plotly](https://plotly.com/) ≥ 6.0 — 互動式圖表；[svgwrite](https://github.com/mozman/svgwrite) — SVG 盤面 |
+| PDF 匯出 Export | [fpdf2](https://py-pdf.github.io/fpdf2/) ≥ 2.7 — PDF 生成 |
+| 語言 Language | Python 3.10+ |
+| 黃道系統 Zodiac | 恆星黃道 (Lahiri) & 回歸黃道 / Sidereal & Tropical |
 
 ---
 
@@ -324,9 +477,9 @@ python -m pytest tests/
 
 ## 🤝 貢獻 | Contributing
 
-歡迎提交 Issue 或 Pull Request！所有貢獻都會被感謝。
+歡迎提交 Issue 或 Pull Request！詳見 [CONTRIBUTING.md](docs/CONTRIBUTING.md)。
 
-*Contributions via Issues and Pull Requests are welcome! All contributions are appreciated.*
+*Contributions via Issues and Pull Requests are welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.*
 
 ---
 
