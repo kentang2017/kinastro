@@ -1,9 +1,9 @@
 """
-Comprehensive tests for 14 advanced modules in the kinastro project.
+Comprehensive tests for 13 advanced modules in the kinastro project.
 
 Covers: chart_theme, vedic_dasha, ashtakavarga, vedic_yogas, asteroids,
 western_transit, western_return, western_synastry, hellenistic,
-cross_compare, fixed_stars, export, session_store, qizheng_electional.
+cross_compare, fixed_stars, export, qizheng_electional.
 """
 
 import json
@@ -565,68 +565,6 @@ class TestExport:
         assert isinstance(pdf_bytes, (bytes, bytearray))
         assert len(pdf_bytes) > 0
 
-
-# ══════════════════════════════════════════════════════════════════════
-# 13. session_store
-# ══════════════════════════════════════════════════════════════════════
-class TestSessionStore:
-    def test_create_saved_chart(self):
-        from astro.session_store import create_saved_chart
-        params = {
-            "year": YEAR, "month": MONTH, "day": DAY,
-            "hour": HOUR, "minute": MINUTE,
-            "timezone": TZ, "latitude": LAT, "longitude": LON,
-            "location_name": LOC, "gender": "male",
-        }
-        sc = create_saved_chart("Test Chart", params, "western")
-        assert sc.name == "Test Chart"
-        assert sc.system_type == "western"
-        assert sc.year == YEAR
-
-    def test_saved_chart_has_timestamp(self):
-        from astro.session_store import create_saved_chart
-        params = {
-            "year": YEAR, "month": MONTH, "day": DAY,
-            "hour": HOUR, "minute": MINUTE,
-            "timezone": TZ, "latitude": LAT, "longitude": LON,
-            "location_name": LOC, "gender": "female",
-        }
-        sc = create_saved_chart("TS Test", params)
-        assert hasattr(sc, "timestamp")
-        assert len(sc.timestamp) > 0
-
-    def test_saved_chart_defaults(self):
-        from astro.session_store import create_saved_chart
-        params = {
-            "year": 2000, "month": 1, "day": 1,
-            "hour": 0, "minute": 0,
-            "timezone": 0.0, "latitude": 0.0, "longitude": 0.0,
-            "location_name": "", "gender": "male",
-        }
-        sc = create_saved_chart("Default", params)
-        assert sc.system_type == "all"
-
-    def test_export_import_roundtrip(self):
-        from astro.session_store import create_saved_chart, import_saved_charts
-        import json as _json
-        params = {
-            "year": YEAR, "month": MONTH, "day": DAY,
-            "hour": HOUR, "minute": MINUTE,
-            "timezone": TZ, "latitude": LAT, "longitude": LON,
-            "location_name": LOC, "gender": "male",
-        }
-        sc = create_saved_chart("Roundtrip", params, "vedic")
-        data = _json.dumps([{
-            "name": sc.name, "system_type": sc.system_type,
-            "timestamp": sc.timestamp,
-            "year": sc.year, "month": sc.month, "day": sc.day,
-            "hour": sc.hour, "minute": sc.minute,
-            "timezone": sc.timezone, "latitude": sc.latitude,
-            "longitude": sc.longitude,
-            "location_name": sc.location_name, "gender": sc.gender,
-        }])
-        count = import_saved_charts(data)
-        assert count >= 1
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -59,7 +59,7 @@ from astro.cross_compare import compute_cross_comparison, render_cross_compariso
 from astro.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.asteroids import compute_asteroids
 from astro.export import render_download_buttons, western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict
-from astro.session_store import render_chart_manager, save_chart
+
 from astro.picatrix_mansions import (
     render_mansion_lookup,
     render_planetary_hours_tool,
@@ -213,9 +213,7 @@ with st.sidebar:
     # 排盤按鈕
     calculate = st.button(t("calculate_btn"), width='stretch', type="primary")
 
-    # 排盤儲存管理
-    st.divider()
-    render_chart_manager()
+
 
     # 性別（用於七政四餘宮位方向）
     st.subheader(t("gender_header"))
