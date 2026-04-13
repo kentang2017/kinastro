@@ -231,7 +231,7 @@ def _cached_western(key: str, year: int, month: int, day: int, hour: int,
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name, sidereal=sidereal,
     )
-    return _chart_to_dict(chart), chart  # keep raw for hellenistic
+    return _chart_to_dict(chart)
 
 
 @lru_cache(maxsize=256)
@@ -407,7 +407,7 @@ async def western_chart(params: WesternParams) -> ChartResponse:
     """Compute a Western astrology chart (tropical or sidereal)."""
     try:
         key = _cache_key(params, sidereal=params.sidereal)
-        data, _ = _cached_western(
+        data = _cached_western(
             key, **_base_kwargs(params), sidereal=params.sidereal,
         )
         return ChartResponse(system="western", data=data)
@@ -591,7 +591,7 @@ async def compute_all(params: ComputeAllParams) -> ComputeAllResponse:
     # --- Western (needs sidereal) ---
     try:
         key = _cache_key(params, sidereal=params.sidereal)
-        data, _ = _cached_western(key, **kw, sidereal=params.sidereal)
+        data = _cached_western(key, **kw, sidereal=params.sidereal)
         charts["western"] = ChartResponse(system="western", data=data)
     except Exception as exc:
         logger.exception("Western chart failed in /api/compute")
