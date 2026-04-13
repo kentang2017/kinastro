@@ -156,4 +156,4 @@ def render_download_buttons(chart_data, key_prefix=""):
                               file_name="chart_report.pdf",
                               mime="application/pdf", key=f"{key_prefix}_pdf")
         except Exception:
-            st.caption("PDF export unavailable")
+            st.caption("PDF export unavailable (fpdf2 missing or error)")
