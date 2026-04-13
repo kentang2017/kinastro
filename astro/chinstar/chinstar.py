@@ -856,6 +856,7 @@ _DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def _load_json(filename: str) -> object:
+    """Load a JSON file from the data directory."""
     path = os.path.join(_DATA_DIR, filename)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)

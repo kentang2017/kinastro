@@ -1358,7 +1358,7 @@ elif _selected_system == "tab_chinstar":
                             "胎星": _xt_e["tai"],
                             "形品": _xt_e["xing_pin"],
                             "喜忌": _xt_e["xi_ji"],
-                            "論斷": _xt_e["desc"][:40] + "…" if len(_xt_e["desc"]) > 40 else _xt_e["desc"],
+                            "論斷": _xt_e["desc"][:50] + "…" if len(_xt_e["desc"]) > 50 else _xt_e["desc"],
                         })
                     st.dataframe(_xt_rows, use_container_width=True, hide_index=True)
 
