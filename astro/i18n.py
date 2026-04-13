@@ -753,6 +753,57 @@ Aḥmad ibn ʿAlī al-Būnī (d. 1225):
 Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill edition
 """,
     },
+
+    # ── Hellenistic Astrology ───────────────────────────────
+    "tab_hellenistic": {"zh": "希臘占星", "en": "Hellenistic"},
+    "desc_hellenistic": {
+        "zh": "**希臘占星（Hellenistic Astrology）**\n\n源自古希臘-羅馬的占星傳統，包含希臘點、埃及界主、年限推進、黃道釋放、行星狀態評分等經典技法。",
+        "en": "**Hellenistic Astrology**\n\nThe Greco-Roman tradition featuring Greek Lots, Egyptian Bounds, Annual Profections, Zodiacal Releasing, and Planetary Condition scoring.",
+    },
+    "spinner_hellenistic": {"zh": "計算希臘占星盤中...", "en": "Computing Hellenistic chart…"},
+    "hellen_subtab_natal": {"zh": "本命盤", "en": "Natal"},
+    "hellen_subtab_profections": {"zh": "年限推進", "en": "Profections"},
+    "hellen_subtab_zr": {"zh": "黃道釋放", "en": "Zodiacal Releasing"},
+    "hellen_subtab_lots": {"zh": "希臘點", "en": "Lots"},
+
+    # ── Cross-system comparison ─────────────────────────────
+    "tab_cross_compare": {"zh": "跨體系比較", "en": "Cross Compare"},
+    "desc_cross_compare": {
+        "zh": "**跨體系比較**\n\n在同一張出生圖中同時查看西洋、印度、中國三大體系的星位對比。",
+        "en": "**Cross-System Comparison**\n\nView planet positions side-by-side across Western, Vedic, and Chinese systems.",
+    },
+    "spinner_cross_compare": {"zh": "計算跨體系比較中...", "en": "Computing cross-system comparison…"},
+
+    # ── Western sub-tabs ────────────────────────────────────
+    "western_subtab_natal": {"zh": "本命盤", "en": "Natal"},
+    "western_subtab_transit": {"zh": "流年過運", "en": "Transits"},
+    "western_subtab_return": {"zh": "返照盤", "en": "Solar Return"},
+    "western_subtab_synastry": {"zh": "合盤", "en": "Synastry"},
+    "transit_target_date": {"zh": "過運日期", "en": "Transit Date"},
+    "return_year_label": {"zh": "返照年份", "en": "Return Year"},
+    "synastry_header": {"zh": "合盤比較", "en": "Synastry Comparison"},
+    "synastry_person_b": {"zh": "對象 B 出生資料", "en": "Person B Birth Data"},
+
+    # ── Vedic sub-tabs ──────────────────────────────────────
+    "vedic_subtab_rashi": {"zh": "星盤 Rashi", "en": "Rashi Chart"},
+    "vedic_subtab_navamsa": {"zh": "九分盤 D9", "en": "Navamsa D9"},
+    "vedic_subtab_dasha": {"zh": "大運 Dasha", "en": "Dasha"},
+    "vedic_subtab_ashtaka": {"zh": "八分力量", "en": "Ashtakavarga"},
+    "vedic_subtab_yogas": {"zh": "瑜伽組合", "en": "Yogas"},
+
+    # ── Ziwei sub-tabs ──────────────────────────────────────
+    "ziwei_subtab_natal": {"zh": "本命盤", "en": "Natal"},
+    "ziwei_subtab_daxian": {"zh": "大限流年", "en": "Daxian / Liunian"},
+
+    # ── Qizheng electional ──────────────────────────────────
+    "ch_subtab_electional": {"zh": "擇日", "en": "Electional"},
+
+    # ── Fixed stars & asteroids ─────────────────────────────
+    "show_fixed_stars": {"zh": "顯示恆星合相", "en": "Show Fixed Star Conjunctions"},
+    "show_asteroids": {"zh": "顯示小行星", "en": "Show Asteroids"},
+
+    # ── Export ──────────────────────────────────────────────
+    "export_header": {"zh": "匯出", "en": "Export"},
 }
 
 
