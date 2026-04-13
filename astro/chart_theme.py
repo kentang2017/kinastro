@@ -104,3 +104,43 @@ def get_planet_color(name: str) -> str:
         if alias in name:
             return PLANET_COLORS.get(key, "#666666")
     return "#666666"
+
+
+# ── Plotly unified theme ────────────────────────────────────────
+
+def get_plotly_theme() -> dict:
+    """Return a unified Plotly layout theme dict for all chart modules."""
+    return dict(
+        paper_bgcolor=CHART_BG,
+        plot_bgcolor=CHART_BG,
+        font=dict(family=FONT_FAMILY, color=TEXT_PRIMARY, size=12),
+        margin=dict(l=20, r=20, t=40, b=20),
+        colorway=[
+            PLANET_COLORS["Sun"], PLANET_COLORS["Moon"],
+            PLANET_COLORS["Mercury"], PLANET_COLORS["Venus"],
+            PLANET_COLORS["Mars"], PLANET_COLORS["Jupiter"],
+            PLANET_COLORS["Saturn"],
+        ],
+    )
+
+
+def apply_chart_theme(fig) -> None:
+    """Apply the unified plotly theme to a plotly Figure *in place*."""
+    fig.update_layout(**get_plotly_theme())
+
+
+# ── SVG helpers ─────────────────────────────────────────────────
+
+def svg_header(width: int = 600, height: int = 600, title: str = "") -> str:
+    """Return a standardised SVG opening tag with consistent styling."""
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'class="chart-wheel" viewBox="0 0 {width} {height}" '
+        f'style="background:{CHART_BG}; font-family:{FONT_FAMILY};">'
+        f'<title>{title}</title>'
+    )
+
+
+def svg_footer() -> str:
+    """Return the SVG closing tag."""
+    return '</svg>'

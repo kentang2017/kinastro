@@ -1,10 +1,11 @@
 """
 astro/export.py — 匯出功能 (Chart Export)
 
-Text summary, CSV, and PDF export for chart data.
+Text summary, CSV, PDF (with CJK support), and SVG→PNG export for chart data.
 """
 import csv
 import io
+import os
 from dataclasses import asdict
 
 
@@ -55,8 +56,29 @@ def _safe_latin1(text):
     return text.encode("latin-1", "replace").decode("latin-1")
 
 
+def _find_cjk_font():
+    """Search for an available CJK font on the system."""
+    candidates = [
+        # Linux — Noto CJK
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJKtc-Regular.otf",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
+        # macOS
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        # Windows
+        "C:/Windows/Fonts/msyh.ttc",
+        "C:/Windows/Fonts/msjh.ttc",
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
+
+
 def generate_chart_pdf(chart_data):
-    """Generate PDF bytes from chart data. Requires fpdf2."""
+    """Generate PDF bytes from chart data. Supports CJK when fonts are available."""
     try:
         from fpdf import FPDF
         from fpdf.enums import XPos, YPos
@@ -65,42 +87,88 @@ def generate_chart_pdf(chart_data):
 
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Helvetica", "B", 16)
+
+    # Try to load CJK font for proper Chinese character rendering
+    cjk_font = _find_cjk_font()
+    if cjk_font:
+        try:
+            pdf.add_font("CJK", "", cjk_font, uni=True)
+            pdf.set_font("CJK", "", 16)
+        except Exception:
+            pdf.set_font("Helvetica", "B", 16)
+            cjk_font = None
+    else:
+        pdf.set_font("Helvetica", "B", 16)
+
+    _text = (lambda s: s) if cjk_font else _safe_latin1
+
     title = chart_data.get("system", "Astrology Chart")
-    pdf.cell(0, 10, _safe_latin1(title), new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
-    pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, _safe_latin1(f"Date: {chart_data.get('datetime', '')}"),
+    pdf.cell(0, 10, _text(title), new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+
+    if cjk_font:
+        pdf.set_font("CJK", "", 10)
+    else:
+        pdf.set_font("Helvetica", "", 10)
+
+    pdf.cell(0, 6, _text(f"Date: {chart_data.get('datetime', '')}"),
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.cell(0, 6, _safe_latin1(f"Location: {chart_data.get('location', '')}"),
+    pdf.cell(0, 6, _text(f"Location: {chart_data.get('location', '')}"),
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     if chart_data.get("ascendant"):
-        pdf.cell(0, 6, _safe_latin1(f"Ascendant: {chart_data['ascendant']}"),
+        pdf.cell(0, 6, _text(f"Ascendant: {chart_data['ascendant']}"),
                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(4)
 
     # Planet table
-    pdf.set_font("Helvetica", "B", 10)
+    if cjk_font:
+        pdf.set_font("CJK", "", 10)
+    else:
+        pdf.set_font("Helvetica", "B", 10)
     pdf.cell(50, 7, "Planet", border=1)
     pdf.cell(40, 7, "Sign", border=1)
     pdf.cell(30, 7, "Degree", border=1)
     pdf.cell(20, 7, "R", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.set_font("Helvetica", "", 9)
+
+    if cjk_font:
+        pdf.set_font("CJK", "", 9)
+    else:
+        pdf.set_font("Helvetica", "", 9)
     for p in chart_data.get("planets", []):
-        pdf.cell(50, 6, _safe_latin1(p.get("name", "")), border=1)
-        pdf.cell(40, 6, _safe_latin1(p.get("sign", "")), border=1)
+        pdf.cell(50, 6, _text(p.get("name", "")), border=1)
+        pdf.cell(40, 6, _text(p.get("sign", "")), border=1)
         pdf.cell(30, 6, f"{p.get('degree', 0):.2f}", border=1)
         pdf.cell(20, 6, "R" if p.get("retrograde") else "", border=1,
                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     for sec in chart_data.get("extra_sections", []):
         pdf.ln(4)
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 7, _safe_latin1(sec.get("title", "")),
+        if cjk_font:
+            pdf.set_font("CJK", "", 10)
+        else:
+            pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 7, _text(sec.get("title", "")),
                  new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("Helvetica", "", 9)
-        pdf.multi_cell(0, 5, _safe_latin1(sec.get("content", "")))
+        if cjk_font:
+            pdf.set_font("CJK", "", 9)
+        else:
+            pdf.set_font("Helvetica", "", 9)
+        pdf.multi_cell(0, 5, _text(sec.get("content", "")))
 
     return pdf.output()
+
+
+def svg_to_png(svg_string: str, width: int = 800) -> bytes | None:
+    """Convert SVG string to PNG bytes. Returns None if cairosvg is unavailable."""
+    try:
+        import cairosvg
+        return cairosvg.svg2png(
+            bytestring=svg_string.encode("utf-8"),
+            output_width=width,
+        )
+    except ImportError:
+        return None
+    except Exception:
+        return None
 
 
 def western_chart_to_dict(chart):
@@ -134,11 +202,12 @@ def chinese_chart_to_dict(chart):
             "planets": planets, "houses": []}
 
 
-def render_download_buttons(chart_data, key_prefix=""):
-    """Render download buttons in Streamlit."""
+def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
+    """Render download buttons in Streamlit (TXT, CSV, PDF, optional PNG)."""
     import streamlit as st
 
-    cols = st.columns(3)
+    n_cols = 4 if svg_string else 3
+    cols = st.columns(n_cols)
     with cols[0]:
         txt = generate_chart_summary(chart_data)
         st.download_button("📄 Text Summary", data=txt,
@@ -157,3 +226,12 @@ def render_download_buttons(chart_data, key_prefix=""):
                               mime="application/pdf", key=f"{key_prefix}_pdf")
         except Exception:
             st.caption("PDF export unavailable (fpdf2 missing or error)")
+    if svg_string and n_cols == 4:
+        with cols[3]:
+            png_bytes = svg_to_png(svg_string)
+            if png_bytes:
+                st.download_button("🖼️ PNG Image", data=png_bytes,
+                                  file_name="chart_image.png",
+                                  mime="image/png", key=f"{key_prefix}_png")
+            else:
+                st.caption("PNG export unavailable")
