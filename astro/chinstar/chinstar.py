@@ -280,6 +280,16 @@ class WanHuaXianQin:
 
     # ────────────────────── 基礎工具 ──────────────────────
 
+    @staticmethod
+    def hour_to_branch_idx(hour: int) -> int:
+        """24小時制轉地支索引（子=0）
+
+        傳統對應：子時(23-1)=0, 丑時(1-3)=1, …, 亥時(21-23)=11
+        公式 ((hour+1)//2)%12 可正確處理跨日子時：
+          hour=23 → 0(子), hour=0 → 0(子), hour=1 → 1(丑) …
+        """
+        return ((hour + 1) // 2) % 12
+
     def get_branch_idx(self, year: int) -> int:
         """年支索引（子=0）"""
         return (year - 4) % 12
@@ -337,8 +347,7 @@ class WanHuaXianQin:
         pos = branch_idx
         pos = (pos + month - 1) % 12
         pos = (pos + day - 1) % 12
-        # 子時(23-1)=0, 丑時(1-3)=1, …, 巳時(9-11)=5 → ((hour+1)//2)%12
-        hour_idx = ((hour + 1) // 2) % 12
+        hour_idx = self.hour_to_branch_idx(hour)
         pos = (pos + hour_idx) % 12
         return pos
 
@@ -393,7 +402,7 @@ class WanHuaXianQin:
           ming_gong = (10 + (3 - 5)) % 12 = 8 = 申 ✓
         """
         sun_palace = self._sun_palace_idx(month)
-        hour_idx = ((hour + 1) // 2) % 12  # 24h → 地支索引
+        hour_idx = self.hour_to_branch_idx(hour)
         mao_idx = 3  # 卯
         return (sun_palace + (mao_idx - hour_idx)) % 12
 
@@ -843,4 +852,5 @@ class WanHuaXianQin:
 if __name__ == "__main__":
     tool = WanHuaXianQin()
     chart = tool.build_chart(1138, 3, 15, 9, "M")  # 戊子年三月十五巳時
-    print(WanHuaXianQin.format_chart(chart))
+    output = WanHuaXianQin.format_chart(chart)
+    print(output)  # noqa: T201
