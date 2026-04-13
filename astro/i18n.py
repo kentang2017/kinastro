@@ -805,6 +805,18 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
 
     # ── Export ──────────────────────────────────────────────
     "export_header": {"zh": "匯出", "en": "Export"},
+
+    # ── Natal summary / Interpretations ────────────────────
+    "natal_summary_header": {"zh": "📝 命盤解讀 / Natal Summary", "en": "📝 Natal Summary"},
+    "transit_readings_header": {"zh": "📖 流年解讀 / Transit Readings", "en": "📖 Transit Readings"},
+    "synastry_readings_header": {"zh": "📖 合盤解讀 / Synastry Readings", "en": "📖 Synastry Readings"},
+    "dasha_reading_header": {"zh": "📖 大限解讀", "en": "📖 Dasha Interpretation"},
+
+    # ── Error boundary ─────────────────────────────────────
+    "error_tab_compute": {
+        "zh": "此體系計算時發生錯誤",
+        "en": "An error occurred computing this system",
+    },
 }
 
 

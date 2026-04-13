@@ -6,6 +6,8 @@ Computes transit planet positions and aspects to natal chart.
 import swisseph as swe
 from dataclasses import dataclass, field
 
+from .interpretations import get_transit_reading
+
 WESTERN_PLANETS = {
     "Sun ☉": swe.SUN, "Moon ☽": swe.MOON, "Mercury ☿": swe.MERCURY,
     "Venus ♀": swe.VENUS, "Mars ♂": swe.MARS, "Jupiter ♃": swe.JUPITER,
@@ -92,8 +94,8 @@ def compute_western_transits(natal_chart, year, month, day,
                         aspect_name=asp["name"], aspect_symbol=asp["symbol"],
                         aspect_angle=asp["angle"], orb=round(orb, 2),
                         is_applying=is_applying,
-                        interpretation_en=f"Transit {t_name.split()[0]} {asp['symbol']} natal {n_name.split()[0]}",
-                        interpretation_cn=f"過運{t_name.split()[0]} {asp['symbol']} 本命{n_name.split()[0]}",
+                        interpretation_en=get_transit_reading(t_name, n_name, asp["name"], "en"),
+                        interpretation_cn=get_transit_reading(t_name, n_name, asp["name"], "zh"),
                     ))
 
     aspects.sort(key=lambda a: a.orb)
