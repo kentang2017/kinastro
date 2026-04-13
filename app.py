@@ -1175,36 +1175,125 @@ elif _selected_system == "tab_chinstar":
             ])
 
             with _cs_tab_chart:
+                from astro.chinstar.chinstar import BRANCHES as _CS_BRANCHES, QIN_ELEMENT as _CS_QIN_ELEM
+
                 bi = _cs_chart["basic_info"]
-                st.markdown(t("chinstar_birth_info").format(**bi))
-                st.divider()
-
-                # 宮位
                 p = _cs_chart["palaces"]
-                _cs_pcols = st.columns(3)
-                _cs_pcols[0].metric("胎宮", p["tai_gong"]["branch"] + "宮")
-                _cs_pcols[1].metric("命宮", p["ming_gong"]["branch"] + "宮")
-                _cs_pcols[2].metric("身宮", p["shen_gong"]["branch"] + "宮")
-
-                st.markdown(t("chinstar_twelve_palaces_header"))
-                _twelve = p["twelve"]
-                _twelve_rows = [{"宮位": k, "地支": v} for k, v in _twelve.items()]
-                st.dataframe(_twelve_rows, use_container_width=True, hide_index=True)
-                st.divider()
-
-                # 星曜
                 s = _cs_chart["stars"]
-                _cs_scols = st.columns(3)
-                _cs_scols[0].metric("胎星", s["tai_xing"])
-                _cs_scols[1].metric("命星", s["ming_xing"])
-                _cs_scols[2].metric("身星", s["shen_xing"])
+                pat = _cs_chart["pattern"]
 
-                st.markdown(t("chinstar_derived_stars_header"))
-                _derived_rows = [{"名稱": k, "禽星": v} for k, v in s["derived"].items()]
-                st.dataframe(_derived_rows, use_container_width=True, hide_index=True)
+                # ── 宮位→禽 映射 ──────────────────────────────
+                _CS_PALACE_BIRD = {
+                    "命宮":   s["ming_xing"],
+                    "財帛宮": s["derived"].get("財帛星", ""),
+                    "兄弟宮": s["derived"].get("兄弟星", ""),
+                    "田宅宮": s["derived"].get("田宅星", ""),
+                    "子女宮": s["derived"].get("子息星", ""),
+                    "奴僕宮": s["derived"].get("奴僕星", ""),
+                    "夫妻宮": s["derived"].get("妻妾星", ""),
+                    "疾厄宮": s["derived"].get("疾厄星", ""),
+                    "遷移宮": s["derived"].get("遷移星", ""),
+                    "官祿宮": s["derived"].get("官祿星", ""),
+                    "福德宮": s["derived"].get("福德星", ""),
+                    "相貌宮": s["derived"].get("相貌星", ""),
+                }
+                # 地支→宮名（反查）
+                _cs_branch_to_palace = {v: k for k, v in p["twelve"].items()}
+
+                # 特殊宮位地支（命/身/胎）
+                _cs_ming_br = p["ming_gong"]["branch"]
+                _cs_shen_br = p["shen_gong"]["branch"]
+                _cs_tai_br  = p["tai_gong"]["branch"]
+
+                # 五行色彩
+                _CS_ELEM_BG = {
+                    "木": "#d9f2d9", "火": "#ffe0d0",
+                    "土": "#fffbcc", "金": "#e8e8e8", "水": "#cce5ff",
+                }
+                _CS_ELEM_BD = {
+                    "木": "#388e3c", "火": "#c62828",
+                    "土": "#f57f17", "金": "#616161", "水": "#1565c0",
+                }
+
+                def _cs_cell(branch_char: str) -> str:
+                    palace = _cs_branch_to_palace.get(branch_char, "")
+                    bird   = _CS_PALACE_BIRD.get(palace, "")
+                    elem   = _CS_QIN_ELEM.get(bird, "")
+                    bg     = _CS_ELEM_BG.get(elem, "#f9f9f9")
+                    bd     = _CS_ELEM_BD.get(elem, "#999")
+                    badge  = ""
+                    if branch_char == _cs_ming_br:
+                        badge = '<span style="color:#c62828;font-size:10px;">★命</span> '
+                        bd    = "#c62828"
+                        bg    = "#fff0f0"
+                    elif branch_char == _cs_shen_br:
+                        badge = '<span style="color:#6a1b9a;font-size:10px;">☆身</span> '
+                        bd    = "#6a1b9a"
+                        bg    = "#f9f0ff"
+                    elif branch_char == _cs_tai_br:
+                        badge = '<span style="color:#e64a19;font-size:10px;">◎胎</span> '
+                        bd    = "#e64a19"
+                        bg    = "#fff3e0"
+                    return (
+                        f'<td style="width:100px;height:88px;text-align:center;'
+                        f'vertical-align:middle;border:2px solid {bd};'
+                        f'background:{bg};padding:4px 2px;border-radius:6px;">'
+                        f'<div style="font-size:11px;color:#555;font-weight:bold;">'
+                        f'{badge}{branch_char}宮</div>'
+                        f'<div style="font-size:11px;color:#444;margin-top:2px;">{palace}</div>'
+                        f'<div style="font-size:14px;color:#1a237e;font-weight:bold;'
+                        f'margin-top:3px;">{bird}</div>'
+                        f'<div style="font-size:10px;color:#888;">{elem}行</div>'
+                        f'</td>'
+                    )
+
+                # 中央格（基本資料 + 三主星 + 格局）
+                _cs_center = (
+                    '<td colspan="2" rowspan="2" style="text-align:center;'
+                    'vertical-align:middle;border:2px solid #444;'
+                    'background:#fffde7;padding:10px 8px;border-radius:6px;'
+                    'line-height:1.6;">'
+                    '<div style="font-size:15px;font-weight:bold;color:#b71c1c;'
+                    'letter-spacing:2px;">萬化仙禽</div>'
+                    f'<div style="font-size:11px;margin-top:6px;">'
+                    f'{bi["year"]}年{bi["month"]}月{bi["day"]}日 {bi["hour"]}時</div>'
+                    f'<div style="font-size:11px;">{bi["gender"]}命 {bi["day_night"]}</div>'
+                    f'<div style="font-size:11px;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
+                    '<hr style="margin:6px 0;border-color:#ccc;">'
+                    f'<div style="font-size:11px;"><b>胎星</b>：{s["tai_xing"]}</div>'
+                    f'<div style="font-size:11px;"><b>命星</b>：{s["ming_xing"]}</div>'
+                    f'<div style="font-size:11px;"><b>身星</b>：{s["shen_xing"]}</div>'
+                    '<hr style="margin:6px 0;border-color:#ccc;">'
+                    f'<div style="font-size:11px;color:#5d4037;">'
+                    f'<b>格局</b>：{pat["grade"]}</div>'
+                    '</td>'
+                )
+
+                # 大六壬式四列排盤
+                # Row 0: 亥(11) 子(0) 丑(1) 寅(2)
+                # Row 1: 戌(10) [CENTER]        卯(3)
+                # Row 2: 酉(9)  [CENTER]        辰(4)
+                # Row 3: 申(8)  未(7) 午(6) 巳(5)
+                _cs_br = _CS_BRANCHES
+                _cs_grid = (
+                    '<table style="border-collapse:separate;border-spacing:4px;'
+                    'margin:10px auto;font-family:\'Noto Serif TC\',serif;">'
+                    "<tr>"
+                    + _cs_cell(_cs_br[11]) + _cs_cell(_cs_br[0])
+                    + _cs_cell(_cs_br[1])  + _cs_cell(_cs_br[2])
+                    + "</tr><tr>"
+                    + _cs_cell(_cs_br[10]) + _cs_center + _cs_cell(_cs_br[3])
+                    + "</tr><tr>"
+                    + _cs_cell(_cs_br[9])  + _cs_cell(_cs_br[4])
+                    + "</tr><tr>"
+                    + _cs_cell(_cs_br[8])  + _cs_cell(_cs_br[7])
+                    + _cs_cell(_cs_br[6])  + _cs_cell(_cs_br[5])
+                    + "</tr></table>"
+                )
+                st.markdown(_cs_grid, unsafe_allow_html=True)
                 st.divider()
 
-                # 吞啗
+                # ── 吞啗分析 ──────────────────────────────
                 st.markdown(t("chinstar_swallow_analysis_header"))
                 _sw = _cs_chart["swallow_analysis"]
                 if _sw:
@@ -1214,18 +1303,17 @@ elif _selected_system == "tab_chinstar":
                     st.info(t("chinstar_no_swallow"))
                 st.divider()
 
-                # 情性賦
+                # ── 情性賦 ──────────────────────────────
                 st.markdown(t("chinstar_personality_header"))
                 for _label, text in _cs_chart["personality"].items():
                     st.info(text)
                 st.divider()
 
-                # 格局
-                pat = _cs_chart["pattern"]
+                # ── 格局 ──────────────────────────────
                 st.markdown(t("chinstar_pattern_header").format(grade=pat["grade"]))
                 st.write(pat["reason"])
 
-                # 完整文字輸出（可複製）
+                # ── 完整文字輸出（可複製） ──────────────────────
                 with st.expander(t("chinstar_full_text_expander")):
                     st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
 
