@@ -11,6 +11,8 @@
 使用農曆新年查找表搭配 pyswisseph 朔望月計算確定農曆月份。
 """
 
+import math
+
 import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
@@ -123,6 +125,10 @@ _CHINESE_NEW_YEAR: dict[int, tuple[int, int]] = {
 # 精確朔日時刻由 pyswisseph 的日月黃經迭代法確定。
 _SYNODIC_MONTH = 29.5305891
 
+# 北京時間（CST = UTC+8）偏移量（以 JD 天為單位）。
+# 農曆以北京時間為準，日期邊界為午夜零時。
+_CST_OFFSET = 8.0 / 24.0
+
 # ============================================================
 # 資料類 (Data Classes)
 # ============================================================
@@ -234,6 +240,9 @@ def _solar_to_lunar(jd: float) -> tuple[int, int, int, bool]:
     """
     將 Julian Day 轉換為農曆日期。
 
+    農曆以北京時間（UTC+8）為準，日期邊界為午夜零時。
+    計算農曆日時，須將 JD（世界時）偏移至北京時間後再取整天數。
+
     Returns:
         (lunar_year, lunar_month, lunar_day, is_leap_month)
         lunar_month: 1-12（閏月與正常月同編號，is_leap_month=True 區分）
@@ -273,7 +282,11 @@ def _solar_to_lunar(jd: float) -> tuple[int, int, int, bool]:
         month = 1  # fallback
 
     # 農曆日（1 起計）
-    lunar_day = int(jd - prev_nm) + 1
+    # JD 整數對應世界時正午；加 0.5 轉為以午夜為基準，再加 CST 偏移量
+    # 即可取得北京時間的日曆日序號（floor 取整）。
+    nm_cal_day = math.floor(prev_nm + _CST_OFFSET + 0.5)
+    jd_cal_day = math.floor(jd + _CST_OFFSET + 0.5)
+    lunar_day = jd_cal_day - nm_cal_day + 1
     lunar_day = max(1, min(lunar_day, 30))
 
     # 閏月判斷（簡化版）：農曆年有 13 個月時，第 13 個月視為閏月並折回 12。

@@ -780,7 +780,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "chinstar_lunar_month": {"zh": "農曆月", "en": "Lunar Month"},
     "chinstar_lunar_day": {"zh": "農曆日", "en": "Lunar Day"},
     "chinstar_use_auto": {"zh": "自動從公曆換算農曆", "en": "Auto-convert from solar date"},
-    "chinstar_auto_result": {"zh": "換算結果：{year}年{month}月{day}日", "en": "Converted: {year}-{month}-{day}"},
+    "chinstar_auto_result": {"zh": "換算結果：{year}年{month}月{day}日 {hour}時", "en": "Converted: {year}-{month}-{day} {hour} hour"},
     "chinstar_subtab_chart": {"zh": "起盤結果", "en": "Chart Result"},
     "chinstar_subtab_text": {"zh": "古籍全文", "en": "Classical Text"},
     "chinstar_leap_month": {"zh": "（閏月）", "en": " (Leap Month)"},
