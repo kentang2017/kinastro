@@ -812,6 +812,26 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "zh": "此體系計算時發生錯誤",
         "en": "An error occurred computing this system",
     },
+
+    # ── Sidebar astrology selector ─────────────────────────
+    "sidebar_system_label": {
+        "zh": "🔮 選擇占星體系",
+        "en": "🔮 Select Astrology System",
+    },
+    "sidebar_system_home": {
+        "zh": "🏠 首頁（世界地圖）",
+        "en": "🏠 Home (World Map)",
+    },
+
+    # ── World map homepage ─────────────────────────────────
+    "map_title": {
+        "zh": "🗺️ 世界占星地圖 — 點選地區探索占星體系",
+        "en": "🗺️ World Astrology Map — Click a region to explore",
+    },
+    "map_subtitle": {
+        "zh": "將滑鼠移到地區上方可查看該地區的占星體系，點擊按鈕即可進入",
+        "en": "Hover over a region to see its astrology systems, click a button to enter",
+    },
 }
 
 

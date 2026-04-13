@@ -75,6 +75,7 @@ from astro.picatrix_mansions import (
     compute_moon_longitude,
 )
 from astro.shams_maarif import render_shams_browse, render_shams_chart
+from astro.world_map import render_world_map
 
 # ============================================================
 # 頁面設定
@@ -249,15 +250,53 @@ with st.sidebar:
     )
     gender = "male" if gender_choice == _male_label else "female"
 
+    # ── Astrology system selector (dropdown in sidebar) ────────
+    st.divider()
+    _SYSTEM_KEYS = [
+        "home",
+        "tab_chinese", "tab_ziwei", "tab_western", "tab_indian",
+        "tab_sukkayodo", "tab_thai", "tab_kabbalistic", "tab_arabic",
+        "tab_maya", "tab_mahabote", "tab_decans", "tab_nadi",
+        "tab_zurkhai", "tab_hellenistic",
+    ]
+    _SYSTEM_LABELS = {
+        "home": t("sidebar_system_home"),
+        "tab_chinese": t("tab_chinese"),
+        "tab_ziwei": t("tab_ziwei"),
+        "tab_western": t("tab_western"),
+        "tab_indian": t("tab_indian"),
+        "tab_sukkayodo": t("tab_sukkayodo"),
+        "tab_thai": t("tab_thai"),
+        "tab_kabbalistic": t("tab_kabbalistic"),
+        "tab_arabic": t("tab_arabic"),
+        "tab_maya": t("tab_maya"),
+        "tab_mahabote": t("tab_mahabote"),
+        "tab_decans": t("tab_decans"),
+        "tab_nadi": t("tab_nadi"),
+        "tab_zurkhai": t("tab_zurkhai"),
+        "tab_hellenistic": t("tab_hellenistic"),
+    }
+
+    # Allow the world-map buttons to pre-select a system
+    _preselected = st.session_state.pop("_selected_system", None)
+    if _preselected and _preselected in _SYSTEM_KEYS:
+        st.session_state["_system_select"] = _SYSTEM_KEYS.index(_preselected)
+
+    _default_idx = int(st.session_state.get("_system_select", 0))
+    if _default_idx >= len(_SYSTEM_KEYS):
+        _default_idx = 0
+
+    _selected_system = st.selectbox(
+        t("sidebar_system_label"),
+        options=_SYSTEM_KEYS,
+        index=_default_idx,
+        format_func=lambda k: _SYSTEM_LABELS.get(k, k),
+        key="_system_select",
+    )
+
 # ============================================================
-# 主區域 - 排盤結果（使用 Tabs 切換不同占星體系）
+# 主區域 - 根據側邊欄選擇顯示對應占星體系
 # ============================================================
-tab_chinese, tab_ziwei, tab_western, tab_indian, tab_sukkayodo, tab_thai, tab_kabbalistic, tab_arabic, tab_maya, tab_mahabote, tab_decans, tab_nadi, tab_zurkhai, tab_hellenistic = st.tabs(
-    [t("tab_chinese"), t("tab_ziwei"), t("tab_western"), t("tab_indian"),
-     t("tab_sukkayodo"), t("tab_thai"), t("tab_kabbalistic"), t("tab_arabic"), t("tab_maya"),
-     t("tab_mahabote"), t("tab_decans"), t("tab_nadi"), t("tab_zurkhai"),
-     t("tab_hellenistic")]
-)
 
 if calculate:
     _params = dict(
@@ -273,8 +312,14 @@ if calculate:
 
 _is_calculated = st.session_state.get("_calculated", False)
 
+# ── Home page (world map) ──────────────────────────────────────
+if _selected_system == "home":
+    st.markdown(f"### {t('map_title')}")
+    st.caption(t("map_subtitle"))
+    render_world_map()
+
 # --- 七政四餘（中國） ---
-with tab_chinese:
+elif _selected_system == "tab_chinese":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -397,7 +442,7 @@ with tab_chinese:
         st.markdown(t("desc_chinese"))
 
 # --- 紫微斗數 ---
-with tab_ziwei:
+elif _selected_system == "tab_ziwei":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -412,7 +457,7 @@ with tab_ziwei:
         st.markdown(t("desc_ziwei"))
 
 # --- 西洋占星 ---
-with tab_western:
+elif _selected_system == "tab_western":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -587,7 +632,7 @@ with tab_western:
         st.markdown(t("desc_western"))
 
 # --- 印度占星 ---
-with tab_indian:
+elif _selected_system == "tab_indian":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -694,7 +739,7 @@ with tab_indian:
         st.markdown(t("desc_indian"))
 
 # --- 宿曜道 ---
-with tab_sukkayodo:
+elif _selected_system == "tab_sukkayodo":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -712,7 +757,7 @@ with tab_sukkayodo:
         st.markdown(t("desc_sukkayodo"))
 
 # --- 泰國占星 ---
-with tab_thai:
+elif _selected_system == "tab_thai":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -739,7 +784,7 @@ with tab_thai:
         st.markdown(t("desc_thai"))
 
 # --- 卡巴拉占星 ---
-with tab_kabbalistic:
+elif _selected_system == "tab_kabbalistic":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -754,7 +799,7 @@ with tab_kabbalistic:
         st.markdown(t("desc_kabbalistic"))
 
 # --- 阿拉伯占星 ---
-with tab_arabic:
+elif _selected_system == "tab_arabic":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -891,7 +936,7 @@ with tab_arabic:
             _render_reference_library()
 
 # --- 瑪雅占星 ---
-with tab_maya:
+elif _selected_system == "tab_maya":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -906,7 +951,7 @@ with tab_maya:
         st.markdown(t("desc_maya"))
 
 # --- 緬甸占星 (Mahabote) ---
-with tab_mahabote:
+elif _selected_system == "tab_mahabote":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -921,7 +966,7 @@ with tab_mahabote:
         st.markdown(t("desc_mahabote"))
 
 # --- 古埃及十度區間 (Decans) ---
-with tab_decans:
+elif _selected_system == "tab_decans":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -936,7 +981,7 @@ with tab_decans:
         render_decan_browse()
 
 # --- 納迪占星 (Nadi Jyotish) ---
-with tab_nadi:
+elif _selected_system == "tab_nadi":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -951,7 +996,7 @@ with tab_nadi:
         st.markdown(t("desc_nadi"))
 
 # --- 蒙古祖爾海 (Zurkhai) ---
-with tab_zurkhai:
+elif _selected_system == "tab_zurkhai":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
@@ -966,7 +1011,7 @@ with tab_zurkhai:
         st.markdown(t("desc_zurkhai"))
 
 # --- 希臘占星 (Hellenistic) ---
-with tab_hellenistic:
+elif _selected_system == "tab_hellenistic":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
