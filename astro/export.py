@@ -59,6 +59,7 @@ def generate_chart_pdf(chart_data):
     """Generate PDF bytes from chart data. Requires fpdf2."""
     try:
         from fpdf import FPDF
+        from fpdf.enums import XPos, YPos
     except ImportError:
         raise RuntimeError("fpdf2 not installed. Run: pip install fpdf2")
 
@@ -66,12 +67,15 @@ def generate_chart_pdf(chart_data):
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 16)
     title = chart_data.get("system", "Astrology Chart")
-    pdf.cell(0, 10, _safe_latin1(title), ln=True, align="C")
+    pdf.cell(0, 10, _safe_latin1(title), new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, _safe_latin1(f"Date: {chart_data.get('datetime', '')}"), ln=True)
-    pdf.cell(0, 6, _safe_latin1(f"Location: {chart_data.get('location', '')}"), ln=True)
+    pdf.cell(0, 6, _safe_latin1(f"Date: {chart_data.get('datetime', '')}"),
+             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 6, _safe_latin1(f"Location: {chart_data.get('location', '')}"),
+             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     if chart_data.get("ascendant"):
-        pdf.cell(0, 6, _safe_latin1(f"Ascendant: {chart_data['ascendant']}"), ln=True)
+        pdf.cell(0, 6, _safe_latin1(f"Ascendant: {chart_data['ascendant']}"),
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(4)
 
     # Planet table
@@ -79,20 +83,20 @@ def generate_chart_pdf(chart_data):
     pdf.cell(50, 7, "Planet", border=1)
     pdf.cell(40, 7, "Sign", border=1)
     pdf.cell(30, 7, "Degree", border=1)
-    pdf.cell(20, 7, "R", border=1)
-    pdf.ln()
+    pdf.cell(20, 7, "R", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("Helvetica", "", 9)
     for p in chart_data.get("planets", []):
         pdf.cell(50, 6, _safe_latin1(p.get("name", "")), border=1)
         pdf.cell(40, 6, _safe_latin1(p.get("sign", "")), border=1)
         pdf.cell(30, 6, f"{p.get('degree', 0):.2f}", border=1)
-        pdf.cell(20, 6, "R" if p.get("retrograde") else "", border=1)
-        pdf.ln()
+        pdf.cell(20, 6, "R" if p.get("retrograde") else "", border=1,
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     for sec in chart_data.get("extra_sections", []):
         pdf.ln(4)
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 7, _safe_latin1(sec.get("title", "")), ln=True)
+        pdf.cell(0, 7, _safe_latin1(sec.get("title", "")),
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("Helvetica", "", 9)
         pdf.multi_cell(0, 5, _safe_latin1(sec.get("content", "")))
 
@@ -151,5 +155,5 @@ def render_download_buttons(chart_data, key_prefix=""):
             st.download_button("📑 PDF Report", data=pdf_bytes,
                               file_name="chart_report.pdf",
                               mime="application/pdf", key=f"{key_prefix}_pdf")
-        except RuntimeError:
-            st.caption("PDF export requires fpdf2")
+        except Exception:
+            st.caption("PDF export unavailable (fpdf2 missing or error)")
