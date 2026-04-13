@@ -435,7 +435,7 @@ with tab_western:
                         st.dataframe([{"Star": c.star_name, "Planet": c.planet_name,
                                        "Orb": f"{c.orb:.2f}°", "Nature": c.nature,
                                        "Meaning": c.meaning_cn}
-                                      for c in conjs], use_container_width=True)
+                                      for c in conjs], width="stretch")
                     else:
                         st.info("No fixed star conjunctions within orb.")
                 if _show_asteroids:
@@ -446,7 +446,7 @@ with tab_western:
                                        "Sign": a.sign, "Degree": f"{a.sign_degree:.2f}°",
                                        "R": "R" if a.retrograde else "",
                                        "Meaning": a.meaning_cn}
-                                      for a in asts], use_container_width=True)
+                                      for a in asts], width="stretch")
                 # Export
                 render_download_buttons(western_chart_to_dict(w_chart), key_prefix="western")
 
@@ -469,7 +469,7 @@ with tab_western:
                                    "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
                                    "Applying": "→" if a.is_applying else "←"}
                                   for a in w_transits.aspects_to_natal[:20]],
-                                 use_container_width=True)
+                                 width="stretch")
                     # Transit readings
                     st.subheader(t("transit_readings_header"))
                     _lang = get_lang()
@@ -524,7 +524,7 @@ with tab_western:
                                        "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
                                        "Score": f"{a.harmony_score:+.3f}"}
                                       for a in syn.inter_aspects[:20]],
-                                     use_container_width=True)
+                                     width="stretch")
                         # Synastry readings (top 5)
                         st.subheader(t("synastry_readings_header"))
                         _lang = get_lang()
@@ -574,14 +574,14 @@ with tab_indian:
                                               "Start": s.start_date, "End": s.end_date,
                                               "Years": f"{s.years:.2f}"}
                                              for s in md.sub_periods],
-                                             use_container_width=True)
+                                             width="stretch")
                     st.divider()
                     st.markdown("##### Yogini Dasha (36-year cycle)")
                     yog = compute_yogini(moon_p.longitude, v_chart.julian_day)
                     st.dataframe([{"Yogini": p.lord, "CN": p.lord_cn,
                                   "Start": p.start_date, "End": p.end_date,
                                   "Years": f"{p.years:.2f}"}
-                                 for p in yog.periods], use_container_width=True)
+                                 for p in yog.periods], width="stretch")
                     # Yogini reading for current period
                     if yog.periods:
                         _yog_reading = get_yogini_reading(yog.periods[0].lord, get_lang())
@@ -618,7 +618,7 @@ with tab_indian:
                         sarva_row[s] = av.sarva[i]
                     sarva_row["Total"] = av.sarva_total
                     rows.append(sarva_row)
-                    st.dataframe(pd.DataFrame(rows), use_container_width=True)
+                    st.dataframe(pd.DataFrame(rows), width="stretch")
                 else:
                     st.warning("Insufficient planet data for Ashtakavarga.")
 
@@ -966,7 +966,7 @@ with tab_hellenistic:
                                    "Ruler": p.ruler, "Years": p.years,
                                    "Start": p.start_date, "End": p.end_date}
                                   for p in _hellen_chart.zodiacal_releasing],
-                                 use_container_width=True)
+                                 width="stretch")
             with _h_tab_lots:
                 if _hellen_chart.lots:
                     st.subheader("Greek Lots / 希臘點")
@@ -975,7 +975,7 @@ with tab_hellenistic:
                                    "House": l.house, "Formula": l.formula_en,
                                    "Meaning": l.meaning_cn}
                                   for l in _hellen_chart.lots],
-                                 use_container_width=True)
+                                 width="stretch")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
