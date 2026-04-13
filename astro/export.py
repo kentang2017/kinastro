@@ -48,6 +48,13 @@ def generate_planet_csv(planets):
     return out.getvalue()
 
 
+def _safe_latin1(text):
+    """Encode text to latin-1 safely, replacing unsupported characters."""
+    if not isinstance(text, str):
+        text = str(text)
+    return text.encode("latin-1", "replace").decode("latin-1")
+
+
 def generate_chart_pdf(chart_data):
     """Generate PDF bytes from chart data. Requires fpdf2."""
     try:
@@ -59,14 +66,12 @@ def generate_chart_pdf(chart_data):
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 16)
     title = chart_data.get("system", "Astrology Chart")
-    # fpdf2 only supports latin-1 with built-in fonts
-    safe_title = title.encode("latin-1", "replace").decode("latin-1")
-    pdf.cell(0, 10, safe_title, ln=True, align="C")
+    pdf.cell(0, 10, _safe_latin1(title), ln=True, align="C")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, f"Date: {chart_data.get('datetime', '')}", ln=True)
-    pdf.cell(0, 6, f"Location: {chart_data.get('location', '')}", ln=True)
+    pdf.cell(0, 6, _safe_latin1(f"Date: {chart_data.get('datetime', '')}"), ln=True)
+    pdf.cell(0, 6, _safe_latin1(f"Location: {chart_data.get('location', '')}"), ln=True)
     if chart_data.get("ascendant"):
-        pdf.cell(0, 6, f"Ascendant: {chart_data['ascendant']}", ln=True)
+        pdf.cell(0, 6, _safe_latin1(f"Ascendant: {chart_data['ascendant']}"), ln=True)
     pdf.ln(4)
 
     # Planet table
@@ -78,13 +83,18 @@ def generate_chart_pdf(chart_data):
     pdf.ln()
     pdf.set_font("Helvetica", "", 9)
     for p in chart_data.get("planets", []):
-        name = p.get("name", "").encode("latin-1", "replace").decode("latin-1")
-        sign = p.get("sign", "").encode("latin-1", "replace").decode("latin-1")
-        pdf.cell(50, 6, name, border=1)
-        pdf.cell(40, 6, sign, border=1)
+        pdf.cell(50, 6, _safe_latin1(p.get("name", "")), border=1)
+        pdf.cell(40, 6, _safe_latin1(p.get("sign", "")), border=1)
         pdf.cell(30, 6, f"{p.get('degree', 0):.2f}", border=1)
         pdf.cell(20, 6, "R" if p.get("retrograde") else "", border=1)
         pdf.ln()
+
+    for sec in chart_data.get("extra_sections", []):
+        pdf.ln(4)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 7, _safe_latin1(sec.get("title", "")), ln=True)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.multi_cell(0, 5, _safe_latin1(sec.get("content", "")))
 
     return pdf.output()
 
