@@ -75,6 +75,7 @@ from astro.picatrix_mansions import (
     compute_moon_longitude,
 )
 from astro.shams_maarif import render_shams_browse, render_shams_chart
+from astro.chinstar.chinstar import WanHuaXianQin
 
 
 # ============================================================
@@ -256,7 +257,7 @@ with st.sidebar:
         "tab_chinese", "tab_ziwei", "tab_western", "tab_indian",
         "tab_sukkayodo", "tab_thai", "tab_kabbalistic", "tab_arabic",
         "tab_maya", "tab_mahabote", "tab_decans", "tab_nadi",
-        "tab_zurkhai", "tab_hellenistic",
+        "tab_zurkhai", "tab_hellenistic", "tab_chinstar",
     ]
     _SYSTEM_LABELS = {
         "tab_chinese": t("tab_chinese"),
@@ -273,6 +274,7 @@ with st.sidebar:
         "tab_nadi": t("tab_nadi"),
         "tab_zurkhai": t("tab_zurkhai"),
         "tab_hellenistic": t("tab_hellenistic"),
+        "tab_chinstar": t("tab_chinstar"),
     }
 
     # Determine default index from session state
@@ -1096,3 +1098,154 @@ elif _selected_system == "tab_hellenistic":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_hellenistic"))
+
+# --- 萬化仙禽 (WanHua XianQin) ---
+elif _selected_system == "tab_chinstar":
+    st.markdown(t("desc_chinstar"))
+
+    # ── Lunar date input ────────────────────────────────────────
+    st.subheader(t("chinstar_lunar_input_header"))
+
+    _auto_convert = st.checkbox(t("chinstar_use_auto"), value=True, key="chinstar_auto_convert")
+
+    # Defaults (will be overridden by auto-convert or manual inputs)
+    _chinstar_year = birth_date.year
+    _chinstar_month = birth_date.month
+    _chinstar_day = birth_date.day
+    _chinstar_hour = birth_time.hour
+    _auto_ok = False
+
+    if _auto_convert and _is_calculated:
+        try:
+            import swisseph as _swe_cs
+            from astro.ziwei import _solar_to_lunar as _cs_solar_to_lunar
+            _p = st.session_state["_calc_params"]
+            _cs_jd = _swe_cs.julday(
+                _p["year"], _p["month"], _p["day"],
+                _p["hour"] + _p["minute"] / 60.0 - _p["timezone"] / 24.0,
+            )
+            _cs_ly, _cs_lm, _cs_ld, _cs_leap = _cs_solar_to_lunar(_cs_jd)
+            _chinstar_year = _cs_ly
+            _chinstar_month = _cs_lm
+            _chinstar_day = _cs_ld
+            _chinstar_hour = _p["hour"]
+            st.info(
+                t("chinstar_auto_result").format(year=_cs_ly, month=_cs_lm, day=_cs_ld)
+                + (t("chinstar_leap_month") if _cs_leap else "")
+            )
+            _auto_ok = True
+        except Exception as _cs_conv_e:
+            st.warning(t("chinstar_auto_convert_failed") + str(_cs_conv_e))
+
+    if not _auto_ok:
+        _cs_col1, _cs_col2, _cs_col3 = st.columns(3)
+        with _cs_col1:
+            _chinstar_year = st.number_input(
+                t("chinstar_lunar_year"), value=int(_chinstar_year),
+                min_value=1, max_value=2200, key="cs_year",
+            )
+        with _cs_col2:
+            _chinstar_month = st.number_input(
+                t("chinstar_lunar_month"), value=int(_chinstar_month),
+                min_value=1, max_value=12, key="cs_month",
+            )
+        with _cs_col3:
+            _chinstar_day = st.number_input(
+                t("chinstar_lunar_day"), value=int(_chinstar_day),
+                min_value=1, max_value=30, key="cs_day",
+            )
+
+    _cs_gender = "M" if gender == "male" else "F"
+
+    if st.button(t("calculate_btn"), key="chinstar_calc_btn") or _auto_ok:
+        try:
+            with st.spinner(t("spinner_chinstar")):
+                _cs_tool = WanHuaXianQin()
+                _cs_chart = _cs_tool.build_chart(
+                    year=int(_chinstar_year),
+                    month=int(_chinstar_month),
+                    day=int(_chinstar_day),
+                    hour=int(_chinstar_hour),
+                    gender=_cs_gender,
+                )
+
+            _cs_tab_chart, _cs_tab_text = st.tabs([
+                t("chinstar_subtab_chart"),
+                t("chinstar_subtab_text"),
+            ])
+
+            with _cs_tab_chart:
+                bi = _cs_chart["basic_info"]
+                st.markdown(t("chinstar_birth_info").format(**bi))
+                st.divider()
+
+                # 宮位
+                p = _cs_chart["palaces"]
+                _cs_pcols = st.columns(3)
+                _cs_pcols[0].metric("胎宮", p["tai_gong"]["branch"] + "宮")
+                _cs_pcols[1].metric("命宮", p["ming_gong"]["branch"] + "宮")
+                _cs_pcols[2].metric("身宮", p["shen_gong"]["branch"] + "宮")
+
+                st.markdown(t("chinstar_twelve_palaces_header"))
+                _twelve = p["twelve"]
+                _twelve_rows = [{"宮位": k, "地支": v} for k, v in _twelve.items()]
+                st.dataframe(_twelve_rows, use_container_width=True, hide_index=True)
+                st.divider()
+
+                # 星曜
+                s = _cs_chart["stars"]
+                _cs_scols = st.columns(3)
+                _cs_scols[0].metric("胎星", s["tai_xing"])
+                _cs_scols[1].metric("命星", s["ming_xing"])
+                _cs_scols[2].metric("身星", s["shen_xing"])
+
+                st.markdown(t("chinstar_derived_stars_header"))
+                _derived_rows = [{"名稱": k, "禽星": v} for k, v in s["derived"].items()]
+                st.dataframe(_derived_rows, use_container_width=True, hide_index=True)
+                st.divider()
+
+                # 吞啗
+                st.markdown(t("chinstar_swallow_analysis_header"))
+                _sw = _cs_chart["swallow_analysis"]
+                if _sw:
+                    _sw_rows = [{"對照": k, "判斷": v} for k, v in _sw.items()]
+                    st.dataframe(_sw_rows, use_container_width=True, hide_index=True)
+                else:
+                    st.info(t("chinstar_no_swallow"))
+                st.divider()
+
+                # 情性賦
+                st.markdown(t("chinstar_personality_header"))
+                for _label, text in _cs_chart["personality"].items():
+                    st.info(text)
+                st.divider()
+
+                # 格局
+                pat = _cs_chart["pattern"]
+                st.markdown(t("chinstar_pattern_header").format(grade=pat["grade"]))
+                st.write(pat["reason"])
+
+                # 完整文字輸出（可複製）
+                with st.expander(t("chinstar_full_text_expander")):
+                    st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+
+            with _cs_tab_text:
+                import os as _cs_os
+                _txt_path = _cs_os.path.join(
+                    _cs_os.path.dirname(__file__),
+                    "astro", "chinstar", "新刻刘伯温万化仙禽.txt",
+                )
+                if _cs_os.path.exists(_txt_path):
+                    with open(_txt_path, "r", encoding="utf-8") as _cs_f:
+                        _cs_txt = _cs_f.read()
+                    st.text_area(t("chinstar_full_text_label"), _cs_txt, height=600)
+                else:
+                    st.warning(t("chinstar_text_not_found"))
+
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        if not _is_calculated:
+            st.info(t("info_calc_prompt"))
+
