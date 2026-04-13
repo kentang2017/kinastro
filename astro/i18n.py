@@ -756,7 +756,8 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     },
 
     # ── 萬化仙禽 (WanHua XianQin) ───────────────────────────
-    "tab_chinstar": {"zh": "萬化仙禽", "en": "WanHua XianQin"},
+    "tab_chinstar": {"zh": "
+    🐦‍⬛ 萬化仙禽", "en": "🐦‍⬛ WanHua XianQin"},
     "desc_chinstar": {
         "zh": (
             "**萬化仙禽（新刻劉伯溫萬化仙禽）**\n\n"
@@ -797,7 +798,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "chinstar_full_text_label": {"zh": "新刻劉伯溫萬化仙禽（全文）", "en": "WanHua XianQin Classical Text (Full)"},
 
     # ── Hellenistic Astrology ───────────────────────────────
-    "tab_hellenistic": {"zh": "希臘占星", "en": "Hellenistic"},
+    "tab_hellenistic": {"zh": "🏛️ 希臘占星", "en": "🏛️ Hellenistic"},
     "desc_hellenistic": {
         "zh": "**希臘占星（Hellenistic Astrology）**\n\n源自古希臘-羅馬的占星傳統，包含希臘點、埃及界主、年限推進、黃道釋放、行星狀態評分等經典技法。",
         "en": "**Hellenistic Astrology**\n\nThe Greco-Roman tradition featuring Greek Lots, Egyptian Bounds, Annual Profections, Zodiacal Releasing, and Planetary Condition scoring.",
