@@ -718,7 +718,7 @@ if calculate:
                 day=birth_date.day,
                 hour=birth_time.hour,
                 minute=birth_time.minute,
-                tz=tz_offset,
+                tz=input_tz,
                 location=location_name,
             )
             st.markdown(_greek_svg, unsafe_allow_html=True)
