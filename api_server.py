@@ -84,20 +84,23 @@ class BirthParams(BaseModel):
         default="", description="Human-readable location name"
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "year": 1990,
-                "month": 6,
-                "day": 15,
-                "hour": 14,
-                "minute": 30,
-                "timezone": 8.0,
-                "latitude": 25.033,
-                "longitude": 121.565,
-                "location_name": "Taipei",
-            }
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "year": 1990,
+                    "month": 6,
+                    "day": 15,
+                    "hour": 14,
+                    "minute": 30,
+                    "timezone": 8.0,
+                    "latitude": 25.033,
+                    "longitude": 121.565,
+                    "location_name": "Taipei",
+                }
+            ]
         }
+    }
 
 
 class ChineseParams(BirthParams):
