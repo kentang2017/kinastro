@@ -3179,3 +3179,174 @@ class TestAiAnalysisCerebrasClient:
         assert len(CEREBRAS_MODEL_OPTIONS) >= 3
         for model in CEREBRAS_MODEL_OPTIONS:
             assert model in CEREBRAS_MODEL_DESCRIPTIONS
+
+
+# ============================================================
+# BPHS Engine Tests (Brihat Parashara Hora Shastra)
+# ============================================================
+
+class TestBPHSEngine:
+    """BPHS 經典解讀引擎測試"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_vedic_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=39.9042, longitude=116.4074,
+            location_name="北京",
+        )
+
+    @pytest.fixture
+    def bphs_result(self, sample_chart):
+        from astro.vedic.bphs_engine import compute_bphs
+        return compute_bphs(sample_chart.planets, sample_chart.houses,
+                            sample_chart.ascendant)
+
+    def test_twelve_bhava_readings(self, bphs_result):
+        assert len(bphs_result.bhava_readings) == 12
+
+    def test_bhava_numbering(self, bphs_result):
+        for i, br in enumerate(bphs_result.bhava_readings):
+            assert br.bhava == i + 1
+
+    def test_bhava_has_lord(self, bphs_result):
+        for br in bphs_result.bhava_readings:
+            assert br.lord_key in [
+                "sun", "moon", "mars", "mercury",
+                "jupiter", "venus", "saturn",
+            ]
+            assert len(br.lord_zh) > 0
+
+    def test_bhava_lord_house_valid(self, bphs_result):
+        for br in bphs_result.bhava_readings:
+            assert 0 <= br.lord_house <= 12
+
+    def test_detailed_bhavas_have_lord_placement(self, bphs_result):
+        """Bhavas 2,5,6,7,8,9,10,11,12 should have lord placement readings."""
+        detailed = [2, 5, 6, 7, 8, 9, 10, 11, 12]
+        for br in bphs_result.bhava_readings:
+            if br.bhava in detailed and br.lord_house > 0:
+                assert len(br.lord_placement_zh) > 0, \
+                    f"Bhava {br.bhava} lord in H{br.lord_house} missing placement"
+
+    def test_graha_maitri_seven_planets(self, bphs_result):
+        assert len(bphs_result.graha_maitri) == 7
+
+    def test_graha_maitri_has_friends_enemies(self, bphs_result):
+        for m in bphs_result.graha_maitri:
+            assert len(m.friends_zh) > 0
+            assert len(m.enemies_zh) > 0
+
+    def test_avasthas_nine_planets(self, bphs_result):
+        assert len(bphs_result.avasthas) == 9
+
+    def test_avastha_names_valid(self, bphs_result):
+        from astro.vedic.bphs_data import BPHS_AVASTHAS
+        valid_names = BPHS_AVASTHAS["avastha_list"]
+        for av in bphs_result.avasthas:
+            assert av.avastha_name in valid_names
+
+    def test_avastha_strength_values(self, bphs_result):
+        for av in bphs_result.avasthas:
+            assert av.strength in ["強", "中", "弱", "未知"]
+
+    def test_avastha_has_reading(self, bphs_result):
+        for av in bphs_result.avasthas:
+            assert len(av.reading_zh) > 0
+
+    def test_dignities_nine_planets(self, bphs_result):
+        assert len(bphs_result.dignities) == 9
+
+    def test_dignity_has_status(self, bphs_result):
+        for d in bphs_result.dignities:
+            assert len(d.status_zh) > 0
+            assert len(d.rashi_en) > 0
+            assert len(d.rashi_zh) > 0
+
+    def test_dignity_flags_exclusive(self, bphs_result):
+        """Exalted and debilitated cannot be true at same time."""
+        for d in bphs_result.dignities:
+            assert not (d.uccha and d.neecha)
+
+    def test_raja_yogas_detected(self, bphs_result):
+        assert len(bphs_result.raja_yogas) >= 8  # base yogas + possible Neecha Bhanga
+
+    def test_raja_yoga_structure(self, bphs_result):
+        for ry in bphs_result.raja_yogas:
+            assert isinstance(ry.is_present, bool)
+            assert len(ry.name) > 0
+            assert len(ry.description_zh) > 0
+            assert len(ry.reason_zh) > 0
+
+    def test_varga_info_has_15_divisions(self, bphs_result):
+        vargas = bphs_result.varga_info.get("vargas", {})
+        assert len(vargas) == 15  # D1..D60
+
+    def test_varga_d9_exists(self, bphs_result):
+        vargas = bphs_result.varga_info.get("vargas", {})
+        assert "D9" in vargas
+        assert "Navamsa" in vargas["D9"]["zh"]
+
+
+class TestBPHSData:
+    """BPHS 資料完整性測試"""
+
+    def test_chapters_count(self):
+        from astro.vedic.bphs_data import BPHS_CHAPTERS
+        assert len(BPHS_CHAPTERS) == 22
+
+    def test_bhava_phala_twelve(self):
+        from astro.vedic.bphs_data import BPHS_BHAVA_PHALA
+        assert len(BPHS_BHAVA_PHALA) == 12
+
+    def test_graha_maitri_seven(self):
+        from astro.vedic.bphs_data import BPHS_GRAHA_MAITRI
+        assert len(BPHS_GRAHA_MAITRI) == 7
+
+    def test_avasthas_twelve_states(self):
+        from astro.vedic.bphs_data import BPHS_AVASTHAS
+        assert len(BPHS_AVASTHAS["avastha_list"]) == 12
+
+    def test_avasthas_nine_planets(self):
+        from astro.vedic.bphs_data import BPHS_AVASTHAS
+        planet_keys = ["sun", "moon", "mars", "mercury", "jupiter",
+                       "venus", "saturn", "rahu", "ketu"]
+        for pk in planet_keys:
+            assert pk in BPHS_AVASTHAS, f"Missing avastha data for {pk}"
+            assert len(BPHS_AVASTHAS[pk]) == 12
+
+    def test_ucca_neecha_seven(self):
+        from astro.vedic.bphs_data import BPHS_UCCA_NEECHA
+        assert len(BPHS_UCCA_NEECHA) == 7
+
+    def test_moola_trikona_seven(self):
+        from astro.vedic.bphs_data import BPHS_MOOLA_TRIKONA
+        assert len(BPHS_MOOLA_TRIKONA) == 7
+
+    def test_rashi_twelve(self):
+        from astro.vedic.bphs_data import BPHS_RASHI
+        assert len(BPHS_RASHI) == 12
+
+    def test_graha_svarupa_nine(self):
+        from astro.vedic.bphs_data import BPHS_GRAHA_SVARUPA
+        assert len(BPHS_GRAHA_SVARUPA) == 9
+
+    def test_raja_yoga_has_entries(self):
+        from astro.vedic.bphs_data import BPHS_RAJA_YOGA
+        assert len(BPHS_RAJA_YOGA["raja_yogas"]) >= 8
+        assert len(BPHS_RAJA_YOGA["special_yogas"]) >= 4
+
+    def test_detailed_bhavas_have_planet_readings(self):
+        from astro.vedic.bphs_data import (
+            BPHS_DHANA_BHAVA, BPHS_SAPTAMA_BHAVA,
+            BPHS_DASHAMA_BHAVA, BPHS_PANCHAMA_BHAVA,
+        )
+        for bhava_data in [BPHS_DHANA_BHAVA, BPHS_SAPTAMA_BHAVA,
+                           BPHS_DASHAMA_BHAVA, BPHS_PANCHAMA_BHAVA]:
+            assert "lord_placement" in bhava_data
+            assert len(bhava_data["lord_placement"]) == 12
+            # Check planet readings exist
+            planet_fields = [k for k in bhava_data if k.startswith("planet_in_")]
+            assert len(planet_fields) >= 1
+            for pf in planet_fields:
+                assert len(bhava_data[pf]) >= 9  # 9 planets

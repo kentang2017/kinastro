@@ -41,6 +41,7 @@ from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
 from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
 from astro.vedic.ashtakavarga import compute_ashtakavarga
 from astro.vedic.vedic_yogas import compute_yogas
+from astro.vedic.bphs_engine import compute_bphs
 from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import (
     compute_thai_chart, render_thai_chart,
@@ -137,6 +138,119 @@ def _render_reference_library():
                 _content = _f.read()
             with st.expander(_title, expanded=False):
                 st.markdown(_content)
+
+
+def _render_bphs_result(bphs_result):
+    """Render BPHS interpretation result in Streamlit."""
+    import pandas as pd
+
+    # ── 1. 行星品位 (Dignity) ──
+    st.markdown("### 🏅 行星品位 (Graha Dignity)")
+    st.caption("根據 BPHS 第5章：行星高低點與基本三角")
+    _dignity_rows = []
+    for d in bphs_result.dignities:
+        status_icon = ""
+        if d.uccha:
+            status_icon = "⬆️"
+        elif d.neecha:
+            status_icon = "⬇️"
+        elif d.moola_trikona:
+            status_icon = "🔺"
+        elif d.own_sign:
+            status_icon = "🏠"
+        _dignity_rows.append({
+            "": status_icon,
+            "行星": f"{d.planet_zh} ({d.planet})",
+            "星座": f"{d.rashi_zh} ({d.rashi_en})",
+            "品位": d.status_zh,
+        })
+    if _dignity_rows:
+        st.dataframe(pd.DataFrame(_dignity_rows), hide_index=True, use_container_width=True)
+
+    st.divider()
+
+    # ── 2. 行星友敵關係 (Graha Maitri) ──
+    st.markdown("### 🤝 行星友敵關係 (Graha Maitri)")
+    st.caption("根據 BPHS 第6章：行星友敵關係")
+    _maitri_rows = []
+    for m in bphs_result.graha_maitri:
+        _maitri_rows.append({
+            "行星": f"{m.planet_zh} ({m.planet})",
+            "友星 ✅": m.friends_zh,
+            "中性 ⚖️": m.neutral_zh,
+            "敵星 ❌": m.enemies_zh,
+        })
+    if _maitri_rows:
+        st.dataframe(pd.DataFrame(_maitri_rows), hide_index=True, use_container_width=True)
+
+    st.divider()
+
+    # ── 3. 行星阿瓦斯塔 (Graha Avastha) ──
+    st.markdown("### 🎭 行星阿瓦斯塔 (Graha Avastha)")
+    st.caption("根據 BPHS 第15章：行星狀態章 — 12種阿瓦斯塔決定行星實際表現")
+    for av in bphs_result.avasthas:
+        strength_icon = {"強": "💪", "中": "⚖️", "弱": "⚠️"}.get(av.strength, "❓")
+        with st.expander(f"{strength_icon} {av.planet_zh} ({av.planet}) — {av.avastha_name} [{av.strength}]"):
+            st.markdown(f"**狀態 (Avastha):** {av.avastha_name}")
+            st.markdown(f"**強度:** {av.strength}")
+            st.markdown(f"**果報:** {av.reading_zh}")
+
+    st.divider()
+
+    # ── 4. 王者瑜伽 (Raja Yoga) ──
+    st.markdown("### 👑 王者瑜伽與特殊組合 (Raja Yoga & Special Yogas)")
+    st.caption("根據 BPHS 第14章：王者瑜伽與特殊瑜伽")
+    for ry in bphs_result.raja_yogas:
+        icon = "✅" if ry.is_present else "⬜"
+        with st.expander(f"{icon} {ry.name}"):
+            st.markdown(f"**說明:** {ry.description_zh}")
+            st.markdown(f"**判斷:** {ry.reason_zh}")
+
+    st.divider()
+
+    # ── 5. 宮位果報 (Bhava Phala) ──
+    st.markdown("### 🏛️ 宮位果報 (Bhava Phala)")
+    st.caption("根據 BPHS 第13章：各宮位行星落入的具體果報")
+    for br in bphs_result.bhava_readings:
+        label_parts = [f"第{br.bhava}宮 {br.bhava_zh}"]
+        if br.signification:
+            label_parts.append(f"— {br.signification}")
+        label = " ".join(label_parts)
+        with st.expander(label):
+            st.markdown(f"**宮主 (Lord):** {br.lord_zh} ({br.lord_key}) — 落在第 {br.lord_house} 宮")
+            if br.lord_placement_zh:
+                st.info(f"📖 宮主落宮解讀：{br.lord_placement_zh}")
+            if br.planets_in_bhava:
+                st.markdown("**入宮行星解讀：**")
+                for pk, pk_zh, reading, level in br.planets_in_bhava:
+                    level_str = f" [{level}]" if level else ""
+                    st.markdown(f"- **{pk_zh}** ({pk}){level_str}：{reading}")
+            if br.special_yogas:
+                st.markdown("**相關特殊瑜伽：**")
+                for sy in br.special_yogas:
+                    st.markdown(f"- **{sy.get('name', '')}**：{sy.get('zh', '')}")
+            if br.note_zh:
+                st.caption(f"💡 {br.note_zh}")
+
+    st.divider()
+
+    # ── 6. 16分盤簡表 (Shodasa Varga Reference) ──
+    st.markdown("### 📊 十六分盤參考 (Shodasa Varga)")
+    st.caption("根據 BPHS 第9章：16種分盤的用途與判斷標準")
+    _varga_rows = []
+    for key, val in bphs_result.varga_info.get("vargas", {}).items():
+        _varga_rows.append({
+            "分盤": key,
+            "名稱": val.get("zh", ""),
+            "切割": val.get("division", ""),
+            "用途": val.get("use", ""),
+            "判斷": val.get("judgment", ""),
+        })
+    if _varga_rows:
+        st.dataframe(pd.DataFrame(_varga_rows), hide_index=True, use_container_width=True)
+    note = bphs_result.varga_info.get("general_note_zh", "")
+    if note:
+        st.caption(f"💡 {note}")
 
 
 st.title(t("app_title"))
@@ -806,11 +920,12 @@ elif _selected_system == "tab_indian":
             with st.spinner(t("spinner_indian")):
                 v_chart = compute_vedic_chart(**_p)
 
-            _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas = st.tabs([
+            _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs = st.tabs([
                 t("vedic_subtab_rashi"),
                 t("vedic_subtab_dasha"),
                 t("vedic_subtab_ashtaka"),
                 t("vedic_subtab_yogas"),
+                t("vedic_subtab_bphs"),
             ])
 
             with _v_tab_rashi:
@@ -897,6 +1012,11 @@ elif _selected_system == "tab_indian":
                     icon = "✅" if yg.is_present else "⬜"
                     with st.expander(f"{icon} {yg.name} ({yg.name_cn}) — {yg.strength}"):
                         st.write(yg.description_cn if get_lang() == "zh" else yg.description)
+
+            with _v_tab_bphs:
+                st.subheader("📜 " + t("vedic_subtab_bphs"))
+                bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
+                _render_bphs_result(bphs_result)
 
             # AI Analysis button for Vedic
             _render_ai_button("tab_indian", v_chart, btn_key="vedic")
