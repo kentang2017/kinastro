@@ -536,7 +536,7 @@ with st.sidebar:
             ("https://kinqimen.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinqimen/master/pic/Untitled-22.png"),
             ("https://kinwuzhao.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwuzhao/refs/heads/main/pic/wuzhao.png"),
             ("https://kintaixuan.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/taixuanshifa/master/pic/taixuan.png"),
-            ("https://kinwangji.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwangji/main/pic/kwj.png"),
+            ("https://kinwangji.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwangji/refs/heads/main/pic/kwj.png"),
             ("https://jingjue.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/jingjue/master/pic/jingjue.png"),
             ("https://liangtouqian.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/liangtouqian/main/pic/Untitled-44.png"),
         ]
