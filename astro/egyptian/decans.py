@@ -19,7 +19,7 @@ import swisseph as swe
 import streamlit as st
 import plotly.graph_objects as go
 
-from astro.decans_data import (
+from .decans_data import (
     DECANS_DATA,
     ZODIAC_SIGNS_DECAN,
     CHALDEAN_ORDER,

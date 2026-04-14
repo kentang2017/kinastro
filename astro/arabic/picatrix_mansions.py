@@ -22,7 +22,7 @@ import swisseph as swe
 import streamlit as st
 import plotly.graph_objects as go
 
-from astro.picatrix_data import (
+from .picatrix_data import (
     PICATRIX_MANSIONS,
     CHALDEAN_ORDER,
     PLANET_GLYPHS,

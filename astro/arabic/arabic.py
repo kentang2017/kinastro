@@ -727,7 +727,7 @@ def get_planetary_hours(
     Returns:
         PlanetaryHoursResult: 行星時計算結果
     """
-    from astro.picatrix_mansions import get_planetary_hours as _get_hours
+    from astro.arabic.picatrix_mansions import get_planetary_hours as _get_hours
     return _get_hours(year, month, day, timezone, latitude, longitude)
 
 
@@ -747,5 +747,5 @@ def get_picatrix_talisman_recommendation(intent: str):
     Returns:
         TalismanRecommendation | None: 護符推薦，若意圖不識別則回傳 None
     """
-    from astro.picatrix_mansions import get_picatrix_talisman_recommendation as _get_rec
+    from astro.arabic.picatrix_mansions import get_picatrix_talisman_recommendation as _get_rec
     return _get_rec(intent)

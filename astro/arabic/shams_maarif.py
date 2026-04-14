@@ -13,11 +13,11 @@ Streamlit sub-tabs:
 import streamlit as st
 from typing import Optional
 
-from astro.arabic_planetaries import PlanetaryProperties
-from astro.arabic_zodiacsigns import ZodiacSigns
-from astro.arabic_spells import IslamicDuas
-from astro.riyada import ShamsRiyada
-from astro.wafq import IslamicWafqGenerator
+from .arabic_planetaries import PlanetaryProperties
+from .arabic_zodiacsigns import ZodiacSigns
+from .arabic_spells import IslamicDuas
+from .riyada import ShamsRiyada
+from .wafq import IslamicWafqGenerator
 
 
 # ── singletons ──────────────────────────────────────────────────────────────

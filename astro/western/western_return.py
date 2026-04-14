@@ -6,7 +6,7 @@ then casts a full chart.
 """
 import swisseph as swe
 from dataclasses import dataclass
-from astro.western import compute_western_chart
+from .western import compute_western_chart
 
 SUN_DAILY_MOTION = 0.9856   # degrees per day
 MOON_DAILY_MOTION = 13.2    # degrees per day

@@ -4,14 +4,14 @@ Tests for Western, Indian (Vedic), Thai, and Arabic astrology calculator modules
 
 import pytest
 
-from astro.western import (
+from astro.western.western import (
     compute_western_chart,
     _normalize,
     _sign_index,
     _sign_degree,
     ZODIAC_SIGNS,
 )
-from astro.indian import (
+from astro.vedic.indian import (
     compute_vedic_chart,
     _nakshatra_info,
     RASHIS,
@@ -26,7 +26,7 @@ from astro.thai import (
     _NINE_GRID_LINES,
     THAI_NUMEROLOGY_PLANETS,
 )
-from astro.arabic import (
+from astro.arabic.arabic import (
     compute_arabic_chart,
     ARABIC_PARTS,
     ZODIAC_SIGNS as ARABIC_ZODIAC_SIGNS,
@@ -1259,7 +1259,7 @@ class TestMahaboteAnimalSigns:
 # Decan Astrology Tests
 # ============================================================
 
-from astro.decans_data import (
+from astro.egyptian.decans_data import (
     DECANS_DATA,
     get_decan_by_longitude,
     get_decan_by_sign_and_degree,
@@ -1268,7 +1268,7 @@ from astro.decans_data import (
     ESSENTIAL_DIGNITIES,
     FACE_DIGNITY_SCORE,
 )
-from astro.decans import compute_decan_chart, DecanChart, DecanPlanetInfo
+from astro.egyptian.decans import compute_decan_chart, DecanChart, DecanPlanetInfo
 
 
 SIGN_ELEMENT = {s[0]: s[3] for s in ZODIAC_SIGNS_DECAN}
@@ -1920,22 +1920,22 @@ class TestPicatrixData:
     """Picatrix 月宿資料完整性測試"""
 
     def test_mansion_count(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS
         assert len(PICATRIX_MANSIONS) == 28
 
     def test_mansion_indices_sequential(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS
         for i, m in enumerate(PICATRIX_MANSIONS):
             assert m["index"] == i
 
     def test_mansion_start_degrees_monotone(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS
         for i, m in enumerate(PICATRIX_MANSIONS):
             expected = i * (360.0 / 28)
             assert abs(m["start_degree"] - expected) < 0.001
 
     def test_mansion_required_keys(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS
         required = {
             "index", "arabic_name", "arabic_script", "english_name",
             "chinese_name", "ruling_planet", "fortunate",
@@ -1946,17 +1946,17 @@ class TestPicatrixData:
             assert required.issubset(m.keys()), f"Mansion {m['index']} missing keys"
 
     def test_ruling_planets_valid(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS, CHALDEAN_ORDER
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS, CHALDEAN_ORDER
         for m in PICATRIX_MANSIONS:
             assert m["ruling_planet"] in CHALDEAN_ORDER
 
     def test_fortunate_is_bool(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS
         for m in PICATRIX_MANSIONS:
             assert isinstance(m["fortunate"], bool)
 
     def test_purposes_are_lists(self):
-        from astro.picatrix_data import PICATRIX_MANSIONS
+        from astro.arabic.picatrix_data import PICATRIX_MANSIONS
         for m in PICATRIX_MANSIONS:
             assert isinstance(m["purposes"], list)
             assert isinstance(m["purposes_cn"], list)
@@ -1964,11 +1964,11 @@ class TestPicatrixData:
             assert len(m["purposes_cn"]) > 0
 
     def test_talisman_intents_count(self):
-        from astro.picatrix_data import TALISMAN_INTENTS
+        from astro.arabic.picatrix_data import TALISMAN_INTENTS
         assert len(TALISMAN_INTENTS) == 8
 
     def test_talisman_required_keys(self):
-        from astro.picatrix_data import TALISMAN_INTENTS
+        from astro.arabic.picatrix_data import TALISMAN_INTENTS
         required = {
             "intent_key", "intent_cn", "intent_en", "planet",
             "mansion_indices", "metal", "incense", "color",
@@ -1978,7 +1978,7 @@ class TestPicatrixData:
             assert required.issubset(t.keys())
 
     def test_talisman_mansion_indices_in_range(self):
-        from astro.picatrix_data import TALISMAN_INTENTS
+        from astro.arabic.picatrix_data import TALISMAN_INTENTS
         for t in TALISMAN_INTENTS:
             for idx in t["mansion_indices"]:
                 assert 0 <= idx <= 27
@@ -1988,22 +1988,22 @@ class TestPicatrixMansionLookup:
     """月宿查詢函數測試"""
 
     def test_mansion_index_at_zero(self):
-        from astro.picatrix_mansions import get_mansion_index
+        from astro.arabic.picatrix_mansions import get_mansion_index
         assert get_mansion_index(0.0) == 0
 
     def test_mansion_index_at_359(self):
-        from astro.picatrix_mansions import get_mansion_index
+        from astro.arabic.picatrix_mansions import get_mansion_index
         assert get_mansion_index(359.9) == 27
 
     def test_mansion_index_full_coverage(self):
-        from astro.picatrix_mansions import get_mansion_index
+        from astro.arabic.picatrix_mansions import get_mansion_index
         for deg in range(0, 360, 5):
             idx = get_mansion_index(float(deg))
             assert 0 <= idx <= 27
 
     def test_mansion_index_boundary(self):
         """Each mansion starts at index * 360/28 degrees (with epsilon tolerance)."""
-        from astro.picatrix_mansions import get_mansion_index
+        from astro.arabic.picatrix_mansions import get_mansion_index
         for i in range(28):
             # Use a degree slightly above the start of each mansion to avoid
             # floating-point precision issues at exact boundaries.
@@ -2011,27 +2011,27 @@ class TestPicatrixMansionLookup:
             assert get_mansion_index(lon) == i
 
     def test_get_mansion_returns_object(self):
-        from astro.picatrix_mansions import get_mansion, PicatrixMansion
+        from astro.arabic.picatrix_mansions import get_mansion, PicatrixMansion
         m = get_mansion(0.0)
         assert isinstance(m, PicatrixMansion)
         assert m.index == 0
         assert m.arabic_name == "Al-Sharatain"
 
     def test_get_mansion_by_index(self):
-        from astro.picatrix_mansions import get_mansion_by_index
+        from astro.arabic.picatrix_mansions import get_mansion_by_index
         for i in range(28):
             m = get_mansion_by_index(i)
             assert m.index == i
 
     def test_get_mansion_by_index_out_of_range(self):
-        from astro.picatrix_mansions import get_mansion_by_index
+        from astro.arabic.picatrix_mansions import get_mansion_by_index
         with pytest.raises(IndexError):
             get_mansion_by_index(-1)
         with pytest.raises(IndexError):
             get_mansion_by_index(28)
 
     def test_get_all_mansions(self):
-        from astro.picatrix_mansions import get_all_mansions
+        from astro.arabic.picatrix_mansions import get_all_mansions
         mansions = get_all_mansions()
         assert len(mansions) == 28
 
@@ -2042,11 +2042,11 @@ class TestPlanetaryHours:
     @pytest.fixture
     def hk_monday(self):
         """HK 2024-01-01 (Monday)"""
-        from astro.picatrix_mansions import get_planetary_hours
+        from astro.arabic.picatrix_mansions import get_planetary_hours
         return get_planetary_hours(2024, 1, 1, 8.0, 22.3193, 114.1694)
 
     def test_returns_result_object(self, hk_monday):
-        from astro.picatrix_mansions import PlanetaryHoursResult
+        from astro.arabic.picatrix_mansions import PlanetaryHoursResult
         assert isinstance(hk_monday, PlanetaryHoursResult)
 
     def test_hours_count_is_24(self, hk_monday):
@@ -2069,13 +2069,13 @@ class TestPlanetaryHours:
         assert hk_monday.hours[0].planet == hk_monday.day_planet
 
     def test_planets_are_from_chaldean_order(self, hk_monday):
-        from astro.picatrix_data import CHALDEAN_ORDER
+        from astro.arabic.picatrix_data import CHALDEAN_ORDER
         for h in hk_monday.hours:
             assert h.planet in CHALDEAN_ORDER
 
     def test_chaldean_sequence(self, hk_monday):
         """Hours should follow Chaldean order cyclically."""
-        from astro.picatrix_data import CHALDEAN_ORDER
+        from astro.arabic.picatrix_data import CHALDEAN_ORDER
         start_idx = CHALDEAN_ORDER.index(hk_monday.day_planet)
         for i, h in enumerate(hk_monday.hours):
             expected = CHALDEAN_ORDER[(start_idx + i) % 7]
@@ -2114,20 +2114,20 @@ class TestTalismanRecommendation:
     """護符推薦測試"""
 
     def test_love_recommendation(self):
-        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        from astro.arabic.picatrix_mansions import get_picatrix_talisman_recommendation
         rec = get_picatrix_talisman_recommendation("love")
         assert rec is not None
         assert rec.planet == "Venus"
         assert rec.metal == "copper"
 
     def test_wealth_recommendation(self):
-        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        from astro.arabic.picatrix_mansions import get_picatrix_talisman_recommendation
         rec = get_picatrix_talisman_recommendation("wealth")
         assert rec is not None
         assert rec.planet == "Jupiter"
 
     def test_chinese_intent_mapping(self):
-        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        from astro.arabic.picatrix_mansions import get_picatrix_talisman_recommendation
         rec = get_picatrix_talisman_recommendation("愛情")
         assert rec is not None
         assert rec.planet == "Venus"
@@ -2136,11 +2136,11 @@ class TestTalismanRecommendation:
         assert rec2.planet == "Jupiter"
 
     def test_unknown_intent_returns_none(self):
-        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        from astro.arabic.picatrix_mansions import get_picatrix_talisman_recommendation
         assert get_picatrix_talisman_recommendation("unknown_xyz") is None
 
     def test_all_intents_return_recommendation(self):
-        from astro.picatrix_mansions import (
+        from astro.arabic.picatrix_mansions import (
             get_picatrix_talisman_recommendation,
             get_all_talisman_intents,
         )
@@ -2149,7 +2149,7 @@ class TestTalismanRecommendation:
             assert rec is not None, f"No recommendation for intent: {key}"
 
     def test_recommendation_mansion_names_populated(self):
-        from astro.picatrix_mansions import get_picatrix_talisman_recommendation
+        from astro.arabic.picatrix_mansions import get_picatrix_talisman_recommendation
         rec = get_picatrix_talisman_recommendation("love")
         assert len(rec.mansion_names_cn) > 0
         for name in rec.mansion_names_cn:
@@ -2158,7 +2158,7 @@ class TestTalismanRecommendation:
 
     def test_arabic_wrapper_functions(self):
         """arabic.py wrapper functions should delegate correctly."""
-        from astro.arabic import (
+        from astro.arabic.arabic import (
             get_planetary_hours,
             get_picatrix_talisman_recommendation,
         )
@@ -2177,7 +2177,7 @@ class TestPlanetaryProperties:
     """Tests for astro.arabic_planetaries.PlanetaryProperties."""
 
     def setup_method(self):
-        from astro.arabic_planetaries import PlanetaryProperties
+        from astro.arabic.arabic_planetaries import PlanetaryProperties
         self.pp = PlanetaryProperties()
 
     def test_list_all_returns_seven_planets(self):
@@ -2218,7 +2218,7 @@ class TestZodiacSigns:
     """Tests for astro.arabic_zodiacsigns.ZodiacSigns."""
 
     def setup_method(self):
-        from astro.arabic_zodiacsigns import ZodiacSigns
+        from astro.arabic.arabic_zodiacsigns import ZodiacSigns
         self.zs = ZodiacSigns()
 
     def test_list_all_returns_twelve_signs(self):
@@ -2254,7 +2254,7 @@ class TestShamsRiyada:
     """Tests for astro.riyada.ShamsRiyada."""
 
     def setup_method(self):
-        from astro.riyada import ShamsRiyada
+        from astro.arabic.riyada import ShamsRiyada
         self.sr = ShamsRiyada()
 
     def test_list_riyada_not_empty(self):
@@ -2293,7 +2293,7 @@ class TestIslamicDuas:
     """Tests for astro.arabic_spells.IslamicDuas."""
 
     def setup_method(self):
-        from astro.arabic_spells import IslamicDuas
+        from astro.arabic.arabic_spells import IslamicDuas
         self.dua = IslamicDuas()
 
     def test_list_all_not_empty(self):
@@ -2313,7 +2313,7 @@ class TestIslamicWafq:
     """Tests for astro.wafq.IslamicWafqGenerator."""
 
     def setup_method(self):
-        from astro.wafq import IslamicWafqGenerator
+        from astro.arabic.wafq import IslamicWafqGenerator
         self.wafq = IslamicWafqGenerator()
 
     def test_abjad_value_known(self):
@@ -2379,11 +2379,11 @@ class TestShenSha:
     """Tests for the Shen Sha divine stars module."""
 
     def test_import(self):
-        from astro.shensha import compute_shensha, ShenShaResult
+        from astro.qizheng.shensha import compute_shensha, ShenShaResult
         assert callable(compute_shensha)
 
     def test_compute_shensha_returns_result(self):
-        from astro.shensha import compute_shensha
+        from astro.qizheng.shensha import compute_shensha
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)  # 1990-01-01 04:00 UTC
@@ -2394,7 +2394,7 @@ class TestShenSha:
 
     def test_shensha_has_key_stars(self):
         """Ensure key divine stars are present."""
-        from astro.shensha import compute_shensha
+        from astro.qizheng.shensha import compute_shensha
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)
@@ -2410,7 +2410,7 @@ class TestShenSha:
 
     def test_shensha_branches_valid(self):
         """All branch indices should be 0-11."""
-        from astro.shensha import compute_shensha
+        from astro.qizheng.shensha import compute_shensha
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1985, 8, 26, -2.167)  # ~ UTC+8
@@ -2420,7 +2420,7 @@ class TestShenSha:
 
     def test_shensha_categories(self):
         """Categories should be 吉, 凶, or 中."""
-        from astro.shensha import compute_shensha
+        from astro.qizheng.shensha import compute_shensha
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(2000, 6, 15, 4.0)
@@ -2430,7 +2430,7 @@ class TestShenSha:
 
     def test_bazi_stems_branches(self):
         """Test Ba Zi four pillars calculation."""
-        from astro.shensha import get_bazi_stems_branches, HEAVENLY_STEMS, EARTHLY_BRANCHES
+        from astro.qizheng.shensha import get_bazi_stems_branches, HEAVENLY_STEMS, EARTHLY_BRANCHES
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)
@@ -2444,7 +2444,7 @@ class TestShenSha:
 
     def test_bazi_1985_aug26(self):
         """Test Ba Zi for 1985-08-26 02:55 CST = 乙丑年甲申月丁酉日辛丑時."""
-        from astro.shensha import get_bazi_stems_branches
+        from astro.qizheng.shensha import get_bazi_stems_branches
         import swisseph as swe
         swe.set_ephe_path("")
         # 1985-08-26 02:55 CST (UTC+8) → UT = 1985-08-25 18:55
@@ -2461,7 +2461,7 @@ class TestShenSha:
 
     def test_year_stem_branch(self):
         """Test year stem and branch calculation."""
-        from astro.shensha import get_year_stem, get_year_branch
+        from astro.qizheng.shensha import get_year_stem, get_year_branch
         # 1984 = 甲子
         assert get_year_stem(1984) == 0   # 甲
         assert get_year_branch(1984) == 0  # 子
@@ -2471,7 +2471,7 @@ class TestShenSha:
 
     def test_twelve_life_stages(self):
         """Test twelve life stages calculation."""
-        from astro.shensha import compute_twelve_life_stages
+        from astro.qizheng.shensha import compute_twelve_life_stages
         stages = compute_twelve_life_stages(0)  # 甲: 亥起順
         assert stages[11] == "長生"  # 亥
         assert stages[0] == "沐浴"   # 子
@@ -2485,12 +2485,12 @@ class TestQizhengDasha:
     """Tests for the planetary period/dasha module."""
 
     def test_import(self):
-        from astro.qizheng_dasha import compute_dasha, DashaResult
+        from astro.qizheng.qizheng_dasha import compute_dasha, DashaResult
         assert callable(compute_dasha)
 
     def test_compute_dasha_returns_12_periods(self):
-        from astro.qizheng_dasha import compute_dasha
-        from astro.calculator import compute_chart
+        from astro.qizheng.qizheng_dasha import compute_dasha
+        from astro.qizheng.calculator import compute_chart
         chart = compute_chart(
             year=1990, month=1, day=1, hour=12, minute=0,
             timezone=8.0, latitude=22.3193, longitude=114.1694,
@@ -2507,8 +2507,8 @@ class TestQizhengDasha:
 
     def test_dasha_ages_are_contiguous(self):
         """Ages should cover continuously from 0."""
-        from astro.qizheng_dasha import compute_dasha
-        from astro.calculator import compute_chart
+        from astro.qizheng.qizheng_dasha import compute_dasha
+        from astro.qizheng.calculator import compute_chart
         chart = compute_chart(
             year=1990, month=1, day=1, hour=12, minute=0,
             timezone=8.0, latitude=22.3193, longitude=114.1694,
@@ -2527,8 +2527,8 @@ class TestQizhengDasha:
 
     def test_dasha_current_period(self):
         """Current period should be correctly identified."""
-        from astro.qizheng_dasha import compute_dasha
-        from astro.calculator import compute_chart
+        from astro.qizheng.qizheng_dasha import compute_dasha
+        from astro.qizheng.calculator import compute_chart
         chart = compute_chart(
             year=1990, month=1, day=1, hour=12, minute=0,
             timezone=8.0, latitude=22.3193, longitude=114.1694,
@@ -2548,8 +2548,8 @@ class TestQizhengDasha:
 
     def test_dasha_flow_year(self):
         """Flow year branch should be valid."""
-        from astro.qizheng_dasha import compute_dasha
-        from astro.calculator import compute_chart
+        from astro.qizheng.qizheng_dasha import compute_dasha
+        from astro.qizheng.calculator import compute_chart
         chart = compute_chart(
             year=1990, month=1, day=1, hour=12, minute=0,
             timezone=8.0, latitude=22.3193, longitude=114.1694,
@@ -2574,11 +2574,11 @@ class TestQizhengTransit:
     """Tests for the transit chart module."""
 
     def test_import(self):
-        from astro.qizheng_transit import compute_transit, TransitData
+        from astro.qizheng.qizheng_transit import compute_transit, TransitData
         assert callable(compute_transit)
 
     def test_compute_transit_returns_11_planets(self):
-        from astro.qizheng_transit import compute_transit
+        from astro.qizheng.qizheng_transit import compute_transit
         result = compute_transit(
             year=2026, month=4, day=10,
             hour=10, minute=30, timezone=8.0,
@@ -2586,7 +2586,7 @@ class TestQizhengTransit:
         assert len(result.planets) == 11  # 7 governors + 4 remainders
 
     def test_transit_planets_have_valid_longitudes(self):
-        from astro.qizheng_transit import compute_transit
+        from astro.qizheng.qizheng_transit import compute_transit
         result = compute_transit(
             year=2026, month=4, day=10,
             hour=10, minute=30, timezone=8.0,
@@ -2595,7 +2595,7 @@ class TestQizhengTransit:
             assert 0 <= p.longitude < 360, f"{p.name} longitude out of range: {p.longitude}"
 
     def test_transit_planet_names(self):
-        from astro.qizheng_transit import compute_transit
+        from astro.qizheng.qizheng_transit import compute_transit
         result = compute_transit(
             year=2026, month=4, day=10,
             hour=10, minute=30, timezone=8.0,
@@ -2607,7 +2607,7 @@ class TestQizhengTransit:
         assert "計都" in names
 
     def test_compute_transit_now(self):
-        from astro.qizheng_transit import compute_transit_now
+        from astro.qizheng.qizheng_transit import compute_transit_now
         result = compute_transit_now(timezone=8.0)
         assert result is not None
         assert len(result.planets) == 11
@@ -2621,7 +2621,7 @@ class TestZhangguoStarReadings:
     """Tests for 張果星宗 module"""
 
     def test_load_star_data(self):
-        from astro.zhangguo import _load_star_data
+        from astro.qizheng.zhangguo import _load_star_data
         entries = _load_star_data()
         assert len(entries) > 100
         # Check first entry has required fields
@@ -2632,7 +2632,7 @@ class TestZhangguoStarReadings:
         assert "description" in e
 
     def test_load_pattern_data(self):
-        from astro.zhangguo import _load_pattern_data
+        from astro.qizheng.zhangguo import _load_pattern_data
         entries = _load_pattern_data()
         assert len(entries) > 50
         e = entries[0]
@@ -2642,7 +2642,7 @@ class TestZhangguoStarReadings:
 
     def test_lookup_sun_in_wu(self):
         """日在午宮 should return readings"""
-        from astro.zhangguo import lookup_star_in_branch
+        from astro.qizheng.zhangguo import lookup_star_in_branch
         readings = lookup_star_in_branch("日", "午")
         assert len(readings) > 0
         for r in readings:
@@ -2652,13 +2652,13 @@ class TestZhangguoStarReadings:
 
     def test_lookup_nonexistent(self):
         """Non-standard star should return empty"""
-        from astro.zhangguo import lookup_star_in_branch
+        from astro.qizheng.zhangguo import lookup_star_in_branch
         readings = lookup_star_in_branch("不存在的星", "子")
         assert len(readings) == 0
 
     def test_lookup_gender_filter(self):
         """Female-specific readings should appear for female, not male"""
-        from astro.zhangguo import lookup_star_in_branch
+        from astro.qizheng.zhangguo import lookup_star_in_branch
         female_readings = lookup_star_in_branch("金星", "酉", "female")
         male_readings = lookup_star_in_branch("金星", "酉", "male")
         # Female should include female-only + both
@@ -2669,7 +2669,7 @@ class TestZhangguoStarReadings:
         assert "female" not in male_genders
 
     def test_get_all_patterns(self):
-        from astro.zhangguo import get_all_patterns
+        from astro.qizheng.zhangguo import get_all_patterns
         patterns = get_all_patterns()
         assert len(patterns) > 50
         names = [p.name for p in patterns]
@@ -2678,7 +2678,7 @@ class TestZhangguoStarReadings:
 
     def test_planet_name_mapping(self):
         """All 11 chart planets should have mappings and no extras"""
-        from astro.zhangguo import PLANET_TO_ZHANGGUO
+        from astro.qizheng.zhangguo import PLANET_TO_ZHANGGUO
         expected = ["太陽", "太陰", "水星", "金星", "火星", "木星", "土星",
                     "羅睺", "計都", "月孛", "紫氣"]
         for name in expected:
@@ -2687,8 +2687,8 @@ class TestZhangguoStarReadings:
 
     def test_compute_zhangguo_with_chart(self):
         """Integration test: compute_zhangguo with real chart data"""
-        from astro.calculator import compute_chart
-        from astro.zhangguo import compute_zhangguo
+        from astro.qizheng.calculator import compute_chart
+        from astro.qizheng.zhangguo import compute_zhangguo
         import swisseph as swe
         swe.set_ephe_path("")
         chart = compute_chart(
@@ -2705,7 +2705,7 @@ class TestZhangguoStarReadings:
 
     def test_reading_fields(self):
         """Check that ZhangguoReading has all expected fields"""
-        from astro.zhangguo import lookup_star_in_branch
+        from astro.qizheng.zhangguo import lookup_star_in_branch
         readings = lookup_star_in_branch("木星", "寅")
         assert len(readings) > 0
         r = readings[0]
@@ -2725,8 +2725,8 @@ class TestGreekHoroscopeSVG:
 
     @pytest.fixture
     def h_chart(self):
-        from astro.western import compute_western_chart
-        from astro.hellenistic import compute_hellenistic_chart
+        from astro.western.western import compute_western_chart
+        from astro.western.hellenistic import compute_hellenistic_chart
         w = compute_western_chart(
             year=1990, month=6, day=15,
             hour=14, minute=30, timezone=8.0,
@@ -2737,7 +2737,7 @@ class TestGreekHoroscopeSVG:
 
     def test_svg_is_valid_markup(self, h_chart):
         """SVG output is well-formed with opening and closing tags."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(
             h_chart, year=1990, month=6, day=15,
             hour=14, minute=30, tz=8.0, location="Hong Kong",
@@ -2748,21 +2748,21 @@ class TestGreekHoroscopeSVG:
 
     def test_svg_contains_all_zodiac_glyphs(self, h_chart):
         """All 12 zodiac sign glyphs appear in the SVG."""
-        from astro.hellenistic import build_greek_horoscope_svg, ZODIAC_GLYPHS
+        from astro.western.hellenistic import build_greek_horoscope_svg, ZODIAC_GLYPHS
         svg = build_greek_horoscope_svg(h_chart)
         for glyph in ZODIAC_GLYPHS:
             assert glyph in svg, f"Missing zodiac glyph: {glyph}"
 
     def test_svg_contains_all_house_numbers(self, h_chart):
         """All 12 Roman numeral house numbers appear."""
-        from astro.hellenistic import build_greek_horoscope_svg, HOUSE_ROMAN
+        from astro.western.hellenistic import build_greek_horoscope_svg, HOUSE_ROMAN
         svg = build_greek_horoscope_svg(h_chart)
         for roman in HOUSE_ROMAN:
             assert roman in svg, f"Missing house number: {roman}"
 
     def test_svg_contains_cardinal_labels(self, h_chart):
         """ASC, MC, DESC, IC labels and their Greek names appear."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(h_chart)
         for label in ["ASC", "MC", "DESC", "IC"]:
             assert label in svg
@@ -2771,20 +2771,20 @@ class TestGreekHoroscopeSVG:
 
     def test_svg_contains_thema_title(self, h_chart):
         """Centre shows ΘΕΜΑ title."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(h_chart)
         assert "ΘΕΜΑ" in svg
 
     def test_svg_contains_planet_glyphs(self, h_chart):
         """Planet glyphs for Sun and Moon appear."""
-        from astro.hellenistic import build_greek_horoscope_svg, PLANET_GLYPHS
+        from astro.western.hellenistic import build_greek_horoscope_svg, PLANET_GLYPHS
         svg = build_greek_horoscope_svg(h_chart)
         assert PLANET_GLYPHS["Sun"] in svg
         assert PLANET_GLYPHS["Moon"] in svg
 
     def test_svg_contains_birth_info(self, h_chart):
         """Birth date/time/location appear when provided."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(
             h_chart, year=1990, month=6, day=15,
             hour=14, minute=30, tz=8.0, location="Hong Kong",
@@ -2795,13 +2795,13 @@ class TestGreekHoroscopeSVG:
 
     def test_svg_contains_sect_info(self, h_chart):
         """Day/Night sect indicator appears."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(h_chart)
         assert "Day" in svg or "Night" in svg
 
     def test_svg_minimal_args(self, h_chart):
         """SVG generates correctly with only the chart (no birth info)."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(h_chart)
         assert "<svg" in svg
         assert "</svg>" in svg
@@ -2809,14 +2809,14 @@ class TestGreekHoroscopeSVG:
 
     def test_svg_contains_greek_sign_names(self, h_chart):
         """Greek zodiac sign names appear."""
-        from astro.hellenistic import build_greek_horoscope_svg, ZODIAC_GREEK
+        from astro.western.hellenistic import build_greek_horoscope_svg, ZODIAC_GREEK
         svg = build_greek_horoscope_svg(h_chart)
         for name in ZODIAC_GREEK:
             assert name in svg, f"Missing Greek sign name: {name}"
 
     def test_ray_to_square_cardinal(self):
         """Ray-to-square hits correct edges for cardinal directions."""
-        from astro.hellenistic import _ray_to_square
+        from astro.western.hellenistic import _ray_to_square
         cx, cy, half = 300, 300, 250
         x, y = _ray_to_square(cx, cy, half, 0)
         assert abs(x - (cx + half)) < 1
@@ -2833,7 +2833,7 @@ class TestGreekHoroscopeSVG:
 
     def test_ray_to_square_corners(self):
         """Ray-to-square hits corners at 45° multiples."""
-        from astro.hellenistic import _ray_to_square
+        from astro.western.hellenistic import _ray_to_square
         cx, cy, half = 300, 300, 250
         x, y = _ray_to_square(cx, cy, half, 45)
         assert abs(x - (cx + half)) < 1
@@ -2850,14 +2850,14 @@ class TestGreekHoroscopeSVG:
 
     def test_svg_contains_lot_markers(self, h_chart):
         """Lots of Fortune/Spirit markers appear in the SVG."""
-        from astro.hellenistic import build_greek_horoscope_svg
+        from astro.western.hellenistic import build_greek_horoscope_svg
         svg = build_greek_horoscope_svg(h_chart)
         assert svg.count('fill-opacity="0.2"') > 0
 
     def test_svg_different_charts(self):
         """SVG generates for a night chart with different ASC sign."""
-        from astro.western import compute_western_chart
-        from astro.hellenistic import compute_hellenistic_chart, build_greek_horoscope_svg
+        from astro.western.western import compute_western_chart
+        from astro.western.hellenistic import compute_hellenistic_chart, build_greek_horoscope_svg
         w2 = compute_western_chart(
             year=2000, month=12, day=21,
             hour=23, minute=0, timezone=0.0,
@@ -2871,7 +2871,7 @@ class TestGreekHoroscopeSVG:
 
     def test_constants_integrity(self):
         """Verify all Greek horoscope constants have correct lengths."""
-        from astro.hellenistic import (
+        from astro.western.hellenistic import (
             ZODIAC_GLYPHS, ZODIAC_GREEK, PLANET_GLYPHS,
             PLANET_COLORS_GREEK, ELEMENT_OF_SIGN, ELEMENT_COLORS,
             HOUSE_ROMAN, TOPOS_GREEK, TOPOS_CN,

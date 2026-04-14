@@ -4,7 +4,7 @@ astro/western_synastry.py — 合盤 (Synastry Chart Comparison)
 Calculates cross-aspects between two natal charts with interpretation text.
 """
 from dataclasses import dataclass, field
-from .interpretations import get_synastry_reading
+from astro.interpretations import get_synastry_reading
 
 ASPECT_TYPES = [
     {"name": "Conjunction (合)", "symbol": "☌", "angle": 0, "orb": 8},

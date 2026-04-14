@@ -11,7 +11,7 @@ from dataclasses import dataclass
 ZODIAC_SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
                 "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
 
-_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+_DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "data")
 
 
 def load_star_catalog():

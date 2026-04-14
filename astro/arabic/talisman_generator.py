@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 
 # 從 picatrix_data.py 引入所有已載入的資料
-from astro.picatrix_data import (
+from .picatrix_data import (
     PICATRIX_TALISMANS,
     PICATRIX_CORRESPONDENCES,
     PICATRIX_INCENSES,
