@@ -784,8 +784,8 @@ class TestZiweiHelpers:
 
     def test_wu_xing_ju_range(self):
         for stem in range(10):
-            for branch in range(0, 12, 2):  # stem and branch must share parity
-                if stem % 2 == branch % 2:
+            for branch in range(12):
+                if stem % 2 == branch % 2:  # valid stem-branch parity
                     ju = _get_wu_xing_ju(stem, branch)
                     assert 2 <= ju <= 6
 

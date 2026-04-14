@@ -103,8 +103,8 @@ SIHUA_TABLE = [
 # ============================================================
 # 祿存表 (Lu Cun by Year Stem)
 # ============================================================
-LUCUN_TABLE = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0]  # 甲寅 乙卯 丙巳 丁午 戊巳 己午 庚申 辛酉 壬亥 癸子
-# 修正：壬→亥(11) 癸→丑(1)? 不，標準：甲寅乙卯丙巳丁午戊巳己午庚申辛酉壬亥癸子
+# 甲寅 乙卯 丙巳 丁午 戊巳 己午 庚申 辛酉 壬亥 癸子
+LUCUN_TABLE = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0]
 
 # ============================================================
 # 天魁天鉞表 (Tian Kui / Tian Yue by Year Stem)
@@ -117,7 +117,7 @@ TIANKUI_TIANYUE_TABLE = [
     (11, 9),  # 丁: 亥, 酉
     (1, 7),   # 戊: 丑, 未
     (0, 8),   # 己: 子, 申
-    (1, 7),   # 庚: 丑, 未 (修正：午, 寅 for some traditions; using standard)
+    (1, 7),   # 庚: 丑, 未
     (6, 2),   # 辛: 午, 寅
     (3, 5),   # 壬: 卯, 巳
     (3, 5),   # 癸: 卯, 巳
@@ -634,9 +634,9 @@ def _place_auxiliary_stars(
     aux[long_chi].append("龍池")
     aux[feng_ge].append("鳳閣")
 
-    # 恩光 / 天貴 (by day + hour)
-    en_guang = (1 + lunar_day - 1 + 12) % 12  # 文昌+1
-    tian_gui = (wen_qu + 1) % 12               # 文曲+1
+    # 恩光 / 天貴 (by day: from 文昌/文曲 forward by day)
+    en_guang = (wen_chang + lunar_day - 1) % 12
+    tian_gui = (wen_qu + lunar_day - 1) % 12
     aux[en_guang].append("恩光")
     aux[tian_gui].append("天貴")
 
@@ -657,9 +657,6 @@ def _place_auxiliary_stars(
     _TIANFU_AUX = [9, 8, 0, 11, 3, 6, 11, 2, 3, 6]
     aux[_TIANGUAN[year_stem]].append("天官")
     aux[_TIANFU_AUX[year_stem]].append("天福")
-
-    # 天才 / 天壽 (命宮起算)
-    # These depend on ming_gong so we skip here (handled in build)
 
     return aux
 
@@ -708,12 +705,10 @@ def _build_palaces(
     建立十二宮位資料。
     命宮在 ming_gong_branch，依地支逆序（counter-clockwise）排列。
     宮位天干由虎年起法推算。
+    大限方向：陽男陰女順行（地支增加），陰男陽女逆行（地支減少）。
     """
     # 寅宮天干
     yin_stem = (2 * (year_stem % 5) + 2) % 10
-
-    # 大限方向：陽男陰女順行（地支增加），陰男陽女逆行（地支減少）
-    da_xian_direction = 1 if is_yang_male_or_yin_female else -1
 
     palaces = []
     for idx in range(12):
@@ -737,17 +732,12 @@ def _build_palaces(
             if star in sihua:
                 palace_sihua[star] = sihua[star]
 
-        # 大限
-        da_xian_step = idx if da_xian_direction == -1 else idx
-        # 大限宮位：順行時從命宮地支遞增，逆行時從命宮地支遞減（即 palace 順序本身）
-        if da_xian_direction == 1:
-            # 陽男陰女：大限按地支遞增（從命宮開始，順時針走）
-            da_xian_idx = idx  # 第0個=命宮, 第1個=命宮地支+1
+        # 大限：陰男陽女逆行（palace idx直接對應），陽男陰女順行（反轉idx）
+        if is_yang_male_or_yin_female:
+            da_xian_num = (12 - idx) % 12 if idx > 0 else 0
         else:
-            # 陰男陽女：大限按地支遞減（從命宮開始，逆時針走）= palace 本身順序
-            da_xian_idx = idx
-
-        da_xian_start = wu_xing_ju + da_xian_idx * 10
+            da_xian_num = idx
+        da_xian_start = wu_xing_ju + da_xian_num * 10
         da_xian_end = da_xian_start + 9
         da_xian = f"{da_xian_start}~{da_xian_end}"
 
