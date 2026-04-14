@@ -989,6 +989,10 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "zh": "❌ 調用 AI 時發生錯誤：{}",
         "en": "❌ Error calling AI: {}",
     },
+    "ai_rate_limit": {
+        "zh": "⏳ AI 服務目前流量過高，已自動重試但仍未成功。請稍後再試。",
+        "en": "⏳ AI service is experiencing high traffic. Automatic retries were exhausted. Please try again shortly.",
+    },
     "ai_result_header": {
         "zh": "🤖 AI 分析結果",
         "en": "🤖 AI Analysis Result",
