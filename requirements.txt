@@ -5,3 +5,4 @@ svgwrite==1.4.3
 fpdf2>=2.7.6
 fastapi>=0.115.0
 uvicorn[standard]>=0.34.0
+cerebras-cloud-sdk>=2.3.0

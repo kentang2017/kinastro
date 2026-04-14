@@ -65,6 +65,14 @@ from astro.interpretations import (
     get_transit_reading, get_synastry_reading, get_dasha_reading,
     get_yogini_reading, get_qizheng_dasha_reading,
 )
+from astro.ai_analysis import (
+    CerebrasClient,
+    CEREBRAS_MODEL_OPTIONS,
+    CEREBRAS_MODEL_DESCRIPTIONS,
+    load_system_prompts,
+    save_system_prompts,
+    format_chart_for_prompt,
+)
 
 from astro.arabic.picatrix_mansions import (
     render_mansion_lookup,
@@ -292,6 +300,162 @@ with st.sidebar:
         key="_system_select",
     )
 
+    # ── AI Analysis settings ──────────────────────────────────
+    st.divider()
+    st.header(t("ai_settings_header"))
+
+    _ai_model = st.selectbox(
+        t("ai_model_label"),
+        options=CEREBRAS_MODEL_OPTIONS,
+        index=0,
+        key="_ai_model_select",
+        help="\n".join(f"• {k}: {v}" for k, v in CEREBRAS_MODEL_DESCRIPTIONS.items()),
+    )
+
+    # System prompt selector
+    _prompts_data = load_system_prompts()
+    _prompts_list = _prompts_data.get("prompts", [])
+    _prompt_names = [p["name"] for p in _prompts_list]
+    _selected_prompt_name = _prompts_data.get("selected", "")
+
+    if _prompt_names:
+        _sel_idx = 0
+        if _selected_prompt_name in _prompt_names:
+            _sel_idx = _prompt_names.index(_selected_prompt_name)
+
+        _chosen_prompt_name = st.selectbox(
+            t("ai_select_prompt"),
+            options=_prompt_names,
+            index=_sel_idx,
+            key="_ai_prompt_select",
+            help=t("ai_select_prompt_help"),
+        )
+        _prompts_data["selected"] = _chosen_prompt_name
+
+        # Fetch selected prompt content
+        _prompt_content = ""
+        for _pr in _prompts_list:
+            if _pr["name"] == _chosen_prompt_name:
+                _prompt_content = _pr["content"]
+                break
+
+        if "ai_system_prompt" not in st.session_state:
+            st.session_state.ai_system_prompt = _prompt_content
+        elif _chosen_prompt_name != st.session_state.get("_last_ai_prompt_name"):
+            st.session_state.ai_system_prompt = _prompt_content
+        st.session_state._last_ai_prompt_name = _chosen_prompt_name
+
+        _new_content = st.text_area(
+            t("ai_edit_prompt"),
+            value=st.session_state.ai_system_prompt,
+            height=120,
+            placeholder=t("ai_edit_prompt_placeholder"),
+            key="_ai_prompt_editor",
+        )
+        st.session_state.ai_system_prompt = _new_content
+
+        _col_upd, _col_del = st.columns(2)
+        with _col_upd:
+            if st.button(t("ai_update_prompt_btn"), key="_ai_update_prompt"):
+                for _pr in _prompts_list:
+                    if _pr["name"] == _chosen_prompt_name:
+                        _pr["content"] = _new_content
+                        break
+                if save_system_prompts(_prompts_data):
+                    st.toast(t("ai_prompt_updated").format(_chosen_prompt_name))
+        with _col_del:
+            if st.button(t("ai_delete_prompt_btn"), key="_ai_delete_prompt",
+                         disabled=len(_prompts_list) <= 1):
+                _prompts_list = [p for p in _prompts_list if p["name"] != _chosen_prompt_name]
+                _prompts_data["prompts"] = _prompts_list
+                if _chosen_prompt_name == _selected_prompt_name and _prompts_list:
+                    _prompts_data["selected"] = _prompts_list[0]["name"]
+                if save_system_prompts(_prompts_data):
+                    st.toast(t("ai_prompt_deleted").format(_chosen_prompt_name))
+                    st.rerun()
+
+    # Add new prompt
+    if "ai_form_key_suffix" not in st.session_state:
+        st.session_state.ai_form_key_suffix = 0
+    _nk = st.session_state.ai_form_key_suffix
+    with st.expander(t("ai_add_prompt_expander"), expanded=False):
+        _new_name = st.text_input(t("ai_new_prompt_name"), key=f"_ai_new_name_{_nk}")
+        _new_body = st.text_area(
+            t("ai_new_prompt_content"), height=100,
+            placeholder=t("ai_new_prompt_placeholder"),
+            key=f"_ai_new_body_{_nk}",
+        )
+        if st.button(t("ai_save_new_prompt_btn"), key=f"_ai_save_new_{_nk}"):
+            if _new_name and _new_body:
+                _prompts_list.append({"name": _new_name, "content": _new_body})
+                _prompts_data["prompts"] = _prompts_list
+                if save_system_prompts(_prompts_data):
+                    st.toast(t("ai_prompt_saved").format(_new_name))
+                    st.session_state.ai_form_key_suffix += 1
+                    st.rerun()
+
+    # Temperature & max tokens
+    _ai_max_tokens = st.slider(
+        t("ai_max_tokens"), min_value=256, max_value=200000, value=8192, step=256,
+        key="_ai_max_tokens",
+        help=t("ai_max_tokens_help"),
+    )
+    _ai_temperature = st.slider(
+        t("ai_temperature"), min_value=0.0, max_value=2.0, value=0.7, step=0.1,
+        key="_ai_temperature",
+        help=t("ai_temperature_help"),
+    )
+
+# ============================================================
+# AI Analysis helper — reusable across all system tabs
+# ============================================================
+
+def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
+    """Render the AI analysis button and execute the analysis when clicked.
+
+    Parameters
+    ----------
+    system_key : str
+        The system tab key (e.g. ``"tab_western"``).
+    chart_obj : object
+        The chart object produced by the compute function.
+    btn_key : str
+        Optional unique key suffix for the button widget.
+    """
+    _bk = f"_ai_btn_{system_key}_{btn_key}" if btn_key else f"_ai_btn_{system_key}"
+    st.divider()
+    if st.button(t("ai_analyze_btn"), key=_bk):
+        with st.spinner(t("ai_analyzing")):
+            # Resolve API key from secrets or env
+            _api_key = ""
+            try:
+                _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
+            except Exception:
+                pass
+            if not _api_key:
+                _api_key = os.environ.get("CEREBRAS_API_KEY", "")
+            if not _api_key:
+                st.error(t("ai_key_missing"))
+                return
+
+            try:
+                client = CerebrasClient(api_key=_api_key)
+                chart_prompt = format_chart_for_prompt(system_key, chart_obj)
+                messages = [
+                    {"role": "system", "content": st.session_state.get("ai_system_prompt", "")},
+                    {"role": "user", "content": chart_prompt},
+                ]
+                result = client.chat(
+                    messages=messages,
+                    model=st.session_state.get("_ai_model_select", CEREBRAS_MODEL_OPTIONS[0]),
+                    max_tokens=st.session_state.get("_ai_max_tokens", 8192),
+                    temperature=st.session_state.get("_ai_temperature", 0.7),
+                )
+                with st.expander(t("ai_result_header"), expanded=True):
+                    st.markdown(result)
+            except Exception as e:
+                st.error(t("ai_error").format(str(e)))
+
 # ============================================================
 # Main Area — Render the selected astrology system
 # 主區域 — 根據側邊欄選擇顯示對應占星體系
@@ -427,6 +591,9 @@ if _selected_system == "tab_chinese":
             with _ch_tab_elect:
                 render_electional_tool(timezone=input_tz)
 
+            # AI Analysis button for Chinese
+            _render_ai_button("tab_chinese", chart, btn_key="chinese")
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -442,6 +609,7 @@ elif _selected_system == "tab_ziwei":
             with st.spinner(t("spinner_ziwei")):
                 zw_chart = compute_ziwei_chart(**_p)
             render_ziwei_chart(zw_chart)
+            _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -617,6 +785,9 @@ elif _selected_system == "tab_western":
                 else:
                     st.info("No traditional planet dignity data available.")
 
+            # AI Analysis button for Western
+            _render_ai_button("tab_western", w_chart, btn_key="western")
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -724,6 +895,9 @@ elif _selected_system == "tab_indian":
                     with st.expander(f"{icon} {yg.name} ({yg.name_cn}) — {yg.strength}"):
                         st.write(yg.description_cn if get_lang() == "zh" else yg.description)
 
+            # AI Analysis button for Vedic
+            _render_ai_button("tab_indian", v_chart, btn_key="vedic")
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -742,6 +916,7 @@ elif _selected_system == "tab_sukkayodo":
             with st.spinner(t("spinner_indian")):
                 _v_chart_sukka = compute_vedic_chart(**_p)
             render_sukkayodo_chart(_v_chart_sukka)
+            _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -769,6 +944,7 @@ elif _selected_system == "tab_thai":
                 st.markdown("---")
                 divination_result = calculate_nine_palace_divination(t_chart)
                 render_nine_palace_divination(divination_result)
+            _render_ai_button("tab_thai", t_chart, btn_key="thai")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -784,6 +960,7 @@ elif _selected_system == "tab_kabbalistic":
             with st.spinner(t("spinner_kabbalistic")):
                 k_chart = compute_kabbalistic_chart(**_p)
             render_kabbalistic_chart(k_chart)
+            _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -876,6 +1053,9 @@ elif _selected_system == "tab_arabic":
                 st.subheader(t("arabic_subtab_reference"))
                 _render_reference_library()
 
+            # AI Analysis button for Arabic
+            _render_ai_button("tab_arabic", a_chart, btn_key="arabic")
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -936,6 +1116,7 @@ elif _selected_system == "tab_maya":
             with st.spinner(t("spinner_maya")):
                 m_chart = compute_maya_chart(**_p)
             render_maya_chart(m_chart)
+            _render_ai_button("tab_maya", m_chart, btn_key="maya")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -951,6 +1132,7 @@ elif _selected_system == "tab_mahabote":
             with st.spinner(t("spinner_mahabote")):
                 mb_chart = compute_mahabote_chart(**_p)
             render_mahabote_chart(mb_chart)
+            _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -966,6 +1148,7 @@ elif _selected_system == "tab_decans":
             with st.spinner(t("spinner_decans")):
                 dc_chart = compute_decan_chart(**_p)
             render_decan_chart(dc_chart)
+            _render_ai_button("tab_decans", dc_chart, btn_key="decans")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -981,6 +1164,7 @@ elif _selected_system == "tab_nadi":
             with st.spinner(t("spinner_nadi")):
                 nadi_chart = compute_nadi_chart(**_p)
             render_nadi_chart(nadi_chart)
+            _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -996,6 +1180,7 @@ elif _selected_system == "tab_zurkhai":
             with st.spinner(t("spinner_zurkhai")):
                 zk_chart = compute_zurkhai_chart(**_p)
             render_zurkhai_chart(zk_chart)
+            _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1091,6 +1276,9 @@ elif _selected_system == "tab_hellenistic":
                     for _a in get_all_aphorisms():
                         with st.expander(f"第 {_a['id']} 條"):
                             st.markdown(_a["text"])
+
+            # AI Analysis button for Hellenistic
+            _render_ai_button("tab_hellenistic", _hellen_chart, btn_key="hellenistic")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
@@ -1430,6 +1618,9 @@ elif _selected_system == "tab_chinstar":
                     st.text_area(t("chinstar_full_text_label"), _cs_txt, height=600)
                 else:
                     st.warning(t("chinstar_text_not_found"))
+
+            # AI Analysis button for Chinstar
+            _render_ai_button("tab_chinstar", _cs_chart, btn_key="chinstar")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")

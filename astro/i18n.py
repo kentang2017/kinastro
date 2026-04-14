@@ -892,6 +892,112 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "zh": "將滑鼠移到地區上方可查看該地區的占星體系，點擊按鈕即可進入",
         "en": "Hover over a region to see its astrology systems, click a button to enter",
     },
+
+    # ── AI Analysis (AI 分析) ──────────────────────────────────
+    "ai_settings_header": {
+        "zh": "🤖 AI 分析設置",
+        "en": "🤖 AI Analysis Settings",
+    },
+    "ai_model_label": {
+        "zh": "AI 模型",
+        "en": "AI Model",
+    },
+    "ai_select_prompt": {
+        "zh": "選擇系統提示",
+        "en": "Select System Prompt",
+    },
+    "ai_select_prompt_help": {
+        "zh": "選擇用於 AI 模型的系統提示，指導其分析排盤結果",
+        "en": "Select a system prompt for the AI model to guide chart analysis",
+    },
+    "ai_edit_prompt": {
+        "zh": "編輯提示內容",
+        "en": "Edit Prompt Content",
+    },
+    "ai_edit_prompt_placeholder": {
+        "zh": "在此編輯系統提示內容…",
+        "en": "Edit the system prompt content here…",
+    },
+    "ai_update_prompt_btn": {
+        "zh": "💾 更新提示",
+        "en": "💾 Update Prompt",
+    },
+    "ai_delete_prompt_btn": {
+        "zh": "🗑️ 刪除提示",
+        "en": "🗑️ Delete Prompt",
+    },
+    "ai_add_prompt_expander": {
+        "zh": "➕ 新增自訂提示",
+        "en": "➕ Add Custom Prompt",
+    },
+    "ai_new_prompt_name": {
+        "zh": "提示名稱",
+        "en": "Prompt Name",
+    },
+    "ai_new_prompt_content": {
+        "zh": "提示內容",
+        "en": "Prompt Content",
+    },
+    "ai_new_prompt_placeholder": {
+        "zh": "輸入 AI 分析指令…",
+        "en": "Enter AI analysis instructions…",
+    },
+    "ai_save_new_prompt_btn": {
+        "zh": "💾 儲存新提示",
+        "en": "💾 Save New Prompt",
+    },
+    "ai_prompt_updated": {
+        "zh": "✅ 已更新提示「{}」",
+        "en": '✅ Prompt "{}" updated',
+    },
+    "ai_prompt_deleted": {
+        "zh": "🗑️ 已刪除提示「{}」",
+        "en": '🗑️ Prompt "{}" deleted',
+    },
+    "ai_prompt_saved": {
+        "zh": "✅ 已新增提示「{}」",
+        "en": '✅ Prompt "{}" saved',
+    },
+    "ai_max_tokens": {
+        "zh": "最大回應長度",
+        "en": "Max Response Tokens",
+    },
+    "ai_max_tokens_help": {
+        "zh": "控制 AI 回應的最大長度",
+        "en": "Control the maximum length of AI responses",
+    },
+    "ai_temperature": {
+        "zh": "溫度 (Temperature)",
+        "en": "Temperature",
+    },
+    "ai_temperature_help": {
+        "zh": "較高的溫度會產生更有創意的回應，較低則更精確",
+        "en": "Higher temperature produces more creative responses, lower is more precise",
+    },
+    "ai_analyze_btn": {
+        "zh": "🔍 使用 AI 分析排盤結果",
+        "en": "🔍 Analyze Chart with AI",
+    },
+    "ai_analyzing": {
+        "zh": "AI 正在分析排盤結果…",
+        "en": "AI is analyzing the chart…",
+    },
+    "ai_key_missing": {
+        "zh": "⚠️ 未設置 Cerebras API Key。請在 Streamlit Secrets 或環境變數中設定 CEREBRAS_API_KEY。",
+        "en": "⚠️ Cerebras API Key not found. Set CEREBRAS_API_KEY in Streamlit Secrets or environment variables.",
+    },
+    "ai_error": {
+        "zh": "❌ 調用 AI 時發生錯誤：{}",
+        "en": "❌ Error calling AI: {}",
+    },
+    "ai_result_header": {
+        "zh": "🤖 AI 分析結果",
+        "en": "🤖 AI Analysis Result",
+    },
+    "ai_no_chart": {
+        "zh": "請先計算排盤後再進行 AI 分析。",
+        "en": "Please compute a chart first before running AI analysis.",
+    },
 }
 
 
