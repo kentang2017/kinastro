@@ -1,6 +1,6 @@
 """
 堅占星 (Kin Astro) - 多體系占星排盤系統
-Multi-System Astrology Chart Application
+Multi-System Astrology Chart Application  
 
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
 卡巴拉占星、阿拉伯占星（含 Picatrix 星體魔法、太陽知識大全 Shams al-Maʻārif）、
