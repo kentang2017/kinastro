@@ -380,7 +380,7 @@ with st.sidebar:
         "tab_chinese", "tab_ziwei", "tab_western", "tab_indian",
         "tab_sukkayodo", "tab_thai", "tab_kabbalistic", "tab_arabic",
         "tab_maya", "tab_mahabote", "tab_decans", "tab_nadi",
-        "tab_zurkhai", "tab_hellenistic", "tab_chinstar", "tab_contact",
+        "tab_zurkhai", "tab_hellenistic", "tab_chinstar",
     ]
     _SYSTEM_LABELS = {
         "tab_chinese": t("tab_chinese"),
@@ -398,7 +398,6 @@ with st.sidebar:
         "tab_zurkhai": t("tab_zurkhai"),
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_chinstar": t("tab_chinstar"),
-        "tab_contact": t("tab_contact"),
     }
 
     # Determine default index from session state
@@ -521,6 +520,37 @@ with st.sidebar:
         key="_ai_temperature",
         help=t("ai_temperature_help"),
     )
+
+    # ── About / Contact section (always visible at sidebar bottom) ──
+    st.divider()
+    with st.expander(t("tab_contact"), expanded=False):
+        st.subheader(t("contact_title"))
+        st.markdown(t("contact_wechat"))
+        st.markdown(t("contact_wechat_id"))
+        st.markdown(t("contact_qq"))
+        st.subheader(t("contact_other_apps"))
+        _contact_apps = [
+            ("https://iching.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/ichingshifa/master/pic/iching.png"),
+            ("https://kintaiyi.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kintaiyi/master/pic/Untitled-1.png"),
+            ("https://kinliuren.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinliuren/master/pic/Untitled-33.png"),
+            ("https://kinqimen.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinqimen/master/pic/Untitled-22.png"),
+            ("https://kinwuzhao.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwuzhao/refs/heads/main/pic/wuzhao.png"),
+            ("https://kintaixuan.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/taixuanshifa/master/pic/taixuan.png"),
+            ("https://kinwangji.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwangji/main/pic/kwj.png"),
+            ("https://jingjue.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/jingjue/master/pic/jingjue.png"),
+            ("https://liangtouqian.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/liangtouqian/main/pic/Untitled-44.png"),
+        ]
+        _contact_cols = st.columns(3)
+        for _ci, (_curl, _cimg) in enumerate(_contact_apps):
+            with _contact_cols[_ci % 3]:
+                st.markdown(
+                    f'<a href="{_curl}" target="_blank"><img src="{_cimg}" style="max-width:100%;height:auto;margin-bottom:8px;"></a>',
+                    unsafe_allow_html=True,
+                )
+        st.image(
+            "https://raw.githubusercontent.com/kentang2017/kintaiyi/master/pic/20231205113526.jpg",
+            use_container_width=True,
+        )
 
 # ============================================================
 # AI Analysis helper — reusable across all system tabs
@@ -1752,35 +1782,4 @@ elif _selected_system == "tab_chinstar":
     else:
         if not _is_calculated:
             st.info(t("info_calc_prompt"))
-
-elif _selected_system == "tab_contact":
-    st.header(t("contact_title"))
-    st.markdown(t("contact_wechat"))
-
-    st.subheader(t("contact_other_apps"))
-    _apps = [
-        ("https://iching.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/ichingshifa/master/pic/iching.png"),
-        ("https://kintaiyi.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kintaiyi/master/pic/Untitled-1.png"),
-        ("https://kinliuren.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinliuren/master/pic/Untitled-33.png"),
-        ("https://kinqimen.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinqimen/master/pic/Untitled-22.png"),
-        ("https://kinwuzhao.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwuzhao/refs/heads/main/pic/wuzhao.png"),
-        ("https://kintaixuan.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/taixuanshifa/master/pic/taixuan.png"),
-        ("https://kinwangji.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/kinwangji/main/pic/kwj.png"),
-        ("https://jingjue.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/jingjue/master/pic/jingjue.png"),
-        ("https://liangtouqian.streamlit.app/", "https://raw.githubusercontent.com/kentang2017/liangtouqian/main/pic/Untitled-44.png"),
-    ]
-    _cols = st.columns(3)
-    for _i, (_url, _img) in enumerate(_apps):
-        with _cols[_i % 3]:
-            st.markdown(
-                f'<a href="{_url}" target="_blank"><img src="{_img}" style="max-width:100%;height:auto;margin-bottom:8px;"></a>',
-                unsafe_allow_html=True,
-            )
-
-    st.image(
-        "https://raw.githubusercontent.com/kentang2017/kintaiyi/master/pic/20231205113526.jpg",
-        use_container_width=True,
-    )
-    st.markdown(t("contact_wechat_id"))
-    st.markdown(t("contact_qq"))
 
