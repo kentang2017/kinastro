@@ -1603,7 +1603,7 @@ elif _selected_system == "tab_chinstar":
                     'vertical-align:middle;border:2px solid #444;'
                     'background:#fffde7;padding:10px 8px;border-radius:6px;'
                     'line-height:1.6;">'
-                    '<div style="font-size:15px;font-weight:bold;color:#b71c1c;'
+                    '<div style="font-size:15px;font-weight:bold;color:#000000;'
                     'letter-spacing:2px;">萬化仙禽</div>'
                     f'<div style="font-size:11px;margin-top:6px;">'
                     f'{bi["year"]}年{bi["month"]}月{bi["day"]}日 {bi["hour"]}時</div>'
@@ -1614,7 +1614,7 @@ elif _selected_system == "tab_chinstar":
                     f'<div style="font-size:11px;"><b>命星</b>：{s["ming_xing"]}</div>'
                     f'<div style="font-size:11px;"><b>身星</b>：{s["shen_xing"]}</div>'
                     '<hr style="margin:6px 0;border-color:#ccc;">'
-                    f'<div style="font-size:11px;color:#5d4037;">'
+                    f'<div style="font-size:11px;color:#000000;">'
                     f'<b>格局</b>：{pat["grade"]}</div>'
                     '</td>'
                 )
