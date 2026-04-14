@@ -67,6 +67,7 @@ from astro.interpretations import (
 )
 from astro.ai_analysis import (
     CerebrasClient,
+    RateLimitError,
     CEREBRAS_MODEL_OPTIONS,
     CEREBRAS_MODEL_DESCRIPTIONS,
     load_system_prompts,
@@ -453,6 +454,8 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
                 )
                 with st.expander(t("ai_result_header"), expanded=True):
                     st.markdown(result)
+            except RateLimitError:
+                st.warning(t("ai_rate_limit"))
             except Exception as e:
                 st.error(t("ai_error").format(str(e)))
 

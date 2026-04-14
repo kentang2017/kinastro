@@ -13,8 +13,12 @@ Similar to the AI integration in kintaiyi (太乙神數).
 from __future__ import annotations
 
 import json
+import logging
 import os
+import time
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Cerebras SDK wrapper
@@ -39,14 +43,24 @@ CEREBRAS_MODEL_DESCRIPTIONS = {
 }
 
 
-class CerebrasClient:
-    """Thin wrapper around the Cerebras Cloud SDK."""
+class RateLimitError(Exception):
+    """Raised when the AI API returns a rate-limit (429) error after all retries."""
 
-    def __init__(self, api_key: str):
+
+# Maximum number of application-level retries on top of the SDK's built-in
+# retries.  Total wait can be up to ~1+2+4 = 7 seconds with jitter.
+_APP_MAX_RETRIES = 3
+_APP_RETRY_BASE_DELAY = 1.0  # seconds
+
+
+class CerebrasClient:
+    """Thin wrapper around the Cerebras Cloud SDK with enhanced retry logic."""
+
+    def __init__(self, api_key: str, max_retries: int = 5):
         if not api_key:
             raise ValueError("CerebrasClient requires a non-empty API key.")
         from cerebras.cloud.sdk import Cerebras
-        self.client = Cerebras(api_key=api_key)
+        self.client = Cerebras(api_key=api_key, max_retries=max_retries)
 
     def chat(
         self,
@@ -54,13 +68,36 @@ class CerebrasClient:
         model: str = DEFAULT_MODEL,
         **kwargs,
     ) -> str:
-        """Send a chat completion request and return the assistant message text."""
-        response = self.client.chat.completions.create(
-            messages=messages,
-            model=model,
-            **kwargs,
-        )
-        return response.choices[0].message.content
+        """Send a chat completion request and return the assistant message text.
+
+        Includes application-level retry with exponential back-off on top of
+        the SDK's built-in retry so that transient 429 bursts are absorbed
+        gracefully.
+        """
+        from cerebras.cloud.sdk import RateLimitError as _SdkRateLimit
+
+        last_exc: Exception | None = None
+        for attempt in range(_APP_MAX_RETRIES):
+            try:
+                response = self.client.chat.completions.create(
+                    messages=messages,
+                    model=model,
+                    **kwargs,
+                )
+                return response.choices[0].message.content
+            except _SdkRateLimit as exc:
+                last_exc = exc
+                if attempt < _APP_MAX_RETRIES - 1:
+                    delay = _APP_RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        "Rate limited (attempt %d/%d), retrying in %.1fs …",
+                        attempt + 1, _APP_MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+
+        # All retries exhausted — raise our own RateLimitError so the caller
+        # can show a user-friendly message.
+        raise RateLimitError(str(last_exc)) from last_exc
 
 
 # ---------------------------------------------------------------------------
