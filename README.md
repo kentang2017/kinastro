@@ -9,9 +9,9 @@
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**十四體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸・古埃及十度區間・納迪・蒙古祖爾海・希臘 + 跨體系比較**
+**十五體系占星排盤系統 — 中國・紫微斗數・西洋・印度・宿曜道・泰國・卡巴拉・阿拉伯・瑪雅・緬甸・古埃及十度區間・納迪・蒙古祖爾海・希臘・萬化仙禽 + 跨體系比較**
 
-*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic (incl. Picatrix & Shams al-Maʻārif), Maya, Myanmar, Egyptian Decans, Nadi, Mongolian Zurkhai, Hellenistic + Cross-System Comparison*
+*Multi-System Astrology Platform — Chinese, Zi Wei, Western, Vedic, Japanese, Thai, Kabbalah, Arabic (incl. Picatrix & Shams al-Maʻārif), Maya, Myanmar, Egyptian Decans, Nadi, Mongolian Zurkhai, Hellenistic, WanHua XianQin + Cross-System Comparison*
 
 </div>
 
@@ -35,7 +35,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **十四體系合一** | 在同一個介面中切換十四種占星體系＋跨體系比較，無需來回切換工具 | Switch between 14 astrology systems + cross-comparison in one unified interface |
+| 🔮 **十五體系合一** | 在同一個介面中切換十五種占星體系＋跨體系比較，無需來回切換工具 | Switch between 15 astrology systems + cross-comparison in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
 | 🌐 **中英雙語** | 介面支援中文與英文切換 | Full Chinese and English bilingual interface |
@@ -64,6 +64,7 @@
 | 12 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
 | 13 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
 | 14 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing |
+| 15 | 🐦‍⬛ 萬化仙禽 WanHua XianQin | 農曆 Lunar | 二十八宿禽星・十二宮・吞啗合戰・相胎賦・貴賤格 |
 | | 🔀 跨體系比較 Cross-Compare | — | 中／西／印三系行星位置統一對照 |
 
 ---
@@ -342,6 +343,33 @@
 
 ---
 
+### 🐦‍⬛ 萬化仙禽（WanHua XianQin / Star-Animal Divination）
+
+源自明代古籍《新刻劉伯溫萬化仙禽》（朱國祥著）的演禽術，以二十八宿禽星為核心的中國傳統命理系統。
+
+*Star-Animal Divination system based on the Ming Dynasty classical text «新刻劉伯溫萬化仙禽» by Zhu Guoxiang, centered on the 28 Lunar Mansion Animal Stars.*
+
+- **二十八宿禽星 / 28 Mansion Animal Stars**：角木蛟、亢金龍、氐土貉、房日兔 …… 每宿配一禽獸與五行 — Each mansion paired with an animal and Five-Element attribute
+- **三元起宿 / Three Cycles Starting Mansion**：上元・中元・下元六甲旬起頭宿推算 — Deriving the starting mansion from the Three Cycles (Upper, Middle, Lower)
+- **十二宮 / Twelve Palaces**：命宮、財帛、兄弟、田宅、子女、奴僕、夫妻、疾厄、遷移、官祿、福德、相貌 — Life, Wealth, Siblings, Property, Children, Servants, Spouse, Illness, Travel, Career, Fortune, Appearance
+- **推命星・身星 / Life Star & Body Star**：從農曆生辰推算命宮星與身宮星 — Deriving Life Star and Body Star from lunar birth data
+- **吞啗・合戰 / Swallow-Bite & Alliance-Battle**：禽星之間的生剋吞噬與合戰判斷 — Inter-star relationships of dominance, alliance, and conflict
+- **情性賦 / Personality Verse**：依命星五行特質的性情描述 — Character description based on the Life Star's elemental nature
+- **格局判斷 / Pattern Evaluation**：得時得地的吉凶格局評定 — Auspicious/inauspicious pattern assessment based on timing and position
+
+<details>
+<summary>📂 四個子分頁 | 4 Sub-tabs</summary>
+
+| 子分頁 | 功能 |
+|---|---|
+| **起盤結果** | 十二宮禽星排布、命星身星、衍生星、吞啗合戰分析、情性賦、格局判斷 |
+| **古籍全文** | 《新刻劉伯溫萬化仙禽》原文全文閱覽 |
+| **相胎賦** | 命星與胎星的 28 組配合論斷（形品、喜忌、斷曰） |
+| **貴賤格** | 貴格（吉利格局）與賤格（凶煞格局）參考表 |
+</details>
+
+---
+
 ### 🔀 跨體系比較 | Cross-System Comparison
 
 將中國七政四餘、西洋占星、印度占星三大系統的行星位置並排比較，一目了然。
@@ -419,6 +447,13 @@ kinastro/
 │   ├── nadi.py                     # 納迪占星 / Nadi Jyotish
 │   ├── zurkhai.py                  # 蒙古祖爾海 / Mongolian Zurkhai
 │   ├── hellenistic.py              # 希臘占星 / Hellenistic astrology
+│   │
+│   │  ── 萬化仙禽（WanHua XianQin） ──
+│   ├── chinstar/                   # 萬化仙禽模組 / Star-Animal Divination module
+│   │   ├── chinstar.py             # 演禽起盤核心 / Core charting engine
+│   │   ├── 新刻刘伯温万化仙禽.txt   # 古籍全文 / Classical text
+│   │   ├── xiangtai_fu.json        # 相胎賦資料 / Birth Combination data
+│   │   └── gui_jian_ge.json        # 貴賤格資料 / Noble/Ignoble Patterns data
 │   │
 │   │  ── 阿拉伯子模組（Arabic Sub-modules） ──
 │   ├── picatrix_data.py            # Picatrix 28 月宿資料 / Picatrix mansions data
