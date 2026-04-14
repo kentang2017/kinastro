@@ -719,6 +719,8 @@ from astro.ziwei import (
     HEAVENLY_STEMS,
     WU_XING_JU_NAMES,
     PALACE_SEQUENCE,
+    SIHUA_TABLE,
+    NAYIN_WUXING_JU,
 )
 
 
@@ -782,9 +784,10 @@ class TestZiweiHelpers:
 
     def test_wu_xing_ju_range(self):
         for stem in range(10):
-            ming_stem = _get_ming_gong_stem(stem, 2)
-            ju = _get_wu_xing_ju(ming_stem)
-            assert 2 <= ju <= 6
+            for branch in range(0, 12, 2):  # stem and branch must share parity
+                if stem % 2 == branch % 2:
+                    ju = _get_wu_xing_ju(stem, branch)
+                    assert 2 <= ju <= 6
 
     def test_wu_xing_ju_names_coverage(self):
         assert set(WU_XING_JU_NAMES.keys()) == {2, 3, 4, 5, 6}
@@ -796,14 +799,22 @@ class TestZiweiHelpers:
                 assert 0 <= b <= 11
 
     def test_tianfu_branch_formula(self):
-        # 天府 = (14 - 紫微) % 12
+        # 天府 = (4 - 紫微 + 12) % 12  (mirror about 寅)
         for ziwei in range(12):
             tianfu = _get_tianfu_branch(ziwei)
-            assert tianfu == (14 - ziwei) % 12
+            assert tianfu == (4 - ziwei + 12) % 12
 
     def test_ziwei_day1_water2(self):
         # 水二局，初一 → 寅 (index 2)
         assert _get_ziwei_branch(1, 2) == 2
+
+    def test_ziwei_day11_wood3(self):
+        # 木三局，十一日 → 辰 (index 4) — matches reference image
+        assert _get_ziwei_branch(11, 3) == 4
+
+    def test_wu_xing_ju_nayin_gui_wei(self):
+        # 癸未 → 楊柳木 → 木三局 (3) — reference case
+        assert _get_wu_xing_ju(9, 7) == 3
 
 
 class TestZiweiSolarToLunar:
@@ -937,6 +948,202 @@ class TestZiweiChart:
     def test_branch_names_valid(self, sample_chart):
         for p in sample_chart.palaces:
             assert p.branch_name in EARTHLY_BRANCHES
+
+
+class TestZiweiReferenceChart:
+    """紫微斗數參考案例測試 (1985-08-26 02:55 男命)"""
+
+    @pytest.fixture
+    def ref_chart(self):
+        return compute_ziwei_chart(
+            year=1985, month=8, day=26, hour=2, minute=55,
+            timezone=8.0, latitude=22.3, longitude=114.2,
+            location_name="Test", gender="男",
+        )
+
+    def test_lunar_date(self, ref_chart):
+        assert ref_chart.lunar_year == 1985
+        assert ref_chart.lunar_month == 7
+        assert ref_chart.lunar_day == 11
+
+    def test_year_ganzi(self, ref_chart):
+        assert HEAVENLY_STEMS[ref_chart.lunar_year_stem] == "乙"
+        assert EARTHLY_BRANCHES[ref_chart.lunar_year_branch] == "丑"
+
+    def test_hour_branch(self, ref_chart):
+        assert ref_chart.hour_branch == 1  # 丑時
+
+    def test_ming_gong(self, ref_chart):
+        assert EARTHLY_BRANCHES[ref_chart.ming_gong_branch] == "未"
+
+    def test_shen_gong(self, ref_chart):
+        assert EARTHLY_BRANCHES[ref_chart.shen_gong_branch] == "酉"
+
+    def test_wu_xing_ju(self, ref_chart):
+        assert ref_chart.wu_xing_ju == 3  # 木三局
+
+    def test_yin_yang(self, ref_chart):
+        assert ref_chart.yin_yang == "陰"
+
+    def test_ming_zhu(self, ref_chart):
+        assert ref_chart.ming_zhu == "武曲"
+
+    def test_shen_zhu(self, ref_chart):
+        assert ref_chart.shen_zhu == "天相"
+
+    def test_ziwei_at_chen(self, ref_chart):
+        assert EARTHLY_BRANCHES[ref_chart.ziwei_branch] == "辰"
+
+    def test_ziwei_tianxiang_at_chen(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 4)  # 辰
+        assert "紫微" in p.stars
+        assert "天相" in p.stars
+
+    def test_tianji_jumen_at_mao(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 3)  # 卯
+        assert "天機" in p.stars
+        assert "巨門" in p.stars
+
+    def test_tianliang_at_si(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 5)  # 巳
+        assert "天梁" in p.stars
+
+    def test_qisha_at_wu(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 6)  # 午
+        assert "七殺" in p.stars
+
+    def test_lianzheng_at_shen(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 8)  # 申
+        assert "廉貞" in p.stars
+
+    def test_wuqu_tianfu_at_zi(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 0)  # 子
+        assert "武曲" in p.stars
+        assert "天府" in p.stars
+
+    def test_taiyang_taiyin_at_chou(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 1)  # 丑
+        assert "太陽" in p.stars
+        assert "太陰" in p.stars
+
+    def test_tiantong_at_hai(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 11)  # 亥
+        assert "天同" in p.stars
+
+    def test_tanlang_at_yin(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 2)  # 寅
+        assert "貪狼" in p.stars
+
+    def test_pojun_at_xu(self, ref_chart):
+        p = next(p for p in ref_chart.palaces if p.branch == 10)  # 戌
+        assert "破軍" in p.stars
+
+    def test_sihua_yi_year(self, ref_chart):
+        # 乙年四化: 天機化祿, 天梁化權, 紫微化科, 太陰化忌
+        assert ref_chart.sihua == {
+            "天機": "祿", "天梁": "權", "紫微": "科", "太陰": "忌"
+        }
+
+    def test_lucun_at_mao(self, ref_chart):
+        # 乙年祿存在卯
+        p = next(p for p in ref_chart.palaces if p.branch == 3)
+        assert "祿存" in p.aux_stars
+
+    def test_qingyang_at_chen(self, ref_chart):
+        # 擎羊在辰 (祿存+1)
+        p = next(p for p in ref_chart.palaces if p.branch == 4)
+        assert "擎羊" in p.aux_stars
+
+    def test_wenchang_at_you(self, ref_chart):
+        # 丑時 → 文昌在酉
+        p = next(p for p in ref_chart.palaces if p.branch == 9)
+        assert "文昌" in p.aux_stars
+
+    def test_wenqu_at_si(self, ref_chart):
+        # 丑時 → 文曲在巳
+        p = next(p for p in ref_chart.palaces if p.branch == 5)
+        assert "文曲" in p.aux_stars
+
+    def test_da_xian_ming(self, ref_chart):
+        ming_palace = next(p for p in ref_chart.palaces if p.name == "命宮")
+        assert ming_palace.da_xian == "3~12"
+
+    def test_da_xian_xiongdi(self, ref_chart):
+        xiongdi = next(p for p in ref_chart.palaces if p.name == "兄弟宮")
+        assert xiongdi.da_xian == "13~22"
+
+    def test_palace_ordering_counter_clockwise(self, ref_chart):
+        """Verify palaces go counter-clockwise (decreasing branch) from 命宮"""
+        branches = [p.branch for p in ref_chart.palaces]
+        # 命宮=未(7), 兄弟=午(6), 夫妻=巳(5)...
+        assert branches[0] == 7  # 未
+        assert branches[1] == 6  # 午
+        assert branches[2] == 5  # 巳
+
+    def test_sanhe_groups_exist(self, ref_chart):
+        assert len(ref_chart.sanhe_groups) == 4
+
+    def test_aux_stars_present(self, ref_chart):
+        all_aux = [s for p in ref_chart.palaces for s in p.aux_stars]
+        for star in ["文昌", "文曲", "左輔", "右弼", "祿存", "擎羊", "陀羅",
+                     "天魁", "天鉞", "火星", "鈴星", "天空", "地劫", "天馬"]:
+            assert star in all_aux, f"{star} not found in auxiliary stars"
+
+    def test_brightness_labels(self, ref_chart):
+        """Each main star should have a brightness label"""
+        for p in ref_chart.palaces:
+            for star in p.stars:
+                assert star in p.brightness, f"{star} missing brightness in {p.name}"
+
+
+class TestNayinWuxingJu:
+    """納音五行局查表測試"""
+
+    def test_table_length(self):
+        assert len(NAYIN_WUXING_JU) == 30
+
+    def test_all_values_valid(self):
+        for val in NAYIN_WUXING_JU:
+            assert val in {2, 3, 4, 5, 6}
+
+    def test_jiazi_gold4(self):
+        # 甲子(0) → pair 0 → 金四局
+        assert NAYIN_WUXING_JU[0] == 4
+
+    def test_bingyin_fire6(self):
+        # 丙寅(2) → pair 1 → 火六局
+        assert NAYIN_WUXING_JU[1] == 6
+
+    def test_wuchen_wood3(self):
+        # 戊辰(4) → pair 2 → 木三局
+        assert NAYIN_WUXING_JU[2] == 3
+
+
+class TestSihuaTable:
+    """四化表測試"""
+
+    def test_table_length(self):
+        assert len(SIHUA_TABLE) == 10
+
+    def test_each_entry_has_4_stars(self):
+        for entry in SIHUA_TABLE:
+            assert len(entry) == 4
+
+    def test_yi_year_sihua(self):
+        # 乙年: 天機祿, 天梁權, 紫微科, 太陰忌
+        lu, quan, ke, ji = SIHUA_TABLE[1]
+        assert lu == "天機"
+        assert quan == "天梁"
+        assert ke == "紫微"
+        assert ji == "太陰"
+
+    def test_jia_year_sihua(self):
+        # 甲年: 廉貞祿, 破軍權, 武曲科, 太陽忌
+        lu, quan, ke, ji = SIHUA_TABLE[0]
+        assert lu == "廉貞"
+        assert quan == "破軍"
+        assert ke == "武曲"
+        assert ji == "太陽"
 
 
 # ============================================================
