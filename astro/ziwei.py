@@ -45,17 +45,17 @@ PALACE_SEQUENCE = [
     "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮",
 ]
 
-# 紫微系：相對於紫微星地支的偏移（順方向 mod 12）
+# 紫微系：相對於紫微星地支的偏移（逆佈 mod 12）
 ZIWEI_GROUP = {
     "紫微": 0,
-    "天機": 11,   # 逆1 → +11 mod 12
-    "太陽": 2,
-    "武曲": 3,
-    "天同": 4,
-    "廉貞": 7,
+    "天機": 11,   # -1 mod 12
+    "太陽": 9,    # -3 mod 12
+    "武曲": 8,    # -4 mod 12
+    "天同": 7,    # -5 mod 12
+    "廉貞": 4,    # -8 mod 12
 }
 
-# 天府系：相對於天府星地支的偏移（順方向 mod 12）
+# 天府系：相對於天府星地支的偏移（順佈 mod 12）
 TIANFU_GROUP = {
     "天府": 0,
     "太陰": 1,
@@ -66,6 +66,118 @@ TIANFU_GROUP = {
     "七殺": 6,
     "破軍": 10,
 }
+
+# ============================================================
+# 納音五行局 (Nayin Wu Xing Ju)
+# ============================================================
+# 60 甲子納音五行對應局數，每兩組干支共用一個納音
+# 索引 = 六十甲子序號 // 2 (0-29)
+# 值 = 五行局數: 金4, 火6, 木3, 土5, 水2
+NAYIN_WUXING_JU = [
+    4, 6, 3, 5, 4,  # 甲子乙丑海中金, 丙寅丁卯爐中火, 戊辰己巳大林木, 庚午辛未路旁土, 壬申癸酉劍鋒金
+    6, 2, 5, 4, 3,  # 甲戌乙亥山頭火, 丙子丁丑澗下水, 戊寅己卯城頭土, 庚辰辛巳白蠟金, 壬午癸未楊柳木
+    2, 5, 6, 3, 2,  # 甲申乙酉泉中水, 丙戌丁亥屋上土, 戊子己丑霹靂火, 庚寅辛卯松柏木, 壬辰癸巳長流水
+    4, 6, 3, 5, 4,  # 甲午乙未沙中金, 丙申丁酉山下火, 戊戌己亥平地木, 庚子辛丑壁上土, 壬寅癸卯金箔金
+    6, 2, 5, 4, 3,  # 甲辰乙巳覆燈火, 丙午丁未天河水, 戊申己酉大驛土, 庚戌辛亥釵環金, 壬子癸丑桑柘木
+    2, 5, 6, 3, 2,  # 甲寅乙卯大溪水, 丙辰丁巳沙中土, 戊午己未天上火, 庚申辛酉石榴木, 壬戌癸亥大海水
+]
+
+# ============================================================
+# 四化表 (Four Transformations by Year Stem)
+# ============================================================
+# 索引 = 年干 (0=甲 ~ 9=癸)
+# 值 = (化祿, 化權, 化科, 化忌) 的星曜名
+SIHUA_TABLE = [
+    ("廉貞", "破軍", "武曲", "太陽"),  # 甲
+    ("天機", "天梁", "紫微", "太陰"),  # 乙
+    ("天同", "天機", "文昌", "廉貞"),  # 丙
+    ("太陰", "天同", "天機", "巨門"),  # 丁
+    ("貪狼", "太陰", "右弼", "天機"),  # 戊
+    ("武曲", "貪狼", "天梁", "文曲"),  # 己
+    ("太陽", "武曲", "天府", "天同"),  # 庚
+    ("巨門", "太陽", "文曲", "文昌"),  # 辛
+    ("天梁", "紫微", "左輔", "武曲"),  # 壬
+    ("破軍", "巨門", "太陰", "貪狼"),  # 癸
+]
+
+# ============================================================
+# 祿存表 (Lu Cun by Year Stem)
+# ============================================================
+LUCUN_TABLE = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0]  # 甲寅 乙卯 丙巳 丁午 戊巳 己午 庚申 辛酉 壬亥 癸子
+# 修正：壬→亥(11) 癸→丑(1)? 不，標準：甲寅乙卯丙巳丁午戊巳己午庚申辛酉壬亥癸子
+
+# ============================================================
+# 天魁天鉞表 (Tian Kui / Tian Yue by Year Stem)
+# ============================================================
+# (天魁branch, 天鉞branch) by year stem
+TIANKUI_TIANYUE_TABLE = [
+    (1, 7),   # 甲: 丑, 未
+    (0, 8),   # 乙: 子, 申
+    (11, 9),  # 丙: 亥, 酉
+    (11, 9),  # 丁: 亥, 酉
+    (1, 7),   # 戊: 丑, 未
+    (0, 8),   # 己: 子, 申
+    (1, 7),   # 庚: 丑, 未 (修正：午, 寅 for some traditions; using standard)
+    (6, 2),   # 辛: 午, 寅
+    (3, 5),   # 壬: 卯, 巳
+    (3, 5),   # 癸: 卯, 巳
+]
+
+# ============================================================
+# 火星鈴星起始宮 (Huo Xing / Ling Xing base by year branch group)
+# ============================================================
+# 年支分四組: 寅午戌(火), 申子辰(水), 巳酉丑(金), 亥卯未(木)
+# (火星base, 鈴星base)
+HUOXING_LINGXING_BASE = {
+    (2, 6, 10): (1, 3),   # 寅午戌: 火星起丑, 鈴星起卯
+    (8, 0, 4):  (2, 10),  # 申子辰: 火星起寅, 鈴星起戌
+    (5, 9, 1):  (3, 10),  # 巳酉丑: 火星起卯, 鈴星起戌
+    (11, 3, 7): (9, 10),  # 亥卯未: 火星起酉, 鈴星起戌
+}
+
+# ============================================================
+# 天馬表 (Tian Ma by Year Branch)
+# ============================================================
+TIANMA_TABLE = {
+    0: 2, 1: 11, 2: 8, 3: 5, 4: 2, 5: 11,   # 子寅 丑亥 寅申 卯巳 辰寅 巳亥
+    6: 8, 7: 5, 8: 2, 9: 11, 10: 8, 11: 5,   # 午申 未巳 申寅 酉亥 戌申 亥巳
+}
+
+# ============================================================
+# 命主 / 身主表
+# ============================================================
+MING_ZHU_TABLE = ["貪狼", "巨門", "祿存", "文曲", "廉貞", "武曲",
+                  "破軍", "武曲", "廉貞", "文曲", "祿存", "巨門"]
+SHEN_ZHU_TABLE = ["火星", "天相", "天梁", "天同", "文昌", "天機",
+                  "火星", "天相", "天梁", "天同", "文昌", "天機"]
+
+# ============================================================
+# 星曜亮度表 (Star Brightness)
+# ============================================================
+# 亮度等級: 廟=6, 旺=5, 得=4, 利=3, 平=2, 不=1, 陷=0
+# 索引 = 地支 (0=子 ~ 11=亥), 值 = 亮度等級
+BRIGHTNESS_TABLE = {
+    "紫微": [5, 6, 1, 4, 1, 6, 5, 5, 5, 2, 6, 4],
+    "天機": [4, 6, 5, 6, 2, 1, 4, 6, 5, 6, 2, 1],
+    "太陽": [5, 6, 6, 6, 5, 4, 2, 1, 0, 0, 1, 2],
+    "武曲": [6, 5, 2, 4, 6, 5, 6, 4, 2, 6, 5, 2],
+    "天同": [2, 1, 5, 4, 1, 6, 5, 0, 2, 6, 4, 6],
+    "廉貞": [2, 0, 6, 5, 2, 2, 6, 2, 6, 0, 2, 5],
+    "天府": [6, 5, 6, 4, 6, 5, 6, 4, 6, 5, 6, 4],
+    "太陰": [6, 6, 0, 0, 1, 2, 4, 5, 6, 6, 5, 6],
+    "貪狼": [5, 6, 2, 6, 2, 6, 5, 6, 2, 6, 2, 6],
+    "巨門": [6, 5, 4, 6, 2, 1, 6, 5, 4, 6, 2, 1],
+    "天相": [6, 4, 6, 2, 4, 5, 6, 4, 6, 2, 4, 5],
+    "天梁": [6, 5, 6, 4, 2, 4, 6, 5, 6, 4, 2, 4],
+    "七殺": [6, 5, 6, 2, 4, 4, 6, 5, 6, 2, 4, 4],
+    "破軍": [5, 6, 2, 4, 0, 2, 5, 6, 2, 4, 0, 2],
+    "文昌": [4, 6, 5, 2, 4, 6, 4, 0, 4, 6, 5, 4],
+    "文曲": [4, 2, 4, 6, 5, 6, 4, 0, 4, 2, 5, 6],
+    "左輔": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+    "右弼": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+    "祿存": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+}
+BRIGHTNESS_LABELS = {6: "廟", 5: "旺", 4: "得", 3: "利", 2: "平", 1: "不", 0: "陷"}
 
 # 主星屬性（五行、別稱、顏色）
 STAR_ATTRIBUTES = {
@@ -142,7 +254,14 @@ class ZiweiPalace:
     branch_name: str                # 地支名稱
     stem: int                       # 天干索引 0-9
     stem_name: str                  # 天干名稱
-    stars: list = field(default_factory=list)  # 在此宮的主星名稱
+    stars: list = field(default_factory=list)       # 主星名稱
+    aux_stars: list = field(default_factory=list)   # 輔助星名稱
+    brightness: dict = field(default_factory=dict)  # {星名: 亮度標籤}
+    sihua: dict = field(default_factory=dict)       # {星名: 四化類型}
+    da_xian: str = ""               # 大限年齡範圍 e.g. "3~12"
+    da_xian_start: int = 0          # 大限起始年齡
+    liu_nian_ages: list = field(default_factory=list)  # 流年年齡列表
+    xiao_xian_ages: list = field(default_factory=list) # 小限年齡列表
 
 
 @dataclass
@@ -158,6 +277,7 @@ class ZiweiChart:
     longitude: float
     location_name: str
     julian_day: float
+    gender: str                    # "男" or "女"
 
     # 農曆資訊
     lunar_year: int
@@ -175,9 +295,18 @@ class ZiweiChart:
     shen_gong_branch: int      # 身宮地支索引
     wu_xing_ju: int            # 五行局（2-6）
     ziwei_branch: int          # 紫微星地支索引
+    yin_yang: str              # "陰" or "陽"
+    ming_zhu: str              # 命主星名
+    shen_zhu: str              # 身主星名
+
+    # 四化
+    sihua: dict = field(default_factory=dict)  # {星名: 四化類型}
 
     # 宮位資料
-    palaces: list              # List[ZiweiPalace]
+    palaces: list = field(default_factory=list)  # List[ZiweiPalace]
+
+    # 三合組
+    sanhe_groups: list = field(default_factory=list)  # List of (branch1, branch2, branch3)
 
 
 # ============================================================
@@ -352,42 +481,47 @@ def _get_ming_gong_stem(year_stem: int, ming_gong_branch: int) -> int:
     return (yin_stem + steps) % 10
 
 
-def _get_wu_xing_ju(ming_gong_stem: int) -> int:
+def _get_wu_xing_ju(ming_gong_stem: int, ming_gong_branch: int) -> int:
     """
-    由命宮天干判斷五行局號（2-6）。
+    由命宮天干地支的納音五行判斷五行局號（2-6）。
 
-    甲/己 → 水二局（2）
-    乙/庚 → 木三局（3）
-    丙/辛 → 金四局（4）
-    丁/壬 → 土五局（5）
-    戊/癸 → 火六局（6）
+    使用六十甲子納音五行查表法：
+      1. 由天干地支計算六十甲子序號
+      2. 每兩組共用一個納音五行
+      3. 納音五行對應局數：金4 木3 水2 火6 土5
     """
-    return (ming_gong_stem % 5) + 2
+    sexagenary = (6 * ming_gong_stem - 5 * ming_gong_branch) % 60
+    pair_idx = sexagenary // 2
+    return NAYIN_WUXING_JU[pair_idx]
 
 
 def _get_ziwei_branch(lunar_day: int, wu_xing_ju: int) -> int:
     """
     由農曆生日與五行局計算紫微星所在地支索引。
 
-    安紫微法（起寅宮，依局數推算）：
-      d0 = lunar_day - 1
-      main_offset = (d0 // n) * n
-      back_offset = (n - d0 % n) % n
-      branch = (2 + main_offset + back_offset) % 12
+    安紫微法：以局數 N 分組，每 N 天為一組。
+    組內第一天（餘數=N-1）在最高位，之後逐日降低。
+    整除時為組底。
+
+    公式（使用整數除法）：
+      q, r = divmod(lunar_day, wu_xing_ju)
+      若 r == 0: branch = q % 12
+      若 r > 0: branch = (q + 3 - r) % 12
     """
     n = wu_xing_ju
-    d0 = lunar_day - 1
-    main_offset = (d0 // n) * n
-    back_offset = (n - d0 % n) % n
-    return (2 + main_offset + back_offset) % 12
+    q, r = divmod(lunar_day, n)
+    if r == 0:
+        return q % 12
+    return (q + 3 - r) % 12
 
 
 def _get_tianfu_branch(ziwei_branch: int) -> int:
     """
     由紫微星地支計算天府星地支索引。
-    公式：(14 - ziwei_branch) % 12
+    天府與紫微關於寅宮對稱。
+    公式：(4 - ziwei_branch + 12) % 12
     """
-    return (14 - ziwei_branch) % 12
+    return (4 - ziwei_branch + 12) % 12
 
 
 def _place_main_stars(ziwei_branch: int) -> dict[int, list[str]]:
@@ -408,24 +542,215 @@ def _place_main_stars(ziwei_branch: int) -> dict[int, list[str]]:
     return stars
 
 
+def _place_auxiliary_stars(
+    year_stem: int, year_branch: int,
+    lunar_month: int, hour_branch: int,
+    lunar_day: int,
+) -> dict[int, list[str]]:
+    """
+    計算輔助星的地支索引，返回 {branch_index: [star_names]} 映射。
+    """
+    aux: dict[int, list[str]] = {i: [] for i in range(12)}
+
+    # 文昌 (based on hour branch, reverse from 戌)
+    wen_chang = (10 - hour_branch + 12) % 12
+    aux[wen_chang].append("文昌")
+
+    # 文曲 (based on hour branch, forward from 辰)
+    wen_qu = (4 + hour_branch) % 12
+    aux[wen_qu].append("文曲")
+
+    # 左輔 (based on lunar month, forward from 辰)
+    zuo_fu = (3 + lunar_month) % 12
+    aux[zuo_fu].append("左輔")
+
+    # 右弼 (based on lunar month, reverse from 戌)
+    you_bi = (11 - lunar_month + 12) % 12
+    aux[you_bi].append("右弼")
+
+    # 祿存 (by year stem)
+    lu_cun_branch = LUCUN_TABLE[year_stem]
+    aux[lu_cun_branch].append("祿存")
+
+    # 擎羊 = 祿存 + 1
+    qing_yang = (lu_cun_branch + 1) % 12
+    aux[qing_yang].append("擎羊")
+
+    # 陀羅 = 祿存 - 1
+    tuo_luo = (lu_cun_branch - 1 + 12) % 12
+    aux[tuo_luo].append("陀羅")
+
+    # 天魁 / 天鉞
+    kui_branch, yue_branch = TIANKUI_TIANYUE_TABLE[year_stem]
+    aux[kui_branch].append("天魁")
+    aux[yue_branch].append("天鉞")
+
+    # 火星 / 鈴星 (by year branch group + hour branch)
+    huo_base, ling_base = 1, 3  # default
+    for branches, bases in HUOXING_LINGXING_BASE.items():
+        if year_branch in branches:
+            huo_base, ling_base = bases
+            break
+    huo_xing = (huo_base + hour_branch) % 12
+    ling_xing = (ling_base + hour_branch) % 12
+    aux[huo_xing].append("火星")
+    aux[ling_xing].append("鈴星")
+
+    # 地劫 / 天空
+    di_jie = (hour_branch + 11) % 12
+    tian_kong = (11 - hour_branch + 12) % 12
+    aux[di_jie].append("地劫")
+    aux[tian_kong].append("天空")
+
+    # 天馬
+    tian_ma = TIANMA_TABLE.get(year_branch, 2)
+    aux[tian_ma].append("天馬")
+
+    # 天刑 (based on lunar month, forward from 酉)
+    tian_xing = (8 + lunar_month) % 12
+    aux[tian_xing].append("天刑")
+
+    # 天姚 (based on lunar month, forward from 丑)
+    tian_yao = (0 + lunar_month) % 12
+    aux[tian_yao].append("天姚")
+
+    # 天喜 (by year branch: 戌起子 reverse)
+    tian_xi = (10 - year_branch + 12) % 12
+    aux[tian_xi].append("天喜")
+
+    # 紅鸞 (by year branch)
+    hong_luan = (4 - year_branch + 12) % 12
+    aux[hong_luan].append("紅鸞")
+
+    # 天哭 / 天虛 (by year branch)
+    tian_ku = (6 + year_branch) % 12
+    tian_xu = (6 - year_branch + 12) % 12
+    aux[tian_ku].append("天哭")
+    aux[tian_xu].append("天虛")
+
+    # 龍池 / 鳳閣 (by year branch)
+    long_chi = (4 + year_branch) % 12
+    feng_ge = (10 - year_branch + 12) % 12
+    aux[long_chi].append("龍池")
+    aux[feng_ge].append("鳳閣")
+
+    # 恩光 / 天貴 (by day + hour)
+    en_guang = (1 + lunar_day - 1 + 12) % 12  # 文昌+1
+    tian_gui = (wen_qu + 1) % 12               # 文曲+1
+    aux[en_guang].append("恩光")
+    aux[tian_gui].append("天貴")
+
+    # 三台 / 八座 (by month + day, adjusted from 左輔/右弼)
+    san_tai = (zuo_fu + lunar_day - 1) % 12
+    ba_zuo = (you_bi - lunar_day + 1 + 12) % 12
+    aux[san_tai].append("三台")
+    aux[ba_zuo].append("八座")
+
+    # 台輔 / 封誥 (by hour)
+    tai_fu = (6 + hour_branch) % 12
+    feng_gao = (2 + hour_branch) % 12
+    aux[tai_fu].append("台輔")
+    aux[feng_gao].append("封誥")
+
+    # 天官 / 天福 (by year stem)
+    _TIANGUAN = [7, 4, 5, 11, 3, 9, 11, 6, 3, 9]
+    _TIANFU_AUX = [9, 8, 0, 11, 3, 6, 11, 2, 3, 6]
+    aux[_TIANGUAN[year_stem]].append("天官")
+    aux[_TIANFU_AUX[year_stem]].append("天福")
+
+    # 天才 / 天壽 (命宮起算)
+    # These depend on ming_gong so we skip here (handled in build)
+
+    return aux
+
+
+def _compute_sihua(year_stem: int, stars_by_branch: dict[int, list[str]],
+                   aux_by_branch: dict[int, list[str]]) -> dict[str, str]:
+    """
+    計算四化：化祿、化權、化科、化忌。
+    Returns {star_name: transformation_type}
+    """
+    lu, quan, ke, ji = SIHUA_TABLE[year_stem]
+    return {lu: "祿", quan: "權", ke: "科", ji: "忌"}
+
+
+def _compute_sanhe_groups(ming_gong_branch: int) -> list[tuple[int, int, int]]:
+    """
+    計算三合組（每組三個宮位，間隔4個地支）。
+    Returns list of (branch1, branch2, branch3) tuples.
+    """
+    groups = []
+    for start in range(4):
+        group = tuple((start + i * 4) % 12 for i in range(3))
+        groups.append(group)
+    return groups
+
+
+def _compute_feixing(palace_stem: int) -> dict[str, str]:
+    """
+    計算飛星四化（由宮位天干決定）。
+    Returns {star_name: transformation_type}
+    """
+    lu, quan, ke, ji = SIHUA_TABLE[palace_stem]
+    return {lu: "祿", quan: "權", ke: "科", ji: "忌"}
+
+
 def _build_palaces(
     ming_gong_branch: int,
     year_stem: int,
     stars_by_branch: dict[int, list[str]],
+    aux_by_branch: dict[int, list[str]],
+    sihua: dict[str, str],
+    wu_xing_ju: int,
+    is_yang_male_or_yin_female: bool,
 ) -> list[ZiweiPalace]:
     """
-    建立十二宮位資料，命宮在 ming_gong_branch，依地支順序排列。
+    建立十二宮位資料。
+    命宮在 ming_gong_branch，依地支逆序（counter-clockwise）排列。
     宮位天干由虎年起法推算。
     """
     # 寅宮天干
     yin_stem = (2 * (year_stem % 5) + 2) % 10
 
+    # 大限方向：陽男陰女順行（地支增加），陰男陽女逆行（地支減少）
+    da_xian_direction = 1 if is_yang_male_or_yin_female else -1
+
     palaces = []
     for idx in range(12):
-        branch = (ming_gong_branch + idx) % 12
+        # 宮位按逆時針排列（地支遞減）
+        branch = (ming_gong_branch - idx + 12) % 12
         palace_name = PALACE_SEQUENCE[idx]
         steps = (branch - 2 + 12) % 12
         stem = (yin_stem + steps) % 10
+
+        # 星曜亮度
+        brightness = {}
+        all_stars = stars_by_branch.get(branch, []) + aux_by_branch.get(branch, [])
+        for star in all_stars:
+            if star in BRIGHTNESS_TABLE:
+                level = BRIGHTNESS_TABLE[star][branch]
+                brightness[star] = BRIGHTNESS_LABELS.get(level, "")
+
+        # 宮位四化（本命四化）
+        palace_sihua = {}
+        for star in all_stars:
+            if star in sihua:
+                palace_sihua[star] = sihua[star]
+
+        # 大限
+        da_xian_step = idx if da_xian_direction == -1 else idx
+        # 大限宮位：順行時從命宮地支遞增，逆行時從命宮地支遞減（即 palace 順序本身）
+        if da_xian_direction == 1:
+            # 陽男陰女：大限按地支遞增（從命宮開始，順時針走）
+            da_xian_idx = idx  # 第0個=命宮, 第1個=命宮地支+1
+        else:
+            # 陰男陽女：大限按地支遞減（從命宮開始，逆時針走）= palace 本身順序
+            da_xian_idx = idx
+
+        da_xian_start = wu_xing_ju + da_xian_idx * 10
+        da_xian_end = da_xian_start + 9
+        da_xian = f"{da_xian_start}~{da_xian_end}"
+
         palaces.append(ZiweiPalace(
             index=idx,
             name=palace_name,
@@ -434,6 +759,11 @@ def _build_palaces(
             stem=stem,
             stem_name=HEAVENLY_STEMS[stem],
             stars=list(stars_by_branch.get(branch, [])),
+            aux_stars=list(aux_by_branch.get(branch, [])),
+            brightness=brightness,
+            sihua=palace_sihua,
+            da_xian=da_xian,
+            da_xian_start=da_xian_start,
         ))
     return palaces
 
@@ -452,6 +782,7 @@ def compute_ziwei_chart(
     latitude: float,
     longitude: float,
     location_name: str = "",
+    gender: str = "男",
 ) -> ZiweiChart:
     """
     計算紫微斗數命盤。
@@ -463,6 +794,7 @@ def compute_ziwei_chart(
         latitude:         緯度（排盤資訊用途）
         longitude:        經度（排盤資訊用途）
         location_name:    地點名稱
+        gender:           性別（"男" or "女"）
 
     Returns:
         ZiweiChart: 命盤資料
@@ -486,30 +818,57 @@ def compute_ziwei_chart(
     ming_gong_branch = _get_ming_gong_branch(lunar_month, hour_branch)
     shen_gong_branch = _get_shen_gong_branch(lunar_month, hour_branch)
 
-    # 五行局
+    # 五行局（使用納音五行）
     mg_stem = _get_ming_gong_stem(year_stem, ming_gong_branch)
-    wu_xing_ju = _get_wu_xing_ju(mg_stem)
+    wu_xing_ju = _get_wu_xing_ju(mg_stem, ming_gong_branch)
 
     # 紫微星位置
     ziwei_branch = _get_ziwei_branch(lunar_day, wu_xing_ju)
 
-    # 安星
+    # 安主星
     stars_by_branch = _place_main_stars(ziwei_branch)
 
+    # 安輔助星
+    aux_by_branch = _place_auxiliary_stars(
+        year_stem, year_branch, lunar_month, hour_branch, lunar_day
+    )
+
+    # 陰陽判斷
+    yin_yang = "陽" if year_stem % 2 == 0 else "陰"
+    is_yang_male_or_yin_female = (
+        (yin_yang == "陽" and gender == "男") or
+        (yin_yang == "陰" and gender == "女")
+    )
+
+    # 四化
+    sihua = _compute_sihua(year_stem, stars_by_branch, aux_by_branch)
+
+    # 命主 / 身主
+    ming_zhu = MING_ZHU_TABLE[ming_gong_branch]
+    shen_zhu = SHEN_ZHU_TABLE[year_branch]
+
+    # 三合組
+    sanhe_groups = _compute_sanhe_groups(ming_gong_branch)
+
     # 建立宮位
-    palaces = _build_palaces(ming_gong_branch, year_stem, stars_by_branch)
+    palaces = _build_palaces(
+        ming_gong_branch, year_stem, stars_by_branch, aux_by_branch,
+        sihua, wu_xing_ju, is_yang_male_or_yin_female,
+    )
 
     return ZiweiChart(
         year=year, month=month, day=day, hour=hour, minute=minute,
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name, julian_day=jd,
+        gender=gender,
         lunar_year=lunar_year, lunar_month=lunar_month, lunar_day=lunar_day,
         is_leap_month=is_leap,
         lunar_year_stem=year_stem, lunar_year_branch=year_branch,
         hour_branch=hour_branch,
         ming_gong_branch=ming_gong_branch, shen_gong_branch=shen_gong_branch,
         wu_xing_ju=wu_xing_ju, ziwei_branch=ziwei_branch,
-        palaces=palaces,
+        yin_yang=yin_yang, ming_zhu=ming_zhu, shen_zhu=shen_zhu,
+        sihua=sihua, palaces=palaces, sanhe_groups=sanhe_groups,
     )
 
 
@@ -522,9 +881,12 @@ def render_ziwei_chart(chart: ZiweiChart) -> None:
     st.subheader("🌟 紫微斗數命盤")
     _render_info(chart)
     st.divider()
+    _render_sihua_legend()
     _render_palace_grid(chart)
     st.divider()
     _render_star_table(chart)
+    st.divider()
+    _render_feixing_table(chart)
     st.divider()
     _render_palace_details(chart)
 
@@ -543,6 +905,7 @@ def _render_info(chart: ZiweiChart) -> None:
         st.write(f"**公曆:** {chart.year}/{chart.month}/{chart.day}")
         st.write(f"**時間:** {chart.hour:02d}:{chart.minute:02d}")
         st.write(f"**時區:** UTC{chart.timezone:+.1f}")
+        st.write(f"**性別:** {chart.gender}命 ({chart.yin_yang})")
     with col2:
         st.write(f"**農曆:** {lunar_date}")
         st.write(f"**時辰:** {HOUR_BRANCH_NAMES[chart.hour_branch]}")
@@ -552,6 +915,13 @@ def _render_info(chart: ZiweiChart) -> None:
         st.write(f"**命宮:** {EARTHLY_BRANCHES[chart.ming_gong_branch]}宮")
         st.write(f"**身宮:** {EARTHLY_BRANCHES[chart.shen_gong_branch]}宮")
         st.write(f"**五行局:** {wu_ju_name}")
+        st.write(f"**命主:** {chart.ming_zhu}　**身主:** {chart.shen_zhu}")
+
+    # 四化資訊
+    sihua_str = "　".join(
+        f"{star}化{hua}" for star, hua in chart.sihua.items()
+    )
+    st.info(f"**四化:** {sihua_str}")
 
 
 def _day_to_chinese(day: int) -> str:
@@ -590,31 +960,58 @@ def _palace_cell_html(
     if is_shen:
         label += '<span style="color:#4ECDC4;font-weight:bold;font-size:11px">【身】</span>'
 
+    # 四化顏色
+    SIHUA_COLORS = {"祿": "#00E676", "權": "#FF5252", "科": "#42A5F5", "忌": "#FF9800"}
+
+    # 主星 HTML（含亮度和四化標記）
     stars_html = ""
     for star in palace.stars:
         attr = STAR_ATTRIBUTES.get(star, ("", "", "#aaa"))
         color = attr[2]
-        alias = attr[1]
+        bright = palace.brightness.get(star, "")
+        bright_html = f'<span style="color:#aaa;font-size:9px">{bright}</span>' if bright else ""
+        hua = palace.sihua.get(star, "")
+        hua_html = ""
+        if hua:
+            hc = SIHUA_COLORS.get(hua, "#fff")
+            hua_html = f'<span style="color:{hc};font-size:10px;font-weight:bold">化{hua}</span>'
         stars_html += (
-            f'<div style="color:{color};font-size:13px;font-weight:bold">'
-            f'{star}</div>'
-            f'<div style="color:#999;font-size:10px">{alias}</div>'
+            f'<div style="display:flex;align-items:center;gap:2px">'
+            f'<span style="color:{color};font-size:13px;font-weight:bold">{star}</span>'
+            f'{bright_html}{hua_html}</div>'
         )
-    if not stars_html:
+
+    # 輔助星 HTML（含亮度和四化標記）
+    aux_html = ""
+    for star in palace.aux_stars:
+        bright = palace.brightness.get(star, "")
+        bright_str = f"({bright})" if bright else ""
+        hua = palace.sihua.get(star, "")
+        hua_str = ""
+        if hua:
+            hc = SIHUA_COLORS.get(hua, "#fff")
+            hua_str = f'<span style="color:{hc};font-size:9px"> 化{hua}</span>'
+        aux_html += (
+            f'<span style="color:#888;font-size:10px">{star}{bright_str}</span>{hua_str} '
+        )
+
+    if not stars_html and not aux_html:
         stars_html = '<div style="color:#666;font-size:11px">─</div>'
 
     return (
-        f'<div style="background:{bg};padding:8px 6px;border-radius:6px;'
-        f'min-height:120px;{border_style}">'
+        f'<div style="background:{bg};padding:6px 5px;border-radius:6px;'
+        f'min-height:130px;{border_style}">'
         f'<div style="display:flex;justify-content:space-between;align-items:center">'
-        f'<span style="color:#c8a96e;font-size:11px">'
+        f'<span style="color:#c8a96e;font-size:10px">'
         f'{palace.stem_name}{palace.branch_name}</span>'
         f'{label}'
+        f'<span style="color:#8B8000;font-size:9px">{palace.da_xian}</span>'
         f'</div>'
-        f'<div style="color:#e0e0e0;font-size:12px;font-weight:bold;'
-        f'border-bottom:1px solid #555;margin-bottom:4px;padding-bottom:2px">'
+        f'<div style="color:#e0e0e0;font-size:11px;font-weight:bold;'
+        f'border-bottom:1px solid #555;margin-bottom:3px;padding-bottom:1px">'
         f'{palace.name}</div>'
         f'{stars_html}'
+        f'<div style="margin-top:3px;line-height:1.4">{aux_html}</div>'
         f'</div>'
     )
 
@@ -627,24 +1024,37 @@ def _center_info_html(chart: ZiweiChart) -> str:
     ld = f"初{_day_to_chinese(chart.lunar_day)}"
     ys = HEAVENLY_STEMS[chart.lunar_year_stem]
     yb = EARTHLY_BRANCHES[chart.lunar_year_branch]
+
+    sihua_html = ""
+    SIHUA_COLORS = {"祿": "#00E676", "權": "#FF5252", "科": "#42A5F5", "忌": "#FF9800"}
+    for star, hua in chart.sihua.items():
+        hc = SIHUA_COLORS.get(hua, "#fff")
+        sihua_html += f'<span style="color:{hc};font-size:11px;margin:0 3px">{star}化{hua}</span>'
+
     return (
         f'<div style="background:#0d0d1a;border:2px solid #c8a96e;border-radius:10px;'
-        f'padding:16px;text-align:center;height:100%;color:#e0d5b0;'
+        f'padding:12px;text-align:center;height:100%;color:#e0d5b0;'
         f'display:flex;flex-direction:column;justify-content:center;">'
-        f'<div style="font-size:22px;font-weight:bold;color:#c8a96e;margin-bottom:6px">'
+        f'<div style="font-size:20px;font-weight:bold;color:#c8a96e;margin-bottom:4px">'
         f'紫微斗數命盤</div>'
-        f'<div style="font-size:13px;margin:3px 0">'
+        f'<div style="font-size:12px;margin:2px 0">'
+        f'{chart.gender}命 / {chart.yin_yang}{chart.gender} / {wu_ju}</div>'
+        f'<div style="font-size:12px;margin:2px 0">'
         f'{chart.lunar_year}年 {ys}{yb}年</div>'
-        f'<div style="font-size:13px;margin:3px 0">'
-        f'{lm}{leap} {ld}</div>'
-        f'<div style="font-size:12px;margin:3px 0;color:#aaa">'
-        f'{HOUR_BRANCH_NAMES[chart.hour_branch]}</div>'
-        f'<div style="font-size:14px;margin:6px 0;color:#FFD700;font-weight:bold">'
-        f'{wu_ju}</div>'
-        f'<div style="font-size:12px;color:#FF6B6B">'
-        f'命宮: {EARTHLY_BRANCHES[chart.ming_gong_branch]}宮</div>'
-        f'<div style="font-size:12px;color:#4ECDC4">'
-        f'身宮: {EARTHLY_BRANCHES[chart.shen_gong_branch]}宮</div>'
+        f'<div style="font-size:12px;margin:2px 0">'
+        f'{lm}{leap} {ld} {HOUR_BRANCH_NAMES[chart.hour_branch]}</div>'
+        f'<div style="font-size:11px;margin:2px 0;color:#aaa">'
+        f'命主: {chart.ming_zhu}  身主: {chart.shen_zhu}</div>'
+        f'<div style="font-size:11px;margin:4px 0;color:#FF6B6B">'
+        f'命宮: {EARTHLY_BRANCHES[chart.ming_gong_branch]}宮 '
+        f'<span style="color:#4ECDC4">身宮: {EARTHLY_BRANCHES[chart.shen_gong_branch]}宮</span>'
+        f'</div>'
+        f'<div style="margin-top:4px">{sihua_html}</div>'
+        f'<div style="font-size:10px;color:#888;margin-top:4px">'
+        f'自化圖示: <span style="color:#00E676">→祿</span>'
+        f'<span style="color:#FF5252">→權</span>'
+        f'<span style="color:#42A5F5">→科</span>'
+        f'<span style="color:#FF9800">→忌</span></div>'
         f'</div>'
     )
 
@@ -717,14 +1127,13 @@ def _render_star_table(chart: ZiweiChart) -> None:
     all_stars = list(ZIWEI_GROUP.keys()) + list(TIANFU_GROUP.keys())
     branch_to_palace: dict[int, ZiweiPalace] = {p.branch: p for p in chart.palaces}
 
-    header = "| 星曜 | 五行 | 別稱 | 所在宮位 | 地支 | 天干地支 |"
-    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|"
+    header = "| 星曜 | 五行 | 別稱 | 所在宮位 | 地支 | 亮度 | 四化 |"
+    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
     rows = [header, sep]
 
     for star in all_stars:
         attr = STAR_ATTRIBUTES[star]
         wuxing, alias, color = attr
-        # 找到星曜在哪個宮位
         palace = next(
             (p for p in chart.palaces if star in p.stars), None
         )
@@ -734,11 +1143,57 @@ def _render_star_table(chart: ZiweiChart) -> None:
         is_shen = "【身】" if palace.branch == chart.shen_gong_branch else ""
         marker = f"{is_ming}{is_shen}"
         name_html = f'<span style="color:{color};font-weight:bold">{star}</span>'
+        bright = palace.brightness.get(star, "")
+        hua = chart.sihua.get(star, "")
+        hua_str = f"化{hua}" if hua else ""
         rows.append(
             f"| {name_html} | {wuxing} | {alias} "
             f"| {palace.name}{marker} "
             f"| {palace.branch_name} "
-            f"| {palace.stem_name}{palace.branch_name} |"
+            f"| {bright} "
+            f"| {hua_str} |"
+        )
+
+    st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+
+def _render_sihua_legend() -> None:
+    """渲染四化圖例說明。"""
+    st.markdown(
+        '<div style="text-align:center;padding:4px;font-size:12px">'
+        '四化圖示: '
+        '<span style="color:#00E676;font-weight:bold">●祿</span> '
+        '<span style="color:#FF5252;font-weight:bold">●權</span> '
+        '<span style="color:#42A5F5;font-weight:bold">●科</span> '
+        '<span style="color:#FF9800;font-weight:bold">●忌</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_feixing_table(chart: ZiweiChart) -> None:
+    """渲染飛星四化表（各宮位天干的四化）。"""
+    st.markdown("#### 🌠 飛星四化表")
+    st.markdown("*各宮位天干所引發的四化（宮干飛星）*")
+
+    header = "| 宮位 | 天干 | 化祿 | 化權 | 化科 | 化忌 |"
+    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|"
+    rows = [header, sep]
+
+    SIHUA_COLORS = {"祿": "#00E676", "權": "#FF5252", "科": "#42A5F5", "忌": "#FF9800"}
+
+    for palace in chart.palaces:
+        feixing = _compute_feixing(palace.stem)
+        lu_star = SIHUA_TABLE[palace.stem][0]
+        quan_star = SIHUA_TABLE[palace.stem][1]
+        ke_star = SIHUA_TABLE[palace.stem][2]
+        ji_star = SIHUA_TABLE[palace.stem][3]
+        rows.append(
+            f"| {palace.name}({palace.branch_name}) | {palace.stem_name} "
+            f'| <span style="color:{SIHUA_COLORS["祿"]}">{lu_star}</span> '
+            f'| <span style="color:{SIHUA_COLORS["權"]}">{quan_star}</span> '
+            f'| <span style="color:{SIHUA_COLORS["科"]}">{ke_star}</span> '
+            f'| <span style="color:{SIHUA_COLORS["忌"]}">{ji_star}</span> |'
         )
 
     st.markdown("\n".join(rows), unsafe_allow_html=True)
@@ -763,10 +1218,30 @@ def _render_palace_details(chart: ZiweiChart) -> None:
         "父母宮": "父母、長輩、文書",
     }
 
+    # 三合組顯示
+    st.markdown("##### 🔺 三合")
+    sanhe_names = {
+        (0, 4, 8): "水局 (子辰申)",
+        (1, 5, 9): "金局 (丑巳酉)",
+        (2, 6, 10): "火局 (寅午戌)",
+        (3, 7, 11): "木局 (卯未亥)",
+    }
+    branch_to_palace = {p.branch: p for p in chart.palaces}
+    for group in chart.sanhe_groups:
+        group_name = sanhe_names.get(group, "")
+        palace_names = [
+            branch_to_palace[b].name if b in branch_to_palace else EARTHLY_BRANCHES[b]
+            for b in group
+        ]
+        st.write(f"**{group_name}:** {' ↔ '.join(palace_names)}")
+
+    st.markdown("---")
+
     cols = st.columns(3)
     for i, palace in enumerate(chart.palaces):
         with cols[i % 3]:
             stars_str = "、".join(palace.stars) if palace.stars else "（空宮）"
+            aux_str = "、".join(palace.aux_stars) if palace.aux_stars else ""
             markers = []
             if palace.branch == chart.ming_gong_branch:
                 markers.append("🔴命")
@@ -774,8 +1249,17 @@ def _render_palace_details(chart: ZiweiChart) -> None:
                 markers.append("🔵身")
             marker_str = " ".join(markers)
             desc = _PALACE_DESC.get(palace.name, "")
+
+            # 四化
+            sihua_str = ""
+            for star, hua in palace.sihua.items():
+                sihua_str += f" {star}化{hua}"
+
             st.markdown(
-                f"**{palace.stem_name}{palace.branch_name} {palace.name}** {marker_str}\n\n"
-                f"⭐ {stars_str}\n\n"
-                f"*{desc}*"
+                f"**{palace.stem_name}{palace.branch_name} {palace.name}** "
+                f"{marker_str} 大限:{palace.da_xian}\n\n"
+                f"⭐ 主星: {stars_str}\n\n"
+                f"🔹 輔星: {aux_str}\n\n"
+                + (f"🔸 四化: {sihua_str}\n\n" if sihua_str else "")
+                + f"*{desc}*"
             )
