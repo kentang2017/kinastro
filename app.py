@@ -396,7 +396,7 @@ with st.sidebar:
 
     # Temperature & max tokens
     _ai_max_tokens = st.slider(
-        t("ai_max_tokens"), min_value=256, max_value=200000, value=8192, step=256,
+        t("ai_max_tokens"), min_value=256, max_value=32768, value=8192, step=256,
         key="_ai_max_tokens",
         help=t("ai_max_tokens_help"),
     )
@@ -430,7 +430,7 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
             _api_key = ""
             try:
                 _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
-            except Exception:
+            except (FileNotFoundError, KeyError, AttributeError):
                 pass
             if not _api_key:
                 _api_key = os.environ.get("CEREBRAS_API_KEY", "")

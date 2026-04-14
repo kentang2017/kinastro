@@ -397,7 +397,7 @@ def format_chinstar_chart(chart_data: dict) -> str:
         for k, v in chart_data.items():
             sections.append(f"{k}: {v}")
     else:
-        sections.append(str(chart_data))
+        sections.append(format_generic_chart(chart_data, "萬花仙禽"))
     return "\n".join(sections)
 
 
