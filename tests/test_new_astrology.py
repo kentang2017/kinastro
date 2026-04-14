@@ -2885,3 +2885,297 @@ class TestGreekHoroscopeSVG:
         assert len(HOUSE_ROMAN) == 12
         assert len(TOPOS_GREEK) == 12
         assert len(TOPOS_CN) == 12
+
+
+# ================================================================
+# AI Analysis Module Tests
+# ================================================================
+
+class TestAiAnalysisFormatters:
+    """Test chart-to-prompt formatting functions."""
+
+    def test_format_planet_list_empty(self):
+        from astro.ai_analysis import _format_planet_list
+        assert _format_planet_list([]) == "(none)"
+        assert _format_planet_list(None) == "(none)"
+
+    def test_format_planet_list_with_objects(self):
+        from astro.ai_analysis import _format_planet_list
+
+        class FakePlanet:
+            def __init__(self, name, sign, degree):
+                self.name = name
+                self.sign = sign
+                self.degree = degree
+                self.retrograde = False
+                self.house = None
+
+        planets = [FakePlanet("Sun", "Aries", 10.5)]
+        result = _format_planet_list(planets)
+        assert "Sun" in result
+        assert "Aries" in result
+
+    def test_format_aspects_empty(self):
+        from astro.ai_analysis import _format_aspects
+        assert _format_aspects([]) == "(none)"
+        assert _format_aspects(None) == "(none)"
+
+    def test_format_houses_empty(self):
+        from astro.ai_analysis import _format_houses
+        assert _format_houses([]) == "(none)"
+        assert _format_houses(None) == "(none)"
+
+    def test_safe_getattr(self):
+        from astro.ai_analysis import _safe_getattr
+
+        class Obj:
+            a = "hello"
+            b = None
+        o = Obj()
+        assert _safe_getattr(o, "a") == "hello"
+        assert _safe_getattr(o, "nonexistent", default="fallback") == "fallback"
+        assert _safe_getattr(o, "b", "a") == "hello"  # b is None, fall through to a
+
+
+class TestAiAnalysisSystemFormatters:
+    """Test all system-specific chart formatters."""
+
+    def _make_chart(self, **kwargs):
+        """Create a simple mock chart object."""
+        class Chart:
+            pass
+        c = Chart()
+        for k, v in kwargs.items():
+            setattr(c, k, v)
+        return c
+
+    def test_format_western_chart(self):
+        from astro.ai_analysis import format_western_chart
+        chart = self._make_chart(
+            asc_sign="Aries", mc_sign="Capricorn",
+            planets=[], houses=[], aspects=[],
+        )
+        result = format_western_chart(chart)
+        assert "西洋占星" in result
+        assert "Aries" in result
+
+    def test_format_vedic_chart(self):
+        from astro.ai_analysis import format_vedic_chart
+        chart = self._make_chart(
+            lagna="Mesha", ayanamsa=23.5,
+            planets=[], houses=[], aspects=[],
+        )
+        result = format_vedic_chart(chart)
+        assert "印度占星" in result
+        assert "Mesha" in result
+
+    def test_format_chinese_chart(self):
+        from astro.ai_analysis import format_chinese_chart
+        chart = self._make_chart(
+            ming_gong="命宮", shen_gong="身宮",
+            bazi=None, planets=[], houses=[], aspects=[],
+        )
+        result = format_chinese_chart(chart)
+        assert "七政四餘" in result
+
+    def test_format_ziwei_chart(self):
+        from astro.ai_analysis import format_ziwei_chart
+        chart = self._make_chart(
+            ming_gong="子", shen_gong="午",
+            ming_zhu="紫微", shen_zhu="天機", palaces=[],
+        )
+        result = format_ziwei_chart(chart)
+        assert "紫微斗數" in result
+
+    def test_format_thai_chart(self):
+        from astro.ai_analysis import format_thai_chart
+        chart = self._make_chart(weekday="Monday", lagna="Aries", planets=[])
+        result = format_thai_chart(chart)
+        assert "泰國占星" in result
+
+    def test_format_kabbalistic_chart(self):
+        from astro.ai_analysis import format_kabbalistic_chart
+        chart = self._make_chart(
+            life_path=7, name_number=3,
+            hebrew_letter="ז", sephirah="Netzach",
+            tree_path="Victory", planets=[],
+        )
+        result = format_kabbalistic_chart(chart)
+        assert "卡巴拉" in result
+
+    def test_format_arabic_chart(self):
+        from astro.ai_analysis import format_arabic_chart
+        chart = self._make_chart(
+            lot_of_fortune="15°", planets=[], arabic_parts=[],
+        )
+        result = format_arabic_chart(chart)
+        assert "阿拉伯" in result
+
+    def test_format_maya_chart(self):
+        from astro.ai_analysis import format_maya_chart
+        chart = self._make_chart(
+            kin=1, tzolkin="1 Imix", haab="0 Pop",
+            tone=1, glyph="Imix", long_count="13.0.11.6.1",
+        )
+        result = format_maya_chart(chart)
+        assert "瑪雅" in result
+
+    def test_format_mahabote_chart(self):
+        from astro.ai_analysis import format_mahabote_chart
+        chart = self._make_chart(
+            birth_weekday="Monday",
+            birth_animal_en="Tiger", houses=[],
+        )
+        result = format_mahabote_chart(chart)
+        assert "緬甸" in result
+
+    def test_format_decan_chart(self):
+        from astro.ai_analysis import format_decan_chart
+        chart = self._make_chart(
+            sun_decan="Decan 1", moon_decan="Decan 2",
+            asc_decan="Decan 3", planets=[],
+        )
+        result = format_decan_chart(chart)
+        assert "古埃及" in result
+
+    def test_format_nadi_chart(self):
+        from astro.ai_analysis import format_nadi_chart
+        chart = self._make_chart(
+            nadi_type="Agastya", birth_nakshatra="Ashwini", planets=[],
+        )
+        result = format_nadi_chart(chart)
+        assert "納迪" in result
+
+    def test_format_zurkhai_chart(self):
+        from astro.ai_analysis import format_zurkhai_chart
+        chart = self._make_chart(
+            animal="Tiger", element="Wood",
+            mewa=1, parkha="Li", planets=[],
+        )
+        result = format_zurkhai_chart(chart)
+        assert "蒙古祖爾海" in result
+
+    def test_format_hellenistic_chart(self):
+        from astro.ai_analysis import format_hellenistic_chart
+        chart = self._make_chart(
+            asc_sign="Aries", mc_sign="Capricorn",
+            sect="Diurnal", lot_of_fortune="20°",
+            planets=[], aspects=[],
+        )
+        result = format_hellenistic_chart(chart)
+        assert "希臘占星" in result
+
+    def test_format_sukkayodo_chart(self):
+        from astro.ai_analysis import format_sukkayodo_chart
+        chart = self._make_chart(
+            birth_mansion="Ashwini", planets=[],
+        )
+        result = format_sukkayodo_chart(chart)
+        assert "宿曜道" in result
+
+    def test_format_chinstar_chart(self):
+        from astro.ai_analysis import format_chinstar_chart
+        data = {"命宮": "甲子", "胎星": "燕", "命星": "鳳"}
+        result = format_chinstar_chart(data)
+        assert "萬花仙禽" in result
+        assert "命宮" in result
+
+    def test_format_generic_chart_dict(self):
+        from astro.ai_analysis import format_generic_chart
+        data = {"key1": "val1", "key2": 42}
+        result = format_generic_chart(data, "TestSystem")
+        assert "TestSystem" in result
+        assert "key1" in result
+
+
+class TestAiAnalysisFormatChartForPrompt:
+    """Test the dispatch function format_chart_for_prompt."""
+
+    def test_dispatch_known_system(self):
+        from astro.ai_analysis import format_chart_for_prompt
+
+        class Chart:
+            asc_sign = "Aries"
+            mc_sign = "Capricorn"
+            planets = []
+            houses = []
+            aspects = []
+
+        result = format_chart_for_prompt("tab_western", Chart())
+        assert "西洋占星" in result
+        assert "Aries" in result
+
+    def test_dispatch_unknown_system(self):
+        from astro.ai_analysis import format_chart_for_prompt
+
+        class Chart:
+            foo = "bar"
+        result = format_chart_for_prompt("tab_unknown", Chart())
+        assert "tab_unknown" in result
+        assert "foo" in result
+
+
+class TestAiAnalysisSystemPrompts:
+    """Test system prompt load/save functionality."""
+
+    def test_load_default_prompts(self):
+        from astro.ai_analysis import load_system_prompts
+        data = load_system_prompts()
+        assert "prompts" in data
+        assert len(data["prompts"]) >= 1
+        assert "selected" in data
+
+    def test_prompt_has_required_fields(self):
+        from astro.ai_analysis import load_system_prompts
+        data = load_system_prompts()
+        for p in data["prompts"]:
+            assert "name" in p
+            assert "content" in p
+            assert len(p["content"]) > 0
+
+    def test_save_and_reload(self):
+        import json
+        import os
+        import tempfile
+        from astro import ai_analysis
+
+        # Temporarily swap the prompts file
+        original = ai_analysis._PROMPTS_FILE
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".json", delete=False
+            ) as f:
+                tmp_path = f.name
+            ai_analysis._PROMPTS_FILE = tmp_path
+
+            test_data = {
+                "prompts": [{"name": "Test", "content": "Test content"}],
+                "selected": "Test",
+            }
+            assert ai_analysis.save_system_prompts(test_data) is True
+            loaded = ai_analysis.load_system_prompts()
+            assert loaded["prompts"][0]["name"] == "Test"
+        finally:
+            ai_analysis._PROMPTS_FILE = original
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+
+class TestAiAnalysisCerebrasClient:
+    """Test CerebrasClient initialization (without actual API calls)."""
+
+    def test_client_requires_api_key(self):
+        from astro.ai_analysis import CerebrasClient
+        with pytest.raises(ValueError, match="non-empty API key"):
+            CerebrasClient(api_key="")
+
+    def test_client_requires_api_key_none(self):
+        from astro.ai_analysis import CerebrasClient
+        with pytest.raises(ValueError, match="non-empty API key"):
+            CerebrasClient(api_key=None)
+
+    def test_model_options_exist(self):
+        from astro.ai_analysis import CEREBRAS_MODEL_OPTIONS, CEREBRAS_MODEL_DESCRIPTIONS
+        assert len(CEREBRAS_MODEL_OPTIONS) >= 3
+        for model in CEREBRAS_MODEL_OPTIONS:
+            assert model in CEREBRAS_MODEL_DESCRIPTIONS
