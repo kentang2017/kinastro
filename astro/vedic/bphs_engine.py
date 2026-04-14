@@ -567,7 +567,8 @@ def _compute_raja_yogas(asc_sign, planet_map):
     if "sun" in planet_map and "moon" in planet_map:
         sun_sign = _sign("sun")
         moon_sign = _sign("moon")
-        # Odd signs (0,2,4,6,8,10) = masculine, even (1,3,5,7,9,11) = feminine
+        # Sign indices 0,2,4,6,8,10 (Aries,Gemini,Leo,Libra,Sagittarius,Aquarius) = masculine
+        # Sign indices 1,3,5,7,9,11 (Taurus,Cancer,Virgo,Scorpio,Capricorn,Pisces) = feminine
         sun_masc = sun_sign % 2 == 0
         moon_masc = moon_sign % 2 == 0
         asc_masc = asc_sign % 2 == 0

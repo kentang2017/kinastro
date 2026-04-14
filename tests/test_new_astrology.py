@@ -3269,7 +3269,7 @@ class TestBPHSEngine:
             assert not (d.uccha and d.neecha)
 
     def test_raja_yogas_detected(self, bphs_result):
-        assert len(bphs_result.raja_yogas) >= 7  # at least base yogas
+        assert len(bphs_result.raja_yogas) >= 8  # base yogas + possible Neecha Bhanga
 
     def test_raja_yoga_structure(self, bphs_result):
         for ry in bphs_result.raja_yogas:
