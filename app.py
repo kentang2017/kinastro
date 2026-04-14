@@ -754,8 +754,9 @@ elif _selected_system == "tab_ziwei":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
+            _gender = st.session_state.get("_calc_gender", "男")
             with st.spinner(t("spinner_ziwei")):
-                zw_chart = compute_ziwei_chart(**_p)
+                zw_chart = compute_ziwei_chart(**_p, gender=_gender)
             render_ziwei_chart(zw_chart)
             _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei")
         except Exception as _e:
