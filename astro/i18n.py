@@ -1002,6 +1002,18 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "zh": "請先計算排盤後再進行 AI 分析。",
         "en": "Please compute a chart first before running AI analysis.",
     },
+    "tab_contact": {"zh": "📬 關於 / 聯繫", "en": "📬 About / Contact"},
+    "contact_title": {"zh": "開發者資訊", "en": "Developer Info"},
+    "contact_wechat": {"zh": "微信公眾號：**探究三式**", "en": "WeChat Official Account: **探究三式**"},
+    "contact_wechat_id": {
+        "zh": "如有任何建議或合作事宜，可加本人微信聯繫，或搜 **gnatnek**（請註明是在 GitHub 加我的）",
+        "en": "For suggestions or collaboration, add WeChat ID **gnatnek** (please mention you found me on GitHub)",
+    },
+    "contact_qq": {
+        "zh": "或加入 QQ 群組「堅三式軟件交流群」（群號 **770621021**）",
+        "en": "Or join QQ Group 「堅三式軟件交流群」 (Group ID **770621021**)",
+    },
+    "contact_other_apps": {"zh": "其他相關應用", "en": "Other Related Apps"},
 }
 
 
