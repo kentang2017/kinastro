@@ -20,7 +20,7 @@ from typing import Any
 # ====================== 資料載入函式 ======================
 def _load_json(filename: str) -> dict[str, Any]:
     """從 data/ 資料夾載入 JSON"""
-    json_path = Path(__file__).parent / "data" / filename
+    json_path = Path(__file__).parent.parent / "data" / filename
     if not json_path.exists():
         raise FileNotFoundError(f"找不到 Picatrix 資料檔：{json_path}")
     with open(json_path, encoding="utf-8") as f:

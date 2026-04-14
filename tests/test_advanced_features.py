@@ -10,9 +10,9 @@ import json
 import pytest
 import swisseph as swe
 
-from astro.western import compute_western_chart
-from astro.indian import compute_vedic_chart
-from astro.calculator import compute_chart
+from astro.western.western import compute_western_chart
+from astro.vedic.indian import compute_vedic_chart
+from astro.qizheng.calculator import compute_chart
 
 # ── Standard test parameters ──────────────────────────────────────────
 YEAR, MONTH, DAY, HOUR, MINUTE = 1990, 6, 15, 12, 0
@@ -95,19 +95,19 @@ class TestVedicDasha:
         return moon.longitude, vedic_chart.julian_day
 
     def test_vimshottari_return_type(self, moon_data):
-        from astro.vedic_dasha import compute_vimshottari
+        from astro.vedic.vedic_dasha import compute_vimshottari
         result = compute_vimshottari(moon_data[0], moon_data[1])
         assert hasattr(result, "moon_nakshatra")
         assert hasattr(result, "mahadasha_periods")
 
     def test_vimshottari_has_nine_periods(self, moon_data):
-        from astro.vedic_dasha import compute_vimshottari
+        from astro.vedic.vedic_dasha import compute_vimshottari
         result = compute_vimshottari(moon_data[0], moon_data[1])
         assert len(result.mahadasha_periods) == 9
 
     def test_vimshottari_total_years_sums_correctly(self, moon_data):
         """First period may be partial (balance). Full periods sum to 120."""
-        from astro.vedic_dasha import compute_vimshottari, VIMSHOTTARI_YEARS
+        from astro.vedic.vedic_dasha import compute_vimshottari, VIMSHOTTARI_YEARS
         result = compute_vimshottari(moon_data[0], moon_data[1])
         full_cycle = sum(VIMSHOTTARI_YEARS.values())
         assert abs(full_cycle - 120.0) < 0.01
@@ -115,25 +115,25 @@ class TestVedicDasha:
         assert result.mahadasha_periods[0].years <= VIMSHOTTARI_YEARS[result.mahadasha_periods[0].lord]
 
     def test_vimshottari_sub_periods_exist(self, moon_data):
-        from astro.vedic_dasha import compute_vimshottari
+        from astro.vedic.vedic_dasha import compute_vimshottari
         result = compute_vimshottari(moon_data[0], moon_data[1])
         for period in result.mahadasha_periods:
             assert len(period.sub_periods) == 9
 
     def test_yogini_return_type(self, moon_data):
-        from astro.vedic_dasha import compute_yogini
+        from astro.vedic.vedic_dasha import compute_yogini
         result = compute_yogini(moon_data[0], moon_data[1])
         assert hasattr(result, "starting_yogini")
         assert hasattr(result, "periods")
 
     def test_yogini_has_eight_periods(self, moon_data):
-        from astro.vedic_dasha import compute_yogini
+        from astro.vedic.vedic_dasha import compute_yogini
         result = compute_yogini(moon_data[0], moon_data[1])
         assert len(result.periods) == 8
 
     def test_yogini_total_years_sums_correctly(self, moon_data):
         """First period may be partial; the 8 full yogini years total 36."""
-        from astro.vedic_dasha import compute_yogini, YOGINI_YEARS
+        from astro.vedic.vedic_dasha import compute_yogini, YOGINI_YEARS
         result = compute_yogini(moon_data[0], moon_data[1])
         full_cycle = sum(YOGINI_YEARS)
         assert abs(full_cycle - 36.0) < 0.01
@@ -141,7 +141,7 @@ class TestVedicDasha:
         assert result.periods[0].years <= max(YOGINI_YEARS)
 
     def test_jd_to_date_str_format(self):
-        from astro.vedic_dasha import jd_to_date_str
+        from astro.vedic.vedic_dasha import jd_to_date_str
         s = jd_to_date_str(JD)
         assert isinstance(s, str)
         parts = s.split("-")
@@ -155,7 +155,7 @@ class TestVedicDasha:
 class TestAshtakavarga:
     @pytest.fixture(scope="class")
     def avarga(self, vedic_chart):
-        from astro.ashtakavarga import compute_ashtakavarga
+        from astro.vedic.ashtakavarga import compute_ashtakavarga
         planet_longs = _vedic_planet_longs(vedic_chart)
         return compute_ashtakavarga(planet_longs, vedic_chart.ascendant)
 
@@ -188,7 +188,7 @@ class TestAshtakavarga:
 class TestVedicYogas:
     @pytest.fixture(scope="class")
     def yogas(self, vedic_chart):
-        from astro.vedic_yogas import compute_yogas
+        from astro.vedic.vedic_yogas import compute_yogas
         planet_longs = _vedic_planet_longs(vedic_chart)
         return compute_yogas(planet_longs, vedic_chart.ascendant)
 
@@ -228,7 +228,7 @@ class TestVedicYogas:
 class TestAsteroids:
     @pytest.fixture(scope="class")
     def asteroids(self):
-        from astro.asteroids import compute_asteroids
+        from astro.western.asteroids import compute_asteroids
         return compute_asteroids(JD)
 
     def test_returns_list(self, asteroids):
@@ -262,7 +262,7 @@ class TestAsteroids:
 class TestWesternTransit:
     @pytest.fixture(scope="class")
     def transit(self, western_chart):
-        from astro.western_transit import compute_western_transits
+        from astro.western.western_transit import compute_western_transits
         return compute_western_transits(western_chart, 2024, 1, 1, 12, 0, TZ)
 
     def test_return_type(self, transit):
@@ -294,13 +294,13 @@ class TestWesternTransit:
 class TestWesternReturn:
     @pytest.fixture(scope="class")
     def solar_return(self, western_chart):
-        from astro.western_return import compute_solar_return
+        from astro.western.western_return import compute_solar_return
         sun_lon = western_chart.planets[0].longitude
         return compute_solar_return(sun_lon, 2024, LAT, LON, TZ, LOC)
 
     @pytest.fixture(scope="class")
     def lunar_return(self, western_chart):
-        from astro.western_return import compute_lunar_return
+        from astro.western.western_return import compute_lunar_return
         moon_lon = western_chart.planets[1].longitude
         after_jd = swe.julday(2024, 1, 1, 0.0)
         return compute_lunar_return(moon_lon, after_jd, LAT, LON, TZ, LOC)
@@ -341,7 +341,7 @@ class TestWesternReturn:
 class TestWesternSynastry:
     @pytest.fixture(scope="class")
     def synastry(self):
-        from astro.western_synastry import compute_synastry
+        from astro.western.western_synastry import compute_synastry
         chart_a = compute_western_chart(1990, 6, 15, 12, 0, TZ, LAT, LON, LOC)
         chart_b = compute_western_chart(1992, 3, 20, 8, 30, TZ, LAT, LON, LOC)
         return compute_synastry(chart_a, chart_b, "Alice", "Bob")
@@ -373,7 +373,7 @@ class TestWesternSynastry:
 class TestHellenistic:
     @pytest.fixture(scope="class")
     def hchart(self, western_chart):
-        from astro.hellenistic import compute_hellenistic_chart
+        from astro.western.hellenistic import compute_hellenistic_chart
         return compute_hellenistic_chart(western_chart, birth_year=1990,
                                          current_year=2024,
                                          current_jd=swe.julday(2024, 1, 1, 12.0))
@@ -410,14 +410,14 @@ class TestHellenistic:
             assert isinstance(pc.score, (int, float))
 
     def test_get_bound_lord(self):
-        from astro.hellenistic import get_bound_lord
+        from astro.western.hellenistic import get_bound_lord
         entry = get_bound_lord(0, 5.0)  # Aries at 5 degrees
         assert hasattr(entry, "planet")
         assert isinstance(entry.planet, str)
         assert len(entry.planet) > 0
 
     def test_compute_lots_directly(self, western_chart):
-        from astro.hellenistic import compute_lots
+        from astro.western.hellenistic import compute_lots
         planet_longs = {}
         for p in western_chart.planets:
             short = p.name.split()[0]
@@ -470,26 +470,26 @@ class TestCrossCompare:
 # ══════════════════════════════════════════════════════════════════════
 class TestFixedStars:
     def test_load_catalog(self):
-        from astro.fixed_stars import load_star_catalog
+        from astro.western.fixed_stars import load_star_catalog
         catalog = load_star_catalog()
         assert isinstance(catalog, list)
         assert len(catalog) >= 10
 
     def test_catalog_entry_fields(self):
-        from astro.fixed_stars import load_star_catalog
+        from astro.western.fixed_stars import load_star_catalog
         catalog = load_star_catalog()
         for entry in catalog:
             assert "name" in entry
             assert "magnitude" in entry or "nature" in entry
 
     def test_compute_positions_returns_list(self):
-        from astro.fixed_stars import compute_fixed_star_positions
+        from astro.western.fixed_stars import compute_fixed_star_positions
         stars = compute_fixed_star_positions(JD)
         assert isinstance(stars, list)
 
     def test_star_position_fields(self):
         """If ephemeris data is available, star positions have correct fields."""
-        from astro.fixed_stars import compute_fixed_star_positions
+        from astro.western.fixed_stars import compute_fixed_star_positions
         stars = compute_fixed_star_positions(JD)
         for s in stars:
             assert hasattr(s, "name")
@@ -497,7 +497,7 @@ class TestFixedStars:
             assert 0 <= s.longitude < 360
 
     def test_find_conjunctions_returns_list(self):
-        from astro.fixed_stars import compute_fixed_star_positions, find_conjunctions
+        from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
         stars = compute_fixed_star_positions(JD)
         planet_pos = {"Sun": 83.8, "Moon": 340.9}
         conj = find_conjunctions(stars, planet_pos, orb=2.0)
@@ -573,7 +573,7 @@ class TestExport:
 class TestQizhengElectional:
     @pytest.fixture(scope="class")
     def electional(self):
-        from astro.qizheng_electional import find_auspicious_dates
+        from astro.qizheng.qizheng_electional import find_auspicious_dates
         return find_auspicious_dates(2024, 1, 1, 2024, 1, 15, TZ, "general")
 
     def test_return_type(self, electional):
@@ -598,7 +598,7 @@ class TestQizhengElectional:
         assert "2024-01" in electional.best_date
 
     def test_different_criteria(self):
-        from astro.qizheng_electional import find_auspicious_dates
+        from astro.qizheng.qizheng_electional import find_auspicious_dates
         for criteria in ("marriage", "travel", "business"):
             result = find_auspicious_dates(2024, 6, 1, 2024, 6, 10, TZ, criteria)
             assert len(result.rated_dates) > 0
@@ -609,60 +609,60 @@ class TestQizhengElectional:
 # ══════════════════════════════════════════════════════════════════════
 class TestPtolemyDignities:
     def test_import(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         assert PtolemyDignityCalculator is not None
 
     def test_sun_in_aries_exaltation(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.SUN, "Aries", 19.0, is_day_chart=True)
         types = [d[0] for d in digs]
         assert DignityType.EXALTATION in types
 
     def test_sun_in_aries_triplicity_day(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.SUN, "Aries", 5.0, is_day_chart=True)
         types = [d[0] for d in digs]
         assert DignityType.TRIPLICITY in types
 
     def test_mars_domicile_in_aries(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.MARS, "Aries", 10.0)
         types = [d[0] for d in digs]
         assert DignityType.DOMICILE in types
 
     def test_venus_detriment_in_aries(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.VENUS, "Aries", 10.0)
         types = [d[0] for d in digs]
         assert DignityType.DETRIMENT in types
 
     def test_saturn_fall_in_aries(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.SATURN, "Aries", 10.0)
         types = [d[0] for d in digs]
         assert DignityType.FALL in types
 
     def test_peregrine_planet(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, DignityType
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.MOON, "Aries", 10.0)
         types = [d[0] for d in digs]
         assert DignityType.PEREGRINE in types
 
     def test_score_calculation(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.SUN, "Aries", 19.0, is_day_chart=True)
         score = calc.calculate_total_score(digs)
         assert score > 0
 
     def test_dignity_to_chinese(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet, dignity_to_chinese
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet, dignity_to_chinese
         calc = PtolemyDignityCalculator()
         digs = calc.get_dignities(Planet.SUN, "Aries", 19.0)
         text = dignity_to_chinese(digs)
@@ -670,18 +670,18 @@ class TestPtolemyDignities:
         assert len(text) > 0
 
     def test_all_signs_covered(self):
-        from astro.ptolemy_dignities import PTOLEMY_DIGNITIES
+        from astro.western.ptolemy_dignities import PTOLEMY_DIGNITIES
         signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
                  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
         for s in signs:
             assert s in PTOLEMY_DIGNITIES
 
     def test_terms_all_signs(self):
-        from astro.ptolemy_dignities import PTOLEMAIC_TERMS
+        from astro.western.ptolemy_dignities import PTOLEMAIC_TERMS
         assert len(PTOLEMAIC_TERMS) == 12
 
     def test_term_ruler_coverage(self):
-        from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet
+        from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet
         calc = PtolemyDignityCalculator()
         # Every degree in every sign should have a term ruler
         for sign in ["Aries", "Taurus", "Gemini"]:

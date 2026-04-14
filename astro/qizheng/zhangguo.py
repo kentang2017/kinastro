@@ -10,7 +10,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+_DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "data")
 
 # ============================================================
 # 星曜名稱映射: 排盤計算名 → 張果星宗 JSON 名

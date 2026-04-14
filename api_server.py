@@ -25,19 +25,19 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 # Astro compute imports (no render functions — they depend on Streamlit UI)
 # ---------------------------------------------------------------------------
-from astro.calculator import compute_chart
-from astro.western import compute_western_chart
-from astro.indian import compute_vedic_chart
+from astro.qizheng.calculator import compute_chart
+from astro.western.western import compute_western_chart
+from astro.vedic.indian import compute_vedic_chart
 from astro.thai import compute_thai_chart
 from astro.kabbalistic import compute_kabbalistic_chart
-from astro.arabic import compute_arabic_chart
+from astro.arabic.arabic import compute_arabic_chart
 from astro.maya import compute_maya_chart
 from astro.ziwei import compute_ziwei_chart
 from astro.mahabote import compute_mahabote_chart
-from astro.decans import compute_decan_chart
-from astro.nadi import compute_nadi_chart
+from astro.egyptian.decans import compute_decan_chart
+from astro.vedic.nadi import compute_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart
-from astro.hellenistic import compute_hellenistic_chart
+from astro.western.hellenistic import compute_hellenistic_chart
 
 # ---------------------------------------------------------------------------
 # Logging

@@ -3,7 +3,7 @@
 """
 
 import pytest
-from astro.calculator import (
+from astro.qizheng.calculator import (
     compute_chart,
     format_degree,
     get_mansion_for_degree,

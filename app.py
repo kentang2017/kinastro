@@ -15,8 +15,8 @@ from datetime import datetime, date, time
 
 from astro.i18n import TRANSLATIONS, get_lang
 from astro.chart_theme import MOBILE_CSS
-from astro.calculator import compute_chart
-from astro.chart_renderer import (
+from astro.qizheng.calculator import compute_chart
+from astro.qizheng.chart_renderer import (
     render_chart_info,
     render_planet_table,
     render_house_table,
@@ -28,19 +28,19 @@ from astro.chart_renderer import (
     render_transit_comparison,
     render_zhangguo,
 )
-from astro.shensha import compute_shensha
-from astro.qizheng_dasha import compute_dasha
-from astro.qizheng_transit import compute_transit, compute_transit_now
-from astro.zhangguo import compute_zhangguo
-from astro.qizheng_electional import render_electional_tool
-from astro.western import compute_western_chart, render_western_chart
-from astro.western_transit import compute_western_transits
-from astro.western_return import compute_solar_return
-from astro.western_synastry import compute_synastry
-from astro.indian import compute_vedic_chart, render_vedic_chart
-from astro.vedic_dasha import compute_vimshottari, compute_yogini
-from astro.ashtakavarga import compute_ashtakavarga
-from astro.vedic_yogas import compute_yogas
+from astro.qizheng.shensha import compute_shensha
+from astro.qizheng.qizheng_dasha import compute_dasha
+from astro.qizheng.qizheng_transit import compute_transit, compute_transit_now
+from astro.qizheng.zhangguo import compute_zhangguo
+from astro.qizheng.qizheng_electional import render_electional_tool
+from astro.western.western import compute_western_chart, render_western_chart
+from astro.western.western_transit import compute_western_transits
+from astro.western.western_return import compute_solar_return
+from astro.western.western_synastry import compute_synastry
+from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
+from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
+from astro.vedic.ashtakavarga import compute_ashtakavarga
+from astro.vedic.vedic_yogas import compute_yogas
 from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import (
     compute_thai_chart, render_thai_chart,
@@ -48,17 +48,17 @@ from astro.thai import (
     calculate_nine_palace_divination, render_nine_palace_divination,
 )
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
-from astro.arabic import compute_arabic_chart, render_arabic_chart
+from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
-from astro.decans import compute_decan_chart, render_decan_chart, render_decan_browse
-from astro.nadi import compute_nadi_chart, render_nadi_chart
+from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
+from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
-from astro.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
-from astro.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
-from astro.fixed_stars import compute_fixed_star_positions, find_conjunctions
-from astro.asteroids import compute_asteroids
+from astro.western.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
+from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
+from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
+from astro.western.asteroids import compute_asteroids
 from astro.export import render_download_buttons, western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict
 from astro.natal_summary import generate_natal_summary
 from astro.interpretations import (
@@ -66,7 +66,7 @@ from astro.interpretations import (
     get_yogini_reading, get_qizheng_dasha_reading,
 )
 
-from astro.picatrix_mansions import (
+from astro.arabic.picatrix_mansions import (
     render_mansion_lookup,
     render_planetary_hours_tool,
     render_talisman_generator,
@@ -74,7 +74,7 @@ from astro.picatrix_mansions import (
     get_mansion_index,
     compute_moon_longitude,
 )
-from astro.shams_maarif import render_shams_browse, render_shams_chart
+from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.chinstar.chinstar import WanHuaXianQin
 
 

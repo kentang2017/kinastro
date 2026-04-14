@@ -6,7 +6,7 @@ Computes transit planet positions and aspects to natal chart.
 import swisseph as swe
 from dataclasses import dataclass, field
 
-from .interpretations import get_transit_reading
+from astro.interpretations import get_transit_reading
 
 WESTERN_PLANETS = {
     "Sun ☉": swe.SUN, "Moon ☽": swe.MOON, "Mercury ☿": swe.MERCURY,
