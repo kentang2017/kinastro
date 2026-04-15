@@ -290,7 +290,8 @@ def _render_info(chart):
     col1, col2 = st.columns(2)
     with col1:
         st.write(f"**วันที่ (日期):** {chart.day:02d}/{chart.month:02d}/{be_year} "
-                 f"(พ.ศ. {be_year} / ค.ศ. {chart.year})")
+                 f"<small style='color:#888'>(พ.ศ. / ค.ศ. {chart.year})</small>",
+                 unsafe_allow_html=True)
         st.write(f"**เวลา (時間):** {chart.hour:02d}:{chart.minute:02d}")
         st.write(f"**เขตเวลา (時區):** UTC{chart.timezone:+.1f}")
     with col2:
@@ -347,7 +348,7 @@ def _render_thai_grid(chart):
                     center_content = (
                         f"<b>ดวงชาตา 泰國占星</b><br/>"
                         f"{chart.day:02d}/{chart.month:02d}/{be_year}"
-                        f"<small style='color:#aaa'> (พ.ศ.)</small><br/>"
+                        f"<small style='color:#aaa'> (พ.ศ. / ค.ศ. {chart.year})</small><br/>"
                         f"{chart.hour:02d}:{chart.minute:02d} "
                         f"UTC{chart.timezone:+.1f}<br/>"
                         f"{chart.location_name}<br/>"
