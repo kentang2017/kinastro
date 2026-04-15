@@ -165,7 +165,7 @@ def _render_bphs_result(bphs_result):
             "品位": d.status_zh,
         })
     if _dignity_rows:
-        st.dataframe(pd.DataFrame(_dignity_rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(_dignity_rows), hide_index=True, width='stretch')
 
     st.divider()
 
@@ -181,7 +181,7 @@ def _render_bphs_result(bphs_result):
             "敵星 ❌": m.enemies_zh,
         })
     if _maitri_rows:
-        st.dataframe(pd.DataFrame(_maitri_rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(_maitri_rows), hide_index=True, width='stretch')
 
     st.divider()
 
@@ -247,7 +247,7 @@ def _render_bphs_result(bphs_result):
             "判斷": val.get("judgment", ""),
         })
     if _varga_rows:
-        st.dataframe(pd.DataFrame(_varga_rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(_varga_rows), hide_index=True, width='stretch')
     note = bphs_result.varga_info.get("general_note_zh", "")
     if note:
         st.caption(f"💡 {note}")
@@ -549,7 +549,7 @@ with st.sidebar:
                 )
         st.image(
             "https://raw.githubusercontent.com/kentang2017/kintaiyi/master/pic/20231205113526.jpg",
-            use_container_width=True,
+            width='stretch',
         )
 
 # ============================================================
@@ -1649,7 +1649,7 @@ elif _selected_system == "tab_chinstar":
                 _sw = _cs_chart["swallow_analysis"]
                 if _sw:
                     _sw_rows = [{"對照": k, "判斷": v} for k, v in _sw.items()]
-                    st.dataframe(_sw_rows, use_container_width=True, hide_index=True)
+                    st.dataframe(_sw_rows, width='stretch', hide_index=True)
                 else:
                     st.info(t("chinstar_no_swallow"))
                 st.divider()
@@ -1703,7 +1703,7 @@ elif _selected_system == "tab_chinstar":
                             "喜忌": _xt_e["xi_ji"],
                             "論斷": _xt_e["desc"][:50] + "…" if len(_xt_e["desc"]) > 50 else _xt_e["desc"],
                         })
-                    st.dataframe(_xt_rows, use_container_width=True, hide_index=True)
+                    st.dataframe(_xt_rows, width='stretch', hide_index=True)
 
             with _cs_tab_gui_jian:
                 from astro.chinstar.chinstar import (
@@ -1748,7 +1748,7 @@ elif _selected_system == "tab_chinstar":
                     _gui = lookup_gui_ge(_gj_star)
                     if _gui:
                         _gui_rows = [{"格局": g["name"], "干支": g["ganzhi"]} for g in _gui]
-                        st.dataframe(_gui_rows, use_container_width=True, hide_index=True)
+                        st.dataframe(_gui_rows, width='stretch', hide_index=True)
                     else:
                         st.info(t("chinstar_no_gui"))
 
@@ -1756,7 +1756,7 @@ elif _selected_system == "tab_chinstar":
                     _jian = lookup_jian_ge(_gj_star)
                     if _jian:
                         _jian_rows = [{"格局": j["name"], "干支": j["ganzhi"]} for j in _jian]
-                        st.dataframe(_jian_rows, use_container_width=True, hide_index=True)
+                        st.dataframe(_jian_rows, width='stretch', hide_index=True)
                     else:
                         st.info(t("chinstar_no_jian"))
                     st.divider()
