@@ -271,8 +271,12 @@ def compute_chart(
     # 時辰地支
     hour_branch = _get_hour_branch(hour, minute)
 
-    # 命宮地支
-    ming_gong_branch = _get_ming_gong_branch(solar_month, hour_branch)
+    # 命宮地支：以命度（上升點）所在地支為命宮
+    # 黃經星座索引(0=白羊..11=雙魚) 與地支索引(0=子..11=亥)的對應：
+    #   戌(10)=0°(白羊), 酉(9)=30°(金牛), ..., 亥(11)=330°(雙魚)
+    # 公式：branch = (10 - sign_index) % 12
+    asc_sign_idx = _degree_to_sign_index(ascendant)
+    ming_gong_branch = (10 - asc_sign_idx) % 12
 
     # ---- 建立宮位資料 (按命宮地支及性別方向排列) ----
     # 男命：順時針 (地支遞減)；女命：逆時針 (地支遞增)
