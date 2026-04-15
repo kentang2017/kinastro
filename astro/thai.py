@@ -13,6 +13,15 @@ from dataclasses import dataclass, field
 # 常量 (Constants)
 # ============================================================
 
+# Buddhist Era offset: BE year = CE year + 543
+_BE_OFFSET = 543
+
+
+def _to_be_year(ce_year):
+    """Convert CE year to Buddhist Era (พุทธศักราช / พ.ศ.) year."""
+    return ce_year + _BE_OFFSET
+
+
 THAI_PLANETS = {
     "พระอาทิตย์ (太陽)": swe.SUN,
     "พระจันทร์ (月亮)": swe.MOON,
@@ -24,19 +33,21 @@ THAI_PLANETS = {
 }
 
 # Thai names for the 12 Rashis
+# Tuple: (full_name, glyph, chinese, lord, short_abbr)
+# short_abbr: 2-char Thai abbreviation used in traditional Thai astrology charts
 THAI_RASHIS = [
-    ("เมษ (Mesha)", "♈", "白羊", "พระอังคาร"),
-    ("พฤษภ (Vrishabha)", "♉", "金牛", "พระศุกร์"),
-    ("เมถุน (Mithuna)", "♊", "雙子", "พระพุธ"),
-    ("กรกฎ (Karka)", "♋", "巨蟹", "พระจันทร์"),
-    ("สิงห์ (Simha)", "♌", "獅子", "พระอาทิตย์"),
-    ("กันย์ (Kanya)", "♍", "處女", "พระพุธ"),
-    ("ตุลย์ (Tula)", "♎", "天秤", "พระศุกร์"),
-    ("พิจิก (Vrischika)", "♏", "天蠍", "พระอังคาร"),
-    ("ธนู (Dhanu)", "♐", "射手", "พระพฤหัสบดี"),
-    ("มกร (Makara)", "♑", "摩羯", "พระเสาร์"),
-    ("กุมภ์ (Kumbha)", "♒", "水瓶", "พระเสาร์"),
-    ("มีน (Meena)", "♓", "雙魚", "พระพฤหัสบดี"),
+    ("เมษ (Mesha)", "♈", "白羊", "พระอังคาร", "มษ"),
+    ("พฤษภ (Vrishabha)", "♉", "金牛", "พระศุกร์", "พษ"),
+    ("เมถุน (Mithuna)", "♊", "雙子", "พระพุธ", "มถ"),
+    ("กรกฎ (Karka)", "♋", "巨蟹", "พระจันทร์", "กร"),
+    ("สิงห์ (Simha)", "♌", "獅子", "พระอาทิตย์", "สห"),
+    ("กันย์ (Kanya)", "♍", "處女", "พระพุธ", "กย"),
+    ("ตุลย์ (Tula)", "♎", "天秤", "พระศุกร์", "ตล"),
+    ("พิจิก (Vrischika)", "♏", "天蠍", "พระอังคาร", "พก"),
+    ("ธนู (Dhanu)", "♐", "射手", "พระพฤหัสบดี", "ธน"),
+    ("มกร (Makara)", "♑", "摩羯", "พระเสาร์", "มก"),
+    ("กุมภ์ (Kumbha)", "♒", "水瓶", "พระเสาร์", "กภ"),
+    ("มีน (Meena)", "♓", "雙魚", "พระพฤหัสบดี", "มน"),
 ]
 
 # Thai day-planet correspondences for interpretive context
@@ -80,6 +91,7 @@ class ThaiPlanet:
     sign_degree: float
     retrograde: bool
     house: int = 0
+    rashi_abbr: str = ""
 
 
 @dataclass
@@ -138,6 +150,20 @@ def _format_deg(deg):
     return f"{d}°{m:02d}'{s:02d}\""
 
 
+def _format_deg_thai(sign_degree):
+    """Format degree within sign as DD:MM style (Thai app convention).
+
+    Args:
+        sign_degree (float): degree within sign (0–30).
+
+    Returns:
+        str: e.g. "04:12" for 4°12'.
+    """
+    d = int(sign_degree)
+    m = int((sign_degree - d) * 60)
+    return f"{d:02d}:{m:02d}"
+
+
 def _find_house(lon, cusps):
     lon = _normalize(lon)
     for i in range(12):
@@ -188,7 +214,7 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
             name=name, longitude=lon, latitude=lat,
             rashi=rashi[0], rashi_glyph=rashi[1], rashi_chinese=rashi[2],
             rashi_lord=rashi[3], sign_degree=_sign_degree(lon),
-            retrograde=speed < 0,
+            retrograde=speed < 0, rashi_abbr=rashi[4],
         ))
 
     # Rahu (ราหู)
@@ -200,7 +226,7 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
         name="ราหู (羅睺)", longitude=rahu_lon, latitude=rahu_res[1],
         rashi=rashi[0], rashi_glyph=rashi[1], rashi_chinese=rashi[2],
         rashi_lord=rashi[3], sign_degree=_sign_degree(rahu_lon),
-        retrograde=False,
+        retrograde=False, rashi_abbr=rashi[4],
     ))
 
     # Ketu (เกตุ)
@@ -211,7 +237,7 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
         name="เกตุ (計都)", longitude=ketu_lon, latitude=-rahu_res[1],
         rashi=rashi[0], rashi_glyph=rashi[1], rashi_chinese=rashi[2],
         rashi_lord=rashi[3], sign_degree=_sign_degree(ketu_lon),
-        retrograde=False,
+        retrograde=False, rashi_abbr=rashi[4],
     ))
 
     # Build houses
@@ -260,9 +286,11 @@ def render_thai_chart(chart):
 
 def _render_info(chart):
     st.subheader("📋 ข้อมูลดวง (排盤資訊)")
+    be_year = _to_be_year(chart.year)
     col1, col2 = st.columns(2)
     with col1:
-        st.write(f"**วันที่ (日期):** {chart.year}/{chart.month}/{chart.day}")
+        st.write(f"**วันที่ (日期):** {chart.day:02d}/{chart.month:02d}/{be_year} "
+                 f"(พ.ศ. {be_year} / ค.ศ. {chart.year})")
         st.write(f"**เวลา (時間):** {chart.hour:02d}:{chart.minute:02d}")
         st.write(f"**เขตเวลา (時區):** UTC{chart.timezone:+.1f}")
     with col2:
@@ -315,9 +343,11 @@ def _render_thai_grid(chart):
             idx = row[col_idx]
             if idx == -1:
                 if row_idx == 1 and col_idx == 1:
+                    be_year = _to_be_year(chart.year)
                     center_content = (
                         f"<b>ดวงชาตา 泰國占星</b><br/>"
-                        f"{chart.year}/{chart.month}/{chart.day}<br/>"
+                        f"{chart.day:02d}/{chart.month:02d}/{be_year}"
+                        f"<small style='color:#aaa'> (พ.ศ.)</small><br/>"
                         f"{chart.hour:02d}:{chart.minute:02d} "
                         f"UTC{chart.timezone:+.1f}<br/>"
                         f"{chart.location_name}<br/>"
@@ -343,8 +373,9 @@ def _render_thai_grid(chart):
                 ) if p_list else '<span style="color:#666">—</span>'
                 marker = " 🔺" if idx == asc_idx else ""
                 cell_content = (
-                    f"<b>{rashi[0]}{marker}</b><br/>"
-                    f'<small style="color:#888">{rashi[1]} {rashi[2]}</small>'
+                    f"<b>{rashi[4]}{marker}</b>"
+                    f'<small style="color:#888"> {rashi[1]}</small><br/>'
+                    f'<small style="color:#666">{rashi[2]}</small>'
                     f"<br/>{p_html}"
                 )
                 html += f'<td style="{style}">{cell_content}</td>'
@@ -356,19 +387,26 @@ def _render_thai_grid(chart):
 
 def _render_planet_table(chart):
     st.subheader("🪐 ตำแหน่งดาว (行星位置)")
-    header = "| ดาว (Planet) | ราศี (Rashi) | องศา (Degree) | เจ้าเรือน (Lord) | ภพ (House) | ℞ |"
-    sep = "|:------------:|:------------:|:-------------:|:----------------:|:----------:|:-:|"
+    # Thai-style table: planet | sign abbr | DD:MM | retrograde marker
+    header = "| ดาว (Planet) | ราศี (Rashi) | ตำแหน่ง (DD:MM) | เจ้าเรือน (Lord) | ภพ (House) | สถานะ |"
+    sep = "|:------------:|:------------:|:---------------:|:----------------:|:----------:|:------:|"
     rows = [header, sep]
     for p in chart.planets:
-        retro = "℞" if p.retrograde else ""
+        # "พ" = พักร (retrograde), "" = direct
+        retro_marker = "พ" if p.retrograde else ""
+        deg_thai = _format_deg_thai(p.sign_degree)
         color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_html = (
             f'<span style="color:{color};font-weight:bold">{p.name}</span>'
         )
+        sign_display = (
+            f'{p.rashi_glyph} <b>{p.rashi_abbr}</b> '
+            f'<small style="color:#888">({p.rashi_chinese})</small>'
+        )
         rows.append(
-            f"| {name_html} | {p.rashi_glyph} {p.rashi} ({p.rashi_chinese}) "
-            f"| {p.sign_degree:.2f}° | {p.rashi_lord} "
-            f"| {p.house} | {retro} |"
+            f"| {name_html} | {sign_display} "
+            f"| {deg_thai} | {p.rashi_lord} "
+            f"| {p.house} | {retro_marker} |"
         )
     st.markdown("\n".join(rows), unsafe_allow_html=True)
 
