@@ -356,6 +356,6 @@ def render_world_map() -> None:
                 )
                 for sys_key, zh, en in info["systems"]:
                     btn_label = zh if lang == "zh" else en
-                    if st.button(btn_label, key=f"map_{sys_key}", use_container_width=True):
+                    if st.button(btn_label, key=f"map_{sys_key}", width='stretch'):
                         st.session_state["_selected_system"] = sys_key
                         st.rerun()
