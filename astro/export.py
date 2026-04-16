@@ -249,7 +249,12 @@ def generic_chart_to_dict(chart_obj, system_name=""):
                     or getattr(p, "sign_chinese", None)
                     or ""
                 ),
-                "degree": round(getattr(p, "sign_degree", 0) or (getattr(p, "longitude", 0) % 30), 2),
+                "degree": round(
+                    getattr(p, "sign_degree", None)
+                    if getattr(p, "sign_degree", None) is not None
+                    else (getattr(p, "longitude", 0) % 30),
+                    2,
+                ),
                 "retrograde": getattr(p, "retrograde", False),
             }
             d["planets"].append(entry)
