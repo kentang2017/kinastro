@@ -209,6 +209,7 @@ TRANSLATIONS = {
         "en": "☪ Shams al-Maʻārif",
     },
     "arabic_subtab_reference": {"zh": "古籍知識庫", "en": "Reference Library"},
+    "arabic_subtab_ms164": {"zh": "📜 MS.164 手稿", "en": "📜 MS.164 Manuscript"},
     # ── Chinese (七政四餘) sub-tab labels ──────────────────────────────────────
     "ch_subtab_natal": {
         "zh": "🎯 本命盤",
@@ -325,6 +326,10 @@ TRANSLATIONS = {
     "thai_subtab_nine": {
         "zh": "🔮 ตาราง 9 ช่อง & 九宮占卜 (9宮格數字學 · 九宮占卜)",
         "en": "🔮 9-Palace Grid & Divination (Numerology · Divination)",
+    },
+    "thai_subtab_brahma": {
+        "zh": "📖 พรหมชาติ (泰國命理)",
+        "en": "📖 Brahma Jati (Thai Fate Reading)",
     },
     # ── Picatrix section ───────────────────────────────────────────────────
     "picatrix_subheader": {

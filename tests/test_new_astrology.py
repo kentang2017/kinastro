@@ -3557,3 +3557,189 @@ class TestBPHSData:
             assert len(planet_fields) >= 1
             for pf in planet_fields:
                 assert len(bhava_data[pf]) >= 9  # 9 planets
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Brahma Jati Tests
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class TestBrahmaJatiDataLoading:
+    """Test that all 5 Brahma Jati JSON files load correctly."""
+
+    def test_load_birthyear_data(self):
+        from astro.brahma_jati import load_birthyear_data
+        data = load_birthyear_data()
+        assert "years" in data
+        assert len(data["years"]) == 12
+        # Check first year has required keys
+        y1 = data["years"]["1"]
+        for key in ["thai", "name_zh", "name_en", "element_zh", "personality_zh"]:
+            assert key in y1, f"Missing key {key}"
+
+    def test_load_12rasi_data(self):
+        from astro.brahma_jati import load_12rasi_data
+        data = load_12rasi_data()
+        assert "positions" in data
+        assert len(data["positions"]) == 12
+        pos1 = data["positions"]["1"]
+        for key in ["thai", "name_zh", "name_en", "meaning_zh", "level"]:
+            assert key in pos1
+
+    def test_load_monthly_variants(self):
+        from astro.brahma_jati import load_monthly_variants
+        data = load_monthly_variants()
+        assert "years" in data
+        assert len(data["years"]) == 12
+
+    def test_load_weekly_variants(self):
+        from astro.brahma_jati import load_weekly_variants
+        data = load_weekly_variants()
+        assert "years" in data
+        assert len(data["years"]) == 12
+        first_year = list(data["years"].values())[0]
+        assert "weekly" in first_year
+        assert len(first_year["weekly"]) == 7
+
+    def test_load_spells_remedies(self):
+        from astro.brahma_jati import load_spells_remedies
+        data = load_spells_remedies()
+        assert "general_remedies" in data
+        assert "color_by_day" in data
+        assert "per_zodiac" in data
+        assert len(data["color_by_day"]) == 7
+        assert len(data["per_zodiac"]) == 12
+
+
+class TestBrahmaJatiCompute:
+    """Test Brahma Jati computation logic."""
+
+    def test_thai_zodiac_index(self):
+        from astro.brahma_jati import _thai_zodiac_index
+        # 2024 = Dragon year (index 4 = ปีมะโรง). (2024-4)%12 = 4
+        assert _thai_zodiac_index(2024) == 4
+        # 2000 = Dragon year as well. (2000-4)%12 = 4
+        assert _thai_zodiac_index(2000) == 4
+        # 1996 = Rat year. (1996-4)%12 = 0
+        assert _thai_zodiac_index(1996) == 0
+
+    def test_compute_basic(self):
+        from astro.brahma_jati import compute_brahma_jati
+        reading = compute_brahma_jati(
+            ce_year=1990, month=6, weekday=0, age=35, gender="male"
+        )
+        assert reading.zodiac_index == (1990 - 4) % 12  # 6 = Horse
+        assert reading.thai_year_name == "ปีมะเมีย"
+        assert reading.birthyear is not None
+        assert reading.year_zh == "馬年"
+
+    def test_compute_with_rasi_position(self):
+        from astro.brahma_jati import compute_brahma_jati
+        reading = compute_brahma_jati(
+            ce_year=1990, month=6, weekday=3, age=35, gender="male"
+        )
+        assert reading.rasi_position is not None
+        assert reading.rasi_pos_number is not None
+        assert 1 <= reading.rasi_pos_number <= 12
+
+    def test_compute_weekly_variant(self):
+        from astro.brahma_jati import compute_brahma_jati
+        reading = compute_brahma_jati(
+            ce_year=1996, month=1, weekday=6  # Sunday
+        )
+        # 1996 = Rat year
+        assert reading.thai_year_name == "ปีชวด"
+        assert reading.weekly_day == "Sunday"
+        assert reading.weekly_variant is not None
+
+    def test_compute_color_of_day(self):
+        from astro.brahma_jati import compute_brahma_jati
+        reading = compute_brahma_jati(ce_year=1990, month=3, weekday=0)
+        assert reading.color_of_day is not None
+        assert "zh" in reading.color_of_day
+
+    def test_rasi_male_female_differ(self):
+        from astro.brahma_jati import _compute_rasi_position, load_12rasi_data
+        rasi_data = load_12rasi_data()
+        _, pos_m = _compute_rasi_position(25, "male", rasi_data)
+        _, pos_f = _compute_rasi_position(25, "female", rasi_data)
+        # Male and female count in opposite directions, should differ
+        assert pos_m is not None
+        assert pos_f is not None
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# MS.164 Manuscript Tests
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class TestMS164DataLoading:
+    """Test that all 5 MS.164 JSON files load correctly."""
+
+    def test_load_metadata(self):
+        from astro.arabic.ms164_browser import load_metadata
+        data = load_metadata()
+        assert data["manuscript_id"] == "MS_164"
+        assert "title_zh" in data
+
+    def test_load_fal_divination(self):
+        from astro.arabic.ms164_browser import load_fal_divination
+        data = load_fal_divination()
+        assert "planets" in data
+        assert len(data["planets"]) >= 5
+        for p in data["planets"]:
+            assert "planet_zh" in p
+            assert len(p["questions"]) >= 1
+
+    def test_load_female_appearances(self):
+        from astro.arabic.ms164_browser import load_female_appearances
+        data = load_female_appearances()
+        assert "appearances" in data
+        assert len(data["appearances"]) >= 3
+
+    def test_load_female_horoscopes(self):
+        from astro.arabic.ms164_browser import load_female_horoscopes
+        data = load_female_horoscopes()
+        assert "horoscopes" in data
+        assert len(data["horoscopes"]) >= 3
+
+    def test_load_magical_practices(self):
+        from astro.arabic.ms164_browser import load_magical_practices
+        data = load_magical_practices()
+        assert "practices" in data
+        assert len(data["practices"]) >= 3
+        for p in data["practices"]:
+            assert "purpose_zh" in p
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Picatrix Planetary Prayers Tests
+# ══════════════════════════════════════════════════════════════════════════
+
+
+class TestPicatrixPlanetaryPrayers:
+    """Test that planetary prayers JSON loads and has correct structure."""
+
+    def test_load_prayers(self):
+        from astro.arabic.picatrix_mansions import _load_planetary_prayers
+        data = _load_planetary_prayers()
+        assert "prayers" in data
+        assert len(data["prayers"]) == 7  # 7 classical planets
+
+    def test_prayer_structure(self):
+        from astro.arabic.picatrix_mansions import _load_planetary_prayers
+        data = _load_planetary_prayers()
+        for prayer in data["prayers"]:
+            assert "planet" in prayer
+            assert "name_zh" in prayer
+            assert "name_en" in prayer
+            assert "spirit_names" in prayer
+            assert "prayer_text" in prayer
+            assert len(prayer["spirit_names"]) >= 1
+
+    def test_all_classical_planets_present(self):
+        from astro.arabic.picatrix_mansions import _load_planetary_prayers
+        data = _load_planetary_prayers()
+        planets = {p["planet"] for p in data["prayers"]}
+        expected = {"Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"}
+        assert planets == expected

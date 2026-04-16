@@ -48,6 +48,9 @@ from astro.thai import (
     calculate_thai_nine_grid, render_nine_grid,
     calculate_nine_palace_divination, render_nine_palace_divination,
 )
+from astro.brahma_jati import (
+    compute_brahma_jati, render_brahma_jati, render_brahma_jati_browse,
+)
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
@@ -85,6 +88,7 @@ from astro.arabic.picatrix_mansions import (
     compute_moon_longitude,
 )
 from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
+from astro.arabic.ms164_browser import render_ms164_browse
 from astro.chinstar.chinstar import WanHuaXianQin
 
 
@@ -1086,8 +1090,8 @@ elif _selected_system == "tab_thai":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_thai")):
                 t_chart = compute_thai_chart(**_p)
-            thai_tab_chart, thai_tab_nine = st.tabs(
-                [t("thai_subtab_chart"), t("thai_subtab_nine")]
+            thai_tab_chart, thai_tab_nine, thai_tab_brahma = st.tabs(
+                [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
             )
             with thai_tab_chart:
                 render_thai_chart(t_chart)
@@ -1099,6 +1103,34 @@ elif _selected_system == "tab_thai":
                 st.markdown("---")
                 divination_result = calculate_nine_palace_divination(t_chart)
                 render_nine_palace_divination(divination_result)
+            with thai_tab_brahma:
+                from datetime import date as _date_cls
+                _bj_bd = _date_cls(birth_date.year, birth_date.month, birth_date.day)
+                _bj_weekday = _bj_bd.weekday()  # 0=Mon … 6=Sun
+                _bj_age = None
+                _bj_gender = None
+                _bj_age_col, _bj_gender_col = st.columns(2)
+                with _bj_age_col:
+                    _bj_age = st.number_input(
+                        "年齡 (Age)", min_value=1, max_value=120,
+                        value=max(1, _date_cls.today().year - birth_date.year),
+                        key="brahma_jati_age",
+                    )
+                with _bj_gender_col:
+                    _bj_gender = st.selectbox(
+                        "性別 (Gender)",
+                        options=["male", "female"],
+                        format_func=lambda x: "男 Male" if x == "male" else "女 Female",
+                        key="brahma_jati_gender",
+                    )
+                _bj_reading = compute_brahma_jati(
+                    ce_year=birth_date.year,
+                    month=birth_date.month,
+                    weekday=_bj_weekday,
+                    age=_bj_age,
+                    gender=_bj_gender,
+                )
+                render_brahma_jati(_bj_reading)
             _render_ai_button("tab_thai", t_chart, btn_key="thai")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
@@ -1106,6 +1138,7 @@ elif _selected_system == "tab_thai":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_thai"))
+        render_brahma_jati_browse()
 
 # --- 卡巴拉占星 ---
 elif _selected_system == "tab_kabbalistic":
@@ -1128,11 +1161,12 @@ elif _selected_system == "tab_arabic":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
-            arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref = st.tabs([
+            arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
                 t("arabic_subtab_chart"),
                 t("arabic_subtab_picatrix"),
                 t("arabic_subtab_shams"),
                 t("arabic_subtab_reference"),
+                t("arabic_subtab_ms164"),
             ])
 
             with arabic_subtab_chart:
@@ -1208,6 +1242,9 @@ elif _selected_system == "tab_arabic":
                 st.subheader(t("arabic_subtab_reference"))
                 _render_reference_library()
 
+            with arabic_subtab_ms164:
+                render_ms164_browse()
+
             # AI Analysis button for Arabic
             _render_ai_button("tab_arabic", a_chart, btn_key="arabic")
 
@@ -1215,11 +1252,12 @@ elif _selected_system == "tab_arabic":
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
     else:
-        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref = st.tabs([
+        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
             t("arabic_subtab_chart"),
             t("arabic_subtab_picatrix"),
             t("arabic_subtab_shams"),
             t("arabic_subtab_reference"),
+            t("arabic_subtab_ms164"),
         ])
 
         with arabic_subtab_chart:
@@ -1262,6 +1300,9 @@ elif _selected_system == "tab_arabic":
         with arabic_subtab_ref:
             st.subheader(t("arabic_subtab_reference"))
             _render_reference_library()
+
+        with arabic_subtab_ms164:
+            render_ms164_browse()
 
 # --- 瑪雅占星 ---
 elif _selected_system == "tab_maya":
