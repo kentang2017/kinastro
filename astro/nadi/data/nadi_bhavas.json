@@ -1,0 +1,159 @@
+{
+  "title": "納迪占星術 - 十二宮詳細解讀 (Meena 版)",
+  "source": "第一部第4章（Jeeva與Sarira檢視法） + 第二部 Bhava Phala Kanda",
+  "description": "每宮包含 Jeeva/Sarira 原則、核心規則、Sookshma 細相、以及書中真實命盤圖例",
+  "last_updated": "2026-04-16",
+  "bhavas": {
+    "1_lagna": {
+      "title": "第一宮（Lagna / Thanu Bhava）",
+      "jeeva": "命宮主星（Lagnadhipathi）",
+      "sarira": "命宮內行星",
+      "rules": [
+        "命宮與土星同Pada且同星座 → 長期慢性病",
+        "Vargothama Lagna 需命宮主星強勢才有效",
+        "Lagna 與 Saturn 在同一Pada → Dheerga Rogi（長期病患）"
+      ],
+      "examples": []
+    },
+    "2_dhana": {
+      "title": "第二宮（Dhana Bhava / 財帛宮）",
+      "jeeva": "第二宮主星",
+      "sarira": "第二宮內行星",
+      "rules": [
+        "第二宮主蘇克拉在毗舍佉星座（古魯主宰）且得迪格巴羅 → 極富",
+        "第二宮主月神在 Revathi 得 Digh Bala → 財運穩健",
+        "第二宮主 Ravi 在 Rohini（月神星座） → 比 Guru 星座更富",
+        "第二宮主在古魯星座且逆行 + 受 Kuja 剋 → 財務不佳",
+        "第二宮主 Kuja 在 Hastha（月神主宰） → 財富強大"
+      ],
+      "examples": [
+        {
+          "description": "命主極富",
+          "reason": "第二宮主蘇克拉在毗舍佉，古魯同時為第四宮主，得迪格巴羅之力",
+          "chart_ref": "第二部圖例2"
+        },
+        {
+          "description": "財運穩健",
+          "reason": "第二宮主 Chandra 在 Revathi，Revathi 主星為第四宮主",
+          "chart_ref": "第二部圖例5"
+        }
+      ]
+    },
+    "3_bhratru": {
+      "title": "第三宮（Bhratru Bhava / 兄弟宮）",
+      "jeeva": "第三宮主星",
+      "sarira": "第三宮內行星",
+      "rules": [],
+      "examples": []
+    },
+    "4_mathru": {
+      "title": "第四宮（Mathru Bhava）",
+      "jeeva": "第四宮主星",
+      "sarira": "第四宮內行星",
+      "rules": [
+        "第四宮主與第六宮主相合 → 出生在醫院",
+        "判斷是否為父親原配或繼室所生：第四宮主在 Punarvasu + 第八宮主也在 Punarvasu → 繼室所生"
+      ],
+      "examples": []
+    },
+    "5_putra": {
+      "title": "第五宮（Putra Bhava / 子嗣宮）",
+      "jeeva": "第五宮主星",
+      "sarira": "第五宮內行星",
+      "rules": [
+        "第五宮主在太陽/月亮/金星星座 → 子女少",
+        "第五宮主旺勢 → 子女數 ≈ 該宮位數 × 3",
+        "第五宮主弱勢 → 子女數 ≈ 該宮位數 × 2",
+        "Kuja 在第五宮 → 流產或墮胎",
+        "第五宮主受 Rahu 影響 → 子女有缺陷或早夭",
+        "第五宮主與第六/第八宮主相會 → 父子不和"
+      ],
+      "examples": [
+        {
+          "description": "僅有一女，無其他子女",
+          "reason": "第五宮主 Sukra 在 Rahu 星座",
+          "chart_ref": "第二部圖例1"
+        },
+        {
+          "description": "十六名子女",
+          "reason": "第五宮主 Sukra 在 Revathi 第四 Pada（旺勢×3）+ Guru 在 Revathi 第二 Pada（弱勢×2）",
+          "chart_ref": "第二部圖例4"
+        }
+      ]
+    },
+    "6_shathru": {
+      "title": "第六宮（Shathru Bhava / 疾病宮）",
+      "jeeva": "第六宮主星",
+      "sarira": "第六宮內行星",
+      "rules": [
+        "第六宮主與第八宮主相合 → 重大疾病",
+        "Sani 在 Lagna Kendra 特定 Pada → 長期疾病",
+        "月神與 Sani 同在 Anuradha → 癲癇",
+        "Kuja 與 Sukra 在 Makara → 瘻管",
+        "Budha 在 Hastha 受 Chandra 影響 → 黃疸"
+      ],
+      "examples": [
+        {
+          "description": "癲癇症",
+          "reason": "月神與 Sani 同在 Anuradha 且落第八宮",
+          "chart_ref": "第二部第六宮圖例1"
+        }
+      ]
+    },
+    "7_kalatra": {
+      "title": "第七宮（Kalatra Bhava / 婚姻宮）",
+      "jeeva": "第七宮主星",
+      "sarira": "第七宮內行星",
+      "rules": [
+        "Kuja 在 2、4、7、8、12 宮 → Kuja Dosha（但作者認為影響有限）",
+        "第七宮主受 Sani 強力相照 → 離婚",
+        "第七宮有三顆強力男性行星 → 娶三妻",
+        "第七宮主與太陽形成 Sathru Yoga → 婚姻不幸",
+        "第七宮主在 Rahu 星座 → 娶寡婦"
+      ],
+      "examples": []
+    },
+    "8_ayur": {
+      "title": "第八宮（Ayur Bhava / 壽命宮）",
+      "jeeva": "第八宮主星",
+      "sarira": "第八宮內行星",
+      "rules": [],
+      "examples": []
+    },
+    "9_pithru": {
+      "title": "第九宮（Pithru Bhava / 父親宮）",
+      "jeeva": "第九宮主星",
+      "sarira": "第九宮內行星",
+      "rules": [],
+      "examples": []
+    },
+    "10_karma": {
+      "title": "第十宮（Karma Bhava / 事業宮）",
+      "jeeva": "第十宮主星",
+      "sarira": "第十宮內行星",
+      "rules": [
+        "第十宮主受土星影響 → 從事皮革、廢鐵、水泥、石油等行業",
+        "第十宮主在 Anuradha → 警官或公職",
+        "第十宮主與 Ravi 同宮 → 醫生（西醫）"
+      ],
+      "examples": []
+    },
+    "11_labha": {
+      "title": "第十一宮（Labha Bhava / 得失宮）",
+      "jeeva": "第十一宮主星",
+      "sarira": "第十一宮內行星",
+      "rules": [],
+      "examples": []
+    },
+    "12_vyaya": {
+      "title": "第十二宮（Vyaya Bhava / 遊行宮）",
+      "jeeva": "第十二宮主星",
+      "sarira": "第十二宮內行星",
+      "rules": [
+        "第十二宮主在第七宮 → 婚姻後分居",
+        "第十二宮主受 Rahu 影響 → 海上貿易或外國旅行"
+      ],
+      "examples": []
+    }
+  }
+}
