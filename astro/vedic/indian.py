@@ -419,7 +419,10 @@ def _render_south_indian_grid(chart):
         "color:#e0e0e0;"
     )
 
-    html = '<table style="border-collapse:collapse; margin:auto; width:100%; table-layout:fixed;">'
+    html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
+        '<table style="border-collapse:collapse; margin:auto; width:100%; min-width:280px; table-layout:fixed;">'
+    )
     for row_idx, row in enumerate(si_grid):
         html += "<tr>"
         col_idx = 0
@@ -462,7 +465,7 @@ def _render_south_indian_grid(chart):
                 html += f'<td style="{style}">{cell_content}</td>'
             col_idx += 1
         html += "</tr>"
-    html += "</table>"
+    html += "</table></div>"
     st.markdown(html, unsafe_allow_html=True)
 
 
@@ -518,7 +521,10 @@ def _render_north_indian_grid(chart):
         "color:#e0e0e0;"
     )
 
-    html = '<table style="border-collapse:collapse; margin:auto; width:100%; table-layout:fixed;">'
+    html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
+        '<table style="border-collapse:collapse; margin:auto; width:100%; min-width:280px; table-layout:fixed;">'
+    )
     for row_idx, row in enumerate(ni_grid):
         html += "<tr>"
         col_idx = 0
@@ -563,7 +569,7 @@ def _render_north_indian_grid(chart):
                 html += f'<td style="{style}">{cell_content}</td>'
             col_idx += 1
         html += "</tr>"
-    html += "</table>"
+    html += "</table></div>"
     st.markdown(html, unsafe_allow_html=True)
 
     # 說明
