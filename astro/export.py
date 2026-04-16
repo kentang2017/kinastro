@@ -1,26 +1,13 @@
 """
 astro/export.py — 匯出功能 (Chart Export)
 
-Text summary, CSV, PDF (with CJK support), and SVG→PNG export for chart data.
+Text summary, CSV, and SVG→PNG export for chart data.
 """
 import csv
 import io
 import logging
-import os
-import urllib.request
-from dataclasses import asdict
 
 logger = logging.getLogger(__name__)
-
-# Directory used to cache downloaded fonts
-_FONTS_DIR = os.path.join(os.path.dirname(__file__), "data", "fonts")
-
-# Noto Sans CJK TC (Traditional Chinese) — hosted on Google Fonts CDN
-_NOTO_CJK_URL = (
-    "https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/TraditionalChinese/"
-    "NotoSansCJKtc-Regular.otf"
-)
-_NOTO_CJK_FILENAME = "NotoSansCJKtc-Regular.otf"
 
 
 def generate_chart_summary(chart_data):
@@ -61,164 +48,6 @@ def generate_planet_csv(planets):
                          p.get("sign",""), f"{p.get('degree',0):.2f}",
                          p.get("retrograde", False)])
     return out.getvalue()
-
-
-def _safe_latin1(text):
-    """Encode text to latin-1 safely, replacing unsupported characters."""
-    if not isinstance(text, str):
-        text = str(text)
-    return text.encode("latin-1", "replace").decode("latin-1")
-
-
-def _find_cjk_font():
-    """Search for an available CJK font on the system or in the project font cache."""
-    candidates = [
-        # Project font cache (downloaded on demand)
-        os.path.join(_FONTS_DIR, _NOTO_CJK_FILENAME),
-        # Linux — Noto CJK
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansCJKtc-Regular.otf",
-        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
-        # macOS
-        "/System/Library/Fonts/PingFang.ttc",
-        "/System/Library/Fonts/STHeiti Light.ttc",
-        # Windows
-        "C:/Windows/Fonts/msyh.ttc",
-        "C:/Windows/Fonts/msjh.ttc",
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            return p
-    return None
-
-
-def _download_cjk_font() -> str | None:
-    """Try to download a CJK font and cache it under *_FONTS_DIR*.
-
-    Returns the local file path on success, or *None* if the download fails.
-    """
-    os.makedirs(_FONTS_DIR, exist_ok=True)
-    dest = os.path.join(_FONTS_DIR, _NOTO_CJK_FILENAME)
-    if os.path.exists(dest):
-        return dest
-    try:
-        logger.info("Downloading CJK font from %s …", _NOTO_CJK_URL)
-        urllib.request.urlretrieve(_NOTO_CJK_URL, dest)  # noqa: S310
-        logger.info("CJK font saved to %s", dest)
-        return dest
-    except Exception as exc:
-        logger.warning("CJK font download failed: %s", exc)
-        # Remove any partial file
-        if os.path.exists(dest):
-            try:
-                os.remove(dest)
-            except OSError:
-                pass
-        return None
-
-
-def _ensure_cjk_font() -> str | None:
-    """Return path to a CJK font, downloading it if necessary."""
-    font_path = _find_cjk_font()
-    if font_path:
-        return font_path
-    return _download_cjk_font()
-
-
-def generate_chart_pdf(chart_data, svg_string: str | None = None):
-    """Generate a full-page PDF from chart data with optional chart image.
-
-    When *svg_string* is provided the chart wheel is converted to a PNG and
-    placed at the top of the page; the text data (planets, houses, extra
-    sections) follows below.  CJK text is rendered correctly when a suitable
-    font is available (system-installed or auto-downloaded).
-    """
-    try:
-        from fpdf import FPDF
-        from fpdf.enums import XPos, YPos
-    except ImportError:
-        raise RuntimeError("fpdf2 not installed. Run: pip install fpdf2")
-
-    pdf = FPDF()
-    pdf.add_page()
-
-    # ── CJK font setup ──────────────────────────────────────────
-    cjk_font = _ensure_cjk_font()
-    if cjk_font:
-        try:
-            pdf.add_font("CJK", "", cjk_font)
-            cjk_ok = True
-        except Exception:
-            cjk_ok = False
-    else:
-        cjk_ok = False
-
-    def _set_font(size: int, bold: bool = False):
-        if cjk_ok:
-            pdf.set_font("CJK", "", size)
-        else:
-            pdf.set_font("Helvetica", "B" if bold else "", size)
-
-    _text = (lambda s: s) if cjk_ok else _safe_latin1
-
-    # Layout constants
-    _MAX_IMAGE_WIDTH_MM = 180    # max chart image width in mm (fits A4 with 15 mm margins)
-    _IMAGE_ASPECT_RATIO = 0.75   # approximate height/width ratio for the chart wheel
-    _IMAGE_BOTTOM_GAP_MM = 4     # vertical gap between image and text
-
-    # ── Chart image (SVG → PNG) ──────────────────────────────────
-    if svg_string:
-        png_bytes = svg_to_png(svg_string, width=1200)
-        if png_bytes:
-            img_io = io.BytesIO(png_bytes)
-            # Centre the image; respect the maximum width limit
-            page_w = pdf.w - pdf.l_margin - pdf.r_margin  # usable width in mm
-            img_w = min(page_w, _MAX_IMAGE_WIDTH_MM)
-            img_x = pdf.l_margin + (page_w - img_w) / 2
-            pdf.image(img_io, x=img_x, y=pdf.get_y(), w=img_w)
-            pdf.ln(img_w * _IMAGE_ASPECT_RATIO + _IMAGE_BOTTOM_GAP_MM)
-
-    # ── Title ────────────────────────────────────────────────────
-    _set_font(16, bold=True)
-    title = chart_data.get("system", "Astrology Chart")
-    pdf.cell(0, 10, _text(title), new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
-
-    _set_font(10)
-    pdf.cell(0, 6, _text(f"Date: {chart_data.get('datetime', '')}"),
-             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.cell(0, 6, _text(f"Location: {chart_data.get('location', '')}"),
-             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    if chart_data.get("ascendant"):
-        pdf.cell(0, 6, _text(f"Ascendant: {chart_data['ascendant']}"),
-                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.ln(4)
-
-    # ── Planet table ─────────────────────────────────────────────
-    _set_font(10, bold=True)
-    pdf.cell(50, 7, _text("Planet"), border=1)
-    pdf.cell(40, 7, _text("Sign"), border=1)
-    pdf.cell(30, 7, _text("Degree"), border=1)
-    pdf.cell(20, 7, _text("R"), border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-    _set_font(9)
-    for p in chart_data.get("planets", []):
-        pdf.cell(50, 6, _text(p.get("name", "")), border=1)
-        pdf.cell(40, 6, _text(p.get("sign", "")), border=1)
-        pdf.cell(30, 6, f"{p.get('degree', 0):.2f}", border=1)
-        pdf.cell(20, 6, "R" if p.get("retrograde") else "", border=1,
-                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-    # ── Extra sections ───────────────────────────────────────────
-    for sec in chart_data.get("extra_sections", []):
-        pdf.ln(4)
-        _set_font(10, bold=True)
-        pdf.cell(0, 7, _text(sec.get("title", "")),
-                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        _set_font(9)
-        pdf.multi_cell(0, 5, _text(sec.get("content", "")))
-
-    return bytes(pdf.output())
 
 
 def svg_to_png(svg_string: str, width: int = 800) -> bytes | None:
@@ -269,7 +98,7 @@ def chinese_chart_to_dict(chart):
 
 
 def generic_chart_to_dict(chart_obj, system_name=""):
-    """Convert any chart object to the standardized dict expected by PDF/export.
+    """Convert any chart object to the standardized dict expected by export.
 
     Works with all 15 astrology systems by introspecting common attributes.
     Falls back gracefully when attributes are missing.
@@ -412,10 +241,7 @@ def generate_share_url(chart_data):
 
 
 def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
-    """Render one-click export row: TXT · CSV · PNG · Share link.
-
-    PDF generation has been moved to the sidebar for consistent availability.
-    """
+    """Render one-click export row: TXT · CSV · PNG · Share link."""
     import streamlit as st
 
     st.markdown('<div class="export-btn-row">', unsafe_allow_html=True)
@@ -457,7 +283,6 @@ def render_unified_export(chart_dict, system_name="", key_prefix="export",
                           svg_string=None):
     """Unified export buttons: TXT · CSV · JSON (+ PNG if SVG provided).
 
-    PDF generation has been moved to the sidebar for consistent availability.
     A more comprehensive version of ``render_download_buttons`` that adds
     JSON export and uses ``width="stretch"`` per project conventions.
     """
