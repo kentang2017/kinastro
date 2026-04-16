@@ -375,16 +375,19 @@ with st.sidebar:
     )
     gender = "male" if gender_choice == _male_label else "female"
 
-    # ── Astrology system selector (eye-catching buttons) ────────
+    # ── Astrology system selector (categorised for beginners) ──
     st.divider()
     st.markdown("🔮 " + t("sidebar_system_label"))
 
-    _SYSTEM_KEYS = [
-        "tab_chinese", "tab_ziwei", "tab_western", "tab_indian",
-        "tab_sukkayodo", "tab_thai", "tab_kabbalistic", "tab_arabic",
-        "tab_maya", "tab_mahabote", "tab_decans", "tab_nadi",
-        "tab_zurkhai", "tab_hellenistic", "tab_chinstar",
+    # Categorised system layout for easier navigation
+    _SYSTEM_CATEGORIES = [
+        ("cat_popular", ["tab_western", "tab_ziwei"]),
+        ("cat_chinese", ["tab_chinese", "tab_chinstar"]),
+        ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
+        ("cat_asian", ["tab_indian", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_nadi"]),
+        ("cat_ancient", ["tab_arabic", "tab_maya", "tab_decans"]),
     ]
+
     _SYSTEM_LABELS = {
         "tab_chinese": t("tab_chinese"),
         "tab_ziwei": t("tab_ziwei"),
@@ -403,24 +406,57 @@ with st.sidebar:
         "tab_chinstar": t("tab_chinstar"),
     }
 
+    # Short hints for each system (beginner-friendly)
+    _SYSTEM_HINTS = {
+        "tab_western": t("sys_hint_western"),
+        "tab_ziwei": t("sys_hint_ziwei"),
+        "tab_chinese": t("sys_hint_chinese"),
+        "tab_indian": t("sys_hint_indian"),
+        "tab_thai": t("sys_hint_thai"),
+        "tab_kabbalistic": t("sys_hint_kabbalistic"),
+        "tab_arabic": t("sys_hint_arabic"),
+        "tab_maya": t("sys_hint_maya"),
+        "tab_mahabote": t("sys_hint_mahabote"),
+        "tab_decans": t("sys_hint_decans"),
+        "tab_nadi": t("sys_hint_nadi"),
+        "tab_zurkhai": t("sys_hint_zurkhai"),
+        "tab_hellenistic": t("sys_hint_hellenistic"),
+        "tab_sukkayodo": t("sys_hint_sukkayodo"),
+        "tab_chinstar": t("sys_hint_chinstar"),
+    }
+
+    _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
+    _cur_lang = st.session_state.get("lang", "zh")
+
     # Resolve current selection
     if "_system_select" not in st.session_state:
-        st.session_state["_system_select"] = _SYSTEM_KEYS[0]
+        st.session_state["_system_select"] = "tab_western"
     _selected_system = st.session_state["_system_select"]
 
-    # Render buttons — each as a Streamlit button for proper state handling
-    for _sk in _SYSTEM_KEYS:
-        _is_active = (_sk == _selected_system)
-        _btn_type = "primary" if _is_active else "secondary"
-        if st.button(
-            _SYSTEM_LABELS[_sk],
-            key=f"_sys_btn_{_sk}",
-            use_container_width=True,
-            type=_btn_type,
-        ):
-            st.session_state["_system_select"] = _sk
-            _selected_system = _sk
-            st.rerun()
+    # Render categorised buttons
+    for _cat_key, _cat_systems in _SYSTEM_CATEGORIES:
+        st.markdown(f'<div class="sidebar-cat">{t(_cat_key)}</div>', unsafe_allow_html=True)
+        for _sk in _cat_systems:
+            _is_active = (_sk == _selected_system)
+            _btn_type = "primary" if _is_active else "secondary"
+            _badge = ""
+            if _sk in _BEGINNER_SYSTEMS:
+                _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
+                _badge = f' <span class="beginner-badge">{_badge_text}</span>'
+            if st.button(
+                _SYSTEM_LABELS[_sk],
+                key=f"_sys_btn_{_sk}",
+                use_container_width=True,
+                type=_btn_type,
+                help=_SYSTEM_HINTS.get(_sk, ""),
+            ):
+                st.session_state["_system_select"] = _sk
+                _selected_system = _sk
+                st.rerun()
+            # Show hint below button
+            _hint = _SYSTEM_HINTS.get(_sk, "")
+            if _hint:
+                st.markdown(f'<div class="sys-desc">{_hint}{_badge}</div>', unsafe_allow_html=True)
 
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()
@@ -612,6 +648,41 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
                 st.error(t("ai_error").format(str(e)))
 
 # ============================================================
+# Welcome / Onboarding Section for Beginners
+# 歡迎頁面 — 為初學者提供引導
+# ============================================================
+
+def _render_welcome():
+    """Render a welcoming onboarding section for new users."""
+    st.markdown(
+        f'<div class="welcome-hero">'
+        f'<h2>{t("welcome_hero_title")}</h2>'
+        f'<p>{t("welcome_hero_body")}</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    _step_cols = st.columns(3)
+    _steps = [
+        ("1️⃣", t("welcome_step1_title"), t("welcome_step1_body")),
+        ("2️⃣", t("welcome_step2_title"), t("welcome_step2_body")),
+        ("3️⃣", t("welcome_step3_title"), t("welcome_step3_body")),
+    ]
+    for _i, (_icon, _title, _body) in enumerate(_steps):
+        with _step_cols[_i]:
+            st.markdown(
+                f'<div class="step-card">'
+                f'<div class="step-num">{_i + 1}</div>'
+                f'<h4>{_icon} {_title}</h4>'
+                f'<p>{_body}</p>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.info(t("welcome_quick_start"))
+
+
+# ============================================================
 # Main Area — Render the selected astrology system
 # 主區域 — 根據側邊欄選擇顯示對應占星體系
 # ============================================================
@@ -628,6 +699,11 @@ st.session_state["_calc_gender"] = gender
 st.session_state["_calculated"] = True
 
 _is_calculated = True
+
+# ── Show welcome onboarding for first-time visitors ────────────
+if "_has_seen_welcome" not in st.session_state:
+    _render_welcome()
+    st.session_state["_has_seen_welcome"] = True
 
 # --- 七政四餘（中國） ---
 if _selected_system == "tab_chinese":
