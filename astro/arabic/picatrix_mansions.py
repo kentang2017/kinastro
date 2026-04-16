@@ -13,6 +13,7 @@ Greer & Warnock 2011 translation / Attrell & Porreca 2019
 
 from __future__ import annotations
 
+import json
 import math
 import os
 from dataclasses import dataclass, field
@@ -1268,8 +1269,11 @@ def _render_talisman_intents_table() -> None:
 # ── Planetary Prayers (Book II) ──────────────────────────────────────────
 
 def _load_planetary_prayers() -> dict:
-    """Load picatrix_planetary_prayers.json."""
-    import json
+    """Load and return the Picatrix planetary prayers/invocations data.
+
+    Returns a dict with keys: source, description, prayers (list of 7),
+    usage_notes, license_suggestion.
+    """
     _prayers_path = os.path.join(
         os.path.dirname(__file__), os.pardir, "data", "picatrix_planetary_prayers.json"
     )
