@@ -154,7 +154,7 @@ def generate_chart_pdf(chart_data):
             pdf.set_font("Helvetica", "", 9)
         pdf.multi_cell(0, 5, _text(sec.get("content", "")))
 
-    return pdf.output()
+    return bytes(pdf.output())
 
 
 def svg_to_png(svg_string: str, width: int = 800) -> bytes | None:
