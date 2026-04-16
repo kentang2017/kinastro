@@ -865,8 +865,6 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
 
     svg_string = "\n".join(svg)
     st.markdown(svg_string, unsafe_allow_html=True)
-    # Store SVG in session state so the sidebar PDF generator can embed it
-    st.session_state["_chart_svg_for_pdf"] = svg_string
     return svg_string
 
 

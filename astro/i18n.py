@@ -13,46 +13,10 @@ TRANSLATIONS = {
         "zh": """
 🌐 **多體系占星排盤系統** — 涵蓋東西方 15 大占星傳統
 
-| 體系 | 說明 |
-|------|------|
-| 🀄 七政四餘（中國） | 日月五星＋四餘虛星，二十八宿 |
-| 🌟 紫微斗數 | 十四主星、十二宮位、大運流年 |
-| 🌍 西洋占星 | 回歸黃道、Placidus 宮位、相位分析 |
-| 🙏 印度占星（Jyotish） | 恆星黃道、27 宿、Vimshottari 大運 |
-| 🈳 宿曜道 | 日本密教、二十七宿吉凶 |
-| 🐘 泰國占星 | 泰國傳統行星神煞系統 |
-| ✡ 卡巴拉占星 | 生命之樹、Sephirot 對應 |
-| ☪ 阿拉伯占星 | 月宿（Manzil）、Picatrix、太陽知識大全 |
-| 🏺 瑪雅占星 | 卓爾金曆、13 月亮曆 |
-| 🇲🇲 緬甸占星（Mahabote） | 七曜守護、出生動物圖騰 |
-| 🏛️ 古埃及十度區間 | 36 Decans、天狼星偕日升 |
-| 🔱 納迪占星 | 南印度葉片命書傳承 |
-| 🇲🇳 蒙古祖爾海 | 藏蒙占星曆算傳統 |
-| 🏛️ 希臘占星 | 赫勒尼斯傳統、Lot 命運點 |
-| 🐦 萬化仙禽 | 中國古典禽星體系 |
-
 > 📝 **使用方式**：在左側欄輸入出生日期、時間、地點，選擇占星體系，點擊「開始排盤」即可。
 """,
         "en": """
 🌐 **Multi-System Astrology Platform** — 15 Traditions from East & West
-
-| System | Description |
-|--------|-------------|
-| 🀄 Seven Governors (Chinese) | Sun, Moon & 5 planets + 4 virtual stars, 28 mansions |
-| 🌟 Zi Wei Dou Shu | 14 major stars, 12 palaces, major/minor cycles |
-| 🌍 Western Astrology | Tropical zodiac, Placidus houses, aspect analysis |
-| 🙏 Indian Astrology (Jyotish) | Sidereal zodiac, 27 Nakshatras, Vimshottari Dasha |
-| 🈳 Sukkayodo | Japanese esoteric 27-mansion system |
-| 🐘 Thai Astrology | Traditional Thai planetary deity system |
-| ✡ Kabbalistic Astrology | Tree of Life, Sephirot correspondences |
-| ☪ Arabic Astrology | Manzil mansions, Picatrix, Shams al-Maʻārif |
-| 🏺 Maya Astrology | Tzolkin calendar, 13-moon calendar |
-| 🇲🇲 Myanmar (Mahabote) | Seven-planet guardian, birth animal totem |
-| 🏛️ Egyptian Decans | 36 Decans, heliacal rising of Sirius |
-| 🔱 Nadi Jyotish | South Indian leaf manuscript tradition |
-| 🇲🇳 Mongolian Zurkhai | Tibeto-Mongolian astro-calendar tradition |
-| 🏛️ Hellenistic Astrology | Classical Greek tradition, Lots |
-| 🐦 WanHua XianQin | Classical Chinese bird-star system |
 
 > 📝 **How to use**: Enter birth date, time, and location in the sidebar, select a system, and click "Calculate Chart".
 """,
@@ -897,9 +861,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
 
     # ── Export ──────────────────────────────────────────────
     "export_header": {"zh": "匯出", "en": "Export"},
-    "sidebar_pdf_download": {"zh": "下載 PDF 報告", "en": "Download PDF Report"},
-    "sidebar_pdf_unavailable": {"zh": "PDF 暫時無法生成", "en": "PDF unavailable"},
-    "sidebar_pdf_hint": {"zh": "請先起盤以生成 PDF", "en": "Calculate a chart first to generate PDF"},
+    # PDF keys removed — PDF generation has been removed
 
     # ── Natal summary / Interpretations ────────────────────
     "natal_summary_header": {"zh": "📝 命盤解讀 / Natal Summary", "en": "📝 Natal Summary"},
