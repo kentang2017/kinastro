@@ -363,9 +363,6 @@ with st.sidebar:
         )
         location_name = t("custom_location")
 
-    # 排盤按鈕
-    calculate = st.button(t("calculate_btn"), width='stretch', type="primary")
-
     # 性別（用於七政四餘宮位方向）
     st.subheader(t("gender_header"))
     _male_label = t("male")
@@ -619,19 +616,18 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
 # 主區域 — 根據側邊欄選擇顯示對應占星體系
 # ============================================================
 
-if calculate:
-    _params = dict(
-        year=birth_date.year, month=birth_date.month, day=birth_date.day,
-        hour=birth_time.hour, minute=birth_time.minute,
-        timezone=input_tz, latitude=input_lat, longitude=input_lon,
-        location_name=location_name,
-    )
-    # Store params in session_state for lazy per-tab computation
-    st.session_state["_calc_params"] = _params
-    st.session_state["_calc_gender"] = gender
-    st.session_state["_calculated"] = True
+_params = dict(
+    year=birth_date.year, month=birth_date.month, day=birth_date.day,
+    hour=birth_time.hour, minute=birth_time.minute,
+    timezone=input_tz, latitude=input_lat, longitude=input_lon,
+    location_name=location_name,
+)
+# Store params in session_state for lazy per-tab computation
+st.session_state["_calc_params"] = _params
+st.session_state["_calc_gender"] = gender
+st.session_state["_calculated"] = True
 
-_is_calculated = st.session_state.get("_calculated", False)
+_is_calculated = True
 
 # --- 七政四餘（中國） ---
 if _selected_system == "tab_chinese":
