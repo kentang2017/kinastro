@@ -204,6 +204,124 @@ def chinese_chart_to_dict(chart):
             "planets": planets, "houses": []}
 
 
+def generic_chart_to_dict(chart_obj, system_name=""):
+    """Convert any chart object to the standardized dict expected by PDF/export.
+
+    Works with all 15 astrology systems by introspecting common attributes.
+    Falls back gracefully when attributes are missing.
+    """
+    d = {
+        "system": system_name,
+        "datetime": "",
+        "location": getattr(chart_obj, "location_name", ""),
+        "ascendant": "",
+        "planets": [],
+        "houses": [],
+        "extra_sections": [],
+    }
+
+    # Date / time
+    _y = getattr(chart_obj, "year", None)
+    _m = getattr(chart_obj, "month", None)
+    _day = getattr(chart_obj, "day", None)
+    if _y and _m and _day:
+        _hr = getattr(chart_obj, "hour", 0)
+        _mi = getattr(chart_obj, "minute", 0)
+        d["datetime"] = f"{_y}-{_m:02d}-{_day:02d} {_hr:02d}:{_mi:02d}"
+
+    # Ascendant
+    for attr in ("asc_sign", "asc_rashi", "ascendant"):
+        val = getattr(chart_obj, attr, None)
+        if val and isinstance(val, str):
+            d["ascendant"] = val
+            break
+
+    # Planets (most systems)
+    raw_planets = getattr(chart_obj, "planets", None)
+    if raw_planets and isinstance(raw_planets, (list, tuple)):
+        for p in raw_planets:
+            entry = {
+                "name": getattr(p, "name", str(p)),
+                "longitude": getattr(p, "longitude", 0),
+                "sign": (
+                    getattr(p, "sign", None)
+                    or getattr(p, "rashi", None)
+                    or getattr(p, "sign_chinese", None)
+                    or ""
+                ),
+                "degree": round(getattr(p, "sign_degree", 0) or (getattr(p, "longitude", 0) % 30), 2),
+                "retrograde": getattr(p, "retrograde", False),
+            }
+            d["planets"].append(entry)
+
+    # Hellenistic: planet_longitudes dict
+    if not d["planets"]:
+        _plongs = getattr(chart_obj, "planet_longitudes", None)
+        if _plongs and isinstance(_plongs, dict):
+            for name, lon in _plongs.items():
+                d["planets"].append({
+                    "name": name,
+                    "longitude": lon,
+                    "sign": "",
+                    "degree": round(lon % 30, 2),
+                    "retrograde": False,
+                })
+
+    # Ziwei palaces
+    _palaces = getattr(chart_obj, "palaces", None)
+    if _palaces and isinstance(_palaces, (list, tuple)) and not d["planets"]:
+        lines = []
+        for pal in _palaces:
+            _pname = getattr(pal, "name", "")
+            _pbranch = getattr(pal, "branch", "")
+            _stars = getattr(pal, "stars", [])
+            star_str = ", ".join(str(s) for s in _stars) if _stars else "—"
+            lines.append(f"{_pname} ({_pbranch}): {star_str}")
+        d["extra_sections"].append({"title": "Palaces / 宮位", "content": "\n".join(lines)})
+
+    # Mahabote houses
+    _mhouses = getattr(chart_obj, "houses", None)
+    if _mhouses and isinstance(_mhouses, (list, tuple)) and not d["planets"]:
+        lines = []
+        for h in _mhouses:
+            _hname = getattr(h, "name_en", "") or getattr(h, "name", "")
+            _hmeaning = getattr(h, "meaning", "") or getattr(h, "name_myanmar", "")
+            lines.append(f"{_hname}: {_hmeaning}")
+        if lines:
+            d["extra_sections"].append({"title": "Houses", "content": "\n".join(lines)})
+
+    # Zurkhai animal/element info
+    _ba = getattr(chart_obj, "birth_animal", None)
+    _be = getattr(chart_obj, "birth_element", None)
+    if _ba or _be:
+        parts = []
+        if _ba:
+            parts.append(f"Birth Animal: {_ba}")
+        if _be:
+            parts.append(f"Birth Element: {_be}")
+        _rel_cn = getattr(chart_obj, "year_element_relation_cn", "")
+        _rel_en = getattr(chart_obj, "year_element_relation_en", "")
+        if _rel_cn or _rel_en:
+            parts.append(f"Year Element Relation: {_rel_cn} / {_rel_en}")
+        d["extra_sections"].append({"title": "Zurkhai Info", "content": "\n".join(parts)})
+
+    # Mayan calendar info
+    _lcs = getattr(chart_obj, "long_count_str", None)
+    if _lcs:
+        parts = [f"Long Count: {_lcs}"]
+        _tzn = getattr(chart_obj, "tzolkin_number", "")
+        _tzd = getattr(chart_obj, "tzolkin_day_name", "")
+        if _tzn and _tzd:
+            parts.append(f"Tzolkin: {_tzn} {_tzd}")
+        _hd = getattr(chart_obj, "haab_day", "")
+        _hm = getattr(chart_obj, "haab_month", "")
+        if _hm:
+            parts.append(f"Haab: {_hd} {_hm}")
+        d["extra_sections"].append({"title": "Mayan Calendar", "content": "\n".join(parts)})
+
+    return d
+
+
 def generate_share_url(chart_data):
     """Generate a share URL containing chart parameters as query string.
 
@@ -225,11 +343,14 @@ def generate_share_url(chart_data):
 
 
 def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
-    """Render one-click export row: TXT · CSV · PDF · PNG · Share link."""
+    """Render one-click export row: TXT · CSV · PNG · Share link.
+
+    PDF generation has been moved to the sidebar for consistent availability.
+    """
     import streamlit as st
 
     st.markdown('<div class="export-btn-row">', unsafe_allow_html=True)
-    cols = st.columns(5 if svg_string else 4)
+    cols = st.columns(4 if svg_string else 3)
 
     with cols[0]:
         txt = generate_chart_summary(chart_data)
@@ -241,17 +362,9 @@ def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
         st.download_button("📊 CSV", data=csv_str,
                           file_name="planet_data.csv",
                           mime="text/csv", key=f"{key_prefix}_csv")
-    with cols[2]:
-        try:
-            pdf_bytes = generate_chart_pdf(chart_data)
-            st.download_button("📑 PDF", data=pdf_bytes,
-                              file_name="chart_report.pdf",
-                              mime="application/pdf", key=f"{key_prefix}_pdf")
-        except Exception:
-            st.caption("PDF unavailable")
 
-    _png_col_idx = 3 if svg_string else None
-    _share_col_idx = 4 if svg_string else 3
+    _png_col_idx = 2 if svg_string else None
+    _share_col_idx = 3 if svg_string else 2
 
     if svg_string:
         with cols[_png_col_idx]:
@@ -273,8 +386,9 @@ def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
 
 def render_unified_export(chart_dict, system_name="", key_prefix="export",
                           svg_string=None):
-    """Unified export buttons: TXT · CSV · PDF · JSON (+ PNG if SVG provided).
+    """Unified export buttons: TXT · CSV · JSON (+ PNG if SVG provided).
 
+    PDF generation has been moved to the sidebar for consistent availability.
     A more comprehensive version of ``render_download_buttons`` that adds
     JSON export and uses ``width="stretch"`` per project conventions.
     """
@@ -282,7 +396,7 @@ def render_unified_export(chart_dict, system_name="", key_prefix="export",
     import streamlit as st
 
     _has_svg = svg_string is not None
-    _ncols = 5 if _has_svg else 4
+    _ncols = 4 if _has_svg else 3
     cols = st.columns(_ncols)
 
     with cols[0]:
@@ -303,22 +417,10 @@ def render_unified_export(chart_dict, system_name="", key_prefix="export",
             key=f"{key_prefix}_u_csv",
             width="stretch",
         )
-    with cols[2]:
-        try:
-            _pdf = generate_chart_pdf(chart_dict)
-            st.download_button(
-                "📑 PDF", data=_pdf,
-                file_name=f"{key_prefix}_chart.pdf",
-                mime="application/pdf",
-                key=f"{key_prefix}_u_pdf",
-                width="stretch",
-            )
-        except Exception:
-            st.caption("PDF unavailable")
 
-    _json_col = 3 if not _has_svg else 4
+    _json_col = 2 if not _has_svg else 3
     if _has_svg:
-        with cols[3]:
+        with cols[2]:
             _png = svg_to_png(svg_string)
             if _png:
                 st.download_button(

@@ -897,6 +897,9 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
 
     # ── Export ──────────────────────────────────────────────
     "export_header": {"zh": "匯出", "en": "Export"},
+    "sidebar_pdf_download": {"zh": "下載 PDF 報告", "en": "Download PDF Report"},
+    "sidebar_pdf_unavailable": {"zh": "PDF 暫時無法生成", "en": "PDF unavailable"},
+    "sidebar_pdf_hint": {"zh": "請先起盤以生成 PDF", "en": "Calculate a chart first to generate PDF"},
 
     # ── Natal summary / Interpretations ────────────────────
     "natal_summary_header": {"zh": "📝 命盤解讀 / Natal Summary", "en": "📝 Natal Summary"},

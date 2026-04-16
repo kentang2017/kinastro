@@ -63,7 +63,7 @@ from astro.western.hellenistic import compute_hellenistic_chart, render_hellenis
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
 from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.western.asteroids import compute_asteroids
-from astro.export import render_download_buttons, western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict
+from astro.export import render_download_buttons, western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict, generate_chart_pdf
 from astro.natal_summary import generate_natal_summary
 from astro.interpretations import (
     get_transit_reading, get_synastry_reading, get_dasha_reading,
@@ -419,6 +419,25 @@ with st.sidebar:
         key="_system_select",
     )
 
+    # ── PDF Export (sidebar) — available for all systems ──────
+    st.divider()
+    _pdf_chart_data = st.session_state.get("_chart_data_for_pdf")
+    if _pdf_chart_data:
+        try:
+            _pdf_bytes = generate_chart_pdf(_pdf_chart_data)
+            st.download_button(
+                "📑 " + t("sidebar_pdf_download"),
+                data=_pdf_bytes,
+                file_name="chart_report.pdf",
+                mime="application/pdf",
+                key="_sidebar_pdf",
+                width="stretch",
+            )
+        except Exception:
+            st.caption(t("sidebar_pdf_unavailable"))
+    else:
+        st.caption(t("sidebar_pdf_hint"))
+
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()
     with st.expander(t("ai_settings_header"), expanded=False):
@@ -635,6 +654,7 @@ if _selected_system == "tab_chinese":
             _g = st.session_state["_calc_gender"]
             with st.spinner(t("spinner_chinese")):
                 chart = compute_chart(**_p, gender=_g)
+            st.session_state["_chart_data_for_pdf"] = chinese_chart_to_dict(chart)
 
             # 子 tabs for the Chinese chart
             _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect = st.tabs([
@@ -761,6 +781,7 @@ elif _selected_system == "tab_ziwei":
             _gender = st.session_state.get("_calc_gender", "男")
             with st.spinner(t("spinner_ziwei")):
                 zw_chart = compute_ziwei_chart(**_p, gender=_gender)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(zw_chart, t("tab_ziwei"))
             render_ziwei_chart(zw_chart)
             _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei")
         except Exception as _e:
@@ -783,6 +804,7 @@ elif _selected_system == "tab_western":
             with st.spinner(t("spinner_western")):
                 w_params = dict(**_p, sidereal=sidereal_mode)
                 w_chart = compute_western_chart(**w_params)
+            st.session_state["_chart_data_for_pdf"] = western_chart_to_dict(w_chart)
 
             _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity = st.tabs([
                 t("western_subtab_natal"),
@@ -955,6 +977,7 @@ elif _selected_system == "tab_indian":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_indian")):
                 v_chart = compute_vedic_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = vedic_chart_to_dict(v_chart)
 
             _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs = st.tabs([
                 t("vedic_subtab_rashi"),
@@ -1074,6 +1097,7 @@ elif _selected_system == "tab_sukkayodo":
             st.markdown(t("desc_sukkayodo"))
             with st.spinner(t("spinner_indian")):
                 _v_chart_sukka = compute_vedic_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(_v_chart_sukka, t("tab_sukkayodo"))
             render_sukkayodo_chart(_v_chart_sukka)
             _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo")
         except Exception as _e:
@@ -1090,6 +1114,7 @@ elif _selected_system == "tab_thai":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_thai")):
                 t_chart = compute_thai_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(t_chart, t("tab_thai"))
             thai_tab_chart, thai_tab_nine, thai_tab_brahma = st.tabs(
                 [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
             )
@@ -1147,6 +1172,7 @@ elif _selected_system == "tab_kabbalistic":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_kabbalistic")):
                 k_chart = compute_kabbalistic_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(k_chart, t("tab_kabbalistic"))
             render_kabbalistic_chart(k_chart)
             _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic")
         except Exception as _e:
@@ -1172,6 +1198,7 @@ elif _selected_system == "tab_arabic":
             with arabic_subtab_chart:
                 with st.spinner(t("spinner_arabic")):
                     a_chart = compute_arabic_chart(**_p)
+                st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(a_chart, t("tab_arabic"))
                 render_arabic_chart(a_chart)
 
             # --- Picatrix 星體魔法 ---
@@ -1311,6 +1338,7 @@ elif _selected_system == "tab_maya":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_maya")):
                 m_chart = compute_maya_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(m_chart, t("tab_maya"))
             render_maya_chart(m_chart)
             _render_ai_button("tab_maya", m_chart, btn_key="maya")
         except Exception as _e:
@@ -1327,6 +1355,7 @@ elif _selected_system == "tab_mahabote":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_mahabote")):
                 mb_chart = compute_mahabote_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(mb_chart, t("tab_mahabote"))
             render_mahabote_chart(mb_chart)
             _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote")
         except Exception as _e:
@@ -1343,6 +1372,7 @@ elif _selected_system == "tab_decans":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_decans")):
                 dc_chart = compute_decan_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(dc_chart, t("tab_decans"))
             render_decan_chart(dc_chart)
             _render_ai_button("tab_decans", dc_chart, btn_key="decans")
         except Exception as _e:
@@ -1359,6 +1389,7 @@ elif _selected_system == "tab_nadi":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_nadi")):
                 nadi_chart = compute_nadi_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(nadi_chart, t("tab_nadi"))
             render_nadi_chart(nadi_chart)
             _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi")
         except Exception as _e:
@@ -1375,6 +1406,7 @@ elif _selected_system == "tab_zurkhai":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_zurkhai")):
                 zk_chart = compute_zurkhai_chart(**_p)
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(zk_chart, t("tab_zurkhai"))
             render_zurkhai_chart(zk_chart)
             _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai")
         except Exception as _e:
@@ -1399,6 +1431,7 @@ elif _selected_system == "tab_hellenistic":
                     birth_year=birth_date.year,
                     current_year=datetime.now().year,
                 )
+            st.session_state["_chart_data_for_pdf"] = generic_chart_to_dict(_hellen_chart, t("tab_hellenistic"))
             _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots, _h_tab_centiloquy = st.tabs([
                 t("hellen_subtab_chart"),
                 t("hellen_subtab_natal"),
@@ -1558,6 +1591,26 @@ elif _selected_system == "tab_chinstar":
                     hour=int(_chinstar_hour),
                     gender=_cs_gender,
                 )
+            # Chinstar returns a dict, build a minimal chart_data for PDF
+            _cs_pdf = {
+                "system": t("tab_chinstar"),
+                "datetime": f"{int(_chinstar_year)}-{int(_chinstar_month):02d}-{int(_chinstar_day):02d}",
+                "location": location_name if _is_calculated else "",
+                "ascendant": _cs_chart.get("basic_info", {}).get("ming_gong", ""),
+                "planets": [],
+                "houses": [],
+                "extra_sections": [],
+            }
+            _cs_bi = _cs_chart.get("basic_info", {})
+            _cs_stars = _cs_chart.get("stars", {})
+            _cs_info_lines = []
+            for k, v in _cs_bi.items():
+                _cs_info_lines.append(f"{k}: {v}")
+            if _cs_info_lines:
+                _cs_pdf["extra_sections"].append({"title": "Basic Info / 基本資料", "content": "\n".join(_cs_info_lines)})
+            if _cs_stars.get("ming_xing"):
+                _cs_pdf["extra_sections"].append({"title": "Stars / 星", "content": f"命星: {_cs_stars['ming_xing']}"})
+            st.session_state["_chart_data_for_pdf"] = _cs_pdf
 
             _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian, _cs_tab_text = st.tabs([
                 t("chinstar_subtab_chart"),
