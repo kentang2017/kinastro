@@ -17,9 +17,121 @@
 使用 pyswisseph 以恆星黃道 (sidereal zodiac / Lahiri ayanamsa) 計算。
 """
 
+import json
+import os
+import re
+
 import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
+
+# ── Nadi JSON Data ────────────────────────────────────────────────────────────
+_NADI_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "nadi", "data")
+
+
+@st.cache_data(show_spinner=False)
+def _load_nadi_json(filename: str) -> dict:
+    path = os.path.join(_NADI_DATA_DIR, filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _get_nakshatra_guna_data() -> dict:
+    return _load_nadi_json("nadi_nakshatra_guna.json")
+
+
+def _get_planet_nakshatra_data() -> dict:
+    return _load_nadi_json("nadi_planet_nakshatra.json")
+
+
+def _get_nadi_yogas_data() -> dict:
+    return _load_nadi_json("nadi_yogas.json")
+
+
+def _get_nadi_bhavas_data() -> dict:
+    return _load_nadi_json("nadi_bhavas.json")
+
+
+# Mapping from nadi.py planet names to JSON planet keys
+_PLANET_NAME_TO_JSON_KEY = {
+    "Surya": "sun",
+    "Chandra": "moon",
+    "Mangal": "mars",
+    "Budha": "mercury",
+    "Guru": "jupiter",
+    "Shukra": "venus",
+    "Shani": "saturn",
+    "Rahu": "rahu",
+    "Ketu": "ketu",
+}
+
+# Alternate nakshatra spellings → nakshatra index (0-based)
+_NAKSHATRA_ALT_NAMES: dict[str, int] = {
+    "aswini": 0, "ashwini": 0,
+    "bharani": 1,
+    "krithika": 2, "krittika": 2,
+    "rohini": 3,
+    "mrigasira": 4, "mrigashira": 4,
+    "arudra": 5, "ardra": 5,
+    "punarvasu": 6,
+    "pushyami": 7, "pushya": 7,
+    "aslesha": 8, "ashlesha": 8,
+    "makha": 9, "magha": 9,
+    "pubba": 10, "purva phalguni": 10,
+    "uttara": 11, "uttara phalguni": 11,
+    "hasta": 12,
+    "chitha": 13, "chitra": 13,
+    "swati": 14,
+    "visaka": 15, "vishakha": 15,
+    "anuradha": 16,
+    "jyeshta": 17, "jyeshtha": 17,
+    "mula": 18,
+    "purvashada": 19, "purva ashadha": 19,
+    "uttarashada": 20, "uttara ashadha": 20,
+    "sravana": 21, "shravana": 21,
+    "dhanishta": 22,
+    "satabisha": 23, "shatabhisha": 23,
+    "purvabhadrapada": 24, "purva bhadrapada": 24,
+    "uttarabhadrapada": 25, "uttara bhadrapada": 25,
+    "revati": 26,
+}
+
+
+def _extract_nakshatra_indices_from_group(group_str: str) -> set[int]:
+    """Extract nakshatra indices mentioned in a nakshatra_group string."""
+    # Extract text inside parentheses
+    m = re.search(r"（(.+?)）", group_str)
+    if not m:
+        return set()
+    inner = m.group(1)
+    # Split by "、" or ","
+    names = [n.strip().lower() for n in re.split(r"[、,]", inner)]
+    indices = set()
+    for name in names:
+        idx = _NAKSHATRA_ALT_NAMES.get(name)
+        if idx is not None:
+            indices.add(idx)
+    return indices
+
+
+def _match_planet_nakshatra_effect(planet_name: str, nakshatra_index: int) -> str | None:
+    """
+    Given a planet name (e.g. 'Surya (太陽)') and its nakshatra index,
+    return the matching effect description from nadi_planet_nakshatra.json,
+    or None if no match found.
+    """
+    planet_key_part = planet_name.split("(")[0].strip().split()[0]
+    json_key = _PLANET_NAME_TO_JSON_KEY.get(planet_key_part)
+    if not json_key:
+        return None
+    effects_data = _get_planet_nakshatra_data().get("planet_nakshatra_effects", {})
+    planet_effects = effects_data.get(json_key, {}).get("effects", [])
+    for eff in planet_effects:
+        indices = _extract_nakshatra_indices_from_group(eff.get("nakshatra_group", ""))
+        if nakshatra_index in indices:
+            return eff.get("description", "")
+    return None
+
 
 # ============================================================
 # 常量 (Constants)
@@ -691,3 +803,135 @@ def render_nadi_chart(chart: NadiChart) -> None:
         - 傳統棕櫚葉手稿根據宮分號碼對應特定的人生事件預言
         """
     )
+
+    st.divider()
+    _render_nakshatra_guna_section(chart)
+
+    st.divider()
+    _render_planet_nakshatra_effects_section(chart)
+
+    st.divider()
+    _render_yoga_section(chart)
+
+    st.divider()
+    _render_bhava_section()
+
+
+# ── New render sections backed by JSON data ───────────────────────────────────
+
+def _render_nakshatra_guna_section(chart: "NadiChart") -> None:
+    """顯示每顆行星所在星宿的品質（Guna）解析。"""
+    st.subheader("🌟 星宿品質解析 (Nakshatra Guna)")
+    st.caption("根據《納迪棕櫚葉》傳統，每個星宿具有 Satwika（善性）、Rajasa（動性）或 Thamasic（惰性）品質，影響行星的表現方式。")
+
+    guna_data = _get_nakshatra_guna_data().get("nakshatras", {})
+    nak_keys = list(guna_data.keys())  # ordered list: '1_Aswini' … '27_Revati'
+
+    rows = []
+    # Include ascendant
+    asc_entry = guna_data.get(nak_keys[chart.asc_nakshatra_index]) if chart.asc_nakshatra_index < len(nak_keys) else None
+    if asc_entry:
+        rows.append({
+            "行星 / 點": f"⬆️ 上升 (Lagna)",
+            "星宿": f"{chart.asc_nakshatra} ({chart.asc_nakshatra_chinese})",
+            "品質 (Guna)": asc_entry.get("guna", "—"),
+            "主星": asc_entry.get("ruler", "—"),
+            "說明": asc_entry.get("description", ""),
+        })
+
+    for p in chart.planets:
+        entry = guna_data.get(nak_keys[p.nakshatra_index]) if p.nakshatra_index < len(nak_keys) else None
+        if entry:
+            rows.append({
+                "行星 / 點": p.name,
+                "星宿": f"{p.nakshatra} ({p.nakshatra_chinese})",
+                "品質 (Guna)": entry.get("guna", "—"),
+                "主星": entry.get("ruler", "—"),
+                "說明": entry.get("description", ""),
+            })
+
+    if rows:
+        import pandas as pd
+        df = pd.DataFrame(rows)
+        st.dataframe(df, width="stretch", hide_index=True)
+
+    # Show planet_guna_change in expanders for planets with an interesting note
+    with st.expander("▶ 行星品質轉化說明（點擊展開）"):
+        for p in chart.planets:
+            entry = guna_data.get(nak_keys[p.nakshatra_index]) if p.nakshatra_index < len(nak_keys) else None
+            if entry and entry.get("planet_guna_change"):
+                st.markdown(f"**{p.name}** 在 {p.nakshatra}：{entry['planet_guna_change']}")
+
+
+def _render_planet_nakshatra_effects_section(chart: "NadiChart") -> None:
+    """依命盤行星所在星宿，顯示對應的納迪影響描述。"""
+    st.subheader("🪐 行星星宿影響 (Planet-Nakshatra Effects)")
+    st.caption("根據每顆行星落在特定星宿群的傳統解讀，以下為命盤中有對應記載的影響。")
+
+    found_any = False
+    for p in chart.planets:
+        desc = _match_planet_nakshatra_effect(p.name, p.nakshatra_index)
+        if desc:
+            found_any = True
+            color = PLANET_COLORS.get(p.name, "#888")
+            nadi_info = NADI_NAMES[p.nadi_type]
+            st.markdown(
+                f"<div style='border-left:4px solid {color};padding:8px 12px;"
+                f"margin:6px 0;background:linear-gradient(90deg,{color}11,transparent)'>"
+                f"<b style='color:{color}'>{p.name}</b> "
+                f"<span style='color:#aaa;font-size:0.85em'>"
+                f"{p.nakshatra} ({p.nakshatra_chinese}) — {nadi_info['symbol']} {nadi_info['chinese']}"
+                f"</span><br/>{desc}</div>",
+                unsafe_allow_html=True,
+            )
+
+    if not found_any:
+        st.info("命盤中的行星星宿位置未能在現有記錄中找到對應的特定描述，請參考星宿品質解析。")
+
+
+def _render_yoga_section(chart: "NadiChart") -> None:
+    """展示納迪瑜伽格局說明，並標示命主上升點的年命主星 (Yoga Karaka)。"""
+    st.subheader("🔯 瑜伽格局 (Yoga Patterns)")
+
+    yogas_data = _get_nadi_yogas_data()
+    yogas = yogas_data.get("yogas", {})
+    lagna_karakas = yogas_data.get("lagna_specific_yoga_karakas", {})
+
+    # Lagna yoga karaka
+    asc_rashi_key = chart.asc_rashi.lower() if chart.asc_rashi else ""
+    karaka = lagna_karakas.get(asc_rashi_key)
+    if karaka:
+        st.info(
+            f"⭐ **命主上升為 {chart.asc_rashi} ({chart.asc_rashi_cn})**，"
+            f"年命主星（Yoga Karaka）為：**{karaka}**"
+        )
+
+    st.caption("以下為納迪占星主要瑜伽格局說明，供命盤解讀參考：")
+    for yoga_key, yoga in yogas.items():
+        with st.expander(f"🔸 {yoga.get('name', yoga_key)}"):
+            st.markdown(f"**條件**：{yoga.get('conditions', '—')}")
+            st.markdown(f"**效果**：{yoga.get('effect', '—')}")
+            if yoga.get("notes"):
+                st.markdown(f"**備注**：{yoga['notes']}")
+            if yoga.get("guna_influence"):
+                st.markdown(f"**品質影響**：{yoga['guna_influence']}")
+            if yoga.get("related_bhavas"):
+                st.markdown("**相關宮位**：" + "、".join(yoga["related_bhavas"]))
+
+
+def _render_bhava_section() -> None:
+    """展示十二宮 (Bhava) 的納迪解讀說明。"""
+    st.subheader("🏠 十二宮納迪解讀 (Bhava Overview)")
+    st.caption("納迪占星以 Jeeva（靈魂）與 Sarira（身體）概念解讀各宮主星與落入行星的互動。")
+
+    bhavas_data = _get_nadi_bhavas_data().get("bhavas", {})
+    for bhava_key, bhava in bhavas_data.items():
+        with st.expander(f"🏛️ {bhava.get('title', bhava_key)}"):
+            st.markdown(bhava.get("description", ""))
+            if bhava.get("jeeva_sarira"):
+                st.markdown(f"**Jeeva / Sarira**：{bhava['jeeva_sarira']}")
+            rules = bhava.get("key_rules", [])
+            if rules:
+                st.markdown("**主要規則**：")
+                for rule in rules:
+                    st.markdown(f"- {rule}")
