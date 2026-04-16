@@ -13,13 +13,15 @@ Do NOT modify without consulting primary sources.
 
 from __future__ import annotations
 import json
+import streamlit as st
 from pathlib import Path
 from typing import Any
 
 
 # ====================== 資料載入函式 ======================
+@st.cache_data(show_spinner=False)
 def _load_json(filename: str) -> dict[str, Any]:
-    """從 data/ 資料夾載入 JSON"""
+    """從 data/ 資料夾載入 JSON (cached)"""
     json_path = Path(__file__).parent.parent / "data" / filename
     if not json_path.exists():
         raise FileNotFoundError(f"找不到 Picatrix 資料檔：{json_path}")

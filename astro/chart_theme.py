@@ -112,6 +112,16 @@ MOBILE_CSS = """<style>
         max-width: 100% !important;
         height: auto !important;
     }
+
+    /* Palace grid: shrink for small screens */
+    .palace-grid td {
+        width: 70px !important;
+        height: 65px !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* Plotly charts: force full-width */
+    .js-plotly-plot { width: 100% !important; }
 }
 /* ── Tablet ─────────────────────────────────────────── */
 @media (min-width: 769px) and (max-width: 1024px) {
@@ -120,6 +130,34 @@ MOBILE_CSS = """<style>
 /* ── General ────────────────────────────────────────── */
 svg.chart-wheel { max-width: 100%; height: auto; }
 .export-btn-row .stDownloadButton { margin-bottom: 4px; }
+
+/* ── Palace grid (unified CSS for 天盤 / 宮位表) ──── */
+.palace-grid {
+    border-collapse: separate;
+    border-spacing: 4px;
+    margin: 10px auto;
+    font-family: 'Noto Serif TC', serif;
+}
+.palace-grid td {
+    width: 100px;
+    height: 88px;
+    text-align: center;
+    vertical-align: middle;
+    border: 2px solid #444;
+    padding: 4px 2px;
+    border-radius: 6px;
+}
+.palace-grid .center-cell {
+    background: #fffde7;
+    padding: 10px 8px;
+    line-height: 1.6;
+}
+/* 五行配色 (Chinese five-element colours for palace cells) */
+.palace-grid .elem-wood  { background: #d9f2d9; border-color: #388e3c; }
+.palace-grid .elem-fire  { background: #ffe0d0; border-color: #c62828; }
+.palace-grid .elem-earth { background: #fffbcc; border-color: #f57f17; }
+.palace-grid .elem-metal { background: #e8e8e8; border-color: #616161; }
+.palace-grid .elem-water { background: #cce5ff; border-color: #1565c0; }
 </style>"""
 
 # ── Planet name → canonical key mapping ─────────────────────────

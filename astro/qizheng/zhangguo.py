@@ -7,6 +7,7 @@
 
 import json
 import os
+import streamlit as st
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -72,30 +73,24 @@ class ZhangguoResult:
 
 
 # ============================================================
-# 資料載入 (懶載入, 只讀一次)
+# 資料載入 (cached via @st.cache_data)
 # ============================================================
-_star_entries: Optional[list] = None
-_pattern_entries: Optional[list] = None
 
 
+@st.cache_data(show_spinner=False)
 def _load_star_data() -> list:
-    global _star_entries
-    if _star_entries is None:
-        fpath = os.path.join(_DATA_DIR, "zhangguo_star_in_branch.json")
-        with open(fpath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        _star_entries = data.get("entries", [])
-    return _star_entries
+    fpath = os.path.join(_DATA_DIR, "zhangguo_star_in_branch.json")
+    with open(fpath, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("entries", [])
 
 
+@st.cache_data(show_spinner=False)
 def _load_pattern_data() -> list:
-    global _pattern_entries
-    if _pattern_entries is None:
-        fpath = os.path.join(_DATA_DIR, "zhangguo_patterns.json")
-        with open(fpath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        _pattern_entries = data.get("patterns", [])
-    return _pattern_entries
+    fpath = os.path.join(_DATA_DIR, "zhangguo_patterns.json")
+    with open(fpath, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("patterns", [])
 
 
 # ============================================================

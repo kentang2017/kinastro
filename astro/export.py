@@ -269,3 +269,74 @@ def render_download_buttons(chart_data, svg_string=None, key_prefix=""):
         st.caption("📋 Share link")
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+def render_unified_export(chart_dict, system_name="", key_prefix="export",
+                          svg_string=None):
+    """Unified export buttons: TXT · CSV · PDF · JSON (+ PNG if SVG provided).
+
+    A more comprehensive version of ``render_download_buttons`` that adds
+    JSON export and uses ``width="stretch"`` per project conventions.
+    """
+    import json as _json
+    import streamlit as st
+
+    _has_svg = svg_string is not None
+    _ncols = 5 if _has_svg else 4
+    cols = st.columns(_ncols)
+
+    with cols[0]:
+        _txt = generate_chart_summary(chart_dict)
+        st.download_button(
+            "📄 TXT", data=_txt,
+            file_name=f"{key_prefix}_chart.txt",
+            mime="text/plain",
+            key=f"{key_prefix}_u_txt",
+            width="stretch",
+        )
+    with cols[1]:
+        _csv = generate_planet_csv(chart_dict.get("planets", []))
+        st.download_button(
+            "📊 CSV", data=_csv,
+            file_name=f"{key_prefix}_chart.csv",
+            mime="text/csv",
+            key=f"{key_prefix}_u_csv",
+            width="stretch",
+        )
+    with cols[2]:
+        try:
+            _pdf = generate_chart_pdf(chart_dict)
+            st.download_button(
+                "📑 PDF", data=_pdf,
+                file_name=f"{key_prefix}_chart.pdf",
+                mime="application/pdf",
+                key=f"{key_prefix}_u_pdf",
+                width="stretch",
+            )
+        except Exception:
+            st.caption("PDF unavailable")
+
+    _json_col = 3 if not _has_svg else 4
+    if _has_svg:
+        with cols[3]:
+            _png = svg_to_png(svg_string)
+            if _png:
+                st.download_button(
+                    "🖼️ PNG", data=_png,
+                    file_name=f"{key_prefix}_chart.png",
+                    mime="image/png",
+                    key=f"{key_prefix}_u_png",
+                    width="stretch",
+                )
+            else:
+                st.caption("PNG unavailable")
+
+    with cols[_json_col]:
+        _json_str = _json.dumps(chart_dict, ensure_ascii=False, indent=2)
+        st.download_button(
+            "🔧 JSON", data=_json_str,
+            file_name=f"{key_prefix}_chart.json",
+            mime="application/json",
+            key=f"{key_prefix}_u_json",
+            width="stretch",
+        )
