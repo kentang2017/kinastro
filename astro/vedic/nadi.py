@@ -21,6 +21,7 @@ import json
 import os
 import re
 
+import pandas as pd
 import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
@@ -98,8 +99,13 @@ _NAKSHATRA_ALT_NAMES: dict[str, int] = {
 
 
 def _extract_nakshatra_indices_from_group(group_str: str) -> set[int]:
-    """Extract nakshatra indices mentioned in a nakshatra_group string."""
-    # Extract text inside parentheses
+    """Extract nakshatra indices mentioned in a nakshatra_group string.
+
+    The group strings use full-width Chinese parentheses （…） to enclose a
+    comma- or 、-separated list of nakshatra names, e.g.
+    ``'月亮星宿（Rohini、Hasta、Sravana）'``.
+    """
+    # Extract text inside full-width parentheses （…）
     m = re.search(r"（(.+?)）", group_str)
     if not m:
         return set()
@@ -120,8 +126,12 @@ def _match_planet_nakshatra_effect(planet_name: str, nakshatra_index: int) -> st
     return the matching effect description from nadi_planet_nakshatra.json,
     or None if no match found.
     """
-    planet_key_part = planet_name.split("(")[0].strip().split()[0]
-    json_key = _PLANET_NAME_TO_JSON_KEY.get(planet_key_part)
+    parts = planet_name.split("(", 1)
+    key_part = parts[0].strip()
+    tokens = key_part.split()
+    if not tokens:
+        return None
+    json_key = _PLANET_NAME_TO_JSON_KEY.get(tokens[0])
     if not json_key:
         return None
     effects_data = _get_planet_nakshatra_data().get("planet_nakshatra_effects", {})
@@ -131,6 +141,13 @@ def _match_planet_nakshatra_effect(planet_name: str, nakshatra_index: int) -> st
         if nakshatra_index in indices:
             return eff.get("description", "")
     return None
+
+
+def _nakshatra_guna_entry(nakshatra_index: int, nak_keys: list, guna_data: dict) -> dict | None:
+    """Return the guna data entry for a 0-based nakshatra index, or None if out of range."""
+    if nakshatra_index < 0 or nakshatra_index >= len(nak_keys):
+        return None
+    return guna_data.get(nak_keys[nakshatra_index])
 
 
 # ============================================================
@@ -829,10 +846,10 @@ def _render_nakshatra_guna_section(chart: "NadiChart") -> None:
 
     rows = []
     # Include ascendant
-    asc_entry = guna_data.get(nak_keys[chart.asc_nakshatra_index]) if chart.asc_nakshatra_index < len(nak_keys) else None
+    asc_entry = _nakshatra_guna_entry(chart.asc_nakshatra_index, nak_keys, guna_data)
     if asc_entry:
         rows.append({
-            "行星 / 點": f"⬆️ 上升 (Lagna)",
+            "行星 / 點": "⬆️ 上升 (Lagna)",
             "星宿": f"{chart.asc_nakshatra} ({chart.asc_nakshatra_chinese})",
             "品質 (Guna)": asc_entry.get("guna", "—"),
             "主星": asc_entry.get("ruler", "—"),
@@ -840,7 +857,7 @@ def _render_nakshatra_guna_section(chart: "NadiChart") -> None:
         })
 
     for p in chart.planets:
-        entry = guna_data.get(nak_keys[p.nakshatra_index]) if p.nakshatra_index < len(nak_keys) else None
+        entry = _nakshatra_guna_entry(p.nakshatra_index, nak_keys, guna_data)
         if entry:
             rows.append({
                 "行星 / 點": p.name,
@@ -851,14 +868,13 @@ def _render_nakshatra_guna_section(chart: "NadiChart") -> None:
             })
 
     if rows:
-        import pandas as pd
         df = pd.DataFrame(rows)
         st.dataframe(df, width="stretch", hide_index=True)
 
     # Show planet_guna_change in expanders for planets with an interesting note
     with st.expander("▶ 行星品質轉化說明（點擊展開）"):
         for p in chart.planets:
-            entry = guna_data.get(nak_keys[p.nakshatra_index]) if p.nakshatra_index < len(nak_keys) else None
+            entry = _nakshatra_guna_entry(p.nakshatra_index, nak_keys, guna_data)
             if entry and entry.get("planet_guna_change"):
                 st.markdown(f"**{p.name}** 在 {p.nakshatra}：{entry['planet_guna_change']}")
 
