@@ -162,17 +162,22 @@ def generate_chart_pdf(chart_data, svg_string: str | None = None):
 
     _text = (lambda s: s) if cjk_ok else _safe_latin1
 
+    # Layout constants
+    _MAX_IMAGE_WIDTH_MM = 180    # max chart image width in mm (fits A4 with 15 mm margins)
+    _IMAGE_ASPECT_RATIO = 0.75   # approximate height/width ratio for the chart wheel
+    _IMAGE_BOTTOM_GAP_MM = 4     # vertical gap between image and text
+
     # ── Chart image (SVG → PNG) ──────────────────────────────────
     if svg_string:
         png_bytes = svg_to_png(svg_string, width=1200)
         if png_bytes:
             img_io = io.BytesIO(png_bytes)
-            # Centre the image; use up to 180 mm width on A4 (210 mm − 2×15 mm margins)
+            # Centre the image; respect the maximum width limit
             page_w = pdf.w - pdf.l_margin - pdf.r_margin  # usable width in mm
-            img_w = min(page_w, 180)
+            img_w = min(page_w, _MAX_IMAGE_WIDTH_MM)
             img_x = pdf.l_margin + (page_w - img_w) / 2
             pdf.image(img_io, x=img_x, y=pdf.get_y(), w=img_w)
-            pdf.ln(img_w * 0.75 + 4)  # approx height (square image) + gap
+            pdf.ln(img_w * _IMAGE_ASPECT_RATIO + _IMAGE_BOTTOM_GAP_MM)
 
     # ── Title ────────────────────────────────────────────────────
     _set_font(16, bold=True)
