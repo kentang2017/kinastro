@@ -628,17 +628,17 @@ def _render_nakshatra_graha_relation(chart):
 
     # ---- 七曜概述 ----
     st.markdown("### 七曜概述 (Navagraha Overview)")
-    cols = st.columns(3)
-    graha_keys = list(GRAHA_DESCRIPTION.keys())
-    for i, graha in enumerate(graha_keys):
-        with cols[i % 3]:
-            nature = GRAHA_NAKSHATRA_NATURE.get(graha, (0, 0, 0))
-            st.markdown(
-                f"**{graha}**\n"
-                f"├ 主宿數：3\n"
-                f"├ 吉/中/凶：{nature[0]}吉/{nature[1]}中/{nature[2]}凶\n"
-                f"└ {GRAHA_DESCRIPTION[graha][:40]}..."
-            )
+    overview_rows = [
+        "| 曜 (Graha) | 主宿數 | 吉 | 中 | 凶 | 描述 Description |",
+        "|:-----------|:------:|:--:|:--:|:--:|:-----------------|",
+    ]
+    for graha in GRAHA_DESCRIPTION:
+        nature = GRAHA_NAKSHATRA_NATURE.get(graha, (0, 0, 0))
+        overview_rows.append(
+            f"| **{graha}** | 3 | {nature[0]} | {nature[1]} | {nature[2]} "
+            f"| {GRAHA_DESCRIPTION[graha]} |"
+        )
+    st.markdown("\n".join(overview_rows))
 
     # ---- 七曜主管宿列表 ----
     st.markdown("### 七曜主宿對照 (Graha → Nakshatra)")
