@@ -678,6 +678,7 @@ if _selected_system == "tab_chinese":
                     julian_day=chart.julian_day,
                     hour_branch=chart.hour_branch,
                     timezone=chart.timezone,
+                    ming_gong_branch=chart.ming_gong_branch,
                 )
                 render_shensha(chart, _shensha)
 

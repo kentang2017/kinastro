@@ -11,8 +11,8 @@ from datetime import datetime
 import streamlit as st
 
 from .calculator import (
-    ChartData, format_degree, get_mansion_for_degree,
-    get_mansion_index_for_degree, _normalize_degree,
+    ChartData, format_degree, get_mansion_index_for_degree,
+    _normalize_degree,
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
@@ -56,19 +56,26 @@ def render_planet_table(chart: ChartData):
 
 def _render_planet_group(planets: list):
     """渲染一組星曜的表格"""
-    header = "| 星曜 | 五行 | 黃經 | 星座 | 度數 | 星次 | 二十八宿 | 逆行 |"
-    separator = "|:----:|:----:|:----:|:----:|:----:|:----:|:--------:|:----:|"
+    header = (
+        "| 星曜 | 五行 | 黃經 | 星座 | 度數 | 宮五行 "
+        "| 星次 | 二十八宿 | 入宿度 | 岐度 | 逆行 |"
+    )
+    separator = (
+        "|:----:|:----:|:----:|:----:|:----:|:------:"
+        "|:----:|:--------:|:------:|:----:|:----:|"
+    )
     rows = [header, separator]
 
     for p in planets:
-        mansion = get_mansion_for_degree(p.longitude)
         retro = "℞" if p.retrograde else ""
+        qidu = "⚠" if p.is_qidu else ""
         color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_styled = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
         rows.append(
             f"| {name_styled} | {p.element} | {format_degree(p.longitude)} "
-            f"| {p.sign_western} | {p.sign_degree:.2f}° "
-            f"| {p.sign_chinese} | {mansion['name']} | {retro} |"
+            f"| {p.sign_western} | {p.sign_degree:.2f}° | {p.sign_element} "
+            f"| {p.sign_chinese} | {p.mansion_name} | {p.mansion_degree:.2f}° "
+            f"| {qidu} | {retro} |"
         )
 
     st.markdown("\n".join(rows), unsafe_allow_html=True)
@@ -124,6 +131,7 @@ def render_chart_grid(chart: ChartData):
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
+        ming_gong_branch=chart.ming_gong_branch,
     )
 
     # 方盤排列 (外圈12格，按固定地支位置排列)
@@ -502,6 +510,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
+        ming_gong_branch=chart.ming_gong_branch,
     )
 
     SIZE = 800
