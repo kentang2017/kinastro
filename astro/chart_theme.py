@@ -185,7 +185,21 @@ section[data-testid="stSidebar"] .stButton > button {
     h2 { font-size: 1.15rem !important; }
     h3 { font-size: 1.0rem !important; }
 
-    /* HTML tables: constrain width and allow cell shrink */
+    /* Markdown tables: horizontal scroll on mobile to avoid overflow */
+    [data-testid="stMarkdownContainer"] table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+        font-size: 0.72rem;
+    }
+    [data-testid="stMarkdownContainer"] table td,
+    [data-testid="stMarkdownContainer"] table th {
+        padding: 3px 6px !important;
+        white-space: nowrap;
+    }
+
+    /* HTML tables (non-markdown): constrain width and allow cell shrink */
     table {
         max-width: 100%;
     }

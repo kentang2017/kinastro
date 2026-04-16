@@ -830,13 +830,6 @@ def _render_sansanju_panel(chart, result):
 
     # Build rows: 11 categories (命/業/胎 + 8) × shows mansion for each
     categories_11 = THREE_ROOTS + CATEGORIES_8  # 11 items
-    rows = []
-
-    # Header: show months as row labels
-    # Table: rows=命/業/胎/榮/衰/安/危/成/壞/友/親 (11), cols=27 mansions
-    header = ["| 分類 |"] + [f" {SUKKAYODO_MANSION[SANSANJU_27_MANSIONS[(start_27 + i) % 27]][2]} |" for i in range(27)]
-    rows.append("".join(header))
-    rows.append("|:---:" + ":---:" * 27)
 
     # ---- 27宿命宿表 ----
     # Position i (0-26) → mansion index in SANSANJU_27_MANSIONS (0-26) + category
@@ -853,27 +846,41 @@ def _render_sansanju_panel(chart, result):
     for i, (m27, cat) in enumerate(pos_table):
         cat_to_pos[cat].append(i)
 
-    st.markdown("#### 27宿命宿表")
-    # Header: column 0 = "分類", columns 1-27 = 27 宿名
-    col_count = 28  # label + 27 mansions
-    header_cells = ["| **分類** |"] + [
-        f"**{SUKKAYODO_MANSION[mansions_27[(start_27 + i) % 27]][2]}** |"
+    # Render as a single HTML table inside a scrollable container for mobile
+    cell_style = "padding:4px 6px;text-align:center;border:1px solid #333;font-size:0.75rem;"
+    header_style = cell_style + "background:#1a1a2e;color:#aaa;white-space:nowrap;"
+    th_cells = "".join(
+        f"<th style='{header_style}'>"
+        f"{SUKKAYODO_MANSION[mansions_27[(start_27 + i) % 27]][2]}</th>"
         for i in range(27)
+    )
+    html_rows = [
+        f"<thead><tr><th style='{header_style}'>分類</th>{th_cells}</tr></thead><tbody>"
     ]
-    st.markdown("".join(header_cells), unsafe_allow_html=True)
-    sep = "|:" + ":---:" + ":---:" * 27
-    st.markdown(sep, unsafe_allow_html=True)
-
     for cat in categories_11:
-        row_cells = [f"| **{cat}** |"]
+        color = SANSANJU_COLORS.get(cat, "#888")
+        td_cells = []
         for i in range(27):
             if i in cat_to_pos[cat]:
-                color = SANSANJU_COLORS.get(cat, "#888")
-                cell = f" <span style='color:{color};font-weight:bold'>{cat}</span> |"
+                td_cells.append(
+                    f"<td style='{cell_style}color:{color};font-weight:bold'>{cat}</td>"
+                )
             else:
-                cell = " · |"
-            row_cells.append(cell)
-        st.markdown("".join(row_cells), unsafe_allow_html=True)
+                td_cells.append(f"<td style='{cell_style}color:#555'>·</td>")
+        html_rows.append(
+            f"<tr><td style='{cell_style}background:#1a1a2e;color:{color};"
+            f"font-weight:bold;white-space:nowrap'>{cat}</td>"
+            + "".join(td_cells)
+            + "</tr>"
+        )
+    html_rows.append("</tbody>")
+    table_html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;margin:8px 0;">'
+        f'<table style="border-collapse:collapse;background:#0d1117;font-family:sans-serif;">'
+        + "".join(html_rows)
+        + "</table></div>"
+    )
+    st.markdown(table_html, unsafe_allow_html=True)
 
     # ---- 當日分類高亮 ----
     day_cat = result["day_category"]
