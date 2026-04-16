@@ -382,6 +382,7 @@ def compute_shensha(
     julian_day: float,
     hour_branch: int,
     timezone: float = 0.0,
+    ming_gong_branch: int | None = None,
 ) -> ShenShaResult:
     """
     計算神煞。
@@ -392,6 +393,7 @@ def compute_shensha(
         julian_day: 儒略日
         hour_branch: 時辰地支索引 (0-11)
         timezone: 時區偏移 (小時)
+        ming_gong_branch: 命宮地支索引 (0-11)。若為 None 則退回年支。
 
     Returns:
         ShenShaResult: 包含所有神煞及其宮位分配
@@ -440,7 +442,7 @@ def compute_shensha(
     _add("天廚", TIANCHU[year_stem], "吉", "年干")
 
     # ==== 張果星宗「诸星起例」完整實現（卷二）====
-    ming_branch = year_branch   # 未來改成真命宮
+    ming_branch = ming_gong_branch if ming_gong_branch is not None else year_branch
 
     # 變曜十星
     hua_name, hua_star, hua_palace = HUA_YAO[year_stem]

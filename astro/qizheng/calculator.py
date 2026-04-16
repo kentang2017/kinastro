@@ -21,6 +21,7 @@ from .constants import (
     FIVE_ELEMENTS,
     TWENTY_EIGHT_MANSIONS,
     EARTHLY_BRANCHES,
+    ZODIAC_SIGN_ELEMENTS,
 )
 
 
@@ -36,6 +37,10 @@ class PlanetPosition:
     element: str            # 五行屬性
     retrograde: bool        # 是否逆行
     palace_index: int = -1  # 所在宮位索引
+    mansion_name: str = ""  # 所在二十八宿名稱
+    mansion_degree: float = 0.0  # 在宿中的度數
+    sign_element: str = ""  # 所在星座五行屬性
+    is_qidu: bool = False   # 是否處於岐度（宮/宿交界）
 
 
 @dataclass
@@ -108,6 +113,60 @@ def _get_hour_branch(hour: int, minute: int) -> int:
     if total_minutes < 60 or total_minutes >= 23 * 60:
         return 0   # 子時 (23:00–01:00)
     return (total_minutes + 60) // 120  # 每 2 小時一個時辰
+
+
+def _get_sign_element(deg: float) -> str:
+    """根據黃經度數取得所在星座的五行屬性"""
+    return ZODIAC_SIGN_ELEMENTS[_degree_to_sign_index(deg)]
+
+
+def _get_mansion_info(lon: float) -> tuple:
+    """
+    根據黃經度數取得二十八宿名稱與宿內度數。
+
+    Returns:
+        (mansion_name, mansion_degree): 宿名, 在宿中的度數
+    """
+    lon = _normalize_degree(lon)
+    n = len(TWENTY_EIGHT_MANSIONS)
+    for i in range(n):
+        start = TWENTY_EIGHT_MANSIONS[i]["start_lon"]
+        end = TWENTY_EIGHT_MANSIONS[(i + 1) % n]["start_lon"]
+        if start < end:
+            if start <= lon < end:
+                return TWENTY_EIGHT_MANSIONS[i]["name"], lon - start
+        else:
+            if lon >= start or lon < end:
+                deg_in = (lon - start) % 360.0
+                return TWENTY_EIGHT_MANSIONS[i]["name"], deg_in
+    return TWENTY_EIGHT_MANSIONS[0]["name"], 0.0
+
+
+def _check_qidu(sign_degree: float, mansion_degree: float, mansion_width: float) -> bool:
+    """
+    檢查星曜是否處於岐度（宮/宿交界 ±1.5° 範圍內）。
+
+    參考 MOIRA (BahnAstro/MOIRA_chinese_astrology) 岐度定義：
+    - 星座（黃道宮）邊界 ±1.5°（即 0°–1.5° 或 28.5°–30°）
+    - 二十八宿邊界 ±1.5°（即入宿 0°–1.5° 或出宿前 1.5°）
+    """
+    QIDU_THRESHOLD = 1.5
+    # 星座邊界
+    if sign_degree <= QIDU_THRESHOLD or sign_degree >= (30.0 - QIDU_THRESHOLD):
+        return True
+    # 宿界邊界
+    if mansion_degree <= QIDU_THRESHOLD or mansion_degree >= (mansion_width - QIDU_THRESHOLD):
+        return True
+    return False
+
+
+def _get_mansion_width(mansion_index: int) -> float:
+    """取得指定宿的寬度（度數）"""
+    n = len(TWENTY_EIGHT_MANSIONS)
+    start = TWENTY_EIGHT_MANSIONS[mansion_index]["start_lon"]
+    end = TWENTY_EIGHT_MANSIONS[(mansion_index + 1) % n]["start_lon"]
+    width = (end - start) % 360.0
+    return width
 
 
 def _get_solar_month(sun_longitude: float) -> int:
@@ -198,71 +257,118 @@ def compute_chart(
         speed = result[3]
         retrograde = speed < 0
 
+        mansion_name, mansion_deg = _get_mansion_info(lon)
+        sign_deg = _degree_to_sign_degree(lon)
+        sign_elem = _get_sign_element(lon)
+        m_idx = get_mansion_index_for_degree(lon)
+        m_width = _get_mansion_width(m_idx)
+        qidu = _check_qidu(sign_deg, mansion_deg, m_width)
+
         pos = PlanetPosition(
             name=name,
             longitude=lon,
             latitude=lat,
             sign_western=_get_western_sign(lon),
             sign_chinese=_get_chinese_sign(lon),
-            sign_degree=_degree_to_sign_degree(lon),
+            sign_degree=sign_deg,
             element=FIVE_ELEMENTS.get(name, ""),
             retrograde=retrograde,
+            mansion_name=mansion_name,
+            mansion_degree=mansion_deg,
+            sign_element=sign_elem,
+            is_qidu=qidu,
         )
         planets.append(pos)
 
     # 計算四餘位置
-    # 羅睺 (Rahu) = Mean North Node
+    # 羅睺 (Rahu) = True North Node（參考 MOIRA 使用真交點）
     rahu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["羅睺"])
     rahu_lon = _normalize_degree(rahu_result[0])
+    _mn, _md = _get_mansion_info(rahu_lon)
+    _sd = _degree_to_sign_degree(rahu_lon)
+    _se = _get_sign_element(rahu_lon)
+    _mi = get_mansion_index_for_degree(rahu_lon)
+    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="羅睺",
         longitude=rahu_lon,
         latitude=rahu_result[1],
         sign_western=_get_western_sign(rahu_lon),
         sign_chinese=_get_chinese_sign(rahu_lon),
-        sign_degree=_degree_to_sign_degree(rahu_lon),
+        sign_degree=_sd,
         element=FIVE_ELEMENTS.get("羅睺", ""),
         retrograde=False,
+        mansion_name=_mn,
+        mansion_degree=_md,
+        sign_element=_se,
+        is_qidu=_check_qidu(_sd, _md, _mw),
     ))
 
     # 計都 (Ketu) = 羅睺 + 180°
     ketu_lon = _normalize_degree(rahu_lon + 180.0)
+    _mn, _md = _get_mansion_info(ketu_lon)
+    _sd = _degree_to_sign_degree(ketu_lon)
+    _se = _get_sign_element(ketu_lon)
+    _mi = get_mansion_index_for_degree(ketu_lon)
+    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="計都",
         longitude=ketu_lon,
         latitude=-rahu_result[1],
         sign_western=_get_western_sign(ketu_lon),
         sign_chinese=_get_chinese_sign(ketu_lon),
-        sign_degree=_degree_to_sign_degree(ketu_lon),
+        sign_degree=_sd,
         element=FIVE_ELEMENTS.get("計都", ""),
         retrograde=False,
+        mansion_name=_mn,
+        mansion_degree=_md,
+        sign_element=_se,
+        is_qidu=_check_qidu(_sd, _md, _mw),
     ))
 
     # 月孛 (Yuebei) = Mean Apogee (Lilith)
     yuebei_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["月孛"])
     yuebei_lon = _normalize_degree(yuebei_result[0])
+    _mn, _md = _get_mansion_info(yuebei_lon)
+    _sd = _degree_to_sign_degree(yuebei_lon)
+    _se = _get_sign_element(yuebei_lon)
+    _mi = get_mansion_index_for_degree(yuebei_lon)
+    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="月孛",
         longitude=yuebei_lon,
         latitude=yuebei_result[1],
         sign_western=_get_western_sign(yuebei_lon),
         sign_chinese=_get_chinese_sign(yuebei_lon),
-        sign_degree=_degree_to_sign_degree(yuebei_lon),
+        sign_degree=_sd,
         element=FIVE_ELEMENTS.get("月孛", ""),
         retrograde=False,
+        mansion_name=_mn,
+        mansion_degree=_md,
+        sign_element=_se,
+        is_qidu=_check_qidu(_sd, _md, _mw),
     ))
 
     # 紫氣 (Ziqi) = 月孛 + 180°
     ziqi_lon = _normalize_degree(yuebei_lon + 180.0)
+    _mn, _md = _get_mansion_info(ziqi_lon)
+    _sd = _degree_to_sign_degree(ziqi_lon)
+    _se = _get_sign_element(ziqi_lon)
+    _mi = get_mansion_index_for_degree(ziqi_lon)
+    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="紫氣",
         longitude=ziqi_lon,
         latitude=-yuebei_result[1],
         sign_western=_get_western_sign(ziqi_lon),
         sign_chinese=_get_chinese_sign(ziqi_lon),
-        sign_degree=_degree_to_sign_degree(ziqi_lon),
+        sign_degree=_sd,
         element=FIVE_ELEMENTS.get("紫氣", ""),
         retrograde=False,
+        mansion_name=_mn,
+        mansion_degree=_md,
+        sign_element=_se,
+        is_qidu=_check_qidu(_sd, _md, _mw),
     ))
 
     # ---- 計算命宮 (Life Palace) ----
@@ -273,12 +379,9 @@ def compute_chart(
     # 時辰地支
     hour_branch = _get_hour_branch(hour, minute)
 
-    # 命宮地支：以命度（上升點）所在地支為命宮
-    # 黃經星座索引(0=白羊..11=雙魚) 與地支索引(0=子..11=亥)的對應：
-    #   戌(10)=0°(白羊), 酉(9)=30°(金牛), ..., 亥(11)=330°(雙魚)
-    # 公式：branch = (10 - sign_index) % 12
-    asc_sign_idx = _degree_to_sign_index(ascendant)
-    ming_gong_branch = (10 - asc_sign_idx) % 12
+    # 命宮地支：使用傳統虎月法（參考 MOIRA 排盤計算方式）
+    # 公式：(1 + solar_month - hour_branch) % 12
+    ming_gong_branch = _get_ming_gong_branch(solar_month, hour_branch)
 
     # ---- 建立宮位資料 (按命宮地支及性別方向排列) ----
     # 男命：順時針 (地支遞減)；女命：逆時針 (地支遞增)

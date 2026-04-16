@@ -7,6 +7,7 @@ from astro.qizheng.calculator import (
     compute_chart,
     format_degree,
     get_mansion_for_degree,
+    get_mansion_index_for_degree,
     _normalize_degree,
     _degree_to_sign_index,
     _degree_to_sign_degree,
@@ -16,6 +17,15 @@ from astro.qizheng.calculator import (
     _get_solar_month,
     _get_ming_gong_branch,
     _branch_to_cusp,
+    _get_sign_element,
+    _get_mansion_info,
+    _check_qidu,
+    _get_mansion_width,
+)
+from astro.qizheng.constants import (
+    TWENTY_EIGHT_MANSIONS,
+    ZODIAC_SIGN_ELEMENTS,
+    FOUR_REMAINDERS,
 )
 
 
@@ -363,3 +373,242 @@ class TestComputeChartMingGong:
             1990, 6, 15, 12, 0, 8.0, 39.9042, 116.4074, "北京",
         )
         assert chart_zi.ming_gong_branch != chart_wu.ming_gong_branch
+
+
+# ============================================================
+# 新增測試：MOIRA 參考精確度改進
+# ============================================================
+
+class TestMOIRAMansionBoundaries:
+    """測試二十八宿邊界（參考 MOIRA 精確值）"""
+
+    def test_28_mansions_count(self):
+        """應有 28 個宿位"""
+        assert len(TWENTY_EIGHT_MANSIONS) == 28
+
+    def test_mansions_ascending_except_wrap(self):
+        """除了跨越 0° 的宿位外，start_lon 應大致遞增"""
+        wraps = 0
+        for i in range(27):
+            if TWENTY_EIGHT_MANSIONS[i + 1]["start_lon"] < TWENTY_EIGHT_MANSIONS[i]["start_lon"]:
+                wraps += 1
+        # Two wraps: 危→室 (333→353) then 室→壁 (353→9, crossing 0°)
+        assert wraps == 1  # only one decreasing transition (crosses 0°)
+
+    def test_jiao_mansion_moira_boundary(self):
+        """角宿起始度數應匹配 MOIRA 值 (≈203.84°)"""
+        jiao = TWENTY_EIGHT_MANSIONS[0]
+        assert jiao["name"] == "角"
+        assert abs(jiao["start_lon"] - 203.8375) < 0.01
+
+    def test_dou_mansion_moira_boundary(self):
+        """斗宿起始度數應匹配 MOIRA 值 (≈280.18°)"""
+        dou = TWENTY_EIGHT_MANSIONS[7]
+        assert dou["name"] == "斗"
+        assert abs(dou["start_lon"] - 280.1775) < 0.01
+
+    def test_kui_mansion_moira_boundary(self):
+        """奎宿起始度數應匹配 MOIRA 值 (≈22.37°)"""
+        kui = next(m for m in TWENTY_EIGHT_MANSIONS if m["name"] == "奎")
+        assert abs(kui["start_lon"] - 22.3721) < 0.01
+
+    def test_jing_mansion_moira_boundary(self):
+        """井宿起始度數應匹配 MOIRA 值 (≈95.30°)"""
+        jing = next(m for m in TWENTY_EIGHT_MANSIONS if m["name"] == "井")
+        assert abs(jing["start_lon"] - 95.2980) < 0.01
+
+    def test_zhen_precedes_jiao(self):
+        """軫宿 start_lon 應小於角宿 start_lon"""
+        zhen = TWENTY_EIGHT_MANSIONS[27]
+        jiao = TWENTY_EIGHT_MANSIONS[0]
+        assert zhen["name"] == "軫"
+        assert abs(zhen["start_lon"] - 190.7218) < 0.01
+        assert zhen["start_lon"] < jiao["start_lon"]
+
+    def test_mansion_lookup_at_0_degrees(self):
+        """0° 應落在壁宿（壁 starts at 9.15°, 室 starts at 353.49°, so 0° is in 室）"""
+        mansion = get_mansion_for_degree(0.0)
+        assert mansion["name"] == "室"
+
+    def test_mansion_lookup_at_10_degrees(self):
+        """10° 應落在壁宿 (壁 starts at 9.15°)"""
+        mansion = get_mansion_for_degree(10.0)
+        assert mansion["name"] == "壁"
+
+    def test_shi_mansion_boundary(self):
+        """室宿起始度數應在 α Pegasi 附近 (≈353.49°)"""
+        shi = next(m for m in TWENTY_EIGHT_MANSIONS if m["name"] == "室")
+        assert abs(shi["start_lon"] - 353.49) < 0.1
+
+    def test_all_mansions_have_valid_elements(self):
+        """所有宿位應有有效的七曜屬性"""
+        valid_elements = {"木", "金", "土", "日", "月", "火", "水"}
+        for m in TWENTY_EIGHT_MANSIONS:
+            assert m["element"] in valid_elements, f"{m['name']}宿元素 '{m['element']}' 無效"
+
+
+class TestTrueNodeUsage:
+    """測試使用真交點 (TRUE_NODE) 而非平均交點"""
+
+    def test_four_remainders_uses_true_node(self):
+        """四餘配置應使用 TRUE_NODE"""
+        import swisseph as swe
+        assert FOUR_REMAINDERS["羅睺"] == swe.TRUE_NODE
+
+    def test_rahu_true_node_vs_mean_node_differ(self):
+        """真交點與平均交點應有差異"""
+        import swisseph as swe
+        swe.set_ephe_path("")
+        jd = swe.julday(1990, 1, 1, 4.0)
+        true_result, _ = swe.calc_ut(jd, swe.TRUE_NODE)
+        mean_result, _ = swe.calc_ut(jd, swe.MEAN_NODE)
+        # They should differ (typically by up to ~1.5°)
+        diff = abs(true_result[0] - mean_result[0])
+        assert diff > 0.01, "TRUE_NODE and MEAN_NODE should differ"
+        assert diff < 5.0, "Difference should be reasonable (< 5°)"
+
+
+class TestMingGongClassicalFormula:
+    """測試命宮使用傳統虎月法公式"""
+
+    def test_ming_gong_uses_solar_month_formula(self):
+        """命宮應使用 (1 + solar_month - hour_branch) % 12 公式"""
+        chart = compute_chart(
+            1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
+        )
+        expected = _get_ming_gong_branch(chart.solar_month, chart.hour_branch)
+        assert chart.ming_gong_branch == expected
+
+    def test_ming_gong_month1_zi(self):
+        """正月子時命宮應在寅 (索引2)"""
+        # Solar month 1 (around Feb 4): Sun ≈ 315°
+        # 子時 = hour_branch 0
+        # (1 + 1 - 0) % 12 = 2 (寅)
+        assert _get_ming_gong_branch(1, 0) == 2
+
+    def test_ming_gong_varies_by_hour(self):
+        """不同時辰同月應產生不同命宮"""
+        # Same month, different hours
+        mg1 = _get_ming_gong_branch(6, 0)   # 午月子時
+        mg2 = _get_ming_gong_branch(6, 6)   # 午月午時
+        assert mg1 != mg2
+
+
+class TestZodiacSignElements:
+    """測試十二宮五行屬性（參考 MOIRA）"""
+
+    def test_zodiac_elements_count(self):
+        """應有 12 個星座五行"""
+        assert len(ZODIAC_SIGN_ELEMENTS) == 12
+
+    def test_aries_fire(self):
+        assert ZODIAC_SIGN_ELEMENTS[0] == "火"   # 白羊=火
+
+    def test_taurus_metal(self):
+        assert ZODIAC_SIGN_ELEMENTS[1] == "金"   # 金牛=金
+
+    def test_gemini_water(self):
+        assert ZODIAC_SIGN_ELEMENTS[2] == "水"   # 雙子=水
+
+    def test_cancer_moon(self):
+        assert ZODIAC_SIGN_ELEMENTS[3] == "月"   # 巨蟹=月
+
+    def test_leo_sun(self):
+        assert ZODIAC_SIGN_ELEMENTS[4] == "日"   # 獅子=日
+
+    def test_get_sign_element_aries(self):
+        """白羊座 (0°–30°) 五行屬火"""
+        assert _get_sign_element(15.0) == "火"
+
+    def test_get_sign_element_capricorn(self):
+        """摩羯座 (270°–300°) 五行屬土"""
+        assert _get_sign_element(280.0) == "土"
+
+
+class TestMansionInfo:
+    """測試宿內度數計算"""
+
+    def test_mansion_name_for_known_degree(self):
+        """已知度數應返回正確宿名"""
+        name, deg = _get_mansion_info(210.0)
+        assert name == "角"
+
+    def test_mansion_degree_in_range(self):
+        """宿內度數應為正值"""
+        name, deg = _get_mansion_info(215.0)
+        assert name == "亢"
+        assert deg >= 0
+
+    def test_mansion_degree_precision(self):
+        """角宿起始點度數應為 0"""
+        name, deg = _get_mansion_info(203.8375)
+        assert name == "角"
+        assert abs(deg) < 0.01
+
+    def test_mansion_width(self):
+        """宿寬度應在合理範圍 (0.5°-36°)"""
+        for i in range(28):
+            w = _get_mansion_width(i)
+            assert 0.5 < w < 36.0, f"宿 {TWENTY_EIGHT_MANSIONS[i]['name']} 寬度 {w}° 超出範圍"
+
+
+class TestQidu:
+    """測試岐度檢查（宮/宿交界 ±1.5°）"""
+
+    def test_qidu_at_sign_boundary_start(self):
+        """星座起始邊界 1° 應為岐度"""
+        assert _check_qidu(1.0, 10.0, 20.0) is True
+
+    def test_qidu_at_sign_boundary_end(self):
+        """星座結束邊界 29° 應為岐度"""
+        assert _check_qidu(29.0, 10.0, 20.0) is True
+
+    def test_no_qidu_at_middle(self):
+        """星座中間 15° 不應為岐度"""
+        assert _check_qidu(15.0, 10.0, 20.0) is False
+
+    def test_qidu_at_mansion_boundary_start(self):
+        """宿起始邊界 1° 應為岐度"""
+        assert _check_qidu(15.0, 1.0, 20.0) is True
+
+    def test_qidu_at_mansion_boundary_end(self):
+        """宿結束邊界附近應為岐度"""
+        assert _check_qidu(15.0, 19.0, 20.0) is True
+
+    def test_no_qidu_mansion_middle(self):
+        """宿中間 10° 不應為岐度"""
+        assert _check_qidu(15.0, 10.0, 20.0) is False
+
+
+class TestPlanetNewFields:
+    """測試星曜新增欄位"""
+
+    @pytest.fixture
+    def sample_chart(self):
+        return compute_chart(
+            year=1990, month=1, day=1, hour=12, minute=0,
+            timezone=8.0, latitude=39.9042, longitude=116.4074,
+            location_name="北京",
+        )
+
+    def test_planets_have_mansion_name(self, sample_chart):
+        """所有星曜應有二十八宿名稱"""
+        valid_names = {m["name"] for m in TWENTY_EIGHT_MANSIONS}
+        for p in sample_chart.planets:
+            assert p.mansion_name in valid_names, f"{p.name} 的宿名 '{p.mansion_name}' 無效"
+
+    def test_planets_have_mansion_degree(self, sample_chart):
+        """所有星曜應有宿內度數（非負）"""
+        for p in sample_chart.planets:
+            assert p.mansion_degree >= 0, f"{p.name} 的宿內度數為負"
+
+    def test_planets_have_sign_element(self, sample_chart):
+        """所有星曜應有所在星座五行"""
+        valid_elements = {"日", "月", "火", "水", "木", "金", "土"}
+        for p in sample_chart.planets:
+            assert p.sign_element in valid_elements, f"{p.name} 的宮五行 '{p.sign_element}' 無效"
+
+    def test_planets_have_is_qidu(self, sample_chart):
+        """所有星曜應有岐度布林值"""
+        for p in sample_chart.planets:
+            assert isinstance(p.is_qidu, bool)
