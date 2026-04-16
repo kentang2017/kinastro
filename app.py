@@ -424,7 +424,8 @@ with st.sidebar:
     _pdf_chart_data = st.session_state.get("_chart_data_for_pdf")
     if _pdf_chart_data:
         try:
-            _pdf_bytes = generate_chart_pdf(_pdf_chart_data)
+            _pdf_svg = st.session_state.get("_chart_svg_for_pdf")
+            _pdf_bytes = generate_chart_pdf(_pdf_chart_data, svg_string=_pdf_svg)
             st.download_button(
                 "📑 " + t("sidebar_pdf_download"),
                 data=_pdf_bytes,
