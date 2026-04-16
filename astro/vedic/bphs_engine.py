@@ -6,6 +6,7 @@ astro/vedic/bphs_engine.py — BPHS 經典解讀引擎
 產生宮位果報、行星阿瓦斯塔、友敵關係、王者瑜伽等解讀。
 """
 
+import streamlit as st
 from dataclasses import dataclass, field
 
 from astro.vedic.bphs_data import (
@@ -181,6 +182,7 @@ _BHAVA_DETAIL = {
 # Core computation
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_bphs(planet_positions: list, houses: list,
                  ascendant_lon: float) -> BPHSResult:
     """Compute BPHS interpretations from a VedicChart.

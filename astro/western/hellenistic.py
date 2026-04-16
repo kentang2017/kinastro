@@ -5,6 +5,7 @@ Lots, Egyptian Bounds, Annual Profections, Zodiacal Releasing,
 Planetary Condition scoring, Sect analysis, Greek horoscope SVG chart.
 """
 import math
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -294,6 +295,7 @@ def _compute_sect(planet_longs, planet_houses, is_day):
     }
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_hellenistic_chart(western_chart, birth_year=None,
                               current_year=None, current_jd=None):
     """Derive Hellenistic techniques from a WesternChart."""

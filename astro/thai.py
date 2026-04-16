@@ -178,6 +178,7 @@ def _find_house(lon, cusps):
     return 1
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_thai_chart(year, month, day, hour, minute, timezone,
                        latitude, longitude, location_name=""):
     """計算泰國占星排盤 (Sidereal / Lahiri Ayanamsa)"""

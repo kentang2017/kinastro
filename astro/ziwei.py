@@ -762,6 +762,7 @@ def _build_palaces(
 # 計算函數 (Computation)
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_ziwei_chart(
     year: int,
     month: int,

@@ -262,6 +262,7 @@ def _compute_periods(weekday, birth_year, current_year):
 # 計算函數 (Calculation)
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_mahabote_chart(year, month, day, hour, minute,
                            timezone, latitude, longitude,
                            location_name=""):

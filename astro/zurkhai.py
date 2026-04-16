@@ -596,6 +596,7 @@ def _compute_day_rating(day_animal_idx: int, is_nahas: bool,
 # 主要計算函數 (Main Computation)
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_zurkhai_chart(year, month, day, hour, minute,
                           timezone, latitude, longitude,
                           location_name="") -> ZurkhaiChart:

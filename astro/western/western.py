@@ -410,6 +410,7 @@ def _compute_fixed_star_conjunctions(planets, jd):
 # 計算函數 (Calculation Functions)
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_western_chart(year, month, day, hour, minute, timezone,
                           latitude, longitude, location_name="",
                           sidereal=False):

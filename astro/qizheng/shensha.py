@@ -11,6 +11,7 @@
   - 月支系（以月支為基準推算）
 """
 
+import streamlit as st
 from dataclasses import dataclass, field
 
 # ============================================================
@@ -374,6 +375,7 @@ def compute_twelve_life_stages(year_stem: int):
     return result
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_shensha(
     year: int,
     solar_month: int,

@@ -14,6 +14,7 @@
   根據大運起始年齡和當年歲數，推算流年所在宮位。
 """
 
+import streamlit as st
 from dataclasses import dataclass, field
 
 
@@ -83,6 +84,7 @@ class DashaResult:
     flow_year_palace: str = ""                     # 流年所在宮位
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_dasha(
     birth_year: int,
     ming_gong_branch: int,

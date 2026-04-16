@@ -8,6 +8,7 @@
 - 星次（中國黃道十二宮）對應
 """
 
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -146,6 +147,7 @@ def _branch_to_cusp(branch: int) -> float:
     return sign_index * 30.0
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_chart(
     year: int,
     month: int,
