@@ -14,6 +14,7 @@ Greer & Warnock 2011 translation / Attrell & Porreca 2019
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, date, time, timedelta
 from datetime import timezone as timezone_module
@@ -1026,7 +1027,7 @@ def render_picatrix_browse() -> None:
     # Sub-tabs for browsing
     browse_tabs = st.tabs([
         "🌐 月宿輪圖", "📋 28 月宿總覽", "🪐 迦勒底行星序",
-        "🔮 護符意圖總覽",
+        "🔮 護符意圖總覽", "🙏 行星祈禱文",
     ])
 
     all_mansions = get_all_mansions()
@@ -1042,6 +1043,9 @@ def render_picatrix_browse() -> None:
 
     with browse_tabs[3]:
         _render_talisman_intents_table()
+
+    with browse_tabs[4]:
+        _render_planetary_prayers()
 
 
 def _render_today_mansion_card(
@@ -1259,3 +1263,48 @@ def _render_talisman_intents_table() -> None:
                     )
             st.markdown(f"**施作指引（中文）:** {t['description_cn']}")
             st.markdown(f"**Instructions:** {t['description_en']}")
+
+
+# ── Planetary Prayers (Book II) ──────────────────────────────────────────
+
+def _load_planetary_prayers() -> dict:
+    """Load picatrix_planetary_prayers.json."""
+    import json
+    _prayers_path = os.path.join(
+        os.path.dirname(__file__), os.pardir, "data", "picatrix_planetary_prayers.json"
+    )
+    with open(_prayers_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _render_planetary_prayers() -> None:
+    """渲染 Picatrix 行星祈禱文（Planetary Invocations）。"""
+    data = _load_planetary_prayers()
+    st.markdown("### 🙏 行星祈禱文 (Planetary Invocations)")
+    st.caption(data.get("source", ""))
+    st.markdown(f"_{data.get('description', '')}_")
+
+    for prayer in data.get("prayers", []):
+        planet_label = (
+            f"{prayer.get('name_zh', '')} "
+            f"({prayer.get('name_en', '')} / {prayer.get('arabic_name', '')})"
+        )
+        glyph = PLANET_GLYPHS.get(prayer.get("planet", ""), "")
+        with st.expander(f"{glyph} {planet_label}", expanded=False):
+            spirits = prayer.get("spirit_names", [])
+            if spirits:
+                st.markdown(f"**靈名 (Spirit Names):** {', '.join(spirits)}")
+            st.markdown(f"**祈禱文：** {prayer.get('prayer_text', '')}")
+            if prayer.get("notes"):
+                st.info(f"📌 {prayer['notes']}")
+            if prayer.get("source"):
+                st.caption(f"出處：{prayer['source']}")
+
+    usage = data.get("usage_notes")
+    if usage:
+        with st.expander("📖 使用須知 (Usage Notes)", expanded=False):
+            if isinstance(usage, list):
+                for note in usage:
+                    st.markdown(f"- {note}")
+            else:
+                st.markdown(str(usage))
