@@ -68,6 +68,93 @@ MOBILE_CSS = """<style>
     max-width: 100vw;
     overflow-x: hidden;
 }
+
+/* ── Welcome hero card ─────────────────────────────── */
+.welcome-hero {
+    background: linear-gradient(135deg, #1a237e 0%, #4a148c 50%, #880e4f 100%);
+    border-radius: 16px;
+    padding: 32px 28px;
+    margin-bottom: 24px;
+    color: #fff;
+    text-align: center;
+}
+.welcome-hero h2 {
+    color: #fff !important;
+    font-size: 1.6rem !important;
+    margin-bottom: 8px;
+}
+.welcome-hero p {
+    color: rgba(255,255,255,0.9);
+    font-size: 1.05rem;
+    margin-bottom: 0;
+    line-height: 1.7;
+}
+
+/* ── Step cards (onboarding) ───────────────────────── */
+.step-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.step-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    transform: translateY(-2px);
+}
+.step-num {
+    display: inline-block;
+    background: #1a73e8;
+    color: #fff;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    line-height: 32px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+.step-card h4 { margin: 6px 0 4px 0; font-size: 1rem; }
+.step-card p { color: #555; font-size: 0.88rem; margin: 0; }
+
+/* ── Category header in sidebar ────────────────────── */
+.sidebar-cat {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 12px 0 4px 2px;
+    font-weight: 600;
+}
+
+/* ── System button descriptions ────────────────────── */
+.sys-desc {
+    font-size: 0.72rem;
+    color: #999;
+    margin: -6px 0 6px 4px;
+    line-height: 1.3;
+}
+
+/* ── Beginner badge ────────────────────────────────── */
+.beginner-badge {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 4px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+/* ── Sidebar overall tweaks ────────────────────────── */
+section[data-testid="stSidebar"] .stButton > button {
+    font-size: 0.88rem;
+    border-radius: 8px;
+    transition: all 0.15s;
+}
+
 /* ── Mobile ─────────────────────────────────────────── */
 @media (max-width: 768px) {
     /* Tabs: wrap onto multiple lines */
@@ -122,6 +209,11 @@ MOBILE_CSS = """<style>
 
     /* Plotly charts: force full-width */
     .js-plotly-plot { width: 100% !important; }
+
+    /* Welcome hero: compact on mobile */
+    .welcome-hero { padding: 20px 16px; }
+    .welcome-hero h2 { font-size: 1.2rem !important; }
+    .welcome-hero p { font-size: 0.9rem; }
 }
 /* ── Tablet ─────────────────────────────────────────── */
 @media (min-width: 769px) and (max-width: 1024px) {

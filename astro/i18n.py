@@ -10,25 +10,17 @@ TRANSLATIONS = {
         "en": "⭐ Kin Astro",
     },
     "app_subtitle": {
-        "zh": """
-🌐 **多體系占星排盤系統** — 涵蓋東西方 15 大占星傳統
-
-> 📝 **使用方式**：在左側欄輸入出生日期、時間、地點，選擇占星體系，點擊「開始排盤」即可。
-""",
-        "en": """
-🌐 **Multi-System Astrology Platform** — 15 Traditions from East & West
-
-> 📝 **How to use**: Enter birth date, time, and location in the sidebar, select a system, and click "Calculate Chart".
-""",
+        "zh": "✨ 輸入你的出生資料，一鍵了解你的命運走向",
+        "en": "✨ Enter your birth info and discover your destiny in one click",
     },
     # ── Sidebar ─────────────────────────────────────────────────────────────
     "sidebar_header": {
-        "zh": "📝 排盤資料",
-        "en": "📝 Chart Data",
+        "zh": "📝 你的出生資料",
+        "en": "📝 Your Birth Info",
     },
     "date_time": {
-        "zh": "日期與時間",
-        "en": "Date & Time",
+        "zh": "出生日期和時間",
+        "en": "Birth Date & Time",
     },
     "birth_date": {
         "zh": "出生日期",
@@ -39,8 +31,8 @@ TRANSLATIONS = {
         "en": "Birth Time",
     },
     "birth_location": {
-        "zh": "出生地點",
-        "en": "Birth Location",
+        "zh": "你在哪裡出生？",
+        "en": "Where were you born?",
     },
     "city_preset": {
         "zh": "預設城市",
@@ -75,8 +67,8 @@ TRANSLATIONS = {
         "en": "Gender",
     },
     "gender_label": {
-        "zh": "性別（影響七政四餘宮位排列方向）",
-        "en": "Gender (affects house direction for Chinese Astrology)",
+        "zh": "你的性別",
+        "en": "Your Gender",
     },
     "male": {
         "zh": "男命",
@@ -331,10 +323,6 @@ TRANSLATIONS = {
         "en": "🔮 Talisman Generator (no chart needed)",
     },
     # ── "Please calculate" info messages ───────────────────────────────────
-    "info_calc_prompt": {
-        "zh": "👈 請在左側輸入排盤資料，然後點擊占星類別。",
-        "en": "👈 Enter birth data on the left and click the astrology chart you want.",
-    },
     "info_decans_prompt": {
         "zh": (
             "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看個人十度區間排盤。"
@@ -876,10 +864,6 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     },
 
     # ── Sidebar astrology selector ─────────────────────────
-    "sidebar_system_label": {
-        "zh": "🔮 選擇占星體系",
-        "en": "🔮 Select Astrology System",
-    },
     "sidebar_system_home": {
         "zh": "🏠 首頁（世界地圖）",
         "en": "🏠 Home (World Map)",
@@ -1016,6 +1000,69 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "en": "Or join QQ Group 「堅三式軟件交流群」 (Group ID **770621021**)",
     },
     "contact_other_apps": {"zh": "其他相關應用", "en": "Other Related Apps"},
+
+    # ── GUI Optimization: System categories ─────────────────
+    "cat_popular": {"zh": "⭐ 最熱門", "en": "⭐ Most Popular"},
+    "cat_chinese": {"zh": "🏮 中華傳統", "en": "🏮 Chinese Traditions"},
+    "cat_western": {"zh": "🌍 西方體系", "en": "🌍 Western Systems"},
+    "cat_asian": {"zh": "🌏 亞洲體系", "en": "🌏 Asian Systems"},
+    "cat_ancient": {"zh": "📜 古文明", "en": "📜 Ancient Civilizations"},
+
+    # ── GUI Optimization: Short beginner-friendly system descriptions ──
+    "sys_hint_western": {"zh": "最廣為人知的星座運勢", "en": "The most well-known horoscope system"},
+    "sys_hint_ziwei": {"zh": "中國最流行的命理系統", "en": "China's most popular destiny system"},
+    "sys_hint_chinese": {"zh": "中國古代天文星象占卜", "en": "Ancient Chinese astronomical divination"},
+    "sys_hint_indian": {"zh": "印度古老吠陀占星", "en": "Ancient Vedic astrology from India"},
+    "sys_hint_thai": {"zh": "泰國傳統命理解讀", "en": "Traditional Thai fate reading"},
+    "sys_hint_kabbalistic": {"zh": "猶太神祕主義占星", "en": "Jewish mystical astrology"},
+    "sys_hint_arabic": {"zh": "伊斯蘭黃金時代占星術", "en": "Islamic Golden Age astrology"},
+    "sys_hint_maya": {"zh": "瑪雅文明曆法占卜", "en": "Mayan calendar-based divination"},
+    "sys_hint_mahabote": {"zh": "緬甸出生星期推算", "en": "Myanmar weekday-based astrology"},
+    "sys_hint_decans": {"zh": "古埃及十度區間預測", "en": "Ancient Egyptian decan predictions"},
+    "sys_hint_nadi": {"zh": "南印度棕櫚葉手稿", "en": "South Indian palm-leaf readings"},
+    "sys_hint_zurkhai": {"zh": "蒙古藏傳佛教占星", "en": "Mongolian Tibetan Buddhist astrology"},
+    "sys_hint_hellenistic": {"zh": "古希臘羅馬占星傳統", "en": "Greco-Roman astrological tradition"},
+    "sys_hint_sukkayodo": {"zh": "日本宿曜道擇日占卜", "en": "Japanese lunar mansion divination"},
+    "sys_hint_chinstar": {"zh": "明代演禽命理推算", "en": "Ming dynasty bird-star divination"},
+
+    # ── GUI Optimization: Welcome / onboarding ─────────────
+    "welcome_hero_title": {
+        "zh": "歡迎來到堅占星 ⭐",
+        "en": "Welcome to Kin Astro ⭐",
+    },
+    "welcome_hero_body": {
+        "zh": "不用懂占星也能了解自己！只需 3 步，即可獲得你的專屬命理分析。",
+        "en": "No astrology knowledge needed! Just 3 steps to get your personal destiny reading.",
+    },
+    "welcome_step1_title": {"zh": "填寫出生資料", "en": "Enter Birth Info"},
+    "welcome_step1_body": {
+        "zh": "在左邊欄填入出生日期、時間、地點",
+        "en": "Fill in your birth date, time, and place in the sidebar",
+    },
+    "welcome_step2_title": {"zh": "選擇占星類型", "en": "Pick a System"},
+    "welcome_step2_body": {
+        "zh": "推薦從「西洋占星」或「紫微斗數」開始",
+        "en": "Start with Western Astrology or Zi Wei Dou Shu",
+    },
+    "welcome_step3_title": {"zh": "AI 幫你解讀", "en": "AI Reads for You"},
+    "welcome_step3_body": {
+        "zh": "點擊 AI 分析按鈕，用白話文解讀你的命盤",
+        "en": "Click AI Analysis to get a plain-language reading",
+    },
+    "welcome_quick_start": {
+        "zh": "👈 先在左邊欄輸入你的出生資料，再選擇一個占星體系吧！",
+        "en": "👈 Start by entering your birth info in the sidebar, then pick a system!",
+    },
+    "sidebar_system_label": {
+        "zh": "選擇你想了解的命理",
+        "en": "Pick Your Destiny Reading",
+    },
+
+    # ── GUI Optimization: Simplified info prompt ───────────
+    "info_calc_prompt": {
+        "zh": "👈 請在左邊欄填寫你的出生資料，然後點選你想了解的占星類型。",
+        "en": "👈 Enter your birth info on the left, then pick the astrology system you want.",
+    },
 }
 
 
