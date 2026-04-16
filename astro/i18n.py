@@ -332,8 +332,8 @@ TRANSLATIONS = {
     },
     # ── "Please calculate" info messages ───────────────────────────────────
     "info_calc_prompt": {
-        "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕。",
-        "en": "👈 Enter birth data on the left and click 'Calculate Chart'.",
+        "zh": "👈 請在左側輸入排盤資料，然後點擊占星類別。",
+        "en": "👈 Enter birth data on the left and click the astrology chart you want.",
     },
     "info_decans_prompt": {
         "zh": (
