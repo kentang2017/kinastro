@@ -378,7 +378,7 @@ with st.sidebar:
     )
     gender = "male" if gender_choice == _male_label else "female"
 
-    # ── Astrology system selector (15 eye-catching buttons) ────────
+    # ── Astrology system selector (eye-catching buttons) ────────
     st.divider()
     st.markdown("🔮 " + t("sidebar_system_label"))
 
@@ -405,42 +405,6 @@ with st.sidebar:
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_chinstar": t("tab_chinstar"),
     }
-
-    # Vivid background colours for each system button
-    _SYSTEM_COLORS = {
-        "tab_chinese":     "#E53935",  # red
-        "tab_ziwei":       "#8E24AA",  # purple
-        "tab_western":     "#1E88E5",  # blue
-        "tab_indian":      "#F57C00",  # orange
-        "tab_sukkayodo":   "#00897B",  # teal
-        "tab_thai":        "#C62828",  # dark red
-        "tab_kabbalistic": "#6A1B9A",  # deep purple
-        "tab_arabic":      "#2E7D32",  # green
-        "tab_maya":        "#AD1457",  # pink
-        "tab_mahabote":    "#00838F",  # cyan
-        "tab_decans":      "#EF6C00",  # dark orange
-        "tab_nadi":        "#4527A0",  # indigo
-        "tab_zurkhai":     "#00695C",  # dark teal
-        "tab_hellenistic": "#1565C0",  # dark blue
-        "tab_chinstar":    "#558B2F",  # olive
-    }
-
-    # Inject CSS for the astrology system buttons
-    st.markdown("""
-    <style>
-    .astro-btn-grid {display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px 0;}
-    .astro-btn-grid .astro-btn {
-        display:inline-block;padding:6px 10px;border-radius:8px;color:#fff;
-        font-size:0.82em;font-weight:700;cursor:pointer;text-align:center;
-        border:2px solid rgba(255,255,255,0.25);transition:all .15s;
-        text-shadow:0 1px 2px rgba(0,0,0,0.3);min-width:90%;box-sizing:border-box;
-    }
-    .astro-btn-grid .astro-btn:hover {filter:brightness(1.15);transform:scale(1.03);}
-    .astro-btn-grid .astro-btn.active {
-        border-color:#FFD600;box-shadow:0 0 8px #FFD600,0 0 2px #FFD600 inset;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
     # Resolve current selection
     if "_system_select" not in st.session_state:
