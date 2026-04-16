@@ -197,6 +197,7 @@ def _find_house(lon, cusps):
     return 1
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_kabbalistic_chart(year, month, day, hour, minute, timezone,
                               latitude, longitude, location_name=""):
     """計算卡巴拉占星排盤 (Tropical Zodiac, Placidus Houses)"""

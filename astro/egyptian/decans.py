@@ -190,6 +190,7 @@ def _build_dignity_row(planet_name: str, sign_idx: int, decan_data: dict) -> dic
 # 計算函數 (Computation Function)
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_decan_chart(year, month, day, hour, minute, timezone,
                         latitude, longitude, location_name="", **kwargs):
     """計算 Decan 排盤

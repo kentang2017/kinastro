@@ -3,6 +3,7 @@ astro/western_transit.py — 西洋占星流年過運 (Western Transits)
 
 Computes transit planet positions and aspects to natal chart.
 """
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -57,6 +58,7 @@ class TransitResult:
     aspects_to_natal: list  # list of TransitAspect
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_western_transits(natal_chart, year, month, day,
                              hour=12, minute=0, timezone=0.0):
     """Compute transit aspects to natal chart for a given date."""

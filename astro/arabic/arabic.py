@@ -308,6 +308,7 @@ def _compute_aspects(planets):
     return aspects
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_arabic_chart(year, month, day, hour, minute, timezone,
                          latitude, longitude, location_name=""):
     """計算阿拉伯占星排盤 (Tropical Zodiac, Placidus Houses)"""

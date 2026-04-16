@@ -5,6 +5,7 @@
 與本命盤對照顯示。
 """
 
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -29,6 +30,7 @@ class TransitData:
     planets: list = field(default_factory=list)   # List[PlanetPosition]
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_transit(
     year: int,
     month: int,

@@ -306,6 +306,7 @@ def _find_house(lon, cusps):
 # 計算函數 (Calculation Functions)
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_maya_chart(year, month, day, hour, minute,
                        timezone, latitude, longitude, location_name=""):
     """計算瑪雅占星排盤"""

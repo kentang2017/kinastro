@@ -268,6 +268,7 @@ def _nadi_amsha(sign_deg: float) -> int:
     return min(int(sign_deg / 0.2) + 1, NADI_AMSHA_PER_SIGN)
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_nadi_chart(year, month, day, hour, minute, timezone,
                        latitude, longitude, location_name="") -> NadiChart:
     """計算納迪占星命盤（使用恆星黃道 Lahiri 歲差）。"""
