@@ -31,7 +31,13 @@ SIXTY_JIAZI = [
 
 
 def gz_index(stem: int, branch: int) -> int:
-    """由天干索引和地支索引計算六十甲子索引"""
+    """由天干索引和地支索引計算六十甲子索引。
+
+    六十甲子中, 索引 i 滿足 i % 10 = stem, i % 12 = branch。
+    利用中國剩餘定理: i ≡ 6·stem − 5·branch (mod 60)
+    因為 6·10 − 5·12 = 0 (mod 60), 且 6·stem ≡ stem (mod 10),
+    −5·branch ≡ branch (mod 12)。
+    """
     return (6 * stem - 5 * branch) % 60
 
 
@@ -260,14 +266,27 @@ def compute_suidian(year_branch: int, year_stem: int) -> int:
 
 
 def compute_kongwang(gzi: int) -> tuple[int, int]:
-    """空亡: 基於旬 (每十個甲子為一旬), 返回兩個空亡地支"""
+    """空亡: 基於旬 (每十個甲子為一旬), 返回兩個空亡地支。
+
+    六十甲子每十個為一旬, 十天干配十地支後剩餘兩地支即空亡:
+    甲子旬(0-9)→戌亥(10,11), 甲戌旬(10-19)→申酉(8,9),
+    甲申旬(20-29)→午未(6,7), 甲午旬(30-39)→辰巳(4,5),
+    甲辰旬(40-49)→寅卯(2,3), 甲寅旬(50-59)→子丑(0,1)。
+    通式: 第一空亡 = (5 − decade) × 2, 第二空亡 = 第一 + 1。
+    """
     decade = gzi // 10
     first = (5 - decade) * 2
     return first % 12, (first + 1) % 12
 
 
 def compute_guxu(gzi: int) -> tuple[int, int]:
-    """孤虛: 基於旬, 返回兩個孤虛地支"""
+    """孤虛: 基於旬, 返回兩個孤虛地支。
+
+    孤虛與空亡類似但錯開, 規律為:
+    甲子旬→辰巳(4,5), 甲戌旬→寅卯(2,3), 甲申旬→子丑(0,1),
+    甲午旬→戌亥(10,11), 甲辰旬→申酉(8,9), 甲寅旬→午未(6,7)。
+    通式: 第一孤虛 = (4 − 2·decade + 12) mod 12, 第二 = 第一 + 1。
+    """
     decade = gzi // 10
     first = (4 - 2 * decade + 12) % 12
     return first, (first + 1) % 12

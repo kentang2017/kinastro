@@ -2684,6 +2684,34 @@ class TestShenSha:
         assert stages[4] == "長生"  # 辰
         assert stages[5] == "養"    # 巳
 
+    def test_twelve_life_stages_all_nayin(self):
+        """Test twelve life stages for each Nayin element type."""
+        from astro.qizheng.shensha import compute_twelve_life_stages, gz_index, get_nayin_element
+        # 金 start=辰(4): 甲子 (stem=0, branch=0)
+        stages = compute_twelve_life_stages(0, 0)
+        assert get_nayin_element(gz_index(0, 0)) == "金"
+        assert stages[4] == "長生"
+
+        # 火 start=未(7): 丙寅 (stem=2, branch=2)
+        stages = compute_twelve_life_stages(2, 2)
+        assert get_nayin_element(gz_index(2, 2)) == "火"
+        assert stages[7] == "長生"
+
+        # 木 start=戌(10): 戊辰 (stem=4, branch=4)
+        stages = compute_twelve_life_stages(4, 4)
+        assert get_nayin_element(gz_index(4, 4)) == "木"
+        assert stages[10] == "長生"
+
+        # 土 start=丑(1): 庚午 (stem=6, branch=6)
+        stages = compute_twelve_life_stages(6, 6)
+        assert get_nayin_element(gz_index(6, 6)) == "土"
+        assert stages[1] == "長生"
+
+        # 水 start=丑(1): 丙子 (stem=2, branch=0)
+        stages = compute_twelve_life_stages(2, 0)
+        assert get_nayin_element(gz_index(2, 0)) == "水"
+        assert stages[1] == "長生"
+
 
 # ============================================================
 # 年限大運 (Dasha) Tests
