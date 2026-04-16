@@ -63,7 +63,7 @@ from astro.western.hellenistic import compute_hellenistic_chart, render_hellenis
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
 from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.western.asteroids import compute_asteroids
-from astro.export import render_download_buttons, western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict, generate_chart_pdf
+from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict, generate_chart_pdf
 from astro.natal_summary import generate_natal_summary
 from astro.interpretations import (
     get_transit_reading, get_synastry_reading, get_dasha_reading,
@@ -434,9 +434,19 @@ with st.sidebar:
                 width="stretch",
             )
         except Exception:
-            st.caption(t("sidebar_pdf_unavailable"))
+            st.button(
+                "📑 " + t("sidebar_pdf_unavailable"),
+                key="_sidebar_pdf_err",
+                disabled=True,
+                use_container_width=True,
+            )
     else:
-        st.caption(t("sidebar_pdf_hint"))
+        st.button(
+            "📑 " + t("sidebar_pdf_hint"),
+            key="_sidebar_pdf_empty",
+            disabled=True,
+            use_container_width=True,
+        )
 
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()
@@ -688,8 +698,6 @@ if _selected_system == "tab_chinese":
                 render_house_table(chart)
                 st.divider()
                 render_aspect_summary(chart)
-                st.divider()
-                render_download_buttons(chinese_chart_to_dict(chart), key_prefix="chinese")
 
             with _ch_tab_shensha:
                 _shensha = compute_shensha(
@@ -848,8 +856,7 @@ elif _selected_system == "tab_western":
                                        "R": "R" if a.retrograde else "",
                                        "Meaning": a.meaning_cn}
                                       for a in asts], width="stretch")
-                # Export
-                render_download_buttons(western_chart_to_dict(w_chart), key_prefix="western")
+                # Export removed — PDF available via sidebar
 
             with _w_tab_transit:
                 st.subheader(t("western_subtab_transit"))
@@ -989,7 +996,6 @@ elif _selected_system == "tab_indian":
 
             with _v_tab_rashi:
                 render_vedic_chart(v_chart)
-                render_download_buttons(vedic_chart_to_dict(v_chart), key_prefix="vedic")
 
             with _v_tab_dasha:
                 st.subheader(t("vedic_subtab_dasha"))
