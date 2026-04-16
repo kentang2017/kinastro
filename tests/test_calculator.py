@@ -392,8 +392,8 @@ class TestMOIRAMansionBoundaries:
         for i in range(27):
             if TWENTY_EIGHT_MANSIONS[i + 1]["start_lon"] < TWENTY_EIGHT_MANSIONS[i]["start_lon"]:
                 wraps += 1
-        # Two wraps: 危→室 (333→353) then 室→壁 (353→9, crossing 0°)
-        assert wraps == 1  # only one decreasing transition (crosses 0°)
+        # Only one decreasing transition where the sequence crosses 0° (室→壁)
+        assert wraps == 1
 
     def test_jiao_mansion_moira_boundary(self):
         """角宿起始度數應匹配 MOIRA 值 (≈203.84°)"""
@@ -426,7 +426,7 @@ class TestMOIRAMansionBoundaries:
         assert zhen["start_lon"] < jiao["start_lon"]
 
     def test_mansion_lookup_at_0_degrees(self):
-        """0° 應落在壁宿（壁 starts at 9.15°, 室 starts at 353.49°, so 0° is in 室）"""
+        """0° 應落在室宿（室 starts at 353.49°, 壁 starts at 9.15°, so 0° is in 室）"""
         mansion = get_mansion_for_degree(0.0)
         assert mansion["name"] == "室"
 
