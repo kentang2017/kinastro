@@ -764,11 +764,10 @@ def _render_aspects(chart):
 
 def _render_classical_dignities(chart):
     st.subheader("🏛️ 本質廟旺落陷 (Essential Dignities & Debilities)")
-    st.markdown(
-        "| Planet | Sign | House | Dignity | Joy | "
-        "|:------:|:----:|:-----:|:-------:|:---:|"
-    )
-    rows = []
+    rows = [
+        "| Planet | Sign | House | Dignity | Joy |",
+        "|:------:|:----:|:-----:|:-------:|:---:|",
+    ]
     for p in chart.planets:
         color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_html = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
