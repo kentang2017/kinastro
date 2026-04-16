@@ -662,22 +662,22 @@ def _render_welcome():
         unsafe_allow_html=True,
     )
 
-    _step_cols = st.columns(3)
     _steps = [
         ("1️⃣", t("welcome_step1_title"), t("welcome_step1_body")),
         ("2️⃣", t("welcome_step2_title"), t("welcome_step2_body")),
         ("3️⃣", t("welcome_step3_title"), t("welcome_step3_body")),
     ]
+    _cards_html = '<div class="step-row">'
     for _i, (_icon, _title, _body) in enumerate(_steps):
-        with _step_cols[_i]:
-            st.markdown(
-                f'<div class="step-card">'
-                f'<div class="step-num">{_i + 1}</div>'
-                f'<h4>{_icon} {_title}</h4>'
-                f'<p>{_body}</p>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
+        _cards_html += (
+            f'<div class="step-card">'
+            f'<div class="step-num">{_i + 1}</div>'
+            f'<h4>{_icon} {_title}</h4>'
+            f'<p>{_body}</p>'
+            f'</div>'
+        )
+    _cards_html += '</div>'
+    st.markdown(_cards_html, unsafe_allow_html=True)
 
     st.info(t("welcome_quick_start"))
 

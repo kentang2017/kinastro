@@ -91,6 +91,15 @@ MOBILE_CSS = """<style>
 }
 
 /* ── Step cards (onboarding) ───────────────────────── */
+.step-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+.step-row .step-card {
+    flex: 1 1 0;
+    min-width: 0;
+}
 .step-card {
     background: #ffffff;
     border: 1px solid #e0e0e0;
@@ -114,7 +123,7 @@ MOBILE_CSS = """<style>
     font-size: 0.95rem;
     margin-bottom: 8px;
 }
-.step-card h4 { margin: 6px 0 4px 0; font-size: 1rem; }
+.step-card h4 { margin: 6px 0 4px 0; font-size: 1rem; color: #1a73e8; }
 .step-card p { color: #555; font-size: 0.88rem; margin: 0; }
 
 /* ── Category header in sidebar ────────────────────── */
@@ -237,6 +246,13 @@ section[data-testid="stSidebar"] .stButton > button {
     .welcome-hero { padding: 20px 16px; }
     .welcome-hero h2 { font-size: 1.2rem !important; }
     .welcome-hero p { font-size: 0.9rem; }
+
+    /* Step cards: stay in a row on mobile, compact */
+    .step-row { gap: 6px; }
+    .step-card { padding: 12px 8px; border-radius: 8px; }
+    .step-num { width: 26px; height: 26px; line-height: 26px; font-size: 0.8rem; margin-bottom: 4px; }
+    .step-card h4 { font-size: 0.78rem; }
+    .step-card p { font-size: 0.72rem; }
 }
 /* ── Tablet ─────────────────────────────────────────── */
 @media (min-width: 769px) and (max-width: 1024px) {
