@@ -185,27 +185,36 @@ section[data-testid="stSidebar"] .stButton > button {
     h2 { font-size: 1.15rem !important; }
     h3 { font-size: 1.0rem !important; }
 
-    /* Markdown tables: horizontal scroll on mobile to avoid overflow */
-    [data-testid="stMarkdownContainer"] table {
-        display: block;
+    /* Scrollable wrapper for wide astrology tables */
+    .scroll-table-wrap {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         max-width: 100%;
+        margin: 8px 0;
+    }
+
+    /* Markdown tables (pure Markdown syntax): horizontal scroll */
+    [data-testid="stMarkdownContainer"] > div > table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         font-size: 0.72rem;
     }
-    [data-testid="stMarkdownContainer"] table td,
-    [data-testid="stMarkdownContainer"] table th {
+    [data-testid="stMarkdownContainer"] > div > table td,
+    [data-testid="stMarkdownContainer"] > div > table th {
         padding: 3px 6px !important;
         white-space: nowrap;
     }
 
-    /* HTML tables (non-markdown): constrain width and allow cell shrink */
+    /* HTML tables rendered via unsafe_allow_html: reduce font, wrap words */
     table {
         max-width: 100%;
+        font-size: 0.78rem;
     }
     table td, table th {
         min-width: auto !important;
         word-break: break-word;
+        font-size: 0.75rem;
     }
 
     /* SVG charts: fit within viewport */

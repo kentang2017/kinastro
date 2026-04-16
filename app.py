@@ -1742,8 +1742,9 @@ elif _selected_system == "tab_chinstar":
                 # Row 3: 寅(2)  丑(1)  子(0)  亥(11)
                 _cs_br = _cs_branches
                 _cs_grid = (
+                    '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
                     '<table style="border-collapse:separate;border-spacing:4px;'
-                    'margin:10px auto;font-family:\'Noto Serif TC\',serif;">'
+                    'margin:10px auto;min-width:280px;font-family:\'Noto Serif TC\',serif;">'
                     "<tr>"
                     + _cs_cell(_cs_br[5])  + _cs_cell(_cs_br[6])
                     + _cs_cell(_cs_br[7])  + _cs_cell(_cs_br[8])
@@ -1754,7 +1755,7 @@ elif _selected_system == "tab_chinstar":
                     + "</tr><tr>"
                     + _cs_cell(_cs_br[2])  + _cs_cell(_cs_br[1])
                     + _cs_cell(_cs_br[0])  + _cs_cell(_cs_br[11])
-                    + "</tr></table>"
+                    + "</tr></table></div>"
                 )
                 st.markdown(_cs_grid, unsafe_allow_html=True)
                 st.divider()

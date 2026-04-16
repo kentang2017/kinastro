@@ -518,8 +518,9 @@ def _render_mahabote_grid(chart):
     ]
 
     html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:separate;border-spacing:4px;'
-        'margin:auto;width:100%;">'
+        'margin:auto;width:100%;min-width:280px;">'
     )
 
     for row in grid_map:
@@ -536,7 +537,7 @@ def _render_mahabote_grid(chart):
                 html += _house_cell(chart.houses[cell])
         html += '</tr>'
 
-    html += '</table>'
+    html += '</table></div>'
     st.markdown(html, unsafe_allow_html=True)
 
 

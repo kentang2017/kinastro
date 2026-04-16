@@ -370,8 +370,9 @@ def _render_tree_of_life(chart):
     spacer = '<td style="border:none; width:5%;"></td>'
 
     html = (
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:separate; border-spacing:6px; '
-        'margin:auto; width:100%;">'
+        'margin:auto; width:100%; min-width:280px;">'
     )
 
     # Row 1: Keter (centered)
@@ -423,7 +424,7 @@ def _render_tree_of_life(chart):
         f'{spacer}<td style="border:none;"></td></tr>'
     )
 
-    html += '</table>'
+    html += '</table></div>'
     st.markdown(html, unsafe_allow_html=True)
 
 
