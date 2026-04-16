@@ -426,6 +426,7 @@ with st.sidebar:
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
+    _cur_lang = st.session_state.get("lang", "zh")
 
     # Resolve current selection
     if "_system_select" not in st.session_state:
@@ -440,8 +441,7 @@ with st.sidebar:
             _btn_type = "primary" if _is_active else "secondary"
             _badge = ""
             if _sk in _BEGINNER_SYSTEMS:
-                _lang = st.session_state.get("lang", "zh")
-                _badge_text = "推薦" if _lang == "zh" else "Start here"
+                _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
                 _badge = f' <span class="beginner-badge">{_badge_text}</span>'
             if st.button(
                 _SYSTEM_LABELS[_sk],
