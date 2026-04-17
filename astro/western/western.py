@@ -553,9 +553,9 @@ def compute_western_chart(year, month, day, hour, minute, timezone,
 # 渲染函數 (Rendering Functions)
 # ============================================================
 
-def render_western_chart(chart, after_chart_hook=None):
+def render_western_chart(chart, after_chart_hook=None, gender=None):
     """渲染完整的西洋占星排盤"""
-    _render_wheel_chart(chart)
+    _render_wheel_chart(chart, gender=gender)
     if after_chart_hook:
         after_chart_hook()
     st.divider()
@@ -601,7 +601,7 @@ def _render_info(chart):
         st.info(f"⚙️ **Sidereal Mode (Lahiri Ayanamsa):** {chart.ayanamsa:.2f}°")
 
 
-def _render_wheel_chart(chart):
+def _render_wheel_chart(chart, gender=None):
     """渲染西洋占星輪圖 (Western Wheel Chart) — SVG 版"""
     st.subheader("🔮 西洋占星輪盤 (Western Wheel)")
 
@@ -664,6 +664,7 @@ def _render_wheel_chart(chart):
         f'</text>'
     )
 
+    centre_rendered = False
     for r, row_data in enumerate(wheel_grid):
         for c, idx in enumerate(row_data):
             x = c * CW
@@ -671,11 +672,50 @@ def _render_wheel_chart(chart):
             cx = x + CW / 2
 
             if idx == -1:
-                # Empty centre cell — no content
+                if centre_rendered:
+                    continue
+                # Merge four centre cells into one — show birth info
+                centre_rendered = True
+                mx = 1 * CW       # col 1
+                my = CAP_H + 1 * CH  # row 1
+                mw = CW * 2       # span 2 cols
+                mh = CH * 2       # span 2 rows
+                mcx = mx + mw / 2
+                mcy = my + mh / 2
+
                 parts.append(
-                    f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
-                    f'fill="#1a1a2e" stroke="#333" stroke-width="0.5"/>'
+                    f'<rect x="{mx}" y="{my}" width="{mw}" height="{mh}" '
+                    f'fill="#1a1a2e" stroke="#444" stroke-width="1" rx="2"/>'
                 )
+
+                # Birth date line
+                date_str = f'{chart.year}/{chart.month:02d}/{chart.day:02d}'
+                time_str = f'{chart.hour:02d}:{chart.minute:02d}'
+                tz_str = f'UTC{chart.timezone:+.1f}'
+                parts.append(
+                    f'<text x="{mcx}" y="{mcy - 28}" text-anchor="middle" '
+                    f'fill="#e0e0e0" font-size="12">'
+                    f'{_esc(date_str)}  {_esc(time_str)}</text>'
+                )
+                parts.append(
+                    f'<text x="{mcx}" y="{mcy - 10}" text-anchor="middle" '
+                    f'fill="#aaa" font-size="11">{_esc(tz_str)}</text>'
+                )
+
+                # Gender line
+                if gender:
+                    gender_label = "男命" if gender == "male" else "女命"
+                    parts.append(
+                        f'<text x="{mcx}" y="{mcy + 10}" text-anchor="middle" '
+                        f'fill="#e0e0e0" font-size="12">{_esc(gender_label)}</text>'
+                    )
+
+                # Location line
+                if chart.location_name:
+                    parts.append(
+                        f'<text x="{mcx}" y="{mcy + 30}" text-anchor="middle" '
+                        f'fill="#aaa" font-size="11">{_esc(chart.location_name)}</text>'
+                    )
                 continue
 
             h = next((hh for hh in chart.houses if hh.number == idx), None)
