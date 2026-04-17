@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # Cerebras SDK wrapper
 # ---------------------------------------------------------------------------
 
-DEFAULT_MODEL = "gpt-oss-120b"
+DEFAULT_MODEL = "qwen-3-235b-a22b-instruct-2507"
 
 CEREBRAS_MODEL_OPTIONS = [
     "gpt-oss-120b",
