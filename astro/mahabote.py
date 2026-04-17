@@ -470,7 +470,7 @@ def _render_compass(chart):
     html = (
         '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:separate;border-spacing:4px;'
-        'margin:auto;width:80%;max-width:500px;">'
+        'margin:auto;width:80%;max-width:500px;table-layout:fixed;">'
         f'<tr>{"".join(row0)}</tr>'
         f'<tr>{row1_l}{center_html}{row1_r}</tr>'
         f'<tr>{"".join(row2)}</tr>'
@@ -520,7 +520,7 @@ def _render_mahabote_grid(chart):
     html = (
         '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:separate;border-spacing:4px;'
-        'margin:auto;width:100%;min-width:280px;">'
+        'margin:auto;width:100%;min-width:280px;table-layout:fixed;">'
     )
 
     for row in grid_map:

@@ -183,7 +183,7 @@ def _build_grid_html(
     html = (
         '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:collapse; margin:auto; width:100%; '
-        'background:#1a1a2e; color:#e0e0e0;">'
+        'table-layout:fixed; background:#1a1a2e; color:#e0e0e0;">'
     )
 
     for row_idx, row in enumerate(grid_order):

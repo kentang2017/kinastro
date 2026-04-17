@@ -634,7 +634,7 @@ def _render_wheel_chart(chart):
 
     html = (
         '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
-        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:560px;">'
+        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:560px; table-layout:fixed;">'
         '<caption style="caption-side:top; font-size:14px; padding:4px;">'
         '<b>Western Wheel Chart</b> — '
         '🔺 ASC ' + asc_info[1] + asc_info[0] + ' '

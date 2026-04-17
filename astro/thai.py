@@ -337,7 +337,7 @@ def _render_thai_grid(chart):
         "color:#e0e0e0;"
     )
 
-    html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;"><table style="border-collapse:collapse; margin:auto; width:100%;">'
+    html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;"><table style="border-collapse:collapse; margin:auto; width:100%; table-layout:fixed;">'
     for row_idx, row in enumerate(grid):
         html += "<tr>"
         col_idx = 0
