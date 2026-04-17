@@ -96,8 +96,9 @@ from astro.chinstar.chinstar import WanHuaXianQin
 # ============================================================
 st.set_page_config(
     page_title="堅占星 Kin Astro",
-    page_icon="⭐",
+    page_icon="🌌",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 # ── Mobile-responsive CSS ──────────────────────────────────────
@@ -257,7 +258,10 @@ def _render_bphs_result(bphs_result):
 
 
 st.title(t("app_title"))
-st.markdown(t("app_subtitle"))
+st.markdown(
+    '<p class="app-subtitle">' + t("app_subtitle") + '</p>',
+    unsafe_allow_html=True,
+)
 
 # ============================================================
 # 預設城市資料
@@ -1547,43 +1551,43 @@ elif _selected_system == "tab_chinstar":
                 _cs_shen_br = p["shen_gong"]["branch"]
                 _cs_tai_br  = p["tai_gong"]["branch"]
 
-                # 五行色彩
+                # 五行色彩 (dark theme)
                 _cs_elem_bg = {
-                    "木": "#d9f2d9", "火": "#ffe0d0",
-                    "土": "#fffbcc", "金": "#e8e8e8", "水": "#cce5ff",
+                    "木": "rgba(56,142,60,0.15)", "火": "rgba(198,40,40,0.15)",
+                    "土": "rgba(245,127,23,0.15)", "金": "rgba(158,158,158,0.15)", "水": "rgba(21,101,192,0.15)",
                 }
                 _cs_elem_bd = {
-                    "木": "#388e3c", "火": "#c62828",
-                    "土": "#f57f17", "金": "#616161", "水": "#1565c0",
+                    "木": "rgba(56,142,60,0.4)", "火": "rgba(198,40,40,0.4)",
+                    "土": "rgba(245,127,23,0.4)", "金": "rgba(158,158,158,0.4)", "水": "rgba(21,101,192,0.4)",
                 }
 
                 def _cs_cell(branch_char: str) -> str:
                     palace = _cs_branch_to_palace.get(branch_char, "")
                     bird   = _cs_palace_bird.get(palace, "")
                     elem   = _cs_qin_elem.get(bird, "")
-                    bg     = _cs_elem_bg.get(elem, "#f9f9f9")
-                    bd     = _cs_elem_bd.get(elem, "#999")
+                    bg     = _cs_elem_bg.get(elem, "rgba(30,27,75,0.4)")
+                    bd     = _cs_elem_bd.get(elem, "rgba(167,139,250,0.3)")
                     badge  = ""
                     if branch_char == _cs_ming_br:
-                        badge = '<span style="color:#c62828;font-size:10px;">★命</span> '
-                        bd    = "#c62828"
-                        bg    = "#fff0f0"
+                        badge = '<span style="color:#ef4444;font-size:10px;">★命</span> '
+                        bd    = "rgba(239,68,68,0.5)"
+                        bg    = "rgba(239,68,68,0.1)"
                     elif branch_char == _cs_shen_br:
-                        badge = '<span style="color:#6a1b9a;font-size:10px;">☆身</span> '
-                        bd    = "#6a1b9a"
-                        bg    = "#f9f0ff"
+                        badge = '<span style="color:#a78bfa;font-size:10px;">☆身</span> '
+                        bd    = "rgba(167,139,250,0.5)"
+                        bg    = "rgba(167,139,250,0.1)"
                     elif branch_char == _cs_tai_br:
-                        badge = '<span style="color:#e64a19;font-size:10px;">◎胎</span> '
-                        bd    = "#e64a19"
-                        bg    = "#fff3e0"
+                        badge = '<span style="color:#facc15;font-size:10px;">◎胎</span> '
+                        bd    = "rgba(250,204,21,0.5)"
+                        bg    = "rgba(250,204,21,0.1)"
                     return (
                         f'<td style="width:25%;min-width:70px;height:88px;text-align:center;'
                         f'vertical-align:middle;border:2px solid {bd};'
-                        f'background:{bg};padding:4px 2px;border-radius:6px;">'
-                        f'<div style="font-size:11px;color:#555;font-weight:bold;">'
+                        f'background:{bg};padding:4px 2px;border-radius:8px;">'
+                        f'<div style="font-size:11px;color:#b0b0d0;font-weight:bold;">'
                         f'{badge}{branch_char}宮</div>'
-                        f'<div style="font-size:11px;color:#444;margin-top:2px;">{palace}</div>'
-                        f'<div style="font-size:14px;color:#1a237e;font-weight:bold;'
+                        f'<div style="font-size:11px;color:#e0e0ff;margin-top:2px;">{palace}</div>'
+                        f'<div style="font-size:14px;color:#a78bfa;font-weight:bold;'
                         f'margin-top:3px;">{bird}</div>'
                         f'</td>'
                     )
@@ -1591,21 +1595,21 @@ elif _selected_system == "tab_chinstar":
                 # 中央格（基本資料 + 三主星 + 格局）
                 _cs_center_td = (
                     '<td colspan="2" rowspan="2" style="text-align:center;'
-                    'vertical-align:middle;border:2px solid #444;'
-                    'background:#fffde7;padding:10px 8px;border-radius:6px;'
+                    'vertical-align:middle;border:2px solid rgba(167,139,250,0.3);'
+                    'background:rgba(30,27,75,0.6);padding:10px 8px;border-radius:8px;'
                     'line-height:1.6;">'
-                    '<div style="font-size:15px;font-weight:bold;color:#000000;'
+                    '<div style="font-size:15px;font-weight:bold;color:#a78bfa;'
                     'letter-spacing:2px;">萬化仙禽</div>'
-                    f'<div style="font-size:11px;color:#000000;margin-top:6px;">'
+                    f'<div style="font-size:11px;color:#e0e0ff;margin-top:6px;">'
                     f'{bi["year"]}年{bi["month"]}月{bi["day"]}日 {bi["hour"]}時</div>'
-                    f'<div style="font-size:11px;color:#000000;">{bi["gender"]}命 {bi["day_night"]}</div>'
-                    f'<div style="font-size:11px;color:#000000;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
-                    '<hr style="margin:6px 0;border-color:#ccc;">'
-                    f'<div style="font-size:11px;color:#000000;"><b>胎星</b>：{s["tai_xing"]}</div>'
-                    f'<div style="font-size:11px;color:#000000;"><b>命星</b>：{s["ming_xing"]}</div>'
-                    f'<div style="font-size:11px;color:#000000;"><b>身星</b>：{s["shen_xing"]}</div>'
-                    '<hr style="margin:6px 0;border-color:#ccc;">'
-                    f'<div style="font-size:11px;color:#000000;">'
+                    f'<div style="font-size:11px;color:#e0e0ff;">{bi["gender"]}命 {bi["day_night"]}</div>'
+                    f'<div style="font-size:11px;color:#e0e0ff;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
+                    '<hr style="margin:6px 0;border-color:rgba(167,139,250,0.2);">'
+                    f'<div style="font-size:11px;color:#e0e0ff;"><b>胎星</b>：{s["tai_xing"]}</div>'
+                    f'<div style="font-size:11px;color:#e0e0ff;"><b>命星</b>：{s["ming_xing"]}</div>'
+                    f'<div style="font-size:11px;color:#e0e0ff;"><b>身星</b>：{s["shen_xing"]}</div>'
+                    '<hr style="margin:6px 0;border-color:rgba(167,139,250,0.2);">'
+                    f'<div style="font-size:11px;color:#e0e0ff;">'
                     f'<b>格局</b>：{pat["grade"]}</div>'
                     '</td>'
                 )
@@ -1619,7 +1623,7 @@ elif _selected_system == "tab_chinstar":
                 _cs_grid = (
                     '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
                     '<table style="border-collapse:separate;border-spacing:4px;'
-                    'margin:10px auto;width:100%;table-layout:fixed;font-family:\'Noto Serif TC\',serif;">'
+                    'margin:10px auto;width:100%;table-layout:fixed;font-family:\'Noto Sans TC\',serif;">'
                     "<tr>"
                     + _cs_cell(_cs_br[5])  + _cs_cell(_cs_br[6])
                     + _cs_cell(_cs_br[7])  + _cs_cell(_cs_br[8])
