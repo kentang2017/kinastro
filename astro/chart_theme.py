@@ -110,6 +110,7 @@ body, p, span, div, li, td, th, label, input, select, textarea, button {
 /* Preserve Material Symbols font for Streamlit UI icons (expander toggle, sidebar toggle, etc.) */
 .material-symbols-rounded,
 [class*="material-symbols"],
+[data-testid="stIconMaterial"],
 [data-testid="stExpanderToggleIcon"],
 [data-testid="stExpanderToggleIcon"] span,
 [data-testid="stExpander"] summary svg,
