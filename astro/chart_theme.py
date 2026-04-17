@@ -69,6 +69,13 @@ MOBILE_CSS = """<style>
     overflow-x: hidden;
 }
 
+/* ── Markdown tables: horizontal scroll on overflow ── */
+[data-testid="stMarkdownContainer"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
 /* ── Welcome hero card ─────────────────────────────── */
 .welcome-hero {
     background: linear-gradient(135deg, #1a237e 0%, #4a148c 50%, #880e4f 100%);
@@ -214,7 +221,6 @@ section[data-testid="stSidebar"] .stButton > button {
 
     /* HTML tables rendered via unsafe_allow_html */
     table {
-        max-width: 100%;
         font-size: 0.75rem;
     }
     table td, table th {
@@ -260,10 +266,6 @@ svg.chart-wheel { max-width: 100%; height: auto; }
 .export-btn-row .stDownloadButton { margin-bottom: 4px; }
 
 /* ── Astro table styling (all screen sizes) ────────── */
-[data-testid="stMarkdownContainer"] > div {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
 [data-testid="stMarkdownContainer"] table {
     border-collapse: collapse;
     width: max-content;
