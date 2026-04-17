@@ -266,7 +266,6 @@ svg.chart-wheel { max-width: 100%; height: auto; }
 }
 [data-testid="stMarkdownContainer"] table {
     border-collapse: collapse;
-    white-space: nowrap;
     width: max-content;
     min-width: 100%;
 }
