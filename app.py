@@ -518,7 +518,8 @@ with st.sidebar:
 # AI Analysis helper — reusable across all system tabs
 # ============================================================
 
-def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
+def _render_ai_button(system_key: str, chart_obj, btn_key: str = "",
+                      page_content: str = ""):
     """Render the AI analysis button and execute the analysis when clicked.
 
     Parameters
@@ -529,6 +530,9 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
         The chart object produced by the compute function.
     btn_key : str
         Optional unique key suffix for the button widget.
+    page_content : str
+        Optional extra text content rendered on the page that should also
+        be included in the AI analysis prompt.
     """
     _bk = f"_ai_btn_{system_key}_{btn_key}" if btn_key else f"_ai_btn_{system_key}"
     st.divider()
@@ -548,7 +552,9 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = ""):
 
             try:
                 client = CerebrasClient(api_key=_api_key)
-                chart_prompt = format_chart_for_prompt(system_key, chart_obj)
+                chart_prompt = format_chart_for_prompt(
+                    system_key, chart_obj, page_content=page_content,
+                )
                 messages = [
                     {"role": "system", "content": st.session_state.get("ai_system_prompt", "")},
                     {"role": "user", "content": chart_prompt},
@@ -786,14 +792,22 @@ elif _selected_system == "tab_western":
 
             with _w_tab_natal:
                 _w_gender = st.session_state.get("_calc_gender")
-                render_western_chart(w_chart, after_chart_hook=lambda: _render_ai_button("tab_western", w_chart, btn_key="western"), gender=_w_gender)
+                # Pre-compute natal summary so it can be included in AI analysis
+                _summary = generate_natal_summary(
+                    w_chart.planets, w_chart.houses,
+                    getattr(w_chart, 'asc_sign', ''),
+                    lang=get_lang(),
+                )
+                render_western_chart(
+                    w_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_western", w_chart,
+                        btn_key="western", page_content=_summary,
+                    ),
+                    gender=_w_gender,
+                )
                 # Natal summary
                 with st.expander(t("natal_summary_header"), expanded=True):
-                    _summary = generate_natal_summary(
-                        w_chart.planets, w_chart.houses,
-                        getattr(w_chart, 'asc_sign', ''),
-                        lang=get_lang(),
-                    )
                     st.markdown(_summary)
                 # Fixed stars & asteroids checkboxes
                 _show_stars = st.checkbox(t("show_fixed_stars"), value=False, key="w_stars")
