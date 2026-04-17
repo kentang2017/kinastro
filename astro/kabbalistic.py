@@ -355,75 +355,96 @@ def _render_tree_of_life(chart):
                 f'{p.sign_glyph} {p.sign_degree:.1f}°'
             )
 
-    def _seph_cell(idx, width="30%"):
+    def _seph_cell(idx):
         s = SEPHIROTH[idx]
         planet_html = "<br/>".join(seph_planets[idx]) if seph_planets[idx] else ""
         return (
-            f'<td style="border:2px solid #9370DB; padding:8px; '
-            f'text-align:center; vertical-align:top; width:{width}; '
-            f'background:#1a0d2e; border-radius:8px; color:#e0d0ff;">'
+            f'<td class="tol-seph">'
             f'<b>{s[1]}</b><br/>'
-            f'<span style="font-size:16px; color:#c8b8f0">{s[0]}</span><br/>'
-            f'<small style="color:#a090c0">{s[2]} ({s[3]})</small><br/>'
+            f'<span class="tol-hebrew">{s[0]}</span><br/>'
+            f'<small class="tol-meaning">{s[2]} ({s[3]})</small><br/>'
             f'{planet_html}'
             f'</td>'
         )
 
-    spacer = '<td style="border:none; width:5%;"></td>'
+    spacer = '<td class="tol-spacer"></td>'
 
-    html = (
-        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
-        '<table style="border-collapse:separate; border-spacing:6px; '
-        'margin:auto; width:100%; min-width:280px;">'
-    )
+    # Responsive CSS
+    css = """<style>
+.tol-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.tol-table{border-collapse:separate;border-spacing:6px;margin:auto;width:100%;min-width:0;table-layout:fixed}
+.tol-seph{border:2px solid #9370DB;padding:8px;text-align:center;vertical-align:top;
+  background:#1a0d2e;border-radius:8px;color:#e0d0ff;font-size:14px;word-break:break-word}
+.tol-hebrew{font-size:16px;color:#c8b8f0}
+.tol-meaning{color:#a090c0}
+.tol-spacer{border:none;width:5%;padding:0}
+.tol-empty{border:none;padding:0}
+
+@media(max-width:600px){
+  .tol-table{border-spacing:3px}
+  .tol-seph{padding:4px;font-size:11px;border-radius:5px}
+  .tol-hebrew{font-size:13px}
+  .tol-meaning{font-size:10px}
+  .tol-spacer{width:2%}
+}
+@media(min-width:601px) and (max-width:900px){
+  .tol-table{border-spacing:4px}
+  .tol-seph{padding:6px;font-size:13px;border-radius:6px}
+  .tol-hebrew{font-size:15px}
+}
+</style>"""
+
+    html = css
+    html += '<div class="tol-wrap">'
+    html += '<table class="tol-table">'
 
     # Row 1: Keter (centered)
     html += (
-        f'<tr><td style="border:none; width:30%"></td>{spacer}'
+        f'<tr><td class="tol-empty"></td>{spacer}'
         f'{_seph_cell(0)}'
-        f'{spacer}<td style="border:none; width:30%"></td></tr>'
+        f'{spacer}<td class="tol-empty"></td></tr>'
     )
 
     # Row 2: Binah — Chokmah
     html += (
         f'<tr>{_seph_cell(2)}{spacer}'
-        f'<td style="border:none;"></td>'
+        f'<td class="tol-empty"></td>'
         f'{spacer}{_seph_cell(1)}</tr>'
     )
 
     # Row 3: Gevurah — Chesed
     html += (
         f'<tr>{_seph_cell(4)}{spacer}'
-        f'<td style="border:none;"></td>'
+        f'<td class="tol-empty"></td>'
         f'{spacer}{_seph_cell(3)}</tr>'
     )
 
     # Row 4: Tiferet (centered)
     html += (
-        f'<tr><td style="border:none;"></td>{spacer}'
+        f'<tr><td class="tol-empty"></td>{spacer}'
         f'{_seph_cell(5)}'
-        f'{spacer}<td style="border:none;"></td></tr>'
+        f'{spacer}<td class="tol-empty"></td></tr>'
     )
 
     # Row 5: Hod — Netzach
     html += (
         f'<tr>{_seph_cell(7)}{spacer}'
-        f'<td style="border:none;"></td>'
+        f'<td class="tol-empty"></td>'
         f'{spacer}{_seph_cell(6)}</tr>'
     )
 
     # Row 6: Yesod (centered)
     html += (
-        f'<tr><td style="border:none;"></td>{spacer}'
+        f'<tr><td class="tol-empty"></td>{spacer}'
         f'{_seph_cell(8)}'
-        f'{spacer}<td style="border:none;"></td></tr>'
+        f'{spacer}<td class="tol-empty"></td></tr>'
     )
 
     # Row 7: Malkuth (centered)
     html += (
-        f'<tr><td style="border:none;"></td>{spacer}'
+        f'<tr><td class="tol-empty"></td>{spacer}'
         f'{_seph_cell(9)}'
-        f'{spacer}<td style="border:none;"></td></tr>'
+        f'{spacer}<td class="tol-empty"></td></tr>'
     )
 
     html += '</table></div>'
