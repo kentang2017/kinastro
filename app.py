@@ -259,8 +259,7 @@ def _render_bphs_result(bphs_result):
 
 st.title(t("app_title"))
 st.markdown(
-    '<p style="font-size:1.05rem; color:#b0b0d0; margin-top:-8px; margin-bottom:20px;">'
-    + t("app_subtitle") + '</p>',
+    '<p class="app-subtitle">' + t("app_subtitle") + '</p>',
     unsafe_allow_html=True,
 )
 

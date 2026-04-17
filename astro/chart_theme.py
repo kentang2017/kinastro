@@ -195,6 +195,14 @@ hr {
     max-width: 100%;
 }
 
+/* ── App subtitle ─────────────────────────────────── */
+.app-subtitle {
+    font-size: 1.05rem;
+    color: #b0b0d0;
+    margin-top: -8px;
+    margin-bottom: 20px;
+}
+
 /* ── Welcome hero card ─────────────────────────────── */
 .welcome-hero {
     background: linear-gradient(135deg, rgba(30, 27, 75, 0.8) 0%, rgba(88, 28, 135, 0.6) 50%, rgba(30, 27, 75, 0.8) 100%);
@@ -221,6 +229,7 @@ hr {
     background-size: 30px 30px;
     animation: starfield 60s linear infinite;
     pointer-events: none;
+    will-change: transform;
 }
 @keyframes starfield {
     0% { transform: translate(0, 0); }
@@ -481,7 +490,7 @@ svg.chart-wheel { max-width: 100%; height: auto; }
     border-collapse: separate;
     border-spacing: 4px;
     margin: 10px auto;
-    font-family: 'Noto Sans TC', serif;
+    font-family: 'Noto Sans TC', sans-serif;
 }
 .palace-grid td {
     width: 100px;
@@ -555,7 +564,7 @@ def get_plotly_theme() -> dict:
         margin=dict(l=20, r=20, t=40, b=20),
         colorway=[
             "#facc15",    # Sun – star gold
-            "#C0C0C0",    # Moon – silver
+            "#c0c0c0",    # Moon – silver
             "#60a5fa",    # Mercury – sky blue
             "#f472b6",    # Venus – pink
             "#ef4444",    # Mars – red
