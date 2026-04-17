@@ -96,6 +96,11 @@ h1 {
 body, p, span, div, li, td, th, label, input, select, textarea, button {
     font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
 }
+/* Preserve Material Symbols font for Streamlit UI icons (e.g. sidebar toggle) */
+.material-symbols-rounded,
+[class*="material-symbols"] {
+    font-family: 'Material Symbols Rounded' !important;
+}
 
 /* ── Glassmorphism cards ─────────────────────────────── */
 [data-testid="stExpander"] {
