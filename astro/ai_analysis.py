@@ -435,12 +435,42 @@ def format_chinstar_chart(chart_data: dict) -> str:
     return "\n".join(sections)
 
 
+def _format_value(value: Any, depth: int = 0) -> str:
+    """Recursively format a value for inclusion in the AI prompt."""
+    if depth > 3:
+        return str(value)
+    indent = "  " * depth
+    if isinstance(value, dict):
+        lines = []
+        for k, v in value.items():
+            lines.append(f"{indent}{k}: {_format_value(v, depth + 1)}")
+        return "\n".join(lines)
+    if isinstance(value, (list, tuple)):
+        if not value:
+            return "(none)"
+        lines = []
+        for item in value:
+            lines.append(f"{indent}- {_format_value(item, depth + 1)}")
+        return "\n".join(lines)
+    if hasattr(value, "__dict__") and not callable(value):
+        lines = []
+        for attr in sorted(vars(value)):
+            if attr.startswith("_"):
+                continue
+            val = getattr(value, attr, None)
+            if callable(val):
+                continue
+            lines.append(f"{indent}{attr}: {_format_value(val, depth + 1)}")
+        return "\n".join(lines) if lines else str(value)
+    return str(value)
+
+
 def format_generic_chart(chart, system_name: str = "Unknown") -> str:
     """Fallback formatter for any chart object — dumps all public attributes."""
     sections = [f"【{system_name}】"]
     if isinstance(chart, dict):
         for k, v in chart.items():
-            sections.append(f"{k}: {v}")
+            sections.append(f"{k}: {_format_value(v, depth=1)}")
     else:
         for attr in sorted(dir(chart)):
             if attr.startswith("_"):
@@ -448,7 +478,7 @@ def format_generic_chart(chart, system_name: str = "Unknown") -> str:
             val = getattr(chart, attr, None)
             if callable(val):
                 continue
-            sections.append(f"{attr}: {val}")
+            sections.append(f"{attr}: {_format_value(val, depth=1)}")
     return "\n".join(sections)
 
 
@@ -472,7 +502,11 @@ SYSTEM_FORMATTERS = {
 }
 
 
-def format_chart_for_prompt(system_key: str, chart) -> str:
+def format_chart_for_prompt(
+    system_key: str,
+    chart,
+    page_content: str = "",
+) -> str:
     """Format a chart object into a text prompt for AI analysis.
 
     Parameters
@@ -481,6 +515,10 @@ def format_chart_for_prompt(system_key: str, chart) -> str:
         One of the _SYSTEM_KEYS (e.g. ``"tab_western"``).
     chart : object
         The chart object returned by the compute function.
+    page_content : str
+        Optional extra text content rendered on the page that should also
+        be included in the analysis (e.g. natal summary, personality
+        readings, swallow analysis).
 
     Returns
     -------
@@ -489,5 +527,18 @@ def format_chart_for_prompt(system_key: str, chart) -> str:
     """
     formatter = SYSTEM_FORMATTERS.get(system_key)
     if formatter:
-        return formatter(chart)
-    return format_generic_chart(chart, system_key)
+        structured = formatter(chart)
+    else:
+        structured = format_generic_chart(chart, system_key)
+
+    # Append a comprehensive dump of all chart attributes so no data is
+    # missed by the specific formatter.
+    generic = format_generic_chart(chart, system_key)
+    if generic and generic != structured:
+        structured += "\n\n--- 完整排盤數據 (Supplementary Data) ---\n" + generic
+
+    # Append any additional page-level content.
+    if page_content:
+        structured += "\n\n--- 頁面附加資訊 (Additional Page Content) ---\n" + page_content
+
+    return structured
