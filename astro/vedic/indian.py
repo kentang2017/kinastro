@@ -388,16 +388,17 @@ def _render_info(chart):
 
 
 def _render_south_indian_grid(chart):
-    """渲染南印度式方盤 (South Indian Chart)"""
+    """渲染南印度式方盤 (South Indian Chart) — SVG 等分格"""
     st.subheader("📊 南印度排盤 (South Indian Chart)")
 
-    # South Indian chart: fixed rashi positions in 4×4 grid
-    # Mapping: each cell corresponds to a rashi index (0-11)
-    si_grid = [
-        [3, 2, 1, 0],      # Cancer Gemini Taurus Aries
-        [4, -1, -1, 11],    # Leo [center] Pisces
-        [5, -1, -1, 10],    # Virgo [center] Aquarius
-        [6, 7, 8, 9],       # Libra Scorpio Sagittarius Capricorn
+    from html import escape as _esc
+
+    # Fixed rashi positions in 4×4 grid: (col, row, rashi_index)
+    si_cells = [
+        (0, 0, 3), (1, 0, 2), (2, 0, 1), (3, 0, 0),
+        (0, 1, 4),                         (3, 1, 11),
+        (0, 2, 5),                         (3, 2, 10),
+        (0, 3, 6), (1, 3, 7), (2, 3, 8), (3, 3, 9),
     ]
 
     rashi_planets = {i: [] for i in range(12)}
@@ -407,76 +408,114 @@ def _render_south_indian_grid(chart):
         rashi_planets[idx].append((short, p.name))
 
     asc_idx = _sign_index(chart.ascendant)
+    S = 400
+    cell = S // 4  # 100 — each cell is exactly the same size
 
-    cell_style = (
-        "border:1px solid #444; padding:6px; text-align:center; "
-        "vertical-align:top; font-size:13px; word-break:break-word;"
-    )
-    asc_cell_style = cell_style + " background:#3d3010;"
-    center_style = (
-        "border:1px solid #444; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
-        "color:#e0e0e0;"
+    svg = [
+        f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg"'
+        f' style="width:100%;max-width:{S}px;height:auto;'
+        f'font-family:sans-serif;">'
+    ]
+
+    # Background
+    svg.append(
+        f'<rect width="{S}" height="{S}" fill="#1a1a2e" rx="4"/>'
     )
 
-    html = (
-        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
-        '<table style="border-collapse:collapse; margin:auto; width:100%; min-width:280px; table-layout:fixed;">'
+    # Grid lines (equal spacing)
+    for i in range(5):
+        svg.append(
+            f'<line x1="{i * cell}" y1="0" x2="{i * cell}" y2="{S}"'
+            f' stroke="#555" stroke-width="1"/>'
+        )
+        svg.append(
+            f'<line x1="0" y1="{i * cell}" x2="{S}" y2="{i * cell}"'
+            f' stroke="#555" stroke-width="1"/>'
+        )
+
+    # Center 2×2 info area
+    svg.append(
+        f'<rect x="{cell}" y="{cell}" width="{cell * 2}"'
+        f' height="{cell * 2}" fill="#2a2a4a" stroke="#555"'
+        f' stroke-width="1"/>'
     )
-    for row_idx, row in enumerate(si_grid):
-        html += "<tr>"
-        col_idx = 0
-        while col_idx < len(row):
-            idx = row[col_idx]
-            if idx == -1:
-                if row_idx == 1 and col_idx == 1:
-                    center_content = (
-                        f"<b>Jyotish 印度占星</b><br/>"
-                        f"{chart.year}/{chart.month}/{chart.day}<br/>"
-                        f"{chart.hour:02d}:{chart.minute:02d} "
-                        f"UTC{chart.timezone:+.1f}<br/>"
-                        f"{chart.location_name}<br/>"
-                        f"Ayanamsa: {chart.ayanamsa:.2f}°"
+
+    # Rashi cells
+    for col, row, ri in si_cells:
+        x, y = col * cell, row * cell
+        is_asc = (ri == asc_idx)
+        if is_asc:
+            svg.append(
+                f'<rect x="{x + 1}" y="{y + 1}" width="{cell - 2}"'
+                f' height="{cell - 2}" fill="#3d3010"/>'
+            )
+        rashi = RASHIS[ri]
+        cx = x + cell // 2
+        marker = " ▲" if is_asc else ""
+        svg.append(
+            f'<text x="{cx}" y="{y + 20}" text-anchor="middle"'
+            f' font-size="11" font-weight="bold"'
+            f' fill="#e0e0e0">{_esc(rashi[0])}{marker}</text>'
+        )
+        svg.append(
+            f'<text x="{cx}" y="{y + 35}" text-anchor="middle"'
+            f' font-size="10" fill="#888">{rashi[1]} {rashi[2]}</text>'
+        )
+        p_list = rashi_planets[ri]
+        if p_list:
+            for pi, (short, full) in enumerate(p_list):
+                color = PLANET_COLORS.get(full, "#c8c8c8")
+                py = y + 52 + pi * 14
+                if py < y + cell - 5:
+                    svg.append(
+                        f'<text x="{cx}" y="{py}" text-anchor="middle"'
+                        f' font-size="11" font-weight="bold"'
+                        f' fill="{color}">{_esc(short)}</text>'
                     )
-                    html += (
-                        f'<td colspan="2" rowspan="2" '
-                        f'style="{center_style}">{center_content}</td>'
-                    )
-                    col_idx += 2
-                    continue
-                else:
-                    col_idx += 1
-                    continue
-            else:
-                rashi = RASHIS[idx]
-                style = asc_cell_style if idx == asc_idx else cell_style
-                p_list = rashi_planets[idx]
-                p_html = " ".join(
-                    f'<span style="color:{PLANET_COLORS.get(full, "#c8c8c8")};'
-                    f'font-weight:bold">{short}</span>'
-                    for short, full in p_list
-                ) if p_list else '<span style="color:#999">—</span>'
-                marker = " 🔺" if idx == asc_idx else ""
-                cell_content = (
-                    f"<b>{rashi[0]}{marker}</b><br/>"
-                    f'<small style="color:#888">{rashi[1]} {rashi[2]}</small>'
-                    f"<br/>{p_html}"
-                )
-                html += f'<td style="{style}">{cell_content}</td>'
-            col_idx += 1
-        html += "</tr>"
-    html += "</table></div>"
-    st.markdown(html, unsafe_allow_html=True)
+        else:
+            svg.append(
+                f'<text x="{cx}" y="{y + 55}" text-anchor="middle"'
+                f' font-size="11" fill="#666">—</text>'
+            )
+
+    # Center info text
+    info_cx = S // 2
+    info_lines = [
+        ("Jyotish 印度占星", 13, "bold", "#e0e0e0"),
+        (f"{chart.year}/{chart.month}/{chart.day}", 11, "normal", "#bbb"),
+        (f"{chart.hour:02d}:{chart.minute:02d} UTC{chart.timezone:+.1f}",
+         11, "normal", "#bbb"),
+        (chart.location_name, 10, "normal", "#999"),
+        (f"Ayanamsa: {chart.ayanamsa:.2f}°", 10, "normal", "#999"),
+    ]
+    for i, (text, size, weight, color) in enumerate(info_lines):
+        svg.append(
+            f'<text x="{info_cx}" y="{cell + 35 + i * 25}"'
+            f' text-anchor="middle" font-size="{size}"'
+            f' font-weight="{weight}" fill="{color}">'
+            f'{_esc(text)}</text>'
+        )
+
+    svg.append('</svg>')
+
+    st.markdown(
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;'
+        'max-width:100%;">' + '\n'.join(svg) + '</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def _render_north_indian_grid(chart):
-    """渲染北印度式方盤 (North Indian Chart)"""
+    """渲染北印度式菱形盤 (North Indian Diamond Chart) — SVG
+
+    Uses the traditional Kundli diamond layout: a square with two
+    corner-to-corner diagonals and a diamond (midpoint connections),
+    producing 12 regions (4 kite-shaped + 8 triangular).
+    House 1 (Lagna) is always at the top; houses run counter-clockwise.
+    """
     st.subheader("📊 北印度排盤 (North Indian Chart)")
 
-    # North Indian chart: signs arranged in a ring clockwise from top
-    # Position 0 (top)=Aries, 1=Cancer, 2=Libra, 3=Capricorn
-    # Layout: each house cusp is shown on the border
-    # Standard North Indian: 12 signs in order clockwise, ascendant highlighted
+    from html import escape as _esc
 
     rashi_planets = {i: [] for i in range(12)}
     for p in chart.planets:
@@ -486,96 +525,108 @@ def _render_north_indian_grid(chart):
 
     asc_idx = _sign_index(chart.ascendant)
 
-    # 北印度排盤佈局：12宮位以 Ascendant 為起點順時針排列
-    # 常見格式：4x3 表格，數字為 rashi index
-    # 以 Aries (0) 為頂端，按順時針方向排列
-    # ni_order: 從頂端順時針
-    ni_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    # 以 Ascendant 所在位置為起點重新排列
-    asc_offset = asc_idx
-    ni_ring = ni_order[asc_offset:] + ni_order[:asc_offset]
+    S = 400
+    M = S // 2   # 200 — midpoint
+    Q = S // 4   # 100 — quarter
 
-    # 4x3 grid: top row=Aries side, right=col4, bottom=Libra side, left=center
-    # 北印度 Standard: 按 K.R. Scheme
-    # Row 1: 11(Aquarius), 0(Aries), 1(Taurus), 2(Gemini)
-    # Row 2: 10(Capricorn),  center, 3(Cancer)
-    # Row 3: 9(Sagittarius), 8(Scorpio), 7(Libra), 6(Virgo)
-    # Row 4:  -      5(Leo), 4(Libra)
+    # Key geometry --------------------------------------------------
+    # Square corners
+    TL, TR, BR, BL = (0, 0), (S, 0), (S, S), (0, S)
+    # Midpoints of sides (diamond vertices)
+    T, R, B, L = (M, 0), (S, M), (M, S), (0, M)
+    # Diagonal–diamond intersection points
+    P1, P2 = (Q, Q), (S - Q, Q)
+    P3, P4 = (S - Q, S - Q), (Q, S - Q)
 
-    ni_grid = [
-        [11, 0, 1, 2],
-        [10, -1, -1, 3],
-        [9, -1, -1, 4],
-        [8, 7, 6, 5],
+    # 12 house definitions -----------------------------------------
+    # (house_offset, polygon_vertices, (text_cx, text_cy), is_kite)
+    # Houses run counter-clockwise from top (H1 = Lagna).
+    _houses = [
+        (0,  [T, P2, (M, M), P1],  (M, M // 2),              True),
+        (1,  [TL, T, P1],          (Q - 5, Q // 3 + 4),      False),
+        (2,  [TL, P1, L],          (Q // 3 + 4, Q - 5),      False),
+        (3,  [P1, (M, M), P4, L],  (M // 2, M),              True),
+        (4,  [L, BL, P4],          (Q // 3 + 4, S - Q + 5),  False),
+        (5,  [BL, B, P4],          (Q - 5, S - Q // 3 - 4),  False),
+        (6,  [(M, M), P4, B, P3],  (M, S - M // 2),          True),
+        (7,  [B, BR, P3],          (S - Q + 5, S - Q // 3 - 4), False),
+        (8,  [BR, R, P3],          (S - Q // 3 - 4, S - Q + 5), False),
+        (9,  [(M, M), P3, R, P2],  (S - M // 2, M),          True),
+        (10, [R, TR, P2],          (S - Q // 3 - 4, Q - 5),  False),
+        (11, [TR, T, P2],          (S - Q + 5, Q // 3 + 4),  False),
     ]
 
-    # 標記 Lagna 位置
-    lagna_style = " background:#3d3010;"
-    cell_style = (
-        "border:1px solid #444; padding:6px; text-align:center; "
-        "vertical-align:top; font-size:13px; word-break:break-word;"
-    )
-    center_style = (
-        "border:1px solid #444; padding:10px; text-align:center; "
-        "vertical-align:middle; font-size:14px; background:#2a2a2a; "
-        "color:#e0e0e0;"
+    svg = [
+        f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg"'
+        f' style="width:100%;max-width:{S}px;height:auto;'
+        f'font-family:sans-serif;">'
+    ]
+    svg.append(
+        f'<rect width="{S}" height="{S}" fill="#1a1a2e" rx="4"/>'
     )
 
-    html = (
-        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
-        '<table style="border-collapse:collapse; margin:auto; width:100%; min-width:280px; table-layout:fixed;">'
-    )
-    for row_idx, row in enumerate(ni_grid):
-        html += "<tr>"
-        col_idx = 0
-        while col_idx < len(row):
-            idx = row[col_idx]
-            if idx == -1:
-                if row_idx == 1 and col_idx == 1:
-                    center_content = (
-                        f"<b>北印度</b><br/>"
-                        f"<small>North Indian</small><br/>"
-                        f"{chart.asc_rashi} Lagna"
-                    )
-                    html += (
-                        f'<td colspan="2" rowspan="2" '
-                        f'style="{center_style}">{center_content}</td>'
-                    )
-                    col_idx += 2
-                    continue
-                elif row_idx == 2 and col_idx == 1:
-                    col_idx += 2
-                    continue
-                else:
-                    col_idx += 1
-                    continue
-            else:
-                rashi = RASHIS[idx]
-                # 判斷是否為 Lagna (Ascendant) 所在的宫
-                is_lagna = (idx == asc_idx)
-                style = cell_style + (" background:#3d3010;" if is_lagna else "")
-                p_list = rashi_planets[idx]
-                p_html = " ".join(
-                    f'<span style="color:{PLANET_COLORS.get(full, "#c8c8c8")};'
-                    f'font-weight:bold">{short}</span>'
-                    for short, full in p_list
-                ) if p_list else '<span style="color:#999">—</span>'
-                marker = " 🔺" if is_lagna else ""
-                cell_content = (
-                    f"<b>{rashi[0]}{marker}</b><br/>"
-                    f'<small style="color:#888">{rashi[1]} {rashi[2]}</small>'
-                    f"<br/>{p_html}"
-                )
-                html += f'<td style="{style}">{cell_content}</td>'
-            col_idx += 1
-        html += "</tr>"
-    html += "</table></div>"
-    st.markdown(html, unsafe_allow_html=True)
+    # Draw each house region
+    for house_num, poly, (cx, cy), is_large in _houses:
+        ri = (asc_idx + house_num) % 12
+        rashi = RASHIS[ri]
+        is_lagna = (house_num == 0)
+        fill = "#3d3010" if is_lagna else "#1e1e3a"
 
-    # 說明
+        pts = " ".join(f"{px},{py}" for px, py in poly)
+        svg.append(
+            f'<polygon points="{pts}" fill="{fill}"'
+            f' stroke="#555" stroke-width="1.5"/>'
+        )
+
+        # Font sizes adapt to region size (kite vs triangle)
+        fs = 11 if is_large else 9
+        fs2 = 10 if is_large else 8
+        lh = 14 if is_large else 12
+
+        marker = " ▲" if is_lagna else ""
+        svg.append(
+            f'<text x="{cx}" y="{cy - 4}" text-anchor="middle"'
+            f' font-size="{fs}" font-weight="bold"'
+            f' fill="#e0e0e0">{_esc(rashi[0])}{marker}</text>'
+        )
+        svg.append(
+            f'<text x="{cx}" y="{cy + 9}" text-anchor="middle"'
+            f' font-size="{fs2}" fill="#888">'
+            f'{rashi[1]} {rashi[2]}</text>'
+        )
+
+        # Planets
+        p_list = rashi_planets[ri]
+        if p_list:
+            tspans = " ".join(
+                f'<tspan fill="{PLANET_COLORS.get(full, "#c8c8c8")}">'
+                f'{_esc(short)}</tspan>'
+                for short, full in p_list
+            )
+            svg.append(
+                f'<text x="{cx}" y="{cy + 9 + lh}"'
+                f' text-anchor="middle" font-size="{fs}"'
+                f' font-weight="bold">{tspans}</text>'
+            )
+        else:
+            svg.append(
+                f'<text x="{cx}" y="{cy + 9 + lh}"'
+                f' text-anchor="middle" font-size="{fs}"'
+                f' fill="#666">—</text>'
+            )
+
+    svg.append('</svg>')
+
+    st.markdown(
+        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;'
+        'max-width:100%;">' + '\n'.join(svg) + '</div>',
+        unsafe_allow_html=True,
+    )
+
     st.caption(
-        "▲ 🔺 = Lagna (命宮/Ascendant)　　"
-        "南印度：宮位固定・行星流動；北印度：宮位固定・宮系統以 Lagna 為起點"
+        "▲ = Lagna (命宮/Ascendant)　　"
+        "南印度：宮位固定・行星流動；"
+        "北印度：宮位以 Lagna 為起點逆時針排列"
     )
 
 
