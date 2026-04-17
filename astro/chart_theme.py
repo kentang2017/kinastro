@@ -65,6 +65,7 @@ FONT_FAMILY = "'Inter', 'Noto Sans TC', Arial, Helvetica, sans-serif"
 MOBILE_CSS = """<style>
 /* ── Google Fonts ────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 
 /* ── Global: prevent horizontal scroll ──────────────── */
 .stMainBlockContainer, .stMain, [data-testid="stAppViewBlockContainer"] {
@@ -96,9 +97,15 @@ h1 {
 body, p, span, div, li, td, th, label, input, select, textarea, button {
     font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
 }
-/* Preserve Material Symbols font for Streamlit UI icons (e.g. sidebar toggle) */
+/* Preserve Material Symbols font for Streamlit UI icons (expander toggle, sidebar toggle, etc.) */
 .material-symbols-rounded,
-[class*="material-symbols"] {
+[class*="material-symbols"],
+[data-testid="stExpanderToggleIcon"],
+[data-testid="stExpanderToggleIcon"] span,
+[data-testid="stExpander"] summary svg,
+[data-testid="stExpander"] summary span[kind],
+[data-testid="stBaseButton-headerNoPadding"] span,
+[data-testid="collapsedControl"] span {
     font-family: 'Material Symbols Rounded' !important;
 }
 
