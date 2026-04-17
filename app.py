@@ -456,14 +456,6 @@ with st.sidebar:
                 st.session_state["_system_select"] = _sk
                 _selected_system = _sk
                 st.rerun()
-            # Show hint below button
-            _hint = _SYSTEM_HINTS.get(_sk, "")
-            if _hint:
-                _caption_text = _hint
-                if _sk in _BEGINNER_SYSTEMS:
-                    _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
-                    _caption_text += f"　🟢 {_badge_text}"
-                st.caption(_caption_text)
 
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()

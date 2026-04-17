@@ -92,11 +92,11 @@ TRANSLATIONS = {
     "city_ulaanbaatar": {"zh": "烏蘭巴托", "en": "Ulaanbaatar"},
     # ── Tab labels ───────────────────────────────────────────────────────────
     "tab_chinese": {
-        "zh": "🀄 七政四餘（中國）",
+        "zh": "🀄 中國七政四餘",
         "en": "🀄 Seven Governors (Chinese)",
     },
     "tab_ziwei": {
-        "zh": "🌟 紫微斗數",
+        "zh": "🌟 中國紫微斗數",
         "en": "🌟 Zi Wei Dou Shu",
     },
     "tab_western": {
@@ -108,7 +108,7 @@ TRANSLATIONS = {
         "en": "🙏 Indian Astrology",
     },
     "tab_sukkayodo": {
-        "zh": "🈳 宿曜道",
+        "zh": "🈳 日本宿曜道",
         "en": "🈳 Sukkayodo",
     },
     "tab_thai": {
@@ -136,7 +136,7 @@ TRANSLATIONS = {
         "en": "🏛️ Egyptian Decans",
     },
     "tab_nadi": {
-        "zh": "🔱 納迪占星",
+        "zh": "🔱 印度納迪占星",
         "en": "🔱 Nadi Jyotish",
     },
     "tab_zurkhai": {
@@ -745,7 +745,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     },
 
     # ── 萬化仙禽 (WanHua XianQin) ───────────────────────────
-    "tab_chinstar": {"zh": "🐦 萬化仙禽", "en": "🐦 WanHua XianQin"},
+    "tab_chinstar": {"zh": "🐦 中國萬化仙禽", "en": "🐦 WanHua XianQin"},
     "desc_chinstar": {
         "zh": (
             "**萬化仙禽（新刻劉伯溫萬化仙禽）**\n\n"
