@@ -176,6 +176,13 @@ def render_sukkayodo_chart(chart, after_chart_hook=None):
     else:
         rokuyo = None
 
+    # 宿曜道圓環圖（先顯示）
+    st.markdown("### 宿曜道圓環圖 (二十八宿)")
+    _render_wheel(chart, moon_mansion_idx)
+
+    if after_chart_hook:
+        after_chart_hook()
+
     # 六曜卡片
     st.markdown("### 當日六曜 (Rokuyō)")
     cols = st.columns(6)
@@ -204,13 +211,6 @@ def render_sukkayodo_chart(chart, after_chart_hook=None):
             f"　{moon_planet.sukkayodo_pada}足　"
             f"→ 六曜：{rokuyo[0] if rokuyo else '?'} ({rokuyo[1] if rokuyo else ''})"
         )
-
-    # 宿曜道圓環圖
-    st.markdown("### 宿曜道圓環圖 (二十八宿)")
-    _render_wheel(chart, moon_mansion_idx)
-
-    if after_chart_hook:
-        after_chart_hook()
 
     # 行星宿曜道位置
     st.markdown("### 行星宿曜道位置")

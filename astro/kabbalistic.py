@@ -304,11 +304,11 @@ def compute_kabbalistic_chart(year, month, day, hour, minute, timezone,
 
 def render_kabbalistic_chart(chart, after_chart_hook=None):
     """渲染完整的卡巴拉占星排盤"""
-    _render_info(chart)
-    st.divider()
     _render_tree_of_life(chart)
     if after_chart_hook:
         after_chart_hook()
+    st.divider()
+    _render_info(chart)
     st.divider()
     _render_planet_table(chart)
     st.divider()

@@ -276,11 +276,11 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
 
 def render_thai_chart(chart, after_chart_hook=None):
     """渲染完整的泰國占星排盤"""
-    _render_info(chart)
-    st.divider()
     _render_thai_grid(chart)
     if after_chart_hook:
         after_chart_hook()
+    st.divider()
+    _render_info(chart)
     st.divider()
     _render_planet_table(chart)
     st.divider()

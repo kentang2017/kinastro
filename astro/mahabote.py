@@ -367,13 +367,13 @@ def compute_mahabote_chart(year, month, day, hour, minute,
 
 def render_mahabote_chart(chart, after_chart_hook=None):
     """Render the complete Myanmar Mahabote chart."""
-    _render_info(chart)
-    st.divider()
     _render_compass(chart)
     st.divider()
     _render_mahabote_grid(chart)
     if after_chart_hook:
         after_chart_hook()
+    st.divider()
+    _render_info(chart)
     st.divider()
     _render_house_table(chart)
     st.divider()
