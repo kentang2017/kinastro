@@ -377,14 +377,17 @@ with st.sidebar:
 
     # ── Astrology system selector (categorised for beginners) ──
     st.divider()
-    st.markdown("🔮 " + t("sidebar_system_label"))
+    st.markdown(
+        f'<div class="sidebar-system-title">🌐 {t("sidebar_system_label")}</div>',
+        unsafe_allow_html=True,
+    )
 
     # Categorised system layout for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
-        ("cat_asian", ["tab_indian", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_nadi"]),
+        ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai"]),
         ("cat_ancient", ["tab_arabic", "tab_maya", "tab_decans"]),
     ]
 
