@@ -134,41 +134,57 @@ MOBILE_CSS = """<style>
 .step-card p { color: #555; font-size: 0.88rem; margin: 0; }
 
 /* ── Category header in sidebar ────────────────────── */
+.sidebar-system-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
 .sidebar-cat {
-    font-size: 0.75rem;
-    color: #888;
+    font-size: 0.7rem;
+    color: #aaa;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin: 12px 0 4px 2px;
-    font-weight: 600;
+    letter-spacing: 1.8px;
+    margin: 18px 0 6px 2px;
+    padding: 4px 0 4px 0;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 /* ── System button descriptions ────────────────────── */
 .sys-desc {
-    font-size: 0.72rem;
-    color: #999;
-    margin: -6px 0 6px 4px;
-    line-height: 1.3;
+    font-size: 0.7rem;
+    color: #888;
+    margin: -4px 0 8px 4px;
+    line-height: 1.4;
+    opacity: 0.85;
 }
 
 /* ── Beginner badge ────────────────────────────────── */
 .beginner-badge {
     display: inline-block;
-    background: #e8f5e9;
-    color: #2e7d32;
-    font-size: 0.65rem;
-    padding: 1px 6px;
-    border-radius: 8px;
-    margin-left: 4px;
-    font-weight: 600;
+    background: linear-gradient(135deg, #1b5e20, #2e7d32);
+    color: #fff;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-weight: 700;
     vertical-align: middle;
+    letter-spacing: 0.3px;
+    box-shadow: 0 1px 3px rgba(27,94,32,0.3);
 }
 
 /* ── Sidebar overall tweaks ────────────────────────── */
 section[data-testid="stSidebar"] .stButton > button {
     font-size: 0.88rem;
-    border-radius: 8px;
-    transition: all 0.15s;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+}
+section[data-testid="stSidebar"] .stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 /* ── Mobile ─────────────────────────────────────────── */
