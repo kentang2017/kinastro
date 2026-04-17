@@ -865,7 +865,8 @@ elif _selected_system == "tab_western":
             ])
 
             with _w_tab_natal:
-                render_western_chart(w_chart, after_chart_hook=lambda: _render_ai_button("tab_western", w_chart, btn_key="western"))
+                _w_gender = st.session_state.get("_calc_gender")
+                render_western_chart(w_chart, after_chart_hook=lambda: _render_ai_button("tab_western", w_chart, btn_key="western"), gender=_w_gender)
                 # Natal summary
                 with st.expander(t("natal_summary_header"), expanded=True):
                     _summary = generate_natal_summary(
