@@ -635,6 +635,14 @@ def render_nadi_chart(chart: NadiChart, after_chart_hook=None) -> None:
 
     st.subheader("🔱 納迪占星 (Nadi Jyotish) 命盤")
 
+    # ---- 納迪星盤（南印度式） ----
+    _render_nadi_south_indian_grid(chart)
+
+    if after_chart_hook:
+        after_chart_hook()
+
+    st.divider()
+
     # ---- 基本資訊 ----
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -656,14 +664,6 @@ def render_nadi_chart(chart: NadiChart, after_chart_hook=None) -> None:
             f"{lnadi['symbol']} {lnadi['chinese']}",
             help="由上升點星宿決定"
         )
-
-    st.divider()
-
-    # ---- 納迪星盤（南印度式） ----
-    _render_nadi_south_indian_grid(chart)
-
-    if after_chart_hook:
-        after_chart_hook()
 
     st.divider()
 

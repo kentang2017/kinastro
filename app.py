@@ -732,9 +732,6 @@ if _selected_system == "tab_chinese":
             ])
 
             with _ch_tab_natal:
-                render_chart_info(chart)
-                st.divider()
-
                 # 計算流時盤 for overlay
                 _transit_now = compute_transit_now(timezone=input_tz)
 
@@ -746,6 +743,8 @@ if _selected_system == "tab_chinese":
 
                 render_mansion_ring(chart, transit=_transit_for_ring)
                 _render_ai_button("tab_chinese", chart, btn_key="chinese")
+                st.divider()
+                render_chart_info(chart)
                 st.divider()
                 render_bazi(chart)
                 st.divider()
@@ -1141,12 +1140,12 @@ elif _selected_system == "tab_sukkayodo":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
-            st.subheader(t("sukkayodo_subheader"))
-            st.info(t("sukkayodo_info"))
-            st.markdown(t("desc_sukkayodo"))
             with st.spinner(t("spinner_indian")):
                 _v_chart_sukka = compute_vedic_chart(**_p)
             render_sukkayodo_chart(_v_chart_sukka, after_chart_hook=lambda: _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo"))
+            st.subheader(t("sukkayodo_subheader"))
+            st.info(t("sukkayodo_info"))
+            st.markdown(t("desc_sukkayodo"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1451,7 +1450,6 @@ elif _selected_system == "tab_hellenistic":
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
-            st.markdown(t("desc_hellenistic"))
             # Hellenistic needs a western chart first
             with st.spinner(t("spinner_western")):
                 _hellen_w = compute_western_chart(**_p)
@@ -1545,21 +1543,15 @@ elif _selected_system == "tab_hellenistic":
 
 # --- 萬化仙禽 (WanHua XianQin) ---
 elif _selected_system == "tab_chinstar":
-    st.markdown(t("desc_chinstar"))
 
-    # ── Lunar date input ────────────────────────────────────────
-    st.subheader(t("chinstar_lunar_input_header"))
-
-    _auto_convert = st.checkbox(t("chinstar_use_auto"), value=True, key="chinstar_auto_convert")
-
-    # Defaults (will be overridden by auto-convert or manual inputs)
+    # ── Lunar date conversion (hidden) ──────────────────────────
     _chinstar_year = birth_date.year
     _chinstar_month = birth_date.month
     _chinstar_day = birth_date.day
     _chinstar_hour = birth_time.hour
     _auto_ok = False
 
-    if _auto_convert and _is_calculated:
+    if _is_calculated:
         try:
             import swisseph as _swe_cs
             from astro.ziwei import _solar_to_lunar as _cs_solar_to_lunar
@@ -1573,41 +1565,13 @@ elif _selected_system == "tab_chinstar":
             _chinstar_month = _cs_lm
             _chinstar_day = _cs_ld
             _chinstar_hour = _p["hour"]
-            from astro.chinstar.chinstar import BRANCHES as _cs_br
-            _cs_branch_idx = ((int(_chinstar_hour) + 1) // 2) % 12
-            _cs_hour_branch = _cs_br[_cs_branch_idx]
-            st.info(
-                t("chinstar_auto_result").format(
-                    year=_cs_ly, month=_cs_lm, day=_cs_ld,
-                    hour=_cs_hour_branch,
-                )
-                + (t("chinstar_leap_month") if _cs_leap else "")
-            )
             _auto_ok = True
-        except Exception as _cs_conv_e:
-            st.warning(t("chinstar_auto_convert_failed") + str(_cs_conv_e))
-
-    if not _auto_ok:
-        _cs_col1, _cs_col2, _cs_col3 = st.columns(3)
-        with _cs_col1:
-            _chinstar_year = st.number_input(
-                t("chinstar_lunar_year"), value=int(_chinstar_year),
-                min_value=1, max_value=2200, key="cs_year",
-            )
-        with _cs_col2:
-            _chinstar_month = st.number_input(
-                t("chinstar_lunar_month"), value=int(_chinstar_month),
-                min_value=1, max_value=12, key="cs_month",
-            )
-        with _cs_col3:
-            _chinstar_day = st.number_input(
-                t("chinstar_lunar_day"), value=int(_chinstar_day),
-                min_value=1, max_value=30, key="cs_day",
-            )
+        except Exception:
+            pass
 
     _cs_gender = "M" if gender == "male" else "F"
 
-    if st.button(t("calculate_btn"), key="chinstar_calc_btn") or _auto_ok:
+    if _auto_ok:
         try:
             with st.spinner(t("spinner_chinstar")):
                 _cs_tool = WanHuaXianQin()
@@ -1867,6 +1831,50 @@ elif _selected_system == "tab_chinstar":
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
     else:
+        # Manual input fallback or not calculated
+        st.markdown(t("desc_chinstar"))
         if not _is_calculated:
             st.info(t("info_calc_prompt"))
+        else:
+            st.subheader(t("chinstar_lunar_input_header"))
+            _cs_col1, _cs_col2, _cs_col3 = st.columns(3)
+            with _cs_col1:
+                _chinstar_year = st.number_input(
+                    t("chinstar_lunar_year"), value=int(_chinstar_year),
+                    min_value=1, max_value=2200, key="cs_year",
+                )
+            with _cs_col2:
+                _chinstar_month = st.number_input(
+                    t("chinstar_lunar_month"), value=int(_chinstar_month),
+                    min_value=1, max_value=12, key="cs_month",
+                )
+            with _cs_col3:
+                _chinstar_day = st.number_input(
+                    t("chinstar_lunar_day"), value=int(_chinstar_day),
+                    min_value=1, max_value=30, key="cs_day",
+                )
+            if st.button(t("calculate_btn"), key="chinstar_calc_btn"):
+                try:
+                    with st.spinner(t("spinner_chinstar")):
+                        _cs_tool = WanHuaXianQin()
+                        _cs_chart = _cs_tool.build_chart(
+                            year=int(_chinstar_year),
+                            month=int(_chinstar_month),
+                            day=int(_chinstar_day),
+                            hour=int(_chinstar_hour),
+                            gender=_cs_gender,
+                        )
+
+                    _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian = st.tabs([
+                        t("chinstar_subtab_chart"),
+                        t("chinstar_subtab_xiangtai"),
+                        t("chinstar_subtab_gui_jian"),
+                    ])
+
+                    with _cs_tab_chart:
+                        from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
+                        st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+                except Exception as _e:
+                    st.error(f"{t('error_tab_compute')}：{_e}")
+                    st.exception(_e)
 

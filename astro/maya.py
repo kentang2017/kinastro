@@ -394,11 +394,11 @@ def compute_maya_chart(year, month, day, hour, minute,
 
 def render_maya_chart(chart, after_chart_hook=None):
     """渲染完整的瑪雅占星排盤"""
-    _render_info(chart)
-    st.divider()
     _render_maya_calendar(chart)
     if after_chart_hook:
         after_chart_hook()
+    st.divider()
+    _render_info(chart)
     st.divider()
     _render_planet_table(chart)
     st.divider()
