@@ -68,7 +68,8 @@ MOBILE_CSS = """<style>
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 
 /* ── Hide sidebar collapsed control (keyboard_double_arrow_right) ── */
-[data-testid="collapsedControl"] {
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
     display: none !important;
 }
 
@@ -110,7 +111,8 @@ body, p, span, div, li, td, th, label, input, select, textarea, button {
 [data-testid="stExpander"] summary svg,
 [data-testid="stExpander"] summary span[kind],
 [data-testid="stBaseButton-headerNoPadding"] span,
-[data-testid="collapsedControl"] span {
+[data-testid="collapsedControl"] span,
+[data-testid="stSidebarCollapsedControl"] span {
     font-family: 'Material Symbols Rounded' !important;
 }
 
