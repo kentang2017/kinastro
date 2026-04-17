@@ -1636,11 +1636,10 @@ elif _selected_system == "tab_chinstar":
                     gender=_cs_gender,
                 )
 
-            _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian, _cs_tab_text = st.tabs([
+            _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian = st.tabs([
                 t("chinstar_subtab_chart"),
                 t("chinstar_subtab_xiangtai"),
                 t("chinstar_subtab_gui_jian"),
-                t("chinstar_subtab_text"),
             ])
 
             with _cs_tab_chart:
@@ -1704,7 +1703,7 @@ elif _selected_system == "tab_chinstar":
                         bd    = "#e64a19"
                         bg    = "#fff3e0"
                     return (
-                        f'<td style="width:100px;height:88px;text-align:center;'
+                        f'<td style="width:25%;min-width:70px;height:88px;text-align:center;'
                         f'vertical-align:middle;border:2px solid {bd};'
                         f'background:{bg};padding:4px 2px;border-radius:6px;">'
                         f'<div style="font-size:11px;color:#555;font-weight:bold;">'
@@ -1724,14 +1723,14 @@ elif _selected_system == "tab_chinstar":
                     'line-height:1.6;">'
                     '<div style="font-size:15px;font-weight:bold;color:#000000;'
                     'letter-spacing:2px;">萬化仙禽</div>'
-                    f'<div style="font-size:11px;margin-top:6px;">'
+                    f'<div style="font-size:11px;color:#000000;margin-top:6px;">'
                     f'{bi["year"]}年{bi["month"]}月{bi["day"]}日 {bi["hour"]}時</div>'
-                    f'<div style="font-size:11px;">{bi["gender"]}命 {bi["day_night"]}</div>'
-                    f'<div style="font-size:11px;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
+                    f'<div style="font-size:11px;color:#000000;">{bi["gender"]}命 {bi["day_night"]}</div>'
+                    f'<div style="font-size:11px;color:#000000;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
                     '<hr style="margin:6px 0;border-color:#ccc;">'
-                    f'<div style="font-size:11px;"><b>胎星</b>：{s["tai_xing"]}</div>'
-                    f'<div style="font-size:11px;"><b>命星</b>：{s["ming_xing"]}</div>'
-                    f'<div style="font-size:11px;"><b>身星</b>：{s["shen_xing"]}</div>'
+                    f'<div style="font-size:11px;color:#000000;"><b>胎星</b>：{s["tai_xing"]}</div>'
+                    f'<div style="font-size:11px;color:#000000;"><b>命星</b>：{s["ming_xing"]}</div>'
+                    f'<div style="font-size:11px;color:#000000;"><b>身星</b>：{s["shen_xing"]}</div>'
                     '<hr style="margin:6px 0;border-color:#ccc;">'
                     f'<div style="font-size:11px;color:#000000;">'
                     f'<b>格局</b>：{pat["grade"]}</div>'
@@ -1747,7 +1746,7 @@ elif _selected_system == "tab_chinstar":
                 _cs_grid = (
                     '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
                     '<table style="border-collapse:separate;border-spacing:4px;'
-                    'margin:10px auto;min-width:280px;font-family:\'Noto Serif TC\',serif;">'
+                    'margin:10px auto;width:100%;table-layout:fixed;font-family:\'Noto Serif TC\',serif;">'
                     "<tr>"
                     + _cs_cell(_cs_br[5])  + _cs_cell(_cs_br[6])
                     + _cs_cell(_cs_br[7])  + _cs_cell(_cs_br[8])
@@ -1879,19 +1878,6 @@ elif _selected_system == "tab_chinstar":
                     else:
                         st.info(t("chinstar_no_jian"))
                     st.divider()
-
-            with _cs_tab_text:
-                import os as _cs_os
-                _txt_path = _cs_os.path.join(
-                    _cs_os.path.dirname(__file__),
-                    "astro", "chinstar", "新刻刘伯温万化仙禽.txt",
-                )
-                if _cs_os.path.exists(_txt_path):
-                    with open(_txt_path, "r", encoding="utf-8") as _cs_f:
-                        _cs_txt = _cs_f.read()
-                    st.text_area(t("chinstar_full_text_label"), _cs_txt, height=600)
-                else:
-                    st.warning(t("chinstar_text_not_found"))
 
             # AI Analysis button for Chinstar
             _render_ai_button("tab_chinstar", _cs_chart, btn_key="chinstar")
