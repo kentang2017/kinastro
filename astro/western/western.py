@@ -664,7 +664,7 @@ def _render_wheel_chart(chart, gender=None):
         f'</text>'
     )
 
-    centre_rendered = False
+    center_rendered = False
     for r, row_data in enumerate(wheel_grid):
         for c, idx in enumerate(row_data):
             x = c * CW
@@ -672,10 +672,10 @@ def _render_wheel_chart(chart, gender=None):
             cx = x + CW / 2
 
             if idx == -1:
-                if centre_rendered:
+                if center_rendered:
                     continue
                 # Merge four centre cells into one — show birth info
-                centre_rendered = True
+                center_rendered = True
                 mx = 1 * CW       # col 1
                 my = CAP_H + 1 * CH  # row 1
                 mw = CW * 2       # span 2 cols
