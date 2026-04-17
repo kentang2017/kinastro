@@ -582,7 +582,7 @@ def _render_house_grid(chart):
     html = (
         '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         '<table style="border-collapse:collapse; margin:auto; '
-        'width:100%; max-width:600px;">'
+        'width:100%; max-width:600px; table-layout:fixed;">'
         '<caption style="caption-side:top; font-size:14px; padding:4px;">'
         '<b>Arabic House Chart</b> — '
         f'🔺 ASC {ZODIAC_SIGNS[asc_idx][1]}{ZODIAC_SIGNS[asc_idx][0]} '
