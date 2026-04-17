@@ -1585,7 +1585,6 @@ elif _selected_system == "tab_chinstar":
                         f'<div style="font-size:11px;color:#444;margin-top:2px;">{palace}</div>'
                         f'<div style="font-size:14px;color:#1a237e;font-weight:bold;'
                         f'margin-top:3px;">{bird}</div>'
-                        f'<div style="font-size:10px;color:#888;">{elem}行</div>'
                         f'</td>'
                     )
 
