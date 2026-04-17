@@ -867,13 +867,15 @@ def compute_ziwei_chart(
 # 渲染函數 (Rendering)
 # ============================================================
 
-def render_ziwei_chart(chart: ZiweiChart) -> None:
+def render_ziwei_chart(chart: ZiweiChart, after_chart_hook=None) -> None:
     """渲染完整的紫微斗數命盤。"""
     st.subheader("🌟 紫微斗數命盤")
     _render_info(chart)
     st.divider()
     _render_sihua_legend()
     _render_palace_grid(chart)
+    if after_chart_hook:
+        after_chart_hook()
     st.divider()
     _render_star_table(chart)
     st.divider()

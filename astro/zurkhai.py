@@ -709,13 +709,15 @@ def compute_zurkhai_chart(year, month, day, hour, minute,
 # Streamlit 渲染函數 (Rendering Functions)
 # ============================================================
 
-def render_zurkhai_chart(chart: ZurkhaiChart) -> None:
+def render_zurkhai_chart(chart: ZurkhaiChart, after_chart_hook=None) -> None:
     """渲染蒙古祖爾海排盤 Streamlit 介面。"""
     _render_info(chart)
     st.divider()
     _render_zurkhai_wheel(chart)
     st.divider()
     _render_element_balance(chart)
+    if after_chart_hook:
+        after_chart_hook()
     st.divider()
     _render_year_forecast(chart)
     st.divider()

@@ -553,11 +553,13 @@ def compute_western_chart(year, month, day, hour, minute, timezone,
 # 渲染函數 (Rendering Functions)
 # ============================================================
 
-def render_western_chart(chart):
+def render_western_chart(chart, after_chart_hook=None):
     """渲染完整的西洋占星排盤"""
     _render_info(chart)
     st.divider()
     _render_wheel_chart(chart)
+    if after_chart_hook:
+        after_chart_hook()
     st.divider()
     _render_planet_table(chart)
     st.divider()
