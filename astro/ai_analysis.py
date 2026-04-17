@@ -24,22 +24,20 @@ logger = logging.getLogger(__name__)
 # Cerebras SDK wrapper
 # ---------------------------------------------------------------------------
 
-DEFAULT_MODEL = "qwen-3-235b-a22b-instruct-2507"
+DEFAULT_MODEL = "gpt-oss-120b"
 
 CEREBRAS_MODEL_OPTIONS = [
-    "qwen-3-235b-a22b-instruct-2507",
-    "llama-4-scout-17b-16e-instruct",
+    "gpt-oss-120b",
     "llama3.1-8b",
-    "llama-3.3-70b",
-    "deepseek-r1-distill-llama-70b",
+    "zai-glm-4.7",
+    "qwen-3-235b-a22b-instruct-2507",
 ]
 
 CEREBRAS_MODEL_DESCRIPTIONS = {
-    "qwen-3-235b-a22b-instruct-2507": "Cerebras: Fast inference, great for rapid iteration.",
-    "llama-4-scout-17b-16e-instruct": "Cerebras: Optimized for guided workflows.",
+    "gpt-oss-120b": "Cerebras: High-capacity model for complex reasoning.",
     "llama3.1-8b": "Cerebras: Light and fast for quick tasks.",
-    "llama-3.3-70b": "Cerebras: Most capable for complex reasoning.",
-    "deepseek-r1-distill-llama-70b": "DeepSeek distilled on Cerebras.",
+    "zai-glm-4.7": "Cerebras: Versatile model for general use.",
+    "qwen-3-235b-a22b-instruct-2507": "Cerebras: Fast inference, great for rapid iteration.",
 }
 
 
