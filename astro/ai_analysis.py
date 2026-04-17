@@ -528,14 +528,16 @@ def format_chart_for_prompt(
     formatter = SYSTEM_FORMATTERS.get(system_key)
     if formatter:
         structured = formatter(chart)
+        # Append a comprehensive dump of all chart attributes so no data is
+        # missed by the specific formatter.  Skip when the structured output
+        # was already produced by the generic formatter (no specific
+        # formatter existed) to avoid duplicating the same content.
+        generic = format_generic_chart(chart, system_key)
+        if generic and generic != structured:
+            structured += "\n\n--- 完整排盤數據 (Supplementary Data) ---\n" + generic
     else:
+        # No specific formatter — the generic dump is the full output.
         structured = format_generic_chart(chart, system_key)
-
-    # Append a comprehensive dump of all chart attributes so no data is
-    # missed by the specific formatter.
-    generic = format_generic_chart(chart, system_key)
-    if generic and generic != structured:
-        structured += "\n\n--- 完整排盤數據 (Supplementary Data) ---\n" + generic
 
     # Append any additional page-level content.
     if page_content:

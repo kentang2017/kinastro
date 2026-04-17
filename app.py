@@ -798,7 +798,14 @@ elif _selected_system == "tab_western":
                     getattr(w_chart, 'asc_sign', ''),
                     lang=get_lang(),
                 )
-                render_western_chart(w_chart, after_chart_hook=lambda: _render_ai_button("tab_western", w_chart, btn_key="western", page_content=_summary), gender=_w_gender)
+                render_western_chart(
+                    w_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_western", w_chart,
+                        btn_key="western", page_content=_summary,
+                    ),
+                    gender=_w_gender,
+                )
                 # Natal summary
                 with st.expander(t("natal_summary_header"), expanded=True):
                     st.markdown(_summary)
