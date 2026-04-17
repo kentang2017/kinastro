@@ -202,27 +202,23 @@ section[data-testid="stSidebar"] .stButton > button {
         margin: 8px 0;
     }
 
-    /* Markdown tables (pure Markdown syntax): horizontal scroll */
-    [data-testid="stMarkdownContainer"] > div > table {
-        display: block;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        font-size: 0.72rem;
+    /* All tables: compact font, horizontal scroll via parent div */
+    [data-testid="stMarkdownContainer"] table {
+        font-size: 0.75rem;
     }
-    [data-testid="stMarkdownContainer"] > div > table td,
-    [data-testid="stMarkdownContainer"] > div > table th {
-        padding: 3px 6px !important;
-        white-space: nowrap;
+    [data-testid="stMarkdownContainer"] table th,
+    [data-testid="stMarkdownContainer"] table td {
+        padding: 4px 6px !important;
+        white-space: nowrap !important;
     }
 
-    /* HTML tables rendered via unsafe_allow_html: reduce font, wrap words */
+    /* HTML tables rendered via unsafe_allow_html */
     table {
         max-width: 100%;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
     }
     table td, table th {
-        min-width: auto !important;
-        word-break: break-word;
+        white-space: nowrap !important;
         font-size: 0.75rem;
     }
 
@@ -237,6 +233,7 @@ section[data-testid="stSidebar"] .stButton > button {
         width: 70px !important;
         height: 65px !important;
         font-size: 0.7rem !important;
+        white-space: normal !important;
     }
 
     /* Plotly charts: force full-width */
@@ -262,6 +259,31 @@ section[data-testid="stSidebar"] .stButton > button {
 svg.chart-wheel { max-width: 100%; height: auto; }
 .export-btn-row .stDownloadButton { margin-bottom: 4px; }
 
+/* ── Astro table styling (all screen sizes) ────────── */
+[data-testid="stMarkdownContainer"] > div {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+[data-testid="stMarkdownContainer"] table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+}
+[data-testid="stMarkdownContainer"] table th,
+[data-testid="stMarkdownContainer"] table td {
+    padding: 8px 12px;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+[data-testid="stMarkdownContainer"] table th {
+    background: rgba(255,255,255,0.08);
+    font-weight: 600;
+}
+[data-testid="stMarkdownContainer"] table tbody tr:hover td {
+    background: rgba(255,255,255,0.04);
+}
+
 /* ── Palace grid (unified CSS for 天盤 / 宮位表) ──── */
 .palace-grid {
     border-collapse: separate;
@@ -277,6 +299,8 @@ svg.chart-wheel { max-width: 100%; height: auto; }
     border: 2px solid #444;
     padding: 4px 2px;
     border-radius: 6px;
+    white-space: normal !important;
+    word-break: break-word;
 }
 .palace-grid .center-cell {
     background: #fffde7;
