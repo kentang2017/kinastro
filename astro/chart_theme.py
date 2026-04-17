@@ -66,6 +66,11 @@ MOBILE_CSS = """<style>
 /* ── Google Fonts ────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 
+/* ── Hide sidebar collapsed control (keyboard_double_arrow_right) ── */
+[data-testid="collapsedControl"] {
+    display: none !important;
+}
+
 /* ── Global: prevent horizontal scroll ──────────────── */
 .stMainBlockContainer, .stMain, [data-testid="stAppViewBlockContainer"] {
     max-width: 100vw;
