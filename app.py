@@ -74,8 +74,7 @@ from astro.ai_analysis import (
     RateLimitError,
     CEREBRAS_MODEL_OPTIONS,
     CEREBRAS_MODEL_DESCRIPTIONS,
-    load_system_prompts,
-    save_system_prompts,
+    DEFAULT_SYSTEM_PROMPT,
     format_chart_for_prompt,
 )
 
@@ -469,89 +468,10 @@ with st.sidebar:
             help="\n".join(f"• {k}: {v}" for k, v in CEREBRAS_MODEL_DESCRIPTIONS.items()),
         )
 
-        # System prompt selector
-        _prompts_data = load_system_prompts()
-        _prompts_list = _prompts_data.get("prompts", [])
-        _prompt_names = [p["name"] for p in _prompts_list]
-        _selected_prompt_name = _prompts_data.get("selected", "")
+        # Use the hardcoded default system prompt (no user editing)
+        st.session_state.ai_system_prompt = DEFAULT_SYSTEM_PROMPT
 
-        if _prompt_names:
-            _sel_idx = 0
-            if _selected_prompt_name in _prompt_names:
-                _sel_idx = _prompt_names.index(_selected_prompt_name)
-
-            _chosen_prompt_name = st.selectbox(
-                t("ai_select_prompt"),
-                options=_prompt_names,
-                index=_sel_idx,
-                key="_ai_prompt_select",
-                help=t("ai_select_prompt_help"),
-            )
-            _prompts_data["selected"] = _chosen_prompt_name
-
-            # Fetch selected prompt content
-            _prompt_content = ""
-            for _pr in _prompts_list:
-                if _pr["name"] == _chosen_prompt_name:
-                    _prompt_content = _pr["content"]
-                    break
-
-            if "ai_system_prompt" not in st.session_state:
-                st.session_state.ai_system_prompt = _prompt_content
-            elif _chosen_prompt_name != st.session_state.get("_last_ai_prompt_name"):
-                st.session_state.ai_system_prompt = _prompt_content
-            st.session_state._last_ai_prompt_name = _chosen_prompt_name
-
-            _new_content = st.text_area(
-                t("ai_edit_prompt"),
-                value=st.session_state.ai_system_prompt,
-                height=120,
-                placeholder=t("ai_edit_prompt_placeholder"),
-                key="_ai_prompt_editor",
-            )
-            st.session_state.ai_system_prompt = _new_content
-
-            _col_upd, _col_del = st.columns(2)
-            with _col_upd:
-                if st.button(t("ai_update_prompt_btn"), key="_ai_update_prompt"):
-                    for _pr in _prompts_list:
-                        if _pr["name"] == _chosen_prompt_name:
-                            _pr["content"] = _new_content
-                            break
-                    if save_system_prompts(_prompts_data):
-                        st.toast(t("ai_prompt_updated").format(_chosen_prompt_name))
-            with _col_del:
-                if st.button(t("ai_delete_prompt_btn"), key="_ai_delete_prompt",
-                             disabled=len(_prompts_list) <= 1):
-                    _prompts_list = [p for p in _prompts_list if p["name"] != _chosen_prompt_name]
-                    _prompts_data["prompts"] = _prompts_list
-                    if _chosen_prompt_name == _selected_prompt_name and _prompts_list:
-                        _prompts_data["selected"] = _prompts_list[0]["name"]
-                    if save_system_prompts(_prompts_data):
-                        st.toast(t("ai_prompt_deleted").format(_chosen_prompt_name))
-                        st.rerun()
-
-        # Add new prompt
-        if "ai_form_key_suffix" not in st.session_state:
-            st.session_state.ai_form_key_suffix = 0
-        _nk = st.session_state.ai_form_key_suffix
-        with st.expander(t("ai_add_prompt_expander"), expanded=False):
-            _new_name = st.text_input(t("ai_new_prompt_name"), key=f"_ai_new_name_{_nk}")
-            _new_body = st.text_area(
-                t("ai_new_prompt_content"), height=100,
-                placeholder=t("ai_new_prompt_placeholder"),
-                key=f"_ai_new_body_{_nk}",
-            )
-            if st.button(t("ai_save_new_prompt_btn"), key=f"_ai_save_new_{_nk}"):
-                if _new_name and _new_body:
-                    _prompts_list.append({"name": _new_name, "content": _new_body})
-                    _prompts_data["prompts"] = _prompts_list
-                    if save_system_prompts(_prompts_data):
-                        st.toast(t("ai_prompt_saved").format(_new_name))
-                        st.session_state.ai_form_key_suffix += 1
-                        st.rerun()
-
-        # Temperature & max tokens
+        # Max tokens & temperature
         _ai_max_tokens = st.slider(
             t("ai_max_tokens"), min_value=256, max_value=32768, value=8192, step=256,
             key="_ai_max_tokens",
