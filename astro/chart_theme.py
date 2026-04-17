@@ -69,8 +69,12 @@ MOBILE_CSS = """<style>
 
 /* ── Hide sidebar collapsed control (keyboard_double_arrow_right) ── */
 [data-testid="collapsedControl"],
-[data-testid="stSidebarCollapsedControl"] {
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapsedControl"] > *,
+button[kind="header"],
+.stSidebarCollapsedControl {
     display: none !important;
+    visibility: hidden !important;
 }
 
 /* ── Global: prevent horizontal scroll ──────────────── */
@@ -112,7 +116,11 @@ body, p, span, div, li, td, th, label, input, select, textarea, button {
 [data-testid="stExpander"] summary span[kind],
 [data-testid="stBaseButton-headerNoPadding"] span,
 [data-testid="collapsedControl"] span,
-[data-testid="stSidebarCollapsedControl"] span {
+[data-testid="stSidebarCollapsedControl"] span,
+[data-testid="stSidebarCollapsedControl"] button,
+.stSidebarCollapsedControl span,
+[data-testid="stHeader"] button span,
+[data-testid="stHeader"] span[data-icon] {
     font-family: 'Material Symbols Rounded' !important;
 }
 
