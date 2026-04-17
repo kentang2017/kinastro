@@ -600,13 +600,8 @@ def _render_info(chart):
 
 
 def _render_wheel_chart(chart):
-    """渲染西洋占星輪圖 (Western Wheel Chart)"""
+    """渲染西洋占星輪圖 (Western Wheel Chart) — SVG 版"""
     st.subheader("🔮 西洋占星輪盤 (Western Wheel)")
-
-    sign_planets = {i: [] for i in range(12)}
-    for p in chart.planets:
-        idx = _sign_index(p.longitude)
-        sign_planets[idx].append(p.name)
 
     asc_idx = _sign_index(chart.ascendant)
     mc_idx = _sign_index(chart.midheaven)
@@ -615,76 +610,148 @@ def _render_wheel_chart(chart):
     for h in chart.houses:
         house_signs[h.number] = _sign_index(h.cusp)
 
-    cell_style = (
-        "border:1px solid #444; padding:6px 4px; text-align:center; "
-        "vertical-align:top; font-size:11px;"
-    )
-    asc_cell = cell_style + " background:#3d3010;"
-    mc_cell = cell_style + " background:#1a2a3d;"
-
-    wheel_grid = [
-        [10, 11, 12,  1],
-        [ 9, -1,  -1,  2],
-        [ 8, -1,  -1,  3],
-        [ 7,  6,   5,  4],
-    ]
-
     asc_info = ZODIAC_SIGNS[asc_idx]
     mc_info = ZODIAC_SIGNS[mc_idx]
 
-    html = (
-        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
-        '<table style="border-collapse:collapse; margin:auto; width:100%; max-width:560px; table-layout:fixed;">'
-        '<caption style="caption-side:top; font-size:14px; padding:4px;">'
-        '<b>Western Wheel Chart</b> — '
-        '🔺 ASC ' + asc_info[1] + asc_info[0] + ' '
-        + f'{_sign_degree(chart.ascendant):.1f}° &nbsp; '
-        '⬡ MC ' + mc_info[1] + mc_info[0] + ' '
-        + f'{_sign_degree(chart.midheaven):.1f}°'
-        '</caption>'
+    wheel_grid = [
+        [10, 11, 12, 1],
+        [9, -1, -1, 2],
+        [8, -1, -1, 3],
+        [7, 6, 5, 4],
+    ]
+
+    # SVG layout constants
+    W = 560
+    CAP_H = 44
+    CW = W / 4          # cell width  = 140
+    CH = 110             # cell height = 110
+    H = CAP_H + CH * 4  # total height
+
+    def _esc(text):
+        """Escape special XML characters for safe SVG text content."""
+        return (
+            text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+            .replace("'", "&apos;")
+        )
+
+    parts: list[str] = []
+    parts.append(
+        f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {W} {H}" '
+        f'style="width:100%;max-width:{W}px;display:block;margin:auto;'
+        f'font-family:sans-serif;">'
     )
-    for row in wheel_grid:
-        html += "<tr>"
-        for idx in row:
+
+    # Caption
+    asc_deg = f"{_sign_degree(chart.ascendant):.1f}"
+    mc_deg = f"{_sign_degree(chart.midheaven):.1f}"
+    parts.append(
+        f'<text x="{W / 2}" y="17" text-anchor="middle" '
+        f'fill="#e0e0e0" font-size="14" font-weight="bold">'
+        f'Western Wheel Chart</text>'
+    )
+    parts.append(
+        f'<text x="{W / 2}" y="36" text-anchor="middle" '
+        f'fill="#c8c8c8" font-size="11">'
+        f'\u0020\u25B2 ASC {_esc(asc_info[1])}{_esc(asc_info[0])} {asc_deg}\u00B0'
+        f'\u2003\u2B21 MC {_esc(mc_info[1])}{_esc(mc_info[0])} {mc_deg}\u00B0'
+        f'</text>'
+    )
+
+    for r, row_data in enumerate(wheel_grid):
+        for c, idx in enumerate(row_data):
+            x = c * CW
+            y = CAP_H + r * CH
+            cx = x + CW / 2
+
             if idx == -1:
-                html += (
-                    '<td style="'
-                    'border:1px solid #444; padding:10px; text-align:center; '
-                    'vertical-align:middle; background:#2a2a2a; font-size:13px; '
-                    'color:#e0e0e0;">'
-                    '<b>Kin<br/>Astro</b><br/>'
-                    '<small>Western</small>'
-                    '</td>'
+                # Empty centre cell — no content
+                parts.append(
+                    f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
+                    f'fill="#1a1a2e" stroke="#333" stroke-width="0.5"/>'
                 )
+                continue
+
+            h = next((hh for hh in chart.houses if hh.number == idx), None)
+            if h is None:
+                parts.append(
+                    f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
+                    f'fill="#1e1e2e" stroke="#444" stroke-width="1"/>'
+                )
+                continue
+
+            sign_idx = house_signs.get(idx, _sign_index(h.cusp))
+            sign_info = ZODIAC_SIGNS[sign_idx]
+            planets_in_house = h.planets
+
+            is_asc = idx == 1
+            is_mc = idx == 10
+            fill = (
+                "#3d3010" if is_asc else ("#1a2a3d" if is_mc else "#1e1e2e")
+            )
+
+            parts.append(
+                f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
+                f'fill="{fill}" stroke="#444" stroke-width="1" rx="2"/>'
+            )
+
+            # House number + marker
+            marker = " \u25B2" if is_asc else (" \u2B21" if is_mc else "")
+            parts.append(
+                f'<text x="{cx}" y="{y + 18}" text-anchor="middle" '
+                f'fill="#e0e0e0" font-size="13" font-weight="bold">'
+                f'{idx}{marker}</text>'
+            )
+
+            # Sign glyph + name
+            parts.append(
+                f'<text x="{cx}" y="{y + 34}" text-anchor="middle" '
+                f'fill="#e0e0e0" font-size="11">'
+                f'{_esc(sign_info[1])} {_esc(sign_info[0])}</text>'
+            )
+
+            # Degree
+            parts.append(
+                f'<text x="{cx}" y="{y + 48}" text-anchor="middle" '
+                f'fill="#aaa" font-size="10">{_esc(_format_deg(h.cusp))}</text>'
+            )
+
+            # Planets – laid out in rows of up to 3
+            if planets_in_house:
+                n = len(planets_in_house)
+                font_size = 11 if n <= 2 else (10 if n <= 3 else 9)
+                names = [p.split(" ")[0] for p in planets_in_house]
+                per_row = min(n, 3)
+                p_spacing = 44   # horizontal gap between planet labels
+                p_base_y = 66    # vertical offset for first planet row
+                p_row_h = 16     # vertical gap between planet rows
+                for i, (short, full) in enumerate(
+                    zip(names, planets_in_house)
+                ):
+                    row_i = i // per_row
+                    col_i = i % per_row
+                    row_count = min(per_row, n - row_i * per_row)
+                    px = cx + (col_i - (row_count - 1) / 2) * p_spacing
+                    py = y + p_base_y + row_i * p_row_h
+                    color = PLANET_COLORS.get(full, "#c8c8c8")
+                    parts.append(
+                        f'<text x="{px}" y="{py}" text-anchor="middle" '
+                        f'fill="{color}" font-size="{font_size}" '
+                        f'font-weight="bold">{_esc(short)}</text>'
+                    )
             else:
-                h = next((x for x in chart.houses if x.number == idx), None)
-                if h is None:
-                    html += f'<td style="{cell_style}"></td>'
-                    continue
-                sign_idx = house_signs.get(idx, _sign_index(h.cusp))
-                sign_info = ZODIAC_SIGNS[sign_idx]
-                planets_in_house = h.planets
-                p_html = " ".join(
-                    f'<span style="color:{PLANET_COLORS.get(p, "#c8c8c8")};font-weight:bold">'
-                    f'{p.split(" ")[0]}</span>'
-                    for p in planets_in_house
-                ) if planets_in_house else '<span style="color:#ccc">—</span>'
-                is_asc_house = (idx == 1)
-                is_mc_house = (idx == 10)
-                style = asc_cell if is_asc_house else (mc_cell if is_mc_house else cell_style)
-                marker = " 🔺" if is_asc_house else (" ⬡" if is_mc_house else "")
-                html += (
-                    f'<td style="{style}">'
-                    f'<b>{idx}</b>{marker}<br/>'
-                    f'{sign_info[1]} {sign_info[0]}<br/>'
-                    f'<small>{_format_deg(h.cusp)}</small><br/>'
-                    f'{p_html}'
-                    '</td>'
+                parts.append(
+                    f'<text x="{cx}" y="{y + 68}" text-anchor="middle" '
+                    f'fill="#555" font-size="11">\u2014</text>'
                 )
-        html += "</tr>"
-    html += "</table></div>"
-    st.markdown(html, unsafe_allow_html=True)
-    st.caption("🔺 = House 1 (Ascendant)   ⬡ = House 10 (Midheaven)")
+
+    parts.append("</svg></div>")
+    st.markdown("".join(parts), unsafe_allow_html=True)
+    st.caption("▲ = House 1 (Ascendant)   ⬡ = House 10 (Midheaven)")
 
 
 def _render_planet_table(chart):
