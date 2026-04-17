@@ -158,7 +158,7 @@ def get_rokuyo(mansion_index):
 # 渲染函數
 # ============================================================
 
-def render_sukkayodo_chart(chart):
+def render_sukkayodo_chart(chart, after_chart_hook=None):
     """渲染日本宿曜道排盤"""
     st.subheader("🈳 日本宿曜道 (Yojōdō)")
 
@@ -208,6 +208,9 @@ def render_sukkayodo_chart(chart):
     # 宿曜道圓環圖
     st.markdown("### 宿曜道圓環圖 (二十八宿)")
     _render_wheel(chart, moon_mansion_idx)
+
+    if after_chart_hook:
+        after_chart_hook()
 
     # 行星宿曜道位置
     st.markdown("### 行星宿曜道位置")

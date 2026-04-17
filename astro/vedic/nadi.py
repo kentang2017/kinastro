@@ -630,7 +630,7 @@ def _render_nadi_south_indian_grid(chart: NadiChart) -> None:
     st.markdown(html, unsafe_allow_html=True)
 
 
-def render_nadi_chart(chart: NadiChart) -> None:
+def render_nadi_chart(chart: NadiChart, after_chart_hook=None) -> None:
     """在 Streamlit 中渲染納迪占星命盤。"""
 
     st.subheader("🔱 納迪占星 (Nadi Jyotish) 命盤")
@@ -661,6 +661,9 @@ def render_nadi_chart(chart: NadiChart) -> None:
 
     # ---- 納迪星盤（南印度式） ----
     _render_nadi_south_indian_grid(chart)
+
+    if after_chart_hook:
+        after_chart_hook()
 
     st.divider()
 

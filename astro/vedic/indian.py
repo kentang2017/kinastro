@@ -356,7 +356,7 @@ def compute_vedic_chart(year, month, day, hour, minute, timezone,
 # 渲染函數 (Rendering Functions)
 # ============================================================
 
-def render_vedic_chart(chart):
+def render_vedic_chart(chart, after_chart_hook=None):
     """渲染完整的印度占星排盤"""
     _render_info(chart)
     st.divider()
@@ -365,6 +365,8 @@ def render_vedic_chart(chart):
         _render_south_indian_grid(chart)
     with col2:
         _render_north_indian_grid(chart)
+    if after_chart_hook:
+        after_chart_hook()
     st.divider()
     _render_planet_table(chart)
     st.divider()

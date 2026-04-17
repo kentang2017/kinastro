@@ -459,7 +459,11 @@ with st.sidebar:
             # Show hint below button
             _hint = _SYSTEM_HINTS.get(_sk, "")
             if _hint:
-                st.markdown(f'<div class="sys-desc">{_hint}{_badge}</div>', unsafe_allow_html=True)
+                _caption_text = _hint
+                if _sk in _BEGINNER_SYSTEMS:
+                    _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
+                    _caption_text += f"　🟢 {_badge_text}"
+                st.caption(_caption_text)
 
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()
@@ -741,6 +745,7 @@ if _selected_system == "tab_chinese":
                 _transit_for_ring = _transit_now if _show_transit_overlay else None
 
                 render_mansion_ring(chart, transit=_transit_for_ring)
+                _render_ai_button("tab_chinese", chart, btn_key="chinese")
                 st.divider()
                 render_bazi(chart)
                 st.divider()
@@ -823,9 +828,6 @@ if _selected_system == "tab_chinese":
             with _ch_tab_elect:
                 render_electional_tool(timezone=input_tz)
 
-            # AI Analysis button for Chinese
-            _render_ai_button("tab_chinese", chart, btn_key="chinese")
-
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -841,8 +843,7 @@ elif _selected_system == "tab_ziwei":
             _gender = st.session_state.get("_calc_gender", "男")
             with st.spinner(t("spinner_ziwei")):
                 zw_chart = compute_ziwei_chart(**_p, gender=_gender)
-            render_ziwei_chart(zw_chart)
-            _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei")
+            render_ziwei_chart(zw_chart, after_chart_hook=lambda: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -873,7 +874,7 @@ elif _selected_system == "tab_western":
             ])
 
             with _w_tab_natal:
-                render_western_chart(w_chart)
+                render_western_chart(w_chart, after_chart_hook=lambda: _render_ai_button("tab_western", w_chart, btn_key="western"))
                 # Natal summary
                 with st.expander(t("natal_summary_header"), expanded=True):
                     _summary = generate_natal_summary(
@@ -1016,9 +1017,6 @@ elif _selected_system == "tab_western":
                 else:
                     st.info("No traditional planet dignity data available.")
 
-            # AI Analysis button for Western
-            _render_ai_button("tab_western", w_chart, btn_key="western")
-
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1043,7 +1041,7 @@ elif _selected_system == "tab_indian":
             ])
 
             with _v_tab_rashi:
-                render_vedic_chart(v_chart)
+                render_vedic_chart(v_chart, after_chart_hook=lambda: _render_ai_button("tab_indian", v_chart, btn_key="vedic"))
 
             with _v_tab_dasha:
                 st.subheader(t("vedic_subtab_dasha"))
@@ -1131,9 +1129,6 @@ elif _selected_system == "tab_indian":
                 bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
                 _render_bphs_result(bphs_result)
 
-            # AI Analysis button for Vedic
-            _render_ai_button("tab_indian", v_chart, btn_key="vedic")
-
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1151,8 +1146,7 @@ elif _selected_system == "tab_sukkayodo":
             st.markdown(t("desc_sukkayodo"))
             with st.spinner(t("spinner_indian")):
                 _v_chart_sukka = compute_vedic_chart(**_p)
-            render_sukkayodo_chart(_v_chart_sukka)
-            _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo")
+            render_sukkayodo_chart(_v_chart_sukka, after_chart_hook=lambda: _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1171,7 +1165,7 @@ elif _selected_system == "tab_thai":
                 [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
             )
             with thai_tab_chart:
-                render_thai_chart(t_chart)
+                render_thai_chart(t_chart, after_chart_hook=lambda: _render_ai_button("tab_thai", t_chart, btn_key="thai"))
             with thai_tab_nine:
                 nine_grid_result = calculate_thai_nine_grid(
                     birth_date.day, birth_date.month, birth_date.year
@@ -1208,7 +1202,6 @@ elif _selected_system == "tab_thai":
                     gender=_bj_gender,
                 )
                 render_brahma_jati(_bj_reading)
-            _render_ai_button("tab_thai", t_chart, btn_key="thai")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1224,8 +1217,7 @@ elif _selected_system == "tab_kabbalistic":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_kabbalistic")):
                 k_chart = compute_kabbalistic_chart(**_p)
-            render_kabbalistic_chart(k_chart)
-            _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic")
+            render_kabbalistic_chart(k_chart, after_chart_hook=lambda: _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1249,7 +1241,7 @@ elif _selected_system == "tab_arabic":
             with arabic_subtab_chart:
                 with st.spinner(t("spinner_arabic")):
                     a_chart = compute_arabic_chart(**_p)
-                render_arabic_chart(a_chart)
+                render_arabic_chart(a_chart, after_chart_hook=lambda: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
 
             # --- Picatrix 星體魔法 ---
             with arabic_subtab_picatrix:
@@ -1322,9 +1314,6 @@ elif _selected_system == "tab_arabic":
             with arabic_subtab_ms164:
                 render_ms164_browse()
 
-            # AI Analysis button for Arabic
-            _render_ai_button("tab_arabic", a_chart, btn_key="arabic")
-
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1388,8 +1377,7 @@ elif _selected_system == "tab_maya":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_maya")):
                 m_chart = compute_maya_chart(**_p)
-            render_maya_chart(m_chart)
-            _render_ai_button("tab_maya", m_chart, btn_key="maya")
+            render_maya_chart(m_chart, after_chart_hook=lambda: _render_ai_button("tab_maya", m_chart, btn_key="maya"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1404,8 +1392,7 @@ elif _selected_system == "tab_mahabote":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_mahabote")):
                 mb_chart = compute_mahabote_chart(**_p)
-            render_mahabote_chart(mb_chart)
-            _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote")
+            render_mahabote_chart(mb_chart, after_chart_hook=lambda: _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1436,8 +1423,7 @@ elif _selected_system == "tab_nadi":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_nadi")):
                 nadi_chart = compute_nadi_chart(**_p)
-            render_nadi_chart(nadi_chart)
-            _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi")
+            render_nadi_chart(nadi_chart, after_chart_hook=lambda: _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1452,8 +1438,7 @@ elif _selected_system == "tab_zurkhai":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_zurkhai")):
                 zk_chart = compute_zurkhai_chart(**_p)
-            render_zurkhai_chart(zk_chart)
-            _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai")
+            render_zurkhai_chart(zk_chart, after_chart_hook=lambda: _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
@@ -1503,6 +1488,7 @@ elif _selected_system == "tab_hellenistic":
                     '</p>',
                     unsafe_allow_html=True,
                 )
+                _render_ai_button("tab_hellenistic", _hellen_chart, btn_key="hellenistic")
             with _h_tab_natal:
                 render_hellenistic_chart(_hellen_chart)
             with _h_tab_prof:
@@ -1549,9 +1535,6 @@ elif _selected_system == "tab_hellenistic":
                     for _a in get_all_aphorisms():
                         with st.expander(f"第 {_a['id']} 條"):
                             st.markdown(_a["text"])
-
-            # AI Analysis button for Hellenistic
-            _render_ai_button("tab_hellenistic", _hellen_chart, btn_key="hellenistic")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
@@ -1761,6 +1744,7 @@ elif _selected_system == "tab_chinstar":
                     + "</tr></table></div>"
                 )
                 st.markdown(_cs_grid, unsafe_allow_html=True)
+                _render_ai_button("tab_chinstar", _cs_chart, btn_key="chinstar")
                 st.divider()
 
                 # ── 吞啗分析 ──────────────────────────────
@@ -1892,9 +1876,6 @@ elif _selected_system == "tab_chinstar":
                     st.text_area(t("chinstar_full_text_label"), _cs_txt, height=600)
                 else:
                     st.warning(t("chinstar_text_not_found"))
-
-            # AI Analysis button for Chinstar
-            _render_ai_button("tab_chinstar", _cs_chart, btn_key="chinstar")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
