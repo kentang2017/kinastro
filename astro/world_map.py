@@ -89,6 +89,7 @@ REGIONS: dict[str, dict] = {
         "color": "#8e44ad",
         "systems": [
             ("tab_maya", "🏺 瑪雅占星", "🏺 Maya Astrology"),
+            ("tab_aztec", "🦅 阿茲特克占星", "🦅 Aztec Astrology"),
         ],
     },
     "egypt": {

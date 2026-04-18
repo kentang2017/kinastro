@@ -54,6 +54,7 @@ from astro.brahma_jati import (
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
+from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
@@ -392,7 +393,7 @@ with st.sidebar:
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai"]),
         ("cat_middle_east", ["tab_arabic"]),
-        ("cat_ancient", ["tab_maya", "tab_decans"]),
+        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans"]),
     ]
 
     _SYSTEM_LABELS = {
@@ -405,6 +406,7 @@ with st.sidebar:
         "tab_kabbalistic": t("tab_kabbalistic"),
         "tab_arabic": t("tab_arabic"),
         "tab_maya": t("tab_maya"),
+        "tab_aztec": t("tab_aztec"),
         "tab_mahabote": t("tab_mahabote"),
         "tab_decans": t("tab_decans"),
         "tab_nadi": t("tab_nadi"),
@@ -423,6 +425,7 @@ with st.sidebar:
         "tab_kabbalistic": t("sys_hint_kabbalistic"),
         "tab_arabic": t("sys_hint_arabic"),
         "tab_maya": t("sys_hint_maya"),
+        "tab_aztec": t("sys_hint_aztec"),
         "tab_mahabote": t("sys_hint_mahabote"),
         "tab_decans": t("sys_hint_decans"),
         "tab_nadi": t("sys_hint_nadi"),
@@ -1315,6 +1318,21 @@ elif _selected_system == "tab_maya":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_maya"))
+
+# --- 阿茲特克占星 ---
+elif _selected_system == "tab_aztec":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_aztec")):
+                az_chart = compute_aztec_chart(**_p)
+            render_aztec_chart(az_chart, after_chart_hook=lambda: _render_ai_button("tab_aztec", az_chart, btn_key="aztec"))
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_aztec"))
 
 # --- 緬甸占星 (Mahabote) ---
 elif _selected_system == "tab_mahabote":
