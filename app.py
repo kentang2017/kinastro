@@ -10,6 +10,7 @@ Multi-System Astrology Chart Application
 """
 
 import os
+import calendar
 import streamlit as st
 from datetime import datetime, date, time
 
@@ -573,6 +574,73 @@ CITY_NAMES_EN = {
 }
 
 # ============================================================
+# 地區分組 — Region → City cascading selector
+# ============================================================
+CITY_REGIONS = {
+    "region_hk_macau": ["香港", "澳門"],
+    "region_taiwan": [
+        "台北", "高雄", "台中", "台南", "新北", "桃園", "新竹",
+        "基隆", "嘉義", "花蓮", "屏東", "宜蘭", "彰化", "苗栗",
+        "南投", "雲林", "台東", "澎湖",
+    ],
+    "region_mainland_south": [
+        "廣州", "深圳", "珠海", "佛山", "東莞", "海口", "南寧",
+    ],
+    "region_mainland_east": [
+        "上海", "南京", "杭州", "蘇州", "無錫", "寧波", "溫州",
+        "合肥", "福州", "廈門", "南昌", "濟南", "青島",
+    ],
+    "region_mainland_north": [
+        "北京", "天津", "石家莊", "太原", "呼和浩特",
+        "瀋陽", "大連", "哈爾濱", "長春",
+    ],
+    "region_mainland_central": [
+        "武漢", "長沙", "鄭州", "貴陽",
+    ],
+    "region_mainland_west": [
+        "成都", "重慶", "昆明", "西安", "拉薩", "烏魯木齊",
+        "蘭州", "銀川", "西寧",
+    ],
+    "region_japan_korea": ["東京", "大阪", "京都", "首爾", "釜山"],
+    "region_southeast_asia": [
+        "新加坡", "吉隆坡", "曼谷", "清邁", "河內", "胡志明市",
+        "雅加達", "馬尼拉", "金邊", "仰光",
+    ],
+    "region_south_asia": [
+        "新德里", "孟買", "加爾各答", "班加羅爾", "清奈",
+        "可倫坡", "加德滿都", "達卡", "伊斯蘭堡", "卡拉奇",
+    ],
+    "region_middle_east": [
+        "喀布爾", "德黑蘭", "巴格達", "利雅得", "杜拜",
+        "多哈", "安卡拉", "伊斯坦堡", "耶路撒冷", "開羅",
+    ],
+    "region_africa": [
+        "奈洛比", "約翰尼斯堡", "開普敦", "拉哥斯", "阿克拉",
+        "卡薩布蘭卡",
+    ],
+    "region_russia_central_asia": [
+        "莫斯科", "聖彼得堡", "烏蘭巴托",
+    ],
+    "region_europe": [
+        "倫敦", "巴黎", "柏林", "羅馬", "馬德里", "里斯本",
+        "阿姆斯特丹", "布魯塞爾", "維也納", "蘇黎世",
+        "斯德哥爾摩", "奧斯陸", "哥本哈根", "赫爾辛基",
+        "華沙", "布拉格", "布達佩斯", "雅典", "都柏林",
+    ],
+    "region_north_america": [
+        "紐約", "洛杉磯", "芝加哥", "休斯頓", "舊金山",
+        "華盛頓", "多倫多", "溫哥華", "蒙特利爾", "墨西哥城",
+        "哈瓦那",
+    ],
+    "region_south_america": [
+        "波哥大", "利馬", "聖保羅", "里約熱內盧",
+        "布宜諾斯艾利斯", "聖地亞哥",
+    ],
+    "region_oceania": ["悉尼", "墨爾本", "奧克蘭", "檀香山"],
+    "region_custom": ["自訂"],
+}
+
+# ============================================================
 # 側邊欄 - 輸入排盤資料
 # ============================================================
 with st.sidebar:
@@ -588,27 +656,74 @@ with st.sidebar:
 
     st.header(t("sidebar_header"))
 
-    # 日期時間輸入
+    # 日期時間輸入 — Year / Month / Day / Hour / Minute dropdowns
     st.subheader(t("date_time"))
-    birth_date = st.date_input(
-        t("birth_date"),
-        value=date(1990, 1, 1),
-        min_value=date(1900, 1, 1),
-        max_value=date(2100, 12, 31),
-    )
-    birth_time = st.time_input(t("birth_time"), value=time(12, 0))
+    _col_y, _col_m, _col_d = st.columns(3)
+    with _col_y:
+        _birth_year = st.selectbox(
+            t("birth_year"),
+            options=list(range(1900, 2101)),
+            index=90,  # default 1990
+            key="birth_year_sel",
+        )
+    with _col_m:
+        _birth_month = st.selectbox(
+            t("birth_month"),
+            options=list(range(1, 13)),
+            index=0,  # default January
+            key="birth_month_sel",
+        )
+    _max_day = calendar.monthrange(_birth_year, _birth_month)[1]
+    with _col_d:
+        _birth_day = st.selectbox(
+            t("birth_day"),
+            options=list(range(1, _max_day + 1)),
+            index=0,  # default 1
+            key="birth_day_sel",
+        )
+    _col_h, _col_min = st.columns(2)
+    with _col_h:
+        _birth_hour = st.selectbox(
+            t("birth_hour"),
+            options=list(range(0, 24)),
+            index=12,  # default 12
+            key="birth_hour_sel",
+        )
+    with _col_min:
+        _birth_minute = st.selectbox(
+            t("birth_minute"),
+            options=list(range(0, 60)),
+            index=0,  # default 0
+            key="birth_minute_sel",
+        )
+    birth_date = date(_birth_year, _birth_month, _birth_day)
+    birth_time = time(_birth_hour, _birth_minute)
 
-    # 地點輸入
+    # 地點輸入 — cascading Region → City selector
     st.subheader(t("birth_location"))
+    _is_en = st.session_state.get("lang") == "en"
+    _region_keys = list(CITY_REGIONS.keys())
+    _region_format = (
+        (lambda r: t(r))
+    )
+    _selected_region = st.selectbox(
+        t("region_label"),
+        options=_region_keys,
+        index=0,  # default: 港澳
+        format_func=_region_format,
+        key="region_sel",
+    )
+    _cities_in_region = CITY_REGIONS[_selected_region]
     _city_format = (
         (lambda c: CITY_NAMES_EN.get(c, c))
-        if st.session_state.get("lang") == "en"
+        if _is_en
         else (lambda c: c)
     )
     city = st.selectbox(
         t("city_preset"),
-        options=list(CITY_PRESETS.keys()),
+        options=_cities_in_region,
         format_func=_city_format,
+        key="city_sel",
     )
 
     if city != "自訂":
@@ -616,7 +731,7 @@ with st.sidebar:
         input_lat = preset_lat
         input_lon = preset_lon
         input_tz = preset_tz
-        location_name = CITY_NAMES_EN[city] if st.session_state.get("lang") == "en" else city
+        location_name = CITY_NAMES_EN[city] if _is_en else city
     else:
         input_lat = st.number_input(
             t("latitude"), value=22.3193, format="%.4f",
