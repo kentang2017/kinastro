@@ -35,8 +35,8 @@ TRANSLATIONS = {
         "en": "Where were you born?",
     },
     "city_preset": {
-        "zh": "預設城市",
-        "en": "City Preset",
+        "zh": "城市",
+        "en": "City",
     },
     "latitude": {
         "zh": "緯度",
