@@ -22,6 +22,8 @@ from astro.qizheng.chart_renderer import (
     render_house_table,
     render_aspect_summary,
     render_mansion_ring,
+    render_full_chart,
+    render_chart_info_panel,
     render_bazi,
     render_shensha,
     render_dasha,
@@ -938,7 +940,8 @@ if _selected_system == "tab_chinese":
                 )
                 _transit_for_ring = _transit_now if _show_transit_overlay else None
 
-                render_mansion_ring(chart, transit=_transit_for_ring)
+                # Full chart: circle + info panel side by side
+                render_full_chart(chart, transit=_transit_for_ring)
                 _render_ai_button("tab_chinese", chart, btn_key="chinese")
                 st.divider()
                 render_chart_info(chart)
