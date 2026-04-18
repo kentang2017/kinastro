@@ -127,6 +127,10 @@ TRANSLATIONS = {
         "zh": "🏺 瑪雅占星",
         "en": "🏺 Maya Astrology",
     },
+    "tab_aztec": {
+        "zh": "🦅 阿茲特克占星",
+        "en": "🦅 Aztec Astrology",
+    },
     "tab_mahabote": {
         "zh": "🇲🇲 緬甸占星",
         "en": "🇲🇲 Myanmar (Mahabote)",
@@ -239,6 +243,10 @@ TRANSLATIONS = {
     "spinner_maya": {
         "zh": "正在計算瑪雅占星排盤...",
         "en": "Calculating Maya astrology chart...",
+    },
+    "spinner_aztec": {
+        "zh": "正在計算阿茲特克占星排盤...",
+        "en": "Calculating Aztec astrology chart...",
     },
     "spinner_mahabote": {
         "zh": "正在計算緬甸 Mahabote 排盤...",
@@ -590,6 +598,34 @@ Sukkayodo is used for date selection and divination of auspiciousness in daily l
 - **Haab (Civil Calendar)**: 365 days — 18 months × 20 days + 5 Wayeb nameless days
 - **Calendar Round**: Tzolkin × Haab synchronised cycle, ~52 years per round
 - **Planetary Overlay**: Western planetary positions mapped to Tzolkin energies
+""",
+    },
+    "desc_aztec": {
+        "zh": """
+### 什麼是阿茲特克占星？
+
+**阿茲特克占星**源自中美洲阿茲特克文明的天文與曆法傳統：
+
+- **Tonalpohualli（神聖曆）**：260 天循環，13 數字 × 20 日徵（day signs）
+- **Trecena（13天週期）**：每 13 天為一個能量週期，由第一天的日徵命名
+- **守護神祇**：每個日徵對應特定的阿茲特克神祇
+- **四方位與顏色**：東=紅、北=白、西=藍、南=黃
+- **行星疊加**：結合西方占星行星位置對應 Tonalpohualli 能量
+
+參考：https://www.azteccalendar.com/
+""",
+        "en": """
+### What is Aztec Astrology?
+
+**Aztec Astrology** draws from the astronomical and calendrical traditions of Mesoamerican Aztec civilisation:
+
+- **Tonalpohualli (Sacred Calendar)**: 260-day cycle — 13 numbers × 20 day signs
+- **Trecena (13-Day Period)**: Each 13-day period is named after its first day sign
+- **Patron Deities**: Each day sign is associated with a specific Aztec deity
+- **Four Directions & Colours**: East=Red, North=White, West=Blue, South=Yellow
+- **Planetary Overlay**: Western planetary positions mapped to Tonalpohualli energies
+
+Reference: https://www.azteccalendar.com/
 """,
     },
     "desc_mahabote": {
@@ -1018,6 +1054,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "sys_hint_kabbalistic": {"zh": "猶太神祕主義占星", "en": "Jewish mystical astrology"},
     "sys_hint_arabic": {"zh": "伊斯蘭黃金時代占星術", "en": "Islamic Golden Age astrology"},
     "sys_hint_maya": {"zh": "瑪雅文明曆法占卜", "en": "Mayan calendar-based divination"},
+    "sys_hint_aztec": {"zh": "阿茲特克文明神聖曆占卜", "en": "Aztec Tonalpohualli sacred calendar divination"},
     "sys_hint_mahabote": {"zh": "緬甸出生星期推算", "en": "Myanmar weekday-based astrology"},
     "sys_hint_decans": {"zh": "古埃及十度區間預測", "en": "Ancient Egyptian decan predictions"},
     "sys_hint_nadi": {"zh": "南印度棕櫚葉手稿", "en": "South Indian palm-leaf readings"},

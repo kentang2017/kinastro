@@ -352,6 +352,24 @@ def format_maya_chart(chart) -> str:
     return "\n".join(sections)
 
 
+def format_aztec_chart(chart) -> str:
+    """Format an Aztec astrology chart for the AI prompt."""
+    sections = ["【阿茲特克占星排盤 Aztec Chart】"]
+    sections.append(f"Tonalpohualli: {_safe_getattr(chart, 'tonalpohualli_number')} "
+                    f"{_safe_getattr(chart, 'tonalpohualli_sign_name')}")
+    sections.append(f"Day Sign (中文): {_safe_getattr(chart, 'tonalpohualli_sign_cn')}")
+    sections.append(f"Day Sign (EN): {_safe_getattr(chart, 'tonalpohualli_sign_en')}")
+    sections.append(f"Energy: {_safe_getattr(chart, 'tonalpohualli_energy')}")
+    sections.append(f"Trecena: {_safe_getattr(chart, 'trecena_ruler_name')} "
+                    f"({_safe_getattr(chart, 'trecena_ruler_cn')})")
+    sections.append(f"Deity: {_safe_getattr(chart, 'deity')}")
+    sections.append(f"Direction: {_safe_getattr(chart, 'direction_cn')} "
+                    f"({_safe_getattr(chart, 'direction_en')})")
+    sections.append(f"Color: {_safe_getattr(chart, 'color_cn')} "
+                    f"({_safe_getattr(chart, 'color_en')})")
+    return "\n".join(sections)
+
+
 def format_mahabote_chart(chart) -> str:
     """Format a Mahabote (Myanmar) chart for the AI prompt."""
     sections = ["【緬甸占星排盤 Mahabote Chart】"]
@@ -493,6 +511,7 @@ SYSTEM_FORMATTERS = {
     "tab_kabbalistic": format_kabbalistic_chart,
     "tab_arabic": format_arabic_chart,
     "tab_maya": format_maya_chart,
+    "tab_aztec": format_aztec_chart,
     "tab_mahabote": format_mahabote_chart,
     "tab_decans": format_decan_chart,
     "tab_nadi": format_nadi_chart,
