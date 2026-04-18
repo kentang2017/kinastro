@@ -57,7 +57,7 @@ PALACE_SEQUENCE = [
 # ============================================================
 # 策天十八飛星 (Ce Tian 18 Flying Stars)
 # ============================================================
-# 十一正曜 (indices 0-11) + 七副曜 (indices 12-18)
+# 十二正曜 (indices 0-11) + 七副曜 (indices 12-18)
 # (序號, 拼音, 中文, English)
 CETIAN_18_FLYING_STARS = [
     ("0",  "ZiWei",     "紫微",   "Purple Micro"),
@@ -67,7 +67,7 @@ CETIAN_18_FLYING_STARS = [
     ("4",  "TianShou",  "天壽",   "Heavenly Longevity"),
     ("5",  "TianKong",  "天空",   "Heavenly Sky"),
     ("6",  "HongLuan",  "紅鸞",   "Red Phoenix"),
-    ("7",  "TianKu2",   "天庫",   "Heavenly Storehouse"),
+    ("7",  "TianKu2",   "天庫",   "Heavenly Storehouse"),  # 天庫（與天哭 TianKu 不同）
     ("8",  "TianGuan",  "天貫",   "Heavenly Official"),
     ("9",  "WenChang",  "文昌",   "Literary Prosperity"),
     ("10", "TianFu",    "天福",   "Heavenly Blessing"),
@@ -592,7 +592,7 @@ def _place_cetian_aux_stars(
     aux[tian_yi].append("天異")
 
     # 旄頭: 以月數起寅順行
-    mao_tou = (2 + lunar_month - 1) % 12
+    mao_tou = (1 + lunar_month) % 12
     aux[mao_tou].append("旄頭")
 
     # 天刃: 以時辰起卯逆行
@@ -600,11 +600,11 @@ def _place_cetian_aux_stars(
     aux[tian_ren].append("天刃")
 
     # 天刑: 以月數起酉順行
-    tian_xing = (8 + lunar_month) % 12
+    tian_xing = (9 + lunar_month) % 12
     aux[tian_xing].append("天刑")
 
     # 天姚: 以月數起丑順行
-    tian_yao = (0 + lunar_month) % 12
+    tian_yao = (1 + lunar_month) % 12
     aux[tian_yao].append("天姚")
 
     # 天哭: 以年支起午順行
