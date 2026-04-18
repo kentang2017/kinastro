@@ -1,21 +1,25 @@
 """
 緬甸 Mahabote 排盤模組 (Myanmar Mahabote Astrology Chart Module)
 
-Mahabote (မဟာဘုတ်) 是緬甸傳統占星術，意為「大創造」或「大決定」，以出生星期為核心：
+Mahabote (မဟာဘုတ်) 是緬甸傳統占星術核心體系，意為「大創造」或「大決定」，
+源自古緬甸與印度-苯教融合，以 **8 方位輪盤** 為基礎：
 
-- **七曜行星**：日（Sun）、月（Moon）、火（Mars）、水（Mercury）、
-  木（Jupiter）、金（Venus）、土（Saturn），分別對應星期日至星期六
-- **羅睺 (Rahu)**：星期三傍晚（18:00後）出生者歸羅睺管轄
-- **八方位**：每個行星/羅睺對應一個羅盤方位
-- **七宮位**：Bhin（本命）、Ayu（壽命）、Winya（意識）、
-  Kiya（身體）、Hein（權勢）、Marana（死亡）、Thila（道德）
-- **行星大運 (Atar)**：每顆行星主宰一定年數，七星循環共 96 年
+- **七曜行星** + **羅睺 (Rahu)**：日、月、火、水、木、金、土 + 羅睺
+- **羅睺 (Rahu)**：星期三傍晚（當地太陽時 18:00 後）出生者歸羅睺管轄
+- **八方位**：NE（東北）開始順時針 → NE、E、SE、S、SW、W、NW、N
+- **八宮位**：Bhin、Ayu、Winya、Kiya、Hein、Marana、Thila + Kamma（業力/未知宮）
+- **行星大運 (Atar)**：七星循環共 96 年
+- **Sakka 曆計算**：Sakka 年 = Gregorian 年 − 638
+- **計算公式**：Mahabote 值 = (Sakka 年 + 星期數) mod 8
 
-計算公式：Mahabote 值 = (緬甸年 + 星期數) mod 7
+文化聲明：
+此計算依循緬甸傳統 Mahabote 古法，僅供文化學習與參考，
+重要決定請諮詢合格的緬甸占星師。
 """
 
+import math
 import streamlit as st
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 
@@ -34,7 +38,7 @@ WEEKDAY_PLANETS = [
     ("Saturn",  "စနေ",       "土星", "♄", "火 Fire",  "N 北"),      # Saturday=6
 ]
 
-# Rahu (pseudo-planet for Wednesday evening, after 18:00)
+# Rahu (pseudo-planet for Wednesday evening, after 18:00 local solar time)
 RAHU_INFO = ("Rahu", "ရာဟု", "羅睺", "☊", "—", "SW 西南")
 
 # Weekday animal signs: (English, Myanmar, Chinese, emoji)
@@ -51,7 +55,7 @@ WEEKDAY_ANIMALS = [
 # Rahu animal sign (Wednesday evening)
 RAHU_ANIMAL = ("Tuskless Elephant", "ဆင်", "象(無牙)", "🐘")
 
-# Mahabote 7 Houses
+# Mahabote 8 Houses (expanded with 8th Kamma / Void house)
 # (English, Myanmar, Chinese, meaning, description)
 MAHABOTE_HOUSES = [
     ("Bhin",   "ဘင်",     "本命宮", "State of Being",
@@ -68,6 +72,90 @@ MAHABOTE_HOUSES = [
      "衰退與終結。此宮主危機、挑戰、人生低谷。"),
     ("Thila",  "သီလ",     "道德宮", "Virtue / Morality",
      "品德與修為。此宮主道德標準、宗教修行、行善積德。"),
+    ("Kamma",  "ကမ္မ",     "業力宮", "Karma / Void",
+     "業力與未知。此宮為第八隱藏宮，主前世業報、未解之緣、神秘力量。"),
+]
+
+# 8 Directions data: (direction_en, direction_cn, direction_myanmar,
+#   planet_en, planet_symbol, planet_cn, weekday_idx, animal_en, animal_emoji, animal_cn,
+#   omen_career, omen_marriage, omen_health, fortune)
+# Ordered: NE → E → SE → S → SW → W → NW → N (clockwise from NE)
+DIRECTIONS_8 = [
+    {
+        "dir_en": "NE", "dir_cn": "東北", "dir_myanmar": "အရှေ့မြောက်",
+        "planet": "Sun", "symbol": "☉", "planet_cn": "太陽",
+        "weekday_idx": 0, "animal": "Garuda", "animal_emoji": "🦅", "animal_cn": "迦樓羅",
+        "fortune": "吉",
+        "omen_career": "領導力強，適合開創事業，有貴人扶持。",
+        "omen_marriage": "婚姻光明，伴侶忠誠，但需避免過於強勢。",
+        "omen_health": "精力充沛，心臟與視力需注意保養。",
+    },
+    {
+        "dir_en": "E", "dir_cn": "東", "dir_myanmar": "အရှေ့",
+        "planet": "Moon", "symbol": "☽", "planet_cn": "月亮",
+        "weekday_idx": 1, "animal": "Tiger", "animal_emoji": "🐅", "animal_cn": "虎",
+        "fortune": "吉",
+        "omen_career": "才華橫溢，適合文學、藝術、教育領域。",
+        "omen_marriage": "感情豐富，婚姻和諧，但情緒波動需控制。",
+        "omen_health": "消化系統與水分代謝需留意，情緒影響健康。",
+    },
+    {
+        "dir_en": "SE", "dir_cn": "東南", "dir_myanmar": "အရှေ့တောင်",
+        "planet": "Mars", "symbol": "♂", "planet_cn": "火星",
+        "weekday_idx": 2, "animal": "Lion", "animal_emoji": "🦁", "animal_cn": "獅",
+        "fortune": "凶中帶吉",
+        "omen_career": "勇猛果敢，軍警、運動、競爭型事業有利。",
+        "omen_marriage": "性格剛烈，婚姻需忍讓，易有口角衝突。",
+        "omen_health": "血液循環與外傷需防範，火氣旺盛。",
+    },
+    {
+        "dir_en": "S", "dir_cn": "南", "dir_myanmar": "တောင်",
+        "planet": "Mercury", "symbol": "☿", "planet_cn": "水星",
+        "weekday_idx": 3, "animal": "Tusked Elephant", "animal_emoji": "🐘",
+        "animal_cn": "象(有牙)",
+        "fortune": "中性",
+        "omen_career": "智商高，適合商業、通訊、寫作、學術。",
+        "omen_marriage": "善於溝通，但需避免口舌是非影響感情。",
+        "omen_health": "神經系統與呼吸道較弱，需防過勞。",
+    },
+    {
+        "dir_en": "SW", "dir_cn": "西南", "dir_myanmar": "အနောက်တောင်",
+        "planet": "Rahu", "symbol": "☊", "planet_cn": "羅睺",
+        "weekday_idx": -1, "animal": "Tuskless Elephant", "animal_emoji": "🐘",
+        "animal_cn": "象(無牙)",
+        "fortune": "凶",
+        "omen_career": "命運多舛但深具靈性，適合宗教、玄學、醫療。",
+        "omen_marriage": "婚姻考驗多，需培養信任與耐心。",
+        "omen_health": "體質較弱，需防不明疾病與精神壓力。",
+    },
+    {
+        "dir_en": "W", "dir_cn": "西", "dir_myanmar": "အနောက်",
+        "planet": "Jupiter", "symbol": "♃", "planet_cn": "木星",
+        "weekday_idx": 4, "animal": "Rat", "animal_emoji": "🐀", "animal_cn": "鼠",
+        "fortune": "大吉",
+        "omen_career": "智慧與福報兼具，適合教育、法律、宗教。",
+        "omen_marriage": "婚姻美滿，伴侶賢德，子女孝順。",
+        "omen_health": "肝膽系統需注意，整體福壽綿長。",
+    },
+    {
+        "dir_en": "NW", "dir_cn": "西北", "dir_myanmar": "အနောက်မြောက်",
+        "planet": "Venus", "symbol": "♀", "planet_cn": "金星",
+        "weekday_idx": 5, "animal": "Guinea Pig", "animal_emoji": "🐹",
+        "animal_cn": "天竺鼠",
+        "fortune": "吉",
+        "omen_career": "藝術才華出眾，適合設計、音樂、時尚、外交。",
+        "omen_marriage": "桃花旺盛，婚姻甜蜜，但需防爛桃花。",
+        "omen_health": "腎臟與泌尿系統需注意，享樂過度損健康。",
+    },
+    {
+        "dir_en": "N", "dir_cn": "北", "dir_myanmar": "မြောက်",
+        "planet": "Saturn", "symbol": "♄", "planet_cn": "土星",
+        "weekday_idx": 6, "animal": "Naga", "animal_emoji": "🐉", "animal_cn": "龍/那伽",
+        "fortune": "凶中帶吉",
+        "omen_career": "刻苦耐勞，大器晚成，適合建築、農業、礦業。",
+        "omen_marriage": "婚姻來遲但穩固，需耐心等待良緣。",
+        "omen_health": "骨骼與關節需注意，晚年養生重要。",
+    },
 ]
 
 # Weekday names
@@ -142,6 +230,19 @@ class MahabotePeriod:
 
 
 @dataclass
+class MahaboteOmen:
+    """Traditional omen reading for a direction-planet placement."""
+    direction_en: str
+    direction_cn: str
+    planet: str
+    planet_cn: str
+    fortune: str
+    omen_career: str
+    omen_marriage: str
+    omen_health: str
+
+
+@dataclass
 class MahaboteChart:
     """Complete Myanmar Mahabote chart result."""
     # Input parameters
@@ -181,7 +282,7 @@ class MahaboteChart:
     birth_animal_emoji: str
 
     # Mahabote calculation
-    mahabote_value: int        # (ME + weekday_num) mod 7
+    mahabote_value: int        # (Sakka_year + weekday_num) mod 8
 
     # Birth house
     birth_house_name_en: str
@@ -190,11 +291,17 @@ class MahaboteChart:
     birth_house_meaning: str
     birth_house_description: str
 
-    # All 7 houses
+    # All 8 houses
     houses: list               # list[MahaboteHouse]
 
     # Planetary periods (Atar)
     periods: list              # list[MahabotePeriod]
+
+    # Direction placements
+    directions: list = field(default_factory=list)
+
+    # Traditional omens
+    omens: list = field(default_factory=list)    # list[MahaboteOmen]
 
 
 # ============================================================
@@ -202,10 +309,10 @@ class MahaboteChart:
 # ============================================================
 
 def _get_myanmar_year(year, month, day):
-    """Calculate Myanmar Era (ME) year from Gregorian date.
+    """Calculate Myanmar Era (ME / Sakka) year from Gregorian date.
 
     Myanmar New Year (Thingyan) typically falls around April 17.
-    ME = Gregorian year - 638 (on/after Apr 17) or - 639 (before Apr 17).
+    Sakka year = Gregorian year - 638 (on/after Apr 17) or - 639 (before Apr 17).
     """
     if month > 4 or (month == 4 and day >= 17):
         return year - 638
@@ -219,8 +326,30 @@ def _get_weekday(year, month, day):
     return (d.weekday() + 1) % 7
 
 
+def _local_solar_hour(hour, minute, timezone, longitude):
+    """Convert clock time to approximate local solar time hour.
+
+    Local solar time accounts for the difference between the timezone
+    meridian and the actual longitude of the birth place.
+    Each degree of longitude = 4 minutes of time.
+    """
+    tz_meridian = timezone * 15.0  # standard meridian for the timezone
+    offset_minutes = (longitude - tz_meridian) * 4.0
+    total_minutes = hour * 60 + minute + offset_minutes
+    solar_hour = total_minutes / 60.0
+    # Normalize to 0-24 range
+    solar_hour = solar_hour % 24
+    return solar_hour
+
+
 def _is_wednesday_evening(weekday, hour):
-    """Wednesday after 18:00 is ruled by Rahu instead of Mercury."""
+    """Wednesday after 18:00 is ruled by Rahu instead of Mercury.
+
+    When called from compute_mahabote_chart, ``hour`` should be the
+    local-solar-time hour so the 18:00 threshold reflects the birth
+    location's actual solar noon.  Helper tests may still pass the
+    raw clock hour directly.
+    """
     return weekday == 3 and hour >= 18
 
 
@@ -258,6 +387,23 @@ def _compute_periods(weekday, birth_year, current_year):
     return periods
 
 
+def _build_omens(birth_planet):
+    """Build omen readings based on the birth planet's direction placement."""
+    omens = []
+    for d in DIRECTIONS_8:
+        omens.append(MahaboteOmen(
+            direction_en=d["dir_en"],
+            direction_cn=d["dir_cn"],
+            planet=d["planet"],
+            planet_cn=d["planet_cn"],
+            fortune=d["fortune"],
+            omen_career=d["omen_career"],
+            omen_marriage=d["omen_marriage"],
+            omen_health=d["omen_health"],
+        ))
+    return omens
+
+
 # ============================================================
 # 計算函數 (Calculation)
 # ============================================================
@@ -266,11 +412,18 @@ def _compute_periods(weekday, birth_year, current_year):
 def compute_mahabote_chart(year, month, day, hour, minute,
                            timezone, latitude, longitude,
                            location_name=""):
-    """Compute a Myanmar Mahabote astrology chart."""
+    """Compute a Myanmar Mahabote astrology chart.
+
+    Uses the Sakka calendar and mod-8 formula for the authentic
+    8-direction / 8-house Mahabote system.
+    """
 
     me_year = _get_myanmar_year(year, month, day)
     weekday = _get_weekday(year, month, day)
-    is_rahu = _is_wednesday_evening(weekday, hour)
+
+    # Use local solar time for Rahu determination
+    solar_hour = _local_solar_hour(hour, minute, timezone, longitude)
+    is_rahu = _is_wednesday_evening(weekday, int(solar_hour))
 
     # Birth planet
     planet_info = WEEKDAY_PLANETS[weekday]
@@ -291,18 +444,22 @@ def compute_mahabote_chart(year, month, day, hour, minute,
         birth_animal = animal_info
 
     # Mahabote value: use 1-based weekday (Sunday=1 … Saturday=7)
+    # Authentic formula: (Sakka_year + weekday_num) mod 8
     weekday_num = weekday + 1
-    mahabote_value = (me_year + weekday_num) % 7
+    mahabote_value = (me_year + weekday_num) % 8
 
     birth_house = MAHABOTE_HOUSES[mahabote_value]
 
-    # Place planets in the 7 houses.
+    # Place planets in the 8 houses.
     # Birth planet sits at *mahabote_value*; subsequent weekdays
-    # fill the next houses cyclically.
+    # fill the next houses cyclically. With 8 houses and 7 weekday
+    # planets, the 8th (Kamma) house wraps back and repeats the
+    # birth planet (planet_offset=7 → (weekday+7)%7 == weekday).
     houses = []
-    for i in range(7):
+    for i in range(8):
         h_info = MAHABOTE_HOUSES[i]
-        planet_offset = (i - mahabote_value) % 7
+        planet_offset = (i - mahabote_value) % 8
+        # Map into the 7 weekday planets cyclically
         planet_weekday = (weekday + planet_offset) % 7
         p_info = WEEKDAY_PLANETS[planet_weekday]
         a_info = WEEKDAY_ANIMALS[planet_weekday]
@@ -325,6 +482,12 @@ def compute_mahabote_chart(year, month, day, hour, minute,
             animal_cn=a_info[2],
             animal_emoji=a_info[3],
         ))
+
+    # Direction placements (copy of DIRECTIONS_8 for inclusion in chart)
+    directions = list(DIRECTIONS_8)
+
+    # Build omens
+    omens = _build_omens(birth_planet)
 
     # Atar periods
     from datetime import date as _date
@@ -358,7 +521,141 @@ def compute_mahabote_chart(year, month, day, hour, minute,
         birth_house_description=birth_house[4],
         houses=houses,
         periods=periods,
+        directions=directions,
+        omens=omens,
     )
+
+
+# ============================================================
+# SVG 輪盤 (8-Sector Wheel Visualization)
+# ============================================================
+
+def build_mahabote_wheel_svg(chart, size=480):
+    """Build an 8-sector retro-style Mahabote wheel as inline SVG.
+
+    Generates a traditional Burmese compass-style wheel with 8 sectors
+    (NE→E→SE→S→SW→W→NW→N), each showing the planet symbol, animal
+    totem and Myanmar script.
+    """
+    cx, cy = size / 2, size / 2
+    r_outer = size / 2 - 10
+    r_inner = r_outer * 0.38
+    r_mid = (r_outer + r_inner) / 2
+    r_label = r_outer * 0.78
+    r_animal = r_outer * 0.58
+
+    # Direction order: NE, E, SE, S, SW, W, NW, N
+    # Angles: NE starts at -67.5° (top-right), each sector is 45°
+    sectors = DIRECTIONS_8
+    sector_angle = 45
+    start_offset = -67.5 - 90  # Rotate so NE is top-right
+
+    svg_parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {size} {size}" '
+        f'style="max-width:100%;height:auto;font-family:serif;">'
+    ]
+
+    # Background circle
+    svg_parts.append(
+        f'<circle cx="{cx}" cy="{cy}" r="{r_outer}" '
+        f'fill="#1a1a2e" stroke="#c9a96e" stroke-width="3"/>'
+    )
+
+    # Draw sectors
+    for idx, sec in enumerate(sectors):
+        angle_start = start_offset + idx * sector_angle
+        angle_end = angle_start + sector_angle
+        a1 = math.radians(angle_start)
+        a2 = math.radians(angle_end)
+        a_mid = math.radians((angle_start + angle_end) / 2)
+
+        # Sector path (pie slice)
+        x1_o = cx + r_outer * math.cos(a1)
+        y1_o = cy + r_outer * math.sin(a1)
+        x2_o = cx + r_outer * math.cos(a2)
+        y2_o = cy + r_outer * math.sin(a2)
+        x1_i = cx + r_inner * math.cos(a1)
+        y1_i = cy + r_inner * math.sin(a1)
+        x2_i = cx + r_inner * math.cos(a2)
+        y2_i = cy + r_inner * math.sin(a2)
+
+        color = PLANET_COLORS.get(sec["planet"], "#888")
+        is_birth = (sec["planet"] == chart.birth_planet)
+        fill_opacity = "0.35" if is_birth else "0.15"
+        stroke_w = "3" if is_birth else "1"
+        stroke_c = "#FFD700" if is_birth else "#c9a96e"
+
+        path = (
+            f'M {x1_i:.1f} {y1_i:.1f} '
+            f'L {x1_o:.1f} {y1_o:.1f} '
+            f'A {r_outer:.1f} {r_outer:.1f} 0 0 1 {x2_o:.1f} {y2_o:.1f} '
+            f'L {x2_i:.1f} {y2_i:.1f} '
+            f'A {r_inner:.1f} {r_inner:.1f} 0 0 0 {x1_i:.1f} {y1_i:.1f} Z'
+        )
+        svg_parts.append(
+            f'<path d="{path}" fill="{color}" fill-opacity="{fill_opacity}" '
+            f'stroke="{stroke_c}" stroke-width="{stroke_w}"/>'
+        )
+
+        # Direction label
+        lx = cx + r_label * math.cos(a_mid)
+        ly = cy + r_label * math.sin(a_mid)
+        svg_parts.append(
+            f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+            f'dominant-baseline="middle" fill="#c9a96e" '
+            f'font-size="11" font-weight="bold">'
+            f'{sec["dir_cn"]}</text>'
+        )
+
+        # Planet symbol
+        sx = cx + r_mid * math.cos(a_mid)
+        sy = cy + r_mid * math.sin(a_mid)
+        svg_parts.append(
+            f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" '
+            f'dominant-baseline="middle" fill="{color}" '
+            f'font-size="22">{sec["symbol"]}</text>'
+        )
+
+        # Animal + planet name
+        ax = cx + r_animal * math.cos(a_mid)
+        ay = cy + r_animal * math.sin(a_mid)
+        svg_parts.append(
+            f'<text x="{ax:.1f}" y="{ay:.1f}" text-anchor="middle" '
+            f'dominant-baseline="middle" fill="white" '
+            f'font-size="10">{sec["animal_emoji"]} {sec["animal_cn"]}</text>'
+        )
+
+    # Center circle
+    svg_parts.append(
+        f'<circle cx="{cx}" cy="{cy}" r="{r_inner}" '
+        f'fill="#0d0d1a" stroke="#c9a96e" stroke-width="2"/>'
+    )
+
+    # Center content
+    birth_color = PLANET_COLORS.get(chart.birth_planet, "#c9a96e")
+    svg_parts.append(
+        f'<text x="{cx}" y="{cy - 22}" text-anchor="middle" '
+        f'fill="#c9a96e" font-size="10">မဟာဘုတ်</text>'
+    )
+    svg_parts.append(
+        f'<text x="{cx}" y="{cy + 2}" text-anchor="middle" '
+        f'fill="{birth_color}" font-size="28">'
+        f'{chart.birth_planet_symbol}</text>'
+    )
+    svg_parts.append(
+        f'<text x="{cx}" y="{cy + 22}" text-anchor="middle" '
+        f'fill="{birth_color}" font-size="12" font-weight="bold">'
+        f'{chart.birth_planet_cn}</text>'
+    )
+    svg_parts.append(
+        f'<text x="{cx}" y="{cy + 38}" text-anchor="middle" '
+        f'fill="#aaa" font-size="9">ME {chart.myanmar_year} · '
+        f'{chart.weekday_name_cn}</text>'
+    )
+
+    svg_parts.append('</svg>')
+    return '\n'.join(svg_parts)
 
 
 # ============================================================
@@ -367,6 +664,13 @@ def compute_mahabote_chart(year, month, day, hour, minute,
 
 def render_mahabote_chart(chart, after_chart_hook=None):
     """Render the complete Myanmar Mahabote chart."""
+    # SVG Wheel
+    svg = build_mahabote_wheel_svg(chart)
+    st.markdown(
+        f'<div style="text-align:center;margin:0 auto;max-width:500px;">{svg}</div>',
+        unsafe_allow_html=True,
+    )
+    st.divider()
     _render_compass(chart)
     st.divider()
     _render_mahabote_grid(chart)
@@ -376,6 +680,8 @@ def render_mahabote_chart(chart, after_chart_hook=None):
     _render_info(chart)
     st.divider()
     _render_house_table(chart)
+    st.divider()
+    _render_omens(chart)
     st.divider()
     _render_periods(chart)
 
@@ -394,7 +700,7 @@ def _render_info(chart):
         st.write(f"**緯度:** {chart.latitude:.4f}°")
         st.write(f"**經度:** {chart.longitude:.4f}°")
     with col3:
-        st.write(f"**緬甸年 (ME):** {chart.myanmar_year}")
+        st.write(f"**緬甸年 (Sakka / ME):** {chart.myanmar_year}")
         st.write(
             f"**出生星期:** {chart.weekday_name_cn} "
             f"({chart.weekday_name_en} / {chart.weekday_name_myanmar})"
@@ -503,20 +809,20 @@ def _compass_cell(direction_info, birth_planet):
     )
 
 
-# -- Mahabote 3×3 grid -----------------------------------------------------
+# -- Mahabote 3×3 grid (8 houses) ------------------------------------------
 
 def _render_mahabote_grid(chart):
-    """Render a 3×3 grid representing the 7 Mahabote houses."""
-    st.subheader("🏛️ Mahabote 七宮盤 (Mahabote House Grid)")
+    """Render a 3×3 grid representing the 8 Mahabote houses."""
+    st.subheader("🏛️ Mahabote 八宮盤 (Mahabote House Grid)")
 
-    # Layout mapping:
-    #   Row 0: Thila(6)  Marana(5)  Hein(4)
-    #   Row 1: (empty)   Centre     Kiya(3)
-    #   Row 2: Bhin(0)   Ayu(1)     Winya(2)
+    # Layout mapping (8 houses + centre):
+    #   Row 0: Kamma(7)  Thila(6)  Marana(5)
+    #   Row 1: Hein(4)   Centre    Bhin(0)
+    #   Row 2: Kiya(3)   Winya(2)  Ayu(1)
     grid_map = [
-        [6, 5, 4],
-        [None, "center", 3],
-        [0, 1, 2],
+        [7, 6, 5],
+        [4, "center", 0],
+        [3, 2, 1],
     ]
 
     html = (
@@ -530,11 +836,6 @@ def _render_mahabote_grid(chart):
         for cell in row:
             if cell == "center":
                 html += _center_cell(chart)
-            elif cell is None:
-                html += (
-                    '<td style="border:none;width:33%;'
-                    'min-height:100px;"></td>'
-                )
             else:
                 html += _house_cell(chart.houses[cell])
         html += '</tr>'
@@ -546,7 +847,7 @@ def _render_mahabote_grid(chart):
 def _house_cell(house):
     """Render a single house cell."""
     color = PLANET_COLORS.get(house.planet, "#888")
-    border = f"3px solid gold" if house.is_birth_house else "1px solid #555"
+    border = "3px solid gold" if house.is_birth_house else "1px solid #555"
     bg = f"{color}15"
     star = "⭐ " if house.is_birth_house else ""
     return (
@@ -588,7 +889,7 @@ def _center_cell(chart):
 # -- House table ------------------------------------------------------------
 
 def _render_house_table(chart):
-    st.subheader("📊 七宮詳表 (House Details)")
+    st.subheader("📊 八宮詳表 (House Details)")
     header = (
         "| # | 宮位 (House) | 緬甸文 | 含義 (Meaning) "
         "| 星期 | 行星 | 動物 | 說明 |"
@@ -614,6 +915,64 @@ def _render_house_table(chart):
             f"| {h.description} |"
         )
     st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+
+# -- Omen readings ---------------------------------------------------------
+
+def _render_omens(chart):
+    """Render traditional omen interpretations for the birth planet."""
+    st.subheader("🔮 傳統預兆解讀 (Traditional Omens)")
+    st.markdown(
+        "依據緬甸 Mahabote 古籍，每個方位行星落宮對應不同吉凶預兆："
+    )
+
+    # Find the birth planet's omen
+    birth_omen = None
+    for o in chart.omens:
+        if o.planet == chart.birth_planet:
+            birth_omen = o
+            break
+
+    if birth_omen:
+        color = PLANET_COLORS.get(birth_omen.planet, "#888")
+        fortune_color = {
+            "大吉": "#FFD700", "吉": "#32CD32",
+            "中性": "#87CEEB", "凶": "#DC143C", "凶中帶吉": "#FF8C00",
+        }.get(birth_omen.fortune, "#888")
+        st.markdown(
+            f'<div style="background:{color}15;border:2px solid {color};'
+            f'padding:16px;border-radius:10px;color:white;margin-bottom:12px;">'
+            f'<h4 style="margin:0 0 8px 0;">'
+            f'⭐ 本命方位：{birth_omen.direction_cn} — '
+            f'{birth_omen.planet_cn} ({birth_omen.planet})</h4>'
+            f'<div style="margin-bottom:8px;">'
+            f'<span style="background:{fortune_color};color:white;'
+            f'padding:2px 10px;border-radius:4px;font-weight:bold;">'
+            f'{birth_omen.fortune}</span></div>'
+            f'<div style="margin:4px 0;">💼 <b>事業：</b>{birth_omen.omen_career}</div>'
+            f'<div style="margin:4px 0;">💕 <b>婚姻：</b>{birth_omen.omen_marriage}</div>'
+            f'<div style="margin:4px 0;">🏥 <b>健康：</b>{birth_omen.omen_health}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    # All omens summary
+    with st.expander("📖 八方位完整預兆一覽"):
+        for o in chart.omens:
+            is_birth = (o.planet == chart.birth_planet)
+            marker = "⭐ " if is_birth else ""
+            color = PLANET_COLORS.get(o.planet, "#888")
+            st.markdown(
+                f"**{marker}{o.direction_cn} ({o.direction_en})** — "
+                f"<span style='color:{color};font-weight:bold;'>"
+                f"{o.planet_cn} ({o.planet})</span> · {o.fortune}",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"  - 💼 事業：{o.omen_career}\n"
+                f"  - 💕 婚姻：{o.omen_marriage}\n"
+                f"  - 🏥 健康：{o.omen_health}"
+            )
 
 
 # -- Atar periods -----------------------------------------------------------
