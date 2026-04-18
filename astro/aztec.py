@@ -411,6 +411,8 @@ def compute_aztec_chart(year, month, day, hour, minute,
         zodiac_info = ZODIAC_SIGNS[idx]
 
         # 此行星對應的 Tonalpohualli 日徵
+        # 使用與 maya.py 相同的疊加方式：基礎日徵 + 行星經度映射到 20 日徵的偏移量
+        # lon/360*20 將 0-360° 經度均勻映射到 0-19 的日徵偏移
         aztec_day_for_planet = int(jd - AZTEC_EPOCH_JD + int(lon / 360 * 20)) % 20
         aztec_energy = AZTEC_ENERGIES.get(aztec_day_for_planet, "")
 
@@ -516,6 +518,7 @@ def _render_tonalpohualli(chart):
             f"**今日日徵:** {chart.tonalpohualli_sign_name}"
             f"（{chart.tonalpohualli_sign_cn}）<br/>"
             f"**能量含義:** {chart.tonalpohualli_energy}",
+            unsafe_allow_html=True,
         )
 
     # Trecena & 守護神祇
@@ -538,6 +541,7 @@ def _render_tonalpohualli(chart):
             f"**主宰日徵:** {chart.trecena_ruler_name}"
             f"（{chart.trecena_ruler_cn}）<br/>"
             f"**今日位置:** 第 {chart.trecena_number} 天",
+            unsafe_allow_html=True,
         )
 
     # 守護神祇與方位顏色
