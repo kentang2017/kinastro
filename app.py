@@ -1505,7 +1505,7 @@ elif _selected_system == "tab_babylonian":
                     year=_p["year"], month=_p["month"], day=_p["day"],
                     hour=_p["hour"], minute=_p["minute"],
                     timezone=_p["timezone"],
-                    lat=_p["lat"], lon=_p["lon"],
+                    lat=_p["latitude"], lon=_p["longitude"],
                 )
             _bab_tab_chart, _bab_tab_natal, _bab_tab_omens = st.tabs([
                 t("babylonian_subtab_chart"),
