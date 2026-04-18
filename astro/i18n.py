@@ -781,7 +781,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     },
 
     # ── 萬化仙禽 (WanHua XianQin) ───────────────────────────
-    "tab_chinstar": {"zh": "🐦 中國萬化仙禽", "en": "🐦 WanHua XianQin"},
+    "tab_chinstar": {"zh": "🐦 萬化仙禽", "en": "🐦 WanHua XianQin"},
     "desc_chinstar": {
         "zh": (
             "**萬化仙禽（新刻劉伯溫萬化仙禽）**\n\n"
