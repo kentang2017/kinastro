@@ -871,6 +871,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "vedic_subtab_ashtaka": {"zh": "八分力量", "en": "Ashtakavarga"},
     "vedic_subtab_yogas": {"zh": "瑜伽組合", "en": "Yogas"},
     "vedic_subtab_bphs": {"zh": "帕拉夏拉大占星經", "en": "BPHS Classic"},
+    "vedic_subtab_varga": {"zh": "分盤 Varga", "en": "Divisional Charts"},
 
     # ── Ziwei sub-tabs ──────────────────────────────────────
     "ziwei_subtab_natal": {"zh": "本命盤", "en": "Natal"},
