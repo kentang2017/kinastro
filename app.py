@@ -60,6 +60,7 @@ from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
+from astro.tibetan import compute_tibetan_chart, render_tibetan_chart, build_kalachakra_mandala_svg
 from astro.western.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
@@ -654,7 +655,7 @@ with st.sidebar:
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
-        ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai"]),
+        ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -674,6 +675,7 @@ with st.sidebar:
         "tab_decans": t("tab_decans"),
         "tab_nadi": t("tab_nadi"),
         "tab_zurkhai": t("tab_zurkhai"),
+        "tab_tibetan": t("tab_tibetan"),
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_babylonian": t("tab_babylonian"),
         "tab_chinstar": t("tab_chinstar"),
@@ -694,6 +696,7 @@ with st.sidebar:
         "tab_decans": t("sys_hint_decans"),
         "tab_nadi": t("sys_hint_nadi"),
         "tab_zurkhai": t("sys_hint_zurkhai"),
+        "tab_tibetan": t("sys_hint_tibetan"),
         "tab_hellenistic": t("sys_hint_hellenistic"),
         "tab_babylonian": t("sys_hint_babylonian"),
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
@@ -1659,6 +1662,62 @@ elif _selected_system == "tab_zurkhai":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_zurkhai"))
+
+# --- 藏傳時輪金剛占星 (Tibetan Kalachakra) ---
+elif _selected_system == "tab_tibetan":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _g = st.session_state["_calc_gender"]
+            with st.spinner(t("spinner_tibetan")):
+                _tib_chart = compute_tibetan_chart(**_p, gender=_g)
+            _t_tab_mandala, _t_tab_natal, _t_tab_mewa, _t_tab_forces, _t_tab_planets = st.tabs([
+                t("tibetan_subtab_mandala"),
+                t("tibetan_subtab_natal"),
+                t("tibetan_subtab_mewa"),
+                t("tibetan_subtab_forces"),
+                t("tibetan_subtab_planets"),
+            ])
+            with _t_tab_mandala:
+                _tib_svg = build_kalachakra_mandala_svg(
+                    _tib_chart,
+                    year=birth_date.year,
+                    month=birth_date.month,
+                    day=birth_date.day,
+                    hour=birth_time.hour,
+                    minute=birth_time.minute,
+                    tz=input_tz,
+                    location=location_name,
+                )
+                st.markdown(_tib_svg, unsafe_allow_html=True)
+                st.caption(
+                    '<p style="text-align:center;color:#888;font-size:11px;">'
+                    'Kalachakra Mandala · 時輪金剛曼荼羅 · '
+                    'Outer: 12 Animals · Middle: 8 Parkha · Inner: 9 Mewa'
+                    '</p>',
+                    unsafe_allow_html=True,
+                )
+                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mandala")
+            with _t_tab_natal:
+                render_tibetan_chart(_tib_chart, after_chart_hook=lambda: _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_natal"))
+            with _t_tab_mewa:
+                from astro.tibetan import _render_mewa_parkha
+                _render_mewa_parkha(_tib_chart)
+                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mewa")
+            with _t_tab_forces:
+                from astro.tibetan import _render_five_forces
+                _render_five_forces(_tib_chart)
+                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_forces")
+            with _t_tab_planets:
+                from astro.tibetan import _render_planets
+                _render_planets(_tib_chart)
+                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_planets")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_tibetan"))
 
 # --- 希臘占星 (Hellenistic) ---
 elif _selected_system == "tab_hellenistic":

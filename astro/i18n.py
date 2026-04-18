@@ -1143,6 +1143,69 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "babylonian_col_aspect": {"zh": "相位", "en": "Aspect"},
     "babylonian_col_angle": {"zh": "角度", "en": "Angle"},
     "babylonian_col_orb": {"zh": "容許度", "en": "Orb"},
+    # ── Tibetan Kalachakra 藏傳時輪金剛占星 ──────────────────────────────────
+    "tab_tibetan": {
+        "zh": "🏔️ 藏傳時輪金剛占星",
+        "en": "🏔️ Tibetan Kalachakra",
+    },
+    "spinner_tibetan": {
+        "zh": "正在計算藏傳時輪金剛排盤...",
+        "en": "Calculating Tibetan Kalachakra chart...",
+    },
+    "sys_hint_tibetan": {
+        "zh": "藏傳佛教時輪金剛占星體系",
+        "en": "Tibetan Buddhist Kalachakra astrology system",
+    },
+    "desc_tibetan": {
+        "zh": """
+### 什麼是藏傳時輪金剛占星 (Kalachakra Astrology)？
+
+**時輪金剛 (Kalachakra)** 是藏傳佛教最深奧的密續體系之一：
+
+- **十二生肖 (lo-rtags)**：鼠 (Byi-ba)、牛 (Glang)、虎 (sTag)、兔 (Yos)、
+  龍 (ḥBrug)、蛇 (sBrul)、馬 (rTa)、羊 (Lug)、猴 (sPre-hu)、
+  鳥 (Bya)、狗 (Khyi)、豬 (Phag)
+- **五行 (ḥByung-ba)**：木 (Shing)、火 (Me)、土 (Sa)、金 (Lcags)、水 (Chu)
+- **九宮 Mewa (sMe-ba dgu)**：九個數字與顏色、方位對應
+- **八卦 Parkha (sPar-kha brgyad)**：八方位系統
+- **五力 (dBang-thang lnga)**：La（魂）、Sok（命）、Lu（身）、Wangthang（權勢）、Lungta（風馬）
+- **九曜**：七星 + 羅睺 (Ra-hu) + 計都 (Khe-ta)
+""",
+        "en": """
+### What is Tibetan Kalachakra Astrology?
+
+**Kalachakra (Time Wheel)** is one of the most profound tantric systems in Tibetan Buddhism:
+
+- **12 Animal Signs (lo-rtags)**: Rat (Byi-ba), Ox (Glang), Tiger (sTag), Rabbit (Yos),
+  Dragon (ḥBrug), Snake (sBrul), Horse (rTa), Sheep (Lug), Monkey (sPre-hu),
+  Bird (Bya), Dog (Khyi), Pig (Phag)
+- **Five Elements (ḥByung-ba)**: Wood (Shing), Fire (Me), Earth (Sa), Metal (Lcags), Water (Chu)
+- **Nine Mewa (sMe-ba dgu)**: Nine numbers with color and directional correspondences
+- **Eight Parkha (sPar-kha brgyad)**: Eight directional trigram system
+- **Five Forces (dBang-thang lnga)**: La (Soul), Sok (Life), Lu (Body), Wangthang (Power), Lungta (Wind Horse)
+- **Nine Planets**: Seven planets + Rahu (Ra-hu) + Ketu (Khe-ta)
+""",
+    },
+    "tibetan_subtab_mandala": {
+        "zh": "☸️ 曼荼羅",
+        "en": "☸️ Mandala",
+    },
+    "tibetan_subtab_natal": {
+        "zh": "📋 排盤資料",
+        "en": "📋 Chart Info",
+    },
+    "tibetan_subtab_mewa": {
+        "zh": "🔮 九宮八卦",
+        "en": "🔮 Mewa & Parkha",
+    },
+    "tibetan_subtab_forces": {
+        "zh": "💪 五力",
+        "en": "💪 Five Forces",
+    },
+    "tibetan_subtab_planets": {
+        "zh": "🪐 九曜",
+        "en": "🪐 Nine Graha",
+    },
 }
 
 
