@@ -1186,6 +1186,58 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
 - **Nine Planets**: Seven planets + Rahu (Ra-hu) + Ketu (Khe-ta)
 """,
     },
+    # ── Yemeni Astrology (也門占星) ────────────────────────────
+    "tab_yemeni": {"zh": "🕌 也門占星", "en": "🕌 Yemeni"},
+    "desc_yemeni": {
+        "zh": (
+            "**也門占星（Yemeni / South Arabian / Rasulid Astrology）**\n\n"
+            "也門占星源自公元前 8 世紀的示巴王國，在 13 世紀 Rasulid 王朝達到高峰。"
+            "核心文獻為 al-Malik al-Ashraf ʿUmar ibn Yūsuf 的《Kitāb al-Tabṣira fī ʿIlm al-Nujūm》。\n\n"
+            "本模組重點在「也門本土 Rasulid 月宿魔法傳統」，包括 28 月宿（Manazil）的護符魔法（Talismanic Magic）、"
+            "醫療與農業擇時、Anwā' 天氣星宿預兆、附庸星傳統、阿拉伯點與 Firdaria 週期。"
+        ),
+        "en": (
+            "**Yemeni / South Arabian / Rasulid Astrology**\n\n"
+            "Yemeni astrology originates from the Kingdom of Saba' (8th century BCE) and peaked "
+            "during the 13th-century Rasulid dynasty. The core text is al-Malik al-Ashraf ʿUmar ibn "
+            "Yūsuf's *Kitāb al-Tabṣira fī ʿIlm al-Nujūm*.\n\n"
+            "This module focuses on the uniquely Yemeni Rasulid lunar mansion magic tradition, including "
+            "28 Manazil talismanic magic, medical and agricultural timing, Anwā' weather omens, "
+            "affiliated planets, Arabic Parts, and Firdaria periods."
+        ),
+    },
+    "spinner_yemeni": {"zh": "計算也門占星盤中…", "en": "Computing Yemeni chart…"},
+    "sys_hint_yemeni": {"zh": "南阿拉伯 Rasulid 月宿魔法傳統", "en": "South Arabian Rasulid lunar mansion magic tradition"},
+    "yemeni_subtab_mandala": {"zh": "☪ 月宿曼荼羅", "en": "☪ Manzil Mandala"},
+    "yemeni_subtab_natal": {"zh": "📋 排盤資料", "en": "📋 Chart Info"},
+    "yemeni_subtab_manazil": {"zh": "🌙 月宿詳表", "en": "🌙 Manazil Table"},
+    "yemeni_subtab_omens": {"zh": "📜 預兆", "en": "📜 Omens"},
+    "yemeni_chart_title": {"zh": "也門占星排盤 / Yemeni Astrology", "en": "Yemeni Astrology"},
+    "yemeni_sect": {"zh": "盤型", "en": "Sect"},
+    "yemeni_manazil_title": {"zh": "月宿 (Manazil)", "en": "Lunar Mansions (Manazil)"},
+    "yemeni_birth_manzil": {"zh": "出生月宿", "en": "Birth Mansion"},
+    "yemeni_stars": {"zh": "主要星宿", "en": "Principal Stars"},
+    "yemeni_fortune": {"zh": "吉凶", "en": "Fortune"},
+    "yemeni_affiliated_planet": {"zh": "附庸星", "en": "Affiliated Planet"},
+    "yemeni_talisman_title": {"zh": "護符魔法 (Talismanic Magic)", "en": "Talismanic Magic"},
+    "yemeni_anwa_title": {"zh": "Anwā' 天氣星宿預兆", "en": "Anwā' Weather Omens"},
+    "yemeni_planet_positions": {"zh": "行星位置 (Sidereal)", "en": "Planet Positions (Sidereal)"},
+    "yemeni_arabic_parts_title": {"zh": "阿拉伯點 (Arabic Parts)", "en": "Arabic Parts"},
+    "yemeni_omens_title": {"zh": "al-Ashraf 預兆", "en": "al-Ashraf Omens"},
+    "yemeni_firdaria_title": {"zh": "Firdaria 週期", "en": "Firdaria Periods"},
+    "yemeni_houses_title": {"zh": "宮位 (Sidereal)", "en": "Houses (Sidereal)"},
+    "yemeni_col_planet": {"zh": "行星", "en": "Planet"},
+    "yemeni_col_sign": {"zh": "星座", "en": "Sign"},
+    "yemeni_col_degree": {"zh": "度數", "en": "Degree"},
+    "yemeni_col_house": {"zh": "宮位", "en": "House"},
+    "yemeni_col_part_name": {"zh": "名稱", "en": "Name"},
+    "yemeni_col_arabic": {"zh": "阿拉伯名", "en": "Arabic"},
+    "yemeni_col_formula": {"zh": "公式", "en": "Formula"},
+    "yemeni_col_years": {"zh": "年數", "en": "Years"},
+    "yemeni_col_start": {"zh": "開始", "en": "Start"},
+    "yemeni_col_end": {"zh": "結束", "en": "End"},
+    "yemeni_col_cusp": {"zh": "宮首", "en": "Cusp"},
+
     "tibetan_subtab_mandala": {
         "zh": "☸️ 曼荼羅",
         "en": "☸️ Mandala",

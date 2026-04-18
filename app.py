@@ -63,6 +63,7 @@ from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
 from astro.tibetan import compute_tibetan_chart, render_tibetan_chart, build_kalachakra_mandala_svg
 from astro.western.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg
+from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni_manzil_mandala_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
 from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.western.asteroids import compute_asteroids
@@ -656,7 +657,7 @@ with st.sidebar:
         ("cat_chinese", ["tab_chinese", "tab_chinstar"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
-        ("cat_middle_east", ["tab_arabic"]),
+        ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
 
@@ -669,6 +670,7 @@ with st.sidebar:
         "tab_thai": t("tab_thai"),
         "tab_kabbalistic": t("tab_kabbalistic"),
         "tab_arabic": t("tab_arabic"),
+        "tab_yemeni": t("tab_yemeni"),
         "tab_maya": t("tab_maya"),
         "tab_aztec": t("tab_aztec"),
         "tab_mahabote": t("tab_mahabote"),
@@ -690,6 +692,7 @@ with st.sidebar:
         "tab_thai": t("sys_hint_thai"),
         "tab_kabbalistic": t("sys_hint_kabbalistic"),
         "tab_arabic": t("sys_hint_arabic"),
+        "tab_yemeni": t("sys_hint_yemeni"),
         "tab_maya": t("sys_hint_maya"),
         "tab_aztec": t("sys_hint_aztec"),
         "tab_mahabote": t("sys_hint_mahabote"),
@@ -1571,6 +1574,61 @@ elif _selected_system == "tab_arabic":
 
         with arabic_subtab_ms164:
             render_ms164_browse()
+
+# --- 也門占星 (Yemeni) ---
+elif _selected_system == "tab_yemeni":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_yemeni")):
+                _yemeni_chart = compute_yemeni_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    timezone=_p["timezone"],
+                    latitude=_p["latitude"], longitude=_p["longitude"],
+                    location_name=location_name,
+                )
+            _y_tab_mandala, _y_tab_natal, _y_tab_omens = st.tabs([
+                t("yemeni_subtab_mandala"),
+                t("yemeni_subtab_natal"),
+                t("yemeni_subtab_omens"),
+            ])
+            with _y_tab_mandala:
+                _yemeni_svg = build_yemeni_manzil_mandala_svg(
+                    _yemeni_chart,
+                    year=birth_date.year,
+                    month=birth_date.month,
+                    day=birth_date.day,
+                    hour=birth_time.hour,
+                    minute=birth_time.minute,
+                    tz=input_tz,
+                    location=location_name,
+                )
+                st.markdown(_yemeni_svg, unsafe_allow_html=True)
+                st.caption(
+                    '<p style="text-align:center; color:#888; font-size:11px;">'
+                    'Yemeni Manzil Mandala — 28-mansion disc · '
+                    'Rasulid manuscript style · Sidereal zodiac'
+                    '</p>',
+                    unsafe_allow_html=True,
+                )
+                _render_ai_button("tab_yemeni", _yemeni_chart, btn_key="yemeni")
+            with _y_tab_natal:
+                render_yemeni_chart(_yemeni_chart)
+            with _y_tab_omens:
+                st.subheader("📜 al-Ashraf " + t("yemeni_subtab_omens"))
+                for _omen in _yemeni_chart.omens:
+                    _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
+                    st.markdown(
+                        f"{_omen_icon} **{_omen.planet}** ({_omen.planet_cn}) — "
+                        f"*{_omen.condition.upper()}*: {_omen.text} / {_omen.text_en}"
+                    )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_yemeni"))
 
 # --- 瑪雅占星 ---
 elif _selected_system == "tab_maya":
