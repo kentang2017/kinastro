@@ -61,6 +61,7 @@ from astro.egyptian.decans import compute_decan_chart, render_decan_chart, rende
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
 from astro.western.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
+from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
 from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.western.asteroids import compute_asteroids
@@ -394,6 +395,7 @@ with st.sidebar:
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai"]),
         ("cat_middle_east", ["tab_arabic"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans"]),
+        ("cat_mesopotamia", ["tab_babylonian"]),
     ]
 
     _SYSTEM_LABELS = {
@@ -412,6 +414,7 @@ with st.sidebar:
         "tab_nadi": t("tab_nadi"),
         "tab_zurkhai": t("tab_zurkhai"),
         "tab_hellenistic": t("tab_hellenistic"),
+        "tab_babylonian": t("tab_babylonian"),
         "tab_chinstar": t("tab_chinstar"),
     }
 
@@ -431,6 +434,7 @@ with st.sidebar:
         "tab_nadi": t("sys_hint_nadi"),
         "tab_zurkhai": t("sys_hint_zurkhai"),
         "tab_hellenistic": t("sys_hint_hellenistic"),
+        "tab_babylonian": t("sys_hint_babylonian"),
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
         "tab_chinstar": t("sys_hint_chinstar"),
     }
@@ -1490,6 +1494,60 @@ elif _selected_system == "tab_hellenistic":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_hellenistic"))
+
+# --- 古巴比倫占星 (Babylonian) ---
+elif _selected_system == "tab_babylonian":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_babylonian")):
+                _bab_chart = compute_babylonian_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    timezone=_p["timezone"],
+                    lat=_p["lat"], lon=_p["lon"],
+                )
+            _bab_tab_chart, _bab_tab_natal, _bab_tab_omens = st.tabs([
+                t("babylonian_subtab_chart"),
+                t("babylonian_subtab_natal"),
+                t("babylonian_subtab_omens"),
+            ])
+            with _bab_tab_chart:
+                _bab_svg = build_babylonian_planisphere_svg(
+                    _bab_chart,
+                    year=birth_date.year,
+                    month=birth_date.month,
+                    day=birth_date.day,
+                    hour=birth_time.hour,
+                    minute=birth_time.minute,
+                    tz=input_tz,
+                    location=location_name,
+                )
+                st.markdown(_bab_svg, unsafe_allow_html=True)
+                st.caption(
+                    '<p style="text-align:center; color:#888; font-size:11px;">'
+                    'Babylonian Planisphere (K.8538 style) — 8-sector clay disc · '
+                    'Sidereal zodiac · MUL.APIN sign names'
+                    '</p>',
+                    unsafe_allow_html=True,
+                )
+                _render_ai_button("tab_babylonian", _bab_chart, btn_key="babylonian")
+            with _bab_tab_natal:
+                render_babylonian_chart(_bab_chart)
+            with _bab_tab_omens:
+                st.subheader("📜 Enūma Anu Enlil " + t("babylonian_subtab_omens"))
+                for _omen in _bab_chart.omens:
+                    _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
+                    st.markdown(
+                        f"{_omen_icon} **{_omen.planet}** ({_omen.god_name}) — "
+                        f"*{_omen.condition.upper()}*: {_omen.text}"
+                    )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_babylonian"))
 
 # --- 萬化仙禽 (WanHua XianQin) ---
 elif _selected_system == "tab_chinstar":

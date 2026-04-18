@@ -1101,6 +1101,48 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
         "zh": "👈 請在左邊欄填寫你的出生資料，然後點選你想了解的占星類型。",
         "en": "👈 Enter your birth info on the left, then pick the astrology system you want.",
     },
+
+    # ── Babylonian Astrology (古巴比倫占星) ─────────────────
+    "tab_babylonian": {"zh": "🏺 古巴比倫占星", "en": "🏺 Babylonian"},
+    "desc_babylonian": {
+        "zh": (
+            "**古巴比倫占星（Babylonian / Chaldean Astrology）**\n\n"
+            "美索不達米亞文明是所有西洋占星的直接源頭。核心文獻包括 MUL.APIN 星表（約公元前 1000 年）、"
+            "Enūma Anu Enlil 預兆集（約 70 片泥板）以及 K.8538 尼尼微星盤（8 區間平面星圖）。\n\n"
+            "本模組使用 sidereal 黃道計算行星位置，對應 12 宮 Akkadian 古名與七大行星神，"
+            "並以 K.8538 泥板風格呈現視覺化星盤。"
+        ),
+        "en": (
+            "**Babylonian / Chaldean Astrology**\n\n"
+            "Mesopotamian civilisation is the direct ancestor of all Western astrology. "
+            "Core sources include the MUL.APIN star catalogue (~1000 BCE), the Enūma Anu Enlil "
+            "omen series (~70 tablets), and the K.8538 Nineveh planisphere (8-sector star map).\n\n"
+            "This module uses a sidereal zodiac to compute planetary positions, maps them to the "
+            "12 Akkadian sign names and the seven planetary deities, and renders a K.8538-style "
+            "clay-tablet planisphere."
+        ),
+    },
+    "spinner_babylonian": {"zh": "計算古巴比倫星盤中…", "en": "Computing Babylonian chart…"},
+    "sys_hint_babylonian": {"zh": "美索不達米亞占星——西洋占星之源", "en": "Mesopotamian astrology — origin of Western horoscopy"},
+    "cat_mesopotamia": {"zh": "🏺 美索不達米亞", "en": "🏺 Mesopotamia"},
+    "babylonian_subtab_chart": {"zh": "泥板星圖", "en": "Planisphere"},
+    "babylonian_subtab_natal": {"zh": "本命盤", "en": "Natal"},
+    "babylonian_subtab_omens": {"zh": "預兆", "en": "Omens"},
+    "babylonian_chart_title": {"zh": "𒀭 古巴比倫占星 / Babylonian Astrology", "en": "𒀭 Babylonian Astrology"},
+    "babylonian_planet_positions": {"zh": "行星位置 (Sidereal)", "en": "Planet Positions (Sidereal)"},
+    "babylonian_omens_title": {"zh": "Enūma Anu Enlil 預兆", "en": "Enūma Anu Enlil Omens"},
+    "babylonian_aspects_title": {"zh": "行星相位", "en": "Aspects"},
+    "babylonian_houses_title": {"zh": "宮位 (Sidereal)", "en": "Houses (Sidereal)"},
+    "babylonian_col_planet": {"zh": "行星", "en": "Planet"},
+    "babylonian_col_god": {"zh": "守護神", "en": "Deity"},
+    "babylonian_col_akkadian": {"zh": "Akkadian 宮名", "en": "Akkadian Sign"},
+    "babylonian_col_sign_cn": {"zh": "中文名", "en": "Chinese Name"},
+    "babylonian_col_degree": {"zh": "度數", "en": "Degree"},
+    "babylonian_col_house": {"zh": "宮位", "en": "House"},
+    "babylonian_col_cusp": {"zh": "宮首", "en": "Cusp"},
+    "babylonian_col_aspect": {"zh": "相位", "en": "Aspect"},
+    "babylonian_col_angle": {"zh": "角度", "en": "Angle"},
+    "babylonian_col_orb": {"zh": "容許度", "en": "Orb"},
 }
 
 
