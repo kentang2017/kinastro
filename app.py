@@ -391,7 +391,8 @@ with st.sidebar:
         ("cat_chinese", ["tab_chinese", "tab_chinstar"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai"]),
-        ("cat_ancient", ["tab_arabic", "tab_maya", "tab_decans"]),
+        ("cat_middle_east", ["tab_arabic"]),
+        ("cat_ancient", ["tab_maya", "tab_decans"]),
     ]
 
     _SYSTEM_LABELS = {
