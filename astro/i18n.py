@@ -632,26 +632,28 @@ Reference: https://www.azteccalendar.com/
         "zh": """
 ### 什麼是緬甸 Mahabote 占星？
 
-**Mahabote** (မဟာဘုတ်) 是緬甸傳統占星術，意為「大創造」：
+**Mahabote** (မဟာဘုတ်) 是緬甸傳統占星術核心體系，意為「大創造」：
 
-- **七曜行星**：日、月、火、水、木、金、土，對應星期日至星期六
-- **羅睺 (Rahu)**：星期三傍晚出生者歸羅睺管轄
-- **八方位**：每顆行星對應一個羅盤方位（東北至北）
-- **七宮位**：本命、壽命、意識、身體、權勢、死亡、道德
+- **七曜行星 + 羅睺**：日、月、火、水、木、金、土 + 羅睺（星期三傍晚）
+- **八方位輪盤**：NE、E、SE、S、SW、W、NW、N，每顆行星對應一個方位
+- **八宮位**：本命、壽命、意識、身體、權勢、死亡、道德 + 業力（第八隱藏宮）
+- **動物守護**：迦樓羅、虎、獅、象(有牙)、鼠、天竺鼠、龍/那伽、象(無牙)
 - **行星大運 (Atar)**：七星循環共 96 年，主宰人生各階段
-- **計算公式**：Mahabote 值 = (緬甸年 + 星期數) mod 7
+- **Sakka 曆計算**：Mahabote 值 = (Sakka 年 + 星期數) mod 8
+- **傳統預兆**：每個方位含吉凶、事業、婚姻、健康解讀
 """,
         "en": """
 ### What is Myanmar Mahabote Astrology?
 
-**Mahabote** (မဟာဘုတ်) is traditional Myanmar astrology, meaning "Great Creation":
+**Mahabote** (မဟာဘုတ်) is the core traditional Myanmar astrology system, meaning "Great Creation":
 
-- **Seven Planets**: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn — corresponding to Sunday through Saturday
-- **Rahu**: Those born Wednesday evening fall under Rahu's rulership
-- **Eight Directions**: Each planet corresponds to a compass direction (NE through N)
-- **Seven Houses**: Birth, Life, Mind, Body, Power, Death, Morality
+- **Seven Planets + Rahu**: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn + Rahu (Wednesday evening)
+- **Eight-Direction Wheel**: NE, E, SE, S, SW, W, NW, N — each planet maps to a compass direction
+- **Eight Houses**: Birth, Life, Mind, Body, Power, Death, Morality + Karma (8th hidden house)
+- **Animal Guardians**: Garuda, Tiger, Lion, Tusked Elephant, Rat, Guinea Pig, Naga, Tuskless Elephant
 - **Planetary Periods (Atar)**: Seven-planet cycle totalling 96 years
-- **Calculation**: Mahabote value = (Myanmar year + weekday number) mod 7
+- **Sakka Calendar**: Mahabote value = (Sakka year + weekday number) mod 8
+- **Traditional Omens**: Each direction includes fortune, career, marriage, and health readings
 """,
     },
     "desc_nadi": {

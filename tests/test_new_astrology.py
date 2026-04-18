@@ -1235,7 +1235,7 @@ class TestMahaboteValue:
     """Mahabote 值計算測試"""
 
     def test_known_calculation(self):
-        """1990-01-01 (Mon): ME=1351, weekday_num=2, (1351+2)%7=2"""
+        """1990-01-01 (Mon): ME=1351, weekday_num=2, (1351+2)%8=5"""
         chart = compute_mahabote_chart(
             year=1990, month=1, day=1, hour=12, minute=0,
             timezone=6.5, latitude=16.8661, longitude=96.1951,
@@ -1243,14 +1243,14 @@ class TestMahaboteValue:
         )
         assert chart.myanmar_year == 1351
         assert chart.weekday == 1  # Monday
-        assert chart.mahabote_value == (1351 + 2) % 7  # = 2
+        assert chart.mahabote_value == (1351 + 2) % 8  # = 5
 
     def test_mahabote_value_range(self):
         chart = compute_mahabote_chart(
             year=2000, month=6, day=15, hour=10, minute=0,
             timezone=6.5, latitude=16.8661, longitude=96.1951,
         )
-        assert 0 <= chart.mahabote_value <= 6
+        assert 0 <= chart.mahabote_value <= 7
 
 
 class TestMahaboteChart:
@@ -1279,8 +1279,8 @@ class TestMahaboteChart:
     def test_not_rahu(self, sample_chart):
         assert sample_chart.is_rahu is False
 
-    def test_seven_houses(self, sample_chart):
-        assert len(sample_chart.houses) == 7
+    def test_eight_houses(self, sample_chart):
+        assert len(sample_chart.houses) == 8
 
     def test_birth_house_marked(self, sample_chart):
         birth_houses = [h for h in sample_chart.houses if h.is_birth_house]
@@ -1294,9 +1294,10 @@ class TestMahaboteChart:
 
     def test_all_seven_planets_placed(self, sample_chart):
         planets = {h.planet for h in sample_chart.houses}
-        assert len(planets) == 7
         expected = {"Sun", "Moon", "Mars", "Mercury",
                     "Jupiter", "Venus", "Saturn"}
+        # All 7 weekday planets should appear across the 8 houses
+        # (one planet repeats in the 8th Kamma house)
         assert planets == expected
 
     def test_house_names_match_constants(self, sample_chart):
@@ -1453,7 +1454,7 @@ class TestMahaboteAnimalSigns:
             assert h.weekday_cn != ""
 
     def test_houses_have_distinct_animals(self):
-        """All 7 houses should have 7 distinct animal signs."""
+        """8 houses should have all 7 distinct animal signs (1 repeats in Kamma)."""
         chart = compute_mahabote_chart(
             year=1990, month=1, day=1, hour=12, minute=0,
             timezone=6.5, latitude=16.8661, longitude=96.1951,
