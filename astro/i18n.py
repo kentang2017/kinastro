@@ -92,11 +92,11 @@ TRANSLATIONS = {
     "city_ulaanbaatar": {"zh": "烏蘭巴托", "en": "Ulaanbaatar"},
     # ── Tab labels ───────────────────────────────────────────────────────────
     "tab_chinese": {
-        "zh": "🀄 中國七政四餘",
-        "en": "🀄 Seven Governors (Chinese)",
+        "zh": "🀄 七政四餘",
+        "en": "🀄 Qi Zheng Si Yu (Chinese Astrology)",
     },
     "tab_ziwei": {
-        "zh": "🌟 中國紫微斗數",
+        "zh": "🌟 紫微斗數",
         "en": "🌟 Zi Wei Dou Shu",
     },
     "tab_western": {
