@@ -1006,6 +1006,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "cat_chinese": {"zh": "🏮 中華傳統", "en": "🏮 Chinese Traditions"},
     "cat_western": {"zh": "🌍 西方體系", "en": "🌍 Western Systems"},
     "cat_asian": {"zh": "🌏 亞洲體系", "en": "🌏 Asian Systems"},
+    "cat_middle_east": {"zh": "☪ 中東體系", "en": "☪ Middle Eastern Systems"},
     "cat_ancient": {"zh": "📜 古文明", "en": "📜 Ancient Civilizations"},
 
     # ── GUI Optimization: Short beginner-friendly system descriptions ──
