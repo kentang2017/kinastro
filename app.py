@@ -394,8 +394,7 @@ with st.sidebar:
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai"]),
         ("cat_middle_east", ["tab_arabic"]),
-        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans"]),
-        ("cat_mesopotamia", ["tab_babylonian"]),
+        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
 
     _SYSTEM_LABELS = {
