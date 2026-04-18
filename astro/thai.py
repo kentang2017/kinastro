@@ -324,10 +324,10 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
     dow = dt.isoweekday() % 7
     day_name, day_planet = THAI_DAY_PLANETS[dow]
 
-    # Compute sidereal Ascendant (use Placidus to get ascmc, then override
-    # with Whole Sign cusps for house assignments)
-    _cusps_raw, ascmc = swe.houses_ex(jd, latitude, longitude, b"W",
-                                      swe.FLG_SIDEREAL)
+    # Compute sidereal Ascendant (use Whole Sign to get ascmc; raw cusps
+    # are discarded in favour of our own _whole_sign_cusps calculation)
+    _, ascmc = swe.houses_ex(jd, latitude, longitude, b"W",
+                             swe.FLG_SIDEREAL)
     ascendant = _normalize(ascmc[0])
 
     # Whole Sign cusps
