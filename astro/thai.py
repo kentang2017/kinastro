@@ -1,10 +1,15 @@
 """
-泰國占星排盤模組 (Thai Astrology Chart Module)
+泰國占星排盤模組 (Thai Horasastra Astrology Module)
 
-泰國占星以印度占星 (Jyotish) 為基礎，使用恆星黃道 (sidereal zodiac)，
-加入泰國傳統命名與詮釋體系。本模組使用 pyswisseph 搭配 Lahiri 歲差計算行星位置。
+โหราศาสตร์ไทย — Thai Horasastra based on Jyotish, with 9 Navagraha
+(including ราหู Rahu & เกตุ Ketu), 12 Rashi, 27 Nakshatra,
+Whole Sign Houses, Brahma Jati (พรหมชาติ) remedies, and
+traditional day-planet (Phra) correspondences.
 """
 
+import json
+import math
+import os
 import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
@@ -73,6 +78,88 @@ PLANET_COLORS = {
     "เกตุ (計都)": "#4B0082",
 }
 
+# ============================================================
+# 27 Nakshatras (二十七宿 / นักษัตร)
+# Each spans 13°20' (800').  Index = int(moon_sidereal_lon / (360/27))
+# Tuple: (thai_name, english_name, chinese_name, lord_planet, brief_reading)
+# lord_planet key: Su=Sun, Mo=Moon, Ma=Mars, Me=Mercury, Ju=Jupiter,
+#                  Ve=Venus, Sa=Saturn, Ra=Rahu, Ke=Ketu
+# ============================================================
+
+THAI_NAKSHATRAS = [
+    ("อัศวินี", "Ashwini", "馬頭宿", "Ke", "敏捷、療癒、先驅精神，宜開創新事業。"),
+    ("ภรณี", "Bharani", "大陵宿", "Ve", "熱情、強烈、承載生死，宜藝術與感情。"),
+    ("กฤตติกา", "Krittika", "昴宿", "Su", "鋒利、淨化、領導力，宜決斷與權威。"),
+    ("โรหิณี", "Rohini", "畢宿", "Mo", "美麗、穩定、豐饒，宜財富與享樂。"),
+    ("มฤคศิรา", "Mrigashira", "觜宿", "Ma", "好奇、探索、溫和，宜旅行與研究。"),
+    ("อารทรา", "Ardra", "參宿", "Ra", "風暴、變革、深刻，宜突破與轉型。"),
+    ("ปุนรวสุ", "Punarvasu", "井宿", "Ju", "回歸、重生、智慧，宜學習與修行。"),
+    ("ปุษยะ", "Pushya", "鬼宿", "Sa", "滋養、吉祥、穩重，最吉之宿，萬事可行。"),
+    ("อาศเลษา", "Ashlesha", "柳宿", "Me", "蛇性、神秘、深邃，宜研究與靈性修行。"),
+    ("มฆา", "Magha", "星宿", "Ke", "皇族、祖先、權勢，宜祭祀與傳承。"),
+    ("ปุรวผลคุณี", "Purva Phalguni", "張宿", "Ve", "享樂、愛情、創意，宜婚姻與藝術。"),
+    ("อุตตรผลคุณี", "Uttara Phalguni", "翼宿", "Su", "友善、守護、責任，宜合作與契約。"),
+    ("หัสตะ", "Hasta", "軫宿", "Mo", "巧手、技藝、聰慧，宜手工與治療。"),
+    ("จิตรา", "Chitra", "角宿", "Ma", "輝煌、建築、美學，宜設計與創造。"),
+    ("สวาตี", "Swati", "亢宿", "Ra", "獨立、自由、柔韌，宜貿易與外交。"),
+    ("วิศาขา", "Vishakha", "氐宿", "Ju", "雙重、決心、目標，宜競爭與成就。"),
+    ("อนุราธา", "Anuradha", "房宿", "Sa", "友誼、忠誠、組織，宜合作與團隊。"),
+    ("เชษฐา", "Jyeshtha", "心宿", "Me", "首領、保護、勇敢，宜領導與防衛。"),
+    ("มูละ", "Mula", "尾宿", "Ke", "根源、破壞重建、深層，宜研究與靈修。"),
+    ("ปุรวาษาฒ", "Purva Ashadha", "箕宿", "Ve", "勝利、淨化、激勵，宜宣傳與說服。"),
+    ("อุตตราษาฒ", "Uttara Ashadha", "斗宿", "Su", "不可戰勝、正義、真理，宜從政與公義。"),
+    ("ศรวณะ", "Shravana", "牛宿", "Mo", "聆聽、學習、傳播，宜教育與傳媒。"),
+    ("ธนิษฐา", "Dhanishta", "女宿", "Ma", "富裕、韻律、名望，宜音樂與表演。"),
+    ("ศตภิษัช", "Shatabhisha", "虛宿", "Ra", "百藥、治療、神秘，宜醫療與靈性。"),
+    ("ปุรวภัทรปท", "Purva Bhadrapada", "危宿", "Ju", "燃燒、苦行、英雄，宜靈修與轉化。"),
+    ("อุตตรภัทรปท", "Uttara Bhadrapada", "室宿", "Sa", "深沉、安穩、智慧，宜冥想與穩定。"),
+    ("เรวตี", "Revati", "壁宿", "Me", "養育、旅途、圓滿，宜遠行與收成。"),
+]
+
+# Lord abbreviation → full Thai planet name
+_NAK_LORD_MAP = {
+    "Su": "พระอาทิตย์ (太陽)", "Mo": "พระจันทร์ (月亮)",
+    "Ma": "พระอังคาร (火星)", "Me": "พระพุธ (水星)",
+    "Ju": "พระพฤหัสบดี (木星)", "Ve": "พระศุกร์ (金星)",
+    "Sa": "พระเสาร์ (土星)", "Ra": "ราหู (羅睺)",
+    "Ke": "เกตุ (計都)",
+}
+
+# Day-planet traditional omens (吉凶預兆)
+THAI_DAY_OMENS = {
+    0: "วันอาทิตย์出生者具備領導魅力與權威，宜從事公職或領導職務。太陽守護帶來光明正大之性格。",
+    1: "วันจันทร์出生者情感細膩、直覺敏銳，宜從事藝術、照護或教育。月亮守護帶來柔和與智慧。",
+    2: "วันอังคาร出生者勇敢果斷、精力充沛，宜從事軍警、運動或競爭性行業。火星守護帶來行動力。",
+    3: "วันพุธ出生者聰慧靈活、善於溝通，宜從事商業、文學或學術。水星守護帶來機智與人緣。",
+    4: "วันพฤหัสบดี出生者福德深厚、受人尊敬，宜從事宗教、教育或顧問。木星守護帶來幸運與擴展。",
+    5: "วันศุกร์出生者風雅迷人、愛好美感，宜從事藝術、時尚或娛樂。金星守護帶來魅力與財運。",
+    6: "วันเสาร์出生者堅毅沉穩、紀律嚴明，宜從事工程、法律或管理。土星守護帶來持久力與智慧。",
+}
+
+# Brahma Jati JSON loader (cached)
+_DATA_DIR = os.path.join(os.path.dirname(__file__), "thai", "data")
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def _load_brahma_jati_remedies():
+    """Load Brahma Jati spells & remedies JSON."""
+    path = os.path.join(_DATA_DIR, "brahma_jati_spells_remedies.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+# Planet glyphs for SVG rendering
+PLANET_GLYPHS_THAI = {
+    "พระอาทิตย์ (太陽)": "☉", "พระจันทร์ (月亮)": "☽",
+    "พระอังคาร (火星)": "♂", "พระพุธ (水星)": "☿",
+    "พระพฤหัสบดี (木星)": "♃", "พระศุกร์ (金星)": "♀",
+    "พระเสาร์ (土星)": "♄", "ราหู (羅睺)": "☊",
+    "เกตุ (計都)": "☋",
+}
+
 
 # ============================================================
 # 資料類 (Data Classes)
@@ -124,6 +211,10 @@ class ThaiChart:
     houses: list
     ascendant: float
     asc_rashi: str
+    nakshatra: dict = field(default_factory=dict)
+    brahma_jati: dict = field(default_factory=dict)
+    omens: str = ""
+    remedies: dict = field(default_factory=dict)
 
 
 # ============================================================
@@ -178,10 +269,46 @@ def _find_house(lon, cusps):
     return 1
 
 
+def _nakshatra_index(lon):
+    """Return 0-based Nakshatra index for a sidereal longitude."""
+    return int(_normalize(lon) / (360.0 / 27.0)) % 27
+
+
+def _get_nakshatra_info(lon):
+    """Return Nakshatra dict for a given sidereal longitude."""
+    idx = _nakshatra_index(lon)
+    nak = THAI_NAKSHATRAS[idx]
+    pada = int((_normalize(lon) % (360.0 / 27.0)) / (360.0 / 108.0)) + 1
+    return {
+        "index": idx,
+        "thai": nak[0],
+        "english": nak[1],
+        "chinese": nak[2],
+        "lord": nak[3],
+        "lord_name": _NAK_LORD_MAP.get(nak[3], nak[3]),
+        "reading": nak[4],
+        "pada": pada,
+    }
+
+
+def _whole_sign_cusps(asc_lon):
+    """Compute Whole Sign house cusps from Ascendant longitude.
+
+    In Whole Sign Houses the cusp of House 1 starts at the beginning
+    of the Ascendant's sign (i.e. sign_index * 30).
+    """
+    asc_sign = _sign_index(asc_lon)
+    return [((asc_sign + i) % 12) * 30.0 for i in range(12)]
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_thai_chart(year, month, day, hour, minute, timezone,
                        latitude, longitude, location_name=""):
-    """計算泰國占星排盤 (Sidereal / Lahiri Ayanamsa)"""
+    """計算泰國占星排盤 (Sidereal / Lahiri Ayanamsa / Whole Sign Houses)
+
+    Returns a ThaiChart with 9 Navagraha positions, 27-Nakshatra data
+    for Moon, Brahma Jati colour/remedy, and day-planet omen reading.
+    """
     swe.set_ephe_path("")
     swe.set_sid_mode(swe.SIDM_LAHIRI)
 
@@ -197,12 +324,17 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
     dow = dt.isoweekday() % 7
     day_name, day_planet = THAI_DAY_PLANETS[dow]
 
-    # Compute sidereal house cusps
-    cusps, ascmc = swe.houses_ex(jd, latitude, longitude, b"P",
-                                 swe.FLG_SIDEREAL)
+    # Compute sidereal Ascendant (use Whole Sign to get ascmc; raw cusps
+    # are discarded in favour of our own _whole_sign_cusps calculation)
+    _, ascmc = swe.houses_ex(jd, latitude, longitude, b"W",
+                             swe.FLG_SIDEREAL)
     ascendant = _normalize(ascmc[0])
 
+    # Whole Sign cusps
+    cusps = _whole_sign_cusps(ascendant)
+
     planets = []
+    moon_lon = None
     for name, pid in THAI_PLANETS.items():
         result, _ = swe.calc_ut(jd, pid, swe.FLG_SIDEREAL)
         lon = _normalize(result[0])
@@ -217,8 +349,10 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
             rashi_lord=rashi[3], sign_degree=_sign_degree(lon),
             retrograde=speed < 0, rashi_abbr=rashi[4],
         ))
+        if pid == swe.MOON:
+            moon_lon = lon
 
-    # Rahu (ราหู)
+    # Rahu (ราหู) — Mean Node; always retrograde in Thai tradition
     rahu_res, _ = swe.calc_ut(jd, swe.MEAN_NODE, swe.FLG_SIDEREAL)
     rahu_lon = _normalize(rahu_res[0])
     idx = _sign_index(rahu_lon)
@@ -227,10 +361,10 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
         name="ราหู (羅睺)", longitude=rahu_lon, latitude=rahu_res[1],
         rashi=rashi[0], rashi_glyph=rashi[1], rashi_chinese=rashi[2],
         rashi_lord=rashi[3], sign_degree=_sign_degree(rahu_lon),
-        retrograde=False, rashi_abbr=rashi[4],
+        retrograde=True, rashi_abbr=rashi[4],
     ))
 
-    # Ketu (เกตุ)
+    # Ketu (เกตุ) — always opposite Rahu; also always retrograde
     ketu_lon = _normalize(rahu_lon + 180.0)
     idx = _sign_index(ketu_lon)
     rashi = THAI_RASHIS[idx]
@@ -238,10 +372,10 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
         name="เกตุ (計都)", longitude=ketu_lon, latitude=-rahu_res[1],
         rashi=rashi[0], rashi_glyph=rashi[1], rashi_chinese=rashi[2],
         rashi_lord=rashi[3], sign_degree=_sign_degree(ketu_lon),
-        retrograde=False, rashi_abbr=rashi[4],
+        retrograde=True, rashi_abbr=rashi[4],
     ))
 
-    # Build houses
+    # Build Whole Sign houses
     houses = []
     for i in range(12):
         cusp = cusps[i]
@@ -260,6 +394,27 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
 
     asc_rashi = THAI_RASHIS[_sign_index(ascendant)][0]
 
+    # Moon Nakshatra
+    nakshatra = _get_nakshatra_info(moon_lon) if moon_lon is not None else {}
+
+    # Day-planet omens
+    omens = THAI_DAY_OMENS.get(dow, "")
+
+    # Brahma Jati colour/remedy from JSON
+    bj_data = _load_brahma_jati_remedies()
+    _day_names_en = ["Sunday", "Monday", "Tuesday", "Wednesday",
+                     "Thursday", "Friday", "Saturday"]
+    day_en = _day_names_en[dow]
+    bj_color = {}
+    if bj_data:
+        color_by_day = bj_data.get("color_by_day", {})
+        bj_color = color_by_day.get(day_en, {})
+    brahma_jati = {
+        "day_color": bj_color,
+        "general_remedies": bj_data.get("general_remedies", {}),
+    }
+    remedies = bj_color
+
     return ThaiChart(
         year=year, month=month, day=day, hour=hour, minute=minute,
         timezone=timezone, latitude=latitude, longitude=longitude,
@@ -267,6 +422,8 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
         day_of_week=dow, day_planet=day_planet,
         planets=planets, houses=houses,
         ascendant=ascendant, asc_rashi=asc_rashi,
+        nakshatra=nakshatra, brahma_jati=brahma_jati,
+        omens=omens, remedies=remedies,
     )
 
 
@@ -276,15 +433,24 @@ def compute_thai_chart(year, month, day, hour, minute, timezone,
 
 def render_thai_chart(chart, after_chart_hook=None):
     """渲染完整的泰國占星排盤"""
-    _render_thai_grid(chart)
+    # SVG mandala chart
+    svg = build_thai_mandala_svg(chart)
+    st.markdown(svg, unsafe_allow_html=True)
+
     if after_chart_hook:
         after_chart_hook()
     st.divider()
     _render_info(chart)
     st.divider()
+    _render_nakshatra_section(chart)
+    st.divider()
+    _render_omens_section(chart)
+    st.divider()
     _render_planet_table(chart)
     st.divider()
     _render_house_table(chart)
+    st.divider()
+    _render_brahma_jati_section(chart)
 
 
 def _render_info(chart):
@@ -427,6 +593,286 @@ def _render_house_table(chart):
             f"| {h.rashi_glyph} {h.rashi} | {planets_str} |"
         )
     st.markdown("\n".join(rows))
+
+
+def _render_nakshatra_section(chart):
+    """Render Moon Nakshatra information."""
+    nak = chart.nakshatra
+    if not nak:
+        return
+    st.subheader("🌙 นักษัตร — Moon Nakshatra (月亮宿)")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            f"**นักษัตร (Nakshatra):** {nak.get('thai', '')} / "
+            f"{nak.get('english', '')} / {nak.get('chinese', '')}"
+        )
+        st.markdown(f"**บาท (Pada):** {nak.get('pada', '')}")
+    with col2:
+        lord_name = nak.get('lord_name', '')
+        lord_color = PLANET_COLORS.get(lord_name, '#e0e0e0')
+        st.markdown(
+            f"**เจ้าเรือน (Lord):** "
+            f"<span style='color:{lord_color};font-weight:bold'>"
+            f"{lord_name}</span>",
+            unsafe_allow_html=True,
+        )
+    reading = nak.get('reading', '')
+    if reading:
+        st.info(f"📖 {reading}")
+
+
+def _render_omens_section(chart):
+    """Render day-planet omen reading."""
+    if not chart.omens:
+        return
+    st.subheader("🔮 คำทำนายตามวันเกิด (日主星預兆)")
+    day_name = THAI_DAY_PLANETS[chart.day_of_week][0]
+    st.markdown(f"**{day_name}** — ดาวประจำวัน: **{chart.day_planet}**")
+    st.markdown(chart.omens)
+
+
+def _render_brahma_jati_section(chart):
+    """Render Brahma Jati colour/remedy section from computed chart data."""
+    bj = chart.brahma_jati
+    if not bj:
+        return
+    st.subheader("📿 พรหมชาติ — Brahma Jati (吉色與補救)")
+    day_color = bj.get("day_color", {})
+    if day_color:
+        st.markdown(
+            f"**สีมงคล (Lucky Colour):** "
+            f"{day_color.get('thai', '')} / {day_color.get('zh', '')} / "
+            f"{day_color.get('en', '')}"
+        )
+        meaning = day_color.get('meaning', '')
+        if meaning:
+            st.markdown(f"**ผลลัพธ์ (Effect):** {meaning}")
+    general = bj.get("general_remedies", {})
+    if general:
+        with st.expander("📋 คำแนะนำการแก้ไข (General Remedies / 通用補救法)", expanded=False):
+            for k, v in general.items():
+                st.markdown(f"**{k}.** {v}")
+
+
+# ============================================================
+# Thai Gold Mandala SVG Chart (ผังดวงแบบมณฑลทอง)
+# ============================================================
+
+
+def build_thai_mandala_svg(chart):
+    """Build a Thai gold mandala-style SVG chart.
+
+    Features:
+    - 12 Whole-Sign house sectors arranged in a circle
+    - Gold border with lotus petal decorations
+    - Thai temple (Phra) styling with warm gold palette
+    - Planet glyphs with Thai text labels
+    - Nakshatra callout for Moon
+    - Centre circle with birth data and BE year
+
+    Returns
+    -------
+    str – complete ``<svg>`` markup wrapped in a centring ``<div>``.
+    """
+    SIZE = 640
+    CX, CY = SIZE / 2, SIZE / 2
+    R_OUTER = 270       # outer circle radius
+    R_INNER = 200       # inner circle (house content area)
+    R_CENTRE = 72       # centre info circle
+
+    asc_idx = _sign_index(chart.ascendant)
+
+    # ── house data ─────────────────────────────────────────────
+    house_data = []
+    for h in range(1, 13):
+        sign_idx = (asc_idx + h - 1) % 12
+        plist = [(p.name, round(_sign_degree(p.longitude), 1), p.retrograde)
+                 for p in chart.planets if _sign_index(p.longitude) == sign_idx]
+        house_data.append({"h": h, "sign_idx": sign_idx, "planets": plist})
+
+    def _polar(r, a):
+        rad = math.radians(a)
+        return CX + r * math.cos(rad), CY - r * math.sin(rad)
+
+    def _house_angle(h):
+        """Centre angle of house h (1-indexed). House 1 at left (180°)."""
+        return (180 - (h - 1) * 30) % 360
+
+    def _boundary_angle(h):
+        return (195 - (h - 1) * 30) % 360
+
+    svg = []
+    svg.append(
+        f'<div style="text-align:center;overflow-x:auto;max-width:100%;">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {SIZE} {SIZE}" '
+        f'style="width:100%;max-width:640px;display:inline-block;" '
+        f'font-family="serif">'
+    )
+
+    # Background — deep Thai temple blue-black
+    svg.append(f'<rect width="{SIZE}" height="{SIZE}" fill="#1a1520" rx="10"/>')
+
+    # Outer gold decorative ring
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_OUTER + 18}" '
+        f'fill="none" stroke="#c9a84c" stroke-width="3" opacity="0.6"/>'
+    )
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_OUTER + 12}" '
+        f'fill="none" stroke="#d4af37" stroke-width="1.5"/>'
+    )
+
+    # Lotus petal decorations around the outer ring
+    for i in range(24):
+        a = i * 15
+        px, py = _polar(R_OUTER + 15, a)
+        petal_r = 6
+        svg.append(
+            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{petal_r}" '
+            f'fill="#d4af37" fill-opacity="0.15" '
+            f'stroke="#d4af37" stroke-width="0.5"/>'
+        )
+
+    # Outer ring background
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_OUTER}" '
+        f'fill="#2a2030" stroke="#d4af37" stroke-width="2"/>'
+    )
+    # Inner ring
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_INNER}" '
+        f'fill="#1e1828" stroke="#b8962e" stroke-width="1.5"/>'
+    )
+
+    # ── house sector lines ─────────────────────────────────────
+    for h in range(1, 13):
+        ba = _boundary_angle(h)
+        p1 = _polar(R_OUTER, ba)
+        p2 = _polar(R_CENTRE + 4, ba)
+        svg.append(
+            f'<line x1="{p1[0]:.1f}" y1="{p1[1]:.1f}" '
+            f'x2="{p2[0]:.1f}" y2="{p2[1]:.1f}" '
+            f'stroke="#b8962e" stroke-width="0.8" opacity="0.7"/>'
+        )
+
+    # ── house content ──────────────────────────────────────────
+    for hd in house_data:
+        h = hd["h"]
+        si = hd["sign_idx"]
+        ca = _house_angle(h)
+        rashi = THAI_RASHIS[si]
+
+        # Sign glyph (outer area)
+        gx, gy = _polar(R_OUTER * 0.88, ca)
+        svg.append(
+            f'<text x="{gx:.1f}" y="{gy:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#d4af37" '
+            f'font-size="18" font-weight="bold">{rashi[1]}</text>'
+        )
+
+        # Thai abbreviation (inner area)
+        ax, ay = _polar(R_OUTER * 0.77, ca)
+        svg.append(
+            f'<text x="{ax:.1f}" y="{ay:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#c9a84c" '
+            f'font-size="10">{rashi[4]}</text>'
+        )
+
+        # House number
+        hx, hy = _polar(R_INNER * 0.55, ca)
+        h_fill = "#d4af37" if h in (1, 4, 7, 10) else "#9a8a5a"
+        svg.append(
+            f'<text x="{hx:.1f}" y="{hy:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{h_fill}" '
+            f'font-size="11">{h}</text>'
+        )
+
+        # Planets
+        if hd["planets"]:
+            n = len(hd["planets"])
+            for pi, (pname, pdeg, retro) in enumerate(hd["planets"]):
+                offset = (pi - (n - 1) / 2) * 8
+                pa = ca + offset
+                px, py = _polar(R_INNER * 0.75, pa)
+                pglyph = PLANET_GLYPHS_THAI.get(pname, "?")
+                pcolor = PLANET_COLORS.get(pname, "#e0e0e0")
+                retro_mark = " ℞" if retro else ""
+                svg.append(
+                    f'<text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" '
+                    f'dominant-baseline="central" fill="{pcolor}" '
+                    f'font-size="14" font-weight="bold">'
+                    f'{pglyph}{retro_mark}</text>'
+                )
+
+    # ── ASC marker ─────────────────────────────────────────────
+    asc_angle = _house_angle(1)
+    asc_x, asc_y = _polar(R_OUTER + 8, asc_angle)
+    svg.append(
+        f'<text x="{asc_x:.1f}" y="{asc_y:.1f}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#d4af37" '
+        f'font-size="13" font-weight="bold">ASC</text>'
+    )
+
+    # ── centre circle (temple motif) ───────────────────────────
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_CENTRE}" '
+        f'fill="#241e30" stroke="#d4af37" stroke-width="2"/>'
+    )
+    # Inner decorative circle
+    svg.append(
+        f'<circle cx="{CX}" cy="{CY}" r="{R_CENTRE - 6}" '
+        f'fill="none" stroke="#b8962e" stroke-width="0.8"/>'
+    )
+
+    # Centre text
+    svg.append(
+        f'<text x="{CX}" y="{CY - 40}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#d4af37" '
+        f'font-size="14" font-weight="bold">ดวงชาตา</text>'
+    )
+    be_year = _to_be_year(chart.year)
+    svg.append(
+        f'<text x="{CX}" y="{CY - 22}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#c9a84c" '
+        f'font-size="9">{chart.day:02d}/{chart.month:02d}/{be_year} '
+        f'(พ.ศ.)</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY - 8}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#9a8a5a" '
+        f'font-size="9">{chart.hour:02d}:{chart.minute:02d} '
+        f'UTC{chart.timezone:+.1f}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 8}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#9a8a5a" '
+        f'font-size="8">{chart.location_name}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 22}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#7a6a50" '
+        f'font-size="8">Ayanamsa: {chart.ayanamsa:.2f}°</text>'
+    )
+    # Nakshatra callout in centre
+    nak = chart.nakshatra
+    if nak:
+        svg.append(
+            f'<text x="{CX}" y="{CY + 36}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#c9a84c" '
+            f'font-size="8">☽ {nak.get("thai", "")} '
+            f'{nak.get("chinese", "")}</text>'
+        )
+    # Lagna label
+    svg.append(
+        f'<text x="{CX}" y="{CY + 50}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#b8962e" '
+        f'font-size="8">ลัคนา: {chart.asc_rashi}</text>'
+    )
+
+    svg.append("</svg></div>")
+    return "\n".join(svg)
 
 
 # ============================================================

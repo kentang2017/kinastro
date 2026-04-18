@@ -295,6 +295,22 @@ TRANSLATIONS = {
         "zh": "📖 พรหมชาติ (泰國命理)",
         "en": "📖 Brahma Jati (Thai Fate Reading)",
     },
+    "thai_nakshatra_title": {
+        "zh": "🌙 นักษัตร — Moon Nakshatra (月亮宿)",
+        "en": "🌙 นักษัตร — Moon Nakshatra",
+    },
+    "thai_omens_title": {
+        "zh": "🔮 คำทำนายตามวันเกิด (日主星預兆)",
+        "en": "🔮 Day Planet Omens (คำทำนายตามวันเกิด)",
+    },
+    "thai_mandala_title": {
+        "zh": "🪷 ผังดวงมณฑลทอง (金色曼荼羅排盤)",
+        "en": "🪷 Thai Gold Mandala Chart",
+    },
+    "thai_brahma_jati_color": {
+        "zh": "📿 พรหมชาติ — 吉色與補救",
+        "en": "📿 Brahma Jati — Lucky Colours & Remedies",
+    },
     # ── Picatrix section ───────────────────────────────────────────────────
     "picatrix_subheader": {
         "zh": "📜 Picatrix 星體魔法 (Picatrix Stellar Magic)",
