@@ -56,6 +56,7 @@ from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
+from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
@@ -654,7 +655,7 @@ with st.sidebar:
     # Categorised system layout for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
-        ("cat_chinese", ["tab_chinese", "tab_chinstar"]),
+        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
@@ -681,6 +682,7 @@ with st.sidebar:
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_babylonian": t("tab_babylonian"),
         "tab_chinstar": t("tab_chinstar"),
+        "tab_cetian_ziwei": t("tab_cetian_ziwei"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -704,6 +706,7 @@ with st.sidebar:
         "tab_babylonian": t("sys_hint_babylonian"),
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
         "tab_chinstar": t("sys_hint_chinstar"),
+        "tab_cetian_ziwei": t("sys_hint_cetian_ziwei"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -1046,6 +1049,22 @@ elif _selected_system == "tab_ziwei":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_ziwei"))
+
+# --- 策天十八飛星 ---
+elif _selected_system == "tab_cetian_ziwei":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _gender = st.session_state.get("_calc_gender", "男")
+            with st.spinner(t("spinner_cetian_ziwei")):
+                ct_chart = compute_cetian_ziwei_chart(**_p, gender=_gender)
+            render_cetian_ziwei_chart(ct_chart, after_chart_hook=lambda: _render_ai_button("tab_cetian_ziwei", ct_chart, btn_key="cetian_ziwei"))
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_cetian_ziwei"))
 
 # --- 西洋占星 ---
 elif _selected_system == "tab_western":
