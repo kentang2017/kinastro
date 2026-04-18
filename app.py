@@ -674,6 +674,10 @@ with st.sidebar:
             key="birth_month_sel",
         )
     _max_day = calendar.monthrange(_birth_year, _birth_month)[1]
+    # Clamp previously selected day if it exceeds the new month's max days
+    _prev_day = st.session_state.get("birth_day_sel", 1)
+    if _prev_day is not None and _prev_day > _max_day:
+        st.session_state["birth_day_sel"] = _max_day
     with _col_d:
         _birth_day = st.selectbox(
             t("birth_day"),
@@ -703,9 +707,7 @@ with st.sidebar:
     st.subheader(t("birth_location"))
     _is_en = st.session_state.get("lang") == "en"
     _region_keys = list(CITY_REGIONS.keys())
-    _region_format = (
-        (lambda r: t(r))
-    )
+    _region_format = lambda r: t(r)
     _selected_region = st.selectbox(
         t("region_label"),
         options=_region_keys,
