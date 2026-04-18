@@ -13,12 +13,12 @@ import swisseph as swe
 
 from .calculator import (
     ChartData, format_degree, get_mansion_index_for_degree,
-    _normalize_degree, _degree_to_sign_degree,
+    _normalize_degree, _degree_to_sign_degree, _get_mansion_info,
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
     TWELVE_SIGNS_CHINESE, TWELVE_SIGNS_WESTERN, EARTHLY_BRANCHES,
-    FIVE_ELEMENTS,
+    FIVE_ELEMENTS, ZODIAC_SIGN_ELEMENTS,
 )
 from .shensha import (
     ShenShaResult, compute_shensha, get_bazi_stems_branches,
@@ -601,14 +601,13 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     )
 
     # Compute dasha for year ring
-    from datetime import datetime as _dt
-    _current_year = _dt.now().year
+    current_year = datetime.now().year
     dasha = compute_dasha(
         birth_year=chart.year,
         ming_gong_branch=chart.ming_gong_branch,
         gender=chart.gender,
         houses=chart.houses,
-        current_year=_current_year,
+        current_year=current_year,
     )
 
     # Compute bazi
@@ -1177,7 +1176,6 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     ming_element = ""
     for h in chart.houses:
         if h.branch == chart.ming_gong_branch:
-            from .constants import ZODIAC_SIGN_ELEMENTS
             sign_idx = int(h.cusp / 30.0) % 12
             ming_element = ZODIAC_SIGN_ELEMENTS[sign_idx]
             break
@@ -1218,7 +1216,6 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
 
     Matches the reference aizhanxing.com info panel with tabs.
     """
-    from datetime import datetime as _dt
 
     # Compute dependencies
     bazi = get_bazi_stems_branches(
@@ -1228,13 +1225,13 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
     )
-    _current_year = _dt.now().year
+    current_year = datetime.now().year
     dasha = compute_dasha(
         birth_year=chart.year,
         ming_gong_branch=chart.ming_gong_branch,
         gender=chart.gender,
         houses=chart.houses,
-        current_year=_current_year,
+        current_year=current_year,
     )
     sun_moon_times = _compute_sun_moon_rise_set(
         chart.julian_day, chart.latitude, chart.longitude, chart.timezone,
@@ -1278,7 +1275,6 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
         ming_branch = EARTHLY_BRANCHES[chart.ming_gong_branch]
         ming_mansion = ""
         ming_degree = 0.0
-        from .calculator import _get_mansion_info
         ming_mansion, ming_degree = _get_mansion_info(chart.ascendant)
         st.markdown(
             f"- **立命：** {ming_branch} {format_degree(chart.ascendant)} · "
