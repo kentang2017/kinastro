@@ -48,7 +48,7 @@ TIBETAN_ANIMALS = [
     (7,  "Lug",       "羊", "Sheep",   "Metal"),
     (8,  "sPre-hu",   "猴", "Monkey",  "Water"),
     (9,  "Bya",       "鳥", "Bird",    "Water"),
-    (10, "Khyi",      "狗", "Dog",     "Fire"),
+    (10, "Khyi",      "狗", "Dog",     "Earth"),
     (11, "Phag",      "豬", "Pig",     "Water"),
 ]
 

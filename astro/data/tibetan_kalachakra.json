@@ -16,7 +16,7 @@
     {"index": 7, "tibetan": "Lug",     "cn": "羊", "en": "Sheep",   "element": "Metal", "emoji": "🐑"},
     {"index": 8, "tibetan": "sPre-hu", "cn": "猴", "en": "Monkey",  "element": "Water", "emoji": "🐒"},
     {"index": 9, "tibetan": "Bya",     "cn": "鳥", "en": "Bird",    "element": "Water", "emoji": "🐦"},
-    {"index": 10,"tibetan": "Khyi",    "cn": "狗", "en": "Dog",     "element": "Fire",  "emoji": "🐕"},
+    {"index": 10,"tibetan": "Khyi",    "cn": "狗", "en": "Dog",     "element": "Earth", "emoji": "🐕"},
     {"index": 11,"tibetan": "Phag",    "cn": "豬", "en": "Pig",     "element": "Water", "emoji": "🐖"}
   ],
   "elements": [
