@@ -75,7 +75,9 @@ GRAHA_CN = {
 # Ayanamsa & Epoch
 # ============================================================
 BABYLONIAN_AYANAMSA_MODE = swe.SIDM_FAGAN_BRADLEY
-BABYLONIAN_EPOCH_JD = 1721139.5   # ~-746 Feb 26 (MUL.APIN observation era baseline)
+# MUL.APIN observation era baseline (~746 BCE Feb 26, Nabonassar epoch).
+# Retained for cross-referencing and future historical chart calculations.
+BABYLONIAN_EPOCH_JD = 1721139.5
 
 # ============================================================
 # K.8538 Planisphere — 8 區間方位 / 顏色
@@ -352,16 +354,9 @@ def compute_babylonian_chart(year, month, day, hour, minute, timezone,
     asc = ascmc[0]
     mc = ascmc[1]
 
-    # Determine day/night chart
+    # Determine day/night chart (Sun above horizon = houses 7–12)
     sun_pos = swe.calc_ut(jd, swe.SUN, swe.FLG_SIDEREAL)[0][0]
-    is_day = _find_house(sun_pos, cusps) in range(7, 13) or _find_house(sun_pos, cusps) == 12
-    # Simpler: Sun above horizon if house 7–12
     sun_house = _find_house(sun_pos, cusps)
-    is_day = sun_house >= 7 or sun_house <= 6
-    # Standard: day chart if Sun is above the horizon (houses 7-12 in whole-sign
-    # correspond to above horizon, but with Placidus cusps the check is simpler:
-    # Sun is above horizon when its longitude is between DSC and ASC going through MC)
-    # Simplified: compare Sun's ecliptic longitude vs. AC/DC axis
     is_day = sun_house in (7, 8, 9, 10, 11, 12)
 
     # Compute planet positions
