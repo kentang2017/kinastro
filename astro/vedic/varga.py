@@ -329,15 +329,15 @@ def _varga_d24(lon: float) -> int:
 
 def _varga_d27(lon: float) -> int:
     """D27 — Bhamsa (Nakshatramsa): each sign split into 27 parts.
-    Fire signs start from Aries; Earth from Cancer;
-    Air from Libra; Water from Capricorn.
+    Fire signs start from Aries; Earth from Capricorn;
+    Air from Libra; Water from Cancer.
     """
     sign = _sign_index(lon)
     span = 30.0 / 27.0
     part = int(_sign_degree(lon) / span)
     part = min(part, 26)
     element = sign % 4
-    starts = [0, 3, 6, 9]
+    starts = [0, 9, 6, 3]  # Fire→Aries, Earth→Capricorn, Air→Libra, Water→Cancer
     return (starts[element] + part) % 12
 
 
