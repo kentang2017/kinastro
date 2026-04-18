@@ -337,7 +337,7 @@ def _local_solar_hour(hour, minute, timezone, longitude):
     offset_minutes = (longitude - tz_meridian) * 4.0
     total_minutes = hour * 60 + minute + offset_minutes
     solar_hour = total_minutes / 60.0
-    # Clamp to 0-24 range
+    # Normalize to 0-24 range
     solar_hour = solar_hour % 24
     return solar_hour
 
@@ -452,8 +452,9 @@ def compute_mahabote_chart(year, month, day, hour, minute,
 
     # Place planets in the 8 houses.
     # Birth planet sits at *mahabote_value*; subsequent weekdays
-    # fill the next houses cyclically. The 8th house (Kamma) gets
-    # the planet that wraps around after 7 placements.
+    # fill the next houses cyclically. With 8 houses and 7 weekday
+    # planets, the 8th (Kamma) house wraps back and repeats the
+    # birth planet (planet_offset=7 → (weekday+7)%7 == weekday).
     houses = []
     for i in range(8):
         h_info = MAHABOTE_HOUSES[i]
