@@ -1077,12 +1077,12 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
     _history = st.session_state[_ck]
     if not _history:
         with _chat_box.chat_message("assistant"):
-            _chat_box.markdown(t("ai_chat_welcome"))
+            st.markdown(t("ai_chat_welcome"))
 
     # Render existing chat messages
     for _msg in _history:
         with _chat_box.chat_message(_msg["role"]):
-            _chat_box.markdown(_msg["content"])
+            st.markdown(_msg["content"])
 
     # Chat input
     _input_key = f"{_ck}_input"
@@ -1094,7 +1094,7 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
         # Show user message immediately
         _history.append({"role": "user", "content": _user_input})
         with _chat_box.chat_message("user"):
-            _chat_box.markdown(_user_input)
+            st.markdown(_user_input)
 
         # Resolve API key
         _api_key = ""
@@ -1134,7 +1134,7 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
                         max_tokens=st.session_state.get("_ai_max_tokens", 8192),
                         temperature=st.session_state.get("_ai_temperature", 0.7),
                     )
-                    _chat_box.markdown(result)
+                    st.markdown(result)
                     _history.append({"role": "assistant", "content": result})
                 except RateLimitError:
                     st.warning(t("ai_rate_limit"))

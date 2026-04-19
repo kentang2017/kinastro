@@ -755,20 +755,11 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
 /* ── Responsive: mobile — bottom-docked compact chat ───────── */
 @media (max-width: 768px) {
     .ai-chat-panel {
-        position: sticky;
-        bottom: 0;
-        z-index: 100;
         padding: 0.3rem 0;
     }
 
     .ai-chat-header {
         font-size: 0.9rem;
         padding: 0.3rem 0.6rem;
-    }
-
-    .stChatInput {
-        position: sticky;
-        bottom: 0;
-        z-index: 101;
     }
 }
