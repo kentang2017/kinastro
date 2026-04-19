@@ -708,7 +708,6 @@ def build_mazzalot_star_of_david_svg(chart, year=None, month=None, day=None,
     # ── 行星標記 ──────────────────────────────────────────────
     for pos in chart.positions:
         # 計算行星在輪盤中的角度位置
-        planet_angle = (pos.longitude / 360) * 360
         sector = pos.sign_idx
         sector_centre_angle = sector * 30 + 15
 
