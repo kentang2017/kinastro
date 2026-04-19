@@ -11,6 +11,7 @@ Multi-System Astrology Chart Application
 
 import os
 import calendar
+import random
 import streamlit as st
 from datetime import datetime, date, time
 
@@ -105,7 +106,7 @@ from astro.chinstar.chinstar import WanHuaXianQin
 # 頁面設定
 # ============================================================
 st.set_page_config(
-    page_title="堅占星 Kin Astro",
+    page_title="堅占星 KinAstro | 世界占星",
     page_icon="🌌",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -113,6 +114,40 @@ st.set_page_config(
 
 # ── Mobile-responsive CSS ──────────────────────────────────────
 st.markdown(MOBILE_CSS, unsafe_allow_html=True)
+
+# ── Load custom CSS from styles/custom.css ─────────────────────
+_css_path = os.path.join(os.path.dirname(__file__), "styles", "custom.css")
+if os.path.exists(_css_path):
+    with open(_css_path, "r", encoding="utf-8") as _css_f:
+        st.markdown(f"<style>{_css_f.read()}</style>", unsafe_allow_html=True)
+
+
+def _inject_star_particles():
+    """Inject CSS-based star particle background."""
+    particles_html = '<div class="star-particles">'
+    for _ in range(60):
+        x = random.uniform(0, 100)
+        y = random.uniform(0, 100)
+        dur = random.uniform(2.5, 6.0)
+        delay = random.uniform(0, 5.0)
+        opacity = random.uniform(0.3, 0.8)
+        size = random.choices([1, 2, 3], weights=[1, 2, 1], k=1)[0]
+        color = random.choices(["#EAB308", "#A78BFA", "#E0E0FF"], weights=[3, 1, 1], k=1)[0]
+        particles_html += (
+            f'<div class="particle" style="'
+            f"left:{x:.1f}%;top:{y:.1f}%;"
+            f"width:{size}px;height:{size}px;"
+            f"background:{color};"
+            f"--duration:{dur:.1f}s;--delay:{delay:.1f}s;"
+            f'--max-opacity:{opacity:.2f};"></div>'
+        )
+    particles_html += "</div>"
+    st.markdown(particles_html, unsafe_allow_html=True)
+
+
+# Inject star particles if toggle is on (default: on for first visit)
+if st.session_state.get("_star_particles", True):
+    _inject_star_particles()
 
 # ── Initialise language from the persisted radio widget value ────────────────
 # When the user clicks the language radio, Streamlit reruns the script with the
@@ -766,14 +801,23 @@ with st.sidebar:
     )
     gender = "male" if gender_choice == _male_label else "female"
 
-    # ── Astrology system selector (categorised for beginners) ──
+    # ── Astrology system selector (categorised accordion with search) ──
     st.divider()
     st.markdown(
         f'<div class="sidebar-system-title">🌐 {t("sidebar_system_label")}</div>',
         unsafe_allow_html=True,
     )
 
-    # Categorised system layout for easier navigation
+    # ── System search box ──────────────────────────────────────
+    _search_placeholder = "搜尋占星體系..." if st.session_state.get("lang", "zh") == "zh" else "Search systems..."
+    _system_search = st.text_input(
+        "🔍",
+        placeholder=_search_placeholder,
+        key="_system_search",
+        label_visibility="collapsed",
+    )
+
+    # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei"]),
@@ -782,6 +826,15 @@ with st.sidebar:
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
+
+    _CATEGORY_ICONS = {
+        "cat_popular": "⭐",
+        "cat_chinese": "🏮",
+        "cat_western": "🏛️",
+        "cat_asian": "🪷",
+        "cat_middle_east": "🕌",
+        "cat_ancient": "🏺",
+    }
 
     _SYSTEM_LABELS = {
         "tab_chinese": t("tab_chinese"),
@@ -838,26 +891,57 @@ with st.sidebar:
         st.session_state["_system_select"] = "tab_western"
     _selected_system = st.session_state["_system_select"]
 
-    # Render categorised buttons
+    # Filter systems by search query
+    _search_q = _system_search.strip().lower() if _system_search else ""
+
+    # Render categorised buttons inside expanders (accordion)
     for _cat_key, _cat_systems in _SYSTEM_CATEGORIES:
-        st.markdown(f'<div class="sidebar-cat">{t(_cat_key)}</div>', unsafe_allow_html=True)
-        for _sk in _cat_systems:
-            _is_active = (_sk == _selected_system)
-            _btn_type = "primary" if _is_active else "secondary"
-            _badge = ""
-            if _sk in _BEGINNER_SYSTEMS:
-                _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
-                _badge = f' <span class="beginner-badge">{_badge_text}</span>'
-            if st.button(
-                _SYSTEM_LABELS[_sk],
-                key=f"_sys_btn_{_sk}",
-                use_container_width=True,
-                type=_btn_type,
-                help=_SYSTEM_HINTS.get(_sk, ""),
-            ):
-                st.session_state["_system_select"] = _sk
-                _selected_system = _sk
-                st.rerun()
+        # Filter systems matching search
+        if _search_q:
+            _filtered = [
+                s for s in _cat_systems
+                if _search_q in _SYSTEM_LABELS.get(s, "").lower()
+                or _search_q in _SYSTEM_HINTS.get(s, "").lower()
+            ]
+            if not _filtered:
+                continue
+        else:
+            _filtered = _cat_systems
+
+        # Determine if this category contains the active system
+        _cat_has_active = _selected_system in _filtered
+        _cat_icon = _CATEGORY_ICONS.get(_cat_key, "📌")
+        _cat_label = f"{_cat_icon} {t(_cat_key)}"
+
+        with st.expander(_cat_label, expanded=_cat_has_active or bool(_search_q)):
+            for _sk in _filtered:
+                _is_active = (_sk == _selected_system)
+                _btn_type = "primary" if _is_active else "secondary"
+                _badge = ""
+                if _sk in _BEGINNER_SYSTEMS:
+                    _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
+                    _badge = f' <span class="beginner-badge">{_badge_text}</span>'
+                if st.button(
+                    _SYSTEM_LABELS[_sk],
+                    key=f"_sys_btn_{_sk}",
+                    use_container_width=True,
+                    type=_btn_type,
+                    help=_SYSTEM_HINTS.get(_sk, ""),
+                ):
+                    st.session_state["_system_select"] = _sk
+                    _selected_system = _sk
+                    st.rerun()
+
+    # ── Star particles toggle ──────────────────────────────────
+    st.divider()
+    _particles_on = st.toggle(
+        "✨ " + ("星空粒子背景" if _cur_lang == "zh" else "Star Particles"),
+        value=st.session_state.get("_star_particles", True),
+        key="_star_particles_toggle",
+    )
+    if _particles_on != st.session_state.get("_star_particles", True):
+        st.session_state["_star_particles"] = _particles_on
+        st.rerun()
 
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()

@@ -4,11 +4,13 @@ astro/chart_theme.py — 全域圖表主題 (Global Chart Theme)
 統一各體系的顏色常量、字型、網格風格，並提供行動裝置適配 CSS。
 """
 
-# ── Primary UI colours ──────────────────────────────────────────
+# ── Primary UI colours (KinAstro Design System) ────────────────
 PRIMARY_COLOR = "#a78bfa"
-SECONDARY_COLOR = "#facc15"
+SECONDARY_COLOR = "#EAB308"          # stardust gold
+ACCENT_PURPLE = "#7C3AED"           # soft purple mist
 BG_LIGHT = "#1e1b4b"
-BG_DARK = "#0a0a2a"
+BG_DARK = "#0F172A"                 # deep indigo
+BG_DEEPSPACE = "#020617"            # deep space black
 TEXT_PRIMARY = "#e0e0ff"
 TEXT_SECONDARY = "#b0b0d0"
 
@@ -55,16 +57,16 @@ ASPECT_COLORS = {
 }
 
 # ── SVG / Chart drawing defaults ────────────────────────────────
-CHART_BG = "#0a0a2a"
+CHART_BG = "#0F172A"
 CHART_RING_STROKE = "#5a5a9a"
 CHART_GRID_LINE = "#2a2a5a"
 CHART_TEXT_COLOR = "#e0e0ff"
-FONT_FAMILY = "'Inter', 'Noto Sans TC', Arial, Helvetica, sans-serif"
+FONT_FAMILY = "'Space Grotesk', 'Inter', 'Noto Sans TC', Arial, Helvetica, sans-serif"
 
 # ── Mobile responsive CSS ───────────────────────────────────────
 MOBILE_CSS = """<style>
 /* ── Google Fonts ────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 
 /* ── Hide sidebar collapsed control (keyboard_double_arrow_right) ── */
@@ -86,10 +88,10 @@ button[kind="header"],
 /* ── Cosmic background ──────────────────────────────── */
 .stApp {
     background:
-        radial-gradient(ellipse at 20% 50%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(30, 27, 75, 0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 80%, rgba(59, 7, 100, 0.12) 0%, transparent 50%),
-        linear-gradient(180deg, #0a0a2a 0%, #0d0d35 50%, #0a0a2a 100%);
+        radial-gradient(ellipse at 20% 50%, rgba(88, 28, 135, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(30, 27, 75, 0.45) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(59, 7, 100, 0.15) 0%, transparent 50%),
+        linear-gradient(180deg, #0F172A 0%, #0d0d35 50%, #020617 100%);
     background-attachment: fixed;
 }
 
@@ -99,13 +101,13 @@ h1, h2, h3 {
     letter-spacing: 1px;
 }
 h1 {
-    background: linear-gradient(135deg, #a78bfa 0%, #facc15 50%, #a78bfa 100%);
+    background: linear-gradient(135deg, #a78bfa 0%, #EAB308 50%, #a78bfa 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 body, p, span, div, li, td, th, label, input, select, textarea, button {
-    font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+    font-family: 'Space Grotesk', 'Inter', 'Noto Sans TC', sans-serif !important;
 }
 /* Preserve Material Symbols font for Streamlit UI icons (expander toggle, sidebar toggle, etc.) */
 .material-symbols-rounded,
@@ -201,7 +203,7 @@ body, p, span, div, li, td, th, label, input, select, textarea, button {
     backdrop-filter: blur(8px);
 }
 [data-testid="stMetricValue"] {
-    color: #facc15 !important;
+    color: #EAB308 !important;
     font-family: 'Cinzel', serif !important;
 }
 
@@ -328,13 +330,13 @@ hr {
 }
 .sidebar-cat {
     font-size: 0.7rem;
-    color: #a78bfa;
+    color: #EAB308;
     text-transform: uppercase;
     letter-spacing: 1.8px;
     margin: 18px 0 6px 2px;
     padding: 4px 0 4px 0;
     font-weight: 700;
-    border-bottom: 1px solid rgba(167, 139, 250, 0.15);
+    border-bottom: 1px solid rgba(234, 179, 8, 0.15);
 }
 
 /* ── System button descriptions ────────────────────── */
@@ -363,8 +365,8 @@ hr {
 
 /* ── Sidebar overall tweaks ────────────────────────── */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0d0d35 0%, #1e1b4b 100%) !important;
-    border-right: 1px solid rgba(167, 139, 250, 0.1) !important;
+    background: linear-gradient(180deg, #0F172A 0%, #1e1b4b 100%) !important;
+    border-right: 1px solid rgba(234, 179, 8, 0.1) !important;
 }
 section[data-testid="stSidebar"] .stButton > button {
     font-size: 0.88rem;
@@ -379,7 +381,7 @@ section[data-testid="stSidebar"] .stButton > button:hover {
 
 /* ── Spinner: Astrology symbol animation ─────────── */
 .stSpinner > div {
-    border-color: #a78bfa transparent #facc15 transparent !important;
+    border-color: #a78bfa transparent #EAB308 transparent !important;
 }
 
 /* ── Scrollbar styling ───────────────────────────────── */
@@ -545,6 +547,126 @@ svg.chart-wheel { max-width: 100%; height: auto; }
 .palace-grid .elem-earth { background: rgba(245, 127, 23, 0.2); border-color: rgba(245, 127, 23, 0.5); }
 .palace-grid .elem-metal { background: rgba(158, 158, 158, 0.2); border-color: rgba(158, 158, 158, 0.5); }
 .palace-grid .elem-water { background: rgba(21, 101, 192, 0.2); border-color: rgba(21, 101, 192, 0.5); }
+
+/* ── Star particles background ─────────────────────── */
+.star-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.star-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #EAB308;
+    border-radius: 50%;
+    animation: twinkle var(--duration, 3s) ease-in-out infinite var(--delay, 0s);
+    opacity: 0;
+}
+@keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: var(--max-opacity, 0.7); transform: scale(1); }
+}
+
+/* ── Chart hover glow & rotation ───────────────────── */
+.chart-glow-wrap {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+}
+.chart-glow-wrap:hover {
+    box-shadow: 0 0 30px rgba(234, 179, 8, 0.2), 0 0 60px rgba(124, 58, 237, 0.12);
+    transform: rotate(0.5deg) scale(1.005);
+}
+.chart-glow-wrap:hover svg {
+    filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.25));
+}
+
+/* ── Cosmic chart outer border ring ────────────────── */
+.cosmic-ring {
+    position: relative;
+    display: inline-block;
+}
+.cosmic-ring::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(234, 179, 8, 0.5),
+        rgba(124, 58, 237, 0.3),
+        rgba(167, 139, 250, 0.2),
+        rgba(234, 179, 8, 0.5)
+    );
+    z-index: -1;
+    animation: cosmicSpin 25s linear infinite;
+    pointer-events: none;
+}
+@keyframes cosmicSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Cosmic transition flash ───────────────────────── */
+.cosmic-transition-flash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9999;
+    animation: flashFade 0.5s ease-out forwards;
+}
+@keyframes flashFade {
+    0% { opacity: 0.7; }
+    100% { opacity: 0; }
+}
+
+/* ── Sidebar search styling ────────────────────────── */
+section[data-testid="stSidebar"] [data-testid="stTextInput"] input {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(124, 58, 237, 0.25) !important;
+    border-radius: 12px !important;
+    font-size: 0.85rem !important;
+}
+section[data-testid="stSidebar"] [data-testid="stTextInput"] input:focus {
+    border-color: rgba(234, 179, 8, 0.5) !important;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.12) !important;
+}
+
+/* ── Share card button ─────────────────────────────── */
+.share-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(124, 58, 237, 0.12));
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    border-radius: 12px;
+    color: #EAB308;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.share-card-btn:hover {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.22), rgba(124, 58, 237, 0.22));
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.18);
+    transform: translateY(-1px);
+}
+
+/* ── Enhanced sidebar active button ────────────────── */
+section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"] {
+    background: linear-gradient(135deg, #7C3AED 0%, #EAB308 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 2px 12px rgba(234, 179, 8, 0.2) !important;
+}
+section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"]:hover {
+    box-shadow: 0 4px 24px rgba(234, 179, 8, 0.35) !important;
+}
 </style>"""
 
 # ── Planet name → canonical key mapping ─────────────────────────
@@ -586,12 +708,12 @@ def get_planet_color(name: str) -> str:
 def get_plotly_theme() -> dict:
     """Return a unified Plotly layout theme dict for all chart modules."""
     return dict(
-        paper_bgcolor="rgba(10, 10, 42, 0.8)",
+        paper_bgcolor="rgba(15, 23, 42, 0.8)",
         plot_bgcolor="rgba(30, 27, 75, 0.4)",
         font=dict(family=FONT_FAMILY, color=TEXT_PRIMARY, size=12),
         margin=dict(l=20, r=20, t=40, b=20),
         colorway=[
-            "#facc15",    # Sun – star gold
+            "#EAB308",    # Sun – stardust gold
             "#c0c0c0",    # Moon – silver
             "#60a5fa",    # Mercury – sky blue
             "#f472b6",    # Venus – pink

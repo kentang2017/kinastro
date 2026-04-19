@@ -1,0 +1,204 @@
+/* ═══════════════════════════════════════════════════════════════
+   styles/custom.css — KinAstro 全域美學樣式
+   Global Aesthetic Stylesheet for KinAstro
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Star Particle Background (Canvas-like CSS animation) ──── */
+.star-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.star-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #EAB308;
+    border-radius: 50%;
+    animation: twinkle var(--duration, 3s) ease-in-out infinite var(--delay, 0s);
+    opacity: 0;
+}
+@keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: var(--max-opacity, 0.7); transform: scale(1); }
+}
+
+/* ── Cosmic transition overlay ─────────────────────────────── */
+.cosmic-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    animation: cosmicFlash 0.6s ease-out forwards;
+}
+@keyframes cosmicFlash {
+    0% { opacity: 0.8; }
+    100% { opacity: 0; }
+}
+
+/* ── Chart hover glow & rotation animation ─────────────────── */
+.chart-container {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    padding: 8px;
+}
+.chart-container:hover {
+    box-shadow: 0 0 30px rgba(234, 179, 8, 0.2), 0 0 60px rgba(124, 58, 237, 0.15);
+    transform: rotate(0.5deg) scale(1.005);
+}
+.chart-container svg {
+    transition: filter 0.4s ease;
+}
+.chart-container:hover svg {
+    filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.3));
+}
+
+/* ── Cosmic border for chart outer ring ────────────────────── */
+.cosmic-chart-border {
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background-clip: padding-box;
+}
+.cosmic-chart-border::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(234, 179, 8, 0.6),
+        rgba(124, 58, 237, 0.4),
+        rgba(167, 139, 250, 0.3),
+        rgba(234, 179, 8, 0.6)
+    );
+    z-index: -1;
+    animation: cosmicRotate 20s linear infinite;
+}
+@keyframes cosmicRotate {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Sidebar search box styling ────────────────────────────── */
+.sidebar-search input {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(124, 58, 237, 0.3) !important;
+    border-radius: 12px !important;
+    color: #E0E0FF !important;
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+}
+.sidebar-search input::placeholder {
+    color: rgba(176, 176, 208, 0.5) !important;
+}
+.sidebar-search input:focus {
+    border-color: rgba(234, 179, 8, 0.5) !important;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.15) !important;
+}
+
+/* ── Category accordion styling ────────────────────────────── */
+.system-category-header {
+    font-size: 0.72rem;
+    color: #EAB308;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 16px 0 6px 2px;
+    padding: 6px 0;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(234, 179, 8, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── Share card button ─────────────────────────────────────── */
+.share-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(124, 58, 237, 0.15));
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 12px;
+    color: #EAB308;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.share-card-btn:hover {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(124, 58, 237, 0.25));
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+    transform: translateY(-1px);
+}
+
+/* ── Particles toggle switch ───────────────────────────────── */
+.particles-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #B0B0D0;
+    padding: 4px 0;
+}
+
+/* ── Enhanced glassmorphism for expanders in sidebar ────────── */
+section[data-testid="stSidebar"] [data-testid="stExpander"] {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(124, 58, 237, 0.12) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    margin-bottom: 4px !important;
+}
+section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+    font-size: 0.85rem;
+    color: #E0E0FF;
+}
+
+/* ── Stardust gold accent on active elements ───────────────── */
+section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"] {
+    background: linear-gradient(135deg, #7C3AED 0%, #EAB308 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 2px 12px rgba(234, 179, 8, 0.25) !important;
+}
+section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"]:hover {
+    box-shadow: 0 4px 24px rgba(234, 179, 8, 0.4) !important;
+}
+
+/* ── Enhanced metric cards with gold accent ────────────────── */
+[data-testid="stMetricValue"] {
+    background: linear-gradient(135deg, #EAB308, #FBBF24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: 'Cinzel', serif !important;
+}
+
+/* ── Responsive: auto-collapse sidebar on mobile ───────────── */
+@media (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 0.3s ease, visibility 0.3s ease;
+    }
+    section[data-testid="stSidebar"][aria-expanded="true"] {
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    /* Stack chart and info vertically */
+    .chart-container {
+        padding: 4px;
+    }
+}
