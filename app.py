@@ -42,7 +42,7 @@ from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
 from astro.western.western_synastry import compute_synastry
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
-from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha, build_jaimini_rashi_chart_svg
+from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha
 from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
 from astro.vedic.ashtakavarga import compute_ashtakavarga
 from astro.vedic.vedic_yogas import compute_yogas

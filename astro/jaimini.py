@@ -22,6 +22,7 @@ Whole Sign Houses 計算行星位置，並實作上述 Jaimini 古法計算。
 import math
 import json
 import os
+from html import escape as _esc
 import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
@@ -115,10 +116,10 @@ JAIMINI_RASHI_DRISHTI = _build_rashi_drishti_table()
 # ============================================================
 # (argala_offset, virodhargala_offset, name_zh, name_en)
 JAIMINI_ARGALA_RULES = [
-    (2,  12, "第二宮 Argala（財富介入）",          "2nd House Argala (Wealth)"),
-    (4,  10, "第四宮 Argala（幸福介入）",          "4th House Argala (Happiness)"),
-    (11,  3, "第十一宮 Argala（收益介入）",        "11th House Argala (Gains)"),
-    (5,   9, "第五宮 Argala（子女/功德介入）",     "5th House Argala (Children/Merit)"),
+    (2,  12, "第二宮 Argala（財富介入）",      "2nd House Argala (Wealth)"),
+    (4,  10, "第四宮 Argala（幸福介入）",      "4th House Argala (Happiness)"),
+    (11,  3, "第十一宮 Argala（收益介入）",    "11th House Argala (Gains)"),
+    (5,   9, "第五宮 Argala（子女/功德介入）", "5th House Argala (Children/Merit)"),
 ]
 
 # ============================================================
@@ -409,7 +410,7 @@ def _compute_argala(houses):
             a_planets = argala_h.planets[:]
             v_planets = virodh_h.planets[:]
             # Argala is obstructed if virodhargala house has >= planets
-            is_obstructed = len(v_planets) >= len(a_planets) and len(a_planets) > 0
+            is_obstructed = len(v_planets) >= len(a_planets)
             if a_planets:  # Only record if there are planets causing argala
                 results.append(JaiminiArgala(
                     target_house=target,
@@ -508,11 +509,11 @@ def _compute_chara_dasha(asc_lon, planets, birth_jd):
         short = p.name.split(" ")[0]
         planet_sign_map[short] = _sign_index(p.longitude)
 
-    # Determine order
-    is_odd_sign = (asc_sign % 2 == 0)  # Aries=0 is index 0 = odd sign
+    # Determine order: traditional odd signs (Aries idx=0, Gemini idx=2, etc.) go forward
+    starts_forward = (asc_sign % 2 == 0)  # Aries=0 is index 0 = odd sign in tradition
 
     dasha_periods = []
-    if is_odd_sign:
+    if starts_forward:
         start_sign = asc_sign
         direction = 1  # Forward
     else:
@@ -530,7 +531,7 @@ def _compute_chara_dasha(asc_lon, planets, birth_jd):
         lord_sign = planet_sign_map.get(lord, sign_idx)
 
         # Duration = distance from sign to lord's sign
-        if is_odd_sign:
+        if starts_forward:
             duration = (lord_sign - sign_idx) % 12
         else:
             duration = (sign_idx - lord_sign) % 12
@@ -714,8 +715,6 @@ def build_jaimini_rashi_chart_svg(chart):
     str
         Complete ``<svg>`` markup wrapped in a centering ``<div>``.
     """
-    from html import escape as _esc
-
     SIZE = 640
     CX, CY = SIZE / 2, SIZE / 2
     R_OUTER = 270
