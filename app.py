@@ -59,6 +59,7 @@ from astro.brahma_jati import (
     compute_brahma_jati, render_brahma_jati, render_brahma_jati_browse,
 )
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
+from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart, build_mazzalot_star_of_david_svg
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.aztec import compute_aztec_chart, render_aztec_chart
@@ -840,7 +841,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei"]),
-        ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
+        ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
@@ -863,6 +864,7 @@ with st.sidebar:
         "tab_sukkayodo": t("tab_sukkayodo"),
         "tab_thai": t("tab_thai"),
         "tab_kabbalistic": t("tab_kabbalistic"),
+        "tab_mazzalot": t("tab_mazzalot"),
         "tab_arabic": t("tab_arabic"),
         "tab_yemeni": t("tab_yemeni"),
         "tab_maya": t("tab_maya"),
@@ -887,6 +889,7 @@ with st.sidebar:
         "tab_indian": t("sys_hint_indian"),
         "tab_thai": t("sys_hint_thai"),
         "tab_kabbalistic": t("sys_hint_kabbalistic"),
+        "tab_mazzalot": t("sys_hint_mazzalot"),
         "tab_arabic": t("sys_hint_arabic"),
         "tab_yemeni": t("sys_hint_yemeni"),
         "tab_maya": t("sys_hint_maya"),
@@ -1692,6 +1695,61 @@ elif _selected_system == "tab_kabbalistic":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_kabbalistic"))
+
+# --- 猶太 Mazzalot 占星 ---
+elif _selected_system == "tab_mazzalot":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_mazzalot")):
+                _mz_chart = compute_mazzalot_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    timezone=_p["timezone"],
+                    lat=_p["latitude"], lon=_p["longitude"],
+                )
+            _mz_tab_star, _mz_tab_natal, _mz_tab_omens = st.tabs([
+                t("mazzalot_subtab_star"),
+                t("mazzalot_subtab_natal"),
+                t("mazzalot_subtab_omens"),
+            ])
+            with _mz_tab_star:
+                _mz_svg = build_mazzalot_star_of_david_svg(
+                    _mz_chart,
+                    year=birth_date.year,
+                    month=birth_date.month,
+                    day=birth_date.day,
+                    hour=birth_time.hour,
+                    minute=birth_time.minute,
+                    tz=input_tz,
+                    location=location_name,
+                )
+                st.markdown(_mz_svg, unsafe_allow_html=True)
+                st.caption(
+                    '<p style="text-align:center; color:#888; font-size:11px;">'
+                    'Star of David Wheel (Magen David) — Sidereal zodiac · '
+                    '12 Mazzalot · Sefer Yetzirah letters · Twelve Tribes'
+                    '</p>',
+                    unsafe_allow_html=True,
+                )
+                _render_ai_button("tab_mazzalot", _mz_chart, btn_key="mazzalot")
+            with _mz_tab_natal:
+                render_mazzalot_chart(_mz_chart)
+            with _mz_tab_omens:
+                st.subheader("📜 " + t("mazzalot_omens_title"))
+                for _omen in _mz_chart.omens:
+                    _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
+                    _en_part = f"  \n_{_omen.text_en}_" if _omen.text_en else ""
+                    st.markdown(
+                        f"{_omen_icon} **{_omen.planet}** — "
+                        f"*{_omen.condition.upper()}*: {_omen.text}{_en_part}"
+                    )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_mazzalot"))
 
 # --- 阿拉伯占星 ---
 elif _selected_system == "tab_arabic":
