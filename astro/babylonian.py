@@ -103,36 +103,91 @@ BABYLONIAN_DIRECTION_CN = {
 }
 
 # ============================================================
+# K.8538 Sector constellation data — connect-the-dots patterns
+# Each entry: sector index → list of (name, Akkadian label,
+#   list of (r_frac, angle_offset) points for dot-line pattern)
+# Coordinates are relative: r_frac ∈ [0,1] within sector radial
+# range, angle_offset in degrees from sector centre.
+# ============================================================
+BABYLONIAN_K8538_CONSTELLATIONS = {
+    0: [("Pleiades", "MUL.MUL",
+         [(0.35, -8), (0.38, -4), (0.40, 0), (0.37, 4), (0.42, 7)])],
+    1: [("Bull of Heaven", "GU4.AN.NA",
+         [(0.30, -10), (0.50, -6), (0.65, 0), (0.55, 8), (0.35, 12)])],
+    2: [("True Shepherd", "SIPA.ZI.AN.NA",
+         [(0.25, -5), (0.45, -2), (0.60, 3), (0.70, 8)])],
+    3: [("Arrow", "KAK.SI.SÁ",
+         [(0.30, 0), (0.45, 0), (0.60, 0), (0.75, 0)])],
+    4: [("Great Twins", "MAŠ.TAB.BA",
+         [(0.30, -8), (0.50, -6), (0.50, 6), (0.30, 8)])],
+    5: [("Scorpion", "GIR.TAB",
+         [(0.25, -5), (0.40, -3), (0.55, 0), (0.65, 5), (0.60, 10),
+          (0.50, 12)])],
+    6: [("Eagle", "TI8",
+         [(0.35, -6), (0.50, 0), (0.35, 6), (0.55, -3), (0.55, 3)])],
+    7: [("Field", "IKU",
+         [(0.30, -8), (0.30, 8), (0.55, 8), (0.55, -8), (0.30, -8)])],
+}
+
+# ============================================================
+# K.8538 sector Akkadian cuneiform-style labels
+# ============================================================
+BABYLONIAN_K8538_SECTOR_LABELS = [
+    "𒀭𒌓",   # Sector 0 — Shamash / Sun glyph
+    "𒀭𒂗",   # Sector 1 — Enlil reference
+    "𒀭𒈾",   # Sector 2 — Nabu reference
+    "𒀭𒌍",   # Sector 3 — generic star
+    "𒀭𒊩𒌆", # Sector 4 — Ishtar reference
+    "𒀭𒃲",   # Sector 5 — great/gal
+    "𒀭𒀀",   # Sector 6 — Anu reference
+    "𒀭𒀊",   # Sector 7 — field reference
+]
+
+# ============================================================
 # Enūma Anu Enlil 預兆 (placeholder omens)
 # ============================================================
 BABYLONIAN_OMENS = {
     "Sun": {
         "strong": "Shamash 光明照耀，王權穩固，國泰民安。",
+        "strong_en": "Shamash shines bright — the king's throne is firm, the land prospers.",
         "weak": "Shamash 黯淡，君主須防叛亂，穀物歉收。",
+        "weak_en": "Shamash is dim — the ruler must beware rebellion; grain harvest fails.",
     },
     "Moon": {
         "strong": "Sin 月光皎潔，豐年有望，婦人生貴子。",
+        "strong_en": "Sin's light is pure — a prosperous year; a noble child is born.",
         "weak": "Sin 見虧，河水泛濫之兆，牧畜有災。",
+        "weak_en": "Sin wanes — floods threaten; livestock face calamity.",
     },
     "Mercury": {
         "strong": "Nabu 運行順暢，書吏與商旅有利。",
+        "strong_en": "Nabu moves smoothly — scribes and merchants thrive.",
         "weak": "Nabu 逆行，文書有誤，使節延遲。",
+        "weak_en": "Nabu retrogrades — documents err; envoys are delayed.",
     },
     "Venus": {
         "strong": "Ishtar 晨星明亮，戰爭得勝，婚姻吉慶。",
+        "strong_en": "Ishtar as morning star shines — victory in war; marriages rejoice.",
         "weak": "Ishtar 隱沒，和平受阻，農事不利。",
+        "weak_en": "Ishtar is hidden — peace is obstructed; agriculture suffers.",
     },
     "Mars": {
         "strong": "Nergal 高懸，軍隊出征有利。",
+        "strong_en": "Nergal rides high — military expeditions are favoured.",
         "weak": "Nergal 低沉，瘟疫之兆，邊境不安。",
+        "weak_en": "Nergal sinks low — pestilence looms; borders are restless.",
     },
     "Jupiter": {
         "strong": "Marduk 居廟，國王受神眷，正義伸張。",
+        "strong_en": "Marduk dwells in his temple — the king is divinely favoured; justice prevails.",
         "weak": "Marduk 落陷，法令不彰，財庫虧損。",
+        "weak_en": "Marduk is fallen — laws falter; the treasury is depleted.",
     },
     "Saturn": {
         "strong": "Ninurta 穩行，農作豐收，水利順暢。",
+        "strong_en": "Ninurta moves steadily — abundant harvest; irrigation flows well.",
         "weak": "Ninurta 遲滯，築城失敗，饑荒之兆。",
+        "weak_en": "Ninurta stalls — fortification fails; famine looms.",
     },
 }
 
@@ -232,6 +287,7 @@ class BabylonianOmen:
     god_name: str
     condition: str   # "strong" or "weak"
     text: str
+    text_en: str = ""
 
 
 @dataclass
@@ -249,6 +305,7 @@ class BabylonianChart:
     aspects: list = field(default_factory=list)
     ayanamsa: float = 0.0
     julian_day: float = 0.0
+    planisphere_data: dict = field(default_factory=dict)   # K.8538 8-sector data
 
 
 # ============================================================
@@ -312,7 +369,50 @@ def _determine_omen(planet, sign_idx):
     condition = "strong" if is_strong else "weak"
     omen_dict = BABYLONIAN_OMENS.get(planet, {})
     text = omen_dict.get(condition, "")
-    return condition, text
+    text_en = omen_dict.get(f"{condition}_en", "")
+    return condition, text, text_en
+
+
+# ============================================================
+# K.8538 planisphere sector data builder
+# ============================================================
+def _build_planisphere_data(planet_longs, positions):
+    """Build 8-sector planisphere data mapping each planet to its 45° sector.
+
+    Returns
+    -------
+    dict with keys:
+        'sectors': list of 8 dicts, each containing direction, colour,
+                   constellation info, and list of planets in that sector.
+    """
+    sectors = []
+    for i in range(8):
+        direction = BABYLONIAN_DIRECTIONS[i]
+        constellation_data = BABYLONIAN_K8538_CONSTELLATIONS.get(i, [])
+        planets_in_sector = [
+            {
+                "name": p.name,
+                "god": p.god_name,
+                "longitude": p.longitude,
+                "degree": p.sign_degree,
+                "akkadian": p.sign_akkadian,
+            }
+            for p in positions
+            if int(p.longitude / 45) % 8 == i
+        ]
+        sectors.append({
+            "index": i,
+            "direction": direction,
+            "direction_cn": BABYLONIAN_DIRECTION_CN[direction],
+            "colour": BABYLONIAN_COLORS[i],
+            "label": BABYLONIAN_K8538_SECTOR_LABELS[i],
+            "constellations": [
+                {"name": c[0], "akkadian": c[1], "dots": c[2]}
+                for c in constellation_data
+            ],
+            "planets": planets_in_sector,
+        })
+    return {"sectors": sectors}
 
 
 # ============================================================
@@ -387,16 +487,20 @@ def compute_babylonian_chart(year, month, day, hour, minute, timezone,
             house=house,
         ))
 
-        condition, text = _determine_omen(name, idx)
+        condition, text, text_en = _determine_omen(name, idx)
         omens.append(BabylonianOmen(
             planet=name,
             god_name=BABYLONIAN_PLANET_GODS.get(name, name),
             condition=condition,
             text=text,
+            text_en=text_en,
         ))
 
     # Aspects
     aspects = _compute_aspects(planet_longs)
+
+    # ── K.8538 planisphere data (8 sectors) ───────────────────
+    planisphere_data = _build_planisphere_data(planet_longs, positions)
 
     return BabylonianChart(
         ascendant=asc,
@@ -411,20 +515,22 @@ def compute_babylonian_chart(year, month, day, hour, minute, timezone,
         aspects=aspects,
         ayanamsa=round(ayanamsa, 4),
         julian_day=jd,
+        planisphere_data=planisphere_data,
     )
 
 
 # ============================================================
 # K.8538 Planisphere SVG — 8 區間泥板風格
 # ============================================================
-def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
-                                     hour=None, minute=None, tz=None,
-                                     location=""):
+def build_k8538_planisphere_svg(chart, year=None, month=None, day=None,
+                                hour=None, minute=None, tz=None,
+                                location=""):
     """Build a K.8538-style planisphere SVG with 8 sectors.
 
-    Clay-tablet aesthetic: warm earthy colours, radial wedge sectors,
-    cuneiform-style labels, concentric circles mimicking the Nineveh
-    planisphere disc.
+    High-fidelity reproduction of the Nineveh planisphere disc (K.8538,
+    British Museum): vitrified clay texture, 8 radial wedge sectors,
+    connect-the-dots constellation patterns, cuneiform-style labels,
+    concentric rings, and an irregular damaged-edge silhouette.
 
     Parameters
     ----------
@@ -450,7 +556,7 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
         f'font-family="serif">'
     )
 
-    # ── Defs: clay texture gradient ────────────────────────────
+    # ── Defs: clay texture gradient + filters ──────────────────
     svg.append('<defs>')
     svg.append(
         '<radialGradient id="clay_bg" cx="50%" cy="50%" r="55%">'
@@ -468,6 +574,14 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
         '<feBlend in="SourceGraphic" in2="grey" mode="multiply"/>'
         '</filter>'
     )
+    # Glow filter for planet markers
+    svg.append(
+        '<filter id="planet_glow">'
+        '<feGaussianBlur stdDeviation="2" result="blur"/>'
+        '<feMerge><feMergeNode in="blur"/>'
+        '<feMergeNode in="SourceGraphic"/></feMerge>'
+        '</filter>'
+    )
     svg.append('</defs>')
 
     # ── Background circle (clay disc) ─────────────────────────
@@ -476,6 +590,22 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
         f'fill="url(#clay_bg)" filter="url(#clay_noise)" '
         f'stroke="#7a5c30" stroke-width="3"/>'
     )
+
+    # ── Damaged-edge cracks (irregular incisions on rim) ───────
+    _crack_angles = [15, 58, 112, 175, 223, 287, 330]
+    for ca in _crack_angles:
+        rad_c = math.radians(ca)
+        r_start = R_OUTER + 10
+        r_end = R_OUTER - 8
+        cx1 = CX + r_start * math.cos(rad_c)
+        cy1 = CY - r_start * math.sin(rad_c)
+        cx2 = CX + r_end * math.cos(rad_c + 0.04)
+        cy2 = CY - r_end * math.sin(rad_c + 0.04)
+        svg.append(
+            f'<line x1="{cx1:.1f}" y1="{cy1:.1f}" '
+            f'x2="{cx2:.1f}" y2="{cy2:.1f}" '
+            f'stroke="#8b7355" stroke-width="0.6" opacity="0.5"/>'
+        )
 
     # Outer rim
     svg.append(
@@ -507,7 +637,7 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
             f'stroke="#5c3a1e" stroke-width="1.5"/>'
         )
 
-    # ── Sector labels (direction + colour band) ───────────────
+    # ── Sector labels (direction + cuneiform + colour band) ───
     for i in range(8):
         angle = (i * 45 + 22.5)   # Centre of sector
         rad = math.radians(angle)
@@ -517,11 +647,21 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
         dx = CX + r_dir * math.cos(rad)
         dy = CY - r_dir * math.sin(rad)
         direction = BABYLONIAN_DIRECTIONS[i]
-        dir_cn = BABYLONIAN_DIRECTION_CN[direction]
         svg.append(
             f'<text x="{dx:.1f}" y="{dy:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="#5c3a1e" '
             f'font-size="10" font-weight="bold">{direction}</text>'
+        )
+
+        # Cuneiform sector label (inside outer rim)
+        r_cunei = R_OUTER - 15
+        clx = CX + r_cunei * math.cos(rad)
+        cly = CY - r_cunei * math.sin(rad)
+        sector_label = BABYLONIAN_K8538_SECTOR_LABELS[i]
+        svg.append(
+            f'<text x="{clx:.1f}" y="{cly:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#5c3a1e" '
+            f'font-size="9" opacity="0.7">{sector_label}</text>'
         )
 
         # Coloured wedge fill (subtle)
@@ -549,26 +689,60 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
             f'fill-opacity="0.15" stroke="none"/>'
         )
 
+    # ── Connect-the-dots constellation patterns ───────────────
+    for sector_idx, constellations in BABYLONIAN_K8538_CONSTELLATIONS.items():
+        sector_base_angle = sector_idx * 45 + 22.5
+        for name, akk_label, dots in constellations:
+            # Convert relative (r_frac, angle_offset) → absolute SVG coords
+            points = []
+            for r_frac, a_off in dots:
+                r = R_INNER + r_frac * (R_MID - R_INNER)
+                a = math.radians(sector_base_angle + a_off)
+                px = CX + r * math.cos(a)
+                py = CY - r * math.sin(a)
+                points.append((px, py))
+            # Draw connecting lines
+            if len(points) >= 2:
+                line_pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
+                svg.append(
+                    f'<polyline points="{line_pts}" fill="none" '
+                    f'stroke="#8b7355" stroke-width="0.8" '
+                    f'stroke-dasharray="3,2" opacity="0.6"/>'
+                )
+            # Draw dots (star points)
+            for px, py in points:
+                svg.append(
+                    f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2" '
+                    f'fill="#5c3a1e" opacity="0.7"/>'
+                )
+            # Constellation Akkadian label
+            if points:
+                mid = points[len(points) // 2]
+                svg.append(
+                    f'<text x="{mid[0]:.1f}" y="{mid[1] - 6:.1f}" '
+                    f'text-anchor="middle" dominant-baseline="central" '
+                    f'fill="#7a5c30" font-size="5" '
+                    f'font-style="italic" opacity="0.8">{akk_label}</text>'
+                )
+
     # ── Place planets in sectors ──────────────────────────────
-    # Map each planet to its sector (based on sidereal longitude → 45° sectors)
     for pos in chart.positions:
         sector = int(pos.longitude / 45) % 8
-        # Place planet in its sector
         sector_centre_angle = sector * 45 + 22.5
-        # Offset planets within sector to avoid overlap
         planet_list_in_sector = [p for p in chart.positions
                                  if int(p.longitude / 45) % 8 == sector]
         idx_in_sector = planet_list_in_sector.index(pos)
         n_in_sector = len(planet_list_in_sector)
 
         # Spread planets radially within the sector
-        r_base = R_INNER + 20
-        r_step = (R_MID - R_INNER - 10) / max(n_in_sector, 1)
+        r_base = R_MID + 5
+        r_step = (R_OUTER - R_MID - 45) / max(n_in_sector, 1)
         r_planet = r_base + idx_in_sector * r_step
 
         # Slight angular offset
         angle_spread = 20
-        angle_offset = (idx_in_sector - (n_in_sector - 1) / 2) * (angle_spread / max(n_in_sector, 1))
+        angle_offset = (idx_in_sector - (n_in_sector - 1) / 2) * (
+            angle_spread / max(n_in_sector, 1))
         pa = sector_centre_angle + angle_offset
         rad = math.radians(pa)
 
@@ -578,6 +752,12 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
         pglyph = PLANET_GLYPHS.get(pos.name, pos.name[0])
         pcolor = PLANET_COLORS.get(pos.name, "#5c3a1e")
 
+        # Glowing planet marker
+        svg.append(
+            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="10" '
+            f'fill="{pcolor}" fill-opacity="0.12" stroke="none" '
+            f'filter="url(#planet_glow)"/>'
+        )
         svg.append(
             f'<text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="{pcolor}" '
@@ -696,6 +876,10 @@ def build_babylonian_planisphere_svg(chart, year=None, month=None, day=None,
     return "\n".join(svg)
 
 
+# Backward-compatible alias — app.py imports this name
+build_babylonian_planisphere_svg = build_k8538_planisphere_svg
+
+
 # ============================================================
 # Render Babylonian chart in Streamlit
 # ============================================================
@@ -734,9 +918,10 @@ def render_babylonian_chart(chart, after_chart_hook=None):
     st.markdown("#### 📜 " + t("babylonian_omens_title"))
     for omen in chart.omens:
         icon = "🌟" if omen.condition == "strong" else "⚠️"
+        en_part = f"  \n_{omen.text_en}_" if omen.text_en else ""
         st.markdown(
             f"{icon} **{omen.planet}** ({omen.god_name}) — "
-            f"*{omen.condition.upper()}*: {omen.text}"
+            f"*{omen.condition.upper()}*: {omen.text}{en_part}"
         )
 
     # ── Aspects ───────────────────────────────────────────────

@@ -171,13 +171,74 @@
     "_comment": "Simple Omens (Enūma Anu Enlil style placeholders)",
     "omens": {
       "solar_eclipse": "日蝕現，君主有厄，國事動盪。",
+      "solar_eclipse_en": "A solar eclipse appears — the ruler faces calamity; state affairs are turbulent.",
       "lunar_eclipse": "月蝕現，王后或后宮有事端，敵國蠢動。",
+      "lunar_eclipse_en": "A lunar eclipse appears — the queen or harem has trouble; enemy states stir.",
       "venus_morning": "Ishtar 晨星東方昇起，戰爭勝利之兆。",
+      "venus_morning_en": "Ishtar rises as morning star in the east — an omen of victory in war.",
       "venus_evening": "Ishtar 昏星西方現，和平與繁榮。",
+      "venus_evening_en": "Ishtar appears as evening star in the west — peace and prosperity.",
       "jupiter_exalted": "Marduk 居高，國王受天神庇佑。",
+      "jupiter_exalted_en": "Marduk rides high — the king is sheltered by the gods.",
       "saturn_retrograde": "Ninurta 逆行，堤壩修築延誤，農作不利。",
+      "saturn_retrograde_en": "Ninurta retrogrades — dam construction is delayed; agriculture suffers.",
       "mars_bright": "Nergal 光芒增強，邊境戰事將起。",
-      "mercury_invisible": "Nabu 隱沒，書信延遲，文書有誤。"
+      "mars_bright_en": "Nergal's brilliance increases — border warfare will erupt.",
+      "mercury_invisible": "Nabu 隱沒，書信延遲，文書有誤。",
+      "mercury_invisible_en": "Nabu is invisible — letters are delayed; documents contain errors."
     }
+  },
+  {
+    "_comment": "K.8538 Planisphere — 8-Sector Descriptions",
+    "k8538_sectors": [
+      {
+        "index": 0, "direction": "NE", "direction_cn": "東北",
+        "constellation": "MUL.MUL (Pleiades)",
+        "description_cn": "昴宿星團區——七姊妹星座，春季升起的標誌星群。",
+        "description_en": "Pleiades sector — the Seven Sisters, a marker of spring rising."
+      },
+      {
+        "index": 1, "direction": "E", "direction_cn": "東",
+        "constellation": "GU4.AN.NA (Bull of Heaven)",
+        "description_cn": "天牛區——Taurus 核心，Ishtar 傳說中的神獸。",
+        "description_en": "Bull of Heaven sector — core of Taurus, Ishtar's legendary beast."
+      },
+      {
+        "index": 2, "direction": "SE", "direction_cn": "東南",
+        "constellation": "SIPA.ZI.AN.NA (True Shepherd of Anu)",
+        "description_cn": "牧者區——Orion 核心，天穹的守護者。",
+        "description_en": "True Shepherd sector — core of Orion, guardian of the heavens."
+      },
+      {
+        "index": 3, "direction": "S", "direction_cn": "南",
+        "constellation": "KAK.SI.SÁ (Arrow Star)",
+        "description_cn": "箭矢區——天狼星（Sirius），最亮的恆星。",
+        "description_en": "Arrow sector — Sirius, the brightest fixed star."
+      },
+      {
+        "index": 4, "direction": "SW", "direction_cn": "西南",
+        "constellation": "MAŠ.TAB.BA (Great Twins)",
+        "description_cn": "大雙子區——Gemini 核心，對稱的雙子星。",
+        "description_en": "Great Twins sector — core of Gemini, the symmetrical twin stars."
+      },
+      {
+        "index": 5, "direction": "W", "direction_cn": "西",
+        "constellation": "GIR.TAB (Scorpion)",
+        "description_cn": "蠍子區——Scorpius 核心，夏季的標誌星座。",
+        "description_en": "Scorpion sector — core of Scorpius, marker of summer."
+      },
+      {
+        "index": 6, "direction": "NW", "direction_cn": "西北",
+        "constellation": "TI8 (Eagle)",
+        "description_cn": "老鷹區——Aquila 核心，包含牛郎星（Altair）。",
+        "description_en": "Eagle sector — core of Aquila, containing Altair."
+      },
+      {
+        "index": 7, "direction": "N", "direction_cn": "北",
+        "constellation": "IKU (Field)",
+        "description_cn": "方田區——飛馬座四邊形，秋分的標誌。",
+        "description_en": "Field sector — the Great Square of Pegasus, marker of autumn equinox."
+      }
+    ]
   }
 ]
