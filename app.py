@@ -1048,7 +1048,7 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
     """
     _ck = f"_ai_chat_{system_key}_{btn_key}" if btn_key else f"_ai_chat_{system_key}"
 
-    # Initialise per-tab chat history in session state
+    # Initialize per-tab chat history in session state
     if _ck not in st.session_state:
         st.session_state[_ck] = []
 
@@ -1104,12 +1104,14 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
             system_key, chart_obj, page_content=page_content,
         )
         _sys_prompt = st.session_state.get("ai_system_prompt", "")
-        _api_messages = [{"role": "system", "content": _sys_prompt}]
+        _api_messages = [
+            {"role": "system", "content": _sys_prompt},
+            # Provide chart data as initial context
+            {"role": "user", "content": chart_prompt},
+            {"role": "assistant", "content": t("ai_chat_welcome")},
+        ]
 
-        # First message always includes chart context
-        _api_messages.append({"role": "user", "content": chart_prompt})
-
-        # Append conversation history (skip system / first chart context)
+        # Append full conversation history (already includes current user input)
         for _msg in _history:
             _api_messages.append({"role": _msg["role"], "content": _msg["content"]})
 
