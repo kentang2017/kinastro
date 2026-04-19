@@ -42,6 +42,7 @@ from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
 from astro.western.western_synastry import compute_synastry
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
+from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha, build_jaimini_rashi_chart_svg
 from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
 from astro.vedic.ashtakavarga import compute_ashtakavarga
 from astro.vedic.vedic_yogas import compute_yogas
@@ -822,7 +823,7 @@ with st.sidebar:
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic"]),
-        ("cat_asian", ["tab_indian", "tab_nadi", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
+        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -851,6 +852,7 @@ with st.sidebar:
         "tab_mahabote": t("tab_mahabote"),
         "tab_decans": t("tab_decans"),
         "tab_nadi": t("tab_nadi"),
+        "tab_jaimini": t("tab_jaimini"),
         "tab_zurkhai": t("tab_zurkhai"),
         "tab_tibetan": t("tab_tibetan"),
         "tab_hellenistic": t("tab_hellenistic"),
@@ -874,6 +876,7 @@ with st.sidebar:
         "tab_mahabote": t("sys_hint_mahabote"),
         "tab_decans": t("sys_hint_decans"),
         "tab_nadi": t("sys_hint_nadi"),
+        "tab_jaimini": t("sys_hint_jaimini"),
         "tab_zurkhai": t("sys_hint_zurkhai"),
         "tab_tibetan": t("sys_hint_tibetan"),
         "tab_hellenistic": t("sys_hint_hellenistic"),
@@ -1946,6 +1949,33 @@ elif _selected_system == "tab_nadi":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_nadi"))
+
+# --- Jaimini 占星 (Jaimini Astrology) ---
+elif _selected_system == "tab_jaimini":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_jaimini")):
+                jm_chart = compute_jaimini_chart(**_p)
+
+            _jm_tab_chart, _jm_tab_dasha = st.tabs([
+                t("jaimini_subtab_chart"),
+                t("jaimini_subtab_dasha"),
+            ])
+
+            with _jm_tab_chart:
+                render_jaimini_chart(jm_chart, after_chart_hook=lambda: _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini"))
+
+            with _jm_tab_dasha:
+                render_jaimini_dasha(jm_chart)
+                _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini_dasha")
+
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_jaimini"))
 
 # --- 蒙古祖爾海 (Zurkhai) ---
 elif _selected_system == "tab_zurkhai":

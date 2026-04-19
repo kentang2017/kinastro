@@ -243,6 +243,10 @@ TRANSLATIONS = {
         "zh": "🇲🇳 蒙古祖爾海",
         "en": "🇲🇳 Mongolian Zurkhai",
     },
+    "tab_jaimini": {
+        "zh": "🕉️ Jaimini 占星",
+        "en": "🕉️ Jaimini Astrology",
+    },
     "tab_picatrix": {
         "zh": "📜 Picatrix 星體魔法",
         "en": "📜 Picatrix Stellar Magic",
@@ -311,6 +315,10 @@ TRANSLATIONS = {
     "spinner_indian": {
         "zh": "正在計算印度占星排盤...",
         "en": "Calculating Indian astrology chart...",
+    },
+    "spinner_jaimini": {
+        "zh": "正在計算 Jaimini 占星排盤...",
+        "en": "Calculating Jaimini astrology chart...",
     },
     "spinner_chinese": {
         "zh": "正在計算七政四餘位置...",
@@ -593,6 +601,52 @@ traditionally attributed to **Chen Xiyi** (Chen Tuan) of the late Five Dynasties
 | Saturn | Pushya, Anuradha, Uttara Bhadrapada |
 | Rahu | Ardra, Swati, Shatabhisha |
 | Ketu | Ashwini, Magha, Mula |
+""",
+    },
+    "desc_jaimini": {
+        "zh": """
+### 什麼是 Jaimini 占星？
+
+**Jaimini 占星**源自古印度聖人 Jaimini 的《Jaimini Sutras》，與 Parashara 體系並列為印度 Jyotish 兩大核心流派：
+
+- **Chara Karaka（可變徵象星）**：7 顆行星依度數高低動態分配角色（AK、AmK、BK、MK、PK、GK、DK）
+- **Rashi Drishti（星座視線）**：整個星座之間的相互視線，活動座 ↔ 固定座互視，雙體座之間互視
+- **Argala（介入）與 Virodhargala（阻擋）**：分析宮位間的干預效果
+- **Arudha Pada（虛象宮）**：反映外在世界對命主的感知
+- **Chara Dasha（可變大運）**：以星座為單位的獨特大運系統
+- **Sthira Karaka（固定徵象星）**：每顆行星永遠代表固定的主題
+
+| Karaka | 中文 | 代表意義 |
+|:------:|:----:|:---------|
+| AK | 靈魂徵象星 | 自我、靈魂目的 |
+| AmK | 大臣徵象星 | 事業、職業 |
+| BK | 兄弟徵象星 | 兄弟姐妹、勇氣 |
+| MK | 母親徵象星 | 母親、不動產 |
+| PK | 子女徵象星 | 子女、智慧 |
+| GK | 敵人徵象星 | 疾病、障礙 |
+| DK | 配偶徵象星 | 婚姻、伴侶 |
+""",
+        "en": """
+### What is Jaimini Astrology?
+
+**Jaimini Astrology** originates from the ancient Indian sage Jaimini's *Jaimini Sutras*, standing alongside the Parashara system as one of the two core Jyotish traditions:
+
+- **Chara Karaka (Variable Significators)**: 7 planets dynamically assigned roles (AK, AmK, BK, MK, PK, GK, DK) based on degrees
+- **Rashi Drishti (Sign Aspects)**: Whole-sign aspects — Cardinal ↔ Fixed signs aspect each other, Dual signs aspect each other
+- **Argala & Virodhargala**: Intervention and obstruction analysis between houses
+- **Arudha Pada**: Reflects how the external world perceives the native
+- **Chara Dasha**: Unique sign-based dasha (timing) system
+- **Sthira Karaka (Fixed Significators)**: Each planet permanently represents fixed themes
+
+| Karaka | Full Name | Signification |
+|:------:|:----------|:-------------|
+| AK | Atmakaraka | Self, soul purpose |
+| AmK | Amatyakaraka | Career, profession |
+| BK | Bhratrukaraka | Siblings, courage |
+| MK | Matrukaraka | Mother, property |
+| PK | Putrakaraka | Children, wisdom |
+| GK | Gnatikaraka | Disease, obstacles |
+| DK | Darakaraka | Marriage, partner |
 """,
     },
     "desc_sukkayodo": {
@@ -1021,6 +1075,9 @@ transmitted by **Chen Xiyi**.
     "vedic_subtab_yogas": {"zh": "瑜伽組合", "en": "Yogas"},
     "vedic_subtab_bphs": {"zh": "帕拉夏拉大占星經", "en": "BPHS Classic"},
     "vedic_subtab_varga": {"zh": "分盤 Varga", "en": "Divisional Charts"},
+    # ── Jaimini sub-tab labels ────────────────────────────────────────────────
+    "jaimini_subtab_chart": {"zh": "🕉️ Rashi Drishti 排盤", "en": "🕉️ Rashi Drishti Chart"},
+    "jaimini_subtab_dasha": {"zh": "📅 Chara Dasha 大運", "en": "📅 Chara Dasha"},
 
     # ── Ziwei sub-tabs ──────────────────────────────────────
     "ziwei_subtab_natal": {"zh": "本命盤", "en": "Natal"},
@@ -1213,6 +1270,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_sukkayodo": {"zh": "日本宿曜道擇日占卜", "en": "Japanese lunar mansion divination"},
     "sys_hint_chinstar": {"zh": "明代演禽命理推算", "en": "Ming dynasty bird-star divination"},
     "sys_hint_cetian_ziwei": {"zh": "古法十八飛星紫微斗數", "en": "Ancient 18 Flying Stars Zi Wei Dou Shu"},
+    "sys_hint_jaimini": {"zh": "Jaimini Sutras 古法占星", "en": "Jaimini Sutras ancient Vedic astrology"},
 
     # ── GUI Optimization: Welcome / onboarding ─────────────
     "welcome_hero_title": {
