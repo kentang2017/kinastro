@@ -1421,6 +1421,7 @@ elif _selected_system == "tab_indian":
                             st.info(f"📖 Current: {_yog_reading}")
                 else:
                     st.warning("Moon position not found.")
+                _render_ai_button("tab_indian", v_chart, btn_key="vedic_dasha")
 
             with _v_tab_ashtaka:
                 st.subheader(t("vedic_subtab_ashtaka"))
@@ -1453,6 +1454,7 @@ elif _selected_system == "tab_indian":
                     st.dataframe(pd.DataFrame(rows), width="stretch")
                 else:
                     st.warning("Insufficient planet data for Ashtakavarga.")
+                _render_ai_button("tab_indian", v_chart, btn_key="vedic_ashtaka")
 
             with _v_tab_yogas:
                 st.subheader(t("vedic_subtab_yogas"))
@@ -1470,11 +1472,13 @@ elif _selected_system == "tab_indian":
                     icon = "✅" if yg.is_present else "⬜"
                     with st.expander(f"{icon} {yg.name} ({yg.name_cn}) — {yg.strength}"):
                         st.write(yg.description_cn if get_lang() == "zh" else yg.description)
+                _render_ai_button("tab_indian", v_chart, btn_key="vedic_yogas")
 
             with _v_tab_bphs:
                 st.subheader("📜 " + t("vedic_subtab_bphs"))
                 bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
                 _render_bphs_result(bphs_result)
+                _render_ai_button("tab_indian", v_chart, btn_key="vedic_bphs")
 
             with _v_tab_varga:
                 st.subheader("📊 " + t("vedic_subtab_varga"))
@@ -1485,6 +1489,7 @@ elif _selected_system == "tab_indian":
                     with _varga_tabs[_vi]:
                         _vc = compute_varga_chart(_vk, v_chart.planets, v_chart.ascendant)
                         render_single_varga(_vc)
+                _render_ai_button("tab_indian", v_chart, btn_key="vedic_varga")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
