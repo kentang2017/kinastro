@@ -1032,7 +1032,11 @@ with st.sidebar:
 
 def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
                     page_content: str = ""):
-    """Render a compact AI chat panel for conversational chart analysis.
+    """Store chart data for the global fixed AI chat panel.
+
+    This function no longer renders inline — it saves the chart context
+    into ``st.session_state`` so the single fixed-bottom chat panel
+    (rendered at the end of the page) can use it.
 
     Parameters
     ----------
@@ -1041,22 +1045,44 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
     chart_obj : object
         The chart object produced by the compute function.
     btn_key : str
-        Optional unique key suffix for widget keys.
+        Optional unique key suffix (kept for API compatibility).
     page_content : str
         Optional extra text content rendered on the page that should also
         be included in the AI analysis prompt.
     """
-    _ck = f"_ai_chat_{system_key}_{btn_key}" if btn_key else f"_ai_chat_{system_key}"
+    st.session_state["_global_chat_system"] = system_key
+    st.session_state["_global_chat_chart"] = chart_obj
+    st.session_state["_global_chat_page_content"] = page_content
 
-    # Initialize per-tab chat history in session state
+
+# Backward-compatible alias so existing call sites keep working
+_render_ai_button = _render_ai_chat
+
+
+def _render_global_ai_chat():
+    """Render the fixed-bottom AI chat panel using stored chart context.
+
+    Called once at the very end of the page so the chat always appears
+    at a consistent fixed position regardless of which system tab is active.
+    """
+    _system_key = st.session_state.get("_global_chat_system", "")
+    _chart_obj = st.session_state.get("_global_chat_chart")
+    _page_content = st.session_state.get("_global_chat_page_content", "")
+
+    if not _system_key or _chart_obj is None:
+        return
+
+    _ck = f"_ai_chat_global_{_system_key}"
+
+    # Initialize per-system chat history
     if _ck not in st.session_state:
         st.session_state[_ck] = []
 
     st.divider()
 
-    # ── Chat container (sticky bottom panel) ──────────────────
+    # ── Fixed-bottom chat panel ───────────────────────────────
     st.markdown(
-        '<div class="ai-chat-panel">',
+        '<div class="ai-chat-fixed-panel">',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -1110,17 +1136,16 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
 
         # Build messages list for the API
         chart_prompt = format_chart_for_prompt(
-            system_key, chart_obj, page_content=page_content,
+            _system_key, _chart_obj, page_content=_page_content,
         )
         _sys_prompt = st.session_state.get("ai_system_prompt", "")
         _api_messages = [
             {"role": "system", "content": _sys_prompt},
-            # Provide chart data as initial context
             {"role": "user", "content": chart_prompt},
             {"role": "assistant", "content": t("ai_chat_welcome")},
         ]
 
-        # Append full conversation history (already includes current user input)
+        # Append full conversation history
         for _msg in _history:
             _api_messages.append({"role": _msg["role"], "content": _msg["content"]})
 
@@ -1142,10 +1167,6 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
                     st.error(t("ai_error").format(str(e)))
 
         st.session_state[_ck] = _history
-
-
-# Backward-compatible alias so existing call sites keep working
-_render_ai_button = _render_ai_chat
 
 # ============================================================
 # Welcome / Onboarding Section for Beginners
@@ -2674,3 +2695,8 @@ elif _selected_system == "tab_chinstar":
                     st.error(f"{t('error_tab_compute')}：{_e}")
                     st.exception(_e)
 
+# ============================================================
+# Global Fixed AI Chat Panel — always visible at page bottom
+# 全域固定 AI 聊天面板 — 固定在所有頁面底部
+# ============================================================
+_render_global_ai_chat()
