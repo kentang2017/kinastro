@@ -42,6 +42,7 @@ from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
 from astro.vedic.ashtakavarga import compute_ashtakavarga
 from astro.vedic.vedic_yogas import compute_yogas
 from astro.vedic.bphs_engine import compute_bphs
+from astro.vedic.varga import compute_varga_chart, VARGA_KEYS, VARGA_INFO, render_single_varga
 from astro.sukkayodo import render_sukkayodo_chart
 from astro.thai import (
     compute_thai_chart, render_thai_chart,
@@ -1238,12 +1239,13 @@ elif _selected_system == "tab_indian":
             with st.spinner(t("spinner_indian")):
                 v_chart = compute_vedic_chart(**_p)
 
-            _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs = st.tabs([
+            _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs, _v_tab_varga = st.tabs([
                 t("vedic_subtab_rashi"),
                 t("vedic_subtab_dasha"),
                 t("vedic_subtab_ashtaka"),
                 t("vedic_subtab_yogas"),
                 t("vedic_subtab_bphs"),
+                t("vedic_subtab_varga"),
             ])
 
             with _v_tab_rashi:
@@ -1334,6 +1336,16 @@ elif _selected_system == "tab_indian":
                 st.subheader("📜 " + t("vedic_subtab_bphs"))
                 bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
                 _render_bphs_result(bphs_result)
+
+            with _v_tab_varga:
+                st.subheader("📊 " + t("vedic_subtab_varga"))
+                st.caption("根據 BPHS 第9章：Shodasa Varga 分盤系統 — 選擇分盤查看行星在各分盤中的位置")
+                _varga_tab_labels = [f"{k} {VARGA_INFO[k]['zh']}" for k in VARGA_KEYS]
+                _varga_tabs = st.tabs(_varga_tab_labels)
+                for _vi, _vk in enumerate(VARGA_KEYS):
+                    with _varga_tabs[_vi]:
+                        _vc = compute_varga_chart(_vk, v_chart.planets, v_chart.ascendant)
+                        render_single_varga(_vc)
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
