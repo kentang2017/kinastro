@@ -1231,6 +1231,22 @@ transmitted by **Chen Xiyi**.
         "zh": "請先計算排盤後再進行 AI 分析。",
         "en": "Please compute a chart first before running AI analysis.",
     },
+    "ai_chat_header": {
+        "zh": "🤖 AI 占星助手",
+        "en": "🤖 AI Astrology Assistant",
+    },
+    "ai_chat_placeholder": {
+        "zh": "輸入問題與 AI 對話…",
+        "en": "Ask the AI about this chart…",
+    },
+    "ai_chat_welcome": {
+        "zh": "你好！我是 AI 占星助手。排盤數據已載入，你可以問我任何關於這個命盤的問題，例如：\n- 幫我分析整體命盤格局\n- 我的事業運如何？\n- 有什麼需要注意的？",
+        "en": "Hello! I'm your AI astrology assistant. The chart data is loaded — you can ask me anything about this chart, such as:\n- Analyze the overall chart\n- How does my career look?\n- What should I watch out for?",
+    },
+    "ai_chat_clear": {
+        "zh": "🗑️ 清除對話",
+        "en": "🗑️ Clear Chat",
+    },
     "tab_contact": {"zh": "📬 關於 / 聯繫", "en": "📬 About / Contact"},
     "contact_title": {"zh": "開發者資訊", "en": "Developer Info"},
     "contact_wechat": {"zh": "微信公眾號：**探究三式**", "en": "WeChat Official Account: **探究三式**"},

@@ -716,3 +716,26 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     --ka-glass-border: rgba(180, 100, 255, 0.2);
     --ka-culture-accent: #9B6ED9;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   AI Chat Panel
+   ══════════════════════════════════════════════════════════════ */
+.ai-chat-header {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ka-stardust-gold);
+    margin-bottom: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--ka-glass-bg);
+    border: 1px solid var(--ka-glass-border);
+    border-radius: var(--ka-radius-sm);
+    backdrop-filter: blur(var(--ka-glass-blur));
+}
+
+/* ── Responsive: mobile — bottom-docked compact chat ───────── */
+@media (max-width: 768px) {
+    .ai-chat-header {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.6rem;
+    }
+}
