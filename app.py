@@ -125,6 +125,9 @@ def inject_custom_css():
 
     # Apply theme data attribute via JS
     _theme = st.session_state.get("_ka_theme", "modern")
+    _valid_themes = {"modern", "classic", "mystic"}
+    if _theme not in _valid_themes:
+        _theme = "modern"
     st.markdown(
         f"""<script>
         (function() {{
@@ -328,21 +331,13 @@ _THEME_OPTIONS = {
 if "_ka_theme" not in st.session_state:
     st.session_state["_ka_theme"] = "modern"
 
-_theme_btns_html = '<div class="theme-switcher">'
-for _tk, (_ti, _tl) in _THEME_OPTIONS.items():
-    _active_cls = " active" if st.session_state["_ka_theme"] == _tk else ""
-    _theme_btns_html += (
-        f'<span class="theme-btn{_active_cls}">{_ti} {_tl}</span>'
-    )
-_theme_btns_html += '</div>'
-st.markdown(_theme_btns_html, unsafe_allow_html=True)
-
-# Use Streamlit radio for actual theme switching (hidden label)
+# Theme switcher — functional buttons only
 _theme_cols = st.columns([1, 1, 1, 3])
 for _ci, (_tk, (_ti, _tl)) in enumerate(_THEME_OPTIONS.items()):
     with _theme_cols[_ci]:
-        if st.button(f"{_ti}", key=f"_theme_{_tk}", help=_tl,
-                     use_container_width=True):
+        if st.button(f"{_ti} {_tl}", key=f"_theme_{_tk}", help=_tl,
+                     use_container_width=True,
+                     type="primary" if st.session_state["_ka_theme"] == _tk else "secondary"):
             st.session_state["_ka_theme"] = _tk
             st.rerun()
 
@@ -961,12 +956,13 @@ with st.sidebar:
 
         with st.expander(_cat_label, expanded=_cat_has_active or bool(_search_q)):
             # Render icon card grid preview (visual-only)
+            import html as _html_mod
             _grid_html = '<div class="sidebar-card-grid">'
             for _sk in _filtered:
                 _is_active = (_sk == _selected_system)
                 _active_cls = " active" if _is_active else ""
                 _icon = SYSTEM_ICONS.get(_sk, "🔮")
-                _label = _SYSTEM_LABELS.get(_sk, _sk)
+                _label = _html_mod.escape(_SYSTEM_LABELS.get(_sk, _sk))
                 _accent = SYSTEM_ACCENT_COLORS.get(_sk, "#A78BFA")
                 _grid_html += (
                     f'<div class="sys-card{_active_cls}" '

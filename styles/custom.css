@@ -568,7 +568,7 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     position: relative;
 }
 .cosmic-loading .spinner-orbit::after {
-    content: '☿';
+    content: var(--ka-spinner-symbol, '☿');
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
