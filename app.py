@@ -1050,6 +1050,9 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
         Optional extra text content rendered on the page that should also
         be included in the AI analysis prompt.
     """
+    # Only one system tab is visible at a time, so the last call wins
+    # intentionally.  Within a tab with multiple subtabs the most recent
+    # chart context is the correct one for the global chat.
     st.session_state["_global_chat_system"] = system_key
     st.session_state["_global_chat_chart"] = chart_obj
     st.session_state["_global_chat_page_content"] = page_content
@@ -1141,6 +1144,7 @@ def _render_global_ai_chat():
         _sys_prompt = st.session_state.get("ai_system_prompt", "")
         _api_messages = [
             {"role": "system", "content": _sys_prompt},
+            # Provide chart data as initial context
             {"role": "user", "content": chart_prompt},
             {"role": "assistant", "content": t("ai_chat_welcome")},
         ]
