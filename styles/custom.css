@@ -721,11 +721,8 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
    AI Chat Panel
    ══════════════════════════════════════════════════════════════ */
 
-/* Sticky bottom wrapper for the AI chat section */
+/* AI chat section wrapper */
 .ai-chat-panel {
-    position: sticky;
-    bottom: 0;
-    z-index: 100;
     background: var(--ka-deep-indigo, #0F172A);
     padding: 0.5rem 0;
     border-top: 1px solid var(--ka-glass-border);
@@ -743,11 +740,8 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     backdrop-filter: blur(var(--ka-glass-blur));
 }
 
-/* Ensure Streamlit chat input stays pinned at the bottom */
+/* Streamlit chat input styling */
 .stChatInput {
-    position: sticky;
-    bottom: 0;
-    z-index: 101;
     background: var(--ka-deep-indigo, #0F172A);
     padding-top: 0.25rem;
 }
