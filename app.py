@@ -17,7 +17,6 @@ from datetime import datetime, date, time
 
 from astro.i18n import TRANSLATIONS, get_lang
 from astro.chart_theme import MOBILE_CSS
-from astro.icons import SYSTEM_ICONS, SYSTEM_ACCENT_COLORS, SYSTEM_CSS_CLASS
 from astro.qizheng.calculator import compute_chart
 from astro.qizheng.chart_renderer import (
     render_chart_info,
@@ -945,7 +944,7 @@ with st.sidebar:
                     _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
                     _badge = f' <span class="beginner-badge">{_badge_text}</span>'
                 if st.button(
-                    f"{SYSTEM_ICONS.get(_sk, '🔮')} {_SYSTEM_LABELS[_sk]}",
+                    f"{_SYSTEM_LABELS[_sk]}",
                     key=f"_sys_btn_{_sk}",
                     use_container_width=True,
                     type=_btn_type,
