@@ -10,7 +10,6 @@ Multi-System Astrology Chart Application
 """
 
 import os
-import calendar
 import random
 import streamlit as st
 from datetime import datetime, date, time
@@ -716,52 +715,20 @@ with st.sidebar:
 
     st.header(t("sidebar_header"))
 
-    # 日期時間輸入 — Year / Month / Day / Hour / Minute dropdowns
+    # 日期時間輸入 — calendar date picker + time picker
     st.subheader(t("date_time"))
-    _col_y, _col_m, _col_d = st.columns(3)
-    with _col_y:
-        _birth_year = st.selectbox(
-            t("birth_year"),
-            options=list(range(1900, 2101)),
-            index=90,  # default 1990
-            key="birth_year_sel",
-        )
-    with _col_m:
-        _birth_month = st.selectbox(
-            t("birth_month"),
-            options=list(range(1, 13)),
-            index=0,  # default January
-            key="birth_month_sel",
-        )
-    _max_day = calendar.monthrange(_birth_year, _birth_month)[1]
-    # Clamp previously selected day if it exceeds the new month's max days
-    _prev_day = st.session_state.get("birth_day_sel", 1)
-    if _prev_day is not None and _prev_day > _max_day:
-        st.session_state["birth_day_sel"] = _max_day
-    with _col_d:
-        _birth_day = st.selectbox(
-            t("birth_day"),
-            options=list(range(1, _max_day + 1)),
-            index=0,  # default 1
-            key="birth_day_sel",
-        )
-    _col_h, _col_min = st.columns(2)
-    with _col_h:
-        _birth_hour = st.selectbox(
-            t("birth_hour"),
-            options=list(range(0, 24)),
-            index=12,  # default 12
-            key="birth_hour_sel",
-        )
-    with _col_min:
-        _birth_minute = st.selectbox(
-            t("birth_minute"),
-            options=list(range(0, 60)),
-            index=0,  # default 0
-            key="birth_minute_sel",
-        )
-    birth_date = date(_birth_year, _birth_month, _birth_day)
-    birth_time = time(_birth_hour, _birth_minute)
+    birth_date = st.date_input(
+        t("birth_date"),
+        value=date(1990, 1, 1),
+        min_value=date(1900, 1, 1),
+        max_value=date(2100, 12, 31),
+        key="birth_date_input",
+    )
+    birth_time = st.time_input(
+        t("birth_time"),
+        value=time(12, 0),
+        key="birth_time_input",
+    )
 
     # 地點輸入 — cascading Region → City selector
     st.subheader(t("birth_location"))
