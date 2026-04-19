@@ -1352,6 +1352,13 @@ transmitted by **Chen Xiyi**.
     "babylonian_col_aspect": {"zh": "相位", "en": "Aspect"},
     "babylonian_col_angle": {"zh": "角度", "en": "Angle"},
     "babylonian_col_orb": {"zh": "容許度", "en": "Orb"},
+    "babylonian_col_condition": {"zh": "狀態", "en": "Condition"},
+    "babylonian_col_omen": {"zh": "預兆", "en": "Omen"},
+    "babylonian_sector_title": {"zh": "K.8538 八區間", "en": "K.8538 Eight Sectors"},
+    "babylonian_sector_direction": {"zh": "方位", "en": "Direction"},
+    "babylonian_sector_constellation": {"zh": "星座", "en": "Constellation"},
+    "babylonian_sector_planets": {"zh": "行星", "en": "Planets"},
+    "babylonian_planisphere_title": {"zh": "K.8538 尼尼微泥板星圖", "en": "K.8538 Nineveh Planisphere"},
     # ── Tibetan Kalachakra 藏傳時輪金剛占星 ──────────────────────────────────
     "tab_tibetan": {
         "zh": "🏔️ 藏傳時輪金剛占星",

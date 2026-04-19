@@ -122,3 +122,57 @@ def render_cross_comparison(result):
         st.metric("Ayanamsa", f"{result.ayanamsa:.4f}°")
     with col2:
         st.metric("Western Asc", result.tropical_asc)
+
+
+# ============================================================
+# Babylonian cross-comparison helper
+# ============================================================
+BABYLONIAN_AKKADIAN_SIGNS = [
+    "LU.HUN.GA", "GU4.AN.NA", "MAŠ.TAB.BA.GAL.GAL", "ALLA",
+    "UR.GU.LA", "AB.SIN", "ZI.BA.AN.NA", "GIR.TAB",
+    "PA.BIL.SAG", "SUḪUR.MAŠ", "GU", "ZIB.ME",
+]
+
+BABYLONIAN_PLANET_GODS_MAP = {
+    "Sun": "Shamash", "Moon": "Sin", "Mercury": "Nabu",
+    "Venus": "Ishtar", "Mars": "Nergal", "Jupiter": "Marduk",
+    "Saturn": "Ninurta",
+}
+
+
+def add_babylonian_to_comparison(result, babylonian_chart):
+    """Augment a CrossCompareResult with Babylonian sidereal positions.
+
+    Parameters
+    ----------
+    result : CrossCompareResult
+    babylonian_chart : BabylonianChart (from astro.babylonian)
+
+    Returns
+    -------
+    CrossCompareResult — same object, with Babylonian columns added to each
+    UnifiedPlanetPosition (attributes: ``babylonian_akkadian``,
+    ``babylonian_degree``, ``babylonian_god``).
+    """
+    if babylonian_chart is None:
+        return result
+
+    planet_map = {}
+    for pos in getattr(babylonian_chart, "positions", []):
+        planet_map[pos.name] = pos
+
+    for up in result.planets:
+        bpos = planet_map.get(up.canonical_name)
+        if bpos:
+            up.babylonian_akkadian = bpos.sign_akkadian
+            up.babylonian_degree = bpos.sign_degree
+            up.babylonian_god = BABYLONIAN_PLANET_GODS_MAP.get(
+                up.canonical_name, "")
+        else:
+            up.babylonian_akkadian = ""
+            up.babylonian_degree = 0.0
+            up.babylonian_god = ""
+
+    bab_asc_idx = int(getattr(babylonian_chart, "ascendant", 0) / 30) % 12  # 30° per sign
+    result.babylonian_asc = BABYLONIAN_AKKADIAN_SIGNS[bab_asc_idx]
+    return result
