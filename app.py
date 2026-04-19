@@ -11,6 +11,7 @@ Multi-System Astrology Chart Application
 
 import os
 import calendar
+import random
 import streamlit as st
 from datetime import datetime, date, time
 
@@ -123,16 +124,15 @@ if os.path.exists(_css_path):
 
 def _inject_star_particles():
     """Inject CSS-based star particle background."""
-    import random
     particles_html = '<div class="star-particles">'
-    for i in range(60):
+    for _ in range(60):
         x = random.uniform(0, 100)
         y = random.uniform(0, 100)
         dur = random.uniform(2.5, 6.0)
         delay = random.uniform(0, 5.0)
         opacity = random.uniform(0.3, 0.8)
-        size = random.choice([1, 2, 2, 3])
-        color = random.choice(["#EAB308", "#A78BFA", "#E0E0FF", "#EAB308", "#EAB308"])
+        size = random.choices([1, 2, 3], weights=[1, 2, 1], k=1)[0]
+        color = random.choices(["#EAB308", "#A78BFA", "#E0E0FF"], weights=[3, 1, 1], k=1)[0]
         particles_html += (
             f'<div class="particle" style="'
             f"left:{x:.1f}%;top:{y:.1f}%;"
