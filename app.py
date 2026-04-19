@@ -1030,9 +1030,9 @@ with st.sidebar:
 # AI Analysis helper — reusable across all system tabs
 # ============================================================
 
-def _render_ai_button(system_key: str, chart_obj, btn_key: str = "",
-                      page_content: str = ""):
-    """Render the AI analysis button and execute the analysis when clicked.
+def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
+                    page_content: str = ""):
+    """Render a compact AI chat panel for conversational chart analysis.
 
     Parameters
     ----------
@@ -1041,48 +1041,100 @@ def _render_ai_button(system_key: str, chart_obj, btn_key: str = "",
     chart_obj : object
         The chart object produced by the compute function.
     btn_key : str
-        Optional unique key suffix for the button widget.
+        Optional unique key suffix for widget keys.
     page_content : str
         Optional extra text content rendered on the page that should also
         be included in the AI analysis prompt.
     """
-    _bk = f"_ai_btn_{system_key}_{btn_key}" if btn_key else f"_ai_btn_{system_key}"
-    st.divider()
-    if st.button(t("ai_analyze_btn"), key=_bk):
-        with st.spinner(t("ai_analyzing")):
-            # Resolve API key from secrets or env
-            _api_key = ""
-            try:
-                _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
-            except (FileNotFoundError, KeyError, AttributeError):
-                pass
-            if not _api_key:
-                _api_key = os.environ.get("CEREBRAS_API_KEY", "")
-            if not _api_key:
-                st.error(t("ai_key_missing"))
-                return
+    _ck = f"_ai_chat_{system_key}_{btn_key}" if btn_key else f"_ai_chat_{system_key}"
 
-            try:
-                client = CerebrasClient(api_key=_api_key)
-                chart_prompt = format_chart_for_prompt(
-                    system_key, chart_obj, page_content=page_content,
-                )
-                messages = [
-                    {"role": "system", "content": st.session_state.get("ai_system_prompt", "")},
-                    {"role": "user", "content": chart_prompt},
-                ]
-                result = client.chat(
-                    messages=messages,
-                    model=st.session_state.get("_ai_model_select", CEREBRAS_MODEL_OPTIONS[0]),
-                    max_tokens=st.session_state.get("_ai_max_tokens", 8192),
-                    temperature=st.session_state.get("_ai_temperature", 0.7),
-                )
-                with st.expander(t("ai_result_header"), expanded=True):
+    # Initialise per-tab chat history in session state
+    if _ck not in st.session_state:
+        st.session_state[_ck] = []
+
+    st.divider()
+
+    # ── Chat container ────────────────────────────────────────
+    st.markdown(
+        f'<div class="ai-chat-header">{t("ai_chat_header")}</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Clear-chat button
+    _clear_key = f"{_ck}_clear"
+    if st.button(t("ai_chat_clear"), key=_clear_key, type="secondary"):
+        st.session_state[_ck] = []
+        st.rerun()
+
+    # Welcome message when history is empty
+    _history = st.session_state[_ck]
+    if not _history:
+        with st.chat_message("assistant"):
+            st.markdown(t("ai_chat_welcome"))
+
+    # Render existing chat messages
+    for _msg in _history:
+        with st.chat_message(_msg["role"]):
+            st.markdown(_msg["content"])
+
+    # Chat input
+    _input_key = f"{_ck}_input"
+    _user_input = st.chat_input(t("ai_chat_placeholder"), key=_input_key)
+
+    if _user_input:
+        # Show user message immediately
+        _history.append({"role": "user", "content": _user_input})
+        with st.chat_message("user"):
+            st.markdown(_user_input)
+
+        # Resolve API key
+        _api_key = ""
+        try:
+            _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
+        except (FileNotFoundError, KeyError, AttributeError):
+            pass
+        if not _api_key:
+            _api_key = os.environ.get("CEREBRAS_API_KEY", "")
+        if not _api_key:
+            st.error(t("ai_key_missing"))
+            return
+
+        # Build messages list for the API
+        chart_prompt = format_chart_for_prompt(
+            system_key, chart_obj, page_content=page_content,
+        )
+        _sys_prompt = st.session_state.get("ai_system_prompt", "")
+        _api_messages = [{"role": "system", "content": _sys_prompt}]
+
+        # First message always includes chart context
+        _api_messages.append({"role": "user", "content": chart_prompt})
+
+        # Append conversation history (skip system / first chart context)
+        for _msg in _history:
+            _api_messages.append({"role": _msg["role"], "content": _msg["content"]})
+
+        with st.chat_message("assistant"):
+            with st.spinner(t("ai_analyzing")):
+                try:
+                    client = CerebrasClient(api_key=_api_key)
+                    result = client.chat(
+                        messages=_api_messages,
+                        model=st.session_state.get("_ai_model_select", CEREBRAS_MODEL_OPTIONS[0]),
+                        max_tokens=st.session_state.get("_ai_max_tokens", 8192),
+                        temperature=st.session_state.get("_ai_temperature", 0.7),
+                    )
                     st.markdown(result)
-            except RateLimitError:
-                st.warning(t("ai_rate_limit"))
-            except Exception as e:
-                st.error(t("ai_error").format(str(e)))
+                    _history.append({"role": "assistant", "content": result})
+                except RateLimitError:
+                    st.warning(t("ai_rate_limit"))
+                except Exception as e:
+                    st.error(t("ai_error").format(str(e)))
+
+        st.session_state[_ck] = _history
+
+
+# Backward-compatible alias so existing call sites keep working
+_render_ai_button = _render_ai_chat
 
 # ============================================================
 # Welcome / Onboarding Section for Beginners
