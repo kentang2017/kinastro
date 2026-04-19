@@ -1054,7 +1054,11 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
 
     st.divider()
 
-    # ── Chat container ────────────────────────────────────────
+    # ── Chat container (sticky bottom panel) ──────────────────
+    st.markdown(
+        '<div class="ai-chat-panel">',
+        unsafe_allow_html=True,
+    )
     st.markdown(
         f'<div class="ai-chat-header">{t("ai_chat_header")}</div>',
         unsafe_allow_html=True,
@@ -1066,26 +1070,31 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
         st.session_state[_ck] = []
         st.rerun()
 
+    # Scrollable message area
+    _chat_box = st.container(height=400)
+
     # Welcome message when history is empty
     _history = st.session_state[_ck]
     if not _history:
-        with st.chat_message("assistant"):
-            st.markdown(t("ai_chat_welcome"))
+        with _chat_box.chat_message("assistant"):
+            _chat_box.markdown(t("ai_chat_welcome"))
 
     # Render existing chat messages
     for _msg in _history:
-        with st.chat_message(_msg["role"]):
-            st.markdown(_msg["content"])
+        with _chat_box.chat_message(_msg["role"]):
+            _chat_box.markdown(_msg["content"])
 
     # Chat input
     _input_key = f"{_ck}_input"
     _user_input = st.chat_input(t("ai_chat_placeholder"), key=_input_key)
 
+    st.markdown('</div>', unsafe_allow_html=True)
+
     if _user_input:
         # Show user message immediately
         _history.append({"role": "user", "content": _user_input})
-        with st.chat_message("user"):
-            st.markdown(_user_input)
+        with _chat_box.chat_message("user"):
+            _chat_box.markdown(_user_input)
 
         # Resolve API key
         _api_key = ""
@@ -1115,7 +1124,7 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
         for _msg in _history:
             _api_messages.append({"role": _msg["role"], "content": _msg["content"]})
 
-        with st.chat_message("assistant"):
+        with _chat_box.chat_message("assistant"):
             with st.spinner(t("ai_analyzing")):
                 try:
                     client = CerebrasClient(api_key=_api_key)
@@ -1125,7 +1134,7 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
                         max_tokens=st.session_state.get("_ai_max_tokens", 8192),
                         temperature=st.session_state.get("_ai_temperature", 0.7),
                     )
-                    st.markdown(result)
+                    _chat_box.markdown(result)
                     _history.append({"role": "assistant", "content": result})
                 except RateLimitError:
                     st.warning(t("ai_rate_limit"))
