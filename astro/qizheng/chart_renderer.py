@@ -9,22 +9,50 @@ import math
 from datetime import datetime
 
 import streamlit as st
+import swisseph as swe
 
 from .calculator import (
     ChartData, format_degree, get_mansion_index_for_degree,
-    _normalize_degree,
+    _normalize_degree, _degree_to_sign_degree, _get_mansion_info,
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
-    TWELVE_SIGNS_CHINESE, EARTHLY_BRANCHES,
+    TWELVE_SIGNS_CHINESE, TWELVE_SIGNS_WESTERN, EARTHLY_BRANCHES,
+    FIVE_ELEMENTS, ZODIAC_SIGN_ELEMENTS,
 )
 from .shensha import (
     ShenShaResult, compute_shensha, get_bazi_stems_branches,
     HEAVENLY_STEMS, TWELVE_LIFE_STAGES,
 )
-from .qizheng_dasha import DashaResult, compute_dasha, PLANET_PERIOD_YEARS
+from .qizheng_dasha import (
+    DashaResult, compute_dasha, PLANET_PERIOD_YEARS, BRANCH_LORD,
+)
 from .qizheng_transit import TransitData, compute_transit, compute_transit_now
 from .zhangguo import ZhangguoResult, PLANET_TO_ZHANGGUO
+
+
+# Western zodiac 3-letter abbreviations
+_WESTERN_ABBR = [
+    "Ari", "Tau", "Gem", "Can", "Leo", "Vir",
+    "Lib", "Sco", "Sag", "Cap", "Aqu", "Pis",
+]
+
+# 五行顏色
+_ELEMENT_COLORS = {
+    "木": "#228B22", "金": "#FFD700", "土": "#8B4513",
+    "日": "#FF4500", "月": "#C0C0C0", "火": "#DC143C", "水": "#4169E1",
+}
+
+# 用度/恩用難仇 (simplified mapping for display)
+_YONGDU_MAP = {
+    "日": {"恩": "木", "用": "火", "難": "水", "仇": "金"},
+    "月": {"恩": "金", "用": "水", "難": "火", "仇": "木"},
+    "木": {"恩": "水", "用": "木", "難": "金", "仇": "土"},
+    "火": {"恩": "木", "用": "火", "難": "水", "仇": "金"},
+    "土": {"恩": "火", "用": "土", "難": "木", "仇": "水"},
+    "金": {"恩": "土", "用": "金", "難": "火", "仇": "木"},
+    "水": {"恩": "金", "用": "水", "難": "土", "仇": "火"},
+}
 
 
 def render_chart_info(chart: ChartData):
@@ -499,9 +527,68 @@ _GROUP_COLORS = {
 }
 
 
+def _compute_sun_moon_rise_set(jd, lat, lon, tz):
+    """Compute sunrise, sunset, moonrise, moonset using swisseph."""
+    swe.set_ephe_path("")
+    geopos = (lon, lat, 0.0)  # (longitude, latitude, altitude)
+    results = {}
+    for name, body, flag in [
+        ("sunrise", swe.SUN, swe.CALC_RISE),
+        ("sunset", swe.SUN, swe.CALC_SET),
+        ("moonrise", swe.MOON, swe.CALC_RISE),
+        ("moonset", swe.MOON, swe.CALC_SET),
+    ]:
+        try:
+            res = swe.rise_trans(
+                jd, body, flag | swe.BIT_DISC_CENTER,
+                geopos, 0.0, 0.0,
+            )
+            rise_jd = res[1][0]
+            y, m, d, h = swe.revjul(rise_jd + tz / 24.0)
+            hour_val = h
+            hh = int(hour_val)
+            mm = int((hour_val - hh) * 60)
+            results[name] = f"{hh:02d}:{mm:02d}"
+        except Exception:
+            results[name] = "--:--"
+    return results
+
+
+def _is_night_birth(chart: ChartData):
+    """Determine if birth is at night (between sunset and sunrise)."""
+    try:
+        times = _compute_sun_moon_rise_set(
+            chart.julian_day, chart.latitude, chart.longitude, chart.timezone,
+        )
+        birth_minutes = chart.hour * 60 + chart.minute
+        # Parse sunrise/sunset
+        sr_parts = times["sunrise"].split(":")
+        ss_parts = times["sunset"].split(":")
+        if "--" in times["sunrise"] or "--" in times["sunset"]:
+            return chart.hour < 6 or chart.hour >= 18
+        sr_min = int(sr_parts[0]) * 60 + int(sr_parts[1])
+        ss_min = int(ss_parts[0]) * 60 + int(ss_parts[1])
+        return birth_minutes < sr_min or birth_minutes >= ss_min
+    except Exception:
+        return chart.hour < 6 or chart.hour >= 18
+
+
 def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
-    """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現 28 宿 + 十二星次 + 星曜 + 神煞 + 流時"""
-    st.subheader("🌕 二十八宿圓環盤")
+    """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現完整七政四餘盤
+
+    Enhanced version matching aizhanxing.com reference:
+    - Dasha year ring (outermost) with year markers
+    - Shensha ring
+    - 28 Mansions ring with element + animal labels
+    - 12 Chinese zodiac stations with Western abbreviations
+    - 12 Palace Names ring
+    - Degree tick marks
+    - Planet positions with degree labels
+    - Aspect lines in center
+    - Transit overlay ring
+    - 八字 display, sunrise/sunset info
+    """
+    st.subheader("🌕 七政四餘圓盤")
 
     # Compute shensha for the chart
     shensha = compute_shensha(
@@ -513,34 +600,60 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         ming_gong_branch=chart.ming_gong_branch,
     )
 
-    SIZE = 800
+    # Compute dasha for year ring
+    current_year = datetime.now().year
+    dasha = compute_dasha(
+        birth_year=chart.year,
+        ming_gong_branch=chart.ming_gong_branch,
+        gender=chart.gender,
+        houses=chart.houses,
+        current_year=current_year,
+    )
+
+    # Compute bazi
+    bazi = get_bazi_stems_branches(
+        year=chart.year,
+        solar_month=chart.solar_month,
+        julian_day=chart.julian_day,
+        hour_branch=chart.hour_branch,
+        timezone=chart.timezone,
+    )
+
+    # Compute sun/moon rise/set
+    sun_moon_times = _compute_sun_moon_rise_set(
+        chart.julian_day, chart.latitude, chart.longitude, chart.timezone,
+    )
+    is_night = _is_night_birth(chart)
+
+    SIZE = 960
     CX, CY = SIZE / 2, SIZE / 2
 
-    # 同心圓半徑 (expanded for shensha ring)
-    R_SHENSHA_OUT = 390  # 神煞環外沿
-    R_SHENSHA_IN = 345   # 神煞環內沿
-    R_OUTER = 345        # 最外圈 (previously 310)
-    R_MANSION_OUT = 345  # 28 宿環外沿
-    R_MANSION_IN = 305   # 28 宿環內沿
-    R_SIGN_OUT = 305     # 十二星次環外沿
-    R_SIGN_IN = 275      # 十二星次環內沿
-    R_PALACE_OUT = 275   # 十二宮名環外沿
-    R_PALACE_IN = 245    # 十二宮名環內沿
-    R_PLANET = 210       # 星曜環 (natal)
-    R_TRANSIT = 155      # 流時星曜環
-    R_CENTER = 115       # 中央圓
+    # Concentric ring radii (from outside in)
+    R_DASHA_OUT = 468      # 大運年環外沿
+    R_DASHA_IN = 435       # 大運年環內沿
+    R_SHENSHA_OUT = 435    # 神煞環外沿
+    R_SHENSHA_IN = 395     # 神煞環內沿
+    R_MANSION_OUT = 395    # 28 宿環外沿
+    R_MANSION_IN = 355     # 28 宿環內沿
+    R_SIGN_OUT = 355       # 十二星次環外沿
+    R_SIGN_IN = 320        # 十二星次環內沿
+    R_PALACE_OUT = 320     # 十二宮名環外沿
+    R_PALACE_IN = 285      # 十二宮名環內沿
+    R_DEGREE_OUT = 285     # 度數刻度環外沿
+    R_DEGREE_IN = 275      # 度數刻度環內沿
+    R_PLANET = 240         # 星曜環 (natal)
+    R_TRANSIT = 175        # 流時星曜環
+    R_CENTER = 130         # 中央圓
 
     NUM_MANSIONS = len(TWENTY_EIGHT_MANSIONS)
-    PLANET_SPREAD_FACTOR = 0.7  # 同宿多星的散佈範圍比例
+    PLANET_SPREAD_FACTOR = 0.7
 
     def _mansion_width(i):
-        """Return angular width of mansion i in degrees."""
         s = TWENTY_EIGHT_MANSIONS[i]["start_lon"]
         e = TWENTY_EIGHT_MANSIONS[(i + 1) % NUM_MANSIONS]["start_lon"]
         return (e - s) % 360.0
 
     def _mansion_chart_start(i):
-        """Return chart-angle of the start edge for mansion i."""
         e = TWENTY_EIGHT_MANSIONS[(i + 1) % NUM_MANSIONS]["start_lon"]
         return ecl_to_chart(e)
 
@@ -571,9 +684,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     def ecl_to_chart(ecl_deg):
         """Convert ecliptic longitude to SVG chart angle.
 
-        Positions earthly branches at traditional compass directions:
-        午(South) at top, 子(North) at bottom, 卯(East) at left, 酉(West) at right.
-        Branches increase clockwise around the chart.
+        午(South) at top, 子(North) at bottom.
         """
         return (45.0 - ecl_deg) % 360.0
 
@@ -587,29 +698,55 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     svg.append(
         f'<svg viewBox="0 0 {SIZE} {SIZE}" '
         f'xmlns="http://www.w3.org/2000/svg" '
-        f'style="width:100%; max-width:800px; height:auto; margin:auto; '
+        f'style="width:100%; max-width:960px; height:auto; margin:auto; '
         f'display:block; background:#0a0a1a; border-radius:12px;">'
     )
     svg.append(f'<rect width="{SIZE}" height="{SIZE}" fill="#0a0a1a" rx="12"/>')
 
-    # --- 神煞環 (outermost: Shen Sha ring) ---
+    # === 大運年環 (Dasha year ring — outermost) ===
+    for idx, period in enumerate(dasha.periods):
+        # Map dasha palace branch to chart angle
+        branch = period.branch
+        sign_idx = (10 - branch) % 12
+        a1 = ecl_to_chart((sign_idx + 1) * 30.0)
+        a2 = a1 + 30.0
+        is_current = (idx == dasha.current_period_idx)
+        bg_fill = "#2a1a2a" if is_current else "#0d0d18"
+        stroke_col = "#d4af37" if is_current else "#333"
+        stroke_w = "1.5" if is_current else "0.5"
+        svg.append(
+            f'<path d="{annular_sector(R_DASHA_IN, R_DASHA_OUT, a1, a2)}" '
+            f'fill="{bg_fill}" stroke="{stroke_col}" stroke-width="{stroke_w}"/>'
+        )
+        # Year label at center of sector
+        mid_a = a1 + 15.0
+        r_text = (R_DASHA_IN + R_DASHA_OUT) / 2
+        x, y = polar(r_text, mid_a)
+        rot = text_rotation(mid_a)
+        year_label = str(period.start_year)
+        text_fill = "#d4af37" if is_current else "#888"
+        svg.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{text_fill}" '
+            f'font-size="10" font-family="sans-serif" '
+            f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
+            f'{year_label}</text>'
+        )
+
+    # === 神煞環 (Shen Sha ring) ===
     for i in range(12):
         a1 = ecl_to_chart((i + 1) * 30.0)
         a2 = a1 + 30.0
         branch_idx = (10 - i) % 12
-        # Background sector
         svg.append(
             f'<path d="{annular_sector(R_SHENSHA_IN, R_SHENSHA_OUT, a1, a2)}" '
             f'fill="#0d0d1a" stroke="#333" stroke-width="0.5"/>'
         )
-        # Shen sha names in this branch
         sha_names = shensha.branch_map.get(branch_idx, [])
         if sha_names:
-            # Show up to 6 names to fit, split into 2 rows
             display_names = sha_names[:6]
             mid_a = a1 + 15.0
             r_text = (R_SHENSHA_IN + R_SHENSHA_OUT) / 2
-            # Compute row offsets
             n_rows = (len(display_names) + 2) // 3
             for row_i in range(n_rows):
                 row_names = display_names[row_i * 3: (row_i + 1) * 3]
@@ -621,27 +758,27 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
                 svg.append(
                     f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
                     f'dominant-baseline="central" fill="#c0a0a0" '
-                    f'font-size="8" font-family="serif" '
+                    f'font-size="7.5" font-family="serif" '
                     f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
                     f'{txt}</text>'
                 )
 
-    # --- 28 宿環 (outermost ring) ---
+    # === 28 宿環 (Mansion ring) with element + animal ===
     for i, m in enumerate(TWENTY_EIGHT_MANSIONS):
         w = _mansion_width(i)
         a1 = _mansion_chart_start(i)
         a2 = a1 + w
         bg, fg = _GROUP_COLORS[m["group"]]
-        # Background sector
         svg.append(
             f'<path d="{annular_sector(R_MANSION_IN, R_MANSION_OUT, a1, a2)}" '
             f'fill="{bg}" stroke="#555" stroke-width="0.5"/>'
         )
-        # Mansion name
         mid_a = a1 + w / 2
-        r_text = (R_MANSION_IN + R_MANSION_OUT) / 2
-        x, y = polar(r_text, mid_a)
+        r_text_name = (R_MANSION_IN + R_MANSION_OUT) / 2 + 5
+        r_text_elem = (R_MANSION_IN + R_MANSION_OUT) / 2 - 8
+        x, y = polar(r_text_name, mid_a)
         rot = text_rotation(mid_a)
+        # Mansion name
         svg.append(
             f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="{fg}" '
@@ -649,34 +786,51 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
             f'{m["name"]}</text>'
         )
+        # Element + animal label (smaller, below name)
+        elem_color = _ELEMENT_COLORS.get(m["element"], "#999")
+        x2, y2 = polar(r_text_elem, mid_a)
+        svg.append(
+            f'<text x="{x2:.1f}" y="{y2:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="{elem_color}" '
+            f'font-size="8" font-family="serif" '
+            f'transform="rotate({rot:.1f},{x2:.1f},{y2:.1f})">'
+            f'{m["element"]}{m["animal"]}</text>'
+        )
 
-    # --- 十二星次環 (12 Chinese zodiac stations ring) ---
+    # === 十二星次環 (12 Chinese zodiac + Western abbreviation) ===
     for i in range(12):
         a1 = ecl_to_chart((i + 1) * 30.0)
         a2 = a1 + 30.0
-        # Thin background
         svg.append(
             f'<path d="{annular_sector(R_SIGN_IN, R_SIGN_OUT, a1, a2)}" '
             f'fill="#111122" stroke="#444" stroke-width="0.5"/>'
         )
-        # Sign name (short form)
         mid_a = a1 + 15.0
-        r_text = (R_SIGN_IN + R_SIGN_OUT) / 2
-        x, y = polar(r_text, mid_a)
-        rot = text_rotation(mid_a)
+        # Chinese name (upper row)
         sign_name = TWELVE_SIGNS_CHINESE[i]
-        # Use the palace name part (e.g. "戌宮")
         short_name = sign_name.split("(")[0] if "(" in sign_name else sign_name
+        r_text_cn = (R_SIGN_IN + R_SIGN_OUT) / 2 + 5
+        x, y = polar(r_text_cn, mid_a)
+        rot = text_rotation(mid_a)
         svg.append(
             f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" '
             f'dominant-baseline="central" fill="#b0b0d0" '
-            f'font-size="13" font-weight="bold" font-family="serif" '
+            f'font-size="12" font-weight="bold" font-family="serif" '
             f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
             f'{short_name}</text>'
         )
+        # Western abbreviation (lower row)
+        r_text_w = (R_SIGN_IN + R_SIGN_OUT) / 2 - 8
+        x2, y2 = polar(r_text_w, mid_a)
+        svg.append(
+            f'<text x="{x2:.1f}" y="{y2:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#808090" '
+            f'font-size="9" font-family="sans-serif" '
+            f'transform="rotate({rot:.1f},{x2:.1f},{y2:.1f})">'
+            f'{_WESTERN_ABBR[i]}</text>'
+        )
 
-    # --- 十二宮名環 (12 Palace Names ring) ---
-    # Build branch → palace name mapping from chart houses
+    # === 十二宮名環 (12 Palace Names ring) ===
     branch_to_palace: dict[int, str] = {}
     for house in chart.houses:
         branch_to_palace[house.branch] = house.name
@@ -684,10 +838,8 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     for i in range(12):
         a1 = ecl_to_chart((i + 1) * 30.0)
         a2 = a1 + 30.0
-        # Determine which earthly branch this segment corresponds to
         branch_idx = (10 - i) % 12
         is_ming = (branch_idx == chart.ming_gong_branch)
-        # Background sector
         bg_fill = "#2a2a1e" if is_ming else "#0f0f22"
         stroke_col = "#d4af37" if is_ming else "#444"
         stroke_w = "1" if is_ming else "0.5"
@@ -695,13 +847,12 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             f'<path d="{annular_sector(R_PALACE_IN, R_PALACE_OUT, a1, a2)}" '
             f'fill="{bg_fill}" stroke="{stroke_col}" stroke-width="{stroke_w}"/>'
         )
-        # Palace name text
         mid_a = a1 + 15.0
-        r_text = (R_PALACE_IN + R_PALACE_OUT) / 2
+        # Palace name (top row)
+        r_text = (R_PALACE_IN + R_PALACE_OUT) / 2 + 5
         x, y = polar(r_text, mid_a)
         rot = text_rotation(mid_a)
         palace_name = branch_to_palace.get(branch_idx, "")
-        # Short palace name (remove 宮 suffix for compactness)
         short_palace = palace_name.replace("宮", "") if palace_name else ""
         text_color = "#d4af37" if is_ming else "#c8b888"
         svg.append(
@@ -711,19 +862,51 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             f'transform="rotate({rot:.1f},{x:.1f},{y:.1f})">'
             f'{short_palace}</text>'
         )
+        # Branch name + lord (bottom row)
+        r_text2 = (R_PALACE_IN + R_PALACE_OUT) / 2 - 8
+        x2, y2 = polar(r_text2, mid_a)
+        branch_name = EARTHLY_BRANCHES[branch_idx]
+        lord = BRANCH_LORD.get(branch_idx, "")
+        svg.append(
+            f'<text x="{x2:.1f}" y="{y2:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#808080" '
+            f'font-size="8" font-family="serif" '
+            f'transform="rotate({rot:.1f},{x2:.1f},{y2:.1f})">'
+            f'{branch_name}·{lord}</text>'
+        )
 
-    # --- Division lines for 12 signs (from center to shensha ring) ---
+    # === 度數刻度 (Degree tick marks) ===
+    for deg in range(360):
+        a = ecl_to_chart(float(deg))
+        if deg % 10 == 0:
+            x1, y1 = polar(R_DEGREE_IN - 2, a)
+            x2, y2 = polar(R_DEGREE_OUT, a)
+            svg.append(
+                f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+                f'x2="{x2:.1f}" y2="{y2:.1f}" '
+                f'stroke="#666" stroke-width="0.8"/>'
+            )
+        elif deg % 5 == 0:
+            x1, y1 = polar(R_DEGREE_IN, a)
+            x2, y2 = polar(R_DEGREE_OUT, a)
+            svg.append(
+                f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+                f'x2="{x2:.1f}" y2="{y2:.1f}" '
+                f'stroke="#555" stroke-width="0.5"/>'
+            )
+
+    # === Division lines for 12 signs ===
     for i in range(12):
         a = ecl_to_chart(i * 30.0)
         x1, y1 = polar(R_CENTER, a)
-        x2, y2 = polar(R_SHENSHA_OUT, a)
+        x2, y2 = polar(R_DASHA_OUT, a)
         svg.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
             f'x2="{x2:.1f}" y2="{y2:.1f}" '
             f'stroke="#555" stroke-width="0.8"/>'
         )
 
-    # --- 28 宿分界線 (from sign ring inner to mansion ring outer) ---
+    # === 28 宿分界線 ===
     for i in range(28):
         a = ecl_to_chart(TWENTY_EIGHT_MANSIONS[i]["start_lon"])
         x1, y1 = polar(R_MANSION_IN, a)
@@ -734,14 +917,13 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             f'stroke="#555" stroke-width="0.5"/>'
         )
 
-    # --- Inner circles ---
+    # === Inner circles ===
     svg.append(
         f'<circle cx="{CX}" cy="{CY}" r="{R_CENTER}" '
         f'fill="#1a1a2e" stroke="#555" stroke-width="1"/>'
     )
 
-    # --- 星曜位置 (planet positions in the planet ring) ---
-    # Group planets by mansion to handle overlaps
+    # === 星曜位置 (natal planet positions) with degree labels ===
     mansion_planets: dict[int, list] = {}
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
@@ -750,20 +932,22 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             mansion_planets[mansion_idx] = []
         mansion_planets[mansion_idx].append((p, lon))
 
+    # Collect planet positions for aspect lines
+    planet_angles = {}
+
     for mansion_idx, planet_data in mansion_planets.items():
         n = len(planet_data)
         w = _mansion_width(mansion_idx)
-        # Mansion sector in chart space
         a1_chart = _mansion_chart_start(mansion_idx)
         base_a = a1_chart + w / 2
         for pi, (p, lon) in enumerate(planet_data):
-            # Single planet: use exact longitude; multiple: spread within mansion
             if n == 1:
                 a = ecl_to_chart(lon)
             else:
                 span = w * PLANET_SPREAD_FACTOR
                 a = base_a - span / 2 + span * pi / (n - 1)
 
+            planet_angles[p.name] = a
             color = PLANET_COLORS.get(p.name, "#c8c8c8")
             x, y = polar(R_PLANET, a)
 
@@ -772,21 +956,56 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
                 f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" '
                 f'fill="{color}" stroke="#fff" stroke-width="0.5"/>'
             )
-            # Planet name
-            x_t, y_t = polar(R_PLANET - 20, a)
+            # Planet name + element
+            x_t, y_t = polar(R_PLANET - 18, a)
             rot = text_rotation(a)
             retro = "℞" if p.retrograde else ""
+            elem = FIVE_ELEMENTS.get(p.name, "")
             svg.append(
                 f'<text x="{x_t:.1f}" y="{y_t:.1f}" text-anchor="middle" '
                 f'dominant-baseline="central" fill="{color}" '
-                f'font-size="11" font-weight="bold" font-family="serif" '
+                f'font-size="10" font-weight="bold" font-family="serif" '
                 f'transform="rotate({rot:.1f},{x_t:.1f},{y_t:.1f})">'
-                f'{p.name}{retro}</text>'
+                f'{elem}·{p.name}{retro}</text>'
+            )
+            # Degree label
+            deg_str = f"{_degree_to_sign_degree(lon):.1f}°"
+            x_d, y_d = polar(R_PLANET + 15, a)
+            svg.append(
+                f'<text x="{x_d:.1f}" y="{y_d:.1f}" text-anchor="middle" '
+                f'dominant-baseline="central" fill="{color}" '
+                f'font-size="7" font-family="sans-serif" opacity="0.7" '
+                f'transform="rotate({rot:.1f},{x_d:.1f},{y_d:.1f})">'
+                f'{deg_str}</text>'
             )
 
-    # --- 流時星曜環 (transit planet positions — inner ring) ---
+    # === Aspect lines between planets (in center) ===
+    aspects = _calculate_aspects(chart.planets)
+    aspect_colors = {
+        "合(0°)": "#FFD700",
+        "沖(180°)": "#FF4444",
+        "刑(90°)": "#FF8800",
+        "三合(120°)": "#44FF44",
+        "六合(60°)": "#4488FF",
+    }
+    for asp in aspects:
+        p1_name = asp["planet1"]
+        p2_name = asp["planet2"]
+        if p1_name in planet_angles and p2_name in planet_angles:
+            a1 = planet_angles[p1_name]
+            a2 = planet_angles[p2_name]
+            x1, y1 = polar(R_CENTER + 5, a1)
+            x2, y2 = polar(R_CENTER + 5, a2)
+            asp_color = aspect_colors.get(asp["aspect_name"], "#666")
+            opacity = "0.3" if asp["orb"] > 4 else "0.5"
+            svg.append(
+                f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+                f'x2="{x2:.1f}" y2="{y2:.1f}" '
+                f'stroke="{asp_color}" stroke-width="0.8" opacity="{opacity}"/>'
+            )
+
+    # === 流時星曜環 (transit planet positions) ===
     if transit is not None:
-        # Separator circle for transit ring
         svg.append(
             f'<circle cx="{CX}" cy="{CY}" r="{R_TRANSIT + 25}" '
             f'fill="none" stroke="#444" stroke-width="0.5" stroke-dasharray="4,4"/>'
@@ -814,13 +1033,11 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
                 color = PLANET_COLORS.get(p.name, "#c8c8c8")
                 x, y = polar(R_TRANSIT, a)
 
-                # Transit planet dot (hollow/outlined)
                 svg.append(
                     f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" '
                     f'fill="none" stroke="{color}" stroke-width="1.5"/>'
                 )
-                # Transit planet name
-                x_t, y_t = polar(R_TRANSIT - 18, a)
+                x_t, y_t = polar(R_TRANSIT - 16, a)
                 rot = text_rotation(a)
                 retro = "℞" if p.retrograde else ""
                 svg.append(
@@ -831,43 +1048,160 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
                     f'{p.name}{retro}</text>'
                 )
 
-    # --- 中央資訊 (center info) ---
+    # === 中央資訊 (center info) ===
+    gender_label = "男命" if chart.gender == "male" else "女命"
+    direction_label = "順至日出" if chart.gender == "male" else "逆至日出"
+    ming_branch = EARTHLY_BRANCHES[chart.ming_gong_branch]
     svg.append(
-        f'<text x="{CX}" y="{CY - 40}" text-anchor="middle" '
+        f'<text x="{CX}" y="{CY - 55}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#e0e0e0" '
-        f'font-size="15" font-weight="bold" font-family="serif">'
+        f'font-size="14" font-weight="bold" font-family="serif">'
         f'七政四餘</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY - 35}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#b0b0b0" '
+        f'font-size="11" font-family="serif">'
+        f'{chart.year}年{chart.month}月{chart.day}日 '
+        f'{chart.hour:02d}:{chart.minute:02d}</text>'
     )
     svg.append(
         f'<text x="{CX}" y="{CY - 18}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#b0b0b0" '
-        f'font-size="12" font-family="serif">'
-        f'{chart.year}年{chart.month}月{chart.day}日</text>'
+        f'font-size="10" font-family="serif">'
+        f'{chart.location_name} ({gender_label})</text>'
     )
     svg.append(
-        f'<text x="{CX}" y="{CY + 2}" text-anchor="middle" '
-        f'dominant-baseline="central" fill="#b0b0b0" '
-        f'font-size="12" font-family="serif">'
-        f'{chart.hour:02d}:{chart.minute:02d} '
+        f'<text x="{CX}" y="{CY}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#d4af37" '
+        f'font-size="10" font-family="serif">'
+        f'命宮 {ming_branch} ({direction_label})</text>'
+    )
+
+    # Find the planet at ming_gong for degree info
+    ming_planet_info = ""
+    for p in chart.planets:
+        if p.palace_index == 0:
+            ming_planet_info = f"{p.mansion_name} {p.mansion_degree:.2f}°"
+            break
+
+    svg.append(
+        f'<text x="{CX}" y="{CY + 18}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#d4af37" '
+        f'font-size="10" font-family="serif">'
+        f'立命 {format_degree(chart.ascendant)}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 34}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#7ec8e3" '
+        f'font-size="10" font-family="serif">'
+        f'中天 {format_degree(chart.midheaven)}</text>'
+    )
+
+    # Dasha current period
+    if dasha.current_period_idx >= 0:
+        cp = dasha.periods[dasha.current_period_idx]
+        svg.append(
+            f'<text x="{CX}" y="{CY + 52}" text-anchor="middle" '
+            f'dominant-baseline="central" fill="#a080c0" '
+            f'font-size="9" font-family="serif">'
+            f'行限 {cp.palace_name} {cp.branch_name} '
+            f'({cp.start_age}-{cp.end_age}歲)</text>'
+        )
+
+    svg.append(
+        f'<text x="{CX}" y="{CY + 68}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#888" '
+        f'font-size="9" font-family="serif">'
         f'UTC{chart.timezone:+.1f}</text>'
     )
+
+    # === 八字顯示 (Four Pillars — top-left corner) ===
+    bazi_x = 15
+    bazi_y = 18
+    # Bazi: year, month, day, hour stems on top, branches on bottom
+    pillars = [
+        (bazi["year_pillar"], "年"),
+        (bazi["month_pillar"], "月"),
+        (bazi["day_pillar"], "日"),
+        (bazi["hour_pillar"], "時"),
+    ]
+    for pi_idx, (pillar, label) in enumerate(pillars):
+        px = bazi_x + pi_idx * 30
+        stem_char = pillar[0]
+        branch_char = pillar[1]
+        svg.append(
+            f'<text x="{px}" y="{bazi_y}" fill="#e0e0e0" '
+            f'font-size="13" font-weight="bold" font-family="serif">'
+            f'{stem_char}</text>'
+        )
+        svg.append(
+            f'<text x="{px}" y="{bazi_y + 18}" fill="#c8b888" '
+            f'font-size="13" font-weight="bold" font-family="serif">'
+            f'{branch_char}</text>'
+        )
+
+    # 乾/坤 label for gender
+    qk_label = "乾" if chart.gender == "male" else "坤"
     svg.append(
-        f'<text x="{CX}" y="{CY + 22}" text-anchor="middle" '
-        f'dominant-baseline="central" fill="#b0b0b0" '
-        f'font-size="12" font-family="serif">'
-        f'{chart.location_name}</text>'
+        f'<text x="{bazi_x + len(pillars) * 30}" y="{bazi_y + 9}" '
+        f'fill="#d4af37" font-size="14" font-weight="bold" font-family="serif">'
+        f'{qk_label}</text>'
+    )
+
+    # === 晝夜/日出日落 (bottom-left corner) ===
+    night_label = "夜生" if is_night else "晝生"
+    info_x = 15
+    info_y = SIZE - 70
+    svg.append(
+        f'<text x="{info_x}" y="{info_y}" fill="#e0e0e0" '
+        f'font-size="12" font-weight="bold" font-family="serif">'
+        f'{night_label}</text>'
     )
     svg.append(
-        f'<text x="{CX}" y="{CY + 44}" text-anchor="middle" '
-        f'dominant-baseline="central" fill="#d4af37" '
-        f'font-size="11" font-family="serif">'
-        f'命度 {format_degree(chart.ascendant)}</text>'
+        f'<text x="{info_x}" y="{info_y + 18}" fill="#b0b0b0" '
+        f'font-size="10" font-family="serif">'
+        f'日出: {sun_moon_times.get("sunrise", "--:--")}  '
+        f'日落: {sun_moon_times.get("sunset", "--:--")}</text>'
     )
     svg.append(
-        f'<text x="{CX}" y="{CY + 62}" text-anchor="middle" '
-        f'dominant-baseline="central" fill="#7ec8e3" '
-        f'font-size="11" font-family="serif">'
-        f'中天 {format_degree(chart.midheaven)}</text>'
+        f'<text x="{info_x}" y="{info_y + 34}" fill="#b0b0b0" '
+        f'font-size="10" font-family="serif">'
+        f'月出: {sun_moon_times.get("moonrise", "--:--")}  '
+        f'月落: {sun_moon_times.get("moonset", "--:--")}</text>'
+    )
+
+    # === 用度恩仇 (bottom-right corner) ===
+    # Show which elements are favourable/unfavourable based on ming palace element
+    ming_element = ""
+    for h in chart.houses:
+        if h.branch == chart.ming_gong_branch:
+            sign_idx = int(h.cusp / 30.0) % 12
+            ming_element = ZODIAC_SIGN_ELEMENTS[sign_idx]
+            break
+
+    if ming_element and ming_element in _YONGDU_MAP:
+        yd = _YONGDU_MAP[ming_element]
+        yd_x = SIZE - 150
+        yd_y = SIZE - 55
+        svg.append(
+            f'<text x="{yd_x}" y="{yd_y}" fill="#b0b0b0" '
+            f'font-size="9" font-family="serif">'
+            f'難{yd["難"]}仇{yd["仇"]}用{yd["用"]}</text>'
+        )
+        svg.append(
+            f'<text x="{yd_x}" y="{yd_y + 14}" fill="#b0b0b0" '
+            f'font-size="9" font-family="serif">'
+            f'恩{yd["恩"]} 度{ming_element}</text>'
+        )
+
+    # === 立命/安身 annotations (bottom-right) ===
+    br_x = SIZE - 150
+    br_y = SIZE - 25
+    svg.append(
+        f'<text x="{br_x}" y="{br_y}" fill="#d4af37" '
+        f'font-size="10" font-weight="bold" font-family="serif">'
+        f'立命 {direction_label}</text>'
     )
 
     svg.append("</svg>")
@@ -875,6 +1209,179 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     svg_string = "\n".join(svg)
     st.markdown(svg_string, unsafe_allow_html=True)
     return svg_string
+
+
+def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None):
+    """渲染右側資訊面板 — 包含基礎、本命、行運等分頁資訊
+
+    Matches the reference aizhanxing.com info panel with tabs.
+    """
+
+    # Compute dependencies
+    bazi = get_bazi_stems_branches(
+        year=chart.year,
+        solar_month=chart.solar_month,
+        julian_day=chart.julian_day,
+        hour_branch=chart.hour_branch,
+        timezone=chart.timezone,
+    )
+    current_year = datetime.now().year
+    dasha = compute_dasha(
+        birth_year=chart.year,
+        ming_gong_branch=chart.ming_gong_branch,
+        gender=chart.gender,
+        houses=chart.houses,
+        current_year=current_year,
+    )
+    sun_moon_times = _compute_sun_moon_rise_set(
+        chart.julian_day, chart.latitude, chart.longitude, chart.timezone,
+    )
+    is_night = _is_night_birth(chart)
+
+    # Lunar date approximation from bazi
+    lunar_year_pillar = bazi["year_pillar"]
+    lunar_month_branch = EARTHLY_BRANCHES[bazi["month_branch"]]
+    hour_branch_name = EARTHLY_BRANCHES[chart.hour_branch]
+    night_day = "夜" if is_night else "晝"
+    gender_label = "男命" if chart.gender == "male" else "女命"
+
+    # Tabs
+    tab_base, tab_natal, tab_transit, tab_dasha_tab = st.tabs(
+        ["基礎", "本命", "行運", "大運"]
+    )
+
+    with tab_base:
+        st.markdown("#### 本命信息")
+        st.markdown(
+            f"- **農曆：** {lunar_year_pillar}年 · {hour_branch_name}時（{night_day}）\n"
+            f"- **生日：** {chart.year}-{chart.month:02d}-{chart.day:02d} "
+            f"{chart.hour:02d}:{chart.minute:02d}:00\n"
+            f"- **時區：** UTC{chart.timezone:+.1f}\n"
+            f"- **地點：** {chart.location_name}\n"
+            f"- **性別：** {gender_label}\n"
+        )
+
+        # 八字
+        st.markdown("#### 八字四柱")
+        bazi_str = (
+            f"年柱 {bazi['year_pillar']} · "
+            f"月柱 {bazi['month_pillar']} · "
+            f"日柱 {bazi['day_pillar']} · "
+            f"時柱 {bazi['hour_pillar']}"
+        )
+        st.markdown(f"- {bazi_str}")
+
+        # 立命/安身
+        ming_branch = EARTHLY_BRANCHES[chart.ming_gong_branch]
+        ming_mansion = ""
+        ming_degree = 0.0
+        ming_mansion, ming_degree = _get_mansion_info(chart.ascendant)
+        st.markdown(
+            f"- **立命：** {ming_branch} {format_degree(chart.ascendant)} · "
+            f"{ming_mansion} {ming_degree:.2f}°\n"
+            f"- **中天：** {format_degree(chart.midheaven)}"
+        )
+
+        # Sunrise/sunset
+        st.markdown(
+            f"- **{night_day}生** — "
+            f"日出 {sun_moon_times.get('sunrise', '--:--')} · "
+            f"日落 {sun_moon_times.get('sunset', '--:--')} · "
+            f"月出 {sun_moon_times.get('moonrise', '--:--')} · "
+            f"月落 {sun_moon_times.get('moonset', '--:--')}"
+        )
+
+    with tab_natal:
+        st.markdown("#### 七政位置")
+        for p in chart.planets[:7]:
+            color = PLANET_COLORS.get(p.name, "#c8c8c8")
+            retro = " ℞" if p.retrograde else ""
+            qidu = " ⚠岐度" if p.is_qidu else ""
+            st.markdown(
+                f'<span style="color:{color};font-weight:bold">{p.name}</span> '
+                f'{p.sign_chinese} {p.sign_degree:.2f}° · '
+                f'{p.mansion_name} {p.mansion_degree:.2f}°'
+                f'{retro}{qidu}',
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("#### 四餘位置")
+        for p in chart.planets[7:]:
+            color = PLANET_COLORS.get(p.name, "#c8c8c8")
+            retro = " ℞" if p.retrograde else ""
+            st.markdown(
+                f'<span style="color:{color};font-weight:bold">{p.name}</span> '
+                f'{p.sign_chinese} {p.sign_degree:.2f}° · '
+                f'{p.mansion_name} {p.mansion_degree:.2f}°{retro}',
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("#### 十二宮位")
+        for house in chart.houses:
+            planet_str = "、".join(house.planets) if house.planets else "—"
+            is_ming = house.name == "命宮"
+            marker = " 🟡" if is_ming else ""
+            st.markdown(
+                f"**{house.name}**{marker} ({house.branch_name}) · "
+                f"{house.sign_chinese} · {planet_str}"
+            )
+
+    with tab_transit:
+        if transit is not None:
+            st.markdown("#### 行運信息")
+            st.markdown(
+                f"- **流時：** {transit.year}-{transit.month:02d}-{transit.day:02d} "
+                f"{transit.hour:02d}:{transit.minute:02d}"
+            )
+            st.markdown("#### 流時星曜")
+            for np_item, tp in zip(chart.planets, transit.planets):
+                diff = abs(np_item.longitude - tp.longitude)
+                if diff > 180:
+                    diff = 360 - diff
+                color = PLANET_COLORS.get(np_item.name, "#c8c8c8")
+                t_retro = " ℞" if tp.retrograde else ""
+                st.markdown(
+                    f'<span style="color:{color};font-weight:bold">{np_item.name}'
+                    f'</span> 本命 {format_degree(np_item.longitude)} → '
+                    f'流時 {format_degree(tp.longitude)}{t_retro} '
+                    f'(差距 {diff:.1f}°)',
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.info("勾選「顯示流時對盤」以查看行運資訊")
+
+    with tab_dasha_tab:
+        st.markdown("#### 年限大運")
+        if dasha.current_period_idx >= 0:
+            cp = dasha.periods[dasha.current_period_idx]
+            st.success(
+                f"📍 現年 **{dasha.current_age}歲** — "
+                f"行 **{cp.palace_name}** ({cp.branch_name}) 限 "
+                f"({cp.start_age}–{cp.end_age}歲)"
+            )
+        for idx, p in enumerate(dasha.periods):
+            mark = " 👈" if idx == dasha.current_period_idx else ""
+            st.markdown(
+                f"{idx+1}. **{p.palace_name}** ({p.branch_name}) · "
+                f"{p.lord} {p.years}年 · "
+                f"{p.start_age}–{p.end_age}歲 "
+                f"({p.start_year}–{p.end_year}){mark}"
+            )
+
+
+def render_full_chart(chart: ChartData, transit: TransitData | None = None):
+    """渲染完整的七政四餘盤 — 圓盤 + 右側資訊面板
+
+    Layout: Left column (chart SVG) + Right column (info panel)
+    Matches the aizhanxing.com reference layout.
+    """
+    col_chart, col_info = st.columns([3, 2])
+
+    with col_chart:
+        render_mansion_ring(chart, transit=transit)
+
+    with col_info:
+        render_chart_info_panel(chart, transit=transit)
 
 
 # ============================================================
