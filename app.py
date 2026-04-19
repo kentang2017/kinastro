@@ -322,25 +322,6 @@ def _render_bphs_result(bphs_result):
         st.caption(f"💡 {note}")
 
 
-# ── Theme Switcher (right-aligned above title) ──────────────────
-_THEME_OPTIONS = {
-    "modern": ("🌐", "Modern"),
-    "classic": ("📜", "Classic"),
-    "mystic": ("🔮", "Mystic"),
-}
-if "_ka_theme" not in st.session_state:
-    st.session_state["_ka_theme"] = "modern"
-
-# Theme switcher — functional buttons only
-_theme_cols = st.columns([1, 1, 1, 3])
-for _ci, (_tk, (_ti, _tl)) in enumerate(_THEME_OPTIONS.items()):
-    with _theme_cols[_ci]:
-        if st.button(f"{_ti} {_tl}", key=f"_theme_{_tk}", help=_tl,
-                     use_container_width=True,
-                     type="primary" if st.session_state["_ka_theme"] == _tk else "secondary"):
-            st.session_state["_ka_theme"] = _tk
-            st.rerun()
-
 st.title(t("app_title"))
 st.markdown(
     '<p class="app-subtitle">' + t("app_subtitle") + '</p>',
@@ -955,26 +936,7 @@ with st.sidebar:
         _cat_label = f"{_cat_icon} {t(_cat_key)}"
 
         with st.expander(_cat_label, expanded=_cat_has_active or bool(_search_q)):
-            # Render icon card grid preview (visual-only)
-            import html as _html_mod
-            _grid_html = '<div class="sidebar-card-grid">'
-            for _sk in _filtered:
-                _is_active = (_sk == _selected_system)
-                _active_cls = " active" if _is_active else ""
-                _icon = SYSTEM_ICONS.get(_sk, "🔮")
-                _label = _html_mod.escape(_SYSTEM_LABELS.get(_sk, _sk))
-                _accent = SYSTEM_ACCENT_COLORS.get(_sk, "#A78BFA")
-                _grid_html += (
-                    f'<div class="sys-card{_active_cls}" '
-                    f'style="--ka-culture-accent: {_accent};">'
-                    f'<span class="sys-icon">{_icon}</span>'
-                    f'<span class="sys-label">{_label}</span>'
-                    f'</div>'
-                )
-            _grid_html += '</div>'
-            st.markdown(_grid_html, unsafe_allow_html=True)
-
-            # Functional buttons (kept for actual selection)
+            # Functional buttons for system selection
             for _sk in _filtered:
                 _is_active = (_sk == _selected_system)
                 _btn_type = "primary" if _is_active else "secondary"
