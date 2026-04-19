@@ -1474,6 +1474,51 @@ transmitted by **Chen Xiyi**.
         "zh": "🪐 九曜",
         "en": "🪐 Nine Graha",
     },
+
+    # ── Jewish Mazzalot Astrology (猶太 Mazzalot 占星) ─────────
+    "tab_mazzalot": {"zh": "✡ 猶太 Mazzalot 占星", "en": "✡ Jewish Mazzalot"},
+    "desc_mazzalot": {
+        "zh": (
+            "**猶太 Mazzalot 占星（Jewish Mazzalot Astrology）**\n\n"
+            "Mazzalot（מַזָּלוֹת）是猶太傳統中的黃道體系，源自 Talmud（塔木德）、"
+            "Sefer Yetzirah（創造之書）與聖經星象解讀。\n\n"
+            "- **12 個 Mazzalot**：對應十二支派（Twelve Tribes of Israel）\n"
+            "- **Sefer Yetzirah 字母**：12 個簡單字母對應 12 個 Mazzalot\n"
+            "- **靈性解讀**：基於 Talmud Shabbat 156a，強調「Ein Mazal l'Yisrael」\n"
+            "- **Sidereal 黃道**：使用 Fagan-Bradley ayanamsa 計算"
+        ),
+        "en": (
+            "**Jewish Mazzalot Astrology**\n\n"
+            "Mazzalot (מַזָּלוֹת) is the zodiac system in Jewish tradition, rooted in the Talmud, "
+            "Sefer Yetzirah (Book of Formation), and biblical star-lore.\n\n"
+            "- **12 Mazzalot**: Corresponding to the Twelve Tribes of Israel\n"
+            "- **Sefer Yetzirah Letters**: 12 simple letters mapped to 12 Mazzalot\n"
+            "- **Spiritual Readings**: Based on Talmud Shabbat 156a, emphasizing 'Ein Mazal l'Yisrael'\n"
+            "- **Sidereal Zodiac**: Computed with Fagan-Bradley ayanamsa"
+        ),
+    },
+    "spinner_mazzalot": {"zh": "計算猶太 Mazzalot 星盤中…", "en": "Computing Jewish Mazzalot chart…"},
+    "sys_hint_mazzalot": {"zh": "猶太傳統黃道占星——Talmud 與 Sefer Yetzirah", "en": "Jewish traditional zodiac — Talmud & Sefer Yetzirah"},
+    "mazzalot_chart_title": {"zh": "✡ 猶太 Mazzalot 占星 / Jewish Mazzalot Astrology", "en": "✡ Jewish Mazzalot Astrology"},
+    "mazzalot_planet_positions": {"zh": "行星位置 (Sidereal)", "en": "Planet Positions (Sidereal)"},
+    "mazzalot_omens_title": {"zh": "Talmud 靈性解讀", "en": "Talmudic Spiritual Readings"},
+    "mazzalot_aspects_title": {"zh": "行星相位", "en": "Aspects"},
+    "mazzalot_houses_title": {"zh": "宮位 (Sidereal)", "en": "Houses (Sidereal)"},
+    "mazzalot_ascendant": {"zh": "上升 Mazzalot", "en": "Ascendant Mazzalot"},
+    "mazzalot_col_planet": {"zh": "行星", "en": "Planet"},
+    "mazzalot_col_mazzalot": {"zh": "Mazzalot", "en": "Mazzalot"},
+    "mazzalot_col_degree": {"zh": "度數", "en": "Degree"},
+    "mazzalot_col_house": {"zh": "宮位", "en": "House"},
+    "mazzalot_col_letter": {"zh": "希伯來字母", "en": "Hebrew Letter"},
+    "mazzalot_col_tribe": {"zh": "支派", "en": "Tribe"},
+    "mazzalot_col_month": {"zh": "希伯來月份", "en": "Hebrew Month"},
+    "mazzalot_col_cusp": {"zh": "宮首", "en": "Cusp"},
+    "mazzalot_col_aspect": {"zh": "相位", "en": "Aspect"},
+    "mazzalot_col_angle": {"zh": "角度", "en": "Angle"},
+    "mazzalot_col_orb": {"zh": "容許度", "en": "Orb"},
+    "mazzalot_subtab_star": {"zh": "大衛之星輪盤", "en": "Star of David Wheel"},
+    "mazzalot_subtab_natal": {"zh": "本命盤", "en": "Natal"},
+    "mazzalot_subtab_omens": {"zh": "靈性解讀", "en": "Spiritual Readings"},
 }
 
 
