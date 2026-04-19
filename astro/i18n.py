@@ -857,6 +857,41 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "chinstar_no_gui": {"zh": "無貴格記錄", "en": "No noble patterns recorded"},
     "chinstar_no_jian": {"zh": "無賤格記錄", "en": "No ignoble patterns recorded"},
 
+    # ── 策天十八飛星 (Ce Tian 18 Flying Stars) ─────────────────
+    "tab_cetian_ziwei": {"zh": "🌠 策天飛星", "en": "🌠 Ce Tian Flying Stars"},
+    "desc_cetian_ziwei": {
+        "zh": """
+### 什麼是策天十八飛星紫微斗數？
+
+**策天十八飛星**是紫微斗數的古法前身與重要分支，源自明代《十八飛星策天紫微斗數全集》，
+由**陳希夷**（希夷先生）傳承，後與標準紫微斗數合併。
+
+- **十八飛星**：十一正曜（紫微、天虛、天貴、天印、天壽、天空、紅鸞、天庫、天貫、文昌、天福、天祿）
+  + 七副曜（天杖、天異、旄頭、天刃、天刑、天姚、天哭）
+- **無空宮**：每宮至少有正曜＋副曜
+- **飛星技術**：星曜會由本宮飛入他宮，產生吉凶影響
+- **單宮獨斷**：以單宮解讀為主，較少使用三方四會
+- **節氣影響**：星曜落度受節氣影響
+- **古法格局**：刑刃哭姚合會等特殊格局解讀
+""",
+        "en": """
+### What is Ce Tian 18 Flying Stars Zi Wei Dou Shu?
+
+**Ce Tian 18 Flying Stars** is the ancient predecessor and important branch of Zi Wei Dou Shu,
+originating from the Ming dynasty text *"18 Flying Stars Ce Tian Zi Wei Dou Shu Complete Collection"*,
+transmitted by **Chen Xiyi**.
+
+- **18 Flying Stars**: 11 Main Stars (Zi Wei, Tian Xu, Tian Gui, etc.)
+  + 7 Auxiliary Stars (Tian Zhang, Tian Yi, Mao Tou, etc.)
+- **No Empty Palaces**: Each palace has at least one main + auxiliary star
+- **Flying Star Technique**: Stars "fly" from their palace to influence other palaces
+- **Single Palace Judgment**: Focus on individual palace reading
+- **Solar Term Influence**: Star positions affected by solar terms
+- **Classical Patterns**: Special pattern interpretations like Blade-Punishment, Crying-Peach Blossom
+""",
+    },
+    "spinner_cetian_ziwei": {"zh": "正在計算策天十八飛星命盤...", "en": "Calculating Ce Tian 18 Flying Stars chart..."},
+
     # ── Hellenistic Astrology ───────────────────────────────
     "tab_hellenistic": {"zh": "🏛️ 希臘占星", "en": "🏛️ Hellenistic"},
     "desc_hellenistic": {
@@ -1081,6 +1116,7 @@ Source: Shams al-Maʻārif al-Kubrā wa Laṭāʼif al-ʻAwārif — 1927 McGill
     "sys_hint_hellenistic": {"zh": "古希臘羅馬占星傳統", "en": "Greco-Roman astrological tradition"},
     "sys_hint_sukkayodo": {"zh": "日本宿曜道擇日占卜", "en": "Japanese lunar mansion divination"},
     "sys_hint_chinstar": {"zh": "明代演禽命理推算", "en": "Ming dynasty bird-star divination"},
+    "sys_hint_cetian_ziwei": {"zh": "古法十八飛星紫微斗數", "en": "Ancient 18 Flying Stars Zi Wei Dou Shu"},
 
     # ── GUI Optimization: Welcome / onboarding ─────────────
     "welcome_hero_title": {
