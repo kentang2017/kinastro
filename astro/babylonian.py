@@ -361,7 +361,15 @@ def _compute_aspects(planet_longs):
 # Omen determination
 # ============================================================
 def _determine_omen(planet, sign_idx):
-    """Simple omen logic based on domicile/exaltation vs. detriment/fall."""
+    """Simple omen logic based on domicile/exaltation vs. detriment/fall.
+
+    Returns
+    -------
+    tuple of (condition, text, text_en)
+        condition : str — ``"strong"`` or ``"weak"``
+        text : str — Chinese omen text
+        text_en : str — English omen text
+    """
     is_strong = (
         sign_idx in DOMICILE.get(planet, [])
         or EXALTATION.get(planet) == sign_idx
@@ -876,7 +884,10 @@ def build_k8538_planisphere_svg(chart, year=None, month=None, day=None,
     return "\n".join(svg)
 
 
-# Backward-compatible alias — app.py imports this name
+# Backward-compatible alias — app.py and other modules import this name.
+# build_k8538_planisphere_svg is the canonical function; this alias
+# ensures existing ``from astro.babylonian import build_babylonian_planisphere_svg``
+# statements continue to work without modification.
 build_babylonian_planisphere_svg = build_k8538_planisphere_svg
 
 

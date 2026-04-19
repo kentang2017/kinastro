@@ -173,6 +173,6 @@ def add_babylonian_to_comparison(result, babylonian_chart):
             up.babylonian_degree = 0.0
             up.babylonian_god = ""
 
-    bab_asc_idx = int(getattr(babylonian_chart, "ascendant", 0) / 30) % 12
+    bab_asc_idx = int(getattr(babylonian_chart, "ascendant", 0) / 30) % 12  # 30° per sign
     result.babylonian_asc = BABYLONIAN_AKKADIAN_SIGNS[bab_asc_idx]
     return result
