@@ -721,11 +721,22 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
    AI Chat Panel
    ══════════════════════════════════════════════════════════════ */
 
-/* AI chat section wrapper */
+/* AI chat section wrapper (legacy inline — kept for compatibility) */
 .ai-chat-panel {
     background: var(--ka-deep-indigo, #0F172A);
     padding: 0.5rem 0;
     border-top: 1px solid var(--ka-glass-border);
+}
+
+/* Global fixed-bottom AI chat panel */
+.ai-chat-fixed-panel {
+    position: sticky;
+    bottom: 0;
+    z-index: 999;
+    background: var(--ka-deep-indigo, #0F172A);
+    padding: 0.5rem 0;
+    border-top: 2px solid var(--ka-stardust-gold, #F5C518);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .ai-chat-header {
@@ -748,7 +759,8 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
 
 /* ── Responsive: mobile — bottom-docked compact chat ───────── */
 @media (max-width: 768px) {
-    .ai-chat-panel {
+    .ai-chat-panel,
+    .ai-chat-fixed-panel {
         padding: 0.3rem 0;
     }
 
