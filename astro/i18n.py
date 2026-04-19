@@ -58,6 +58,102 @@ TRANSLATIONS = {
         "zh": "自訂地點",
         "en": "Custom Location",
     },
+    "region_label": {
+        "zh": "地區",
+        "en": "Region",
+    },
+    "birth_year": {
+        "zh": "年",
+        "en": "Year",
+    },
+    "birth_month": {
+        "zh": "月",
+        "en": "Month",
+    },
+    "birth_day": {
+        "zh": "日",
+        "en": "Day",
+    },
+    "birth_hour": {
+        "zh": "時",
+        "en": "Hour",
+    },
+    "birth_minute": {
+        "zh": "分",
+        "en": "Minute",
+    },
+    "region_hk_macau": {
+        "zh": "港澳",
+        "en": "HK / Macau",
+    },
+    "region_taiwan": {
+        "zh": "台灣",
+        "en": "Taiwan",
+    },
+    "region_mainland_south": {
+        "zh": "華南",
+        "en": "South China",
+    },
+    "region_mainland_east": {
+        "zh": "華東",
+        "en": "East China",
+    },
+    "region_mainland_north": {
+        "zh": "華北 / 東北",
+        "en": "North / Northeast China",
+    },
+    "region_mainland_central": {
+        "zh": "華中",
+        "en": "Central China",
+    },
+    "region_mainland_west": {
+        "zh": "西部",
+        "en": "West China",
+    },
+    "region_japan_korea": {
+        "zh": "日本 / 韓國",
+        "en": "Japan / Korea",
+    },
+    "region_southeast_asia": {
+        "zh": "東南亞",
+        "en": "Southeast Asia",
+    },
+    "region_south_asia": {
+        "zh": "南亞",
+        "en": "South Asia",
+    },
+    "region_middle_east": {
+        "zh": "中東",
+        "en": "Middle East",
+    },
+    "region_africa": {
+        "zh": "非洲",
+        "en": "Africa",
+    },
+    "region_europe": {
+        "zh": "歐洲",
+        "en": "Europe",
+    },
+    "region_north_america": {
+        "zh": "北美洲",
+        "en": "North America",
+    },
+    "region_south_america": {
+        "zh": "南美洲",
+        "en": "South America",
+    },
+    "region_oceania": {
+        "zh": "大洋洲 / 太平洋",
+        "en": "Oceania / Pacific",
+    },
+    "region_russia_central_asia": {
+        "zh": "俄羅斯 / 中亞",
+        "en": "Russia / Central Asia",
+    },
+    "region_custom": {
+        "zh": "自訂",
+        "en": "Custom",
+    },
     "calculate_btn": {
         "zh": "🔮 開始排盤",
         "en": "🔮 Calculate Chart",
