@@ -17,6 +17,7 @@ from datetime import datetime, date, time
 
 from astro.i18n import TRANSLATIONS, get_lang
 from astro.chart_theme import MOBILE_CSS
+from astro.icons import SYSTEM_ICONS, SYSTEM_ACCENT_COLORS, SYSTEM_CSS_CLASS
 from astro.qizheng.calculator import compute_chart
 from astro.qizheng.chart_renderer import (
     render_chart_info,
@@ -113,14 +114,32 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── Mobile-responsive CSS ──────────────────────────────────────
-st.markdown(MOBILE_CSS, unsafe_allow_html=True)
 
-# ── Load custom CSS from styles/custom.css ─────────────────────
-_css_path = os.path.join(os.path.dirname(__file__), "styles", "custom.css")
-if os.path.exists(_css_path):
-    with open(_css_path, "r", encoding="utf-8") as _css_f:
-        st.markdown(f"<style>{_css_f.read()}</style>", unsafe_allow_html=True)
+def inject_custom_css():
+    """Inject all custom CSS (mobile + custom.css) into the page."""
+    st.markdown(MOBILE_CSS, unsafe_allow_html=True)
+    _css_path = os.path.join(os.path.dirname(__file__), "styles", "custom.css")
+    if os.path.exists(_css_path):
+        with open(_css_path, "r", encoding="utf-8") as _css_f:
+            st.markdown(f"<style>{_css_f.read()}</style>", unsafe_allow_html=True)
+
+    # Apply theme data attribute via JS
+    _theme = st.session_state.get("_ka_theme", "modern")
+    _valid_themes = {"modern", "classic", "mystic"}
+    if _theme not in _valid_themes:
+        _theme = "modern"
+    st.markdown(
+        f"""<script>
+        (function() {{
+            var app = window.parent.document.querySelector('.stApp');
+            if (app) app.setAttribute('data-ka-theme', '{_theme}');
+        }})();
+        </script>""",
+        unsafe_allow_html=True,
+    )
+
+
+inject_custom_css()
 
 
 def _inject_star_particles():
@@ -302,6 +321,25 @@ def _render_bphs_result(bphs_result):
     if note:
         st.caption(f"💡 {note}")
 
+
+# ── Theme Switcher (right-aligned above title) ──────────────────
+_THEME_OPTIONS = {
+    "modern": ("🌐", "Modern"),
+    "classic": ("📜", "Classic"),
+    "mystic": ("🔮", "Mystic"),
+}
+if "_ka_theme" not in st.session_state:
+    st.session_state["_ka_theme"] = "modern"
+
+# Theme switcher — functional buttons only
+_theme_cols = st.columns([1, 1, 1, 3])
+for _ci, (_tk, (_ti, _tl)) in enumerate(_THEME_OPTIONS.items()):
+    with _theme_cols[_ci]:
+        if st.button(f"{_ti} {_tl}", key=f"_theme_{_tk}", help=_tl,
+                     use_container_width=True,
+                     type="primary" if st.session_state["_ka_theme"] == _tk else "secondary"):
+            st.session_state["_ka_theme"] = _tk
+            st.rerun()
 
 st.title(t("app_title"))
 st.markdown(
@@ -897,7 +935,7 @@ with st.sidebar:
     # Filter systems by search query
     _search_q = _system_search.strip().lower() if _system_search else ""
 
-    # Render categorised buttons inside expanders (accordion)
+    # Render categorised icon card grids inside collapsible expanders
     for _cat_key, _cat_systems in _SYSTEM_CATEGORIES:
         # Filter systems matching search
         if _search_q:
@@ -917,6 +955,26 @@ with st.sidebar:
         _cat_label = f"{_cat_icon} {t(_cat_key)}"
 
         with st.expander(_cat_label, expanded=_cat_has_active or bool(_search_q)):
+            # Render icon card grid preview (visual-only)
+            import html as _html_mod
+            _grid_html = '<div class="sidebar-card-grid">'
+            for _sk in _filtered:
+                _is_active = (_sk == _selected_system)
+                _active_cls = " active" if _is_active else ""
+                _icon = SYSTEM_ICONS.get(_sk, "🔮")
+                _label = _html_mod.escape(_SYSTEM_LABELS.get(_sk, _sk))
+                _accent = SYSTEM_ACCENT_COLORS.get(_sk, "#A78BFA")
+                _grid_html += (
+                    f'<div class="sys-card{_active_cls}" '
+                    f'style="--ka-culture-accent: {_accent};">'
+                    f'<span class="sys-icon">{_icon}</span>'
+                    f'<span class="sys-label">{_label}</span>'
+                    f'</div>'
+                )
+            _grid_html += '</div>'
+            st.markdown(_grid_html, unsafe_allow_html=True)
+
+            # Functional buttons (kept for actual selection)
             for _sk in _filtered:
                 _is_active = (_sk == _selected_system)
                 _btn_type = "primary" if _is_active else "secondary"
@@ -925,7 +983,7 @@ with st.sidebar:
                     _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
                     _badge = f' <span class="beginner-badge">{_badge_text}</span>'
                 if st.button(
-                    _SYSTEM_LABELS[_sk],
+                    f"{SYSTEM_ICONS.get(_sk, '🔮')} {_SYSTEM_LABELS[_sk]}",
                     key=f"_sys_btn_{_sk}",
                     use_container_width=True,
                     type=_btn_type,

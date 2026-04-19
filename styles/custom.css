@@ -1,24 +1,59 @@
 /* ═══════════════════════════════════════════════════════════════
-   styles/custom.css — KinAstro 全域美學樣式
+   styles/custom.css — KinAstro 全域美學樣式 v2
    Global Aesthetic Stylesheet for KinAstro
+   Glassmorphism · Cultural Themes · Animations · Theme Switcher
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Star Particle Background (Canvas-like CSS animation) ──── */
+/* ── :root Design Tokens ───────────────────────────────────── */
+:root {
+    /* Primary palette */
+    --ka-deep-indigo: #0F172A;
+    --ka-stardust-gold: #EAB308;
+    --ka-soft-purple: #7C3AED;
+    --ka-deep-space: #020617;
+    --ka-cosmic-violet: #A78BFA;
+    --ka-nebula-blue: #1E1B4B;
+    --ka-aurora-teal: #2DD4BF;
+    --ka-stellar-silver: #E0E0FF;
+    --ka-dim-starlight: #B0B0D0;
+    --ka-midnight-purple: #581C87;
+
+    /* Glassmorphism tokens */
+    --ka-glass-bg: rgba(30, 27, 75, 0.45);
+    --ka-glass-border: rgba(167, 139, 250, 0.18);
+    --ka-glass-blur: 14px;
+    --ka-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    --ka-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+    /* Border radius */
+    --ka-radius-sm: 10px;
+    --ka-radius-md: 16px;
+    --ka-radius-lg: 24px;
+    --ka-radius-xl: 32px;
+
+    /* Transitions */
+    --ka-transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Culture accent (overridden per-culture section) */
+    --ka-culture-accent: var(--ka-cosmic-violet);
+    --ka-culture-glow: rgba(167, 139, 250, 0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   1. Star Particle Background
+   ══════════════════════════════════════════════════════════════ */
 .star-particles {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
 }
 .star-particles .particle {
     position: absolute;
-    width: 2px;
-    height: 2px;
-    background: #EAB308;
+    width: 2px; height: 2px;
+    background: var(--ka-stardust-gold);
     border-radius: 50%;
     animation: twinkle var(--duration, 3s) ease-in-out infinite var(--delay, 0s);
     opacity: 0;
@@ -28,13 +63,13 @@
     50% { opacity: var(--max-opacity, 0.7); transform: scale(1); }
 }
 
-/* ── Cosmic transition overlay ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   2. Cosmic Transition Overlay
+   ══════════════════════════════════════════════════════════════ */
 .cosmic-transition {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
     background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
     pointer-events: none;
     z-index: 9999;
@@ -46,21 +81,68 @@
     100% { opacity: 0; }
 }
 
-/* ── Chart hover glow & rotation animation ─────────────────── */
-.chart-container {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 16px;
-    padding: 8px;
+/* ══════════════════════════════════════════════════════════════
+   3. Glassmorphism Cards (universal)
+   ══════════════════════════════════════════════════════════════ */
+.glass-card {
+    background: var(--ka-glass-bg);
+    border: 1px solid var(--ka-glass-border);
+    border-radius: var(--ka-radius-md);
+    backdrop-filter: blur(var(--ka-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ka-glass-blur));
+    box-shadow: var(--ka-glass-shadow), var(--ka-glass-inset);
+    padding: 20px;
+    transition: var(--ka-transition);
 }
-.chart-container:hover {
-    box-shadow: 0 0 30px rgba(234, 179, 8, 0.2), 0 0 60px rgba(124, 58, 237, 0.15);
+.glass-card:hover {
+    border-color: rgba(167, 139, 250, 0.35);
+    box-shadow: var(--ka-glass-shadow), var(--ka-glass-inset),
+                0 0 24px var(--ka-culture-glow);
+    transform: translateY(-2px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. Chart Container v2 — Hover Glow, Slow Spin
+   ══════════════════════════════════════════════════════════════ */
+.chart-container,
+.chart-v2-container {
+    transition: var(--ka-transition);
+    border-radius: var(--ka-radius-md);
+    padding: 8px;
+    position: relative;
+}
+.chart-container:hover,
+.chart-v2-container:hover {
+    box-shadow: 0 0 30px rgba(234, 179, 8, 0.2),
+                0 0 60px var(--ka-culture-glow);
     transform: rotate(0.5deg) scale(1.005);
 }
-.chart-container svg {
+.chart-container svg,
+.chart-v2-container svg {
     transition: filter 0.4s ease;
 }
-.chart-container:hover svg {
+.chart-container:hover svg,
+.chart-v2-container:hover svg {
     filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.3));
+}
+
+/* Title inside chart v2 wrapper */
+.chart-v2-title {
+    text-align: center;
+    font-family: 'Cinzel', 'Noto Sans TC', serif;
+    font-size: 1.1rem;
+    color: var(--ka-stellar-silver);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 12px var(--ka-culture-glow);
+}
+
+/* Slow spin animation for charts */
+.chart-slow-spin svg {
+    animation: chartSlowSpin 90s linear infinite;
+}
+@keyframes chartSlowSpin {
+    to { transform: rotate(360deg); }
 }
 
 /* ── Cosmic border for chart outer ring ────────────────────── */
@@ -89,12 +171,242 @@
     to { transform: rotate(360deg); }
 }
 
-/* ── Sidebar search box styling ────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   5. Culture-Info Popup Card
+   ══════════════════════════════════════════════════════════════ */
+.culture-info-card {
+    background: var(--ka-glass-bg);
+    border: 1px solid var(--ka-glass-border);
+    border-radius: var(--ka-radius-md);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 16px 20px;
+    margin: 12px 0;
+    box-shadow: var(--ka-glass-shadow), var(--ka-glass-inset);
+    border-left: 3px solid var(--ka-culture-accent);
+}
+.culture-info-card h4 {
+    color: var(--ka-stellar-silver);
+    font-family: 'Cinzel', serif;
+    margin: 0 0 6px 0;
+    font-size: 0.95rem;
+}
+.culture-info-card p {
+    color: var(--ka-dim-starlight);
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. CULTURAL THEME CLASSES
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 6a. Chinese 中國 — 紫金 + 水墨暈染 + 金箔星點 ─────── */
+.chinese-chart {
+    --ka-culture-accent: #C9A84C;
+    --ka-culture-glow: rgba(201, 168, 76, 0.3);
+    background:
+        radial-gradient(circle at 30% 40%, rgba(90, 50, 20, 0.12) 0%, transparent 50%),
+        var(--ka-glass-bg);
+    border-color: rgba(201, 168, 76, 0.25);
+    position: relative;
+}
+.chinese-chart::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(1px 1px at 20% 30%, rgba(201, 168, 76, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 70%, rgba(201, 168, 76, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 20%, rgba(201, 168, 76, 0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 80%, rgba(201, 168, 76, 0.35) 0%, transparent 100%);
+    pointer-events: none;
+    animation: goldFoilShimmer 6s ease-in-out infinite;
+}
+@keyframes goldFoilShimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+.chinese-chart:hover {
+    box-shadow: 0 0 20px rgba(201, 168, 76, 0.25),
+                0 0 50px rgba(90, 50, 20, 0.15);
+}
+
+/* ── 6b. Aztec 阿茲特克 — 鮮豔陶土 + 彩色圖騰 ─────────── */
+.aztec-chart {
+    --ka-culture-accent: #C44D2A;
+    --ka-culture-glow: rgba(196, 77, 42, 0.3);
+    background:
+        repeating-conic-gradient(
+            rgba(196, 77, 42, 0.06) 0deg 15deg,
+            transparent 15deg 30deg
+        ),
+        var(--ka-glass-bg);
+    border-color: rgba(196, 77, 42, 0.3);
+}
+.aztec-chart:hover {
+    box-shadow: 0 0 20px rgba(196, 77, 42, 0.3),
+                0 0 40px rgba(210, 160, 50, 0.15);
+    border-color: rgba(210, 160, 50, 0.4);
+}
+
+/* ── 6c. Babylonian 古巴比倫 — 陶土紋理 + 楔形裂紋 ────── */
+.babylonian-chart {
+    --ka-culture-accent: #B8956A;
+    --ka-culture-glow: rgba(184, 149, 106, 0.3);
+    background:
+        url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 30 L20 25 L30 30 M35 10 L40 20 L45 10' stroke='rgba(184,149,106,0.08)' fill='none' stroke-width='1'/%3E%3C/svg%3E"),
+        linear-gradient(135deg, rgba(80, 60, 30, 0.15) 0%, rgba(50, 40, 25, 0.1) 100%),
+        var(--ka-glass-bg);
+    border-color: rgba(184, 149, 106, 0.3);
+    position: relative;
+}
+.babylonian-chart::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        linear-gradient(45deg, transparent 48%, rgba(184, 149, 106, 0.1) 49%, rgba(184, 149, 106, 0.1) 51%, transparent 52%),
+        linear-gradient(-30deg, transparent 46%, rgba(120, 90, 50, 0.06) 47%, rgba(120, 90, 50, 0.06) 53%, transparent 54%);
+    pointer-events: none;
+}
+.babylonian-chart:hover {
+    box-shadow: 0 0 20px rgba(184, 149, 106, 0.25),
+                0 0 50px rgba(120, 90, 50, 0.15);
+}
+
+/* ── 6d. Celtic 凱爾特樹 — 木質紋理 + Ogham ─────────── */
+.celtic-chart {
+    --ka-culture-accent: #5A8C3C;
+    --ka-culture-glow: rgba(90, 140, 60, 0.3);
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(90, 140, 60, 0.03) 0px,
+            transparent 2px,
+            transparent 8px
+        ),
+        linear-gradient(135deg, rgba(60, 45, 25, 0.15) 0%, rgba(40, 30, 18, 0.1) 100%),
+        var(--ka-glass-bg);
+    border-color: rgba(90, 140, 60, 0.25);
+}
+.celtic-chart:hover {
+    box-shadow: 0 0 20px rgba(90, 140, 60, 0.25),
+                0 0 40px rgba(60, 45, 25, 0.15);
+}
+
+/* ── 6e. Western / Hellenistic — 現代藍銀 + 星座光環 ─── */
+.western-chart {
+    --ka-culture-accent: #7B9ED9;
+    --ka-culture-glow: rgba(123, 158, 217, 0.3);
+    background:
+        radial-gradient(circle at 50% 50%, rgba(123, 158, 217, 0.06) 0%, transparent 70%),
+        var(--ka-glass-bg);
+    border-color: rgba(123, 158, 217, 0.2);
+}
+.western-chart:hover {
+    box-shadow: 0 0 25px rgba(123, 158, 217, 0.25),
+                0 0 50px rgba(167, 139, 250, 0.12);
+}
+
+/* ── 6f. Vedic / Indian — 暖橙 + 蓮花光暈 ──────────── */
+.vedic-chart {
+    --ka-culture-accent: #FF9933;
+    --ka-culture-glow: rgba(255, 153, 51, 0.25);
+    background:
+        radial-gradient(circle at 50% 50%, rgba(255, 153, 51, 0.05) 0%, transparent 60%),
+        var(--ka-glass-bg);
+    border-color: rgba(255, 153, 51, 0.2);
+}
+.vedic-chart:hover {
+    box-shadow: 0 0 20px rgba(255, 153, 51, 0.2),
+                0 0 45px rgba(232, 168, 56, 0.12);
+}
+
+/* ── 6g. Thai — 蓮花粉金 ────────────────────────────── */
+.thai-chart {
+    --ka-culture-accent: #E0A526;
+    --ka-culture-glow: rgba(224, 165, 38, 0.25);
+    background:
+        radial-gradient(circle at 50% 40%, rgba(224, 165, 38, 0.05) 0%, transparent 50%),
+        var(--ka-glass-bg);
+    border-color: rgba(224, 165, 38, 0.2);
+}
+
+/* ── 6h. Tibetan — 深紅 + 曼荼羅光環 ────────────────── */
+.tibetan-chart {
+    --ka-culture-accent: #B24747;
+    --ka-culture-glow: rgba(178, 71, 71, 0.25);
+    background:
+        radial-gradient(circle at 50% 50%, rgba(178, 71, 71, 0.06) 0%, transparent 60%),
+        var(--ka-glass-bg);
+    border-color: rgba(178, 71, 71, 0.2);
+}
+.tibetan-chart:hover {
+    box-shadow: 0 0 20px rgba(178, 71, 71, 0.25),
+                0 0 50px rgba(150, 50, 50, 0.12);
+}
+
+/* ── 6i. Arabic / Yemeni — 翡翠綠金 ─────────────────── */
+.arabic-chart {
+    --ka-culture-accent: #3AB09E;
+    --ka-culture-glow: rgba(58, 176, 158, 0.25);
+    background:
+        repeating-linear-gradient(
+            60deg,
+            rgba(58, 176, 158, 0.02) 0px,
+            transparent 1px,
+            transparent 12px
+        ),
+        var(--ka-glass-bg);
+    border-color: rgba(58, 176, 158, 0.2);
+}
+.arabic-chart:hover {
+    box-shadow: 0 0 20px rgba(58, 176, 158, 0.25),
+                0 0 40px rgba(201, 168, 76, 0.1);
+}
+
+/* ── 6j. Maya — 翡翠綠 + 叢林 ───────────────────────── */
+.maya-chart {
+    --ka-culture-accent: #4AA068;
+    --ka-culture-glow: rgba(74, 160, 104, 0.25);
+    background:
+        radial-gradient(circle at 40% 60%, rgba(74, 160, 104, 0.06) 0%, transparent 50%),
+        var(--ka-glass-bg);
+    border-color: rgba(74, 160, 104, 0.2);
+}
+.maya-chart:hover {
+    box-shadow: 0 0 20px rgba(74, 160, 104, 0.25),
+                0 0 40px rgba(50, 120, 70, 0.12);
+}
+
+/* ── 6k. Egyptian — 沙漠金 + 太陽光暈 ────────────────── */
+.egyptian-chart {
+    --ka-culture-accent: #D4A04A;
+    --ka-culture-glow: rgba(212, 160, 74, 0.25);
+    background:
+        radial-gradient(circle at 50% 30%, rgba(212, 160, 74, 0.06) 0%, transparent 50%),
+        var(--ka-glass-bg);
+    border-color: rgba(212, 160, 74, 0.2);
+}
+.egyptian-chart:hover {
+    box-shadow: 0 0 20px rgba(212, 160, 74, 0.25),
+                0 0 50px rgba(180, 130, 50, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. Sidebar Enhancements
+   ══════════════════════════════════════════════════════════════ */
+
+/* Sidebar search box */
 .sidebar-search input {
     background: rgba(15, 23, 42, 0.8) !important;
     border: 1px solid rgba(124, 58, 237, 0.3) !important;
-    border-radius: 12px !important;
-    color: #E0E0FF !important;
+    border-radius: var(--ka-radius-sm) !important;
+    color: var(--ka-stellar-silver) !important;
     padding: 8px 12px !important;
     font-size: 0.85rem !important;
 }
@@ -106,10 +418,10 @@
     box-shadow: 0 0 12px rgba(234, 179, 8, 0.15) !important;
 }
 
-/* ── Category accordion styling ────────────────────────────── */
+/* Category accordion headers */
 .system-category-header {
     font-size: 0.72rem;
-    color: #EAB308;
+    color: var(--ka-stardust-gold);
     text-transform: uppercase;
     letter-spacing: 2px;
     margin: 16px 0 6px 2px;
@@ -121,51 +433,74 @@
     gap: 6px;
 }
 
-/* ── Share card button ─────────────────────────────────────── */
-.share-card-btn {
-    display: inline-flex;
-    align-items: center;
+/* Sidebar card grid for system selection */
+.sidebar-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(124, 58, 237, 0.15));
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    border-radius: 12px;
-    color: #EAB308;
-    padding: 8px 16px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-.share-card-btn:hover {
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(124, 58, 237, 0.25));
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
-    transform: translateY(-1px);
-}
-
-/* ── Particles toggle switch ───────────────────────────────── */
-.particles-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    color: #B0B0D0;
     padding: 4px 0;
 }
+.sidebar-card-grid .sys-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 4px;
+    border-radius: var(--ka-radius-sm);
+    background: var(--ka-glass-bg);
+    border: 1px solid var(--ka-glass-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: var(--ka-transition);
+    text-align: center;
+    min-height: 58px;
+}
+.sidebar-card-grid .sys-card:hover {
+    background: rgba(167, 139, 250, 0.15);
+    border-color: rgba(167, 139, 250, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(167, 139, 250, 0.2);
+}
+.sidebar-card-grid .sys-card.active {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(234, 179, 8, 0.15));
+    border-color: var(--ka-stardust-gold);
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
+}
+.sidebar-card-grid .sys-card .sys-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+.sidebar-card-grid .sys-card .sys-label {
+    font-size: 0.68rem;
+    color: var(--ka-dim-starlight);
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sidebar-card-grid .sys-card.active .sys-label {
+    color: var(--ka-stellar-silver);
+    font-weight: 600;
+}
 
-/* ── Enhanced glassmorphism for expanders in sidebar ────────── */
+/* Enhanced sidebar expanders */
 section[data-testid="stSidebar"] [data-testid="stExpander"] {
     background: rgba(15, 23, 42, 0.6) !important;
     border: 1px solid rgba(124, 58, 237, 0.12) !important;
-    border-radius: 12px !important;
+    border-radius: var(--ka-radius-sm) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     margin-bottom: 4px !important;
 }
 section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
     font-size: 0.85rem;
-    color: #E0E0FF;
+    color: var(--ka-stellar-silver);
 }
 
-/* ── Stardust gold accent on active elements ───────────────── */
+/* Active sidebar buttons */
 section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"] {
     background: linear-gradient(135deg, #7C3AED 0%, #EAB308 100%) !important;
     border: none !important;
@@ -176,16 +511,147 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     box-shadow: 0 4px 24px rgba(234, 179, 8, 0.4) !important;
 }
 
-/* ── Enhanced metric cards with gold accent ────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   8. Theme Switcher
+   ══════════════════════════════════════════════════════════════ */
+.theme-switcher {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 4px 0;
+    flex-wrap: wrap;
+}
+.theme-switcher .theme-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: 1px solid var(--ka-glass-border);
+    background: var(--ka-glass-bg);
+    color: var(--ka-dim-starlight);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: var(--ka-transition);
+}
+.theme-switcher .theme-btn:hover {
+    border-color: var(--ka-cosmic-violet);
+    color: var(--ka-stellar-silver);
+    background: rgba(167, 139, 250, 0.15);
+}
+.theme-switcher .theme-btn.active {
+    border-color: var(--ka-stardust-gold);
+    color: var(--ka-stardust-gold);
+    background: rgba(234, 179, 8, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   9. Loading / Spinner Cultural Animation
+   ══════════════════════════════════════════════════════════════ */
+.cosmic-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px;
+}
+.cosmic-loading .spinner-orbit {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(167, 139, 250, 0.15);
+    border-top-color: var(--ka-stardust-gold);
+    border-right-color: var(--ka-cosmic-violet);
+    border-radius: 50%;
+    animation: orbitSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    position: relative;
+}
+.cosmic-loading .spinner-orbit::after {
+    content: var(--ka-spinner-symbol, '☿');
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1rem;
+    animation: orbitSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
+}
+.cosmic-loading .spinner-text {
+    color: var(--ka-dim-starlight);
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+@keyframes orbitSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   10. Share Card Button
+   ══════════════════════════════════════════════════════════════ */
+.share-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(124, 58, 237, 0.15));
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: var(--ka-radius-sm);
+    color: var(--ka-stardust-gold);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--ka-transition);
+}
+.share-card-btn:hover {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(124, 58, 237, 0.25));
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+    transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   11. Particles Toggle
+   ══════════════════════════════════════════════════════════════ */
+.particles-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--ka-dim-starlight);
+    padding: 4px 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   12. Enhanced Metric Cards
+   ══════════════════════════════════════════════════════════════ */
 [data-testid="stMetricValue"] {
-    background: linear-gradient(135deg, #EAB308, #FBBF24);
+    background: linear-gradient(135deg, var(--ka-stardust-gold), #FBBF24);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-family: 'Cinzel', serif !important;
 }
 
-/* ── Responsive: auto-collapse sidebar on mobile ───────────── */
+/* ══════════════════════════════════════════════════════════════
+   13. Aspect Line Glow Animations (SVG)
+   ══════════════════════════════════════════════════════════════ */
+.aspect-line-glow {
+    animation: aspectPulse 4s ease-in-out infinite;
+}
+@keyframes aspectPulse {
+    0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 2px currentColor); }
+    50% { opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
+}
+
+/* Planet symbol gentle self-rotation */
+.planet-symbol-rotate {
+    transform-origin: center;
+    animation: planetSelfRotate 30s linear infinite;
+}
+@keyframes planetSelfRotate {
+    to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   14. Responsive — Mobile
+   ══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
     section[data-testid="stSidebar"] {
         transform: translateX(-100%);
@@ -197,8 +663,56 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
         visibility: visible;
     }
 
-    /* Stack chart and info vertically */
-    .chart-container {
+    .chart-container,
+    .chart-v2-container {
         padding: 4px;
     }
+
+    .sidebar-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px;
+    }
+    .sidebar-card-grid .sys-card {
+        padding: 8px 2px;
+        min-height: 50px;
+    }
+    .sidebar-card-grid .sys-card .sys-icon { font-size: 1.1rem; }
+    .sidebar-card-grid .sys-card .sys-label { font-size: 0.62rem; }
+
+    .theme-switcher {
+        justify-content: center;
+    }
+    .theme-switcher .theme-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    .glass-card {
+        padding: 14px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   15. Theme Variants (applied via data attribute on .stApp)
+   ══════════════════════════════════════════════════════════════ */
+
+/* Classic theme */
+[data-ka-theme="classic"] {
+    --ka-glass-bg: rgba(25, 20, 45, 0.55);
+    --ka-glass-border: rgba(180, 160, 120, 0.2);
+    --ka-culture-accent: #C9A84C;
+}
+
+/* Modern theme */
+[data-ka-theme="modern"] {
+    --ka-glass-bg: rgba(20, 25, 50, 0.5);
+    --ka-glass-border: rgba(100, 140, 220, 0.2);
+    --ka-culture-accent: #7B9ED9;
+}
+
+/* Mystic theme */
+[data-ka-theme="mystic"] {
+    --ka-glass-bg: rgba(30, 15, 50, 0.55);
+    --ka-glass-border: rgba(180, 100, 255, 0.2);
+    --ka-culture-accent: #9B6ED9;
 }
