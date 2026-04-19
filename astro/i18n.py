@@ -1245,12 +1245,12 @@ transmitted by **Chen Xiyi**.
     "contact_other_apps": {"zh": "其他相關應用", "en": "Other Related Apps"},
 
     # ── GUI Optimization: System categories ─────────────────
-    "cat_popular": {"zh": "⭐ 最熱門", "en": "⭐ Most Popular"},
-    "cat_chinese": {"zh": "🏮 中華傳統", "en": "🏮 Chinese Traditions"},
-    "cat_western": {"zh": "🌍 西方體系", "en": "🌍 Western Systems"},
-    "cat_asian": {"zh": "🌏 亞洲體系", "en": "🌏 Asian Systems"},
-    "cat_middle_east": {"zh": "☪ 中東體系", "en": "☪ Middle Eastern Systems"},
-    "cat_ancient": {"zh": "📜 古文明", "en": "📜 Ancient Civilizations"},
+    "cat_popular": {"zh": "最熱門", "en": "Most Popular"},
+    "cat_chinese": {"zh": "中華傳統", "en": "Chinese Traditions"},
+    "cat_western": {"zh": "西方體系", "en": "Western Systems"},
+    "cat_asian": {"zh": "亞洲體系", "en": "Asian Systems"},
+    "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
+    "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
 
     # ── GUI Optimization: Short beginner-friendly system descriptions ──
     "sys_hint_western": {"zh": "最廣為人知的星座運勢", "en": "The most well-known horoscope system"},
