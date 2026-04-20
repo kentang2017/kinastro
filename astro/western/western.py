@@ -390,7 +390,7 @@ def _compute_fixed_star_conjunctions(planets, jd):
 
     # Pre-compute all fixed star positions once
     star_positions = []
-    for star_key, star_name, star_cn, mag, meaning in FIXED_STARS:
+    for star_key, star_name, star_cn, _, meaning in FIXED_STARS:
         try:
             star_res, _ = swe.fixstar2(star_name, jd, swe.FLG_SWIEPH)
             star_lon = _normalize(star_res[0])
