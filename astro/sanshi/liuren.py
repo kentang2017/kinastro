@@ -213,3 +213,155 @@ def render_liuren_chart(chart: dict, after_chart_hook=None):
 
     if after_chart_hook:
         after_chart_hook()
+
+
+# ============================================================
+# 論命分析便利介面
+# ============================================================
+
+def compute_lunming(
+    chart: dict,
+    benming_zhi: str,
+    liunian_zhi: str | None = None,
+) -> dict:
+    """對已排好的大六壬盤進行論命分析。
+
+    Parameters
+    ----------
+    chart : dict
+        ``compute_liuren_chart()`` 的回傳值。
+    benming_zhi : str
+        本命地支（如 ``'子'``）。
+    liunian_zhi : str, optional
+        流年地支，用於流年禍福分析。
+
+    Returns
+    -------
+    dict
+        完整結構化論命報告。
+    """
+    from astro.sanshi.lunming import LunMingAnalyzer
+
+    analyzer = LunMingAnalyzer(chart, benming_zhi)
+    report = analyzer.analyze_all()
+    # 若有指定流年，重新分析流年部分
+    if liunian_zhi:
+        report["流年壽夭"] = analyzer.analyze_flow_year_month(liunian_zhi)
+    return report
+
+
+def render_lunming_report(report: dict) -> None:
+    """在 Streamlit 中渲染論命分析報告。"""
+    st.markdown(f"### 📜 {auto_cn('大六壬論命分析')}")
+
+    # ── 身命總則 ──
+    shenming = report.get("身命總則", {})
+    if shenming:
+        st.markdown(f"#### {auto_cn('身命總則')}")
+        for section_name, section_data in shenming.items():
+            if isinstance(section_data, dict):
+                with st.expander(auto_cn(section_name), expanded=True):
+                    for k, v in section_data.items():
+                        if k == "論斷" and isinstance(v, list):
+                            for comment in v:
+                                st.markdown(f"- {comment}")
+                        else:
+                            st.markdown(f"**{auto_cn(k)}**：{v}")
+            elif isinstance(section_data, list):
+                with st.expander(auto_cn(section_name), expanded=False):
+                    for item in section_data:
+                        if isinstance(item, dict):
+                            st.markdown(f"**{item.get('傳名', '')}**")
+                            for k2, v2 in item.items():
+                                if k2 == "傳名":
+                                    continue
+                                if k2 == "論斷" and isinstance(v2, list):
+                                    for c in v2:
+                                        st.markdown(f"  - {c}")
+                                else:
+                                    st.markdown(f"  - **{auto_cn(k2)}**：{v2}")
+                        else:
+                            st.markdown(f"- {item}")
+            elif isinstance(section_data, str):
+                st.info(section_data)
+
+    st.divider()
+
+    # ── 五節總決 ──
+    five = report.get("五節總決", {})
+    if five:
+        st.markdown(f"#### {auto_cn('五節總決')}")
+        for sec_name, sec_items in five.items():
+            with st.expander(auto_cn(sec_name), expanded=False):
+                if isinstance(sec_items, list):
+                    for item in sec_items:
+                        st.markdown(f"- {item}")
+                else:
+                    st.markdown(str(sec_items))
+
+    st.divider()
+
+    # ── 十二宮論 ──
+    palaces = report.get("十二宮論", {})
+    if palaces:
+        st.markdown(f"#### {auto_cn('十二宮論')}")
+        cols = st.columns(3)
+        for i, (pname, pdata) in enumerate(palaces.items()):
+            with cols[i % 3]:
+                with st.expander(auto_cn(pname), expanded=False):
+                    if isinstance(pdata, dict):
+                        for k, v in pdata.items():
+                            if k == "論斷" and isinstance(v, list):
+                                for c in v:
+                                    st.markdown(f"- {c}")
+                            else:
+                                st.markdown(f"**{auto_cn(k)}**：{v}")
+
+    st.divider()
+
+    # ── 二十四格 & 十六局 ──
+    ge24 = report.get("二十四格", [])
+    ju16 = report.get("十六局", [])
+    if ge24 or ju16:
+        st.markdown(f"#### {auto_cn('格局判斷')}")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown(f"**{auto_cn('二十四格')}**")
+            if ge24:
+                for g in ge24:
+                    st.markdown(f"- {g}")
+            else:
+                st.caption(auto_cn("未入任何格"))
+        with col_b:
+            st.markdown(f"**{auto_cn('十六局')}**")
+            if ju16:
+                for j in ju16:
+                    st.markdown(f"- {j}")
+            else:
+                st.caption(auto_cn("未入任何局"))
+
+    st.divider()
+
+    # ── 女命專論 ──
+    female = report.get("女命專論", {})
+    if female:
+        with st.expander(auto_cn("女命專論"), expanded=False):
+            for k, v in female.items():
+                if isinstance(v, list):
+                    for c in v:
+                        st.markdown(f"- {c}")
+                else:
+                    st.markdown(f"**{auto_cn(k)}**：{v}")
+
+    # ── 流年壽夭 ──
+    flow = report.get("流年壽夭", {})
+    if flow:
+        st.markdown(f"#### {auto_cn('流年壽夭')}")
+        for sec_name, sec_items in flow.items():
+            with st.expander(auto_cn(sec_name), expanded=False):
+                if isinstance(sec_items, list):
+                    for item in sec_items:
+                        st.markdown(f"- {item}")
+                else:
+                    st.markdown(str(sec_items))
+
