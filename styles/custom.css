@@ -549,7 +549,7 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
 }
 
 /* ══════════════════════════════════════════════════════════════
-   8b. Language Switcher (top-right, inline with title)
+   8b. Language Switcher (dropdown, above title)
    ══════════════════════════════════════════════════════════════ */
 .lang-switcher-spacer {
     height: 0.5rem;
