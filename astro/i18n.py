@@ -231,6 +231,10 @@ TRANSLATIONS = {
         "zh": "🇲🇲 緬甸占星",
         "en": "🇲🇲 Myanmar (Mahabote)",
     },
+    "tab_wariga": {
+        "zh": "🏝️ 巴厘 Wariga",
+        "en": "🏝️ Balinese Wariga",
+    },
     "tab_decans": {
         "zh": "🏛️ 古埃及十度區間",
         "en": "🏛️ Egyptian Decans",
@@ -355,6 +359,10 @@ TRANSLATIONS = {
     "spinner_mahabote": {
         "zh": "正在計算緬甸 Mahabote 排盤...",
         "en": "Calculating Myanmar Mahabote chart...",
+    },
+    "spinner_wariga": {
+        "zh": "正在計算巴厘 Wariga 日曆...",
+        "en": "Calculating Balinese Wariga calendar...",
     },
     "spinner_decans": {
         "zh": "正在計算古埃及十度區間排盤...",
@@ -822,6 +830,32 @@ Reference: https://www.azteccalendar.com/
 - **Traditional Omens**: Each direction includes fortune, career, marriage, and health readings
 """,
     },
+    "desc_wariga": {
+        "zh": """
+### 什麼是巴厘傳統 Wariga 占星？
+
+**Wariga**（亦稱 Ala Ayuning Dewasa）是巴厘島印度教傳統曆法占卜體系，古法依據 *Lontar Wariga / Dasar Wariga*：
+
+- **Wuku 週期**：共 30 個 Wuku，每個 7 天，形成 210 天的 Pawukon 大週期
+- **Wewaran（十類星期）**：Eka～Dasa Wara，以各 Neptu/Urip 數值推算吉凶
+- **Dewasa 吉凶**：Panca Wara + Sapta Wara Neptu 總和，對應 Pancasuda 五星判斷
+- **Ingkel、Watek、Lintang**：動物分類、吉凶屬性、星宿守護
+- **Sasih 月份**：對應巴厘傳統農曆月份與乾雨季劃分
+- **Waluku (Orion) 參考**：用於季節驗證與農作時機判斷
+""",
+        "en": """
+### What is Balinese Wariga Astrology?
+
+**Wariga** (also known as Ala Ayuning Dewasa) is the traditional Balinese Hindu calendar divination system, based on *Lontar Wariga / Dasar Wariga*:
+
+- **Wuku Cycle**: 30 Wuku, each 7 days, forming a 210-day Pawukon grand cycle
+- **Wewaran (Ten Weekday Types)**: Eka~Dasa Wara, using Neptu/Urip values to assess auspiciousness
+- **Dewasa (Auspiciousness)**: Panca Wara + Sapta Wara Neptu sum mapped to Pancasuda five-star judgment
+- **Ingkel, Watek, Lintang**: Animal classification, auspice attributes, and stellar guardians
+- **Sasih (Months)**: Corresponds to Balinese traditional lunar months and dry/wet season divisions
+- **Waluku (Orion) Reference**: Used for seasonal verification and farming timing
+""",
+    },
     "desc_nadi": {
         "zh": """
 ### 什麼是納迪占星 (Nadi Jyotish)？
@@ -1279,6 +1313,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_maya": {"zh": "瑪雅文明曆法占卜", "en": "Mayan calendar-based divination"},
     "sys_hint_aztec": {"zh": "阿茲特克文明神聖曆占卜", "en": "Aztec Tonalpohualli sacred calendar divination"},
     "sys_hint_mahabote": {"zh": "緬甸出生星期推算", "en": "Myanmar weekday-based astrology"},
+    "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
     "sys_hint_decans": {"zh": "古埃及十度區間預測", "en": "Ancient Egyptian decan predictions"},
     "sys_hint_nadi": {"zh": "南印度棕櫚葉手稿", "en": "South Indian palm-leaf readings"},
     "sys_hint_zurkhai": {"zh": "蒙古藏傳佛教占星", "en": "Mongolian Tibetan Buddhist astrology"},

@@ -67,6 +67,8 @@ from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
 from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
+from astro.wariga.calculator import WarigaCalculator
+from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
@@ -844,7 +846,7 @@ with st.sidebar:
         ("cat_sanshi", ["tab_liuren", "tab_qimen", "tab_taiyi"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg"]),
-        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
+        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -873,6 +875,7 @@ with st.sidebar:
         "tab_maya": t("tab_maya"),
         "tab_aztec": t("tab_aztec"),
         "tab_mahabote": t("tab_mahabote"),
+        "tab_wariga": t("tab_wariga"),
         "tab_decans": t("tab_decans"),
         "tab_nadi": t("tab_nadi"),
         "tab_jaimini": t("tab_jaimini"),
@@ -904,6 +907,7 @@ with st.sidebar:
         "tab_maya": t("sys_hint_maya"),
         "tab_aztec": t("sys_hint_aztec"),
         "tab_mahabote": t("sys_hint_mahabote"),
+        "tab_wariga": t("sys_hint_wariga"),
         "tab_decans": t("sys_hint_decans"),
         "tab_nadi": t("sys_hint_nadi"),
         "tab_jaimini": t("sys_hint_jaimini"),
@@ -3198,6 +3202,26 @@ elif _selected_system == "tab_acg":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_acg"))
+
+# --- 巴厘 Wariga 傳統占星 (Balinese Wariga) ---
+elif _selected_system == "tab_wariga":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_wariga")):
+                _wariga_result = WarigaCalculator(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    lat=_p["latitude"], lon=_p["longitude"],
+                ).compute_result()
+            render_wariga_chart(_wariga_result)
+            _render_ai_button("tab_wariga", _wariga_result, btn_key="wariga")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_wariga"))
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom
