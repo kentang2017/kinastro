@@ -109,7 +109,7 @@ from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
 from astro.chinstar.chinstar import WanHuaXianQin
 from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
-from astro.sanshi.liuren import compute_liuren_chart, render_liuren_chart
+from astro.sanshi.liuren import compute_liuren_chart, render_liuren_chart, compute_lunming, render_lunming_report
 from astro.sanshi.taiyi import compute_taiyi_chart, render_taiyi_chart
 from astro.sanshi.qimen_luming import compute_qimen_luming, render_qimen_luming
 from astro.astrocartography import (
@@ -2820,6 +2820,13 @@ elif _selected_system == "tab_liuren":
                 ),
                 benming_zhi=_lr_benming,
             )
+            # ── 論命分析 ──
+            st.divider()
+            # 流年地支：以排盤年份的年支計算
+            _lunming_report = compute_lunming(
+                _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
+            )
+            render_lunming_report(_lunming_report)
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
