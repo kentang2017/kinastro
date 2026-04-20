@@ -14,7 +14,7 @@ import random
 import streamlit as st
 from datetime import datetime, date, time
 
-from astro.i18n import TRANSLATIONS, get_lang
+from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
 from astro.qizheng.calculator import compute_chart
 from astro.qizheng.chart_renderer import (
@@ -198,7 +198,8 @@ def t(key: str) -> str:
     """Return the translated string for *key* in the current UI language.
 
     For zh_cn (Simplified Chinese), falls back to zh (Traditional) if no
-    explicit zh_cn entry exists.
+    explicit zh_cn entry exists, and automatically converts to Simplified
+    Chinese.
     """
     lang = st.session_state.get("lang", "zh")
     entry = TRANSLATIONS.get(key)
@@ -208,8 +209,8 @@ def t(key: str) -> str:
         val = entry.get("zh_cn")
         if val is not None:
             return val
-        # fallback to Traditional Chinese
-        return entry.get("zh", key)
+        # Fallback: convert Traditional Chinese to Simplified
+        return _t2s(entry.get("zh", key))
     return entry.get(lang, entry.get("zh", key))
 
 
@@ -825,7 +826,7 @@ with st.sidebar:
     )
 
     # ── System search box ──────────────────────────────────────
-    _search_placeholder = "搜尋占星體系..." if st.session_state.get("lang", "zh") in ("zh", "zh_cn") else "Search systems..."
+    _search_placeholder = auto_cn("搜尋占星體系...") if st.session_state.get("lang", "zh") in ("zh", "zh_cn") else "Search systems..."
     _system_search = st.text_input(
         "🔍",
         placeholder=_search_placeholder,
@@ -946,7 +947,7 @@ with st.sidebar:
                 _btn_type = "primary" if _is_active else "secondary"
                 _badge = ""
                 if _sk in _BEGINNER_SYSTEMS:
-                    _badge_text = "推薦" if _cur_lang in ("zh", "zh_cn") else "Start here"
+                    _badge_text = auto_cn("推薦") if _cur_lang in ("zh", "zh_cn") else "Start here"
                     _badge = f' <span class="beginner-badge">{_badge_text}</span>'
                 if st.button(
                     f"{_SYSTEM_LABELS[_sk]}",
@@ -1484,6 +1485,7 @@ elif _selected_system == "tab_western":
                     _lang = get_lang()
                     for _ta in w_transits.aspects_to_natal[:5]:
                         _reading = _ta.interpretation_cn if _lang in ("zh", "zh_cn") else _ta.interpretation_en
+                        _reading = auto_cn(_reading) if _reading else _reading
                         st.info(f"**{_ta.transit_planet} {_ta.aspect_symbol} {_ta.natal_planet}** (orb {_ta.orb}°)\n\n{_reading}")
                 else:
                     st.info("No transit aspects found.")
@@ -1525,7 +1527,7 @@ elif _selected_system == "tab_western":
                     )
                     syn = compute_synastry(w_chart, w_b, "Person A", "Person B")
                     st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
-                    st.info(syn.summary_cn if get_lang() in ("zh", "zh_cn") else syn.summary_en)
+                    st.info(auto_cn(syn.summary_cn) if get_lang() in ("zh", "zh_cn") else syn.summary_en)
                     if syn.element_compatibility:
                         st.write(f"🔮 {syn.element_compatibility}")
                     if syn.inter_aspects:
@@ -1539,6 +1541,7 @@ elif _selected_system == "tab_western":
                         _lang = get_lang()
                         for _sa in syn.inter_aspects[:5]:
                             _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
+                            _reading = auto_cn(_reading) if _reading else _reading
                             st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
 
             with _w_tab_dignity:
@@ -1675,8 +1678,9 @@ elif _selected_system == "tab_indian":
                 yogas = compute_yogas(p_lons_y, asc_lon_y)
                 for yg in yogas:
                     icon = "✅" if yg.is_present else "⬜"
-                    with st.expander(f"{icon} {yg.name} ({yg.name_cn}) — {yg.strength}"):
-                        st.write(yg.description_cn if get_lang() in ("zh", "zh_cn") else yg.description)
+                    with st.expander(f"{icon} {yg.name} ({auto_cn(yg.name_cn)}) — {yg.strength}"):
+                        _yg_text = yg.description_cn if get_lang() in ("zh", "zh_cn") else yg.description
+                        st.write(auto_cn(_yg_text))
                 _render_ai_button("tab_indian", v_chart, btn_key="vedic_yogas")
 
             with _v_tab_bphs:
