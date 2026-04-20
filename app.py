@@ -157,7 +157,7 @@ inject_custom_css()
 
 def _inject_star_particles():
     """Inject CSS-based star particle background."""
-    particles_html = '<div class="star-particles">'
+    parts = []
     for _ in range(60):
         x = random.uniform(0, 100)
         y = random.uniform(0, 100)
@@ -166,7 +166,7 @@ def _inject_star_particles():
         opacity = random.uniform(0.3, 0.8)
         size = random.choices([1, 2, 3], weights=[1, 2, 1], k=1)[0]
         color = random.choices(["#EAB308", "#A78BFA", "#E0E0FF"], weights=[3, 1, 1], k=1)[0]
-        particles_html += (
+        parts.append(
             f'<div class="particle" style="'
             f"left:{x:.1f}%;top:{y:.1f}%;"
             f"width:{size}px;height:{size}px;"
@@ -174,7 +174,7 @@ def _inject_star_particles():
             f"--duration:{dur:.1f}s;--delay:{delay:.1f}s;"
             f'--max-opacity:{opacity:.2f};"></div>'
         )
-    particles_html += "</div>"
+    particles_html = '<div class="star-particles">' + "".join(parts) + "</div>"
     st.markdown(particles_html, unsafe_allow_html=True)
 
 

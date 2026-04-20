@@ -380,20 +380,32 @@ def _compute_arabic_parts(ascendant, sun_lon, moon_lon, saturn_lon, jupiter_lon,
 
 
 def _compute_fixed_star_conjunctions(planets, jd):
-    """計算恆星相位（合相）"""
+    """計算恆星相位（合相）
+
+    優化：先一次性計算所有恆星位置，再與行星比對，
+    避免對每顆行星重複呼叫 swe.fixstar2（從 O(planets×stars) 降為 O(stars) 次 swe 呼叫）。
+    """
     results = []
     swe.set_ephe_path("")
+
+    # Pre-compute all fixed star positions once
+    star_positions = []
+    for star_key, star_name, star_cn, mag, meaning in FIXED_STARS:
+        try:
+            star_res, _ = swe.fixstar2(star_name, jd, swe.FLG_SWIEPH)
+            star_lon = _normalize(star_res[0])
+            orb = FIXED_STAR_ORBS.get(star_key, 1.0)
+            star_positions.append((star_name, star_cn, star_lon, orb, meaning))
+        except Exception:
+            continue
+
+    # Compare each planet against pre-computed star positions
     for p in planets:
-        for star_key, star_name, star_cn, mag, meaning in FIXED_STARS:
-            try:
-                star_res, _ = swe.fixstar2(star_name, jd, swe.FLG_SWIEPH)
-                star_lon = _normalize(star_res[0])
-            except Exception:
-                continue
-            diff = abs(_normalize(p.longitude) - star_lon)
+        p_lon = _normalize(p.longitude)
+        for star_name, star_cn, star_lon, orb, meaning in star_positions:
+            diff = abs(p_lon - star_lon)
             if diff > 180:
                 diff = 360 - diff
-            orb = FIXED_STAR_ORBS.get(star_key, 1.0)
             if diff <= orb:
                 results.append(FixedStarConjunction(
                     star_name=star_name,

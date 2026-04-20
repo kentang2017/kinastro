@@ -122,24 +122,27 @@ def _get_sign_element(deg: float) -> str:
 
 def _get_mansion_info(lon: float) -> tuple:
     """
-    根據黃經度數取得二十八宿名稱與宿內度數。
+    根據黃經度數取得二十八宿名稱、宿內度數、宿索引與宿寬度。
 
     Returns:
-        (mansion_name, mansion_degree): 宿名, 在宿中的度數
+        (mansion_name, mansion_degree, mansion_index, mansion_width):
+        宿名, 在宿中的度數, 宿索引 (0-27), 宿寬度
     """
     lon = _normalize_degree(lon)
     n = len(TWENTY_EIGHT_MANSIONS)
     for i in range(n):
         start = TWENTY_EIGHT_MANSIONS[i]["start_lon"]
         end = TWENTY_EIGHT_MANSIONS[(i + 1) % n]["start_lon"]
+        width = (end - start) % 360.0
         if start < end:
             if start <= lon < end:
-                return TWENTY_EIGHT_MANSIONS[i]["name"], lon - start
+                return TWENTY_EIGHT_MANSIONS[i]["name"], lon - start, i, width
         else:
             if lon >= start or lon < end:
                 deg_in = (lon - start) % 360.0
-                return TWENTY_EIGHT_MANSIONS[i]["name"], deg_in
-    return TWENTY_EIGHT_MANSIONS[0]["name"], 0.0
+                return TWENTY_EIGHT_MANSIONS[i]["name"], deg_in, i, width
+    width0 = (TWENTY_EIGHT_MANSIONS[1]["start_lon"] - TWENTY_EIGHT_MANSIONS[0]["start_lon"]) % 360.0
+    return TWENTY_EIGHT_MANSIONS[0]["name"], 0.0, 0, width0
 
 
 def _check_qidu(sign_degree: float, mansion_degree: float, mansion_width: float) -> bool:
@@ -257,11 +260,9 @@ def compute_chart(
         speed = result[3]
         retrograde = speed < 0
 
-        mansion_name, mansion_deg = _get_mansion_info(lon)
+        mansion_name, mansion_deg, m_idx, m_width = _get_mansion_info(lon)
         sign_deg = _degree_to_sign_degree(lon)
         sign_elem = _get_sign_element(lon)
-        m_idx = get_mansion_index_for_degree(lon)
-        m_width = _get_mansion_width(m_idx)
         qidu = _check_qidu(sign_deg, mansion_deg, m_width)
 
         pos = PlanetPosition(
@@ -284,11 +285,9 @@ def compute_chart(
     # 羅睺 (Rahu) = True North Node（參考 MOIRA 使用真交點）
     rahu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["羅睺"])
     rahu_lon = _normalize_degree(rahu_result[0])
-    _mn, _md = _get_mansion_info(rahu_lon)
+    _mn, _md, _mi, _mw = _get_mansion_info(rahu_lon)
     _sd = _degree_to_sign_degree(rahu_lon)
     _se = _get_sign_element(rahu_lon)
-    _mi = get_mansion_index_for_degree(rahu_lon)
-    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="羅睺",
         longitude=rahu_lon,
@@ -306,11 +305,9 @@ def compute_chart(
 
     # 計都 (Ketu) = 羅睺 + 180°
     ketu_lon = _normalize_degree(rahu_lon + 180.0)
-    _mn, _md = _get_mansion_info(ketu_lon)
+    _mn, _md, _mi, _mw = _get_mansion_info(ketu_lon)
     _sd = _degree_to_sign_degree(ketu_lon)
     _se = _get_sign_element(ketu_lon)
-    _mi = get_mansion_index_for_degree(ketu_lon)
-    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="計都",
         longitude=ketu_lon,
@@ -329,11 +326,9 @@ def compute_chart(
     # 月孛 (Yuebei) = Mean Apogee (Lilith)
     yuebei_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["月孛"])
     yuebei_lon = _normalize_degree(yuebei_result[0])
-    _mn, _md = _get_mansion_info(yuebei_lon)
+    _mn, _md, _mi, _mw = _get_mansion_info(yuebei_lon)
     _sd = _degree_to_sign_degree(yuebei_lon)
     _se = _get_sign_element(yuebei_lon)
-    _mi = get_mansion_index_for_degree(yuebei_lon)
-    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="月孛",
         longitude=yuebei_lon,
@@ -351,11 +346,9 @@ def compute_chart(
 
     # 紫氣 (Ziqi) = 月孛 + 180°
     ziqi_lon = _normalize_degree(yuebei_lon + 180.0)
-    _mn, _md = _get_mansion_info(ziqi_lon)
+    _mn, _md, _mi, _mw = _get_mansion_info(ziqi_lon)
     _sd = _degree_to_sign_degree(ziqi_lon)
     _se = _get_sign_element(ziqi_lon)
-    _mi = get_mansion_index_for_degree(ziqi_lon)
-    _mw = _get_mansion_width(_mi)
     planets.append(PlanetPosition(
         name="紫氣",
         longitude=ziqi_lon,
