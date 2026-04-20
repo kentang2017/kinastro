@@ -111,6 +111,7 @@ from astro.chinstar.chinstar import WanHuaXianQin
 from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
 from astro.sanshi.liuren import compute_liuren_chart, render_liuren_chart
 from astro.sanshi.taiyi import compute_taiyi_chart, render_taiyi_chart
+from astro.sanshi.qimen_luming import compute_qimen_luming, render_qimen_luming
 from astro.astrocartography import (
     compute_astrocartography,
     compute_astrocartography_transit,
@@ -842,7 +843,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
-        ("cat_sanshi", ["tab_liuren", "tab_taiyi"]),
+        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan"]),
@@ -889,6 +890,7 @@ with st.sidebar:
         "tab_acg": t("tab_acg"),
         "tab_liuren": t("tab_liuren"),
         "tab_taiyi": t("tab_taiyi"),
+        "tab_qimen_luming": t("tab_qimen_luming"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -921,6 +923,7 @@ with st.sidebar:
         "tab_acg": t("sys_hint_acg"),
         "tab_liuren": t("sys_hint_liuren"),
         "tab_taiyi": t("sys_hint_taiyi"),
+        "tab_qimen_luming": t("sys_hint_qimen_luming"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2840,7 +2843,25 @@ elif _selected_system == "tab_taiyi":
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_taiyi"))
 
-# --- Astrocartography (地點占星 / 搬遷線) ---
+# --- 奇門祿命 (Qi Men Destiny Analysis) ---
+elif _selected_system == "tab_qimen_luming":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_qimen_luming")):
+                _qm_luming = compute_qimen_luming(**_p)
+            render_qimen_luming(
+                _qm_luming,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_qimen_luming", _qm_luming, btn_key="qimen_luming"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_qimen_luming"))
 elif _selected_system == "tab_acg":
     if _is_calculated:
         try:

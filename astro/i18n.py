@@ -1844,6 +1844,36 @@ transmitted by **Chen Xiyi**.
     },
     "spinner_taiyi": {"zh": "正在計算太乙命法排盤…", "en": "Computing Taiyi life chart…"},
 
+    # ── 奇門祿命 (Qimen Destiny) ──────────────────────────────
+    "tab_qimen_luming": {
+        "zh": "🔮 奇門祿命",
+        "en": "🔮 Qimen Destiny",
+    },
+    "sys_hint_qimen_luming": {
+        "zh": "以出生時辰奇門遁甲局推算一生命運吉凶",
+        "en": "Qimen Dunjia destiny analysis based on birth chart",
+    },
+    "desc_qimen_luming": {
+        "zh": (
+            "**奇門祿命**\n\n"
+            "推人命運，以本人生時奇門之局為主，然後於局中搜尋本人生年干支局，"
+            "即其為人之本命。取其本命之局，以推其一生之窮通、壽夭、吉凶、禍福，"
+            "妻財子祿，俱可知也。\n\n"
+            "以年干五行為主，查看各宮奇儀之生克關係，分析六親（父母、兄弟、子孫、"
+            "官祿、妻財、疾厄），結合八門、八神（八將）、格局等，"
+            "推斷一生窮通壽夭吉凶禍福。"
+        ),
+        "en": (
+            "**Qimen Destiny Analysis**\n\n"
+            "This method uses the Qi Men Dun Jia chart cast at the time of birth "
+            "to analyze one's destiny. The year stem's palace becomes the Life Palace, "
+            "and the Five Elements relationships with other stems reveal the Six Relations "
+            "(parents, siblings, children, career, spouse/wealth, health), combined with "
+            "Eight Doors, Eight Gods, and pattern analysis for a comprehensive life reading."
+        ),
+    },
+    "spinner_qimen_luming": {"zh": "正在計算奇門祿命…", "en": "Computing Qimen Destiny…"},
+
     # ── 三式分類 (Sanshi category) ─────────────────────────────
     "cat_sanshi": {
         "zh": "三式",
