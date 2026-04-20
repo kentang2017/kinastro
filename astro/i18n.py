@@ -1535,6 +1535,62 @@ transmitted by **Chen Xiyi**.
     "mazzalot_subtab_star": {"zh": "大衛之星輪盤", "en": "Star of David Wheel"},
     "mazzalot_subtab_natal": {"zh": "本命盤", "en": "Natal"},
     "mazzalot_subtab_omens": {"zh": "靈性解讀", "en": "Spiritual Readings"},
+
+    # ── 達摩一掌經 (Damo One Palm Scripture) ────────────────────
+    "tab_damo": {
+        "zh": "🤚 達摩一掌經",
+        "en": "🤚 Damo One Palm",
+    },
+    "sys_hint_damo": {
+        "zh": "達摩祖師掌中推命——前世今生因果輪迴",
+        "en": "Damo's palm-based past-life & destiny reading",
+    },
+    "desc_damo": {
+        "zh": (
+            "**達摩一掌經**（又名一掌金），相傳由菩提達摩祖師所創。\n\n"
+            "以左手掌十二地支宮位為基礎，透過年、月、日、時四柱推算出對應的"
+            "十二星與六道輪迴，藉此論斷前世今生與性格命運。\n\n"
+            "十二星：天貴、天厄、天權、天破、天奸、天文、天福、天驛、天孤、天刃、天藝、天壽。\n\n"
+            "六道：佛道、仙道、人道、修羅道、畜道、鬼道。"
+        ),
+        "en": (
+            "**Damo One Palm Scripture** (Yi Zhang Jin), attributed to Bodhidharma.\n\n"
+            "Based on 12 Earthly Branch positions on the left palm, it uses the Four Pillars "
+            "(Year, Month, Day, Hour) to determine the corresponding 12 Stars and Six Realms, "
+            "revealing past lives and present destiny."
+        ),
+    },
+    "spinner_damo": {"zh": "推算達摩一掌經中…", "en": "Computing Damo One Palm chart…"},
+    "damo_chart_title": {
+        "zh": "🤚 達摩一掌經 / Damo One Palm Scripture",
+        "en": "🤚 Damo One Palm Scripture",
+    },
+    "damo_subtab_chart": {"zh": "掌中星圖", "en": "Palm Chart"},
+    "damo_subtab_detail": {"zh": "詳細解讀", "en": "Detailed Reading"},
+    "damo_subtab_advice": {"zh": "改運建議", "en": "Remedy & Advice"},
+    "damo_subtab_classic": {"zh": "掌經原文", "en": "Classic Text"},
+    "damo_four_palaces": {"zh": "四宮速覽", "en": "Four Palaces Overview"},
+    "damo_realm_analysis": {"zh": "六道綜合分析", "en": "Six Realms Analysis"},
+    "damo_overall_summary": {"zh": "命格總論", "en": "Overall Destiny Summary"},
+    "damo_life_stages": {"zh": "人生各階段建議", "en": "Life Stage Advice"},
+    "damo_remedy": {"zh": "改運法門", "en": "Remedy Methods"},
+    "damo_positive_ending": {
+        "zh": (
+            "🙏 **相由心生，命由己造。**\n\n"
+            "一掌經揭示的是前世因果的參考，而非命定的枷鎖。"
+            "了解自己的命格特質後，更應積極行善、廣結善緣、修心養性。"
+            "每一個善念善行，都在為今生和來世種下美好的種子。"
+            "改運的最佳方法，就是從此刻開始，做一個更好的自己。"
+        ),
+        "en": (
+            "🙏 **Your destiny is shaped by your heart and actions.**\n\n"
+            "The One Palm Scripture reveals past-life patterns as guidance, not shackles. "
+            "Understanding your chart empowers you to cultivate virtue, form good connections, "
+            "and refine your character. Every kind thought and deed plants beautiful seeds "
+            "for this life and beyond. The best way to improve your destiny is to become "
+            "a better version of yourself, starting right now."
+        ),
+    },
 }
 
 

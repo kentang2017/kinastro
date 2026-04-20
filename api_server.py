@@ -38,6 +38,7 @@ from astro.egyptian.decans import compute_decan_chart
 from astro.vedic.nadi import compute_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart
 from astro.western.hellenistic import compute_hellenistic_chart
+from astro.damo import compute_damo_chart
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -357,6 +358,19 @@ def _cached_zurkhai(key: str, year: int, month: int, day: int, hour: int,
     return _chart_to_dict(chart)
 
 
+@lru_cache(maxsize=256)
+def _cached_damo(key: str, year: int, month: int, day: int, hour: int,
+                 minute: int, timezone: float, latitude: float,
+                 longitude: float, location_name: str,
+                 gender: str) -> dict:
+    chart = compute_damo_chart(
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        timezone=timezone, latitude=latitude, longitude=longitude,
+        location_name=location_name, gender=gender,
+    )
+    return _chart_to_dict(chart)
+
+
 # Hellenistic depends on a WesternChart object, so handle specially.
 def _compute_hellenistic(params: BirthParams,
                          current_year: Optional[int]) -> dict:
@@ -539,6 +553,20 @@ async def zurkhai_chart(params: BirthParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.post("/api/damo", response_model=ChartResponse, tags=["Systems"])
+async def damo_chart(params: ChineseParams) -> ChartResponse:
+    """Compute a Damo One Palm Scripture chart (達摩一掌經)."""
+    try:
+        key = _cache_key(params, gender=params.gender)
+        kwargs = _base_kwargs(params)
+        kwargs["gender"] = params.gender
+        data = _cached_damo(key, **kwargs)
+        return ChartResponse(system="damo", data=data)
+    except Exception as exc:
+        logger.exception("Damo One Palm chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.post("/api/hellenistic", response_model=ChartResponse, tags=["Systems"])
 async def hellenistic_chart(params: HellenisticParams) -> ChartResponse:
     """Compute a Hellenistic Greek astrology chart (derived from Western)."""
@@ -567,6 +595,9 @@ _SYSTEMS_BASIC: list[tuple[str, Any]] = [
     ("nadi", _cached_nadi),
     ("zurkhai", _cached_zurkhai),
 ]
+
+# Damo requires gender parameter and is handled separately in compute_all
+# endpoint rather than being included in _SYSTEMS_BASIC.
 
 
 @app.post("/api/compute", response_model=ComputeAllResponse, tags=["Aggregate"])
@@ -624,6 +655,17 @@ async def compute_all(params: ComputeAllParams) -> ComputeAllResponse:
             system="hellenistic", ok=False, error=str(exc),
         )
 
+    # --- Damo (needs gender) ---
+    try:
+        key = _cache_key(params, gender=params.gender)
+        data = _cached_damo(key, **kw, gender=params.gender)
+        charts["damo"] = ChartResponse(system="damo", data=data)
+    except Exception as exc:
+        logger.exception("Damo chart failed in /api/compute")
+        charts["damo"] = ChartResponse(
+            system="damo", ok=False, error=str(exc),
+        )
+
     return ComputeAllResponse(charts=charts)
 
 
@@ -656,5 +698,6 @@ async def list_systems() -> dict[str, list[str]]:
             "nadi",
             "zurkhai",
             "hellenistic",
+            "damo",
         ]
     }
