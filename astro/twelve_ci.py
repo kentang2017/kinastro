@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional
 
-from astro.i18n import t
+from astro.i18n import t, get_lang
 
 # ============================================================
 # 十二星次定義 — 冬至 0° 起、每 30° 一次
@@ -465,7 +465,7 @@ def compute_twelve_ci_chart(
     jupiter_ci = TWELVE_CI[jupiter_planet.ci_index] if jupiter_planet else None
 
     # Transit Jupiter (current moment)
-    now = datetime.now(tz=None)  # UTC-naive; matches swisseph convention
+    now = datetime.now(tz=None)  # UTC-naive datetime; swisseph expects UT
     jd_now = swe.julday(now.year, now.month, now.day,
                         now.hour + now.minute / 60.0)
     transit_jup = _compute_planet_ci("Jupiter", jd_now)
@@ -710,7 +710,6 @@ def render_twelve_ci_chart(
                 f"{jup.degree_in_ci:.2f}° ({ci['name_zh']}){retro_str}",
             )
 
-        from astro.i18n import get_lang
         lang = get_lang()
         interp_key = "interpretation_zh" if lang == "zh" else "interpretation_en"
         st.info(ci[interp_key])
@@ -749,7 +748,6 @@ def render_twelve_ci_chart(
         with c3:
             st.metric(t("twelve_ci_transit_branch"), tc["branch"])
 
-        from astro.i18n import get_lang
         lang = get_lang()
         interp_key = "interpretation_zh" if lang == "zh" else "interpretation_en"
         st.success(tc[interp_key])
