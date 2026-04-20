@@ -1763,7 +1763,7 @@ transmitted by **Chen Xiyi**.
     # ── 三式 (Sanshi — Three Styles) ───────────────────────────
     # ── 大六壬 (Da Liu Ren) ────────────────────────────────────
     "tab_liuren": {
-        "zh": "🔮 大六壬",
+        "zh": "🔮 六壬祿命",
         "en": "🔮 Da Liu Ren",
     },
     "sys_hint_liuren": {
