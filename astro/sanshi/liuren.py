@@ -21,11 +21,20 @@ from astro.i18n import t, auto_cn
 TIANGAN = list("甲乙丙丁戊己庚辛壬癸")
 DIZHI = list("子丑寅卯辰巳午未申酉戌亥")
 
-# 天將顏色（用於盤式著色）
+# 天將顏色（用於盤式著色）— 柔和典雅風格
 JIANG_COLORS: dict[str, str] = {
-    "貴": "#FFD700", "蛇": "#FF4444", "雀": "#FF6B35", "合": "#4CAF50",
-    "勾": "#DAA520", "龍": "#00BCD4", "空": "#9E9E9E", "虎": "#E0E0E0",
-    "常": "#FFC107", "玄": "#5C6BC0", "陰": "#CE93D8", "后": "#F48FB1",
+    "貴": "#F0C674",  # 柔金
+    "蛇": "#CC6666",  # 暗紅
+    "雀": "#DE935F",  # 橘褐
+    "合": "#7EB889",  # 翠綠
+    "勾": "#A1887F",  # 赭褐
+    "龍": "#5DADE2",  # 天藍
+    "空": "#95A5A6",  # 灰色
+    "虎": "#D5D8DC",  # 銀白
+    "常": "#FFAB40",  # 琥珀
+    "玄": "#7986CB",  # 靛青
+    "陰": "#B39DDB",  # 藤紫
+    "后": "#F06292",  # 玫紅
 }
 
 # 天將全名
@@ -35,10 +44,13 @@ JIANG_FULLNAME: dict[str, str] = {
     "常": "太常", "玄": "玄武", "陰": "太陰", "后": "天后",
 }
 
-# 六親簡稱顏色
+# 六親簡稱顏色 — 淡雅明亮、與天將色系分離
 LIUQIN_COLORS: dict[str, str] = {
-    "父": "#60A5FA", "財": "#4ADE80", "官": "#F87171",
-    "兄": "#FBBF24", "子": "#A78BFA",
+    "父": "#81D4FA",  # 淺天藍
+    "財": "#80CBC4",  # 碧綠
+    "官": "#EF9A9A",  # 淺珊瑚
+    "兄": "#FFF176",  # 鵝黃
+    "子": "#CE93D8",  # 淺藍紫
 }
 
 # 十二宮名稱
@@ -249,25 +261,30 @@ def _build_liuren_board_html(
         palace = palace_map.get(branch, "")
 
         palace_html = (
-            f'<div style="font-size:10px;color:#888;line-height:1.2;">{palace}</div>'
+            f'<div style="font-size:10px;color:#9E9E9E;line-height:1.2;'
+            f'letter-spacing:1px;">{palace}</div>'
             if palace else ""
         )
         lq_html = (
-            f'<span style="color:{lq_color};font-size:11px;">{lq}</span>'
+            f'<span style="color:{lq_color};font-size:12px;font-weight:600;">'
+            f'{lq}</span>'
             if lq else ""
         )
 
         return (
-            f'<td style="border:1px solid #555;text-align:center;'
-            f'vertical-align:middle;padding:3px 2px;min-width:60px;'
-            f'background:rgba(30,30,40,0.5);">'
+            f'<td style="border:1px solid rgba(120,120,140,0.35);'
+            f'text-align:center;vertical-align:middle;'
+            f'padding:6px 4px;min-width:68px;'
+            f'background:rgba(30,30,45,0.45);">'
             f'{palace_html}'
-            f'<div style="color:{jcolor};font-size:12px;line-height:1.3;">'
-            f'{jiang_full}</div>'
-            f'<div style="font-size:15px;font-weight:bold;line-height:1.3;">'
-            f'{tian} {lq_html}</div>'
-            f'<div style="border-top:1px dashed #666;margin:1px 4px;"></div>'
-            f'<div style="font-size:14px;color:#AAA;line-height:1.3;">'
+            f'<div style="color:{jcolor};font-size:12px;line-height:1.4;'
+            f'opacity:0.85;">{jiang_full}</div>'
+            f'<div style="font-size:16px;font-weight:bold;line-height:1.4;'
+            f'color:#E8E8F0;">'
+            f'{tian}&thinsp;{lq_html}</div>'
+            f'<div style="border-top:1px dashed rgba(120,120,140,0.4);'
+            f'margin:2px 8px;"></div>'
+            f'<div style="font-size:14px;color:#9E9E9E;line-height:1.4;">'
             f'{branch}</div>'
             f'</td>'
         )
@@ -288,26 +305,27 @@ def _build_liuren_board_html(
         lq = _liuqin_label(ri_gan, top_char) if ri_gan and top_char else ""
         lq_color = LIUQIN_COLORS.get(lq, "#CCC")
         sk_rows_jiang += (
-            f'<td style="text-align:center;padding:1px 6px;'
-            f'color:{jcolor};font-size:12px;">{jiang}</td>'
+            f'<td style="text-align:center;padding:2px 8px;'
+            f'color:{jcolor};font-size:12px;opacity:0.85;">{jiang}</td>'
         )
         sk_rows_lq += (
-            f'<td style="text-align:center;padding:1px 6px;'
-            f'color:{lq_color};font-size:11px;">{lq}</td>'
+            f'<td style="text-align:center;padding:2px 8px;'
+            f'color:{lq_color};font-size:12px;font-weight:600;">{lq}</td>'
         )
         sk_rows_top += (
-            f'<td style="text-align:center;padding:1px 6px;'
-            f'font-size:14px;">{top_char}</td>'
+            f'<td style="text-align:center;padding:2px 8px;'
+            f'font-size:15px;color:#E8E8F0;">{top_char}</td>'
         )
         sk_rows_btm += (
-            f'<td style="text-align:center;padding:1px 6px;'
-            f'font-size:14px;color:#AAA;">{btm_char}</td>'
+            f'<td style="text-align:center;padding:2px 8px;'
+            f'font-size:14px;color:#9E9E9E;">{btm_char}</td>'
         )
 
     si_ke_html = (
         f'<table style="margin:auto;border-collapse:collapse;">'
         f'<tr><td colspan="4" style="text-align:center;font-size:11px;'
-        f'color:#888;padding-bottom:2px;">{auto_cn("四課")}</td></tr>'
+        f'color:#9E9E9E;padding-bottom:4px;letter-spacing:2px;">'
+        f'{auto_cn("四課")}</td></tr>'
         f'<tr>{sk_rows_jiang}</tr>'
         f'<tr>{sk_rows_lq}</tr>'
         f'<tr>{sk_rows_top}</tr>'
@@ -325,34 +343,42 @@ def _build_liuren_board_html(
         kong = vals[3] if len(vals) > 3 else ""
         jcolor = JIANG_COLORS.get(jiang, "#CCC")
         lq_color = LIUQIN_COLORS.get(lq_raw, "#CCC")
-        kong_mark = '<span style="color:#F87171;font-size:10px;">空</span>' if kong == "空" else ""
+        kong_mark = (
+            '<span style="color:#EF9A9A;font-size:10px;'
+            'border:1px solid rgba(239,154,154,0.4);border-radius:3px;'
+            'padding:0 2px;">空</span>'
+            if kong == "空" else ""
+        )
         sc_html_rows += (
             f'<tr>'
-            f'<td style="font-size:11px;color:#888;padding:1px 4px;">'
+            f'<td style="font-size:11px;color:#9E9E9E;padding:2px 6px;">'
             f'{auto_cn(name)}</td>'
-            f'<td style="font-size:14px;padding:1px 4px;">{zhi}</td>'
-            f'<td style="color:{jcolor};font-size:12px;padding:1px 4px;">'
-            f'{jiang}</td>'
-            f'<td style="color:{lq_color};font-size:11px;padding:1px 4px;">'
-            f'{lq_raw}</td>'
-            f'<td style="padding:1px 4px;">{kong_mark}</td>'
+            f'<td style="font-size:15px;padding:2px 6px;color:#E8E8F0;'
+            f'font-weight:bold;">{zhi}</td>'
+            f'<td style="color:{jcolor};font-size:12px;padding:2px 6px;'
+            f'opacity:0.85;">{jiang}</td>'
+            f'<td style="color:{lq_color};font-size:12px;padding:2px 6px;'
+            f'font-weight:600;">{lq_raw}</td>'
+            f'<td style="padding:2px 4px;">{kong_mark}</td>'
             f'</tr>'
         )
 
     san_chuan_html = (
         f'<table style="margin:auto;border-collapse:collapse;">'
         f'<tr><td colspan="5" style="text-align:center;font-size:11px;'
-        f'color:#888;padding-bottom:2px;">{auto_cn("三傳")}</td></tr>'
+        f'color:#9E9E9E;padding-bottom:4px;letter-spacing:2px;">'
+        f'{auto_cn("三傳")}</td></tr>'
         f'{sc_html_rows}'
         f'</table>'
     )
 
     center_html = (
-        f'<td colspan="2" rowspan="2" style="border:1px solid #555;'
+        f'<td colspan="2" rowspan="2" style="border:1px solid rgba(120,120,140,0.35);'
         f'vertical-align:middle;text-align:center;'
-        f'background:rgba(20,20,30,0.6);padding:6px;">'
+        f'background:rgba(20,20,35,0.55);padding:8px;">'
         f'{si_ke_html}'
-        f'<div style="border-top:1px solid #555;margin:4px 0;"></div>'
+        f'<div style="border-top:1px solid rgba(120,120,140,0.3);'
+        f'margin:6px 0;"></div>'
         f'{san_chuan_html}'
         f'</td>'
     )
@@ -384,10 +410,11 @@ def _build_liuren_board_html(
 
     table_html = (
         f'<div style="overflow-x:auto;">'
-        f'<div style="text-align:center;font-size:13px;color:#CCC;'
-        f'margin-bottom:6px;">{header_info}</div>'
+        f'<div style="text-align:center;font-size:13px;color:#B0B0C8;'
+        f'margin-bottom:8px;letter-spacing:1px;">{header_info}</div>'
         f'<table style="margin:auto;border-collapse:collapse;'
-        f'border:2px solid #777;">'
+        f'border:1px solid rgba(120,120,140,0.4);'
+        f'border-radius:4px;overflow:hidden;">'
         f'{rows_html}'
         f'</table>'
         f'</div>'
@@ -515,15 +542,22 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
             jcolor = JIANG_COLORS.get(jiang, "#CCC")
             lq = _liuqin_label(ri_gan, tian) if ri_gan and tian else ""
             with p_cols[i % 4]:
+                lq_color = LIUQIN_COLORS.get(lq, "#CCC")
                 st.markdown(
-                    f"<div style='border:1px solid #555;border-radius:6px;"
-                    f"padding:6px;text-align:center;margin-bottom:6px;"
-                    f"min-height:90px;'>"
-                    f"<b>{auto_cn(pname)}</b><br>"
-                    f"<span style='font-size:13px;color:#AAA;'>"
+                    f"<div style='border:1px solid rgba(120,120,140,0.35);"
+                    f"border-radius:8px;padding:8px;text-align:center;"
+                    f"margin-bottom:6px;min-height:90px;"
+                    f"background:rgba(30,30,45,0.3);'>"
+                    f"<b style='color:#D0D0E0;'>{auto_cn(pname)}</b><br>"
+                    f"<span style='font-size:13px;color:#9E9E9E;'>"
                     f"{zhi}（{tian}）</span><br>"
-                    f"<span style='color:{jcolor};'>{jiang_full}</span>"
-                    + (f"<br><span style='font-size:12px;'>{lq}</span>" if lq else "")
+                    f"<span style='color:{jcolor};opacity:0.85;'>"
+                    f"{jiang_full}</span>"
+                    + (
+                        f"<br><span style='font-size:12px;color:{lq_color};"
+                        f"font-weight:600;'>{lq}</span>"
+                        if lq else ""
+                    )
                     + f"</div>",
                     unsafe_allow_html=True,
                 )
