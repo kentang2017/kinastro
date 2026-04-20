@@ -500,6 +500,12 @@ def format_generic_chart(chart, system_name: str = "Unknown") -> str:
     return "\n".join(sections)
 
 
+def _format_twelve_ci_chart(chart) -> str:
+    """Format a TwelveCiChart for AI analysis."""
+    from astro.twelve_ci import format_twelve_ci_chart
+    return format_twelve_ci_chart(chart)
+
+
 # Mapping from system key to formatter function
 SYSTEM_FORMATTERS = {
     "tab_chinese": format_chinese_chart,
@@ -518,6 +524,7 @@ SYSTEM_FORMATTERS = {
     "tab_zurkhai": format_zurkhai_chart,
     "tab_hellenistic": format_hellenistic_chart,
     "tab_chinstar": format_chinstar_chart,
+    "tab_twelve_ci": _format_twelve_ci_chart,
 }
 
 
