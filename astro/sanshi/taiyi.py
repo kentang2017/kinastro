@@ -44,6 +44,38 @@ def compute_taiyi_chart(
         result["_chart_svg"] = t.gen_life_gong(sex)
     except Exception:
         result["_chart_svg"] = None
+
+    # ── 十二宮文字描述 ──
+    try:
+        life1 = t.gongs_discription(sex)
+        life2 = t.twostar_disc(sex)
+        result["_lifedisc"] = t.convert_gongs_text(life1, life2)
+    except Exception:
+        result["_lifedisc"] = None
+
+    # ── 十六諸神落宮描述 ──
+    try:
+        result["_lifedisc2"] = t.stars_descriptions_text(3, 0)
+    except Exception:
+        result["_lifedisc2"] = None
+
+    # ── 十六宮評分等級 ──
+    try:
+        result["_lifedisc3"] = t.sixteen_gong_grades(3, 0)
+    except Exception:
+        result["_lifedisc3"] = None
+
+    # ── 陽九行限 / 百六行限 文字描述 ──
+    try:
+        result["_yangjiu_xx"] = t.yangjiu_xingxian(sex)
+    except Exception:
+        result["_yangjiu_xx"] = None
+
+    try:
+        result["_bailiu_xx"] = t.bailiu_xingxian(sex)
+    except Exception:
+        result["_bailiu_xx"] = None
+
     return result
 
 
@@ -61,6 +93,20 @@ def _render_svg(svg: str) -> None:
         + "</div>"
     )
     components.html(html, height=480)
+
+
+def _format_nested(d: dict, parent_key: str = "") -> str:
+    """將巢狀字典格式化為可讀的 Markdown 文字。"""
+    items: list[str] = []
+    for k, v in d.items():
+        full_key = f"{parent_key}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.append(_format_nested(v, full_key + ":").rstrip())
+        elif isinstance(v, list):
+            items.append(f"**{full_key}**：{', '.join(map(str, v))}")
+        else:
+            items.append(f"**{full_key}**：{v}")
+    return "\n\n".join(items) + "\n\n"
 
 
 def render_taiyi_chart(chart: dict, after_chart_hook=None):
@@ -223,6 +269,36 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
                     [{"年齡段": k, "地支": v} for k, v in data.items()]
                 )
                 st.dataframe(df, use_container_width=True, hide_index=True)
+
+    # ── 十二宮分析 ──
+    lifedisc = chart.get("_lifedisc")
+    if lifedisc:
+        with st.expander(auto_cn("【十二宮分析】"), expanded=True):
+            st.markdown(lifedisc)
+
+    # ── 太乙十六神落宮 ──
+    lifedisc2 = chart.get("_lifedisc2")
+    if lifedisc2:
+        with st.expander(auto_cn("【太乙十六神落宮】"), expanded=False):
+            st.markdown(lifedisc2)
+
+    # ── 太乙十六神上中下等 ──
+    lifedisc3 = chart.get("_lifedisc3")
+    if lifedisc3:
+        with st.expander(auto_cn("【太乙十六神上中下等】"), expanded=False):
+            st.markdown(lifedisc3)
+
+    # ── 陽九行限描述 ──
+    yangjiu_xx = chart.get("_yangjiu_xx")
+    if yangjiu_xx:
+        with st.expander(auto_cn("【陽九行限】"), expanded=False):
+            st.markdown(_format_nested(yangjiu_xx))
+
+    # ── 百六行限描述 ──
+    bailiu_xx = chart.get("_bailiu_xx")
+    if bailiu_xx:
+        with st.expander(auto_cn("【百六行限】"), expanded=False):
+            st.markdown(_format_nested(bailiu_xx))
 
     # ── 其他指標 ──
     extra_keys = ["定目", "五福", "帝符", "太尊", "飛鳥", "三風", "五風", "八風", "大游", "小游", "黑符"]
