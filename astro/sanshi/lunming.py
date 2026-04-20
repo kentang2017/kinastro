@@ -20,8 +20,8 @@ from typing import Any
 # 常量表
 # ============================================================
 
-DIZHI: list[str] = list("子丑寅卯辰巳午未申酉戌亥")
-TIANGAN: list[str] = list("甲乙丙丁戊己庚辛壬癸")
+DIZHI: tuple[str, ...] = tuple("子丑寅卯辰巳午未申酉戌亥")
+TIANGAN: tuple[str, ...] = tuple("甲乙丙丁戊己庚辛壬癸")
 
 # 地支五行
 ZHI_WUXING: dict[str, str] = {
@@ -1042,9 +1042,9 @@ class LunMingAnalyzer:
             else:
                 matched.append("土蛇化龍：化而不化，反主賤，多生貧賤之家")
 
-        # 7. 乘虎登天：本命午帶白虎臨於亥上
+        # 7. 乘虎登天：本命午帶白虎臨於亥上，或本命申加於亥上亦是
         if (bm == "午" and bm_shang == "亥" and bm_jiang == "虎") or \
-           (bm == "申" and bm_shang == "亥"):
+           (bm == "申" and bm_shang == "亥" and bm_jiang == "虎"):
             if _is_wangxiang(bm_state):
                 matched.append("乘虎登天：主威鎮邊夷，公侯之命")
             else:
@@ -1191,7 +1191,8 @@ class LunMingAnalyzer:
         if czs & mu_ju == mu_ju:
             matched.append("青帝施恩（三合木局曲直）")
         # 5. 穩坐中宮（四季土局稼穡）
-        if czs & tu_ju and len(czs & tu_ju) >= 2 and all(_wx(z) == "土" for z in czs):
+        tu_overlap = czs & tu_ju
+        if tu_overlap and len(tu_overlap) >= 2 and all(_wx(z) == "土" for z in czs):
             matched.append("穩坐中宮（四季土局稼穡）")
 
         # 方位秀氣三傳
@@ -1268,6 +1269,7 @@ class LunMingAnalyzer:
                 matched.append("火明西嶽：否則不以此論")
 
         # 五局加通用評語
+        # 遍歷已匹配的格局，為五局加通用評語（複製列表避免迭代時修改）
         for m in matched[:]:
             if any(k in m for k in ("庚星", "祥光", "帝座", "青帝", "穩坐")):
                 if _shengke(self._chuan_zhi(0), self.benming) == "生" and self._sanchuan_has_ji():
