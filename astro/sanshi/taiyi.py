@@ -33,19 +33,45 @@ def compute_taiyi_chart(
     Returns
     -------
     dict
-        太乙命法完整排盤結果。
+        太乙命法完整排盤結果，包含 ``_chart_svg`` 鍵儲存生成的 SVG 圖表字串。
     """
     from kintaiyi.kintaiyi import Taiyi
 
     sex = "男" if gender in ("male", "男") else "女"
     t = Taiyi(year, month, day, hour, minute)
     result = t.taiyi_life(sex)
+    try:
+        result["_chart_svg"] = t.gen_life_gong(sex)
+    except Exception:
+        result["_chart_svg"] = None
     return result
+
+
+def _render_svg(svg: str) -> None:
+    """以 HTML 組件方式渲染太乙排盤 SVG 圖。"""
+    import streamlit.components.v1 as components
+
+    # Strip the XML declaration if present so the SVG embeds cleanly in HTML.
+    if svg.startswith("<?xml"):
+        svg = svg[svg.index("?>") + 2:].lstrip()
+
+    html = (
+        '<div style="display:flex;justify-content:center;align-items:center;">'
+        + svg
+        + "</div>"
+    )
+    components.html(html, height=480)
 
 
 def render_taiyi_chart(chart: dict, after_chart_hook=None):
     """在 Streamlit 中渲染太乙命法排盤結果。"""
     st.markdown(f"### 🌟 {auto_cn('太乙命法排盤')}")
+
+    # ── SVG 排盤圖 ──
+    svg = chart.get("_chart_svg")
+    if svg:
+        _render_svg(svg)
+        st.divider()
 
     # ── 基本資訊 ──
     col1, col2, col3 = st.columns(3)
