@@ -1746,14 +1746,18 @@ def get_lang() -> str:
     return lang
 
 
+try:
+    from opencc import OpenCC as _OpenCC
+    _T2S_CONVERTER = _OpenCC('t2s')
+except Exception:
+    _T2S_CONVERTER = None
+
+
 def _t2s(text: str) -> str:
     """Convert Traditional Chinese text to Simplified Chinese using OpenCC."""
-    try:
-        from opencc import OpenCC
-        _converter = OpenCC('t2s')
-        return _converter.convert(text)
-    except Exception:
-        return text
+    if _T2S_CONVERTER is not None:
+        return _T2S_CONVERTER.convert(text)
+    return text
 
 
 def auto_cn(text: str) -> str:

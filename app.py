@@ -14,7 +14,7 @@ import random
 import streamlit as st
 from datetime import datetime, date, time
 
-from astro.i18n import TRANSLATIONS, get_lang, auto_cn
+from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
 from astro.qizheng.calculator import compute_chart
 from astro.qizheng.chart_renderer import (
@@ -208,7 +208,7 @@ def t(key: str) -> str:
         if val is not None:
             return val
         # Fallback: convert Traditional Chinese to Simplified
-        return auto_cn(entry.get("zh", key))
+        return _t2s(entry.get("zh", key))
     return entry.get(lang, entry.get("zh", key))
 
 
