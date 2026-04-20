@@ -347,7 +347,7 @@ with _title_col:
         unsafe_allow_html=True,
     )
 with _lang_col:
-    st.markdown("<div style='height: 0.5rem'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='lang-switcher-spacer'></div>", unsafe_allow_html=True)
     _sel_lang = st.radio(
         "🌐",
         options=_lang_labels,
