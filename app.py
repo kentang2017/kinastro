@@ -129,7 +129,7 @@ st.set_page_config(
     page_title="堅占星 KinAstro | 世界占星",
     page_icon="🌌",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 

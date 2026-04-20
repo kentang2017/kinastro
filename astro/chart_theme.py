@@ -69,14 +69,49 @@ MOBILE_CSS = """<style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 
-/* ── Hide sidebar collapsed control (keyboard_double_arrow_right) ── */
+/* ── Sidebar toggle button (Grok-style) ── */
 [data-testid="collapsedControl"],
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="stSidebarCollapsedControl"] > *,
-button[kind="header"],
-.stSidebarCollapsedControl {
-    display: none !important;
-    visibility: hidden !important;
+[data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    z-index: 999 !important;
+}
+[data-testid="collapsedControl"] button,
+[data-testid="stSidebarCollapsedControl"] button {
+    background: rgba(30, 27, 75, 0.85) !important;
+    border: 1px solid rgba(124, 58, 237, 0.3) !important;
+    border-radius: 8px !important;
+    color: #A78BFA !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: all 0.25s ease !important;
+}
+[data-testid="collapsedControl"] button:hover,
+[data-testid="stSidebarCollapsedControl"] button:hover {
+    background: rgba(124, 58, 237, 0.25) !important;
+    border-color: rgba(234, 179, 8, 0.4) !important;
+    color: #EAB308 !important;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.15) !important;
+}
+
+/* ── Fixed-width sidebar (Grok-style) ── */
+section[data-testid="stSidebar"] {
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.3s ease !important;
+}
+section[data-testid="stSidebar"] > div:first-child {
+    width: 320px !important;
+}
+/* Close (X) button inside sidebar */
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
+    color: #A78BFA !important;
+    transition: all 0.25s ease !important;
+}
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"]:hover {
+    color: #EAB308 !important;
 }
 
 /* ── Global: prevent horizontal scroll ──────────────── */
