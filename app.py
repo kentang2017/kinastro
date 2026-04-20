@@ -172,24 +172,33 @@ if st.session_state.get("_star_particles", True):
     _inject_star_particles()
 
 # ── Initialise language from the persisted radio widget value ────────────────
-# When the user clicks the language radio, Streamlit reruns the script with the
-# new "_lang_radio" value already in session_state.  We read it here — before
-# rendering the title — so that *all* content on the page uses the correct
-# language in the same rerun.
-if "_lang_radio" in st.session_state:
-    st.session_state["lang"] = (
-        "en" if st.session_state["_lang_radio"] == "English" else "zh"
-    )
+# Language switcher uses query params via st_js bridge. We check for the
+# "_lang_select" session_state key that is set by the HTML language buttons.
+_LANG_MAP = {"繁": "zh", "簡": "zh_cn", "英": "en"}
+
+if "_lang_select" in st.session_state:
+    _sel = st.session_state["_lang_select"]
+    st.session_state["lang"] = _LANG_MAP.get(_sel, "zh")
 elif "lang" not in st.session_state:
     st.session_state["lang"] = "zh"
 
 
 def t(key: str) -> str:
-    """Return the translated string for *key* in the current UI language."""
+    """Return the translated string for *key* in the current UI language.
+
+    For zh_cn (Simplified Chinese), falls back to zh (Traditional) if no
+    explicit zh_cn entry exists.
+    """
     lang = st.session_state.get("lang", "zh")
     entry = TRANSLATIONS.get(key)
     if entry is None:
         return key
+    if lang == "zh_cn":
+        val = entry.get("zh_cn")
+        if val is not None:
+            return val
+        # fallback to Traditional Chinese
+        return entry.get("zh", key)
     return entry.get(lang, entry.get("zh", key))
 
 
@@ -324,11 +333,29 @@ def _render_bphs_result(bphs_result):
         st.caption(f"💡 {note}")
 
 
-st.title(t("app_title"))
-st.markdown(
-    '<p class="app-subtitle">' + t("app_subtitle") + '</p>',
-    unsafe_allow_html=True,
-)
+# ── Language switcher (top-right of main page) ──────────────────
+_cur_lang = st.session_state.get("lang", "zh")
+_lang_labels = ["繁", "簡", "英"]
+_lang_codes = ["zh", "zh_cn", "en"]
+_cur_lang_idx = _lang_codes.index(_cur_lang) if _cur_lang in _lang_codes else 0
+
+_title_col, _lang_col = st.columns([4, 1])
+with _title_col:
+    st.title(t("app_title"))
+    st.markdown(
+        '<p class="app-subtitle">' + t("app_subtitle") + "</p>",
+        unsafe_allow_html=True,
+    )
+with _lang_col:
+    st.markdown("<div style='height: 0.5rem'></div>", unsafe_allow_html=True)
+    _sel_lang = st.radio(
+        "🌐",
+        options=_lang_labels,
+        index=_cur_lang_idx,
+        key="_lang_select",
+        horizontal=True,
+        label_visibility="collapsed",
+    )
 
 # ============================================================
 # 世界城市資料 (城市, 緯度, 經度, 時區)
@@ -706,16 +733,6 @@ CITY_REGIONS = {
 # 側邊欄 - 輸入排盤資料
 # ============================================================
 with st.sidebar:
-    # ── Language switcher (top of sidebar) ──────────────────
-    st.radio(
-        "🌐 Language / 語言",
-        options=["繁體中文", "English"],
-        index=0 if st.session_state.get("lang", "zh") == "zh" else 1,
-        key="_lang_radio",
-        horizontal=True,
-    )
-    st.divider()
-
     st.header(t("sidebar_header"))
 
     # 日期時間輸入 — calendar date picker + time picker
@@ -799,7 +816,7 @@ with st.sidebar:
     )
 
     # ── System search box ──────────────────────────────────────
-    _search_placeholder = "搜尋占星體系..." if st.session_state.get("lang", "zh") == "zh" else "Search systems..."
+    _search_placeholder = "搜尋占星體系..." if st.session_state.get("lang", "zh") in ("zh", "zh_cn") else "Search systems..."
     _system_search = st.text_input(
         "🔍",
         placeholder=_search_placeholder,
@@ -918,7 +935,7 @@ with st.sidebar:
                 _btn_type = "primary" if _is_active else "secondary"
                 _badge = ""
                 if _sk in _BEGINNER_SYSTEMS:
-                    _badge_text = "推薦" if _cur_lang == "zh" else "Start here"
+                    _badge_text = "推薦" if _cur_lang in ("zh", "zh_cn") else "Start here"
                     _badge = f' <span class="beginner-badge">{_badge_text}</span>'
                 if st.button(
                     f"{_SYSTEM_LABELS[_sk]}",
@@ -934,7 +951,7 @@ with st.sidebar:
     # ── Star particles toggle ──────────────────────────────────
     st.divider()
     _particles_on = st.toggle(
-        "✨ " + ("星空粒子背景" if _cur_lang == "zh" else "Star Particles"),
+        "✨ " + ("星空粒子背景" if _cur_lang in ("zh", "zh_cn") else "Star Particles"),
         value=st.session_state.get("_star_particles", True),
         key="_star_particles_toggle",
     )
@@ -1449,7 +1466,7 @@ elif _selected_system == "tab_western":
                     st.subheader(t("transit_readings_header"))
                     _lang = get_lang()
                     for _ta in w_transits.aspects_to_natal[:5]:
-                        _reading = _ta.interpretation_cn if _lang == "zh" else _ta.interpretation_en
+                        _reading = _ta.interpretation_cn if _lang in ("zh", "zh_cn") else _ta.interpretation_en
                         st.info(f"**{_ta.transit_planet} {_ta.aspect_symbol} {_ta.natal_planet}** (orb {_ta.orb}°)\n\n{_reading}")
                 else:
                     st.info("No transit aspects found.")
@@ -1491,7 +1508,7 @@ elif _selected_system == "tab_western":
                     )
                     syn = compute_synastry(w_chart, w_b, "Person A", "Person B")
                     st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
-                    st.info(syn.summary_cn if get_lang() == "zh" else syn.summary_en)
+                    st.info(syn.summary_cn if get_lang() in ("zh", "zh_cn") else syn.summary_en)
                     if syn.element_compatibility:
                         st.write(f"🔮 {syn.element_compatibility}")
                     if syn.inter_aspects:
@@ -1504,7 +1521,7 @@ elif _selected_system == "tab_western":
                         st.subheader(t("synastry_readings_header"))
                         _lang = get_lang()
                         for _sa in syn.inter_aspects[:5]:
-                            _reading = _sa.interpretation_cn if _lang == "zh" else _sa.interpretation_en
+                            _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
                             st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
 
             with _w_tab_dignity:
@@ -1642,7 +1659,7 @@ elif _selected_system == "tab_indian":
                 for yg in yogas:
                     icon = "✅" if yg.is_present else "⬜"
                     with st.expander(f"{icon} {yg.name} ({yg.name_cn}) — {yg.strength}"):
-                        st.write(yg.description_cn if get_lang() == "zh" else yg.description)
+                        st.write(yg.description_cn if get_lang() in ("zh", "zh_cn") else yg.description)
                 _render_ai_button("tab_indian", v_chart, btn_key="vedic_yogas")
 
             with _v_tab_bphs:

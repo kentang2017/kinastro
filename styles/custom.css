@@ -549,6 +549,54 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
 }
 
 /* ══════════════════════════════════════════════════════════════
+   8b. Language Switcher (top-right corner)
+   ══════════════════════════════════════════════════════════════ */
+.lang-switcher-wrapper {
+    position: fixed;
+    top: 0.6rem;
+    right: 1rem;
+    z-index: 999999;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.lang-switcher-wrapper .lang-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid var(--ka-glass-border);
+    background: var(--ka-glass-bg);
+    color: var(--ka-dim-starlight);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: var(--ka-transition);
+    text-decoration: none;
+    font-weight: 500;
+    line-height: 1;
+}
+.lang-switcher-wrapper .lang-btn:hover {
+    border-color: var(--ka-cosmic-violet);
+    color: var(--ka-stellar-silver);
+    background: rgba(167, 139, 250, 0.15);
+}
+.lang-switcher-wrapper .lang-btn.active {
+    border-color: var(--ka-stardust-gold);
+    color: var(--ka-stardust-gold);
+    background: rgba(234, 179, 8, 0.12);
+    pointer-events: none;
+}
+.lang-switcher-wrapper .lang-sep {
+    color: var(--ka-dim-starlight);
+    opacity: 0.4;
+    font-size: 0.75rem;
+    user-select: none;
+}
+
+/* ══════════════════════════════════════════════════════════════
    9. Loading / Spinner Cultural Animation
    ══════════════════════════════════════════════════════════════ */
 .cosmic-loading {
@@ -684,6 +732,15 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     }
     .theme-switcher .theme-btn {
         padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    .lang-switcher-wrapper {
+        top: 0.4rem;
+        right: 0.5rem;
+    }
+    .lang-switcher-wrapper .lang-btn {
+        padding: 3px 8px;
         font-size: 0.7rem;
     }
 
