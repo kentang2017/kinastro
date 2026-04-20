@@ -1746,10 +1746,33 @@ def get_lang() -> str:
     return lang
 
 
+def _t2s(text: str) -> str:
+    """Convert Traditional Chinese text to Simplified Chinese using OpenCC."""
+    try:
+        from opencc import OpenCC
+        _converter = OpenCC('t2s')
+        return _converter.convert(text)
+    except Exception:
+        return text
+
+
+def auto_cn(text: str) -> str:
+    """Return *text* converted to Simplified Chinese when the UI language is
+    ``zh_cn``; otherwise return the original text unchanged.
+
+    Use this helper to wrap any Chinese string that is **not** sourced from
+    ``TRANSLATIONS`` (which is already handled by :func:`t`).
+    """
+    if get_ui_lang() == "zh_cn":
+        return _t2s(text)
+    return text
+
+
 def t(key: str) -> str:
     """Return the translated string for *key* in the current language.
 
-    For zh_cn, falls back to zh if no explicit zh_cn entry exists.
+    For zh_cn, falls back to zh (Traditional) if no explicit zh_cn entry
+    exists, and automatically converts to Simplified Chinese.
     """
     lang = get_ui_lang()
     entry = TRANSLATIONS.get(key)
@@ -1759,5 +1782,6 @@ def t(key: str) -> str:
         val = entry.get("zh_cn")
         if val is not None:
             return val
-        return entry.get("zh", key)
+        # Fallback: convert Traditional Chinese to Simplified
+        return _t2s(entry.get("zh", key))
     return entry.get(lang, entry.get("zh", key))
