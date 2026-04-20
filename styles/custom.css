@@ -549,6 +549,13 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
 }
 
 /* ══════════════════════════════════════════════════════════════
+   8b. Language Switcher (top-right, inline with title)
+   ══════════════════════════════════════════════════════════════ */
+.lang-switcher-spacer {
+    height: 0.5rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
    9. Loading / Spinner Cultural Animation
    ══════════════════════════════════════════════════════════════ */
 .cosmic-loading {

@@ -1,6 +1,6 @@
 """
 i18n.py — Internationalisation strings for Kin Astro
-Supports: 繁體中文 (zh-TW) and English (en)
+Supports: 繁體中文 (zh), 簡體中文 (zh_cn), and English (en)
 """
 
 TRANSLATIONS = {
@@ -1639,16 +1639,37 @@ transmitted by **Chen Xiyi**.
 }
 
 
-def get_lang() -> str:
-    """Return current language code: 'zh' or 'en'."""
+def get_ui_lang() -> str:
+    """Return the full UI language code: 'zh', 'zh_cn', or 'en'."""
     import streamlit as st
     return st.session_state.get("lang", "zh")
 
 
+def get_lang() -> str:
+    """Return normalised language code for content: 'zh' or 'en'.
+
+    Simplified Chinese ('zh_cn') is normalised to 'zh' so that all
+    existing ``lang == "zh"`` checks throughout the codebase continue
+    to return Chinese content.
+    """
+    lang = get_ui_lang()
+    if lang == "zh_cn":
+        return "zh"
+    return lang
+
+
 def t(key: str) -> str:
-    """Return the translated string for *key* in the current language."""
-    lang = get_lang()
+    """Return the translated string for *key* in the current language.
+
+    For zh_cn, falls back to zh if no explicit zh_cn entry exists.
+    """
+    lang = get_ui_lang()
     entry = TRANSLATIONS.get(key)
     if entry is None:
         return key
+    if lang == "zh_cn":
+        val = entry.get("zh_cn")
+        if val is not None:
+            return val
+        return entry.get("zh", key)
     return entry.get(lang, entry.get("zh", key))
