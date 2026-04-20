@@ -664,7 +664,6 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
         width: 280px !important;
         min-width: 280px !important;
         max-width: 280px !important;
-        transition: transform 0.3s ease, visibility 0.3s ease;
     }
     section[data-testid="stSidebar"] > div:first-child {
         width: 280px !important;

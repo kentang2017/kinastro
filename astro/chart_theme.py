@@ -99,7 +99,7 @@ section[data-testid="stSidebar"] {
     width: 320px !important;
     min-width: 320px !important;
     max-width: 320px !important;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 visibility 0.3s ease !important;
 }
 section[data-testid="stSidebar"] > div:first-child {
