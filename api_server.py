@@ -40,7 +40,6 @@ from astro.zurkhai import compute_zurkhai_chart
 from astro.western.hellenistic import compute_hellenistic_chart
 from astro.damo import compute_damo_chart
 from astro.sanshi.liuren import compute_liuren_chart
-from astro.sanshi.qimen import compute_qimen_chart
 from astro.sanshi.taiyi import compute_taiyi_chart
 
 # ---------------------------------------------------------------------------
@@ -58,7 +57,7 @@ app = FastAPI(
         "Supports Chinese (七政四餘), Zi Wei Dou Shu (紫微斗數), Western, "
         "Vedic (Jyotish), Thai, Kabbalistic, Arabic, Mayan, Mahabote, "
         "Egyptian Decans, Nadi, Zurkhai, Hellenistic, "
-        "Da Liu Ren (大六壬), Qi Men Dun Jia (奇門遁甲), and Taiyi (太乙命法) systems."
+        "Da Liu Ren (大六壬) and Taiyi (太乙命法) systems."
     ),
     version="1.0.0",
 )
@@ -153,16 +152,6 @@ class ComputeAllParams(BirthParams):
         description="Current year for Hellenistic profections",
     )
 
-
-class QimenParams(BirthParams):
-    """Qi Men Dun Jia additionally supports a method selector."""
-
-    method: int = Field(
-        default=1,
-        ge=1,
-        le=2,
-        description="Chart method: 1=拆補法, 2=置閏法",
-    )
 
 
 class TaiyiParams(BirthParams):
@@ -408,18 +397,6 @@ def _cached_liuren(key: str, year: int, month: int, day: int, hour: int,
 
 
 @lru_cache(maxsize=256)
-def _cached_qimen(key: str, year: int, month: int, day: int, hour: int,
-                  minute: int, timezone: float, latitude: float,
-                  longitude: float, location_name: str,
-                  method: int) -> dict:
-    chart = compute_qimen_chart(
-        year=year, month=month, day=day, hour=hour, minute=minute,
-        method=method,
-    )
-    return _chart_to_dict(chart)
-
-
-@lru_cache(maxsize=256)
 def _cached_taiyi(key: str, year: int, month: int, day: int, hour: int,
                   minute: int, timezone: float, latitude: float,
                   longitude: float, location_name: str,
@@ -650,20 +627,6 @@ async def liuren_chart(params: BirthParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-@app.post("/api/qimen", response_model=ChartResponse, tags=["Systems"])
-async def qimen_chart(params: QimenParams) -> ChartResponse:
-    """Compute a Qi Men Dun Jia chart (奇門遁甲)."""
-    try:
-        key = _cache_key(params, method=params.method)
-        kwargs = _base_kwargs(params)
-        kwargs["method"] = params.method
-        data = _cached_qimen(key, **kwargs)
-        return ChartResponse(system="qimen", data=data)
-    except Exception as exc:
-        logger.exception("Qi Men Dun Jia chart computation failed")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
 @app.post("/api/taiyi", response_model=ChartResponse, tags=["Systems"])
 async def taiyi_chart(params: TaiyiParams) -> ChartResponse:
     """Compute a Taiyi Life Method chart (太乙命法)."""
@@ -801,7 +764,6 @@ async def list_systems() -> dict[str, list[str]]:
             "hellenistic",
             "damo",
             "liuren",
-            "qimen",
             "taiyi",
         ]
     }
