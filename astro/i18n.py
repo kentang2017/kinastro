@@ -1287,6 +1287,51 @@ transmitted by **Chen Xiyi**.
     "sys_hint_chinstar": {"zh": "明代演禽命理推算", "en": "Ming dynasty bird-star divination"},
     "sys_hint_cetian_ziwei": {"zh": "古法十八飛星紫微斗數", "en": "Ancient 18 Flying Stars Zi Wei Dou Shu"},
     "sys_hint_jaimini": {"zh": "Jaimini Sutras 古法占星", "en": "Jaimini Sutras ancient Vedic astrology"},
+    "sys_hint_twelve_ci": {"zh": "中國古代木星分野系統", "en": "Ancient Chinese Jupiter-station system"},
+
+    # ── 十二星次 (Twelve Ci) ────────────────────────────────────
+    "tab_twelve_ci": {"zh": "🌌 十二星次", "en": "🌌 Twelve Ci"},
+    "desc_twelve_ci": {
+        "zh": (
+            "**十二星次（Twelve Ci / 十二次 / 木星分野）**\n\n"
+            "中國古代最古老的木星分野系統，源自《左傳》《國語》《漢書・天文志》等經典。"
+            "以冬至點為黃道 0° 起點，將黃道 360° 等分為十二次，每次 30°，"
+            "依據木星（歲星）十二年繞天一周的運行規律，判定分野歸屬與吉凶。\n\n"
+            "十二次與十二地支、二十八宿、九州分野一一對應，是古代天文預測與國運分析的核心工具。"
+        ),
+        "en": (
+            "**Twelve Ci (十二星次 / Jupiter Station Astrology)**\n\n"
+            "The most ancient Chinese Jupiter-station system, originating from classical texts "
+            "such as Zuozhuan, Guoyu, and Han Shu (Book of Han — Treatise on Astronomy).\n\n"
+            "Starting from the winter-solstice point as ecliptic 0°, the ecliptic is divided into "
+            "twelve equal 30° sections (Ci).  Based on Jupiter's ~12-year orbital cycle, each Ci "
+            "corresponds to an Earthly Branch, Lunar Mansions, and a territorial domain (Fenye)."
+        ),
+    },
+    "spinner_twelve_ci": {"zh": "計算十二星次盤中…", "en": "Computing Twelve Ci chart…"},
+    "twelve_ci_chart_title": {"zh": "🌌 十二星次排盤 / Twelve Ci Astrology", "en": "🌌 Twelve Ci Astrology"},
+    "twelve_ci_natal_jupiter": {"zh": "本命木星星次", "en": "Natal Jupiter Ci"},
+    "twelve_ci_ci_name": {"zh": "星次", "en": "Ci"},
+    "twelve_ci_branch": {"zh": "地支", "en": "Branch"},
+    "twelve_ci_mansions": {"zh": "二十八宿", "en": "Mansions"},
+    "twelve_ci_fenye": {"zh": "分野", "en": "Fenye"},
+    "twelve_ci_jupiter_degree": {"zh": "木星度數", "en": "Jupiter Degree"},
+    "twelve_ci_planet_table": {"zh": "全部行星星次位置", "en": "All Planet Ci Positions"},
+    "twelve_ci_col_planet": {"zh": "行星", "en": "Planet"},
+    "twelve_ci_col_ci": {"zh": "星次", "en": "Ci"},
+    "twelve_ci_col_branch": {"zh": "地支", "en": "Branch"},
+    "twelve_ci_col_degree": {"zh": "度數", "en": "Degree"},
+    "twelve_ci_col_mansions": {"zh": "宿", "en": "Mansions"},
+    "twelve_ci_col_fenye": {"zh": "分野", "en": "Fenye"},
+    "twelve_ci_col_range": {"zh": "範圍", "en": "Range"},
+    "twelve_ci_col_solar": {"zh": "約陽曆", "en": "Solar Approx."},
+    "twelve_ci_transit_title": {"zh": "流年木星（當前行運）", "en": "Transit Jupiter (Current)"},
+    "twelve_ci_transit_ci": {"zh": "流年星次", "en": "Transit Ci"},
+    "twelve_ci_transit_degree": {"zh": "流年度數", "en": "Transit Degree"},
+    "twelve_ci_transit_branch": {"zh": "流年地支", "en": "Transit Branch"},
+    "twelve_ci_reference_title": {"zh": "📚 十二星次總覽", "en": "📚 Twelve Ci Reference"},
+    "twelve_ci_subtab_chart": {"zh": "🌌 星次輪盤", "en": "🌌 Ci Wheel"},
+    "twelve_ci_subtab_detail": {"zh": "📋 排盤資料", "en": "📋 Chart Detail"},
 
     # ── GUI Optimization: Welcome / onboarding ─────────────
     "welcome_hero_title": {

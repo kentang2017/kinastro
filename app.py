@@ -102,6 +102,7 @@ from astro.arabic.picatrix_mansions import (
 from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
 from astro.chinstar.chinstar import WanHuaXianQin
+from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
 
 
 # ============================================================
@@ -808,7 +809,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
-        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei", "tab_damo"]),
+        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
@@ -846,6 +847,7 @@ with st.sidebar:
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_babylonian": t("tab_babylonian"),
         "tab_chinstar": t("tab_chinstar"),
+        "tab_twelve_ci": t("tab_twelve_ci"),
         "tab_cetian_ziwei": t("tab_cetian_ziwei"),
         "tab_damo": t("tab_damo"),
     }
@@ -873,6 +875,7 @@ with st.sidebar:
         "tab_babylonian": t("sys_hint_babylonian"),
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
         "tab_chinstar": t("sys_hint_chinstar"),
+        "tab_twelve_ci": t("sys_hint_twelve_ci"),
         "tab_cetian_ziwei": t("sys_hint_cetian_ziwei"),
         "tab_damo": t("sys_hint_damo"),
     }
@@ -2354,6 +2357,47 @@ elif _selected_system == "tab_damo":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_damo"))
+
+# --- 十二星次 (Twelve Ci) ---
+elif _selected_system == "tab_twelve_ci":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_twelve_ci")):
+                _ci_chart = compute_twelve_ci_chart(**_p)
+
+            _ci_tab_wheel, _ci_tab_detail = st.tabs([
+                t("twelve_ci_subtab_chart"),
+                t("twelve_ci_subtab_detail"),
+            ])
+
+            with _ci_tab_wheel:
+                _ci_svg = build_twelve_ci_svg(
+                    _ci_chart,
+                    year=birth_date.year,
+                    month=birth_date.month,
+                    day=birth_date.day,
+                    hour=birth_time.hour,
+                    minute=birth_time.minute,
+                    tz=input_tz,
+                    location=location_name,
+                )
+                st.markdown(_ci_svg, unsafe_allow_html=True)
+                _render_ai_button("tab_twelve_ci", _ci_chart, btn_key="twelve_ci")
+
+            with _ci_tab_detail:
+                render_twelve_ci_chart(
+                    _ci_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_twelve_ci", _ci_chart, btn_key="twelve_ci_detail"
+                    ),
+                )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_twelve_ci"))
 
 # --- 萬化仙禽 (WanHua XianQin) ---
 elif _selected_system == "tab_chinstar":
