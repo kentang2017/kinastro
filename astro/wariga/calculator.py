@@ -267,15 +267,26 @@ class WarigaCalculator:
         decimal_hour = self.hour + self.minute / 60.0 - 8.0
         jd = swe.julday(self.year, self.month, self.day, decimal_hour)
 
-        # 太陽黃經
-        sun_result = swe.calc_ut(jd, swe.SUN)
-        sun_lon = sun_result[0][0] if isinstance(sun_result[0], (list, tuple)) else sun_result[0]
-
-        # 月亮黃經
-        moon_result = swe.calc_ut(jd, swe.MOON)
-        moon_lon = moon_result[0][0] if isinstance(moon_result[0], (list, tuple)) else moon_result[0]
+        # 太陽黃經、月亮黃經
+        sun_lon = self._extract_longitude(jd, swe.SUN)
+        moon_lon = self._extract_longitude(jd, swe.MOON)
 
         return jd, sun_lon, moon_lon
+
+    @staticmethod
+    def _extract_longitude(jd: float, planet_id: int) -> float:
+        """
+        從 pyswisseph 計算結果中提取天體黃經
+
+        參數：
+            jd        (float): 儒略日
+            planet_id (int):   pyswisseph 天體 ID
+
+        回傳：
+            float: 黃經度數 (0-360)
+        """
+        result = swe.calc_ut(jd, planet_id)
+        return result[0][0] if isinstance(result[0], (list, tuple)) else result[0]
 
     def _compute_pawukon_day(self) -> int:
         """
@@ -471,7 +482,7 @@ class WarigaCalculator:
         Sanga Wara 在 Pawukon 週期中有跳過規則：
         - 如果 day_in_pawukon < 4: idx = Dangu (索引0)
         - 否則: idx = (day_in_pawukon - 3) % 9
-        （前3天固定為 Dangu，從第4天開始正常循環）
+        （前4天 [索引0-3] 固定為 Dangu，從第5天 [索引4] 開始正常循環）
 
         古法依據：Lontar Wariga — Sanga Wara 排序法
 

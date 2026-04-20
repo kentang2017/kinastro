@@ -19,6 +19,22 @@ from .calculator import WarigaResult
 
 
 # ============================================================
+# 輔助函數 (Helpers)
+# ============================================================
+
+def _format_dewasa_status(is_auspicious: bool):
+    """
+    根據吉凶狀態回傳格式化文字與顏色
+
+    回傳：
+        tuple: (status_text, color)
+    """
+    if is_auspicious:
+        return "✅ 吉日 (Dewasa Ayu)", "#2E8B57"
+    return "⚠️ 需謹慎 (Dewasa Ala)", "#CD5C5C"
+
+
+# ============================================================
 # 文字渲染 (Text Rendering)
 # ============================================================
 
@@ -85,7 +101,7 @@ def render_text(result: WarigaResult) -> str:
     lines.append("  【Ala Ayuning Dewasa（吉凶判斷）】")
     lines.append("─" * 60)
     d = result.dewasa
-    status = "✅ 吉日 (Dewasa Ayu)" if d.is_auspicious else "⚠️ 需謹慎 (Dewasa Ala)"
+    status, _ = _format_dewasa_status(d.is_auspicious)
     lines.append(f"  總體判斷：{status}")
     lines.append(f"  Neptu 總和（Panca + Sapta）：{d.neptu_sum}")
     lines.append(f"  Pancasuda：{d.pancasuda} — {d.pancasuda_meaning}")
@@ -294,8 +310,7 @@ def render_svg(result: WarigaResult, width=600, height=800) -> str:
 
     # 吉凶判斷
     d = result.dewasa
-    status_text = "✅ 吉日 (Dewasa Ayu)" if d.is_auspicious else "⚠️ 需謹慎 (Dewasa Ala)"
-    status_color = "#2E8B57" if d.is_auspicious else "#CD5C5C"
+    status_text, status_color = _format_dewasa_status(d.is_auspicious)
     dwg.add(dwg.text("吉凶判斷",
                       insert=(30, y),
                       font_size="14px", font_weight="bold", fill="#8B4513"))
@@ -376,8 +391,7 @@ def _render_svg_fallback(result: WarigaResult, width=600, height=800) -> str:
                  f'Wuku {result.wuku.name} (Neptu={result.wuku.neptu})</text>')
     y += 25
 
-    status = "吉日" if result.dewasa.is_auspicious else "需謹慎"
-    color = "#2E8B57" if result.dewasa.is_auspicious else "#CD5C5C"
+    status, color = _format_dewasa_status(result.dewasa.is_auspicious)
     lines.append(f'<text x="{width // 2}" y="{y}" text-anchor="middle" '
                  f'font-size="14" fill="{color}">{status}</text>')
     y += 30
