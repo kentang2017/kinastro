@@ -795,3 +795,604 @@ def render_hellenistic_chart(chart):
             cond_data.append({"Planet": pc.planet, "Score": pc.score,
                               "Details": detail_str})
         st.dataframe(cond_data, width="stretch")
+
+
+# ============================================================
+# Extended Hellenistic Lots  (Valens / Hellenistic tradition)
+# ============================================================
+# 12 additional Lots following Vettius Valens' *Anthologies* and
+# standard Hellenistic formulae.  Each Lot uses a day / night
+# formula variant (the night formula reverses the subtraction
+# of the two significator planets).
+
+# Exaltation degree lookup — the exact degree of exaltation used
+# in the Lot of Exaltation formula.
+_EXALTATION_DEG = {
+    "Sun": 19.0,    # Aries 19°
+    "Moon": 33.0,   # Taurus 3°  → 30 + 3 = 33
+}
+
+
+def compute_extended_lots(planet_longs, ascendant, is_day, cusps):
+    """Compute 12 extended Hellenistic / Valens Lots.
+
+    計算 12 個擴充希臘 Lots（瓦倫斯 / 希臘傳統）
+
+    Parameters
+    ----------
+    planet_longs : dict
+        Planet name → ecliptic longitude (0-360).
+    ascendant : float
+        Ascendant longitude.
+    is_day : bool
+        True for day chart, False for night chart.
+    cusps : list[float]
+        12 whole-sign house cusps.
+
+    Returns
+    -------
+    list[Lot]
+        12 Lot dataclass instances with the same schema as
+        ``compute_lots()`` output.
+    """
+    sun = planet_longs.get("Sun", 0.0)
+    moon = planet_longs.get("Moon", 0.0)
+    venus = planet_longs.get("Venus", 0.0)
+    mars = planet_longs.get("Mars", 0.0)
+    mercury = planet_longs.get("Mercury", 0.0)
+    jupiter = planet_longs.get("Jupiter", 0.0)
+    saturn = planet_longs.get("Saturn", 0.0)
+
+    # Pre-compute Fortune & Spirit (needed for some Lots)
+    if is_day:
+        fortune = _normalize(ascendant + moon - sun)
+        spirit = _normalize(ascendant + sun - moon)
+    else:
+        fortune = _normalize(ascendant + sun - moon)
+        spirit = _normalize(ascendant + moon - sun)
+
+    # ── Lot definitions ────────────────────────────────────────
+    # Each tuple: (english_name, chinese_name, selected_longitude,
+    #              formula_en, meaning_en, meaning_cn)
+    # Day/night selection is applied via conditional expressions.
+
+    # 1. Lot of Basis  基礎點
+    #    Day: Asc + Fortune - Spirit | Night: Asc + Spirit - Fortune
+    basis_day = _normalize(ascendant + fortune - spirit)
+    basis_night = _normalize(ascendant + spirit - fortune)
+
+    # 2. Lot of Exaltation  尊貴點
+    #    Day: Asc + 19°Aries - Sun | Night: Asc + 3°Taurus - Moon
+    exalt_day = _normalize(ascendant + _EXALTATION_DEG["Sun"] - sun)
+    exalt_night = _normalize(ascendant + _EXALTATION_DEG["Moon"] - moon)
+
+    # 3. Lot of Marriage  婚姻點
+    #    Day: Asc + Venus - Saturn | Night: Asc + Saturn - Venus
+    marriage_day = _normalize(ascendant + venus - saturn)
+    marriage_night = _normalize(ascendant + saturn - venus)
+
+    # 4. Lot of Children  子女點
+    #    Day: Asc + Jupiter - Saturn | Night: Asc + Saturn - Jupiter
+    children_day = _normalize(ascendant + jupiter - saturn)
+    children_night = _normalize(ascendant + saturn - jupiter)
+
+    # 5. Lot of Parents (Father)  父母點
+    #    Day: Asc + Saturn - Sun | Night: Asc + Sun - Saturn
+    parents_day = _normalize(ascendant + saturn - sun)
+    parents_night = _normalize(ascendant + sun - saturn)
+
+    # 6. Lot of Siblings  兄弟姐妹點
+    #    Day: Asc + Saturn - Jupiter | Night: Asc + Jupiter - Saturn
+    siblings_day = _normalize(ascendant + saturn - jupiter)
+    siblings_night = _normalize(ascendant + jupiter - saturn)
+
+    # 7. Lot of Friends  朋友點
+    #    Day: Asc + Moon - Mercury | Night: Asc + Mercury - Moon
+    friends_day = _normalize(ascendant + moon - mercury)
+    friends_night = _normalize(ascendant + mercury - moon)
+
+    # 8. Lot of Enemies  敵人點
+    #    Day: Asc + Mars - Saturn | Night: Asc + Saturn - Mars
+    enemies_day = _normalize(ascendant + mars - saturn)
+    enemies_night = _normalize(ascendant + saturn - mars)
+
+    # 9. Lot of Health  健康點
+    #    Day: Asc + Mars - Saturn | Night: Asc + Saturn - Mars
+    #    (Valens variant using Fortune)
+    #    Day: Asc + Fortune - Mars | Night: Asc + Mars - Fortune
+    health_day = _normalize(ascendant + fortune - mars)
+    health_night = _normalize(ascendant + mars - fortune)
+
+    # 10. Lot of Career / Achievement  事業點
+    #    Day: Asc + Saturn - Sun  (same base as Valens' "Lot of Accomplishment")
+    #    Variant: Asc + Mars - Mercury (Dorotheus)
+    #    We use: Day: Asc + Mars - Moon | Night: Asc + Moon - Mars
+    career_day = _normalize(ascendant + mars - moon)
+    career_night = _normalize(ascendant + moon - mars)
+
+    # 11. Lot of Travel  旅行點
+    #    Day: Asc + Mercury - Mars | Night: Asc + Mars - Mercury
+    travel_day = _normalize(ascendant + mercury - mars)
+    travel_night = _normalize(ascendant + mars - mercury)
+
+    # 12. Lot of Death  死亡點
+    #    Day: Asc + Moon - 8th cusp | Night: Asc + 8th cusp - Moon
+    #    Valens: Day: Asc + Saturn - Moon | Night: Asc + Moon - Saturn
+    death_day = _normalize(ascendant + saturn - moon)
+    death_night = _normalize(ascendant + moon - saturn)
+
+    defs = [
+        ("Lot of Basis", "基礎點",
+         basis_day if is_day else basis_night,
+         "Day: Asc+Fortune-Spirit / Night: Asc+Spirit-Fortune",
+         "Foundation, life direction", "生命基礎、方向"),
+        ("Lot of Exaltation", "尊貴點",
+         exalt_day if is_day else exalt_night,
+         "Day: Asc+19°Ari-Sun / Night: Asc+3°Tau-Moon",
+         "Honour, eminence", "榮譽、顯赫"),
+        ("Lot of Marriage", "婚姻點",
+         marriage_day if is_day else marriage_night,
+         "Day: Asc+Venus-Saturn / Night: Asc+Saturn-Venus",
+         "Partnership, marriage", "伴侶、婚姻"),
+        ("Lot of Children", "子女點",
+         children_day if is_day else children_night,
+         "Day: Asc+Jupiter-Saturn / Night: Asc+Saturn-Jupiter",
+         "Offspring, fertility", "子嗣、生育"),
+        ("Lot of Parents", "父母點",
+         parents_day if is_day else parents_night,
+         "Day: Asc+Saturn-Sun / Night: Asc+Sun-Saturn",
+         "Father, authority figures", "父親、權威人物"),
+        ("Lot of Siblings", "兄弟姐妹點",
+         siblings_day if is_day else siblings_night,
+         "Day: Asc+Saturn-Jupiter / Night: Asc+Jupiter-Saturn",
+         "Brothers, sisters, peers", "兄弟姐妹、同輩"),
+        ("Lot of Friends", "朋友點",
+         friends_day if is_day else friends_night,
+         "Day: Asc+Moon-Mercury / Night: Asc+Mercury-Moon",
+         "Friendship, alliances", "友誼、同盟"),
+        ("Lot of Enemies", "敵人點",
+         enemies_day if is_day else enemies_night,
+         "Day: Asc+Mars-Saturn / Night: Asc+Saturn-Mars",
+         "Open enemies, adversaries", "公開敵人、對手"),
+        ("Lot of Health", "健康點",
+         health_day if is_day else health_night,
+         "Day: Asc+Fortune-Mars / Night: Asc+Mars-Fortune",
+         "Vitality, physical health", "活力、身體健康"),
+        ("Lot of Career", "事業點",
+         career_day if is_day else career_night,
+         "Day: Asc+Mars-Moon / Night: Asc+Moon-Mars",
+         "Career, achievement, praxis", "事業、成就"),
+        ("Lot of Travel", "旅行點",
+         travel_day if is_day else travel_night,
+         "Day: Asc+Mercury-Mars / Night: Asc+Mars-Mercury",
+         "Foreign travel, journeys", "遠行、旅途"),
+        ("Lot of Death", "死亡點",
+         death_day if is_day else death_night,
+         "Day: Asc+Saturn-Moon / Night: Asc+Moon-Saturn",
+         "Mortality, endings", "死亡、終結"),
+    ]
+
+    lots = []
+    for name, cn, lon, formula, m_en, m_cn in defs:
+        idx = _sign_idx(lon)
+        lots.append(Lot(
+            name=name, name_cn=cn, longitude=lon,
+            sign=ZODIAC_SIGNS[idx], sign_degree=round(_sign_deg(lon), 2),
+            house=_find_house(lon, cusps),
+            formula_en=formula, meaning_en=m_en, meaning_cn=m_cn,
+        ))
+    return lots
+
+
+# ============================================================
+# Valens Synkrasis — Planetary Combinations (σύγκρασις)
+# ============================================================
+# Implements Vettius Valens' classical *planetary mixture* logic.
+# Two or three planets are evaluated together considering sect,
+# essential dignity, aspect type, bound ruler, and phase.
+
+# Aspect type score modifiers
+_ASPECT_SCORE = {
+    "conjunction": 12,
+    "trine": 10,
+    "sextile": 6,
+    "square": -4,
+    "opposition": -8,
+}
+
+# Orb thresholds for aspect detection (degrees)
+_ASPECT_ORBS = {
+    0: ("conjunction", 8),
+    60: ("sextile", 6),
+    90: ("square", 7),
+    120: ("trine", 8),
+    180: ("opposition", 8),
+}
+
+# Valens-style keywords per planet pair family
+_PAIR_KEYWORDS = {
+    ("Sun", "Moon"): {
+        "positive": ["帝王相位 / Royal Union", "光明調和 / Luminaries Harmony"],
+        "negative": ["內在衝突 / Inner Conflict", "光暗拉扯 / Light-Dark Tension"],
+    },
+    ("Sun", "Jupiter"): {
+        "positive": ["榮耀與幸運 / Glory & Fortune", "領袖光環 / Kingly Aura"],
+        "negative": ["過度自信 / Overconfidence", "權勢膨脹 / Power Inflation"],
+    },
+    ("Sun", "Saturn"): {
+        "positive": ["隱藏的統治者 / Hidden Ruler", "堅韌領導 / Steadfast Authority"],
+        "negative": ["壓抑自我 / Suppressed Self", "權威受挫 / Authority Undermined"],
+    },
+    ("Sun", "Mars"): {
+        "positive": ["戰將之光 / Warrior's Light", "果斷行動 / Decisive Action"],
+        "negative": ["激烈衝突 / Fierce Conflict", "暴力傾向 / Violent Tendency"],
+    },
+    ("Sun", "Venus"): {
+        "positive": ["優雅權威 / Graceful Authority", "藝術才華 / Artistic Brilliance"],
+        "negative": ["虛榮矛盾 / Vanity Conflict", "愛與權衝突 / Love-Power Clash"],
+    },
+    ("Sun", "Mercury"): {
+        "positive": ["聰慧領袖 / Wise Leader", "口才卓越 / Eloquent Authority"],
+        "negative": ["心智緊張 / Mental Strain", "意見分歧 / Opinion Clash"],
+    },
+    ("Moon", "Venus"): {
+        "positive": ["柔美共鳴 / Gentle Resonance", "情感豐沛 / Emotional Richness"],
+        "negative": ["情緒依賴 / Emotional Dependence", "過度感性 / Over-Sensitivity"],
+    },
+    ("Moon", "Mars"): {
+        "positive": ["情感勇氣 / Emotional Courage", "直覺行動 / Instinctive Action"],
+        "negative": ["情緒暴躁 / Emotional Volatility", "衝動反應 / Impulsive Reaction"],
+    },
+    ("Moon", "Jupiter"): {
+        "positive": ["慈悲智慧 / Compassionate Wisdom", "靈性成長 / Spiritual Growth"],
+        "negative": ["情感膨脹 / Emotional Inflation", "過度樂觀 / Over-Optimism"],
+    },
+    ("Moon", "Saturn"): {
+        "positive": ["情感堅韌 / Emotional Resilience", "自律深沉 / Disciplined Depth"],
+        "negative": ["情感壓抑 / Emotional Suppression", "憂鬱傾向 / Melancholic Tendency"],
+    },
+    ("Moon", "Mercury"): {
+        "positive": ["心智靈敏 / Mental Agility", "溝通情感 / Communicating Feelings"],
+        "negative": ["思緒紛亂 / Scattered Thoughts", "焦慮多變 / Anxious Fluctuation"],
+    },
+    ("Mercury", "Venus"): {
+        "positive": ["藝文才華 / Literary Grace", "社交魅力 / Social Charm"],
+        "negative": ["膚淺表達 / Shallow Expression", "輕浮言辭 / Frivolous Words"],
+    },
+    ("Mercury", "Mars"): {
+        "positive": ["辯論高手 / Master Debater", "策略思維 / Strategic Mind"],
+        "negative": ["言語攻擊 / Verbal Aggression", "爭論不休 / Endless Argument"],
+    },
+    ("Mercury", "Jupiter"): {
+        "positive": ["博學多聞 / Erudite Wisdom", "哲學深度 / Philosophical Depth"],
+        "negative": ["誇大言辭 / Exaggerated Speech", "理論脫節 / Theory Disconnect"],
+    },
+    ("Mercury", "Saturn"): {
+        "positive": ["精密思維 / Precise Thinking", "學術嚴謹 / Scholarly Rigor"],
+        "negative": ["悲觀思維 / Pessimistic Thinking", "溝通障礙 / Communication Block"],
+    },
+    ("Venus", "Mars"): {
+        "positive": ["熱情之愛 / Passionate Love", "創造力爆發 / Creative Burst"],
+        "negative": ["愛恨交織 / Love-Hate Entangle", "慾望失控 / Desire Out of Control"],
+    },
+    ("Venus", "Jupiter"): {
+        "positive": ["大福大愛 / Great Fortune & Love", "豐盛之美 / Abundant Beauty"],
+        "negative": ["奢侈浪費 / Extravagance", "過度放縱 / Over-Indulgence"],
+    },
+    ("Venus", "Saturn"): {
+        "positive": ["忠誠之愛 / Loyal Love", "持久之美 / Enduring Beauty"],
+        "negative": ["愛情阻礙 / Love Obstacles", "情感冷漠 / Emotional Coldness"],
+    },
+    ("Mars", "Jupiter"): {
+        "positive": ["正義之戰 / Righteous Battle", "積極擴展 / Active Expansion"],
+        "negative": ["魯莽冒進 / Reckless Advance", "過度征服 / Over-Conquest"],
+    },
+    ("Mars", "Saturn"): {
+        "positive": ["紀律戰士 / Disciplined Warrior", "堅忍不拔 / Tenacious Endurance"],
+        "negative": ["破壞之力 / Destructive Force", "殘酷壓迫 / Cruel Oppression"],
+    },
+    ("Jupiter", "Saturn"): {
+        "positive": ["智慧之柱 / Pillar of Wisdom", "社會建設 / Social Building"],
+        "negative": ["擴張與限制 / Expansion vs Restriction", "信念動搖 / Faith Shaken"],
+    },
+}
+
+
+def _get_aspect(lon_a, lon_b):
+    """Detect the Ptolemaic aspect between two longitudes.
+
+    偵測兩個黃經之間的托勒密相位
+
+    Returns
+    -------
+    tuple[str, float] | None
+        (aspect_name, exact_angular_distance) or None if no aspect.
+    """
+    diff = abs(lon_a - lon_b) % 360
+    if diff > 180:
+        diff = 360 - diff
+    for target, (name, orb) in _ASPECT_ORBS.items():
+        if abs(diff - target) <= orb:
+            return name, diff
+    return None
+
+
+def _planet_dignity_score(planet, lon):
+    """Essential dignity score for a single planet.
+
+    行星的本質尊貴評分
+
+    Returns
+    -------
+    int
+        Positive for dignities, negative for debilities.
+    """
+    idx = _sign_idx(lon)
+    score = 0
+    if idx in DOMICILE.get(planet, []):
+        score += 5
+    if EXALTATION.get(planet) == idx:
+        score += 4
+    if idx in DETRIMENT.get(planet, []):
+        score -= 5
+    if FALL.get(planet) == idx:
+        score -= 4
+    return score
+
+
+def _is_morning_star(planet, sun_lon, planet_lon):
+    """Check if a planet rises before the Sun (morning star / φαίνων).
+
+    判斷行星是否為晨星
+
+    Mercury and Venus are relevant; outer planets always have
+    a phase but the distinction is less meaningful.
+    """
+    diff = (planet_lon - sun_lon) % 360
+    return diff > 180  # planet behind the Sun → rises before it
+
+
+def _mutual_reception(planet_a, lon_a, planet_b, lon_b):
+    """Check if two planets are in mutual reception (each in the other's domicile).
+
+    判斷兩顆行星是否互容
+    """
+    idx_a = _sign_idx(lon_a)
+    idx_b = _sign_idx(lon_b)
+    a_in_b_dom = idx_a in DOMICILE.get(planet_b, [])
+    b_in_a_dom = idx_b in DOMICILE.get(planet_a, [])
+    return a_in_b_dom and b_in_a_dom
+
+
+def calculate_valens_synkrasis(planet_longs, sect, bound_rulers=None):
+    """Compute Valens-style planetary combinations (σύγκρασις).
+
+    計算瓦倫斯行星組合（Synkrasis）
+
+    Evaluates every pair of the 7 traditional planets, scoring them
+    on sect, essential dignity, aspect, reception, bound ruler, and
+    phase (morning / evening star).
+
+    Parameters
+    ----------
+    planet_longs : dict
+        Planet name → ecliptic longitude (0-360).
+    sect : str
+        ``"Day"`` or ``"Night"``.
+    bound_rulers : dict | None
+        Optional mapping of planet → bound ruler for bonus scoring.
+
+    Returns
+    -------
+    list[dict]
+        Each dict contains:
+        - ``combination_name`` (str)
+        - ``planet_a`` / ``planet_b`` (str)
+        - ``aspect`` (str | None)
+        - ``strength_score`` (int, 0-100)
+        - ``valens_keywords`` (list[str])
+        - ``interpretation_template`` (str, prompt for AI)
+    """
+    is_day = sect == "Day"
+    sun_lon = planet_longs.get("Sun", 0.0)
+
+    day_sect = {"Sun", "Jupiter", "Saturn"}
+    night_sect = {"Moon", "Venus", "Mars"}
+
+    planets_list = [p for p in
+                    ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"]
+                    if p in planet_longs]
+
+    results = []
+    for i, pa in enumerate(planets_list):
+        for pb in planets_list[i + 1:]:
+            lon_a = planet_longs[pa]
+            lon_b = planet_longs[pb]
+
+            # ── Base score (start at 50) ─────────────────────────
+            score = 50
+
+            # 1. Aspect bonus/penalty
+            aspect_info = _get_aspect(lon_a, lon_b)
+            aspect_name = aspect_info[0] if aspect_info else None
+            if aspect_info:
+                score += _ASPECT_SCORE.get(aspect_info[0], 0)
+
+            # 2. Sect agreement
+            for p in (pa, pb):
+                if is_day and p in day_sect:
+                    score += 3
+                elif not is_day and p in night_sect:
+                    score += 3
+                elif p in day_sect or p in night_sect:
+                    score -= 2
+
+            # 3. Essential dignity
+            score += _planet_dignity_score(pa, lon_a)
+            score += _planet_dignity_score(pb, lon_b)
+
+            # 4. Mutual reception
+            if _mutual_reception(pa, lon_a, pb, lon_b):
+                score += 8
+
+            # 5. Phase bonus (morning star = stronger in Valens)
+            for p, lon in ((pa, lon_a), (pb, lon_b)):
+                if p in ("Mercury", "Venus"):
+                    if _is_morning_star(p, sun_lon, lon):
+                        score += 2
+
+            # 6. Bound ruler bonus
+            if bound_rulers:
+                for p in (pa, pb):
+                    if bound_rulers.get(p) == pa or bound_rulers.get(p) == pb:
+                        score += 3
+
+            # Clamp to 0-100
+            score = max(0, min(100, score))
+
+            # ── Keywords ─────────────────────────────────────────
+            key = (pa, pb) if (pa, pb) in _PAIR_KEYWORDS else (pb, pa)
+            pair_kw = _PAIR_KEYWORDS.get(key, {
+                "positive": ["和諧共振 / Harmonious Resonance"],
+                "negative": ["張力衝突 / Tension & Conflict"],
+            })
+            if score >= 50:
+                keywords = pair_kw["positive"]
+            else:
+                keywords = pair_kw["negative"]
+
+            # ── Combination name ─────────────────────────────────
+            combo_name = f"{pa}–{pb}"
+
+            # ── Interpretation template ──────────────────────────
+            aspect_str = aspect_name or "no major aspect"
+            template = (
+                f"Interpret the Valens Synkrasis of {pa} and {pb} "
+                f"({aspect_str}, strength {score}/100, "
+                f"{'day' if is_day else 'night'} chart). "
+                f"Keywords: {', '.join(keywords)}. "
+                f"Consider sect, dignity, and phase in the analysis."
+            )
+
+            results.append({
+                "combination_name": combo_name,
+                "planet_a": pa,
+                "planet_b": pb,
+                "aspect": aspect_name,
+                "strength_score": score,
+                "valens_keywords": keywords,
+                "interpretation_template": template,
+            })
+
+    # Sort by strength descending
+    results.sort(key=lambda r: r["strength_score"], reverse=True)
+    return results
+
+
+# ============================================================
+# Extended Hellenistic dataclass
+# ============================================================
+
+@dataclass
+class HellenisticExtended:
+    """Extended Hellenistic data (Lots + Synkrasis).
+
+    擴充的希臘占星資料（Lots + 行星組合）
+    """
+    extended_lots: list = field(default_factory=list)
+    synkrasis: list = field(default_factory=list)
+
+
+def compute_hellenistic_extended(western_chart, hellenistic_chart):
+    """Compute extended Hellenistic techniques from existing charts.
+
+    從現有星盤資料計算擴充希臘占星技法
+
+    Parameters
+    ----------
+    western_chart : WesternChart
+        The base western chart.
+    hellenistic_chart : HellenisticChart
+        The standard Hellenistic chart (from ``compute_hellenistic_chart``).
+
+    Returns
+    -------
+    HellenisticExtended
+    """
+    p_longs = hellenistic_chart.planet_longitudes
+    cusps = hellenistic_chart.house_cusps
+    asc = hellenistic_chart.ascendant
+    is_day = hellenistic_chart.is_day_chart
+
+    ext_lots = compute_extended_lots(p_longs, asc, is_day, cusps)
+
+    sect_str = "Day" if is_day else "Night"
+    synkrasis = calculate_valens_synkrasis(p_longs, sect_str)
+
+    return HellenisticExtended(
+        extended_lots=ext_lots,
+        synkrasis=synkrasis,
+    )
+
+
+# ============================================================
+# Streamlit rendering for extended features
+# ============================================================
+
+def render_extended_lots(lots):
+    """Render the 12 extended Lots in Streamlit.
+
+    在 Streamlit 中渲染 12 個擴充 Lots
+    """
+    import streamlit as st
+
+    st.subheader("📜 Extended Hellenistic Lots / 擴充古代 Lots")
+    st.caption("Based on Vettius Valens' *Anthologies* and Hellenistic tradition")
+
+    lot_data = []
+    for lot in lots:
+        lot_data.append({
+            "Name": f"{lot.name} ({lot.name_cn})",
+            "Sign": lot.sign,
+            "Degree": f"{lot.sign_degree:.2f}°",
+            "House": lot.house,
+            "Formula": lot.formula_en,
+            "Meaning": lot.meaning_cn,
+        })
+    if lot_data:
+        st.dataframe(lot_data, use_container_width=True)
+
+
+def render_valens_combinations(synkrasis):
+    """Render Valens Synkrasis table in Streamlit.
+
+    在 Streamlit 中渲染瓦倫斯行星組合表
+    """
+    import streamlit as st
+
+    st.subheader("⚗️ Valens Synkrasis / 瓦倫斯行星組合")
+    st.caption("Planetary combination analysis following Vettius Valens' method")
+
+    combo_data = []
+    for c in synkrasis:
+        combo_data.append({
+            "Combination": c["combination_name"],
+            "Aspect": c["aspect"] or "—",
+            "Strength": f"{c['strength_score']}/100",
+            "Keywords": " · ".join(c["valens_keywords"]),
+        })
+    if combo_data:
+        st.dataframe(combo_data, use_container_width=True)
+
+    # Show top 3 strongest combinations as highlights
+    top3 = synkrasis[:3]
+    if top3:
+        st.markdown("#### 🏆 Top Combinations / 最強組合")
+        for c in top3:
+            emoji = "🔥" if c["strength_score"] >= 70 else "⭐"
+            st.info(
+                f"{emoji} **{c['combination_name']}** — "
+                f"Strength: {c['strength_score']}/100 | "
+                f"Aspect: {c['aspect'] or 'none'}\n\n"
+                f"Keywords: {' · '.join(c['valens_keywords'])}"
+            )

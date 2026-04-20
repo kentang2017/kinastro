@@ -70,7 +70,8 @@ from astro.egyptian.decans import compute_decan_chart, render_decan_chart, rende
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
 from astro.tibetan import compute_tibetan_chart, render_tibetan_chart, build_kalachakra_mandala_svg
-from astro.western.hellenistic import compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg
+from astro.western.hellenistic import (compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg,
+                                      compute_hellenistic_extended, render_extended_lots, render_valens_combinations)
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg, build_k8538_planisphere_svg
 from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni_manzil_mandala_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
@@ -2200,12 +2201,15 @@ elif _selected_system == "tab_hellenistic":
                     birth_year=birth_date.year,
                     current_year=datetime.now().year,
                 )
-            _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots, _h_tab_centiloquy = st.tabs([
+                _hellen_ext = compute_hellenistic_extended(_hellen_w, _hellen_chart)
+            _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots, _h_tab_ext_lots, _h_tab_synkrasis, _h_tab_centiloquy = st.tabs([
                 t("hellen_subtab_chart"),
                 t("hellen_subtab_natal"),
                 t("hellen_subtab_profections"),
                 t("hellen_subtab_zr"),
                 t("hellen_subtab_lots"),
+                "📜 Extended Lots / 擴充 Lots",
+                "⚗️ Valens Synkrasis / 行星組合",
                 t("hellen_subtab_centiloquy"),
             ])
             with _h_tab_chart:
@@ -2255,6 +2259,13 @@ elif _selected_system == "tab_hellenistic":
                                    "Meaning": l.meaning_cn}
                                   for l in _hellen_chart.lots],
                                  width="stretch")
+
+            with _h_tab_ext_lots:
+                if _hellen_ext.extended_lots:
+                    render_extended_lots(_hellen_ext.extended_lots)
+            with _h_tab_synkrasis:
+                if _hellen_ext.synkrasis:
+                    render_valens_combinations(_hellen_ext.synkrasis)
 
             with _h_tab_centiloquy:
                 st.subheader("托勒密《百論》 / Ptolemy's Centiloquy")

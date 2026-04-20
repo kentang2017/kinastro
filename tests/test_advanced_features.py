@@ -429,6 +429,58 @@ class TestHellenistic:
         for lot in lots:
             assert 0 <= lot.longitude < 360
 
+    def test_extended_lots_count(self, western_chart):
+        from astro.western.hellenistic import compute_extended_lots
+        planet_longs = {}
+        for p in western_chart.planets:
+            short = p.name.split()[0]
+            planet_longs[short] = p.longitude
+        cusps = [h.cusp for h in western_chart.houses]
+        lots = compute_extended_lots(planet_longs, western_chart.ascendant,
+                                     western_chart.is_day_chart, cusps)
+        assert len(lots) == 12
+
+    def test_extended_lots_fields(self, western_chart):
+        from astro.western.hellenistic import compute_extended_lots
+        planet_longs = {p.name.split()[0]: p.longitude for p in western_chart.planets}
+        cusps = [h.cusp for h in western_chart.houses]
+        lots = compute_extended_lots(planet_longs, western_chart.ascendant,
+                                     western_chart.is_day_chart, cusps)
+        for lot in lots:
+            assert hasattr(lot, "name")
+            assert hasattr(lot, "longitude")
+            assert 0 <= lot.longitude < 360
+            assert hasattr(lot, "sign")
+            assert hasattr(lot, "house")
+            assert hasattr(lot, "formula_en")
+            assert hasattr(lot, "meaning_en")
+            assert hasattr(lot, "meaning_cn")
+
+    def test_valens_synkrasis(self, hchart):
+        from astro.western.hellenistic import calculate_valens_synkrasis
+        combos = calculate_valens_synkrasis(hchart.planet_longitudes, "Day")
+        assert len(combos) > 0
+        for c in combos:
+            assert "combination_name" in c
+            assert "strength_score" in c
+            assert 0 <= c["strength_score"] <= 100
+            assert "valens_keywords" in c
+            assert isinstance(c["valens_keywords"], list)
+            assert "interpretation_template" in c
+
+    def test_valens_synkrasis_night(self, hchart):
+        from astro.western.hellenistic import calculate_valens_synkrasis
+        combos = calculate_valens_synkrasis(hchart.planet_longitudes, "Night")
+        assert len(combos) > 0
+        for c in combos:
+            assert 0 <= c["strength_score"] <= 100
+
+    def test_hellenistic_extended(self, western_chart, hchart):
+        from astro.western.hellenistic import compute_hellenistic_extended
+        ext = compute_hellenistic_extended(western_chart, hchart)
+        assert len(ext.extended_lots) == 12
+        assert len(ext.synkrasis) > 0
+
 
 # ══════════════════════════════════════════════════════════════════════
 # 10. cross_compare
