@@ -443,3 +443,228 @@ CATUR_WARA_SKIP_DAYS = {70, 71}
 # 即可得到在 Pawukon 週期中的位置
 # ============================================================
 PAWUKON_CYCLE = 210
+
+# ============================================================
+# Panca Dauh — 5 時辰劃分（每 Dauh 約 4.8 小時）
+# 巴厘傳統將一日分為 5 個 Dauh，每 Dauh 歸屬特定神明
+# 格式：(名稱, 起始小時(含), 終止小時(不含), 神明/主宰, 吉凶, 說明)
+# 範圍使用半開區間 [start, end)，無邊界重疊
+# 古法依據：Lontar Wariga — Panca Dauh 時辰表
+# ============================================================
+PANCA_DAUH = [
+    ("Pagi",       0,   6,  "Dewa Surya",    "中性", "日出前，萬物甦醒"),
+    ("Tengai",     6,  11,  "Dewa Brahma",   "吉",   "上午，創造之時"),
+    ("Tangeh",    11,  16,  "Dewa Wisnu",    "吉",   "正午，維護之時"),
+    ("Sandikala", 16,  20,  "Dewa Siwa",     "凶",   "黃昏，轉化之時"),
+    ("Wengi",     20,  24,  "Dewa Yama",     "凶",   "夜間，靜思之時"),
+]
+
+# ============================================================
+# Asta Dauh — 8 時辰劃分（每 Dauh 3 小時）
+# 更精細的時辰系統，嚴格按照 Lontar Wariga Gemet 傳統
+# 格式：(名稱, 起始小時(含), 終止小時(不含), 方位, 吉凶, 說明)
+# 範圍使用半開區間 [start, end)，無邊界重疊
+# 古法依據：Lontar Wariga Gemet — Asta Dauh 時辰劃分
+# ============================================================
+ASTA_DAUH = [
+    ("Pagi",        0,  3,  "Timur",        "中性",  "黎明前，Dewa Iswara 方，宜靜修"),
+    ("Kala Pagi",   3,  6,  "Tenggara",     "凶",    "Dewa Maheswara 方，忌出行"),
+    ("Tengai",      6,  9,  "Selatan",      "吉",    "Dewa Brahma 方，宜開始重要事"),
+    ("Kala Tengai", 9, 12,  "Barat Daya",   "凶",    "Dewa Rudra 方，忌簽約"),
+    ("Tangeh",     12, 15,  "Barat",        "吉",    "Dewa Mahadewa 方，宜農耕"),
+    ("Kala Tangeh",15, 18,  "Barat Laut",   "凶",    "Dewa Sangkara 方，忌動土"),
+    ("Sandikala",  18, 21,  "Utara",        "中性",  "Dewa Wisnu 方，宜祭祀"),
+    ("Wengi",      21, 24,  "Timur Laut",   "凶",    "Dewa Sambu 方，宜休息"),
+]
+
+# ============================================================
+# Penanggal — 月盈期 (1-15)，從新月到滿月
+# 格式：(序號, 巴厘名稱, 梵語名, Neptu/Urip)
+# 古法依據：Lontar Wariga — Penanggal 數值表
+# ============================================================
+PENANGGAL_NAMES = [
+    (1,  "Penanggal Ping Pisan",   "Pratipada",  5),
+    (2,  "Penanggal Ping Dua",     "Dvitiya",    4),
+    (3,  "Penanggal Ping Tiga",    "Tritiya",    3),
+    (4,  "Penanggal Ping Empat",   "Caturthi",   7),
+    (5,  "Penanggal Ping Lima",    "Pancami",    1),
+    (6,  "Penanggal Ping Enam",    "Sashti",     8),
+    (7,  "Penanggal Ping Pitu",    "Saptami",    9),
+    (8,  "Penanggal Ping Wolu",    "Ashtami",    6),
+    (9,  "Penanggal Ping Songo",   "Navami",     5),
+    (10, "Penanggal Ping Dasa",    "Dashami",    4),
+    (11, "Penanggal Ping Sewelas", "Ekadashi",   3),
+    (12, "Penanggal Ping Rolas",   "Dvadashi",   7),
+    (13, "Penanggal Ping Telulas", "Trayodashi", 1),
+    (14, "Penanggal Ping Pat Blas","Caturdashi", 8),
+    (15, "Penanggal Ping Limolas", "Purnama",    9),
+]
+
+# ============================================================
+# Panglong — 月虧期 (1-15)，從滿月到新月
+# 格式：(序號, 巴厘名稱, 梵語名, Neptu/Urip)
+# 古法依據：Lontar Wariga — Panglong 數值表
+# ============================================================
+PANGLONG_NAMES = [
+    (1,  "Panglong Ping Pisan",    "Pratipada",  5),
+    (2,  "Panglong Ping Dua",      "Dvitiya",    4),
+    (3,  "Panglong Ping Tiga",     "Tritiya",    3),
+    (4,  "Panglong Ping Empat",    "Caturthi",   7),
+    (5,  "Panglong Ping Lima",     "Pancami",    1),
+    (6,  "Panglong Ping Enam",     "Sashti",     8),
+    (7,  "Panglong Ping Pitu",     "Saptami",    9),
+    (8,  "Panglong Ping Wolu",     "Ashtami",    6),
+    (9,  "Panglong Ping Songo",    "Navami",     5),
+    (10, "Panglong Ping Dasa",     "Dashami",    4),
+    (11, "Panglong Ping Sewelas",  "Ekadashi",   3),
+    (12, "Panglong Ping Rolas",    "Dvadashi",   7),
+    (13, "Panglong Ping Telulas",  "Trayodashi", 1),
+    (14, "Panglong Ping Pat Blas", "Caturdashi", 8),
+    (15, "Panglong Ping Limolas",  "Tilem",      9),
+]
+
+# ============================================================
+# 特殊聖日 — Purnama（滿月）與 Tilem（新月）
+# 古法依據：Lontar Wariga — 月相聖日
+# ============================================================
+PURNAMA_TILEM = {
+    "Purnama": "滿月聖日（Penanggal 15），宜祈福祭神",
+    "Tilem":   "新月聖日（Panglong 15），宜靜修內觀",
+}
+
+# ============================================================
+# Wuku 符號對應 — 用於傳統視覺呈現
+# 格式：(Wuku名稱, 方位神, 顏色, 動物象徵, 吉凶傾向)
+# 古法依據：Palalintangan 傳統對應表
+# ============================================================
+WUKU_ATTRIBUTES = [
+    ("Sinta",        "Timur",     "#FF6B6B", "獅子", "大吉"),
+    ("Landep",       "Tenggara",  "#4ECDC4", "鹿",   "吉"),
+    ("Ukir",         "Selatan",   "#FFE66D", "牛",   "吉"),
+    ("Kulantir",     "Barat Daya","#A8E6CF", "孔雀", "中"),
+    ("Tolu",         "Barat",     "#FF8B94", "蛇",   "中"),
+    ("Gumbreg",      "Barat Laut","#C3A6FF", "象",   "吉"),
+    ("Wariga",       "Utara",     "#85E89D", "猴",   "吉"),
+    ("Warigadian",   "Timur Laut","#FFC3A0", "鳥",   "中"),
+    ("Julungwangi",  "Timur",     "#FF6B6B", "龜",   "大吉"),
+    ("Sungsang",     "Tenggara",  "#4ECDC4", "魚",   "凶"),
+    ("Dungulan",     "Selatan",   "#FFE66D", "豬",   "中"),
+    ("Kuningan",     "Barat Daya","#A8E6CF", "鳳凰", "大吉"),
+    ("Langkir",      "Barat",     "#FF8B94", "牛",   "凶"),
+    ("Medangsia",    "Barat Laut","#C3A6FF", "鱷魚", "凶"),
+    ("Pujut",        "Utara",     "#85E89D", "獅子", "吉"),
+    ("Pahang",       "Timur Laut","#FFC3A0", "蜈蚣", "凶"),
+    ("Krulut",       "Timur",     "#FF6B6B", "蜘蛛", "凶"),
+    ("Merakih",      "Tenggara",  "#4ECDC4", "犀牛", "中"),
+    ("Tambir",       "Selatan",   "#FFE66D", "象",   "吉"),
+    ("Medangkungan", "Barat Daya","#A8E6CF", "蜜蜂", "吉"),
+    ("Matal",        "Barat",     "#FF8B94", "牛",   "中"),
+    ("Uye",          "Barat Laut","#C3A6FF", "蝴蝶", "吉"),
+    ("Menail",       "Utara",     "#85E89D", "鷹",   "中"),
+    ("Prangbakat",   "Timur Laut","#FFC3A0", "蝙蝠", "凶"),
+    ("Bala",         "Timur",     "#FF6B6B", "虎",   "凶"),
+    ("Ugu",          "Tenggara",  "#4ECDC4", "鸚鵡", "中"),
+    ("Wayang",       "Selatan",   "#FFE66D", "猴",   "吉"),
+    ("Klawu",        "Barat Daya","#A8E6CF", "蛙",   "中"),
+    ("Dukut",        "Barat",     "#FF8B94", "蚯蚓", "凶"),
+    ("Watugunung",   "Barat Laut","#C3A6FF", "龍",   "大吉"),
+]
+
+# ============================================================
+# 完整 Ala Ayuning Dewasa 規則表
+# 嚴格依照 Lontar Wariga Dewasa 的傳統吉凶組合
+# 格式：(名稱, 觸發條件說明, 吉/凶, Lontar古法描述)
+# 古法依據：Lontar Wariga Dewasa
+# ============================================================
+ALA_AYUNING_DEWASA = [
+    # === 吉日 (Dewasa Ayu) ===
+    ("Hari Raya Galungan",
+     "Wuku Dungulan，Sapta Wara=Buda，Panca Wara=Kliwon",
+     "大吉", "天神降臨人間之聖日，宜祭典慶祝"),
+    ("Hari Raya Kuningan",
+     "Wuku Kuningan，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "大吉", "天神返回天界前最後護佑之日，宜獻供"),
+    ("Sugihan Bali",
+     "Wuku Sungsang，Sapta Wara=Saniscara",
+     "吉", "淨化巴厘島大地之日，宜清掃祭所"),
+    ("Sugihan Jawa",
+     "Wuku Sungsang，Sapta Wara=Wraspati",
+     "吉", "淨化自身靈魂之日，宜沐浴冥想"),
+    ("Purnama",
+     "月相=滿月（Penanggal 15）",
+     "大吉", "滿月聖日，宜祈福禱告，忌不潔之事"),
+    ("Buda Cemeng Klawu",
+     "Wuku Klawu，Sapta Wara=Buda，Panca Wara=Kliwon",
+     "吉", "依 Lontar Wariga，此日宜靜心修行"),
+    ("Tumpek Landep",
+     "Wuku Landep，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "吉", "祝福器具、武器之日，宜磨刀器"),
+    ("Tumpek Uduh",
+     "Wuku Wariga，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "吉", "祝福植物、農作之日，宜種植"),
+    ("Tumpek Kuningan",
+     "Wuku Kuningan，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "大吉", "祖靈降臨之日，宜祭拜先祖"),
+    ("Tumpek Krulut",
+     "Wuku Krulut，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "吉", "祝福音樂藝術之日，宜演奏歌詠"),
+    ("Tumpek Kandang",
+     "Wuku Uye，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "吉", "祝福牲畜家禽之日，宜照料動物"),
+    ("Tumpek Wayang",
+     "Wuku Wayang，Sapta Wara=Saniscara，Panca Wara=Kliwon",
+     "吉", "祝福皮影藝術之日，宜觀賞 Wayang"),
+    # === 凶日 (Dewasa Ala) ===
+    ("Kajeng Kliwon",
+     "Tri Wara=Kajeng + Panca Wara=Kliwon",
+     "凶", "傳統大忌日，惡靈出沒，忌一切重要活動"),
+    ("Anggara Kasih",
+     "Sapta Wara=Anggara + Panca Wara=Kliwon",
+     "凶", "火曜凶日，忌重大決定、訴訟、出行"),
+    ("Buda Cemeng",
+     "Sapta Wara=Buda + Panca Wara=Kliwon（非 Wuku Klawu）",
+     "凶", "水曜凶日，宜謹慎行事，忌簽約"),
+    ("Tilem",
+     "月相=新月（Panglong 15）",
+     "凶", "新月聖日，靈界活躍，忌出行冒險"),
+    ("Buda Kliwon Pahang",
+     "Wuku Pahang，Sapta Wara=Buda，Panca Wara=Kliwon",
+     "大凶", "Lontar 記載最凶之日，萬事皆忌"),
+    ("Manis Galungan",
+     "Wuku Dungulan，Sapta Wara=Kamis（Wraspati）",
+     "中", "Galungan 翌日，宜訪問親友"),
+    ("Penampahan Galungan",
+     "Wuku Dungulan，Sapta Wara=Anggara",
+     "中", "Galungan 前一日，宜準備祭品"),
+]
+
+# ============================================================
+# Dewasa Ayu 詳細說明 — 各 Wewaran 組合的吉日描述
+# 格式：(分類, 傳統活動描述)
+# 古法依據：Lontar Wariga Dewasa — 宜事章節
+# ============================================================
+DEWASA_AYU_ACTIVITIES = {
+    "pernikahan":  ("宜婚嫁", "Pahing Umanis、Sukra Umanis、Soma Umanis 為婚嫁吉日"),
+    "perniagaan":  ("宜經商", "Wraspati Pon 為最宜開業之日"),
+    "pertanian":   ("宜農耕", "Redite Wage 宜播種，Soma Pon 宜收割"),
+    "pembangunan": ("宜建築", "Buda Kliwon Sinta 宜動土，Wraspati Pahing 宜上梁"),
+    "perjalanan":  ("宜出行", "Sukra Umanis 宜長途旅行"),
+    "pengobatan":  ("宜醫療", "Soma Kliwon 宜開始治療"),
+}
+
+# ============================================================
+# Pangider-ider — 八方位神明（風向玫瑰）
+# 巴厘傳統九宮格方位體系，中央 + 八方
+# 古法依據：Lontar Wariga — Nawa Sanga（九聖）
+# ============================================================
+PANGIDER_IDER = {
+    "Timur":      ("Dewa Iswara",   "白色", "besi",   "♁"),
+    "Tenggara":   ("Dewa Maheswara","pink",  "perak",  "☽"),
+    "Selatan":    ("Dewa Brahma",   "Merah", "tembaga","☀"),
+    "Barat Daya": ("Dewa Rudra",    "Jingga","besi",   "♂"),
+    "Barat":      ("Dewa Mahadewa", "Kuning","emas",   "♃"),
+    "Barat Laut": ("Dewa Sangkara", "Hijau", "besi",   "♄"),
+    "Utara":      ("Dewa Wisnu",    "Hitam", "besi",   "♆"),
+    "Timur Laut": ("Dewa Sambu",    "Biru",  "besi",   "♅"),
+    "Tengah":     ("Dewa Siwa",     "Pancawarna","emas","☯"),
+}
