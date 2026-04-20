@@ -1636,6 +1636,94 @@ transmitted by **Chen Xiyi**.
             "a better version of yourself, starting right now."
         ),
     },
+    # ── Astrocartography (地點占星 / 搬遷線) ──────────────────────────────────
+    "tab_acg": {
+        "zh": "🌍 地點占星 ACG",
+        "en": "🌍 Astrocartography",
+    },
+    "sys_hint_acg": {
+        "zh": "搬遷線地圖：找出最適合你的城市與方位",
+        "en": "Relocation map: find your best cities & directions",
+    },
+    "desc_acg": {
+        "zh": (
+            "**Astrocartography（地點占星 / 搬遷線）**\n\n"
+            "由 Jim Lewis 於 1976 年創立，顯示出生時刻各行星在地球上的角度力量。\n"
+            "四條線代表：上升線 (AC)、中天線 (MC)、下降線 (DC)、底天線 (IC)。\n"
+            "透過搬遷線地圖，找出最適合事業、愛情、健康的城市與地區。"
+        ),
+        "en": (
+            "**Astrocartography (Relocation Astrology)**\n\n"
+            "Created by Jim Lewis in 1976, showing where each planet is angular "
+            "on Earth at the moment of birth.\n"
+            "Four lines: Ascendant (AC), Midheaven (MC), Descendant (DC), Imum Coeli (IC).\n"
+            "Find your best cities for career, love, health and growth."
+        ),
+    },
+    "acg_title": {
+        "zh": "🌍 Astrocartography 搬遷線地圖",
+        "en": "🌍 Astrocartography Relocation Map",
+    },
+    "acg_subtab_map": {
+        "zh": "🗺️ 互動地圖",
+        "en": "🗺️ Interactive Map",
+    },
+    "acg_subtab_table": {
+        "zh": "📊 行星線資料",
+        "en": "📊 Planet Line Data",
+    },
+    "acg_subtab_transit": {
+        "zh": "🔄 流年搬遷線",
+        "en": "🔄 Transit Lines",
+    },
+    "acg_line_ac": {
+        "zh": "上升線 (AC) — 紅",
+        "en": "Ascendant (AC) — Red",
+    },
+    "acg_line_mc": {
+        "zh": "中天線 (MC) — 藍",
+        "en": "Midheaven (MC) — Blue",
+    },
+    "acg_line_ic": {
+        "zh": "底天線 (IC) — 綠",
+        "en": "Imum Coeli (IC) — Green",
+    },
+    "acg_line_dc": {
+        "zh": "下降線 (DC) — 紫",
+        "en": "Descendant (DC) — Purple",
+    },
+    "acg_planet_filter": {
+        "zh": "選擇行星",
+        "en": "Select Planets",
+    },
+    "acg_line_filter": {
+        "zh": "選擇線型",
+        "en": "Select Line Types",
+    },
+    "acg_paran_header": {
+        "zh": "🔗 Paran 交叉點（多線交匯能量區）",
+        "en": "🔗 Paran Crossings (Multi-line Power Zones)",
+    },
+    "acg_transit_date": {
+        "zh": "流年日期",
+        "en": "Transit Date",
+    },
+    "acg_transit_time": {
+        "zh": "流年時間",
+        "en": "Transit Time",
+    },
+    "acg_ai_btn": {
+        "zh": "🤖 AI 地點占星解盤",
+        "en": "🤖 AI Astrocartography Reading",
+    },
+    "spinner_acg": {
+        "zh": "正在計算搬遷線…",
+        "en": "Computing astrocartography lines…",
+    },
+    "acg_no_data": {
+        "zh": "請先輸入出生資料並計算。",
+        "en": "Please enter birth data and calculate first.",
+    },
 }
 
 

@@ -104,6 +104,15 @@ from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
 from astro.chinstar.chinstar import WanHuaXianQin
 from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
+from astro.astrocartography import (
+    compute_astrocartography,
+    compute_astrocartography_transit,
+    format_acg_for_prompt,
+    PLANET_GLYPHS,
+    PLANET_COLORS as ACG_PLANET_COLORS,
+    LINE_COLORS as ACG_LINE_COLORS,
+    ACG_PLANETS,
+)
 
 
 # ============================================================
@@ -828,7 +837,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
-        ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot"]),
+        ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
@@ -868,6 +877,7 @@ with st.sidebar:
         "tab_twelve_ci": t("tab_twelve_ci"),
         "tab_cetian_ziwei": t("tab_cetian_ziwei"),
         "tab_damo": t("tab_damo"),
+        "tab_acg": t("tab_acg"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -896,6 +906,7 @@ with st.sidebar:
         "tab_twelve_ci": t("sys_hint_twelve_ci"),
         "tab_cetian_ziwei": t("sys_hint_cetian_ziwei"),
         "tab_damo": t("sys_hint_damo"),
+        "tab_acg": t("sys_hint_acg"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2762,6 +2773,336 @@ elif _selected_system == "tab_chinstar":
                 except Exception as _e:
                     st.error(f"{t('error_tab_compute')}：{_e}")
                     st.exception(_e)
+
+# --- Astrocartography (地點占星 / 搬遷線) ---
+elif _selected_system == "tab_acg":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_acg")):
+                _acg_result = compute_astrocartography(**_p)
+
+            st.markdown(f"### {t('acg_title')}")
+
+            _acg_tab_map, _acg_tab_table, _acg_tab_transit = st.tabs([
+                t("acg_subtab_map"),
+                t("acg_subtab_table"),
+                t("acg_subtab_transit"),
+            ])
+
+            # ── Sub-tab 1: 互動地圖 Interactive Map ──
+            with _acg_tab_map:
+                import plotly.graph_objects as go
+
+                # Planet & line type filters
+                _acg_col1, _acg_col2 = st.columns(2)
+                with _acg_col1:
+                    _acg_planets = st.multiselect(
+                        t("acg_planet_filter"),
+                        options=list(ACG_PLANETS.keys()),
+                        default=["Sun", "Moon", "Venus", "Mars", "Jupiter"],
+                        key="acg_planet_sel",
+                    )
+                with _acg_col2:
+                    _acg_lines = st.multiselect(
+                        t("acg_line_filter"),
+                        options=["AC", "MC", "IC", "DC"],
+                        default=["AC", "MC", "IC", "DC"],
+                        key="acg_line_sel",
+                    )
+
+                # Build Plotly map
+                _acg_fig = go.Figure()
+
+                # Line dash patterns for each line type
+                _acg_dashes = {"AC": "solid", "MC": "dash", "IC": "dot", "DC": "dashdot"}
+
+                for _planet in _acg_planets:
+                    _planet_data = _acg_result.lines.get(_planet, {})
+                    _glyph = PLANET_GLYPHS.get(_planet, "")
+                    _p_color = ACG_PLANET_COLORS.get(_planet, "#888")
+
+                    for _lt in _acg_lines:
+                        _pts = _planet_data.get(_lt, [])
+                        if not _pts:
+                            continue
+
+                        _lons = [p[0] for p in _pts]
+                        _lats = [p[1] for p in _pts]
+
+                        # Get meaning for hover
+                        _meaning = _acg_result.meanings.get(_planet, {}).get(_lt, "")
+
+                        _acg_fig.add_trace(go.Scattergeo(
+                            lon=_lons,
+                            lat=_lats,
+                            mode="lines",
+                            line=dict(
+                                color=_p_color,
+                                width=2,
+                                dash=_acg_dashes.get(_lt, "solid"),
+                            ),
+                            name=f"{_planet} {_glyph} {_lt}",
+                            hovertemplate=(
+                                f"<b>{_planet} {_glyph} {_lt}</b><br>"
+                                f"經度: %{{lon:.1f}}°<br>"
+                                f"緯度: %{{lat:.1f}}°<br>"
+                                f"<i>{_meaning[:40]}</i>"
+                                "<extra></extra>"
+                            ),
+                        ))
+
+                # Add Paran points as markers
+                if _acg_result.parans:
+                    _paran_lons = [p.longitude for p in _acg_result.parans[:50]]
+                    _paran_lats = [p.latitude for p in _acg_result.parans[:50]]
+                    _paran_texts = [
+                        f"{p.planet1} {p.line_type1} × {p.planet2} {p.line_type2}"
+                        for p in _acg_result.parans[:50]
+                    ]
+
+                    _acg_fig.add_trace(go.Scattergeo(
+                        lon=_paran_lons,
+                        lat=_paran_lats,
+                        mode="markers",
+                        marker=dict(
+                            size=8,
+                            color="#FFD700",
+                            symbol="star",
+                            line=dict(width=1, color="#333"),
+                        ),
+                        text=_paran_texts,
+                        name="Paran ✦",
+                        hovertemplate=(
+                            "<b>Paran 交叉點</b><br>"
+                            "%{text}<br>"
+                            "經度: %{lon:.1f}°, 緯度: %{lat:.1f}°"
+                            "<extra></extra>"
+                        ),
+                    ))
+
+                # Add birth location marker
+                _acg_fig.add_trace(go.Scattergeo(
+                    lon=[_p["longitude"]],
+                    lat=[_p["latitude"]],
+                    mode="markers+text",
+                    marker=dict(size=12, color="#e74c3c", symbol="diamond"),
+                    text=[_p.get("location_name", "Birth")],
+                    textposition="top center",
+                    name="出生地 Birth",
+                    hovertemplate=(
+                        "<b>出生地</b><br>"
+                        f"{_p.get('location_name', '')}<br>"
+                        f"經度: {_p['longitude']:.2f}°, 緯度: {_p['latitude']:.2f}°"
+                        "<extra></extra>"
+                    ),
+                ))
+
+                _acg_fig.update_geos(
+                    showcountries=True,
+                    countrycolor="rgba(100,100,100,0.3)",
+                    showcoastlines=True,
+                    coastlinecolor="rgba(150,150,150,0.4)",
+                    showland=True,
+                    landcolor="rgba(30,30,50,0.8)",
+                    showocean=True,
+                    oceancolor="rgba(20,20,40,0.9)",
+                    showlakes=False,
+                    projection_type="natural earth",
+                    bgcolor="rgba(0,0,0,0)",
+                )
+
+                _acg_fig.update_layout(
+                    height=550,
+                    margin=dict(l=0, r=0, t=30, b=0),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=-0.15,
+                        xanchor="center",
+                        x=0.5,
+                        font=dict(size=10),
+                    ),
+                    geo=dict(bgcolor="rgba(0,0,0,0)"),
+                )
+
+                st.plotly_chart(_acg_fig, use_container_width=True)
+
+                # Legend
+                _legend_cols = st.columns(4)
+                _legend_items = [
+                    ("acg_line_ac", ACG_LINE_COLORS["AC"], "solid"),
+                    ("acg_line_mc", ACG_LINE_COLORS["MC"], "dashed"),
+                    ("acg_line_ic", ACG_LINE_COLORS["IC"], "dotted"),
+                    ("acg_line_dc", ACG_LINE_COLORS["DC"], "dashdot"),
+                ]
+                for _col, (_key, _color, _style) in zip(_legend_cols, _legend_items):
+                    with _col:
+                        st.markdown(
+                            f'<div style="display:flex;align-items:center;gap:6px;">'
+                            f'<div style="width:24px;height:3px;background:{_color};'
+                            f'border-style:{_style};"></div>'
+                            f'<span style="font-size:12px;">{t(_key)}</span></div>',
+                            unsafe_allow_html=True,
+                        )
+
+                # Paran section
+                if _acg_result.parans:
+                    with st.expander(t("acg_paran_header"), expanded=False):
+                        import pandas as pd
+                        _paran_rows = []
+                        for _pr in _acg_result.parans[:30]:
+                            _paran_rows.append({
+                                "行星1": f"{_pr.planet1} {PLANET_GLYPHS.get(_pr.planet1, '')}",
+                                "線型1": _pr.line_type1,
+                                "行星2": f"{_pr.planet2} {PLANET_GLYPHS.get(_pr.planet2, '')}",
+                                "線型2": _pr.line_type2,
+                                "緯度": f"{_pr.latitude:.1f}°",
+                                "經度": f"{_pr.longitude:.1f}°",
+                            })
+                        if _paran_rows:
+                            st.dataframe(pd.DataFrame(_paran_rows), hide_index=True, use_container_width=True)
+
+                # AI button
+                _render_ai_button("tab_acg", _acg_result, btn_key="acg_map",
+                                  page_content=format_acg_for_prompt(_acg_result))
+
+            # ── Sub-tab 2: 行星線資料表 Planet Line Data Table ──
+            with _acg_tab_table:
+                import pandas as pd
+                st.subheader(t("acg_subtab_table"))
+
+                _table_rows = []
+                for _planet_name, _line_dict in _acg_result.lines.items():
+                    _glyph = PLANET_GLYPHS.get(_planet_name, "")
+                    for _lt in ("AC", "MC", "IC", "DC"):
+                        _pts = _line_dict.get(_lt, [])
+                        _meaning = _acg_result.meanings.get(_planet_name, {}).get(_lt, "")
+                        if _pts:
+                            _mid = len(_pts) // 2
+                            _table_rows.append({
+                                "行星 Planet": f"{_planet_name} {_glyph}",
+                                "線型 Type": _lt,
+                                "黃經 Lon": f"{_acg_result.planet_longitudes.get(_planet_name, 0):.2f}°",
+                                "代表經度 Geo Lon": f"{_pts[_mid][0]:.1f}°",
+                                "點數 Points": len(_pts),
+                                "解釋 Meaning": _meaning,
+                            })
+                if _table_rows:
+                    st.dataframe(pd.DataFrame(_table_rows), hide_index=True, use_container_width=True)
+
+                _render_ai_button("tab_acg", _acg_result, btn_key="acg_table",
+                                  page_content=format_acg_for_prompt(_acg_result))
+
+            # ── Sub-tab 3: 流年搬遷線 Transit ACG ──
+            with _acg_tab_transit:
+                st.subheader(t("acg_subtab_transit"))
+
+                _tr_col1, _tr_col2 = st.columns(2)
+                with _tr_col1:
+                    _tr_date = st.date_input(
+                        t("acg_transit_date"),
+                        value=datetime.now().date(),
+                        key="acg_tr_date",
+                    )
+                with _tr_col2:
+                    _tr_time = st.time_input(
+                        t("acg_transit_time"),
+                        value=time(12, 0),
+                        key="acg_tr_time",
+                    )
+
+                # Year slider for quick navigation
+                _tr_year_slider = st.slider(
+                    "Year / 年份",
+                    min_value=1950,
+                    max_value=2050,
+                    value=_tr_date.year,
+                    key="acg_tr_year_slider",
+                )
+
+                # Compute transit ACG
+                with st.spinner(t("spinner_acg")):
+                    _tr_acg = compute_astrocartography_transit(
+                        natal_year=_p["year"], natal_month=_p["month"],
+                        natal_day=_p["day"], natal_hour=_p["hour"],
+                        natal_minute=_p["minute"], natal_timezone=_p["timezone"],
+                        transit_year=_tr_year_slider,
+                        transit_month=_tr_date.month,
+                        transit_day=_tr_date.day,
+                        transit_hour=_tr_time.hour,
+                        transit_minute=_tr_time.minute,
+                        transit_timezone=_p["timezone"],
+                    )
+
+                # Transit map
+                import plotly.graph_objects as go
+                _tr_fig = go.Figure()
+
+                _tr_planets_sel = st.multiselect(
+                    t("acg_planet_filter"),
+                    options=list(ACG_PLANETS.keys()),
+                    default=["Sun", "Moon", "Jupiter", "Saturn"],
+                    key="acg_tr_planet_sel",
+                )
+                _tr_dashes = {"AC": "solid", "MC": "dash", "IC": "dot", "DC": "dashdot"}
+
+                for _planet in _tr_planets_sel:
+                    _planet_data = _tr_acg.lines.get(_planet, {})
+                    _glyph = PLANET_GLYPHS.get(_planet, "")
+                    _p_color = ACG_PLANET_COLORS.get(_planet, "#888")
+
+                    for _lt in ("AC", "MC", "IC", "DC"):
+                        _pts = _planet_data.get(_lt, [])
+                        if not _pts:
+                            continue
+                        _lons = [p[0] for p in _pts]
+                        _lats = [p[1] for p in _pts]
+
+                        _tr_fig.add_trace(go.Scattergeo(
+                            lon=_lons,
+                            lat=_lats,
+                            mode="lines",
+                            line=dict(color=_p_color, width=2,
+                                      dash=_tr_dashes.get(_lt, "solid")),
+                            name=f"{_planet} {_glyph} {_lt} (Transit)",
+                        ))
+
+                _tr_fig.update_geos(
+                    showcountries=True,
+                    countrycolor="rgba(100,100,100,0.3)",
+                    showcoastlines=True,
+                    coastlinecolor="rgba(150,150,150,0.4)",
+                    showland=True,
+                    landcolor="rgba(30,30,50,0.8)",
+                    showocean=True,
+                    oceancolor="rgba(20,20,40,0.9)",
+                    projection_type="natural earth",
+                    bgcolor="rgba(0,0,0,0)",
+                )
+                _tr_fig.update_layout(
+                    height=500,
+                    margin=dict(l=0, r=0, t=30, b=0),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.15,
+                                xanchor="center", x=0.5, font=dict(size=10)),
+                    geo=dict(bgcolor="rgba(0,0,0,0)"),
+                )
+
+                st.plotly_chart(_tr_fig, use_container_width=True)
+
+                _render_ai_button("tab_acg", _tr_acg, btn_key="acg_transit",
+                                  page_content=format_acg_for_prompt(_tr_acg))
+
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_acg"))
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom

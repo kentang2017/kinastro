@@ -506,6 +506,12 @@ def _format_twelve_ci_chart(chart) -> str:
     return format_twelve_ci_chart(chart)
 
 
+def _format_acg_chart(chart) -> str:
+    """Format an AcgResult for AI analysis."""
+    from astro.astrocartography import format_acg_for_prompt
+    return format_acg_for_prompt(chart)
+
+
 # Mapping from system key to formatter function
 SYSTEM_FORMATTERS = {
     "tab_chinese": format_chinese_chart,
@@ -525,6 +531,7 @@ SYSTEM_FORMATTERS = {
     "tab_hellenistic": format_hellenistic_chart,
     "tab_chinstar": format_chinstar_chart,
     "tab_twelve_ci": _format_twelve_ci_chart,
+    "tab_acg": _format_acg_chart,
 }
 
 
