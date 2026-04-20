@@ -1724,6 +1724,96 @@ transmitted by **Chen Xiyi**.
         "zh": "請先輸入出生資料並計算。",
         "en": "Please enter birth data and calculate first.",
     },
+
+    # ── 三式 (Sanshi — Three Styles) ───────────────────────────
+    # ── 大六壬 (Da Liu Ren) ────────────────────────────────────
+    "tab_liuren": {
+        "zh": "🔮 大六壬",
+        "en": "🔮 Da Liu Ren",
+    },
+    "sys_hint_liuren": {
+        "zh": "古代三式之一，以天地盤推演吉凶",
+        "en": "One of the Three Styles — celestial/terrestrial plate divination",
+    },
+    "desc_liuren": {
+        "zh": (
+            "**大六壬**\n\n"
+            "大六壬為中國古代三式（太乙、奇門、六壬）之一，"
+            "以日干支及月將為基礎，排列天地盤、四課、三傳，推斷吉凶。\n\n"
+            "六壬排盤包含：天地盤十二神將、四課上下、三傳（初傳、中傳、末傳）、"
+            "格局判斷（賊尅、元首、重審等）及各類神煞。"
+        ),
+        "en": (
+            "**Da Liu Ren (Six Ren Astrology)**\n\n"
+            "One of China's ancient Three Styles (Taiyi, Qimen, Liuren). "
+            "Based on the Day Stem-Branch and Monthly General, it constructs "
+            "celestial and terrestrial plates, Four Courses, and Three Transmissions "
+            "to predict fortune and misfortune."
+        ),
+    },
+    "spinner_liuren": {"zh": "正在計算大六壬排盤…", "en": "Computing Da Liu Ren chart…"},
+
+    # ── 奇門遁甲 (Qi Men Dun Jia) ─────────────────────────────
+    "tab_qimen": {
+        "zh": "🚪 奇門遁甲",
+        "en": "🚪 Qi Men Dun Jia",
+    },
+    "sys_hint_qimen": {
+        "zh": "古代三式之一，九宮配天地門星神推演",
+        "en": "One of the Three Styles — Nine Palace energy mapping",
+    },
+    "desc_qimen": {
+        "zh": (
+            "**奇門遁甲**\n\n"
+            "奇門遁甲為中國古代三式之一，以九宮格配置天盤、地盤、八門、九星、八神，"
+            "共 1080 局，推斷吉凶方位。\n\n"
+            "支援拆補法與置閏法兩種排盤方式。"
+        ),
+        "en": (
+            "**Qi Men Dun Jia (Mysterious Door Escape)**\n\n"
+            "One of China's ancient Three Styles, mapping cosmic energy "
+            "onto a 3×3 Nine Palace grid with Heaven/Earth plates, "
+            "Eight Doors, Nine Stars, and Eight Gods — 1,080 unique configurations."
+        ),
+    },
+    "spinner_qimen": {"zh": "正在計算奇門遁甲排盤…", "en": "Computing Qi Men Dun Jia chart…"},
+    "qimen_method_label": {"zh": "排盤方法", "en": "Chart Method"},
+    "qimen_method_chaibu": {"zh": "拆補法", "en": "Chaibu Method"},
+    "qimen_method_zhirun": {"zh": "置閏法", "en": "Zhirun Method"},
+
+    # ── 太乙神數 (Taiyi Shen Shu) ─────────────────────────────
+    "tab_taiyi": {
+        "zh": "🌟 太乙命法",
+        "en": "🌟 Taiyi Life Method",
+    },
+    "sys_hint_taiyi": {
+        "zh": "古代三式之首，太乙命法推算個人命運",
+        "en": "Chief of the Three Styles — Taiyi life destiny divination",
+    },
+    "desc_taiyi": {
+        "zh": (
+            "**太乙命法（太乙神數）**\n\n"
+            "太乙神數為中國古代三式之首，傳為黃帝時代所創，"
+            "主要用於推算天時國運及個人命運。\n\n"
+            "本系統主要顯示「太乙命法」部分：以出生年月日時計算命宮、身宮、"
+            "十二宮排列、卦象、陽九百六行限、太乙諸神等，推斷個人一生運勢。"
+        ),
+        "en": (
+            "**Taiyi Life Method (Taiyi Shen Shu)**\n\n"
+            "Taiyi Shen Shu is the chief of China's Three Styles, "
+            "traditionally used for predicting celestial timing, national fortune, "
+            "and personal destiny.\n\n"
+            "This system focuses on the Life Destiny Method: calculating Life Palace, "
+            "Body Palace, Twelve Palace arrangement, hexagrams, and life progressions."
+        ),
+    },
+    "spinner_taiyi": {"zh": "正在計算太乙命法排盤…", "en": "Computing Taiyi life chart…"},
+
+    # ── 三式分類 (Sanshi category) ─────────────────────────────
+    "cat_sanshi": {
+        "zh": "三式",
+        "en": "Three Styles",
+    },
 }
 
 

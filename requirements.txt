@@ -7,3 +7,7 @@ fastapi>=0.115.0
 uvicorn[standard]>=0.34.0
 cerebras-cloud-sdk>=1.67.0
 opencc-python-reimplemented>=0.1.7
+kinliuren>=0.1.2.9
+kinqimen>=0.0.6.6
+kintaiyi @ git+https://github.com/kentang2017/kintaiyi.git
+sxtwl>=2.0.6
