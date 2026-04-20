@@ -119,6 +119,26 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
         _render_svg(svg)
         st.divider()
 
+    # ── 十二宮分析 ──
+    lifedisc = chart.get("_lifedisc")
+    if lifedisc:
+        with st.expander(auto_cn("【十二宮分析】"), expanded=True):
+            st.markdown(lifedisc)
+
+    # ── 太乙十六神落宮 ──
+    lifedisc2 = chart.get("_lifedisc2")
+    if lifedisc2:
+        with st.expander(auto_cn("【太乙十六神落宮】"), expanded=False):
+            st.markdown(lifedisc2)
+
+    # ── 太乙十六神上中下等 ──
+    lifedisc3 = chart.get("_lifedisc3")
+    if lifedisc3:
+        with st.expander(auto_cn("【太乙十六神上中下等】"), expanded=False):
+            st.markdown(lifedisc3)
+
+    st.divider()
+
     # ── 基本資訊 ──
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -161,28 +181,6 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
         st.metric(auto_cn("飛祿"), chart.get("飛祿", ""))
     with mg_cols[3]:
         st.metric(auto_cn("飛馬"), chart.get("飛馬", ""))
-
-    st.divider()
-
-    # ── 十二命宮排列 ──
-    gong_map = chart.get("十二命宮排列", {})
-    if gong_map:
-        st.markdown(f"#### {auto_cn('十二命宮排列')}")
-        gong_items = list(gong_map.items())
-        row_size = 4
-        for start in range(0, len(gong_items), row_size):
-            row = gong_items[start:start + row_size]
-            cols = st.columns(row_size)
-            for ci, (branch, palace) in enumerate(row):
-                with cols[ci]:
-                    st.markdown(
-                        f"<div style='border:1px solid #555;border-radius:8px;"
-                        f"padding:8px;text-align:center;'>"
-                        f"<b>{branch}</b><br>"
-                        f"<span style='color:#EAB308;'>{auto_cn(palace)}</span>"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
 
     st.divider()
 
@@ -269,24 +267,6 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
                     [{"年齡段": k, "地支": v} for k, v in data.items()]
                 )
                 st.dataframe(df, use_container_width=True, hide_index=True)
-
-    # ── 十二宮分析 ──
-    lifedisc = chart.get("_lifedisc")
-    if lifedisc:
-        with st.expander(auto_cn("【十二宮分析】"), expanded=True):
-            st.markdown(lifedisc)
-
-    # ── 太乙十六神落宮 ──
-    lifedisc2 = chart.get("_lifedisc2")
-    if lifedisc2:
-        with st.expander(auto_cn("【太乙十六神落宮】"), expanded=False):
-            st.markdown(lifedisc2)
-
-    # ── 太乙十六神上中下等 ──
-    lifedisc3 = chart.get("_lifedisc3")
-    if lifedisc3:
-        with st.expander(auto_cn("【太乙十六神上中下等】"), expanded=False):
-            st.markdown(lifedisc3)
 
     # ── 陽九行限描述 ──
     yangjiu_xx = chart.get("_yangjiu_xx")
