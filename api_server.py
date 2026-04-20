@@ -39,6 +39,9 @@ from astro.vedic.nadi import compute_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart
 from astro.western.hellenistic import compute_hellenistic_chart
 from astro.damo import compute_damo_chart
+from astro.sanshi.liuren import compute_liuren_chart
+from astro.sanshi.qimen import compute_qimen_chart
+from astro.sanshi.taiyi import compute_taiyi_chart
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -54,7 +57,8 @@ app = FastAPI(
         "Multi-system astrology chart computation backend. "
         "Supports Chinese (七政四餘), Zi Wei Dou Shu (紫微斗數), Western, "
         "Vedic (Jyotish), Thai, Kabbalistic, Arabic, Mayan, Mahabote, "
-        "Egyptian Decans, Nadi, Zurkhai, and Hellenistic systems."
+        "Egyptian Decans, Nadi, Zurkhai, Hellenistic, "
+        "Da Liu Ren (大六壬), Qi Men Dun Jia (奇門遁甲), and Taiyi (太乙命法) systems."
     ),
     version="1.0.0",
 )
@@ -147,6 +151,27 @@ class ComputeAllParams(BirthParams):
     current_year: Optional[int] = Field(
         default=None,
         description="Current year for Hellenistic profections",
+    )
+
+
+class QimenParams(BirthParams):
+    """Qi Men Dun Jia additionally supports a method selector."""
+
+    method: int = Field(
+        default=1,
+        ge=1,
+        le=2,
+        description="Chart method: 1=拆補法, 2=置閏法",
+    )
+
+
+class TaiyiParams(BirthParams):
+    """Taiyi Life Method additionally requires gender."""
+
+    gender: str = Field(
+        default="male",
+        pattern=r"^(male|female)$",
+        description="Gender: 'male' or 'female'",
     )
 
 
@@ -371,6 +396,41 @@ def _cached_damo(key: str, year: int, month: int, day: int, hour: int,
     return _chart_to_dict(chart)
 
 
+@lru_cache(maxsize=256)
+def _cached_liuren(key: str, year: int, month: int, day: int, hour: int,
+                   minute: int, timezone: float, latitude: float,
+                   longitude: float, location_name: str) -> dict:
+    chart = compute_liuren_chart(
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        timezone=timezone,
+    )
+    return _chart_to_dict(chart)
+
+
+@lru_cache(maxsize=256)
+def _cached_qimen(key: str, year: int, month: int, day: int, hour: int,
+                  minute: int, timezone: float, latitude: float,
+                  longitude: float, location_name: str,
+                  method: int) -> dict:
+    chart = compute_qimen_chart(
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        method=method,
+    )
+    return _chart_to_dict(chart)
+
+
+@lru_cache(maxsize=256)
+def _cached_taiyi(key: str, year: int, month: int, day: int, hour: int,
+                  minute: int, timezone: float, latitude: float,
+                  longitude: float, location_name: str,
+                  gender: str) -> dict:
+    chart = compute_taiyi_chart(
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        gender=gender,
+    )
+    return _chart_to_dict(chart)
+
+
 # Hellenistic depends on a WesternChart object, so handle specially.
 def _compute_hellenistic(params: BirthParams,
                          current_year: Optional[int]) -> dict:
@@ -578,6 +638,46 @@ async def hellenistic_chart(params: HellenisticParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.post("/api/liuren", response_model=ChartResponse, tags=["Systems"])
+async def liuren_chart(params: BirthParams) -> ChartResponse:
+    """Compute a Da Liu Ren chart (大六壬)."""
+    try:
+        key = _cache_key(params)
+        data = _cached_liuren(key, **_base_kwargs(params))
+        return ChartResponse(system="liuren", data=data)
+    except Exception as exc:
+        logger.exception("Da Liu Ren chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/qimen", response_model=ChartResponse, tags=["Systems"])
+async def qimen_chart(params: QimenParams) -> ChartResponse:
+    """Compute a Qi Men Dun Jia chart (奇門遁甲)."""
+    try:
+        key = _cache_key(params, method=params.method)
+        kwargs = _base_kwargs(params)
+        kwargs["method"] = params.method
+        data = _cached_qimen(key, **kwargs)
+        return ChartResponse(system="qimen", data=data)
+    except Exception as exc:
+        logger.exception("Qi Men Dun Jia chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/taiyi", response_model=ChartResponse, tags=["Systems"])
+async def taiyi_chart(params: TaiyiParams) -> ChartResponse:
+    """Compute a Taiyi Life Method chart (太乙命法)."""
+    try:
+        key = _cache_key(params, gender=params.gender)
+        kwargs = _base_kwargs(params)
+        kwargs["gender"] = params.gender
+        data = _cached_taiyi(key, **kwargs)
+        return ChartResponse(system="taiyi", data=data)
+    except Exception as exc:
+        logger.exception("Taiyi Life Method chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 # =========================================================================
 #  Aggregate endpoint — compute ALL systems in one call
 # =========================================================================
@@ -594,6 +694,7 @@ _SYSTEMS_BASIC: list[tuple[str, Any]] = [
     ("decans", _cached_decans),
     ("nadi", _cached_nadi),
     ("zurkhai", _cached_zurkhai),
+    ("liuren", _cached_liuren),
 ]
 
 # Damo requires gender parameter and is handled separately in compute_all
@@ -699,5 +800,8 @@ async def list_systems() -> dict[str, list[str]]:
             "zurkhai",
             "hellenistic",
             "damo",
+            "liuren",
+            "qimen",
+            "taiyi",
         ]
     }
