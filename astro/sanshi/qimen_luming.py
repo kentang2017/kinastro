@@ -39,6 +39,9 @@ GONG_GRID: list[list[str]] = [
 # 四正宮（子午卯酉對應宮位）
 SI_ZHENG_GONG: set[str] = {"坎", "離", "震", "兌"}
 
+# 凶格關鍵字（用於判斷格局吉凶）
+XIONG_KEYWORDS: tuple[str, ...] = ("不利", "凶", "貧窮", "嗽咳", "昏迷", "刑傷", "憂愁")
+
 # 天干五行
 GAN_WUXING: dict[str, str] = {
     "甲": "木", "乙": "木", "丙": "火", "丁": "火",
@@ -86,6 +89,18 @@ LIUQIN_MAP: dict[str, str] = {
 MEN_WUXING: dict[str, str] = {
     "休": "水", "生": "土", "傷": "木", "杜": "木",
     "景": "火", "死": "土", "驚": "金", "開": "金",
+}
+
+# 六親 emoji 映射
+LIUQIN_EMOJI: dict[str, str] = {
+    "父母": "🟢",
+    "兄弟": "🔵",
+    "子孫": "🟡",
+    "官祿": "🟠",
+    "疾厄": "🟠",
+    "妻財": "🔴",
+    "奴僕": "🔴",
+    "比肩": "🔵",
 }
 
 # 九星五行
@@ -374,6 +389,7 @@ def _analyze_six_relations(
     results: list[dict[str, Any]] = []
     for gong in GONG_ORDER:
         if gong == "中":
+            # 中宮無門無星無神，不參與六親分析
             continue
         tian_gan = sky.get(gong)
         if not tian_gan:
@@ -487,7 +503,7 @@ def _analyze_patterns(chart: dict, benming_gong: str | None) -> list[str]:
         patterns.append("人遁（丁加乙）：吉格，可安守家園")
 
     # ── 甲加丙、丙加甲 ──
-    if (tian_gan in ("戊",) and di_gan == "丙") or (tian_gan == "丙" and di_gan in ("戊",)):
+    if (tian_gan == "戊" and di_gan == "丙") or (tian_gan == "丙" and di_gan == "戊"):
         patterns.append("甲（戊）加丙或丙加甲（戊）：各宮皆利，惟疾厄宮主一生疾病纏綿")
 
     # ── 太白入熒惑（庚加丙）──
@@ -586,7 +602,7 @@ def _overall_assessment(
         parts.append(f"十干迫制：{suppression}")
 
     # 凶格
-    xiong_patterns = [p for p in patterns if any(w in p for w in ("不利", "凶", "貧窮", "嗽咳", "昏迷", "刑傷", "憂愁"))]
+    xiong_patterns = [p for p in patterns if any(w in p for w in XIONG_KEYWORDS)]
     if xiong_patterns:
         parts.append("命局有凶格：" + "；".join(xiong_patterns))
 
@@ -889,7 +905,8 @@ def render_qimen_luming(result: dict, after_chart_hook=None):
         liuqin_groups.setdefault(lq, []).append(rel)
 
     for lq_name, rels in liuqin_groups.items():
-        with st.expander(auto_cn(f"{'🟢' if '父母' in lq_name else '🔵' if '兄弟' in lq_name else '🟡' if '子孫' in lq_name else '🟠' if '官祿' in lq_name else '🔴' if '妻財' in lq_name else '⚪'} {lq_name}"), expanded=False):
+        emoji = next((v for k, v in LIUQIN_EMOJI.items() if k in lq_name), "⚪")
+        with st.expander(auto_cn(f"{emoji} {lq_name}"), expanded=False):
             for rel in rels:
                 gong = rel["宮位"]
                 st.markdown(
@@ -936,7 +953,7 @@ def render_qimen_luming(result: dict, after_chart_hook=None):
     if patterns:
         st.markdown(f"#### {auto_cn('格局分析')}")
         for p in patterns:
-            if any(w in p for w in ("不利", "凶", "貧窮", "嗽咳", "昏迷", "刑傷", "憂愁")):
+            if any(w in p for w in XIONG_KEYWORDS):
                 st.error(auto_cn(p))
             elif any(w in p for w in ("吉", "貴")):
                 st.success(auto_cn(p))
