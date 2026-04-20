@@ -852,8 +852,9 @@ def compute_extended_lots(planet_longs, ascendant, is_day, cusps):
         spirit = _normalize(ascendant + moon - sun)
 
     # ── Lot definitions ────────────────────────────────────────
-    # Each tuple: (english_name, chinese_name, day_longitude, night_longitude,
+    # Each tuple: (english_name, chinese_name, selected_longitude,
     #              formula_en, meaning_en, meaning_cn)
+    # Day/night selection is applied via conditional expressions.
 
     # 1. Lot of Basis  基礎點
     #    Day: Asc + Fortune - Spirit | Night: Asc + Spirit - Fortune

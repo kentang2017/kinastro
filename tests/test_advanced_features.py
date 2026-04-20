@@ -468,6 +468,13 @@ class TestHellenistic:
             assert isinstance(c["valens_keywords"], list)
             assert "interpretation_template" in c
 
+    def test_valens_synkrasis_night(self, hchart):
+        from astro.western.hellenistic import calculate_valens_synkrasis
+        combos = calculate_valens_synkrasis(hchart.planet_longitudes, "Night")
+        assert len(combos) > 0
+        for c in combos:
+            assert 0 <= c["strength_score"] <= 100
+
     def test_hellenistic_extended(self, western_chart, hchart):
         from astro.western.hellenistic import compute_hellenistic_extended
         ext = compute_hellenistic_extended(western_chart, hchart)
