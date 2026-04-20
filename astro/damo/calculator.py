@@ -216,8 +216,6 @@ def _compute_overall_summary(palaces: list) -> str:
     hour_p = palaces[3]  # 時宮 = 命宮
     parts = [f"命宮（時宮）落入{hour_p.branch}宮，得{hour_p.star}，屬{hour_p.realm}。"]
 
-    star_natures = {p.star: PALACE_MAP[p.branch][0] for p in palaces}
-
     # 檢查年月日時四宮的吉凶搭配
     year_p, month_p, day_p = palaces[0], palaces[1], palaces[2]
 

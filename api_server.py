@@ -596,7 +596,8 @@ _SYSTEMS_BASIC: list[tuple[str, Any]] = [
     ("zurkhai", _cached_zurkhai),
 ]
 
-# Damo requires gender, handled specially in compute_all below.
+# Damo requires gender parameter and is handled separately in compute_all
+# endpoint rather than being included in _SYSTEMS_BASIC.
 
 
 @app.post("/api/compute", response_model=ComputeAllResponse, tags=["Aggregate"])

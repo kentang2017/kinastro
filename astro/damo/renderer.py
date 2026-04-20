@@ -98,6 +98,8 @@ def _build_palm_svg(chart: DamoChart) -> str:
     }
 
     # 12 宮位排列（子在正下方，順時針）
+    # 達摩一掌經以左手掌為盤，子位於掌底（6 點鐘方向），
+    # 順時針排列至亥。此佈局與傳統掌中排列一致。
     # 角度：子=180°(下), 丑=210°, 寅=240° ... 亥=150°
     for i, branch in enumerate(EARTHLY_BRANCHES):
         # 角度計算：子(index=0)在180°(正下方)，順時針每宮30°
@@ -119,7 +121,8 @@ def _build_palm_svg(chart: DamoChart) -> str:
         # 圓點
         dot_r = 22 if is_highlight else 16
         opacity = "1.0" if is_highlight else "0.5"
-        stroke = f'stroke="{color}" stroke-width="3"' if is_highlight else f'stroke="{color}" stroke-width="1"'
+        sw = "3" if is_highlight else "1"
+        stroke = f'stroke="{color}" stroke-width="{sw}"'
         fill = f'fill="{color}"' if is_highlight else 'fill="#2a2a4a"'
 
         parts.append(
