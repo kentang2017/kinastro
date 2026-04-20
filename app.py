@@ -5,8 +5,9 @@ Multi-System Astrology Chart Application
 支援七政四餘（中國）、紫微斗數、西洋占星、印度占星（Jyotish）、宿曜道、泰國占星、
 卡巴拉占星、阿拉伯占星（含 Picatrix 星體魔法、太陽知識大全 Shams al-Maʻārif）、
 瑪雅占星、緬甸占星（Mahabote）、古埃及十度區間（Decans）、
-納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、希臘占星（Hellenistic）
-共十四種體系，使用 pyswisseph 進行天文計算。
+納迪占星（Nadi Jyotish）、蒙古祖爾海（Zurkhai）、希臘占星（Hellenistic）、
+大六壬、奇門遁甲、太乙神數（命法）
+共十七種體系，使用 pyswisseph 進行天文計算。
 """
 
 import os
@@ -106,6 +107,9 @@ from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
 from astro.chinstar.chinstar import WanHuaXianQin
 from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
+from astro.sanshi.liuren import compute_liuren_chart, render_liuren_chart
+from astro.sanshi.qimen import compute_qimen_chart, render_qimen_chart
+from astro.sanshi.taiyi import compute_taiyi_chart, render_taiyi_chart
 from astro.astrocartography import (
     compute_astrocartography,
     compute_astrocartography_transit,
@@ -837,6 +841,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
+        ("cat_sanshi", ["tab_liuren", "tab_qimen", "tab_taiyi"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
@@ -846,6 +851,7 @@ with st.sidebar:
 
     _CATEGORY_ICONS = {
         "cat_popular": "⭐",
+        "cat_sanshi": "☯️",
         "cat_chinese": "🏮",
         "cat_western": "🏛️",
         "cat_asian": "🪷",
@@ -879,6 +885,9 @@ with st.sidebar:
         "tab_cetian_ziwei": t("tab_cetian_ziwei"),
         "tab_damo": t("tab_damo"),
         "tab_acg": t("tab_acg"),
+        "tab_liuren": t("tab_liuren"),
+        "tab_qimen": t("tab_qimen"),
+        "tab_taiyi": t("tab_taiyi"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -908,6 +917,9 @@ with st.sidebar:
         "tab_cetian_ziwei": t("sys_hint_cetian_ziwei"),
         "tab_damo": t("sys_hint_damo"),
         "tab_acg": t("sys_hint_acg"),
+        "tab_liuren": t("sys_hint_liuren"),
+        "tab_qimen": t("sys_hint_qimen"),
+        "tab_taiyi": t("sys_hint_taiyi"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2785,6 +2797,77 @@ elif _selected_system == "tab_chinstar":
                 except Exception as _e:
                     st.error(f"{t('error_tab_compute')}：{_e}")
                     st.exception(_e)
+
+# --- 大六壬 (Da Liu Ren) ---
+elif _selected_system == "tab_liuren":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_liuren")):
+                _liuren_chart = compute_liuren_chart(**_p)
+            render_liuren_chart(
+                _liuren_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_liuren", _liuren_chart, btn_key="liuren"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_liuren"))
+
+# --- 奇門遁甲 (Qi Men Dun Jia) ---
+elif _selected_system == "tab_qimen":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _qimen_method = 1  # default: 拆補法
+            _qm_method_options = {t("qimen_method_chaibu"): 1, t("qimen_method_zhirun"): 2}
+            _qm_method_sel = st.radio(
+                t("qimen_method_label"),
+                list(_qm_method_options.keys()),
+                horizontal=True,
+                key="_qimen_method",
+            )
+            _qimen_method = _qm_method_options.get(_qm_method_sel, 1)
+            with st.spinner(t("spinner_qimen")):
+                _qimen_chart = compute_qimen_chart(**_p, method=_qimen_method)
+            render_qimen_chart(
+                _qimen_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_qimen", _qimen_chart, btn_key="qimen"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_qimen"))
+
+# --- 太乙命法 (Taiyi Life Method) ---
+elif _selected_system == "tab_taiyi":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _g = st.session_state["_calc_gender"]
+            _taiyi_gender = "male" if _g in ("male", "男", "M") else "female"
+            with st.spinner(t("spinner_taiyi")):
+                _taiyi_chart = compute_taiyi_chart(**_p, gender=_taiyi_gender)
+            render_taiyi_chart(
+                _taiyi_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_taiyi", _taiyi_chart, btn_key="taiyi"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_taiyi"))
 
 # --- Astrocartography (地點占星 / 搬遷線) ---
 elif _selected_system == "tab_acg":

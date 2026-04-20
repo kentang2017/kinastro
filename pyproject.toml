@@ -16,6 +16,10 @@ dependencies = [
     "svgwrite>=1.4.3",
     "fpdf2>=2.7.6",
     "cerebras-cloud-sdk>=1.67.0",
+    "kinliuren>=0.1.2.9",
+    "kinqimen>=0.0.6.6",
+    "kintaiyi @ git+https://github.com/kentang2017/kintaiyi.git",
+    "sxtwl>=2.0.6",
 ]
 
 [project.urls]
