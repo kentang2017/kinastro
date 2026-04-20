@@ -255,7 +255,7 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
             df = pd.DataFrame(
                 [{"地支": k, "天盤": v} for k, v in tianpan.items()]
             )
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
 
     # ── 陽九百六行限 ──
     for key in ("陽九行限", "百六行限"):
@@ -266,7 +266,7 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
                 df = pd.DataFrame(
                     [{"年齡段": k, "地支": v} for k, v in data.items()]
                 )
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width="stretch", hide_index=True)
 
     # ── 陽九行限描述 ──
     yangjiu_xx = chart.get("_yangjiu_xx")

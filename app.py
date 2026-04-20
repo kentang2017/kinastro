@@ -968,7 +968,7 @@ with st.sidebar:
                 if st.button(
                     f"{_SYSTEM_LABELS[_sk]}",
                     key=f"_sys_btn_{_sk}",
-                    use_container_width=True,
+                    width="stretch",
                     type=_btn_type,
                 ):
                     st.session_state["_system_select"] = _sk
@@ -3028,7 +3028,7 @@ elif _selected_system == "tab_acg":
                     geo=dict(bgcolor="rgba(0,0,0,0)"),
                 )
 
-                st.plotly_chart(_acg_fig, use_container_width=True)
+                st.plotly_chart(_acg_fig, width="stretch")
 
                 # Legend
                 _legend_cols = st.columns(4)
@@ -3063,7 +3063,7 @@ elif _selected_system == "tab_acg":
                                 "經度": f"{_pr.longitude:.1f}°",
                             })
                         if _paran_rows:
-                            st.dataframe(pd.DataFrame(_paran_rows), hide_index=True, use_container_width=True)
+                            st.dataframe(pd.DataFrame(_paran_rows), hide_index=True, width="stretch")
 
                 # AI button
                 _render_ai_button("tab_acg", _acg_result, btn_key="acg_map",
@@ -3091,7 +3091,7 @@ elif _selected_system == "tab_acg":
                                 "解釋 Meaning": _meaning,
                             })
                 if _table_rows:
-                    st.dataframe(pd.DataFrame(_table_rows), hide_index=True, use_container_width=True)
+                    st.dataframe(pd.DataFrame(_table_rows), hide_index=True, width="stretch")
 
                 _render_ai_button("tab_acg", _acg_result, btn_key="acg_table",
                                   page_content=format_acg_for_prompt(_acg_result))
@@ -3192,7 +3192,7 @@ elif _selected_system == "tab_acg":
                     geo=dict(bgcolor="rgba(0,0,0,0)"),
                 )
 
-                st.plotly_chart(_tr_fig, use_container_width=True)
+                st.plotly_chart(_tr_fig, width="stretch")
 
                 _render_ai_button("tab_acg", _tr_acg, btn_key="acg_transit",
                                   page_content=format_acg_for_prompt(_tr_acg))

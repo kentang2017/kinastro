@@ -420,7 +420,7 @@ def render_damo_chart(
                 "吉凶": info.get("nature", ""),
                 "關鍵字": info.get("keywords", ""),
             })
-        st.dataframe(table_data, use_container_width=True, hide_index=True)
+        st.dataframe(table_data, width="stretch", hide_index=True)
 
 
 # ============================================================
