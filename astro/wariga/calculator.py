@@ -34,12 +34,36 @@ from .constants import (
     SEASON_LAHRU_RANGE, SEASON_RENGRENG_RANGE,
     PANCASUDA,
     PAWUKON_CYCLE,
+    PANCA_DAUH, ASTA_DAUH,
+    PENANGGAL_NAMES, PANGLONG_NAMES,
+    WUKU_ATTRIBUTES, ALA_AYUNING_DEWASA,
 )
 
 
 # ============================================================
 # 資料類定義 (Data Classes)
 # ============================================================
+
+@dataclass
+class DauhInfo:
+    """時辰（Dauh）資訊"""
+    dauh_type: str       # 時辰系統名稱 (Panca Dauh / Asta Dauh)
+    name: str            # 時辰名稱
+    deity: str           # 主宰神明
+    direction: str       # 方位
+    quality: str         # 吉凶
+
+
+@dataclass
+class PenanggalInfo:
+    """月相日（Penanggal/Panglong）資訊"""
+    is_penanggal: bool   # True=月盈期(Penanggal), False=月虧期(Panglong)
+    day_number: int      # 月相日數 (1-15)
+    name: str            # 傳統名稱
+    neptu: int           # Neptu/Urip 值
+    moon_phase_deg: float  # 月相角度 (0-360)
+    special: str = ""    # 特殊聖日標記 (Purnama / Tilem / 空白)
+
 
 @dataclass
 class WaraInfo:
@@ -112,6 +136,11 @@ class WarigaResult:
     dewasa: DewasaInfo          # 吉凶判斷
     # 月份與季節
     sasih: SasihInfo            # Sasih 月份與季節
+    # 時辰資訊（Panca Dauh / Asta Dauh）
+    panca_dauh: DauhInfo        # Panca Dauh 時辰
+    asta_dauh: DauhInfo         # Asta Dauh 時辰
+    # 月相日（Penanggal / Panglong）
+    penanggal: PenanggalInfo    # 月相日資訊
     # 天文參考（使用 pyswisseph 計算，僅供參考）
     sun_longitude: float        # 太陽黃經
     moon_longitude: float       # 月亮黃經
@@ -225,6 +254,13 @@ class WarigaCalculator:
         # 7) 計算 Sasih 與季節
         sasih = self._compute_sasih(sun_lon, moon_lon)
 
+        # 8) 計算時辰 (Panca Dauh / Asta Dauh)
+        panca_dauh = self._compute_panca_dauh(self.hour)
+        asta_dauh = self._compute_asta_dauh(self.hour)
+
+        # 9) 計算月相日 (Penanggal / Panglong)
+        penanggal = self._compute_penanggal(sun_lon, moon_lon)
+
         return WarigaResult(
             year=self.year,
             month=self.month,
@@ -251,6 +287,9 @@ class WarigaCalculator:
             lintang=lintang,
             dewasa=dewasa,
             sasih=sasih,
+            panca_dauh=panca_dauh,
+            asta_dauh=asta_dauh,
+            penanggal=penanggal,
             sun_longitude=sun_lon,
             moon_longitude=moon_lon,
             julian_day=jd,
@@ -667,6 +706,111 @@ class WarigaCalculator:
                 return name
         return "Tumpek（未分類）"
 
+    def _compute_panca_dauh(self, hour: int) -> DauhInfo:
+        """
+        計算 Panca Dauh 時辰（5 時辰劃分）
+
+        依照傳統 Lontar Wariga，一日分為 5 個 Dauh，
+        每個 Dauh 約 4.8 小時，各歸屬特定神明掌管。
+
+        古法依據：Lontar Wariga — Panca Dauh 時辰表
+
+        回傳：
+            DauhInfo: Panca Dauh 時辰資訊
+        """
+        selected = PANCA_DAUH[0]  # 預設
+        for entry in PANCA_DAUH:
+            name, start, end, deity, quality, desc = entry
+            if start <= hour <= end:
+                selected = entry
+                break
+        name, start, end, deity, quality, desc = selected
+        return DauhInfo(
+            dauh_type="Panca Dauh",
+            name=name,
+            deity=deity,
+            direction=desc,
+            quality=quality,
+        )
+
+    def _compute_asta_dauh(self, hour: int) -> DauhInfo:
+        """
+        計算 Asta Dauh 時辰（8 時辰劃分，每 3 小時）
+
+        Asta Dauh 為更精細的時辰系統，嚴格依照
+        Lontar Wariga Gemet 的 8 方位神明體系。
+
+        古法依據：Lontar Wariga Gemet — Asta Dauh
+
+        回傳：
+            DauhInfo: Asta Dauh 時辰資訊
+        """
+        selected = ASTA_DAUH[0]  # 預設
+        for entry in ASTA_DAUH:
+            name, start, end, direction, quality, desc = entry
+            if start <= hour <= end:
+                selected = entry
+                break
+        name, start, end, direction, quality, desc = selected
+        return DauhInfo(
+            dauh_type="Asta Dauh",
+            name=name,
+            deity=desc,
+            direction=direction,
+            quality=quality,
+        )
+
+    def _compute_penanggal(self, sun_lon: float, moon_lon: float) -> PenanggalInfo:
+        """
+        計算 Penanggal / Panglong（月相日）
+
+        月相角度 = (月亮黃經 - 太陽黃經) mod 360
+        - 0°~180°  → Penanggal（月盈期）1-15
+        - 180°~360° → Panglong（月虧期）1-15
+
+        Sasih 的階層規則：
+        「Penanggal/Panglong alah dening Śaśih」
+        月相日的計算服從於 Sasih 月份體系。
+
+        古法依據：Lontar Wariga — Penanggal/Panglong 計算法
+
+        回傳：
+            PenanggalInfo: 月相日資訊
+        """
+        # 月相角度 (0-360)
+        phase_deg = (moon_lon - sun_lon) % 360.0
+
+        if phase_deg < 180.0:
+            # 月盈期 (Penanggal)：0° ~ 180°，共 15 天
+            day_num = max(1, min(15, int(phase_deg / 12.0) + 1))
+            table = PENANGGAL_NAMES
+            is_penanggal = True
+        else:
+            # 月虧期 (Panglong)：180° ~ 360°，共 15 天
+            day_num = max(1, min(15, int((phase_deg - 180.0) / 12.0) + 1))
+            table = PANGLONG_NAMES
+            is_penanggal = False
+
+        # 查找對應的表格條目
+        entry = table[day_num - 1]
+        seq, name, sanskrit, neptu = entry
+
+        # 特殊聖日標記
+        special = ""
+        if is_penanggal and day_num == 15:
+            special = "Purnama（滿月聖日）"
+        elif not is_penanggal and day_num == 15:
+            special = "Tilem（新月聖日）"
+
+        return PenanggalInfo(
+            is_penanggal=is_penanggal,
+            day_number=day_num,
+            name=name,
+            neptu=neptu,
+            moon_phase_deg=phase_deg,
+            special=special,
+        )
+
     def _compute_sasih(self, sun_lon, moon_lon) -> SasihInfo:
         """
         計算 Sasih（月份）與季節
@@ -771,6 +915,26 @@ class WarigaCalculator:
                 "season": r.sasih.season,
                 "season_cn": r.sasih.season_cn,
                 "ayana": r.sasih.ayana,
+            },
+            "panca_dauh": {
+                "name": r.panca_dauh.name,
+                "deity": r.panca_dauh.deity,
+                "direction": r.panca_dauh.direction,
+                "quality": r.panca_dauh.quality,
+            },
+            "asta_dauh": {
+                "name": r.asta_dauh.name,
+                "deity": r.asta_dauh.deity,
+                "direction": r.asta_dauh.direction,
+                "quality": r.asta_dauh.quality,
+            },
+            "penanggal": {
+                "is_penanggal": r.penanggal.is_penanggal,
+                "day_number": r.penanggal.day_number,
+                "name": r.penanggal.name,
+                "neptu": r.penanggal.neptu,
+                "moon_phase_deg": r.penanggal.moon_phase_deg,
+                "special": r.penanggal.special,
             },
             "sun_longitude": r.sun_longitude,
             "moon_longitude": r.moon_longitude,
