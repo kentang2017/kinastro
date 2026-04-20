@@ -21,6 +21,33 @@ from astro.i18n import t, auto_cn
 TIANGAN = list("甲乙丙丁戊己庚辛壬癸")
 DIZHI = list("子丑寅卯辰巳午未申酉戌亥")
 
+# 天將顏色（用於盤式著色）
+JIANG_COLORS: dict[str, str] = {
+    "貴": "#FFD700", "蛇": "#FF4444", "雀": "#FF6B35", "合": "#4CAF50",
+    "勾": "#DAA520", "龍": "#00BCD4", "空": "#9E9E9E", "虎": "#E0E0E0",
+    "常": "#FFC107", "玄": "#5C6BC0", "陰": "#CE93D8", "后": "#F48FB1",
+}
+
+# 天將全名
+JIANG_FULLNAME: dict[str, str] = {
+    "貴": "貴人", "蛇": "騰蛇", "雀": "朱雀", "合": "六合",
+    "勾": "勾陳", "龍": "青龍", "空": "天空", "虎": "白虎",
+    "常": "太常", "玄": "玄武", "陰": "太陰", "后": "天后",
+}
+
+# 六親簡稱顏色
+LIUQIN_COLORS: dict[str, str] = {
+    "父": "#60A5FA", "財": "#4ADE80", "官": "#F87171",
+    "兄": "#FBBF24", "子": "#A78BFA",
+}
+
+# 十二宮名稱
+TWELVE_PALACES: list[str] = [
+    "命宮", "兄弟", "夫妻", "子女",
+    "財帛", "疾厄", "遷移", "奴僕",
+    "官祿", "田宅", "福德", "相貌",
+]
+
 # 24 節氣名（sxtwl 的索引順序）
 JIEQI_NAMES = [
     "小寒", "大寒", "立春", "雨水", "驚蟄", "春分",
@@ -122,8 +149,228 @@ def compute_liuren_chart(
     return result
 
 
-def render_liuren_chart(chart: dict, after_chart_hook=None):
+def _liuqin_label(ri_gan: str, target_zhi: str) -> str:
+    """以日干為主，求 target 地支的六親簡稱。"""
+    GANZHI_WX = {
+        "甲": "木", "乙": "木", "丙": "火", "丁": "火",
+        "戊": "土", "己": "土", "庚": "金", "辛": "金",
+        "壬": "水", "癸": "水",
+        "子": "水", "丑": "土", "寅": "木", "卯": "木",
+        "辰": "土", "巳": "火", "午": "火", "未": "土",
+        "申": "金", "酉": "金", "戌": "土", "亥": "水",
+    }
+    WX_SHENGKE = {
+        ("木", "火"): "生", ("火", "土"): "生", ("土", "金"): "生",
+        ("金", "水"): "生", ("水", "木"): "生",
+        ("木", "土"): "剋", ("土", "水"): "剋", ("水", "火"): "剋",
+        ("火", "金"): "剋", ("金", "木"): "剋",
+        ("火", "木"): "被生", ("土", "火"): "被生", ("金", "土"): "被生",
+        ("水", "金"): "被生", ("木", "水"): "被生",
+        ("土", "木"): "被剋", ("水", "土"): "被剋", ("火", "水"): "被剋",
+        ("金", "火"): "被剋", ("木", "金"): "被剋",
+    }
+    LQ = {"生": "子", "剋": "財", "被生": "父", "被剋": "官", "比和": "兄"}
+    wa = GANZHI_WX.get(ri_gan, "")
+    wb = GANZHI_WX.get(target_zhi, "")
+    if wa == wb:
+        return "兄"
+    rel = WX_SHENGKE.get((wa, wb), "")
+    return LQ.get(rel, "")
+
+
+def _build_liuren_board_html(
+    chart: dict,
+    benming_zhi: str | None = None,
+) -> str:
+    """產生傳統六壬盤式 HTML（方盤 + 四課三傳 + 十二宮）。"""
+    di_to_tian = chart.get("地轉天盤", {})
+    di_to_jiang = chart.get("地轉天將", {})
+    san_chuan = chart.get("三傳", {})
+    si_ke = chart.get("四課", {})
+    day_gz = chart.get("_day_gz", chart.get("日期", "")[:2])
+    ri_gan = day_gz[0] if day_gz else ""
+
+    # 十二宮映射: 地支 → 宮名
+    palace_map: dict[str, str] = {}
+    if benming_zhi and benming_zhi in DIZHI:
+        start = DIZHI.index(benming_zhi)
+        for i, pname in enumerate(TWELVE_PALACES):
+            palace_map[DIZHI[(start + i) % 12]] = pname
+
+    # 方盤位置 (4×4 外框，中間空心)
+    # 行列安排：
+    #   (0,0)=巳 (0,1)=午 (0,2)=未 (0,3)=申
+    #   (1,0)=辰                   (1,3)=酉
+    #   (2,0)=卯                   (2,3)=戌
+    #   (3,0)=寅 (3,1)=丑 (3,2)=子 (3,3)=亥
+    GRID: list[list[str | None]] = [
+        ["巳", "午", "未", "申"],
+        ["辰", None, None, "酉"],
+        ["卯", None, None, "戌"],
+        ["寅", "丑", "子", "亥"],
+    ]
+
+    def _cell(branch: str) -> str:
+        """產生單一地盤位置的 HTML。"""
+        tian = di_to_tian.get(branch, "")
+        jiang = di_to_jiang.get(branch, "")
+        jiang_full = JIANG_FULLNAME.get(jiang, jiang)
+        jcolor = JIANG_COLORS.get(jiang, "#CCC")
+        lq = _liuqin_label(ri_gan, tian) if ri_gan else ""
+        lq_color = LIUQIN_COLORS.get(lq, "#CCC")
+        palace = palace_map.get(branch, "")
+
+        palace_html = (
+            f'<div style="font-size:10px;color:#888;line-height:1.2;">{palace}</div>'
+            if palace else ""
+        )
+        lq_html = (
+            f'<span style="color:{lq_color};font-size:11px;">{lq}</span>'
+            if lq else ""
+        )
+
+        return (
+            f'<td style="border:1px solid #555;text-align:center;'
+            f'vertical-align:middle;padding:3px 2px;min-width:60px;'
+            f'background:rgba(30,30,40,0.5);">'
+            f'{palace_html}'
+            f'<div style="color:{jcolor};font-size:12px;line-height:1.3;">'
+            f'{jiang_full}</div>'
+            f'<div style="font-size:15px;font-weight:bold;line-height:1.3;">'
+            f'{tian} {lq_html}</div>'
+            f'<div style="border-top:1px dashed #666;margin:1px 4px;"></div>'
+            f'<div style="font-size:14px;color:#AAA;line-height:1.3;">'
+            f'{branch}</div>'
+            f'</td>'
+        )
+
+    # ── 四課 HTML（顯示在中央上方）──
+    si_ke_names = ["四課", "三課", "二課", "一課"]
+    sk_rows_top = ""   # 上面一行：天盤支
+    sk_rows_btm = ""   # 下面一行：地盤支 / 日干
+    sk_rows_jiang = ""  # 天將
+    sk_rows_lq = ""     # 六親
+    for name in si_ke_names:
+        vals = si_ke.get(name, [])
+        pair = vals[0] if len(vals) > 0 else ""
+        jiang = vals[1] if len(vals) > 1 else ""
+        top_char = pair[0] if len(pair) > 0 else ""
+        btm_char = pair[1] if len(pair) > 1 else ""
+        jcolor = JIANG_COLORS.get(jiang, "#CCC")
+        lq = _liuqin_label(ri_gan, top_char) if ri_gan and top_char else ""
+        lq_color = LIUQIN_COLORS.get(lq, "#CCC")
+        sk_rows_jiang += (
+            f'<td style="text-align:center;padding:1px 6px;'
+            f'color:{jcolor};font-size:12px;">{jiang}</td>'
+        )
+        sk_rows_lq += (
+            f'<td style="text-align:center;padding:1px 6px;'
+            f'color:{lq_color};font-size:11px;">{lq}</td>'
+        )
+        sk_rows_top += (
+            f'<td style="text-align:center;padding:1px 6px;'
+            f'font-size:14px;">{top_char}</td>'
+        )
+        sk_rows_btm += (
+            f'<td style="text-align:center;padding:1px 6px;'
+            f'font-size:14px;color:#AAA;">{btm_char}</td>'
+        )
+
+    si_ke_html = (
+        f'<table style="margin:auto;border-collapse:collapse;">'
+        f'<tr><td colspan="4" style="text-align:center;font-size:11px;'
+        f'color:#888;padding-bottom:2px;">{auto_cn("四課")}</td></tr>'
+        f'<tr>{sk_rows_jiang}</tr>'
+        f'<tr>{sk_rows_lq}</tr>'
+        f'<tr>{sk_rows_top}</tr>'
+        f'<tr>{sk_rows_btm}</tr>'
+        f'</table>'
+    )
+
+    # ── 三傳 HTML（顯示在中央下方）──
+    sc_html_rows = ""
+    for name in ("初傳", "中傳", "末傳"):
+        vals = san_chuan.get(name, [])
+        zhi = vals[0] if len(vals) > 0 else ""
+        jiang = vals[1] if len(vals) > 1 else ""
+        lq_raw = vals[2] if len(vals) > 2 else ""
+        kong = vals[3] if len(vals) > 3 else ""
+        jcolor = JIANG_COLORS.get(jiang, "#CCC")
+        lq_color = LIUQIN_COLORS.get(lq_raw, "#CCC")
+        kong_mark = '<span style="color:#F87171;font-size:10px;">空</span>' if kong == "空" else ""
+        sc_html_rows += (
+            f'<tr>'
+            f'<td style="font-size:11px;color:#888;padding:1px 4px;">'
+            f'{auto_cn(name)}</td>'
+            f'<td style="font-size:14px;padding:1px 4px;">{zhi}</td>'
+            f'<td style="color:{jcolor};font-size:12px;padding:1px 4px;">'
+            f'{jiang}</td>'
+            f'<td style="color:{lq_color};font-size:11px;padding:1px 4px;">'
+            f'{lq_raw}</td>'
+            f'<td style="padding:1px 4px;">{kong_mark}</td>'
+            f'</tr>'
+        )
+
+    san_chuan_html = (
+        f'<table style="margin:auto;border-collapse:collapse;">'
+        f'<tr><td colspan="5" style="text-align:center;font-size:11px;'
+        f'color:#888;padding-bottom:2px;">{auto_cn("三傳")}</td></tr>'
+        f'{sc_html_rows}'
+        f'</table>'
+    )
+
+    center_html = (
+        f'<td colspan="2" rowspan="2" style="border:1px solid #555;'
+        f'vertical-align:middle;text-align:center;'
+        f'background:rgba(20,20,30,0.6);padding:6px;">'
+        f'{si_ke_html}'
+        f'<div style="border-top:1px solid #555;margin:4px 0;"></div>'
+        f'{san_chuan_html}'
+        f'</td>'
+    )
+
+    # ── 組裝完整方盤 ──
+    day_label = chart.get("_day_gz", "")
+    hour_label = chart.get("_hour_gz", "")
+    geju = chart.get("格局", [])
+    geju_str = "、".join(geju) if isinstance(geju, list) else str(geju)
+    dayma = chart.get("日馬", "")
+
+    header_info = f'{auto_cn("日課")}：{day_label}日{hour_label}時'
+    if geju_str:
+        header_info += f'　{auto_cn("格局")}：{geju_str}'
+    if dayma:
+        header_info += f'　{auto_cn("日馬")}：{dayma}'
+
+    rows_html = ""
+    for r, row in enumerate(GRID):
+        rows_html += "<tr>"
+        for c, branch in enumerate(row):
+            if branch is not None:
+                rows_html += _cell(branch)
+            elif r == 1 and c == 1:
+                # 中央區塊（佔 2×2）
+                rows_html += center_html
+            # r=1,c=2 / r=2,c=1 / r=2,c=2 被 colspan/rowspan 覆蓋
+        rows_html += "</tr>"
+
+    table_html = (
+        f'<div style="overflow-x:auto;">'
+        f'<div style="text-align:center;font-size:13px;color:#CCC;'
+        f'margin-bottom:6px;">{header_info}</div>'
+        f'<table style="margin:auto;border-collapse:collapse;'
+        f'border:2px solid #777;">'
+        f'{rows_html}'
+        f'</table>'
+        f'</div>'
+    )
+    return table_html
+
+
+def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | None = None):
     """在 Streamlit 中渲染大六壬排盤結果。"""
+    import streamlit.components.v1 as components
+
     st.markdown(f"### 🔮 {auto_cn('大六壬排盤')}")
 
     # ── 基本資訊 ──
@@ -136,6 +383,17 @@ def render_liuren_chart(chart: dict, after_chart_hook=None):
         st.metric(auto_cn("日干支"), chart.get("_day_gz", ""))
     with col4:
         st.metric(auto_cn("時干支"), chart.get("_hour_gz", ""))
+
+    st.divider()
+
+    # ── 六壬盤式（方盤）──
+    st.markdown(f"#### {auto_cn('六壬盤式')}")
+    board_html = _build_liuren_board_html(chart, benming_zhi=benming_zhi)
+    components.html(
+        f'<div style="background:#1E1E2E;padding:12px;border-radius:8px;">'
+        f'{board_html}</div>',
+        height=420,
+    )
 
     st.divider()
 
@@ -210,6 +468,37 @@ def render_liuren_chart(chart: dict, after_chart_hook=None):
                     [{"地支": k, "對應": v} for k, v in mapping.items()]
                 )
                 st.dataframe(df, use_container_width=True, hide_index=True)
+
+    # ── 十二宮（需要本命地支）──
+    if benming_zhi and benming_zhi in DIZHI:
+        st.divider()
+        st.markdown(f"#### {auto_cn('十二宮')}")
+        di_to_tian = chart.get("地轉天盤", {})
+        di_to_jiang = chart.get("地轉天將", {})
+        day_gz = chart.get("_day_gz", "")
+        ri_gan = day_gz[0] if day_gz else ""
+        start = DIZHI.index(benming_zhi)
+        p_cols = st.columns(4)
+        for i, pname in enumerate(TWELVE_PALACES):
+            zhi = DIZHI[(start + i) % 12]
+            tian = di_to_tian.get(zhi, "")
+            jiang = di_to_jiang.get(zhi, "")
+            jiang_full = JIANG_FULLNAME.get(jiang, jiang)
+            jcolor = JIANG_COLORS.get(jiang, "#CCC")
+            lq = _liuqin_label(ri_gan, tian) if ri_gan and tian else ""
+            with p_cols[i % 4]:
+                st.markdown(
+                    f"<div style='border:1px solid #555;border-radius:6px;"
+                    f"padding:6px;text-align:center;margin-bottom:6px;"
+                    f"min-height:90px;'>"
+                    f"<b>{auto_cn(pname)}</b><br>"
+                    f"<span style='font-size:13px;color:#AAA;'>"
+                    f"{zhi}（{tian}）</span><br>"
+                    f"<span style='color:{jcolor};'>{jiang_full}</span>"
+                    + (f"<br><span style='font-size:12px;'>{lq}</span>" if lq else "")
+                    + f"</div>",
+                    unsafe_allow_html=True,
+                )
 
     if after_chart_hook:
         after_chart_hook()
