@@ -1078,12 +1078,12 @@ def _render_global_ai_chat():
     # Welcome message when history is empty
     _history = st.session_state[_ck]
     if not _history:
-        with _chat_box.chat_message("assistant"):
+        with _chat_box.chat_message("assistant", avatar="🧙"):
             st.markdown(t("ai_chat_welcome"))
 
     # Render existing chat messages
     for _msg in _history:
-        with _chat_box.chat_message(_msg["role"]):
+        with _chat_box.chat_message(_msg["role"], avatar="🧙" if _msg["role"] == "assistant" else None):
             st.markdown(_msg["content"])
 
     # Chat input
@@ -1126,7 +1126,7 @@ def _render_global_ai_chat():
         for _msg in _history:
             _api_messages.append({"role": _msg["role"], "content": _msg["content"]})
 
-        with _chat_box.chat_message("assistant"):
+        with _chat_box.chat_message("assistant", avatar="🧙"):
             with st.spinner(t("ai_analyzing")):
                 try:
                     client = CerebrasClient(api_key=_api_key)
