@@ -5,16 +5,16 @@
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.0.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-25-FFD700?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-29-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**二十五體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・西洋・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・蒙古祖爾海・藏傳時輪金剛・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫**
+**二十九體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫**
 
-*25-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Western, Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Mongolian Zurkhai, Tibetan Kalachakra, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian*
+*29-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian*
 
 </div>
 
@@ -39,7 +39,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **二十五體系合一** | 在同一個介面中切換二十五種占星體系，無需來回切換工具 | Switch between 25 astrology systems in one unified interface |
+| 🔮 **二十九體系合一** | 在同一個介面中切換二十九種占星體系，無需來回切換工具 | Switch between 29 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
@@ -54,43 +54,57 @@
 
 ## 🧭 體系總覽 | Systems at a Glance
 
-> 💡 體系按分類顯示：熱門 → 中國 → 西方 → 亞洲 → 中東 → 古代文明
+> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 亞洲 → 中東 → 古代文明
 >
-> *Systems displayed by category: Popular → Chinese → Western → Asian → Middle East → Ancient*
+> *Systems displayed by category: Popular → Three Formulae → Chinese → Western → Asian → Middle East → Ancient*
 
 | # | 體系 System | 黃道 Zodiac | 子功能 Sub-features |
 |:-:|---|---|---|
+| | **⭐ 熱門 Popular** | | |
 | 1 | 🌍 西洋占星 Western | 回歸 Tropical | 本命盤・行星過運・太陽回歸・合盤比較・Ptolemy 尊貴 |
 | 2 | 🌟 紫微斗數 Zi Wei | 農曆 Lunar | 十四主星・十二宮位・五行局 |
-| 3 | 🀄 七政四餘 Chinese | 恆星 Sidereal | 本命盤・神煞・年限大運・流時對盤・張果星宗・擇日 |
-| 4 | 🐦‍⬛ 萬化仙禽 WanHua XianQin | 農曆 Lunar | 二十八宿禽星・十二宮・吞啗合戰・相胎賦・貴賤格 |
-| 5 | 🌠 策天飛星 Ce Tian | 農曆 Lunar | 十八飛星・十一正曜七副曜・飛星四化・單宮獨斷 |
-| 6 | 🔢 十二星次 Twelve Ci | 回歸 Tropical | 木星分野・十二次環形盤・歲星方位 |
-| 7 | 🖐️ 達摩一掌經 Damo | 農曆 Lunar | 十二宮掌紋・前世今生六道・四柱星宮・互動手掌 SVG |
-| 8 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing・擴充 Lots・Valens Synkrasis・百論 |
-| 9 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
-| 10 | ✡ 猶太 Mazzalot | 恆星 Sidereal | 大衛之星盤・十二支派・Sefer Yetzirah 字母 |
-| 11 | 🗺️ Astrocartography 地點占星 | 回歸 Tropical | AC/MC/IC/DC 搬遷線・互動 Plotly 地圖・過運搬遷線 |
-| 12 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
-| 13 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
-| 14 | 🕉️ Jaimini 占星 | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
-| 15 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
-| 16 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
-| 17 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
-| 18 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
-| 19 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
-| 20 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
-| 21 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
-| 22 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
-| 23 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
-| 24 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
-| 25 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| | **🔮 三式 Three Formulae** | | |
+| 3 | 🔮 六壬祿命 Da Liu Ren | 農曆 Lunar | 天地盤・四課・三傳・十二宮・論命分析 |
+| 4 | 🌟 太乙命法 Taiyi | 農曆 Lunar | 命宮身宮・十二宮・陽九百六行限・出身卦・五柱卦象 |
+| 5 | 🔮 奇門祿命 Qimen Destiny | 農曆 Lunar | 奇門遁甲局・六親分析・八門八神九星・格局推斷 |
+| | **🀄 中國 Chinese** | | |
+| 6 | 🀄 七政四餘 Chinese | 恆星 Sidereal | 本命盤・神煞・年限大運・流時對盤・張果星宗・擇日 |
+| 7 | 🐦‍⬛ 萬化仙禽 WanHua XianQin | 農曆 Lunar | 二十八宿禽星・十二宮・吞啗合戰・相胎賦・貴賤格 |
+| 8 | 🔢 十二星次 Twelve Ci | 回歸 Tropical | 木星分野・十二次環形盤・歲星方位 |
+| 9 | 🌠 策天飛星 Ce Tian | 農曆 Lunar | 十八飛星・十一正曜七副曜・飛星四化・單宮獨斷 |
+| 10 | 🖐️ 達摩一掌經 Damo | 農曆 Lunar | 十二宮掌紋・前世今生六道・四柱星宮・互動手掌 SVG |
+| | **🏛️ 西方 Western** | | |
+| 11 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing・擴充 Lots・Valens Synkrasis・百論 |
+| 12 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
+| 13 | ✡ 猶太 Mazzalot | 恆星 Sidereal | 大衛之星盤・十二支派・Sefer Yetzirah 字母 |
+| 14 | 🗺️ Astrocartography 地點占星 | 回歸 Tropical | AC/MC/IC/DC 搬遷線・互動 Plotly 地圖・過運搬遷線 |
+| | **🌏 亞洲 Asian** | | |
+| 15 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
+| 16 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
+| 17 | 🕉️ Jaimini 占星 | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
+| 18 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
+| 19 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
+| 20 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
+| 21 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
+| 22 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
+| 23 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
+| | **☪ 中東 Middle East** | | |
+| 24 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
+| 25 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
+| | **🏺 古代文明 Ancient** | | |
+| 26 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 27 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
+| 28 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 29 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
 
 ---
 
 ## 🔍 各體系詳細介紹 | System Details
 
-### 🀄 七政四餘（中國傳統占星）| Chinese Traditional Astrology
+> 💡 點擊展開各體系的詳細介紹 / *Click to expand each system's details*
+
+<details>
+<summary><strong>🀄 七政四餘（中國傳統占星）| Chinese Traditional Astrology</strong></summary>
 
 中國千年傳承的占星術，以恆星黃道為基礎。
 
@@ -118,7 +132,10 @@
 
 ---
 
-### 🌟 紫微斗數（Zi Wei Dou Shu）
+</details>
+
+<details>
+<summary><strong>🌟 紫微斗數（Zi Wei Dou Shu）</strong></summary>
 
 中國傳統命理學最重要的排盤體系之一，相傳由陳希夷整理創立。
 
@@ -129,9 +146,10 @@
 - **五行局 / Five Element Groups**：水二局、木三局、金四局、土五局、火六局
 - **農曆排盤 / Lunar Calendar**：以農曆生辰（年、月、日、時辰）為基礎 — Chart based on lunar birth date and time
 
----
+</details>
 
-### 🌠 策天飛星紫微斗數（Ce Tian 18 Flying Stars）
+<details>
+<summary><strong>🌠 策天飛星紫微斗數（Ce Tian 18 Flying Stars）</strong></summary>
 
 紫微斗數的古法前身與重要分支，源自明代《十八飛星策天紫微斗數全集》。
 
@@ -143,9 +161,10 @@
 - **節氣影響 / Solar Term Effects**：需計算節氣對星曜落度的影響 — Solar terms affect star placement
 - **農曆排盤 / Lunar Calendar**：使用農曆新年查找表搭配朔望月計算 — Chart based on lunar new year lookup tables with synodic month calculations
 
----
+</details>
 
-### 🔢 十二星次（Twelve Ci / Jupiter Stations）
+<details>
+<summary><strong>🔢 十二星次（Twelve Ci / Jupiter Stations）</strong></summary>
 
 中國古代木星分野系統，以冬至點為黃道 0° 起點，將 360° 等分為十二次。
 
@@ -167,7 +186,10 @@
 
 ---
 
-### 🖐️ 達摩一掌經（Damo One Palm Scripture）
+</details>
+
+<details>
+<summary><strong>🖐️ 達摩一掌經（Damo One Palm Scripture）</strong></summary>
 
 以左手掌十二地支為宮位，配合十二星與六道，透過年月日時四柱推算前世今生因果業力的命理系統。
 
@@ -180,9 +202,10 @@
 - **互動手掌 SVG / Interactive Palm SVG**：視覺化十二宮位掌圖，高亮四宮 — Interactive SVG palm chart highlighting the four palaces
 - **前世今生 / Past & Present Life**：四宮各得一星一道，推斷命運因果 — Each palace receives a star and realm for karmic analysis
 
----
+</details>
 
-### 🌍 西洋占星（Western Astrology）
+<details>
+<summary><strong>🌍 西洋占星（Western Astrology）</strong></summary>
 
 全球最流行的占星體系，以回歸黃道為基準。
 
@@ -209,7 +232,10 @@
 
 ---
 
-### 🙏 印度占星 Jyotish（Vedic Astrology）
+</details>
+
+<details>
+<summary><strong>🙏 印度占星 Jyotish（Vedic Astrology）</strong></summary>
 
 源於印度的古老占星體系，使用恆星黃道與 Lahiri 歲差。
 
@@ -237,7 +263,10 @@
 
 ---
 
-### 🈳 宿曜道（日本 Yōjōdō）| Japanese Sukkayodo
+</details>
+
+<details>
+<summary><strong>🈳 宿曜道（日本 Yōjōdō）| Japanese Sukkayodo</strong></summary>
 
 9 世紀由空海大師自印度傳入日本，融合佛教密宗與道家思想。
 
@@ -249,9 +278,10 @@
 - **宿曜道方盤 / Sukkayodo Chart**：4×7 網格，二十八宿沿圓環排列 — 4×7 grid with 28 mansions in circular arrangement
 - **象徵符號 / Symbols**：每宿有獨特漢字符號（馬、彡、卍、兔、蚯…）— Unique kanji symbols for each mansion
 
----
+</details>
 
-### 🐘 泰國占星（Thai Astrology）
+<details>
+<summary><strong>🐘 泰國占星（Thai Astrology）</strong></summary>
 
 以印度 Jyotish 為基礎，融合泰國佛教文化與本土占星傳統。
 
@@ -264,9 +294,10 @@
 - **九宮格 / Nine Grid**：泰國傳統九宮格排盤與占卜 — Traditional Thai nine-grid divination
 - **พรหมชาติ / Brahma Jati**：根據出生年份（12 生肖）、月份、星期推算命理，含年運輪與符咒改運法 — Fortune reading based on birth year (12 zodiac), month, weekday, with annual fortune wheel and remedies
 
----
+</details>
 
-### ✡ 卡巴拉占星（Kabbalah Astrology）
+<details>
+<summary><strong>✡ 卡巴拉占星（Kabbalah Astrology）</strong></summary>
 
 結合猶太神祕主義與占星術，以回歸黃道呈現。
 
@@ -277,9 +308,10 @@
 - **塔羅對應 / Tarot Correspondence**：每個星座對應一張塔羅大牌 — Each sign corresponds to a Major Arcana card
 - **回歸黃道 / Tropical Zodiac**：與西洋占星相同的黃道系統 — Same zodiac system as Western astrology
 
----
+</details>
 
-### ✡ 猶太 Mazzalot 占星（Jewish Mazzalot Astrology）
+<details>
+<summary><strong>✡ 猶太 Mazzalot 占星（Jewish Mazzalot Astrology）</strong></summary>
 
 源自 Talmud（塔木德）與 Sefer Yetzirah（創造之書）的猶太傳統黃道體系。
 
@@ -303,7 +335,10 @@
 
 ---
 
-### ☪ 阿拉伯占星（Arabic Astrology）
+</details>
+
+<details>
+<summary><strong>☪ 阿拉伯占星（Arabic Astrology）</strong></summary>
 
 源自中世紀伊斯蘭黃金時代，融合希臘與波斯天文傳統。
 
@@ -328,7 +363,10 @@
 
 ---
 
-### 🕌 也門占星（Yemeni / Rasulid Astrology）
+</details>
+
+<details>
+<summary><strong>🕌 也門占星（Yemeni / Rasulid Astrology）</strong></summary>
 
 南阿拉伯半島最古老的占星傳統之一，源自示巴王國，在 13 世紀 Rasulid 王朝時期達到頂峰。
 
@@ -353,7 +391,10 @@
 
 ---
 
-### 🏺 瑪雅占星（Maya Astrology）
+</details>
+
+<details>
+<summary><strong>🏺 瑪雅占星（Maya Astrology）</strong></summary>
 
 源自瓜地馬拉瑪雅文明的天文與曆法傳統。
 
@@ -365,9 +406,10 @@
 - **Calendar Round**：Tzolkin × Haab 同步循環，約 52 年一輪 — Synchronized Tzolkin–Haab cycle, approximately 52-year rotation
 - **行星疊加 / Planetary Overlay**：結合西方占星行星位置對應 Tzolkin 能量 — Western planetary positions mapped to Tzolkin energies
 
----
+</details>
 
-### 🇲🇲 緬甸占星（Mahabote / Myanmar Astrology）
+<details>
+<summary><strong>🇲🇲 緬甸占星（Mahabote / Myanmar Astrology）</strong></summary>
 
 緬甸傳統占星術，Mahabote (မဟာဘုတ်) 意為「大創造」。
 
@@ -381,9 +423,10 @@
 - **計算公式 / Formula**：Mahabote 值 = (緬甸年 + 星期數) mod 7 — Mahabote value = (Myanmar year + weekday number) mod 7
 - **動物守護 / Animal Signs**：每個星期對應守護動物（鳥翼獅、虎、獅、有牙象、鼠、天竺鼠、龍）— Weekday animal signs (Galon, Tiger, Lion, Tusked Elephant, Rat, Guinea Pig, Dragon)
 
----
+</details>
 
-### 🏛️ 古埃及十度區間（Decanic Astrology / 36 Decans）
+<details>
+<summary><strong>🏛️ 古埃及十度區間（Decanic Astrology / 36 Decans）</strong></summary>
 
 源自古埃及數千年前的天文計時系統，是西洋占星學最古老的分區技法之一。
 
@@ -401,9 +444,10 @@
 >
 > *This tool is for cultural, historical, and astrological learning purposes. Ancient Egyptian Decans originated from an astronomical timekeeping system thousands of years ago; modern interpretations are for reference only.*
 
----
+</details>
 
-### 🔱 納迪占星（Nadi Jyotish）
+<details>
+<summary><strong>🔱 納迪占星（Nadi Jyotish）</strong></summary>
 
 源自南印度泰米爾那德邦的古代棕櫚葉手稿傳統，以三種「納迪脈輪」為核心。
 
@@ -419,9 +463,10 @@
 - **上升納迪 / Lagna Nadi**：以上升點所在星宿決定 — Determined by the Ascendant's Nakshatra
 - **恆星黃道 / Sidereal Zodiac**：使用 Lahiri Ayanamsa 計算 — Calculated with Lahiri Ayanamsa
 
----
+</details>
 
-### 🕉️ Jaimini 占星（Jaimini Astrology）
+<details>
+<summary><strong>🕉️ Jaimini 占星（Jaimini Astrology）</strong></summary>
 
 源自古印度聖人 Jaimini 所著之《Jaimini Sutras》（約公元前 2 世紀），與 Parashara 體系並列為 Jyotish 兩大核心流派。
 
@@ -445,7 +490,10 @@
 
 ---
 
-### 🇲🇳 蒙古祖爾海（Mongolian Zurkhai）
+</details>
+
+<details>
+<summary><strong>🇲🇳 蒙古祖爾海（Mongolian Zurkhai）</strong></summary>
 
 蒙古傳統占星術 (Зурхай / Shar Zurkhai)，源自藏傳佛教曆算體系。
 
@@ -462,9 +510,10 @@
 >
 > *Calculations follow traditional Mongolian Zurkhai methods for cultural learning and reference only. For important decisions, consult a qualified Mongolian astrologer (Zurkhaič) or Lama.*
 
----
+</details>
 
-### 🏔️ 藏傳時輪金剛占星（Tibetan Kalachakra Astrology）
+<details>
+<summary><strong>🏔️ 藏傳時輪金剛占星（Tibetan Kalachakra Astrology）</strong></summary>
 
 時輪金剛續 (Kalachakra Tantra) 為藏傳占星的根本古法，融合印度天文學、中國干支體系與苯教本土元素。
 
@@ -494,9 +543,10 @@
 >
 > *Calculations follow traditional Tibetan astrological methods for cultural learning and reference only. For important decisions, consult a qualified Tibetan astrologer (rTsis-pa) or Lama.*
 
----
+</details>
 
-### 🏺 希臘占星（Hellenistic Astrology）
+<details>
+<summary><strong>🏺 希臘占星（Hellenistic Astrology）</strong></summary>
 
 古希臘羅馬時期的占星體系，是西洋占星的源頭，以整宮制（Whole-sign Houses）與希臘點為核心。
 
@@ -527,7 +577,10 @@
 
 ---
 
-### 🐦‍⬛ 萬化仙禽（WanHua XianQin / Star-Animal Divination）
+</details>
+
+<details>
+<summary><strong>🐦‍⬛ 萬化仙禽（WanHua XianQin / Star-Animal Divination）</strong></summary>
 
 源自明代古籍《新刻劉伯溫萬化仙禽》（朱國祥著）的演禽術，以二十八宿禽星為核心的中國傳統命理系統。
 
@@ -553,7 +606,10 @@
 
 ---
 
-### 🦅 阿茲特克占星（Aztec Astrology）
+</details>
+
+<details>
+<summary><strong>🦅 阿茲特克占星（Aztec Astrology）</strong></summary>
 
 源自中美洲阿茲特克文明的天文與曆法傳統，與瑪雅體系有密切淵源。
 
@@ -565,9 +621,10 @@
 - **方位與顏色 / Direction & Color**：每個日徵對應特定的羅盤方位與顏色 — Each day sign maps to a compass direction and color
 - **行星疊加 / Planetary Overlay**：結合西方占星行星位置對應 Tonalpohualli 能量 — Western planetary positions mapped to Tonalpohualli energies
 
----
+</details>
 
-### 🏛️ 古巴比倫占星（Babylonian / Chaldean Astrology）
+<details>
+<summary><strong>🏛️ 古巴比倫占星（Babylonian / Chaldean Astrology）</strong></summary>
 
 所有西洋占星體系的直接源頭，起源於美索不達米亞文明。
 
@@ -591,7 +648,10 @@
 
 ---
 
-### 🗺️ Astrocartography 地點占星（搬遷線）
+</details>
+
+<details>
+<summary><strong>🗺️ Astrocartography 地點占星（搬遷線）</strong></summary>
 
 以出生時刻的行星位置投射至全球地圖，顯示各行星在地球上何處具有角度力量。
 
@@ -611,6 +671,72 @@
 | **互動地圖 Map** | Plotly 全球搬遷線互動地圖 |
 | **數據表 Table** | 各行星各線型的經緯度數據 |
 | **過運 Transit** | 過運行星搬遷線分析 |
+</details>
+
+---
+
+</details>
+
+<details>
+<summary><strong>🔮 六壬祿命（Da Liu Ren / Six Ren Destiny）</strong></summary>
+
+古代三式之一，以天地盤推演吉凶，依據《六壬論命秘要》實作完整論命邏輯。
+
+*One of the Three Ancient Formulae (San Shi), using celestial and terrestrial boards to deduce fortune, based on the classic «Six Ren Destiny Secrets».*
+
+- **天地盤 / Celestial & Terrestrial Boards**：以日干支及月將排列天盤地盤 — Arrange boards based on day stems/branches and monthly general
+- **四課 / Four Lessons**：從天地盤中取出四組干支 — Four pairs of stems/branches derived from the boards
+- **三傳 / Three Transmissions**：初傳、中傳、末傳，推演事態發展 — Initial, Middle, Final transmissions for event progression
+- **十二宮 / Twelve Palaces**：命宮、兄弟、夫妻、子女等十二宮分析 — Twelve palace analysis for life areas
+- **論命分析 / Destiny Analysis**：身命判斷、女命專論、五節總決、二十四格、十六局、流年月令、壽夭推算 — Comprehensive fate analysis including gender-specific readings, patterns, and longevity
+
+</details>
+
+<details>
+<summary><strong>🌟 太乙命法（Taiyi Life Method）</strong></summary>
+
+古代三式之首，太乙神數以出生年月日時推算個人命運。
+
+*The foremost of the Three Ancient Formulae; Taiyi Shen Shu calculates personal destiny from birth date and time.*
+
+- **命宮身宮 / Life & Body Palaces**：以出生時辰計算命宮與身宮位置 — Calculate Life Palace and Body Palace from birth time
+- **十二宮排列 / Twelve Palaces**：太乙命法十二宮排布 — Twelve palace arrangement in Taiyi method
+- **陽九百六行限 / Yang Nine & Hundred Six Periods**：推算人生各階段運勢 — Life-stage fortune calculation
+- **出身卦 / Birth Hexagram**：依出生資訊推算先天卦象 — Innate hexagram derived from birth data
+- **五柱卦象 / Five Pillar Hexagrams**：年柱、月柱、日柱、時柱、命柱卦象分析 — Year, Month, Day, Hour, Life pillar hexagram analysis
+
+</details>
+
+<details>
+<summary><strong>🔮 奇門祿命（Qimen Destiny Analysis）</strong></summary>
+
+以出生時辰的奇門遁甲局為主，推斷一生窮通壽夭吉凶禍福。
+
+*Using the Qi Men Dun Jia chart of the birth hour to deduce lifelong fortune and misfortune.*
+
+- **奇門遁甲局 / Qi Men Chart**：以出生時辰排列奇門遁甲局 — Qi Men Dun Jia chart based on birth hour
+- **六親分析 / Six Relations**：父母、兄弟、子孫、官祿、妻財、疾厄宮位分析 — Analysis of six relational palaces
+- **八門八神九星 / Eight Gates, Eight Spirits, Nine Stars**：奇門遁甲核心要素解讀 — Core Qi Men elements interpretation
+- **格局推斷 / Pattern Deduction**：吉格凶格判斷，推斷一生命運走向 — Auspicious/inauspicious pattern assessment for life trajectory
+
+</details>
+
+<details>
+<summary><strong>🏝️ 巴厘 Wariga（Balinese Wariga Calendar）</strong></summary>
+
+巴厘島傳統曆法系統，使用 Wuku 210天週期與 Wewaran 九層週期進行吉凶判斷。
+
+*Traditional Balinese calendar system using the 210-day Wuku cycle and nine-layer Wewaran cycles for auspiciousness determination.*
+
+- **Wuku 週期 / Wuku Cycle**：210 天為一個完整循環，分為 30 個 Wuku 週期 — 210-day cycle divided into 30 Wuku periods
+- **Wewaran 九層週期 / Nine Wewaran Layers**：Eka Wara（1天）至 Dasa Wara（10天），共九層週期 — Nine cyclical layers from Eka Wara (1-day) to Dasa Wara (10-day)
+- **Neptu / Urip 數值 / Neptu Values**：每個 Wara 日名有對應的 Neptu 數值，用於吉凶計算 — Numerical values assigned to each day name for fortune calculation
+- **吉凶判斷 / Auspiciousness**：依古典 Lontar Wariga 規則進行日期吉凶評估 — Date auspiciousness based on classical Lontar Wariga rules
+
+> 📖 此計算依循巴厘傳統古法，僅供文化學習與參考。
+>
+> *Calculations follow traditional Balinese methods for cultural learning and reference only.*
+
 </details>
 
 ---
@@ -703,6 +829,14 @@ kinastro/
 │   ├── swe_init.py                 # Swiss Ephemeris 初始化 / Swiss Ephemeris init
 │   ├── astrocartography.py         # Astrocartography 地點占星 / Astrocartography module
 │   │
+│   │  ── 三式（Three Formulae） ──
+│   ├── sanshi/
+│   │   ├── liuren.py               # 大六壬排盤 / Da Liu Ren divination
+│   │   ├── lunming.py              # 六壬論命分析 / Liu Ren destiny analysis
+│   │   ├── taiyi.py                # 太乙命法 / Taiyi Life Method
+│   │   ├── qimen.py                # 奇門遁甲 / Qi Men Dun Jia
+│   │   └── qimen_luming.py         # 奇門祿命 / Qi Men destiny analysis
+│   │
 │   │  ── 七政四餘（Chinese Traditional） ──
 │   ├── qizheng/
 │   │   ├── calculator.py           # 核心計算引擎 / Core calculation engine
@@ -768,6 +902,12 @@ kinastro/
 │   │   ├── chinstar.py             # 演禽起盤核心 / Core charting engine
 │   │   ├── xiangtai_fu.json        # 相胎賦資料 / Birth Combination data
 │   │   └── gui_jian_ge.json        # 貴賤格資料 / Noble/Ignoble Patterns data
+│   │
+│   │  ── 巴厘（Balinese） ──
+│   ├── wariga/
+│   │   ├── calculator.py           # Wuku/Wewaran 計算 / Wuku/Wewaran calculator
+│   │   ├── constants.py            # 巴厘曆常量 / Balinese calendar constants
+│   │   └── renderer.py             # Streamlit 渲染 / UI rendering
 │   │
 │   │  ── 納迪（Nadi）──
 │   ├── nadi/
