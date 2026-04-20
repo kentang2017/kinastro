@@ -94,16 +94,10 @@ MOBILE_CSS = """<style>
     box-shadow: 0 0 12px rgba(234, 179, 8, 0.15) !important;
 }
 
-/* ── Fixed-width sidebar (Grok-style) ── */
+/* ── Sidebar transitions ── */
 section[data-testid="stSidebar"] {
-    width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 visibility 0.3s ease !important;
-}
-section[data-testid="stSidebar"] > div:first-child {
-    width: 320px !important;
 }
 /* Close (X) button inside sidebar */
 section[data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
@@ -440,9 +434,6 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     /* Tabs: wrap onto multiple lines */
     .stTabs [data-baseweb="tab-list"] { flex-wrap: wrap; gap: 2px; }
     .stTabs [data-baseweb="tab"] { font-size: 0.8rem; padding: 3px 6px; min-height: 32px; }
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] { min-width: 200px; }
 
     /* Columns: stack vertically on mobile */
     [data-testid="stHorizontalBlock"] {
