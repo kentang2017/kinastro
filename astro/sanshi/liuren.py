@@ -146,7 +146,7 @@ def compute_liuren_chart(
     dict
         包含三傳、四課、天地盤、格局等完整排盤資訊。
     """
-    from kinliuren.kinliuren import Liuren
+    from astro.sanshi.kinliuren.kinliuren import Liuren
 
     gz = _get_gangzhi(year, month, day, hour)
     jieqi = _get_jieqi(year, month, day)
