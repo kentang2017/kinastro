@@ -1078,6 +1078,9 @@ def _render_global_ai_chat():
     if not _system_key or _chart_obj is None:
         return
 
+    # User avatar based on sidebar gender selection
+    _user_avatar = "👦" if st.session_state.get("_calc_gender") == "male" else "👧"
+
     _ck = f"_ai_chat_global_{_system_key}"
 
     # Initialize per-system chat history
@@ -1113,7 +1116,7 @@ def _render_global_ai_chat():
 
     # Render existing chat messages
     for _msg in _history:
-        with _chat_box.chat_message(_msg["role"], avatar="🧙" if _msg["role"] == "assistant" else None):
+        with _chat_box.chat_message(_msg["role"], avatar="🧙" if _msg["role"] == "assistant" else _user_avatar):
             st.markdown(_msg["content"])
 
     # Chat input
@@ -1125,7 +1128,7 @@ def _render_global_ai_chat():
     if _user_input:
         # Show user message immediately
         _history.append({"role": "user", "content": _user_input})
-        with _chat_box.chat_message("user"):
+        with _chat_box.chat_message("user", avatar=_user_avatar):
             st.markdown(_user_input)
 
         # Resolve API key
