@@ -1224,16 +1224,16 @@ transmitted by **Chen Xiyi**.
         "en": "⏳ AI service is experiencing high traffic. Automatic retries were exhausted. Please try again shortly.",
     },
     "ai_result_header": {
-        "zh": "🤖 AI 分析結果",
-        "en": "🤖 AI Analysis Result",
+        "zh": "AI 分析結果",
+        "en": "AI Analysis Result",
     },
     "ai_no_chart": {
         "zh": "請先計算排盤後再進行 AI 分析。",
         "en": "Please compute a chart first before running AI analysis.",
     },
     "ai_chat_header": {
-        "zh": "🤖 AI 占星助手",
-        "en": "🤖 AI Astrology Assistant",
+        "zh": "AI 占星助手",
+        "en": "AI Astrology Assistant",
     },
     "ai_chat_placeholder": {
         "zh": "輸入問題與 AI 對話…",
