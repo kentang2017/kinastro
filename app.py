@@ -89,6 +89,8 @@ from astro.ai_analysis import (
     CEREBRAS_MODEL_OPTIONS,
     CEREBRAS_MODEL_DESCRIPTIONS,
     DEFAULT_SYSTEM_PROMPT,
+    DEFAULT_SYSTEM_PROMPT_EN,
+    detect_language,
     format_chart_for_prompt,
 )
 
@@ -1141,7 +1143,13 @@ def _render_global_ai_chat():
         chart_prompt = format_chart_for_prompt(
             _system_key, _chart_obj, page_content=_page_content,
         )
-        _sys_prompt = st.session_state.get("ai_system_prompt", "")
+        # Detect the language of the latest user message and choose the
+        # matching system prompt so the AI responds in the same language.
+        _user_lang = detect_language(_user_input)
+        if _user_lang == "en":
+            _sys_prompt = DEFAULT_SYSTEM_PROMPT_EN
+        else:
+            _sys_prompt = st.session_state.get("ai_system_prompt", DEFAULT_SYSTEM_PROMPT)
         _api_messages = [
             {"role": "system", "content": _sys_prompt},
             # Provide chart data as initial context
