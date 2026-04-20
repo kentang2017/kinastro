@@ -2822,7 +2822,7 @@ elif _selected_system == "tab_liuren":
             )
             # ── 論命分析 ──
             st.divider()
-            # 流年地支：以排盤年份的年支計算
+            # 本命與流年均取自排盤年份的年支
             _lunming_report = compute_lunming(
                 _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
             )
