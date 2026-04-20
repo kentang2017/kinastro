@@ -5,6 +5,7 @@ Computes positions of classical fixed stars and finds conjunctions with planets.
 """
 import json
 import os
+from functools import lru_cache
 import swisseph as swe
 from dataclasses import dataclass
 
@@ -14,6 +15,7 @@ ZODIAC_SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
 _DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "data")
 
 
+@lru_cache(maxsize=1)
 def load_star_catalog():
     path = os.path.join(_DATA_DIR, "fixed_stars.json")
     with open(path, "r", encoding="utf-8") as f:

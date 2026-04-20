@@ -1275,7 +1275,7 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
         ming_branch = EARTHLY_BRANCHES[chart.ming_gong_branch]
         ming_mansion = ""
         ming_degree = 0.0
-        ming_mansion, ming_degree = _get_mansion_info(chart.ascendant)
+        ming_mansion, ming_degree, _, _ = _get_mansion_info(chart.ascendant)
         st.markdown(
             f"- **立命：** {ming_branch} {format_degree(chart.ascendant)} · "
             f"{ming_mansion} {ming_degree:.2f}°\n"

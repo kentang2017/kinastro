@@ -530,18 +530,18 @@ class TestMansionInfo:
 
     def test_mansion_name_for_known_degree(self):
         """已知度數應返回正確宿名"""
-        name, deg = _get_mansion_info(210.0)
+        name, deg, _, _ = _get_mansion_info(210.0)
         assert name == "角"
 
     def test_mansion_degree_in_range(self):
         """宿內度數應為正值"""
-        name, deg = _get_mansion_info(215.0)
+        name, deg, _, _ = _get_mansion_info(215.0)
         assert name == "亢"
         assert deg >= 0
 
     def test_mansion_degree_precision(self):
         """角宿起始點度數應為 0"""
-        name, deg = _get_mansion_info(203.8375)
+        name, deg, _, _ = _get_mansion_info(203.8375)
         assert name == "角"
         assert abs(deg) < 0.01
 
