@@ -954,7 +954,6 @@ with st.sidebar:
                     key=f"_sys_btn_{_sk}",
                     use_container_width=True,
                     type=_btn_type,
-                    help=_SYSTEM_HINTS.get(_sk, ""),
                 ):
                     st.session_state["_system_select"] = _sk
                     _selected_system = _sk
