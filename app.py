@@ -2808,11 +2808,17 @@ elif _selected_system == "tab_liuren":
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_liuren")):
                 _liuren_chart = compute_liuren_chart(**_p)
+            # 從生年推算本命地支（年支）
+            import sxtwl as _sxtwl_lr
+            _lr_day = _sxtwl_lr.fromSolar(_p["year"], _p["month"], _p["day"])
+            _lr_year_gz = _lr_day.getYearGZ()
+            _lr_benming = list("子丑寅卯辰巳午未申酉戌亥")[_lr_year_gz.dz]
             render_liuren_chart(
                 _liuren_chart,
                 after_chart_hook=lambda: _render_ai_button(
                     "tab_liuren", _liuren_chart, btn_key="liuren"
                 ),
+                benming_zhi=_lr_benming,
             )
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
