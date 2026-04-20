@@ -27,7 +27,7 @@ from astro.astrocartography import (
 )
 
 
-# ── Test parameters: 1990-01-15 10:30 CST, Taipei ────────────
+# ── Test parameters: 1990-01-15 10:30 UTC+8, Taipei ────────────
 TEST_YEAR, TEST_MONTH, TEST_DAY = 1990, 1, 15
 TEST_HOUR, TEST_MINUTE = 10, 30
 TEST_TZ = 8.0

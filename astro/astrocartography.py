@@ -82,8 +82,8 @@ PLANET_COLORS: dict[str, str] = {
 }
 
 # 緯度取樣範圍和步長 / Latitude sampling range and step
-LAT_MIN = -70.0   # 高緯度精度低，截止±70°
-LAT_MAX = 70.0
+LAT_MIN = -70.0   # 極地附近(±90°)球面三角公式中 tan(φ) 趨近無窮大，計算不穩定
+LAT_MAX = 70.0    # 因此截止 ±70°；此範圍涵蓋絕大多數有人居住的地區
 LAT_STEP = 1.0    # 1° step → 141 points per line
 N_LAT_SAMPLES = int((LAT_MAX - LAT_MIN) / LAT_STEP) + 1
 
@@ -297,7 +297,8 @@ def compute_planet_longitudes(jd: float) -> dict[str, float]:
     return longitudes
 
 
-def compute_mc_longitude(planet_lon: float, gast_deg: float) -> float:
+def compute_mc_longitude(planet_lon: float, gast_deg: float,
+                         obliquity: float = OBLIQUITY_DEFAULT) -> float:
     """計算 MC 線的地理經度
 
     MC 線數學原理：
@@ -320,12 +321,13 @@ def compute_mc_longitude(planet_lon: float, gast_deg: float) -> float:
     Args:
         planet_lon: 行星黃經 (degrees)
         gast_deg: 格林威治視恆星時 (degrees)
+        obliquity: 黃赤交角 (degrees), 預設使用近似值
 
     Returns:
         地理經度 (-180 ~ +180)
     """
     lam = _deg2rad(planet_lon)
-    eps = _deg2rad(OBLIQUITY_DEFAULT)
+    eps = _deg2rad(obliquity)
     # 黃經轉赤經
     # RA = atan2(sin(λ)·cos(ε), cos(λ))
     ra = _rad2deg(math.atan2(math.sin(lam) * math.cos(eps), math.cos(lam)))
