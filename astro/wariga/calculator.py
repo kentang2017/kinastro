@@ -721,7 +721,7 @@ class WarigaCalculator:
         selected = PANCA_DAUH[0]  # 預設
         for entry in PANCA_DAUH:
             name, start, end, deity, quality, desc = entry
-            if start <= hour <= end:
+            if start <= hour < end:
                 selected = entry
                 break
         name, start, end, deity, quality, desc = selected
@@ -748,7 +748,7 @@ class WarigaCalculator:
         selected = ASTA_DAUH[0]  # 預設
         for entry in ASTA_DAUH:
             name, start, end, direction, quality, desc = entry
-            if start <= hour <= end:
+            if start <= hour < end:
                 selected = entry
                 break
         name, start, end, direction, quality, desc = selected

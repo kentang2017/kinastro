@@ -447,32 +447,34 @@ PAWUKON_CYCLE = 210
 # ============================================================
 # Panca Dauh — 5 時辰劃分（每 Dauh 約 4.8 小時）
 # 巴厘傳統將一日分為 5 個 Dauh，每 Dauh 歸屬特定神明
-# 格式：(名稱, 時間範圍起始小時, 神明/主宰, 吉凶, 說明)
+# 格式：(名稱, 起始小時(含), 終止小時(不含), 神明/主宰, 吉凶, 說明)
+# 範圍使用半開區間 [start, end)，無邊界重疊
 # 古法依據：Lontar Wariga — Panca Dauh 時辰表
 # ============================================================
 PANCA_DAUH = [
-    ("Pagi",      0,   5,  "Dewa Surya",    "中性", "日出前，萬物甦醒"),
-    ("Tengai",    6,  10,  "Dewa Brahma",   "吉",   "上午，創造之時"),
-    ("Tangeh",   11,  15,  "Dewa Wisnu",    "吉",   "正午，維護之時"),
-    ("Sandikala",16,  19,  "Dewa Siwa",     "凶",   "黃昏，轉化之時"),
-    ("Wengi",    20,  23,  "Dewa Yama",     "凶",   "夜間，靜思之時"),
+    ("Pagi",       0,   6,  "Dewa Surya",    "中性", "日出前，萬物甦醒"),
+    ("Tengai",     6,  11,  "Dewa Brahma",   "吉",   "上午，創造之時"),
+    ("Tangeh",    11,  16,  "Dewa Wisnu",    "吉",   "正午，維護之時"),
+    ("Sandikala", 16,  20,  "Dewa Siwa",     "凶",   "黃昏，轉化之時"),
+    ("Wengi",     20,  24,  "Dewa Yama",     "凶",   "夜間，靜思之時"),
 ]
 
 # ============================================================
 # Asta Dauh — 8 時辰劃分（每 Dauh 3 小時）
 # 更精細的時辰系統，嚴格按照 Lontar Wariga Gemet 傳統
-# 格式：(名稱, 起始小時, 終止小時, 方位, 吉凶, 說明)
+# 格式：(名稱, 起始小時(含), 終止小時(不含), 方位, 吉凶, 說明)
+# 範圍使用半開區間 [start, end)，無邊界重疊
 # 古法依據：Lontar Wariga Gemet — Asta Dauh 時辰劃分
 # ============================================================
 ASTA_DAUH = [
-    ("Pagi",        0,  2,  "Timur",        "中性",  "黎明前，Dewa Iswara 方，宜靜修"),
-    ("Kala Pagi",   3,  5,  "Tenggara",     "凶",    "Dewa Maheswara 方，忌出行"),
-    ("Tengai",      6,  8,  "Selatan",      "吉",    "Dewa Brahma 方，宜開始重要事"),
-    ("Kala Tengai", 9, 11,  "Barat Daya",   "凶",    "Dewa Rudra 方，忌簽約"),
-    ("Tangeh",     12, 14,  "Barat",        "吉",    "Dewa Mahadewa 方，宜農耕"),
-    ("Kala Tangeh",15, 17,  "Barat Laut",   "凶",    "Dewa Sangkara 方，忌動土"),
-    ("Sandikala",  18, 20,  "Utara",        "中性",  "Dewa Wisnu 方，宜祭祀"),
-    ("Wengi",      21, 23,  "Timur Laut",   "凶",    "Dewa Sambu 方，宜休息"),
+    ("Pagi",        0,  3,  "Timur",        "中性",  "黎明前，Dewa Iswara 方，宜靜修"),
+    ("Kala Pagi",   3,  6,  "Tenggara",     "凶",    "Dewa Maheswara 方，忌出行"),
+    ("Tengai",      6,  9,  "Selatan",      "吉",    "Dewa Brahma 方，宜開始重要事"),
+    ("Kala Tengai", 9, 12,  "Barat Daya",   "凶",    "Dewa Rudra 方，忌簽約"),
+    ("Tangeh",     12, 15,  "Barat",        "吉",    "Dewa Mahadewa 方，宜農耕"),
+    ("Kala Tangeh",15, 18,  "Barat Laut",   "凶",    "Dewa Sangkara 方，忌動土"),
+    ("Sandikala",  18, 21,  "Utara",        "中性",  "Dewa Wisnu 方，宜祭祀"),
+    ("Wengi",      21, 24,  "Timur Laut",   "凶",    "Dewa Sambu 方，宜休息"),
 ]
 
 # ============================================================

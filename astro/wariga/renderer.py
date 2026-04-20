@@ -96,6 +96,19 @@ def _escape_html(text: str) -> str:
                 .replace('"', "&quot;"))
 
 
+def _ayana_main(ayana: str) -> str:
+    """提取 Ayana 主要名稱（括號前部分）"""
+    return ayana.split("（")[0]
+
+
+def _ayana_sub(ayana: str) -> str:
+    """提取 Ayana 括號內說明（若有），否則回傳空字串"""
+    parts = ayana.split("（", 1)
+    if len(parts) < 2:
+        return ""
+    return parts[1].rstrip("）")
+
+
 # ============================================================
 # Palalintangan 風格 HTML/CSS+SVG 渲染
 # 嚴格依照傳統巴厘 Palalintangan 排版結構
@@ -431,10 +444,10 @@ def render_palalintangan_html(result: WarigaResult) -> str:
 
     # ── 30 Wuku 網格矩陣 HTML ──────────────────────────────
     wuku_cells = []
+    day_in_wuku = (r.day_in_pawukon % 7) + 1  # 只用於當前 Wuku 標示
     for i, (name, neptu) in enumerate(WUKU_TABLE):
         is_current = (i == r.wuku.index)
         cell_class = "wl-wuku-cell current" if is_current else "wl-wuku-cell"
-        day_in_wuku = (r.day_in_pawukon % 7) + 1
         day_label = f"（第{day_in_wuku}天）" if is_current else ""
         wuku_cells.append(
             f'<div class="{cell_class}" title="Wuku {name}，Neptu={neptu}">'
@@ -558,8 +571,8 @@ def render_palalintangan_html(result: WarigaResult) -> str:
   </div>
   <div class="wl-info-card">
     <span class="ic-label">{ayana_icon} Ayana</span>
-    <span class="ic-value">{_escape_html(s.ayana.split('（')[0])}</span>
-    <span class="ic-sub">{_escape_html(s.ayana.split('（')[1].rstrip('）') if '（' in s.ayana else '')}</span>
+    <span class="ic-value">{_escape_html(_ayana_main(s.ayana))}</span>
+    <span class="ic-sub">{_escape_html(_ayana_sub(s.ayana))}</span>
   </div>
 </div>
 """
@@ -582,7 +595,7 @@ def render_palalintangan_html(result: WarigaResult) -> str:
     <div class="dc-title">🧭 Asta Dauh：{_escape_html(ad.name)}</div>
     <div class="dc-deity">{_escape_html(ad.direction)}</div>
     <div style="font-size:0.8em;color:{'#2E6B3B' if ad.quality=='吉' else '#8B1A1A' if ad.quality=='凶' else _LONTAR_SUBTLE};">
-      {_escape_html(ad.quality)} — {_escape_html(ad.deity[:18])}
+      {_escape_html(ad.quality)} — {_escape_html(ad.deity)}
     </div>
   </div>
 </div>
