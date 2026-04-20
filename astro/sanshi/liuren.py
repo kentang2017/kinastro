@@ -150,7 +150,21 @@ def compute_liuren_chart(
 
 
 def _liuqin_label(ri_gan: str, target_zhi: str) -> str:
-    """以日干為主，求 target 地支的六親簡稱。"""
+    """以日干為主，求 *target_zhi* 地支的六親簡稱。
+
+    Parameters
+    ----------
+    ri_gan : str
+        日干（如 ``'壬'``）。
+    target_zhi : str
+        待判定六親的地支（如 ``'午'``）。
+
+    Returns
+    -------
+    str
+        六親簡稱：``'父'``/``'財'``/``'官'``/``'兄'``/``'子'``，
+        若無法判定則回傳空字串。
+    """
     GANZHI_WX = {
         "甲": "木", "乙": "木", "丙": "火", "丁": "火",
         "戊": "土", "己": "土", "庚": "金", "辛": "金",
@@ -182,7 +196,21 @@ def _build_liuren_board_html(
     chart: dict,
     benming_zhi: str | None = None,
 ) -> str:
-    """產生傳統六壬盤式 HTML（方盤 + 四課三傳 + 十二宮）。"""
+    """產生傳統六壬盤式 HTML（方盤 + 四課三傳 + 十二宮）。
+
+    Parameters
+    ----------
+    chart : dict
+        ``compute_liuren_chart()`` 的回傳值，需包含
+        ``地轉天盤``、``地轉天將``、``三傳``、``四課`` 等鍵。
+    benming_zhi : str, optional
+        本命地支（如 ``'寅'``），若提供則在各位置標註十二宮宮名。
+
+    Returns
+    -------
+    str
+        可嵌入 ``streamlit.components.v1.html()`` 的 HTML 字串。
+    """
     di_to_tian = chart.get("地轉天盤", {})
     di_to_jiang = chart.get("地轉天將", {})
     san_chuan = chart.get("三傳", {})
