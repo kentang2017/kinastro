@@ -14,7 +14,7 @@
 
 **二十五體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・西洋・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・蒙古祖爾海・藏傳時輪金剛・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫**
 
-*25-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Western, Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Japanese Sukkayodo, Thai, Myanmar, Mongolian Zurkhai, Tibetan Kalachakra, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian*
+*25-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Western, Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Mongolian Zurkhai, Tibetan Kalachakra, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian*
 
 </div>
 
