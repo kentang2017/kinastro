@@ -60,12 +60,12 @@ TWELVE_PALACES: list[str] = [
     "官祿", "田宅", "福德", "相貌",
 ]
 
-# 24 節氣名（sxtwl 的索引順序）
+# 24 節氣名（sxtwl 的索引順序，index 0 = 冬至）
 JIEQI_NAMES = [
-    "小寒", "大寒", "立春", "雨水", "驚蟄", "春分",
-    "清明", "穀雨", "立夏", "小滿", "芒種", "夏至",
-    "小暑", "大暑", "立秋", "處暑", "白露", "秋分",
-    "寒露", "霜降", "立冬", "小雪", "大雪", "冬至",
+    "冬至", "小寒", "大寒", "立春", "雨水", "驚蟄",
+    "春分", "清明", "穀雨", "立夏", "小滿", "芒種",
+    "夏至", "小暑", "大暑", "立秋", "處暑", "白露",
+    "秋分", "寒露", "霜降", "立冬", "小雪", "大雪",
 ]
 
 # 月份中文名（正月 ~ 十二月）
@@ -74,38 +74,28 @@ CHINESE_MONTHS = list("正二三四五六七八九十") + ["十一", "十二"]
 
 def _get_jieqi(year: int, month: int, day: int) -> str:
     """根據公曆日期推算當前所在節氣。"""
-    # 取得當年所有節氣日期
-    jieqi_list = []
-    for m in range(1, 13):
-        for jq_type in (0, 1):  # 節, 氣
-            jq_idx = (m - 1) * 2 + jq_type
-            if jq_idx >= 24:
-                break
-            jd = sxtwl.fromSolar(year, m, 1)
-            # Use sxtwl approach: iterate to find jieqi dates
-    # Simplified approach: use month-based mapping
-    # The jieqi of a given month is roughly predictable
-    month_jieqi = {
-        1: "小寒", 2: "立春", 3: "驚蟄", 4: "清明",
-        5: "立夏", 6: "芒種", 7: "小暑", 8: "立秋",
-        9: "白露", 10: "寒露", 11: "立冬", 12: "大雪",
-    }
-    # More precise: use sxtwl to get exact jieqi
     try:
         d = sxtwl.fromSolar(year, month, day)
-        # Check current jieqi
-        # Walk backwards from current day to find the most recent jieqi
-        for offset in range(45):
-            check = sxtwl.fromSolar(year, month, day)
-            # sxtwl JD approach
-            jd_val = check.getJD() - offset
-            check_day = sxtwl.fromJD(jd_val)
+        # 若當天剛好是節氣日，直接返回
+        if d.hasJieQi():
+            jq_idx = d.getJieQi()
+            if 0 <= jq_idx < 24:
+                return JIEQI_NAMES[jq_idx]
+        # 往前逐日搜尋最近的節氣（最多回溯 45 天）
+        for offset in range(1, 46):
+            check_day = d.before(offset)
             if check_day.hasJieQi():
                 jq_idx = check_day.getJieQi()
                 if 0 <= jq_idx < 24:
                     return JIEQI_NAMES[jq_idx]
     except Exception:
         pass
+    # 最後兜底：按月份粗略對應
+    month_jieqi = {
+        1: "小寒", 2: "立春", 3: "驚蟄", 4: "清明",
+        5: "立夏", 6: "芒種", 7: "小暑", 8: "立秋",
+        9: "白露", 10: "寒露", 11: "立冬", 12: "大雪",
+    }
     return month_jieqi.get(month, "小寒")
 
 
