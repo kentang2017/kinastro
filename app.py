@@ -180,10 +180,10 @@ def _inject_star_particles():
 if st.session_state.get("_star_particles", True):
     _inject_star_particles()
 
-# ── Initialise language from the persisted radio widget value ────────────────
-# Language switcher uses query params via st_js bridge. We check for the
-# "_lang_select" session_state key that is set by the HTML language buttons.
-_LANG_MAP = {"繁": "zh", "簡": "zh_cn", "英": "en"}
+# ── Initialise language from the persisted selectbox widget value ────────────
+# Language switcher uses a dropdown (selectbox). We check for the
+# "_lang_select" session_state key that is set by the dropdown.
+_LANG_MAP = {"🌐 繁體中文": "zh", "🌐 简体中文": "zh_cn", "🌐 English": "en"}
 
 if "_lang_select" in st.session_state:
     _sel = st.session_state["_lang_select"]
@@ -342,29 +342,27 @@ def _render_bphs_result(bphs_result):
         st.caption(f"💡 {note}")
 
 
-# ── Language switcher (top-right of main page) ──────────────────
+# ── Language switcher (dropdown above page title) ───────────────
 _cur_lang = st.session_state.get("lang", "zh")
-_lang_labels = ["繁", "簡", "英"]
+_lang_labels = ["🌐 繁體中文", "🌐 简体中文", "🌐 English"]
 _lang_codes = ["zh", "zh_cn", "en"]
 _cur_lang_idx = _lang_codes.index(_cur_lang) if _cur_lang in _lang_codes else 0
 
-_title_col, _lang_col = st.columns([4, 1])
-with _title_col:
-    st.title(t("app_title"))
-    st.markdown(
-        '<p class="app-subtitle">' + t("app_subtitle") + "</p>",
-        unsafe_allow_html=True,
-    )
-with _lang_col:
-    st.markdown("<div class='lang-switcher-spacer'></div>", unsafe_allow_html=True)
-    _sel_lang = st.radio(
+_lang_spacer, _lang_drop = st.columns([4, 1])
+with _lang_drop:
+    _sel_lang = st.selectbox(
         "🌐",
         options=_lang_labels,
         index=_cur_lang_idx,
         key="_lang_select",
-        horizontal=True,
         label_visibility="collapsed",
     )
+
+st.title(t("app_title"))
+st.markdown(
+    '<p class="app-subtitle">' + t("app_subtitle") + "</p>",
+    unsafe_allow_html=True,
+)
 
 # ============================================================
 # 世界城市資料 (城市, 緯度, 經度, 時區)
