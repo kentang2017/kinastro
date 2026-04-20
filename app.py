@@ -63,6 +63,7 @@ from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
+from astro.damo import compute_damo_chart, render_damo_chart
 from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
@@ -807,7 +808,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
-        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei"]),
+        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_zurkhai", "tab_tibetan"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
@@ -846,6 +847,7 @@ with st.sidebar:
         "tab_babylonian": t("tab_babylonian"),
         "tab_chinstar": t("tab_chinstar"),
         "tab_cetian_ziwei": t("tab_cetian_ziwei"),
+        "tab_damo": t("tab_damo"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -872,6 +874,7 @@ with st.sidebar:
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
         "tab_chinstar": t("sys_hint_chinstar"),
         "tab_cetian_ziwei": t("sys_hint_cetian_ziwei"),
+        "tab_damo": t("sys_hint_damo"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2329,6 +2332,28 @@ elif _selected_system == "tab_babylonian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_babylonian"))
+
+# --- 達摩一掌經 (Damo One Palm Scripture) ---
+elif _selected_system == "tab_damo":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _damo_params = dict(_p)
+            _damo_params["gender"] = gender
+            with st.spinner(t("spinner_damo")):
+                _damo_chart = compute_damo_chart(**_damo_params)
+            render_damo_chart(
+                _damo_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_damo", _damo_chart, btn_key="damo"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_damo"))
 
 # --- 萬化仙禽 (WanHua XianQin) ---
 elif _selected_system == "tab_chinstar":

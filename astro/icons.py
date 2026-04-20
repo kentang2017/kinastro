@@ -31,6 +31,8 @@ SYSTEM_ICONS: dict[str, str] = {
     # ── Middle East ──
     "tab_arabic":       "🕌",
     "tab_yemeni":       "🌙",
+    # ── Chinese (additional) ──
+    "tab_damo":         "🤚",
     # ── Ancient / Mesoamerican ──
     "tab_maya":         "🐍",
     "tab_aztec":        "🦅",
@@ -47,6 +49,7 @@ SYSTEM_ACCENT_COLORS: dict[str, str] = {
     "tab_chinstar":     "#C9A84C",
     "tab_cetian_ziwei": "#C9A84C",
     "tab_ziwei":        "#C9A84C",
+    "tab_damo":         "#C9A84C",
     # ── Western / Hellenistic → blue-silver 藍銀 ──
     "tab_western":      "#7B9ED9",
     "tab_hellenistic":  "#7B9ED9",
@@ -78,6 +81,7 @@ SYSTEM_CSS_CLASS: dict[str, str] = {
     "tab_chinstar":     "chinese-chart",
     "tab_cetian_ziwei": "chinese-chart",
     "tab_ziwei":        "chinese-chart",
+    "tab_damo":         "chinese-chart",
     "tab_western":      "western-chart",
     "tab_hellenistic":  "western-chart",
     "tab_kabbalistic":  "western-chart",
