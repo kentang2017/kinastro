@@ -32,18 +32,17 @@ from typing import Dict, List, Optional, Tuple
 # Rates in degrees per Julian year (365.25 days)
 # ============================================================
 
-# Reference positions at J2000.0 (2000-Jan-1.5 TT) in degrees tropical
-# Values from Witte-Lefeldt (Rules for Planetary Pictures, 1974 ed.) and
-# NCGR Hamburg School ephemeris tables.
-TNP_J2000: Dict[str, float] = {
-    "Cupido":   11.00,    # ♡
-    "Hades":    8.00,     # ☠
-    "Zeus":     21.00,    # ⚡
-    "Kronos":   9.00,     # ♚
-    "Apollon":  3.00,     # ☀
-    "Admetos":  9.00,     # ⛓
-    "Vulkanus": 17.00,    # 🌋
-    "Poseidon": 6.00,     # 🌊
+# Approximate tropical positions at J2000.0 (2000 Jan 1.5 TT)
+# Sourced from Hamburg School ephemeris tables.
+TNP_EPOCH2000: Dict[str, float] = {
+    "Cupido":   211.2,   # ~1° Scorpio
+    "Hades":    178.0,   # ~28° Virgo
+    "Zeus":     289.5,   # ~19° Capricorn
+    "Kronos":   271.4,   # ~1° Capricorn
+    "Apollon":  183.3,   # ~3° Virgo
+    "Admetos":  273.0,   # ~3° Capricorn
+    "Vulkanus": 65.2,    # ~5° Gemini
+    "Poseidon": 183.6,   # ~3° Virgo
 }
 
 # Annual motion in degrees/year (Witte's original values)
@@ -56,33 +55,6 @@ TNP_RATE: Dict[str, float] = {
     "Admetos":  1.111,
     "Vulkanus": 1.750,
     "Poseidon": 1.528,
-}
-
-# Zodiac reference longitudes at J2000.0 (sign entry)
-# These represent approximate positions in degrees of the TNPs at J2000.0
-# Based on Uranian Astrology reference tables (Hamburg School)
-TNP_REFERENCE: Dict[str, float] = {
-    "Cupido":   221.0,   # Early Scorpio
-    "Hades":    181.0,   # Early Virgo (actually ~181° Libra)
-    "Zeus":     21.0,    # Aries → ~21° Aries → actually near 19° Capricorn (283°)
-    "Kronos":   273.0,   # Capricorn
-    "Apollon":  183.0,   # Virgo
-    "Admetos":  273.0,   # Capricorn
-    "Vulkanus": 65.0,    # Gemini
-    "Poseidon": 183.0,   # Virgo
-}
-
-# Corrected reference positions from published Hamburg School ephemeris
-# Positions for 2000 Jan 1 (approximate)
-TNP_EPOCH2000: Dict[str, float] = {
-    "Cupido":   211.2,   # ~1° Scorpio
-    "Hades":    178.0,   # ~28° Virgo
-    "Zeus":     289.5,   # ~19° Capricorn
-    "Kronos":   271.4,   # ~1° Capricorn
-    "Apollon":  183.3,   # ~3° Virgo
-    "Admetos":  273.0,   # ~3° Capricorn
-    "Vulkanus": 65.2,    # ~5° Gemini
-    "Poseidon": 183.6,   # ~3° Virgo
 }
 
 J2000 = 2451545.0  # Julian Day for J2000.0
