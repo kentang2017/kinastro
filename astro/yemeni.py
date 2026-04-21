@@ -882,7 +882,7 @@ def render_yemeni_chart(chart_obj, after_chart_hook=None):
             "℞": retro,
         })
     if planet_data:
-        st.dataframe(planet_data, use_container_width=True, hide_index=True)
+        st.dataframe(planet_data, width="stretch", hide_index=True)
 
     st.divider()
 
@@ -899,7 +899,7 @@ def render_yemeni_chart(chart_obj, after_chart_hook=None):
             t("yemeni_col_formula"): part.formula,
         })
     if parts_data:
-        st.dataframe(parts_data, use_container_width=True, hide_index=True)
+        st.dataframe(parts_data, width="stretch", hide_index=True)
 
     st.divider()
 
@@ -925,7 +925,7 @@ def render_yemeni_chart(chart_obj, after_chart_hook=None):
             t("yemeni_col_end"): fp.end_date,
         })
     if fird_data:
-        st.dataframe(fird_data, use_container_width=True, hide_index=True)
+        st.dataframe(fird_data, width="stretch", hide_index=True)
 
     st.divider()
 
@@ -940,4 +940,4 @@ def render_yemeni_chart(chart_obj, after_chart_hook=None):
             t("yemeni_col_arabic"): SIGN_AR.get(h.sign, ""),
         })
     if house_data:
-        st.dataframe(house_data, use_container_width=True, hide_index=True)
+        st.dataframe(house_data, width="stretch", hide_index=True)

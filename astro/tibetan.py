@@ -1118,7 +1118,7 @@ def _render_mewa_parkha(chart):
                 "方位 Direction": md[4],
                 "吉凶": "吉 ✅" if md[5] else "不吉 ⚠️",
             })
-        st.dataframe(mewa_data, use_container_width=True)
+        st.dataframe(mewa_data, width="stretch")
 
     with col2:
         pk = chart.parkha
@@ -1149,7 +1149,7 @@ def _render_mewa_parkha(chart):
                 "方位": pd_item[4],
                 "元素": pd_item[5],
             })
-        st.dataframe(parkha_data, use_container_width=True)
+        st.dataframe(parkha_data, width="stretch")
 
 
 def _render_five_forces(chart):
@@ -1199,7 +1199,7 @@ def _render_planets(chart):
             "度數 Degree": f"{p.sign_degree:.2f}°",
             "宿 Nakshatra": f"{p.nakshatra} ({p.nakshatra_cn})",
         })
-    st.dataframe(planet_data, use_container_width=True)
+    st.dataframe(planet_data, width="stretch")
 
 
 def _render_omens(chart):

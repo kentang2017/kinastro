@@ -880,7 +880,7 @@ def render_mazzalot_chart(chart, after_chart_hook=None):
             t("mazzalot_col_month"): pos.hebrew_month,
         })
     if pos_data:
-        st.dataframe(pos_data, use_container_width=True)
+        st.dataframe(pos_data, width="stretch")
 
     # ── 靈性解讀 (Omens) ─────────────────────────────────────
     st.markdown("#### 📜 " + t("mazzalot_omens_title"))
@@ -904,7 +904,7 @@ def render_mazzalot_chart(chart, after_chart_hook=None):
                 t("mazzalot_col_angle"): f"{asp['angle']:.2f}°",
                 t("mazzalot_col_orb"): f"{asp['orb']:.2f}°",
             })
-        st.dataframe(asp_data, use_container_width=True)
+        st.dataframe(asp_data, width="stretch")
 
     # ── 宮位 (Houses) ────────────────────────────────────────
     st.markdown("#### 🏛️ " + t("mazzalot_houses_title"))
@@ -918,4 +918,4 @@ def render_mazzalot_chart(chart, after_chart_hook=None):
             t("mazzalot_col_mazzalot"): f"{mz[2]} {mz[1]}",
             t("mazzalot_col_letter"): MAZZALOT_HEBREW_LETTERS.get(mz[5], "—"),
         })
-    st.dataframe(house_data, use_container_width=True)
+    st.dataframe(house_data, width="stretch")
