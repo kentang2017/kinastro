@@ -663,10 +663,12 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     section[data-testid="stSidebar"][aria-expanded="false"] {
         transform: translateX(-100%);
         visibility: hidden;
+        overflow: hidden !important;
     }
     section[data-testid="stSidebar"][aria-expanded="true"] {
         transform: translateX(0);
         visibility: visible;
+        overflow: hidden !important;
     }
 
     .chart-container,

@@ -98,6 +98,7 @@ MOBILE_CSS = """<style>
 section[data-testid="stSidebar"] {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 visibility 0.3s ease !important;
+    overflow: hidden !important;
 }
 /* Close (X) button inside sidebar */
 section[data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
