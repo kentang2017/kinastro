@@ -660,9 +660,13 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
    14. Responsive — Mobile
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        overflow: hidden;
+    }
     section[data-testid="stSidebar"][aria-expanded="false"] {
         transform: translateX(-100%);
         visibility: hidden;
+        overflow: hidden;
     }
     section[data-testid="stSidebar"][aria-expanded="true"] {
         transform: translateX(0);
