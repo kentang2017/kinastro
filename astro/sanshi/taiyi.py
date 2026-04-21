@@ -79,6 +79,78 @@ def compute_taiyi_chart(
     return result
 
 
+def _post_process_svg(svg: str) -> str:
+    """Post-process the kintaiyi-generated SVG for improved aesthetics.
+
+    Applies a jewel-tone 五行 colour palette, a radial gradient background,
+    better text contrast, softened stroke lines, and slightly larger fonts —
+    all without altering the chart's data or geometry.
+    """
+    import re
+
+    # ── Radial gradient background + decorative centre circle ───────────────
+    rich_defs = (
+        "<defs>\n"
+        '  <radialGradient id="tyBg" cx="50%" cy="50%" r="50%">\n'
+        '    <stop offset="0%" stop-color="#1b2d48"/>\n'
+        '    <stop offset="100%" stop-color="#060e1c"/>\n'
+        "  </radialGradient>\n"
+        '  <radialGradient id="tyCtr" cx="50%" cy="50%" r="50%">\n'
+        '    <stop offset="0%" stop-color="#2a3f60"/>\n'
+        '    <stop offset="100%" stop-color="#111d30"/>\n'
+        "  </radialGradient>\n"
+        "</defs>\n"
+        # Full background fill
+        '<circle cx="0" cy="0" r="224" fill="url(#tyBg)"/>\n'
+        # Decorative centre disc (inside the inner 12-palace ring, r < 47)
+        '<circle cx="0" cy="0" r="44" fill="url(#tyCtr)"'
+        ' stroke="rgba(180,200,255,0.25)" stroke-width="1"/>'
+    )
+    svg = svg.replace("<defs>\n</defs>", rich_defs)
+
+    # ── Fix black-fill text (shows on gold/metal cells) → white ─────────────
+    # Must happen BEFORE bulk fill="black" replacement below.
+    svg = re.sub(r'fill="black"(\s+font-family)', r'fill="white"\1', svg)
+
+    # ── Jewel-tone 五行 colour palette ───────────────────────────────────────
+    palette = (
+        # Inner 12-palace ring: flat gray → deep-indigo navy
+        ('fill="gray"',  'fill="#1f3354"'),
+        # 火 Fire (巳 午)  : ruby crimson
+        ('fill="red"',   'fill="#8b1a2a"'),
+        # 土 Earth (辰 未 戌 丑): warm umber
+        ('fill="brown"', 'fill="#5a3828"'),
+        # 金 Metal (申 酉)  : antique gold
+        ('fill="gold"',  'fill="#7a5510"'),
+        # 水 Water (亥 子)  : deep sapphire
+        ('fill="blue"',  'fill="#112756"'),
+        # 木 Wood  (寅 卯)  : forest green
+        ('fill="green"', 'fill="#163320"'),
+        # Outer oracle rings: pure black → midnight navy
+        ('fill="black"', 'fill="#09152a"'),
+    )
+    for old, new in palette:
+        svg = svg.replace(old, new)
+
+    # ── Soften ring dividers: hard white → translucent pearl ────────────────
+    svg = svg.replace(
+        'stroke="white" stroke-width="1.8"',
+        'stroke="rgba(180,205,255,0.28)" stroke-width="1.2"',
+    )
+
+    # ── Bump font size 9 → 11 for legibility ────────────────────────────────
+    svg = re.sub(r'font-size="9"', 'font-size="11"', svg)
+
+    # ── Add a subtle outer decorative ring ───────────────────────────────────
+    outer_ring = (
+        '<circle cx="0" cy="0" r="222" fill="none"'
+        ' stroke="rgba(140,170,230,0.20)" stroke-width="2"/>'
+    )
+    svg = svg.replace("</svg>", outer_ring + "\n</svg>")
+
+    return svg
+
+
 def _render_svg(svg: str) -> None:
     """以 HTML 組件方式渲染太乙排盤 SVG 圖。"""
     import streamlit.components.v1 as components
@@ -87,12 +159,18 @@ def _render_svg(svg: str) -> None:
     if svg.startswith("<?xml"):
         svg = svg[svg.index("?>") + 2:].lstrip()
 
+    svg = _post_process_svg(svg)
+
     html = (
-        '<div style="display:flex;justify-content:center;align-items:center;">'
+        '<div style="'
+        "display:flex;justify-content:center;align-items:center;"
+        "background:radial-gradient(ellipse at center,#0e1c32 0%,#040c1a 100%);"
+        "border-radius:14px;padding:18px;"
+        '">'
         + svg
         + "</div>"
     )
-    components.html(html, height=480)
+    components.html(html, height=520)
 
 
 def _format_nested(d: dict, parent_key: str = "") -> str:
