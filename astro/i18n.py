@@ -1714,6 +1714,32 @@ transmitted by **Chen Xiyi**.
         "zh": "漢堡學派：以天王星派虛點與和諧點進行精密分析",
         "en": "Hamburg School: midpoints & transneptunian planets for precision analysis",
     },
+    "spinner_uranian": {
+        "zh": "正在計算天王星派（漢堡學派）命盤…",
+        "en": "Computing Uranian (Hamburg School) chart…",
+    },
+    "desc_uranian": {
+        "zh": (
+            "**天王星派占星（漢堡學派）** — 由 Alfred Witte 於 1920–1941 年創立。\n\n"
+            "• 使用 90° 轉盤（Dial），將所有強相位（合、半刑、刑、倍半刑、沖）等同於合相處理。\n"
+            "• 引入八顆超海王星虛點（TNPs）：Cupido、Hades、Zeus、Kronos、"
+            "Apollon、Admetos、Vulkanus、Poseidon。\n"
+            "• 核心公式：行星圖像 A + B − C = D（Regelwerk für Planetenbilder）。\n"
+            "• 中點樹（Midpoint Tree）揭示行星能量的對稱匯聚點。\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "**Uranian Astrology (Hamburg School)** — Founded by Alfred Witte 1920–1941.\n\n"
+            "• Uses the 90° Dial: all hard aspects (0°, 45°, 90°, 135°, 180°) "
+            "are treated as conjunctions.\n"
+            "• Introduces 8 Transneptunian Planets (TNPs): Cupido, Hades, Zeus, Kronos, "
+            "Apollon, Admetos, Vulkanus, Poseidon.\n"
+            "• Core law: Planetary Picture A + B − C = D "
+            "(*Regelwerk für Planetenbilder*).\n"
+            "• Midpoint Tree reveals symmetrical energy confluence points.\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
     "acg_title": {
         "zh": "🌍 Astrocartography 搬遷線地圖",
         "en": "🌍 Astrocartography Relocation Map",
