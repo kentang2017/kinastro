@@ -252,18 +252,6 @@ HARMONIC_SYMBOLISM: dict[int, dict] = {
     },
 }
 
-# Default number symbolism for harmonics not specifically listed
-_DEFAULT_SYMBOLISM_ZH = (
-    "遵循Addey（1976）諧波理論：以諧波數k將黃道圓圈k等分，"
-    "每{k}個正極（{interval:.1f}°間距），揭示第{k}宇宙波動節律的相位分布。"
-    "素因子（{factors}）決定其複合象徵：{factor_meaning}。"
-)
-_DEFAULT_SYMBOLISM_EN = (
-    "Following Addey (1976): the zodiac circle is divided by {k}, "
-    "producing {k} poles at {interval:.1f}° intervals. "
-    "The prime factors ({factors}) combine their symbolic meanings: {factor_meaning}."
-)
-
 
 def _prime_factors(n: int) -> List[int]:
     """Return prime factors of n (with repetition)."""
@@ -941,7 +929,7 @@ def render_harmonic_chart(natal_chart: WesternChart, lang: str = "zh"):
             f"（容許度 {_harmonic_orb(k):.1f}°以內），"
             f"它們共同參與第{k}宇宙節律的同一相位，"
             f"體現了數字{k}的特徵振動。\n\n"
-            f"在帕拉圖《蒂邁歐篇》的傳統中，圓圈是永恆依數流動的映象；"
+            f"在柏拉圖《蒂邁歐篇》的傳統中，圓圈是永恆依數流動的映象；"
             f"數字的象徵性在此諧波圓圈中得以展開。"
         )
         if hchart.aspects:
