@@ -746,7 +746,7 @@ def _render_soul_interpretation(dchart: DraconicChart, lang: str = "zh"):
         meaning_text = meaning.get(lang, meaning.get("en", ""))
         sign_text = sign_meaning.get("zh" if lang in ("zh", "zh_cn") else "en", "")
         if lang == "zh_cn":
-            sign_text = sign_meaning.get("zh", "").replace("座", "座").replace("龍頭", "龙头").replace("靈魂", "灵魂")
+            sign_text = sign_meaning.get("zh", "").replace("龍頭", "龙头").replace("靈魂", "灵魂")
 
         color = PLANET_COLORS.get(pname, "#c8c8c8")
         retro = " ℞" if p.retrograde else ""
