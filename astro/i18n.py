@@ -1700,6 +1700,15 @@ transmitted by **Chen Xiyi**.
             "Find your best cities for career, love, health and growth."
         ),
     },
+    # ── Uranian Astrology (天王星派占星) ────────────────────────────────────────
+    "tab_uranian": {
+        "zh": "♅ 天王星派占星",
+        "en": "♅ Uranian Astrology",
+    },
+    "sys_hint_uranian": {
+        "zh": "漢堡學派：以天王星派虛點與和諧點進行精密分析",
+        "en": "Hamburg School: midpoints & transneptunian planets for precision analysis",
+    },
     "acg_title": {
         "zh": "🌍 Astrocartography 搬遷線地圖",
         "en": "🌍 Astrocartography Relocation Map",
