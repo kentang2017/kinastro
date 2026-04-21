@@ -286,10 +286,10 @@ def _render_bphs_result(bphs_result):
     # ── 3. 行星阿瓦斯塔 (Graha Avastha) ──
     st.markdown(t("bphs_section_avastha"))
     st.caption(t("bphs_caption_avastha"))
-    _strength_icons = {auto_cn("強"): "💪", auto_cn("中"): "⚖️", auto_cn("弱"): "⚠️"}
+    _strength_icon_map = {"強": "💪", "中": "⚖️", "弱": "⚠️"}
     for av in bphs_result.avasthas:
         _av_strength = auto_cn(av.strength)
-        strength_icon = _strength_icons.get(_av_strength, "❓")
+        strength_icon = _strength_icon_map.get(av.strength, "❓")
         with st.expander(f"{strength_icon} {auto_cn(av.planet_zh)} ({av.planet}) — {auto_cn(av.avastha_name)} [{_av_strength}]"):
             st.markdown(f"**{t('bphs_label_avastha')}:** {auto_cn(av.avastha_name)}")
             st.markdown(f"**{t('bphs_label_strength')}:** {_av_strength}")
@@ -342,7 +342,7 @@ def _render_bphs_result(bphs_result):
     _varga_rows = []
     for key, val in bphs_result.varga_info.get("vargas", {}).items():
         _varga_rows.append({
-            "Chart": key,
+            t("bphs_col_varga_chart"): key,
             t("bphs_col_varga_name"): auto_cn(val.get("zh", "")),
             t("bphs_col_varga_division"): val.get("division", ""),
             t("bphs_col_varga_use"): auto_cn(val.get("use", "")),

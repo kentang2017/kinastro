@@ -2001,6 +2001,10 @@ transmitted by **Chen Xiyi**.
         "zh": "落在第 {n} 宮",
         "en": "in House {n}",
     },
+    "bphs_col_varga_chart": {
+        "zh": "分盤",
+        "en": "Chart",
+    },
     "bphs_col_varga_name": {
         "zh": "名稱",
         "en": "Name",
