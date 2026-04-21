@@ -748,12 +748,8 @@ def _render_soul_interpretation(dchart: DraconicChart, lang: str = "zh"):
         if lang == "zh_cn":
             sign_text = sign_meaning.get("zh", "").replace("龍頭", "龙头").replace("靈魂", "灵魂")
 
-        color = PLANET_COLORS.get(pname, "#c8c8c8")
         retro = " ℞" if p.retrograde else ""
-        label = (
-            f'<span style="color:{color};font-weight:bold">{pname}{retro}</span> '
-            f'→ {p.sign_glyph} {p.sign} ({p.sign_chinese}) {p.sign_degree:.1f}°'
-        )
+        label = f'{pname}{retro} → {p.sign_glyph} {p.sign} ({p.sign_chinese}) {p.sign_degree:.1f}°'
         with st.expander(f"{'🌟' if pname == 'Sun ☉' else ('🌙' if pname == 'Moon ☽' else '🔮')} {label}", expanded=(pname in ("Sun ☉", "Moon ☽"))):
             if meaning_text:
                 st.info(meaning_text)
