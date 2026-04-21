@@ -20,6 +20,7 @@ import math
 from dataclasses import dataclass, field
 from datetime import date
 
+import streamlit as _st
 import swisseph as swe
 
 from .constants import (
@@ -946,8 +947,6 @@ class WarigaCalculator:
 # 快取便利函式 (Cached convenience function)
 # ============================================================
 
-import streamlit as _st  # noqa: E402  — import after class definition
-
 
 @_st.cache_data(ttl=3600, show_spinner=False)
 def compute_wariga(
@@ -955,7 +954,11 @@ def compute_wariga(
     hour: int, minute: int,
     lat: float = -8.5069, lon: float = 115.2625,
 ) -> "WarigaResult":
-    """Cached wrapper around :class:`WarigaCalculator`.compute_result()."""
+    """Cached wrapper around :class:`WarigaCalculator`.compute_result().
+
+    Default coordinates (-8.5069, 115.2625) are the centre of Bali, Indonesia,
+    the home of the Wariga calendar tradition.
+    """
     return WarigaCalculator(
         year=year, month=month, day=day,
         hour=hour, minute=minute,
