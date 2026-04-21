@@ -98,7 +98,17 @@ from astro.ai_analysis import (
     DEFAULT_SYSTEM_PROMPT_EN,
     detect_language,
     format_chart_for_prompt,
+    get_cross_system_analysis,
+    format_cross_system_for_prompt,
+    CROSS_SYSTEM_SYNTHESIS_PROMPT,
+    CROSS_SYSTEM_SYNTHESIS_PROMPT_EN,
 )
+from astro.western.aspect_patterns import (
+    detect_aspect_patterns,
+    render_aspect_patterns,
+    format_patterns_for_prompt,
+)
+from astro.cross_compare import compute_cross_comparison, render_cross_comparison
 
 from astro.arabic.picatrix_mansions import (
     render_mansion_lookup,
@@ -1010,6 +1020,22 @@ with st.sidebar:
         st.session_state["_star_particles"] = _particles_on
         st.rerun()
 
+    # ── Cross-system comparison toggle ────────────────────────
+    _cross_system_on = st.toggle(
+        t("enable_cross_system"),
+        value=st.session_state.get("_cross_system_enabled", False),
+        key="_cross_system_toggle",
+        help=(
+            "同時計算西洋、印度、七政四餘、紫微、希臘占星並進行 AI 交叉比對解讀"
+            if _cur_lang in ("zh", "zh_cn") else
+            "Compute Western, Vedic, Chinese, Zi Wei, and Hellenistic charts "
+            "together for AI cross-system synthesis"
+        ),
+    )
+    if _cross_system_on != st.session_state.get("_cross_system_enabled", False):
+        st.session_state["_cross_system_enabled"] = _cross_system_on
+        st.rerun()
+
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()
     with st.expander(t("ai_settings_header"), expanded=False):
@@ -1481,6 +1507,7 @@ elif _selected_system == "tab_western":
                 # Fixed stars & asteroids checkboxes
                 _show_stars = st.checkbox(t("show_fixed_stars"), value=False, key="w_stars")
                 _show_asteroids = st.checkbox(t("show_asteroids"), value=False, key="w_asteroids")
+                _show_patterns = st.checkbox(t("show_aspect_patterns"), value=False, key="w_patterns")
                 if _show_stars:
                     stars = compute_fixed_star_positions(w_chart.julian_day)
                     p_lons = {p.name: p.longitude for p in w_chart.planets}
@@ -1502,6 +1529,10 @@ elif _selected_system == "tab_western":
                                        "R": "R" if a.retrograde else "",
                                        "Meaning": auto_cn(a.meaning_cn)}
                                       for a in asts], width="stretch")
+                if _show_patterns:
+                    _w_positions = {p.name: p.longitude for p in w_chart.planets}
+                    _w_patterns = detect_aspect_patterns(_w_positions)
+                    render_aspect_patterns(_w_patterns, _w_positions, lang=get_lang())
 
             with _w_tab_transit:
                 st.subheader(t("western_subtab_transit"))
@@ -3269,6 +3300,188 @@ elif _selected_system == "tab_wariga":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_wariga"))
+
+# ============================================================
+# 多體系綜合解讀 — Cross-System Synthesis Section
+# Rendered when the cross-system toggle is active (any system tab)
+# ============================================================
+if st.session_state.get("_cross_system_enabled", False) and _is_calculated:
+    st.divider()
+    st.markdown(t("cross_system_header"))
+    st.info(t("cross_system_intro"))
+
+    _cs_p = st.session_state["_calc_params"]
+    _cs_g = st.session_state.get("_calc_gender", "male")
+
+    with st.spinner(t("cross_system_computing")):
+        try:
+            _cs_western = compute_western_chart(**_cs_p)
+        except Exception:
+            _cs_western = None
+        try:
+            _cs_vedic = compute_vedic_chart(**_cs_p)
+        except Exception:
+            _cs_vedic = None
+        try:
+            _cs_chinese = compute_chart(**_cs_p, gender=_cs_g)
+        except Exception:
+            _cs_chinese = None
+        try:
+            _cs_ziwei = compute_ziwei_chart(**_cs_p, gender="男" if _cs_g == "male" else "女")
+        except Exception:
+            _cs_ziwei = None
+        try:
+            # Hellenistic requires a WesternChart as input
+            if _cs_western is not None:
+                _cs_hellenistic = compute_hellenistic_chart(_cs_western)
+            else:
+                _cs_hellenistic = None
+        except Exception:
+            _cs_hellenistic = None
+
+    # Raw cross-compare table (Western + Vedic + Chinese)
+    if _cs_western is not None and _cs_vedic is not None and _cs_chinese is not None:
+        try:
+            _raw_cc = compute_cross_comparison(_cs_chinese, _cs_western, _cs_vedic)
+            st.markdown(t("cross_system_comparison_table"))
+            render_cross_comparison(_raw_cc)
+        except Exception as _cc_err:
+            st.caption(f"Cross-compare table unavailable: {_cc_err}")
+
+    # Aspect patterns for cross-system context
+    _cs_patterns = []
+    if _cs_western is not None:
+        try:
+            _cs_positions = {p.name: p.longitude for p in _cs_western.planets}
+            _cs_patterns = detect_aspect_patterns(_cs_positions)
+            if _cs_patterns:
+                st.markdown("#### 🔷 " + ("相位圖案 (Aspect Patterns)" if get_lang() == "zh" else "Aspect Patterns"))
+                import pandas as pd
+                _pat_rows = []
+                for _pat in _cs_patterns:
+                    _is_zh = get_lang() == "zh"
+                    _pat_rows.append({
+                        ("圖案" if _is_zh else "Pattern"): (
+                            f"{_pat['pattern_cn']} ({_pat['pattern']})" if _is_zh else _pat["pattern"]
+                        ),
+                        ("行星" if _is_zh else "Planets"): ", ".join(_pat["planets"]),
+                        ("頂點" if _is_zh else "Apex"): _pat.get("apex") or "—",
+                    })
+                st.dataframe(_pat_rows, width="stretch")
+        except Exception:
+            _cs_patterns = []
+
+    # Build structured analysis dict
+    _cs_analysis = get_cross_system_analysis(
+        western_chart=_cs_western,
+        vedic_chart=_cs_vedic,
+        chinese_chart=_cs_chinese,
+        ziwei_chart=_cs_ziwei,
+        hellenistic_chart=_cs_hellenistic,
+        aspect_patterns=_cs_patterns if _cs_patterns else None,
+    )
+    _cs_prompt_data = format_cross_system_for_prompt(_cs_analysis)
+
+    # AI synthesis button + chat
+    _cs_chat_key = "_cs_ai_chat_history"
+    if _cs_chat_key not in st.session_state:
+        st.session_state[_cs_chat_key] = []
+
+    _cs_col1, _cs_col2 = st.columns([3, 1])
+    with _cs_col2:
+        if st.button(t("ai_chat_clear"), key="_cs_clear_btn", type="secondary"):
+            st.session_state[_cs_chat_key] = []
+            st.rerun()
+
+    _cs_chat_box = st.container(height=500)
+    _cs_history = st.session_state[_cs_chat_key]
+
+    _cs_user_avatar = "👦" if _cs_g == "male" else "👧"
+
+    if not _cs_history:
+        with _cs_chat_box.chat_message("assistant", avatar="🧙"):
+            _welcome_msg = (
+                "我已計算完成多體系排盤。請輸入您的問題，或點擊下方按鈕直接生成綜合解讀。"
+                if get_lang() == "zh"
+                else "Multi-system charts computed. Ask a question or use the button below for synthesis."
+            )
+            st.markdown(_welcome_msg)
+
+    for _cs_msg in _cs_history:
+        with _cs_chat_box.chat_message(
+            _cs_msg["role"],
+            avatar="🧙" if _cs_msg["role"] == "assistant" else _cs_user_avatar,
+        ):
+            st.markdown(_cs_msg["content"])
+
+    _cs_user_input = st.chat_input(
+        t("ai_chat_placeholder") + " (多體系綜合)" if get_lang() == "zh"
+        else t("ai_chat_placeholder") + " (Cross-System)",
+        key="_cs_chat_input",
+    )
+
+    # One-click synthesis button
+    _cs_generate = st.button(t("cross_system_ai_btn"), key="_cs_generate_btn", type="primary")
+
+    def _cs_call_ai(user_message: str) -> None:
+        """Call Cerebras AI with cross-system prompt and append to history."""
+        _api_key = ""
+        try:
+            _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
+        except (FileNotFoundError, KeyError, AttributeError):
+            pass
+        if not _api_key:
+            _api_key = os.environ.get("CEREBRAS_API_KEY", "")
+        if not _api_key:
+            st.error(t("cross_system_api_missing"))
+            return
+
+        _user_lang = detect_language(user_message)
+        _sys_prompt = (
+            (CROSS_SYSTEM_SYNTHESIS_PROMPT_EN if _user_lang == "en" else CROSS_SYSTEM_SYNTHESIS_PROMPT)
+            + "\n\n"
+            + _cs_prompt_data
+        )
+
+        _api_messages = [{"role": "system", "content": _sys_prompt}]
+        for _m in _cs_history:
+            _api_messages.append({"role": _m["role"], "content": _m["content"]})
+        _api_messages.append({"role": "user", "content": user_message})
+
+        st.session_state[_cs_chat_key].append({"role": "user", "content": user_message})
+        with _cs_chat_box.chat_message("user", avatar=_cs_user_avatar):
+            st.markdown(user_message)
+
+        with _cs_chat_box.chat_message("assistant", avatar="🧙"):
+            with st.spinner(t("cross_system_ai_generating")):
+                try:
+                    _cs_client = CerebrasClient(api_key=_api_key)
+                    _cs_result = _cs_client.chat(
+                        messages=_api_messages,
+                        model=st.session_state.get("_ai_model_select", CEREBRAS_MODEL_OPTIONS[0]),
+                        max_tokens=st.session_state.get("_ai_max_tokens", 8192),
+                        temperature=st.session_state.get("_ai_temperature", 0.7),
+                    )
+                    st.markdown(_cs_result)
+                    st.session_state[_cs_chat_key].append({"role": "assistant", "content": _cs_result})
+                except RateLimitError:
+                    st.warning(t("ai_rate_limit"))
+                except Exception as _e:
+                    st.error(t("ai_error").format(str(_e)))
+
+    if _cs_generate:
+        _synthesis_request = (
+            "請對這位命主的多體系排盤進行完整的交叉比對綜合解讀，找出各體系的共鳴與獨特洞見。"
+            if get_lang() == "zh"
+            else "Please provide a complete cross-system synthesized interpretation for this chart, "
+                 "highlighting agreements and unique insights from each tradition."
+        )
+        _cs_call_ai(_synthesis_request)
+        st.rerun()
+
+    if _cs_user_input:
+        _cs_call_ai(_cs_user_input)
+        st.rerun()
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom
