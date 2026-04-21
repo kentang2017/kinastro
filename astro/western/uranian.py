@@ -576,7 +576,7 @@ def render_uranian_chart(chart: UranianChart) -> None:
     """Render the full Uranian Astrology analysis in Streamlit."""
 
     lang = get_lang()
-    is_zh = lang == "zh"
+    is_zh = lang in ("zh", "zh_cn")
 
     if is_zh:
         st.markdown(
@@ -609,10 +609,12 @@ def render_uranian_chart(chart: UranianChart) -> None:
             "🪐 Transneptunian Planets",
         ])
 
-    # helper: localised planet display name
+    # helper: merged name map and localised planet display name
+    _name_map = {**PLANET_CN, **TNP_CN}
+
     def _pname(name: str) -> str:
         if is_zh:
-            return TNP_CN.get(name, PLANET_CN.get(name, name))
+            return _name_map.get(name, name)
         return name
 
     # ── TAB 1: 90° Dial summary
@@ -761,7 +763,9 @@ def render_uranian_chart(chart: UranianChart) -> None:
                     with col1:
                         if is_zh:
                             formula_zh = pic.formula
-                            for en_name, zh_name in {**PLANET_CN, **TNP_CN}.items():
+                            for en_name, zh_name in sorted(
+                                _name_map.items(), key=lambda x: len(x[0]), reverse=True
+                            ):
                                 formula_zh = formula_zh.replace(en_name, zh_name)
                             st.markdown(f"**公式：** `{formula_zh}`")
                             st.markdown(f"**計算黃經：** `{pic.computed_lon:.2f}°`")
