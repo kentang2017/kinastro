@@ -127,6 +127,7 @@ from astro.astrocartography import (
     LINE_COLORS as ACG_LINE_COLORS,
     ACG_PLANETS,
 )
+from astro.nine_star_ki import compute_nine_star_ki_chart, render_nine_star_ki_chart
 
 
 # ============================================================
@@ -871,7 +872,7 @@ with st.sidebar:
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian"]),
-        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan"]),
+        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -906,6 +907,7 @@ with st.sidebar:
         "tab_jaimini": t("tab_jaimini"),
         "tab_zurkhai": t("tab_zurkhai"),
         "tab_tibetan": t("tab_tibetan"),
+        "tab_nine_star_ki": t("tab_nine_star_ki"),
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_babylonian": t("tab_babylonian"),
         "tab_chinstar": t("tab_chinstar"),
@@ -939,6 +941,7 @@ with st.sidebar:
         "tab_jaimini": t("sys_hint_jaimini"),
         "tab_zurkhai": t("sys_hint_zurkhai"),
         "tab_tibetan": t("sys_hint_tibetan"),
+        "tab_nine_star_ki": t("sys_hint_nine_star_ki"),
         "tab_hellenistic": t("sys_hint_hellenistic"),
         "tab_babylonian": t("sys_hint_babylonian"),
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
@@ -2498,6 +2501,27 @@ elif _selected_system == "tab_tibetan":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_tibetan"))
+
+# --- 日本九星氣學 (Japanese Nine Star Ki) ---
+elif _selected_system == "tab_nine_star_ki":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_nine_star_ki")):
+                _nsk_chart = compute_nine_star_ki_chart(**_p)
+            render_nine_star_ki_chart(
+                _nsk_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_nine_star_ki", _nsk_chart, btn_key="nine_star_ki"
+                ),
+                lang=get_lang(),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_nine_star_ki"))
 
 # --- 希臘占星 (Hellenistic) ---
 elif _selected_system == "tab_hellenistic":
