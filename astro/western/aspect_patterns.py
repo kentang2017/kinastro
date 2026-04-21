@@ -1,38 +1,38 @@
+# coding: utf-8
 """
-astro/western/aspect_patterns.py — Aspect Pattern Detection
+astro/western/aspect_patterns.py - Aspect Pattern Detection
 
 Detects classic Western astrology aspect patterns from a set of
 planet positions.  Supported patterns:
 
-  - Grand Trine (大三角)
-  - T-Square (T形相位 / T-方格)
-  - Grand Cross (大十字)
-  - Yod / Finger of God (命運指 / 上帝之指)
-  - Kite (風箏)
-  - Mystic Rectangle (神秘長方形)
-  - Grand Sextile (大六芒星)
-  - Stellium (星群)
-  - Boomerang (回力鏢)
+  - Grand Trine (\u5927\u4e09\u89d2)
+  - T-Square (T\u5f62\u76f8\u4f4d)
+  - Grand Cross (\u5927\u5341\u5b57)
+  - Yod / Finger of God (\u547d\u904b\u6307)
+  - Kite (\u98a8\u7b4d)
+  - Mystic Rectangle (\u795e\u79d8\u9577\u65b9\u5f62)
+  - Grand Sextile (\u5927\u516d\u8292\u661f)
+  - Stellium (\u661f\u7fa4)
+  - Boomerang (\u56de\u529b\u93d6)
 
-Each detected pattern is returned as a ``dict`` with at least:
-  - ``"pattern"``   (str) English pattern name
-  - ``"pattern_cn"`` (str) Chinese pattern name
-  - ``"planets"``   (list[str]) participating planet names
-  - ``"element"``   (str) dominant element where applicable
-  - ``"quality"``   (str) modality quality where applicable
-  - ``"apex"``      (str) apex/focal planet where applicable
-  - ``"description"`` (str) brief English description
-  - ``"description_cn"`` (str) brief Chinese description
+Each detected pattern is returned as a dict with at least:
+  - "pattern"        English pattern name
+  - "pattern_cn"     Chinese pattern name
+  - "planets"        participating planet names
+  - "element"        dominant element where applicable
+  - "quality"        modality quality where applicable
+  - "apex"           apex/focal planet where applicable
+  - "description"    brief English description
+  - "description_cn" brief Chinese description
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional
+from itertools import combinations
+from typing import TYPE_CHECKING
 
-# ─────────────────────────────────────────────────────────────────
-# Constants
-# ─────────────────────────────────────────────────────────────────
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # noqa: F401
 
 ZODIAC_ELEMENTS = {
     "Aries": "Fire", "Leo": "Fire", "Sagittarius": "Fire",
@@ -55,448 +55,8 @@ ZODIAC_SIGNS_ORDER = [
     "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
 ]
 
-ELEMENT_CN = {"Fire": "火", "Earth": "土", "Air": "風", "Water": "水"}
-QUALITY_CN = {"Cardinal": "本位", "Fixed": "固定", "Mutable": "變動"}
-
-# ─────────────────────────────────────────────────────────────────
-# Angle helpers
-# ─────────────────────────────────────────────────────────────────
-
-def _normalize(deg: float) -> float:
-    return deg % 360.0
-
-
-def _angle_diff(a: float, b: float) -> float:
-    """Smallest arc between two longitudes (0–180°)."""
-    diff = abs(_normalize(a) - _normalize(b))
-    if diff > 180.0:
-        diff = 360.0 - diff
-    return diff
-
-
-def _is_aspect(lon_a: float, lon_b: float, target: float, orb: float) -> bool:
-    return abs(_angle_diff(lon_a, lon_b) - target) <= orb
-
-
-def _sign_of(longitude: float) -> str:
-    idx = int(_normalize(longitude) / 30.0) % 12
-    return ZODIAC_SIGNS_ORDER[idx]
-
-
-def _dominant_element(planet_names: list[str], positions: dict[str, float]) -> str:
-    counts: dict[str, int] = {}
-    for name in planet_names:
-        lon = positions.get(name)
-        if lon is None:
-            continue
-        elem = ZODIAC_ELEMENTS.get(_sign_of(lon), "")
-        if elem:
-            counts[elem] = counts.get(elem, 0) + 1
-    return max(counts, key=counts.get) if counts else ""
-
-
-def _dominant_quality(planet_names: list[str], positions: dict[str, float]) -> str:
-    counts: dict[str, int] = {}
-    for name in planet_names:
-        lon = positions.get(name)
-        if lon is None:
-            continue
-        qual = ZODIAC_QUALITIES.get(_sign_of(lon), "")
-        if qual:
-            counts[qual] = counts.get(qual, 0) + 1
-    return max(counts, key=counts.get) if counts else ""
-
-
-# ─────────────────────────────────────────────────────────────────
-# Main detection function
-# ─────────────────────────────────────────────────────────────────
-
-def detect_aspect_patterns(
-    positions: dict[str, float],
-    orb: float = 8.0,
-) -> list[dict]:
-    """Detect classic aspect patterns from a dict of planet longitudes.
-
-    Parameters
-    ----------
-    positions : dict[str, float]
-        Mapping of planet name → ecliptic longitude (0–360°).
-    orb : float
-        Default orb in degrees for major aspects.  Minor-aspect orbs are
-        derived proportionally.
-
-    Returns
-    -------
-    list[dict]
-        Each dict describes one detected pattern.
-    """
-    planets = list(positions.keys())
-    n = len(planets)
-    patterns: list[dict] = []
-    seen_sets: set[frozenset] = set()  # deduplicate
-
-    trine_orb = orb
-    square_orb = orb
-    sextile_orb = max(3.0, orb * 0.5)
-    quincunx_orb = max(3.0, orb * 0.5)
-    opposition_orb = orb
-
-    def _add(record: dict) -> None:
-        key = frozenset(record["planets"])
-        # Allow the same planet-set to appear for different pattern types
-        pat_key = (record["pattern"], key)
-        if pat_key not in seen_sets:
-            seen_sets.add(pat_key)
-            patterns.append(record)
-
-    def _trine(a, b): return _is_aspect(positions[a], positions[b], 120, trine_orb)
-    def _square(a, b): return _is_aspect(positions[a], positions[b], 90, square_orb)
-    def _sextile(a, b): return _is_aspect(positions[a], positions[b], 60, sextile_orb)
-    def _quincunx(a, b): return _is_aspect(positions[a], positions[b], 150, quincunx_orb)
-    def _opposition(a, b): return _is_aspect(positions[a], positions[b], 180, opposition_orb)
-    def _conjunction(a, b): return _is_aspect(positions[a], positions[b], 0, orb)
-
-    # ── Grand Trine ────────────────────────────────────────────
-    for i in range(n):
-        for j in range(i + 1, n):
-            for k in range(j + 1, n):
-                a, b, c = planets[i], planets[j], planets[k]
-                if _trine(a, b) and _trine(b, c) and _trine(a, c):
-                    elem = _dominant_element([a, b, c], positions)
-                    _add({
-                        "pattern": "Grand Trine",
-                        "pattern_cn": "大三角",
-                        "planets": [a, b, c],
-                        "element": elem,
-                        "element_cn": ELEMENT_CN.get(elem, ""),
-                        "quality": "",
-                        "quality_cn": "",
-                        "apex": "",
-                        "description": (
-                            f"A Grand Trine in {elem} element — natural talent and ease, "
-                            "but may lack motivation without challenge."
-                        ),
-                        "description_cn": (
-                            f"大三角（{ELEMENT_CN.get(elem, '')}象）— "
-                            "代表天賦才能與輕鬆流動的能量，但可能缺乏動力與挑戰。"
-                        ),
-                    })
-
-    # ── T-Square ──────────────────────────────────────────────
-    for i in range(n):
-        for j in range(i + 1, n):
-            if not _opposition(planets[i], planets[j]):
-                continue
-            for k in range(n):
-                if k == i or k == j:
-                    continue
-                a, b, c = planets[i], planets[j], planets[k]
-                if _square(a, c) and _square(b, c):
-                    qual = _dominant_quality([a, b, c], positions)
-                    _add({
-                        "pattern": "T-Square",
-                        "pattern_cn": "T形相位",
-                        "planets": [a, b, c],
-                        "element": "",
-                        "element_cn": "",
-                        "quality": qual,
-                        "quality_cn": QUALITY_CN.get(qual, ""),
-                        "apex": c,
-                        "description": (
-                            f"A T-Square with apex {c} in {qual} quality — "
-                            "intense pressure, drive, and ambition concentrated at the apex."
-                        ),
-                        "description_cn": (
-                            f"T形相位，頂點為 {c}（{QUALITY_CN.get(qual, '')}星座）— "
-                            "強大的張力與驅動力集中在頂點行星，需要主動化解。"
-                        ),
-                    })
-
-    # ── Grand Cross ───────────────────────────────────────────
-    for i in range(n):
-        for j in range(i + 1, n):
-            if not _opposition(planets[i], planets[j]):
-                continue
-            for k in range(j + 1, n):
-                if k == i:
-                    continue
-                for l in range(k + 1, n):
-                    if l == i or l == j:
-                        continue
-                    a, b, c, d = planets[i], planets[j], planets[k], planets[l]
-                    if (
-                        _opposition(c, d)
-                        and _square(a, c) and _square(a, d)
-                        and _square(b, c) and _square(b, d)
-                    ):
-                        qual = _dominant_quality([a, b, c, d], positions)
-                        _add({
-                            "pattern": "Grand Cross",
-                            "pattern_cn": "大十字",
-                            "planets": [a, b, c, d],
-                            "element": "",
-                            "element_cn": "",
-                            "quality": qual,
-                            "quality_cn": QUALITY_CN.get(qual, ""),
-                            "apex": "",
-                            "description": (
-                                f"A Grand Cross in {qual} quality — "
-                                "extreme tension from four directions; powerful but demanding."
-                            ),
-                            "description_cn": (
-                                f"大十字（{QUALITY_CN.get(qual, '')}星座）— "
-                                "四面壓力，極大的緊張能量，需要強大意志力才能整合。"
-                            ),
-                        })
-
-    # ── Yod (Finger of God) ───────────────────────────────────
-    for i in range(n):
-        for j in range(i + 1, n):
-            if not _sextile(planets[i], planets[j]):
-                continue
-            for k in range(n):
-                if k == i or k == j:
-                    continue
-                a, b, c = planets[i], planets[j], planets[k]
-                if _quincunx(a, c) and _quincunx(b, c):
-                    _add({
-                        "pattern": "Yod",
-                        "pattern_cn": "命運指（上帝之指）",
-                        "planets": [a, b, c],
-                        "element": "",
-                        "element_cn": "",
-                        "quality": "",
-                        "quality_cn": "",
-                        "apex": c,
-                        "description": (
-                            f"A Yod pointing to {c} — a karmic configuration suggesting "
-                            "a special destiny or spiritual mission requiring adjustment."
-                        ),
-                        "description_cn": (
-                            f"命運指，指向 {c} — 業力格局，暗示特殊使命或靈性方向，"
-                            "需要持續調整與適應。"
-                        ),
-                    })
-
-    # ── Kite ──────────────────────────────────────────────────
-    # Grand Trine + one planet opposing one of the three and sextile the other two
-    for i in range(n):
-        for j in range(i + 1, n):
-            for k in range(j + 1, n):
-                a, b, c = planets[i], planets[j], planets[k]
-                if not (_trine(a, b) and _trine(b, c) and _trine(a, c)):
-                    continue
-                # look for a fourth planet opposing one vertex and sextile the other two
-                for l in range(n):
-                    if l in (i, j, k):
-                        continue
-                    d = planets[l]
-                    for apex in (a, b, c):
-                        others = [p for p in (a, b, c) if p != apex]
-                        if (
-                            _opposition(d, apex)
-                            and _sextile(d, others[0])
-                            and _sextile(d, others[1])
-                        ):
-                            elem = _dominant_element([a, b, c], positions)
-                            _add({
-                                "pattern": "Kite",
-                                "pattern_cn": "風箏",
-                                "planets": [a, b, c, d],
-                                "element": elem,
-                                "element_cn": ELEMENT_CN.get(elem, ""),
-                                "quality": "",
-                                "quality_cn": "",
-                                "apex": d,
-                                "description": (
-                                    f"A Kite with focal planet {d} — Grand Trine energy "
-                                    "directed through the focal point into practical achievement."
-                                ),
-                                "description_cn": (
-                                    f"風箏，焦點行星為 {d} — 大三角的能量透過焦點行星"
-                                    "轉化為現實成就，是較為幸運的格局。"
-                                ),
-                            })
-
-    # ── Mystic Rectangle ──────────────────────────────────────
-    # 4 planets: 2 oppositions + 4 sextiles (or trines crossing)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if not _opposition(planets[i], planets[j]):
-                continue
-            for k in range(j + 1, n):
-                if k in (i, j):
-                    continue
-                for l in range(k + 1, n):
-                    if l in (i, j, k):
-                        continue
-                    a, b, c, d = planets[i], planets[j], planets[k], planets[l]
-                    if (
-                        _opposition(c, d)
-                        and _sextile(a, c) and _sextile(a, d)
-                        and _sextile(b, c) and _sextile(b, d)
-                    ):
-                        _add({
-                            "pattern": "Mystic Rectangle",
-                            "pattern_cn": "神秘長方形",
-                            "planets": [a, b, c, d],
-                            "element": "",
-                            "element_cn": "",
-                            "quality": "",
-                            "quality_cn": "",
-                            "apex": "",
-                            "description": (
-                                "A Mystic Rectangle — harmonious flow of opposing energies, "
-                                "creativity and practical ability balanced."
-                            ),
-                            "description_cn": (
-                                "神秘長方形 — 對立能量的和諧流動，"
-                                "創造力與實踐能力相互平衡，是較為祥和的格局。"
-                            ),
-                        })
-
-    # ── Grand Sextile (Star of David) ─────────────────────────
-    # 6 planets each 60° apart (or 3 oppositions + 6 sextiles)
-    if n >= 6:
-        for combo in _combinations(range(n), 6):
-            pts = [planets[idx] for idx in combo]
-            lons = sorted(positions[p] for p in pts)
-            # Check all pairs are either 60° or 120° apart
-            all_sextile_or_trine = True
-            for x in range(6):
-                for y in range(x + 1, 6):
-                    diff = _angle_diff(lons[x], lons[y])
-                    if not (
-                        abs(diff - 60) <= sextile_orb
-                        or abs(diff - 120) <= trine_orb
-                        or abs(diff - 180) <= opposition_orb
-                    ):
-                        all_sextile_or_trine = False
-                        break
-                if not all_sextile_or_trine:
-                    break
-            # Also require roughly equal 60° spacing
-            diffs = []
-            for x in range(6):
-                d = _normalize(lons[(x + 1) % 6] - lons[x])
-                if d > 180:
-                    d = 360 - d
-                diffs.append(d)
-            spacing_ok = all(abs(d - 60) <= sextile_orb for d in diffs)
-            if all_sextile_or_trine and spacing_ok:
-                elem = _dominant_element(pts, positions)
-                _add({
-                    "pattern": "Grand Sextile",
-                    "pattern_cn": "大六芒星",
-                    "planets": pts,
-                    "element": elem,
-                    "element_cn": ELEMENT_CN.get(elem, ""),
-                    "quality": "",
-                    "quality_cn": "",
-                    "apex": "",
-                    "description": (
-                        "A Grand Sextile (Star of David) — a rare, highly harmonious "
-                        "configuration of great gifts and creative potential."
-                    ),
-                    "description_cn": (
-                        "大六芒星（大衛之星）— 極為罕見的和諧格局，"
-                        "象徵豐盛天賦與強大創造潛力。"
-                    ),
-                })
-
-    # ── Boomerang (Yod + opposition to apex) ──────────────────
-    for i in range(n):
-        for j in range(i + 1, n):
-            if not _sextile(planets[i], planets[j]):
-                continue
-            for k in range(n):
-                if k == i or k == j:
-                    continue
-                a, b, c = planets[i], planets[j], planets[k]
-                if not (_quincunx(a, c) and _quincunx(b, c)):
-                    continue
-                for l in range(n):
-                    if l in (i, j, k):
-                        continue
-                    d = planets[l]
-                    if _opposition(c, d):
-                        _add({
-                            "pattern": "Boomerang",
-                            "pattern_cn": "回力鏢",
-                            "planets": [a, b, c, d],
-                            "element": "",
-                            "element_cn": "",
-                            "quality": "",
-                            "quality_cn": "",
-                            "apex": c,
-                            "description": (
-                                f"A Boomerang with apex {c} and reaction point {d} — "
-                                "karmic Yod energy reflected back through opposition."
-                            ),
-                            "description_cn": (
-                                f"回力鏢，頂點 {c}，反射點 {d} — "
-                                "命運指的業力能量透過對分相反射，帶來強烈的轉化壓力。"
-                            ),
-                        })
-
-    # ── Stellium (3+ planets in same sign or consecutive signs) ─
-    sign_groups: dict[str, list[str]] = {}
-    for p in planets:
-        lon = positions.get(p)
-        if lon is None:
-            continue
-        sign = _sign_of(lon)
-        sign_groups.setdefault(sign, []).append(p)
-
-    for sign, members in sign_groups.items():
-        if len(members) >= 3:
-            elem = ZODIAC_ELEMENTS.get(sign, "")
-            qual = ZODIAC_QUALITIES.get(sign, "")
-            _add({
-                "pattern": "Stellium",
-                "pattern_cn": "星群",
-                "planets": members,
-                "element": elem,
-                "element_cn": ELEMENT_CN.get(elem, ""),
-                "quality": qual,
-                "quality_cn": QUALITY_CN.get(qual, ""),
-                "apex": "",
-                "description": (
-                    f"A Stellium in {sign} — intense concentration of energy and focus "
-                    f"in {sign} themes; dominant life area."
-                ),
-                "description_cn": (
-                    f"{sign}星座星群 — 能量高度集中於{sign}的主題，"
-                    "是人生的核心焦點，既是天賦也是執念。"
-                ),
-            })
-
-    return patterns
-
-
-def _combinations(iterable, r):
-    """Minimal itertools.combinations replacement (avoids import overhead)."""
-    pool = list(iterable)
-    n = len(pool)
-    if r > n:
-        return
-    indices = list(range(r))
-    yield tuple(pool[i] for i in indices)
-    while True:
-        for i in reversed(range(r)):
-            if indices[i] != i + n - r:
-                break
-        else:
-            return
-        indices[i] += 1
-        for j in range(i + 1, r):
-            indices[j] = indices[j - 1] + 1
-        yield tuple(pool[i] for i in indices)
-
-
-# ─────────────────────────────────────────────────────────────────
-# Plotly visualization helper
-# ─────────────────────────────────────────────────────────────────
+ELEMENT_CN = {"Fire": "\u706b", "Earth": "\u571f", "Air": "\u98a8", "Water": "\u6c34"}
+QUALITY_CN = {"Cardinal": "\u672c\u4f4d", "Fixed": "\u56fa\u5b9a", "Mutable": "\u8b8a\u52d5"}
 
 _PATTERN_COLORS = {
     "Grand Trine": "#4CAF50",
@@ -511,65 +71,319 @@ _PATTERN_COLORS = {
 }
 
 
-def build_aspect_pattern_figure(
-    positions: dict[str, float],
-    patterns: list[dict],
-    *,
-    title: str = "Aspect Patterns",
-) -> "plotly.graph_objects.Figure":  # type: ignore[name-defined]
-    """Build a Plotly polar figure showing planet positions and pattern lines.
+def _normalize(deg):
+    return deg % 360.0
+
+
+def _angle_diff(a, b):
+    diff = abs(_normalize(a) - _normalize(b))
+    if diff > 180.0:
+        diff = 360.0 - diff
+    return diff
+
+
+def _is_aspect(lon_a, lon_b, target, orb):
+    return abs(_angle_diff(lon_a, lon_b) - target) <= orb
+
+
+def _sign_of(longitude):
+    idx = int(_normalize(longitude) / 30.0) % 12
+    return ZODIAC_SIGNS_ORDER[idx]
+
+
+def _dominant_element(planet_names, positions):
+    counts = {}
+    for name in planet_names:
+        lon = positions.get(name)
+        if lon is None:
+            continue
+        elem = ZODIAC_ELEMENTS.get(_sign_of(lon), "")
+        if elem:
+            counts[elem] = counts.get(elem, 0) + 1
+    return max(counts, key=counts.get) if counts else ""
+
+
+def _dominant_quality(planet_names, positions):
+    counts = {}
+    for name in planet_names:
+        lon = positions.get(name)
+        if lon is None:
+            continue
+        qual = ZODIAC_QUALITIES.get(_sign_of(lon), "")
+        if qual:
+            counts[qual] = counts.get(qual, 0) + 1
+    return max(counts, key=counts.get) if counts else ""
+
+
+def detect_aspect_patterns(positions, orb=8.0):
+    """Detect classic aspect patterns from a dict of planet longitudes.
 
     Parameters
     ----------
     positions : dict[str, float]
-        Planet name → ecliptic longitude (0–360°).
-    patterns : list[dict]
-        Output of :func:`detect_aspect_patterns`.
-    title : str
-        Figure title.
+        Mapping of planet name to ecliptic longitude (0-360 degrees).
+    orb : float
+        Default orb in degrees for major aspects.
 
     Returns
     -------
-    plotly.graph_objects.Figure
+    list[dict]
+        Each dict describes one detected pattern.
     """
-    import math
-    import plotly.graph_objects as go
+    planets = list(positions.keys())
+    n = len(planets)
+    patterns = []
+    seen_sets = set()
 
-    # Convert longitude to x,y on unit circle
-    # 0° Aries at top (90° from standard), going counter-clockwise
-    def _xy(lon: float):
-        angle_rad = math.radians(90.0 - lon)
-        return math.cos(angle_rad), math.sin(angle_rad)
+    trine_orb = orb
+    square_orb = orb
+    sextile_orb = max(3.0, orb * 0.5)
+    quincunx_orb = max(3.0, orb * 0.5)
+    opposition_orb = orb
+
+    def _add(record):
+        key = (record["pattern"], frozenset(record["planets"]))
+        if key not in seen_sets:
+            seen_sets.add(key)
+            patterns.append(record)
+
+    def _trine(a, b):
+        return _is_aspect(positions[a], positions[b], 120, trine_orb)
+
+    def _square(a, b):
+        return _is_aspect(positions[a], positions[b], 90, square_orb)
+
+    def _sextile(a, b):
+        return _is_aspect(positions[a], positions[b], 60, sextile_orb)
+
+    def _quincunx(a, b):
+        return _is_aspect(positions[a], positions[b], 150, quincunx_orb)
+
+    def _opposition(a, b):
+        return _is_aspect(positions[a], positions[b], 180, opposition_orb)
+
+    # Grand Trine
+    for a, b, c in combinations(planets, 3):
+        if _trine(a, b) and _trine(b, c) and _trine(a, c):
+            elem = _dominant_element([a, b, c], positions)
+            elem_cn = ELEMENT_CN.get(elem, "")
+            _add({
+                "pattern": "Grand Trine",
+                "pattern_cn": "\u5927\u4e09\u89d2",
+                "planets": [a, b, c],
+                "element": elem, "element_cn": elem_cn,
+                "quality": "", "quality_cn": "", "apex": "",
+                "description": "A Grand Trine in " + elem + " element -- natural talent and ease, but may lack motivation without challenge.",
+                "description_cn": "\u5927\u4e09\u89d2\uff08" + elem_cn + "\u8c61\uff09\u2014\u2014 \u4ee3\u8868\u5929\u8ce6\u624d\u80fd\u8207\u8f15\u9b06\u6d41\u52d5\u7684\u80fd\u91cf\u3002",
+            })
+
+    # T-Square
+    for a, b in combinations(planets, 2):
+        if not _opposition(a, b):
+            continue
+        for c in planets:
+            if c == a or c == b:
+                continue
+            if _square(a, c) and _square(b, c):
+                qual = _dominant_quality([a, b, c], positions)
+                qual_cn = QUALITY_CN.get(qual, "")
+                _add({
+                    "pattern": "T-Square",
+                    "pattern_cn": "T\u5f62\u76f8\u4f4d",
+                    "planets": [a, b, c],
+                    "element": "", "element_cn": "",
+                    "quality": qual, "quality_cn": qual_cn, "apex": c,
+                    "description": "A T-Square with apex " + c + " in " + qual + " quality -- intense pressure and drive concentrated at the apex.",
+                    "description_cn": "T\u5f62\u76f8\u4f4d\uff0c\u9802\u9ede " + c + " (" + qual_cn + "\u661f\u5ea7) -- \u5f37\u5927\u5f35\u529b\u96c6\u4e2d\u5728\u9802\u9ede\u884c\u661f\u3002",
+                })
+
+    # Grand Cross
+    for a, b, c, d in combinations(planets, 4):
+        if (
+            _opposition(a, b) and _opposition(c, d)
+            and _square(a, c) and _square(a, d)
+            and _square(b, c) and _square(b, d)
+        ):
+            qual = _dominant_quality([a, b, c, d], positions)
+            qual_cn = QUALITY_CN.get(qual, "")
+            _add({
+                "pattern": "Grand Cross",
+                "pattern_cn": "\u5927\u5341\u5b57",
+                "planets": [a, b, c, d],
+                "element": "", "element_cn": "",
+                "quality": qual, "quality_cn": qual_cn, "apex": "",
+                "description": "A Grand Cross in " + qual + " quality -- extreme tension from four directions; powerful but demanding.",
+                "description_cn": "\u5927\u5341\u5b57(" + qual_cn + "\u661f\u5ea7) -- \u56db\u9762\u58d3\u529b\uff0c\u6975\u5927\u7d27\u5f35\u80fd\u91cf\u3002",
+            })
+
+    # Yod
+    for a, b in combinations(planets, 2):
+        if not _sextile(a, b):
+            continue
+        for c in planets:
+            if c == a or c == b:
+                continue
+            if _quincunx(a, c) and _quincunx(b, c):
+                _add({
+                    "pattern": "Yod",
+                    "pattern_cn": "\u547d\u904b\u6307\uff08\u4e0a\u5e1d\u4e4b\u6307\uff09",
+                    "planets": [a, b, c],
+                    "element": "", "element_cn": "",
+                    "quality": "", "quality_cn": "", "apex": c,
+                    "description": "A Yod pointing to " + c + " -- karmic configuration suggesting a special destiny or spiritual mission.",
+                    "description_cn": "\u547d\u904b\u6307\uff0c\u6307\u5411 " + c + " -- \u696d\u529b\u683c\u5c40\uff0c\u66b4\u793a\u7279\u6b8a\u4f7f\u547d\u3002",
+                })
+
+    # Kite
+    for a, b, c in combinations(planets, 3):
+        if not (_trine(a, b) and _trine(b, c) and _trine(a, c)):
+            continue
+        for d in planets:
+            if d in (a, b, c):
+                continue
+            for apex in (a, b, c):
+                others = [p for p in (a, b, c) if p != apex]
+                if _opposition(d, apex) and _sextile(d, others[0]) and _sextile(d, others[1]):
+                    elem = _dominant_element([a, b, c], positions)
+                    elem_cn = ELEMENT_CN.get(elem, "")
+                    _add({
+                        "pattern": "Kite",
+                        "pattern_cn": "\u98a8\u7b4d",
+                        "planets": sorted([a, b, c, d]),
+                        "element": elem, "element_cn": elem_cn,
+                        "quality": "", "quality_cn": "", "apex": d,
+                        "description": "A Kite with focal planet " + d + " -- Grand Trine energy directed through focal point into practical achievement.",
+                        "description_cn": "\u98a8\u7b4d\uff0c\u7126\u9ede\u884c\u661f " + d + " -- \u5927\u4e09\u89d2\u80fd\u91cf\u8f49\u5316\u70ba\u73fe\u5be6\u6210\u5c31\u3002",
+                    })
+
+    # Mystic Rectangle
+    for a, b, c, d in combinations(planets, 4):
+        if (
+            _opposition(a, b) and _opposition(c, d)
+            and _sextile(a, c) and _sextile(b, d)
+            and _trine(a, d) and _trine(b, c)
+        ):
+            _add({
+                "pattern": "Mystic Rectangle",
+                "pattern_cn": "\u795e\u79d8\u9577\u65b9\u5f62",
+                "planets": [a, b, c, d],
+                "element": "", "element_cn": "",
+                "quality": "", "quality_cn": "", "apex": "",
+                "description": "A Mystic Rectangle -- harmonious flow of opposing energies, creativity and practical ability balanced.",
+                "description_cn": "\u795e\u79d8\u9577\u65b9\u5f62 -- \u5c0d\u7acb\u80fd\u91cf\u7684\u548c\u8ae7\u6d41\u52d5\uff0c\u5275\u9020\u529b\u8207\u5be6\u8e10\u529b\u5e73\u8861\u3002",
+            })
+
+    # Grand Sextile: 6 planets at 60-degree intervals forming 3 oppositions
+    if n >= 6:
+        for combo in combinations(planets, 6):
+            pts = list(combo)
+            lons = sorted(positions[p] for p in pts)
+            diffs = []
+            for x in range(6):
+                d = _normalize(lons[(x + 1) % 6] - lons[x])
+                if d > 180:
+                    d = 360 - d
+                diffs.append(d)
+            if not all(abs(d - 60) <= sextile_orb for d in diffs):
+                continue
+            if not (
+                _is_aspect(lons[0], lons[3], 180, opposition_orb)
+                and _is_aspect(lons[1], lons[4], 180, opposition_orb)
+                and _is_aspect(lons[2], lons[5], 180, opposition_orb)
+            ):
+                continue
+            elem = _dominant_element(pts, positions)
+            elem_cn = ELEMENT_CN.get(elem, "")
+            _add({
+                "pattern": "Grand Sextile",
+                "pattern_cn": "\u5927\u516d\u8292\u661f",
+                "planets": pts,
+                "element": elem, "element_cn": elem_cn,
+                "quality": "", "quality_cn": "", "apex": "",
+                "description": "A Grand Sextile (Star of David) -- a rare, highly harmonious configuration of great gifts and creative potential.",
+                "description_cn": "\u5927\u516d\u8292\u661f\uff08\u5927\u885b\u4e4b\u661f\uff09 -- \u6975\u70ba\u7f55\u898b\u7684\u548c\u8ae7\u683c\u5c40\uff0c\u8c61\u5fb5\u8c50\u76db\u5929\u8ce6\u3002",
+            })
+
+    # Boomerang: Yod + opposition to apex
+    for a, b in combinations(planets, 2):
+        if not _sextile(a, b):
+            continue
+        for c in planets:
+            if c == a or c == b:
+                continue
+            if not (_quincunx(a, c) and _quincunx(b, c)):
+                continue
+            for d in planets:
+                if d in (a, b, c):
+                    continue
+                if _opposition(c, d):
+                    _add({
+                        "pattern": "Boomerang",
+                        "pattern_cn": "\u56de\u529b\u93d6",
+                        "planets": [a, b, c, d],
+                        "element": "", "element_cn": "",
+                        "quality": "", "quality_cn": "", "apex": c,
+                        "description": "A Boomerang with apex " + c + " and reaction point " + d + " -- karmic Yod energy reflected through opposition.",
+                        "description_cn": "\u56de\u529b\u93d6\uff0c\u9802\u9ede " + c + "\uff0c\u53cd\u5c04\u9ede " + d + " -- \u547d\u904b\u6307\u696d\u529b\u80fd\u91cf\u9001\u904e\u5c0d\u5206\u76f8\u53cd\u5c04\u3002",
+                    })
+
+    # Stellium: 3+ planets in same sign
+    sign_groups = {}
+    for p in planets:
+        lon = positions.get(p)
+        if lon is None:
+            continue
+        sign = _sign_of(lon)
+        sign_groups.setdefault(sign, []).append(p)
+
+    for sign, members in sign_groups.items():
+        if len(members) >= 3:
+            elem = ZODIAC_ELEMENTS.get(sign, "")
+            qual = ZODIAC_QUALITIES.get(sign, "")
+            _add({
+                "pattern": "Stellium",
+                "pattern_cn": "\u661f\u7fa4",
+                "planets": members,
+                "element": elem, "element_cn": ELEMENT_CN.get(elem, ""),
+                "quality": qual, "quality_cn": QUALITY_CN.get(qual, ""),
+                "apex": "",
+                "description": "A Stellium in " + sign + " -- intense concentration of energy in " + sign + " themes.",
+                "description_cn": sign + "\u661f\u5ea7\u661f\u7fa4 -- \u80fd\u91cf\u9ad8\u5ea6\u96c6\u4e2d\u65bc" + sign + "\u7684\u4e3b\u984c\uff0c\u662f\u4eba\u751f\u7684\u6838\u5fc3\u7126\u9ede\u3002",
+            })
+
+    return patterns
+
+
+def build_aspect_pattern_figure(positions, patterns, title="Aspect Patterns"):
+    """Build a Plotly polar figure showing planet positions and pattern lines."""
+    import plotly.graph_objects as go
 
     fig = go.Figure()
 
-    # Draw zodiac circle background
-    theta = list(range(0, 361))
     fig.add_trace(go.Scatterpolar(
-        r=[1.0] * len(theta),
-        theta=theta,
+        r=[1.0] * 361,
+        theta=list(range(361)),
         mode="lines",
         line=dict(color="rgba(150,150,150,0.3)", width=1),
         showlegend=False,
         hoverinfo="skip",
     ))
 
-    # Planet color map (simple fallback)
-    _PLANET_COLORS = {
+    _PLANET_COLORS_LOCAL = {
         "Sun": "#FF8C00", "Moon": "#C0C0C0", "Mercury": "#4169E1",
         "Venus": "#FF69B4", "Mars": "#DC143C", "Jupiter": "#228B22",
         "Saturn": "#8B4513", "Uranus": "#00CED1", "Neptune": "#7B68EE",
-        "Pluto": "#800080", "North Node": "#888888",
+        "Pluto": "#800080", "North": "#888888",
     }
 
-    def _p_color(name: str) -> str:
-        for k, v in _PLANET_COLORS.items():
+    def _p_color(name):
+        for k, v in _PLANET_COLORS_LOCAL.items():
             if k in name:
                 return v
         return "#c8c8c8"
 
-    # Draw pattern lines
-    already_drawn: set[tuple] = set()
+    pattern_in_legend = set()
+    drawn_pairs = set()
     for pat in patterns:
         color = _PATTERN_COLORS.get(pat["pattern"], "#ffffff")
         p_names = pat["planets"]
@@ -578,23 +392,29 @@ def build_aspect_pattern_figure(
                 na, nb = p_names[idx_a], p_names[idx_b]
                 if na not in positions or nb not in positions:
                     continue
-                pair_key = (min(na, nb), max(na, nb))
-                if pair_key in already_drawn:
+                pair_key = frozenset({na, nb, pat["pattern"]})
+                if pair_key in drawn_pairs:
                     continue
-                already_drawn.add(pair_key)
+                drawn_pairs.add(pair_key)
                 la, lb = positions[na], positions[nb]
+                show_legend = (
+                    pat["pattern"] not in pattern_in_legend
+                    and idx_a == 0
+                    and idx_b == 1
+                )
+                if show_legend:
+                    pattern_in_legend.add(pat["pattern"])
                 fig.add_trace(go.Scatterpolar(
                     r=[1.0, 1.0],
                     theta=[la, lb],
                     mode="lines",
-                    line=dict(color=color, width=2, dash="solid"),
+                    line=dict(color=color, width=2),
                     name=pat["pattern"],
                     legendgroup=pat["pattern"],
-                    showlegend=pair_key == (min(p_names[0], p_names[1]), max(p_names[0], p_names[1])),
+                    showlegend=show_legend,
                     hoverinfo="name",
                 ))
 
-    # Draw planet markers
     for name, lon in positions.items():
         short = name.split(" ")[0]
         color = _p_color(name)
@@ -602,13 +422,13 @@ def build_aspect_pattern_figure(
             r=[1.05],
             theta=[lon],
             mode="markers+text",
-            marker=dict(size=10, color=color, symbol="circle"),
+            marker=dict(size=10, color=color),
             text=[short],
             textposition="top center",
             textfont=dict(size=9, color=color),
             name=name,
             showlegend=False,
-            hovertemplate=f"{name}<br>{lon:.2f}°<extra></extra>",
+            hovertemplate=name + "<br>" + str(round(lon, 2)) + "deg<extra></extra>",
         ))
 
     fig.update_layout(
@@ -620,8 +440,8 @@ def build_aspect_pattern_figure(
                 rotation=90,
                 tickmode="array",
                 tickvals=[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
-                ticktext=["♈", "♉", "♊", "♋", "♌", "♍",
-                          "♎", "♏", "♐", "♑", "♒", "♓"],
+                ticktext=["\u2648", "\u2649", "\u264a", "\u264b", "\u264c", "\u264d",
+                          "\u264e", "\u264f", "\u2650", "\u2651", "\u2652", "\u2653"],
                 tickfont=dict(size=14),
                 showgrid=True,
                 gridcolor="rgba(100,100,100,0.2)",
@@ -630,14 +450,7 @@ def build_aspect_pattern_figure(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#e0e0e0"),
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.05,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=11),
-        ),
+        legend=dict(orientation="h", yanchor="top", y=-0.05, xanchor="center", x=0.5, font=dict(size=11)),
         height=500,
         margin=dict(l=20, r=20, t=50, b=60),
     )
@@ -645,86 +458,70 @@ def build_aspect_pattern_figure(
     return fig
 
 
-def render_aspect_patterns(patterns: list[dict], positions: dict[str, float], lang: str = "zh") -> None:
-    """Render detected aspect patterns in Streamlit with Plotly chart.
-
-    Parameters
-    ----------
-    patterns : list[dict]
-        Output of :func:`detect_aspect_patterns`.
-    positions : dict[str, float]
-        Planet name → longitude (for Plotly visualization).
-    lang : str
-        ``"zh"`` or ``"en"``.
-    """
+def render_aspect_patterns(patterns, positions, lang="zh"):
+    """Render detected aspect patterns in Streamlit with Plotly chart."""
     import streamlit as st
 
     is_zh = lang in ("zh", "zh_cn")
-    header = "🔷 相位圖案 / Aspect Patterns"
+    header = "\u7684\u76f8\u4f4d\u5716\u6848 / Aspect Patterns"
     st.subheader(header)
 
     if not patterns:
-        msg = "未偵測到特殊相位圖案。" if is_zh else "No significant aspect patterns detected."
+        msg = "\u672a\u5075\u6e2c\u5230\u7279\u6b8a\u76f8\u4f4d\u5716\u6848\u3002" if is_zh else "No significant aspect patterns detected."
         st.info(msg)
         return
 
-    # Summary table
     rows = []
     for pat in patterns:
         rows.append({
-            ("圖案" if is_zh else "Pattern"): (
-                f"{pat['pattern_cn']} ({pat['pattern']})" if is_zh else pat["pattern"]
+            ("\u5716\u6848" if is_zh else "Pattern"): (
+                pat["pattern_cn"] + " (" + pat["pattern"] + ")" if is_zh else pat["pattern"]
             ),
-            ("行星" if is_zh else "Planets"): ", ".join(pat["planets"]),
-            ("頂點" if is_zh else "Apex"): pat.get("apex") or "—",
-            ("元素" if is_zh else "Element"): (
-                f"{pat.get('element_cn', '')} ({pat.get('element', '')})"
-                if pat.get("element") else "—"
+            ("\u884c\u661f" if is_zh else "Planets"): ", ".join(pat["planets"]),
+            ("\u9802\u9ede" if is_zh else "Apex"): pat.get("apex") or "\u2014",
+            ("\u5143\u7d20" if is_zh else "Element"): (
+                pat.get("element_cn", "") + " (" + pat.get("element", "") + ")"
+                if pat.get("element") else "\u2014"
             ),
-            ("品質" if is_zh else "Quality"): (
-                f"{pat.get('quality_cn', '')} ({pat.get('quality', '')})"
-                if pat.get("quality") else "—"
+            ("\u54c1\u8cea" if is_zh else "Quality"): (
+                pat.get("quality_cn", "") + " (" + pat.get("quality", "") + ")"
+                if pat.get("quality") else "\u2014"
             ),
         })
     st.dataframe(rows, width="stretch")
 
-    # Plotly wheel
-    title = "相位圖案輪盤" if is_zh else "Aspect Pattern Wheel"
+    title = "\u76f8\u4f4d\u5716\u6848\u8f2a\u76e4" if is_zh else "Aspect Pattern Wheel"
     fig = build_aspect_pattern_figure(positions, patterns, title=title)
     st.plotly_chart(fig, use_container_width=True)
 
-    # Pattern detail cards
     for pat in patterns:
-        pname = f"{pat['pattern_cn']} ({pat['pattern']})" if is_zh else pat["pattern"]
+        pname = pat["pattern_cn"] + " (" + pat["pattern"] + ")" if is_zh else pat["pattern"]
         desc = pat.get("description_cn", "") if is_zh else pat.get("description", "")
         color = _PATTERN_COLORS.get(pat["pattern"], "#888")
         planets_str = ", ".join(pat["planets"])
-        apex_str = f" — 頂點: {pat['apex']}" if is_zh and pat.get("apex") else (
-            f" — Apex: {pat['apex']}" if pat.get("apex") else ""
-        )
+        apex = pat.get("apex", "")
+        apex_str = (" \u2014 \u9802\u9ede: " + apex if is_zh else " -- Apex: " + apex) if apex else ""
         st.markdown(
-            f'<div style="border-left: 4px solid {color}; padding: 8px 12px; '
-            f'margin: 6px 0; background: rgba(0,0,0,0.2); border-radius: 4px;">'
-            f'<b style="color:{color}">{pname}</b>{apex_str}<br>'
-            f'<span style="color:#aaa;font-size:0.9em">{planets_str}</span><br>'
-            f'<span style="font-size:0.9em">{desc}</span>'
-            f'</div>',
+            '<div style="border-left: 4px solid ' + color + '; padding: 8px 12px; '
+            'margin: 6px 0; background: rgba(0,0,0,0.2); border-radius: 4px;">'
+            '<b style="color:' + color + '">' + pname + '</b>' + apex_str + '<br>'
+            '<span style="color:#aaa;font-size:0.9em">' + planets_str + '</span><br>'
+            '<span style="font-size:0.9em">' + desc + '</span>'
+            '</div>',
             unsafe_allow_html=True,
         )
 
 
-def format_patterns_for_prompt(patterns: list[dict]) -> str:
+def format_patterns_for_prompt(patterns):
     """Format detected patterns as a text block for AI prompts."""
     if not patterns:
         return "No significant aspect patterns detected."
-    lines = ["【相位圖案 Aspect Patterns】"]
+    lines = ["[Aspect Patterns]"]
     for pat in patterns:
         planets_str = ", ".join(pat["planets"])
-        apex = f"  Apex: {pat['apex']}" if pat.get("apex") else ""
-        qual = f"  Quality: {pat['quality']}" if pat.get("quality") else ""
-        elem = f"  Element: {pat['element']}" if pat.get("element") else ""
-        lines.append(
-            f"- {pat['pattern']} ({pat['pattern_cn']}): {planets_str}{apex}{elem}{qual}"
-        )
-        lines.append(f"  → {pat['description']}")
+        apex = ("  Apex: " + pat["apex"]) if pat.get("apex") else ""
+        qual = ("  Quality: " + pat["quality"]) if pat.get("quality") else ""
+        elem = ("  Element: " + pat["element"]) if pat.get("element") else ""
+        lines.append("- " + pat["pattern"] + " (" + pat["pattern_cn"] + "): " + planets_str + apex + elem + qual)
+        lines.append("  -> " + pat.get("description", ""))
     return "\n".join(lines)
