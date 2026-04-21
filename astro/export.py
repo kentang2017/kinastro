@@ -50,6 +50,49 @@ def generate_planet_csv(planets):
     return out.getvalue()
 
 
+def generate_asteroids_csv(asteroids) -> str:
+    """Generate CSV string from a list of AsteroidPosition objects."""
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow([
+        "Name", "CN Name", "Symbol", "Group",
+        "Longitude", "Latitude", "Speed (°/d)",
+        "Sign", "Sign Degree", "Retrograde", "Heliocentric",
+        "Meaning (EN)", "Meaning (CN)",
+    ])
+    for a in asteroids:
+        writer.writerow([
+            a.name, a.name_cn, a.symbol, a.group,
+            f"{a.longitude:.4f}", f"{a.latitude:.4f}", f"{a.speed:+.6f}",
+            a.sign, f"{a.sign_degree:.2f}",
+            "Yes" if a.retrograde else "No",
+            "Yes" if a.heliocentric else "No",
+            a.meaning_en, a.meaning_cn,
+        ])
+    return out.getvalue()
+
+
+def generate_fixed_stars_csv(stars) -> str:
+    """Generate CSV string from a list of FixedStarPosition objects."""
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow([
+        "Name", "CN Name", "Constellation",
+        "Longitude", "Latitude", "Sign", "Sign Degree",
+        "Magnitude", "Nature",
+        "Meaning (EN)", "Meaning (CN)",
+    ])
+    for s in stars:
+        writer.writerow([
+            s.name, getattr(s, "cn_name", s.name), s.constellation,
+            f"{s.longitude:.4f}", f"{s.latitude:.4f}",
+            s.sign, f"{s.sign_degree:.2f}",
+            s.magnitude, s.nature,
+            s.meaning_en, s.meaning_cn,
+        ])
+    return out.getvalue()
+
+
 def svg_to_png(svg_string: str, width: int = 800) -> bytes | None:
     """Convert SVG string to PNG bytes. Returns None if cairosvg is unavailable."""
     try:

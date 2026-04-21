@@ -80,8 +80,11 @@ from astro.western.hellenistic import (compute_hellenistic_chart, render_helleni
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg, build_k8538_planisphere_svg
 from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni_manzil_mandala_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
-from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
-from astro.western.asteroids import compute_asteroids
+from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions, STAR_CATALOG_ALL
+from astro.western.asteroids import compute_asteroids, ASTEROID_GROUPS
+from astro.western.advanced_bodies import (
+    calculate_parans, calculate_heliacal, get_asteroid_aspects,
+)
 from astro.western.uranian import compute_uranian_chart, render_uranian_chart
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
 from astro.natal_summary import generate_natal_summary
@@ -1010,6 +1013,70 @@ with st.sidebar:
         st.session_state["_star_particles"] = _particles_on
         st.rerun()
 
+    # ── Advanced Bodies settings ───────────────────────────────
+    st.divider()
+    with st.expander(t("adv_bodies_header"), expanded=False):
+        _adv_ast = st.toggle(
+            t("adv_asteroids_toggle"),
+            value=st.session_state.get("_adv_asteroids", True),
+            key="_adv_asteroids",
+        )
+        if _adv_ast:
+            _group_options = {
+                t("adv_group_chiron_pholus"): "chiron_pholus",
+                t("adv_group_lilith"):        "lilith",
+                t("adv_group_main_belt"):     "main_belt",
+                t("adv_group_centaurs"):      "centaurs",
+                t("adv_group_tnos"):          "tnos",
+            }
+            _selected_groups = st.multiselect(
+                t("adv_asteroids_groups"),
+                options=list(_group_options.keys()),
+                default=list(_group_options.keys())[:3],
+                key="_adv_ast_groups",
+            )
+            st.session_state["_adv_ast_group_keys"] = [
+                _group_options[g] for g in _selected_groups
+            ]
+            st.toggle(
+                t("adv_asteroids_helio"),
+                value=False,
+                key="_adv_helio",
+            )
+            st.toggle(
+                t("adv_asteroid_aspects_toggle"),
+                value=True,
+                key="_adv_ast_aspects",
+            )
+
+        _adv_stars = st.toggle(
+            t("adv_stars_toggle"),
+            value=st.session_state.get("_adv_fixed_stars", False),
+            key="_adv_fixed_stars",
+        )
+        if _adv_stars:
+            st.select_slider(
+                t("adv_stars_count"),
+                options=[10, 30, 50, STAR_CATALOG_ALL],
+                value=30,
+                key="_adv_stars_count",
+                format_func=lambda v: ("全部 / All" if v == STAR_CATALOG_ALL else str(v)),
+            )
+
+        _adv_parans = st.toggle(
+            t("adv_parans_toggle"),
+            value=st.session_state.get("_adv_parans", False),
+            key="_adv_parans",
+            help=t("adv_parans_tooltip"),
+        )
+
+        _adv_heliacal = st.toggle(
+            t("adv_heliacal_toggle"),
+            value=st.session_state.get("_adv_heliacal", False),
+            key="_adv_heliacal",
+            help=t("adv_heliacal_tooltip"),
+        )
+
     # ── AI Analysis settings ──────────────────────────────────
     st.divider()
     with st.expander(t("ai_settings_header"), expanded=False):
@@ -1449,7 +1516,7 @@ elif _selected_system == "tab_western":
                 w_params = dict(**_p, sidereal=sidereal_mode)
                 w_chart = compute_western_chart(**w_params)
 
-            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic = st.tabs([
+            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal = st.tabs([
                 t("western_subtab_natal"),
                 t("western_subtab_transit"),
                 t("western_subtab_return"),
@@ -1457,6 +1524,10 @@ elif _selected_system == "tab_western":
                 t("western_subtab_dignity"),
                 t("western_subtab_harmonic"),
                 t("western_subtab_draconic"),
+                t("western_subtab_asteroids"),
+                t("western_subtab_fixed_stars"),
+                t("western_subtab_parans"),
+                t("western_subtab_heliacal"),
             ])
 
             with _w_tab_natal:
@@ -1478,30 +1549,6 @@ elif _selected_system == "tab_western":
                 # Natal summary
                 with st.expander(t("natal_summary_header"), expanded=True):
                     st.markdown(_summary)
-                # Fixed stars & asteroids checkboxes
-                _show_stars = st.checkbox(t("show_fixed_stars"), value=False, key="w_stars")
-                _show_asteroids = st.checkbox(t("show_asteroids"), value=False, key="w_asteroids")
-                if _show_stars:
-                    stars = compute_fixed_star_positions(w_chart.julian_day)
-                    p_lons = {p.name: p.longitude for p in w_chart.planets}
-                    conjs = find_conjunctions(stars, p_lons)
-                    if conjs:
-                        st.markdown(t("fixed_star_conjunctions_header"))
-                        st.dataframe([{"Star": c.star_name, "Planet": c.planet_name,
-                                       "Orb": f"{c.orb:.2f}°", "Nature": c.nature,
-                                       "Meaning": auto_cn(c.meaning_cn)}
-                                      for c in conjs], width="stretch")
-                    else:
-                        st.info("No fixed star conjunctions within orb.")
-                if _show_asteroids:
-                    asts = compute_asteroids(w_chart.julian_day)
-                    if asts:
-                        st.markdown(t("asteroids_header"))
-                        st.dataframe([{"Name": f"{a.name} {a.symbol} ({a.name_cn})",
-                                       "Sign": a.sign, "Degree": f"{a.sign_degree:.2f}°",
-                                       "R": "R" if a.retrograde else "",
-                                       "Meaning": auto_cn(a.meaning_cn)}
-                                      for a in asts], width="stretch")
 
             with _w_tab_transit:
                 st.subheader(t("western_subtab_transit"))
@@ -1619,6 +1666,184 @@ elif _selected_system == "tab_western":
 
             with _w_tab_draconic:
                 render_draconic_chart(w_chart, lang=get_lang())
+
+            # ── Asteroids & Centaurs tab ──────────────────────────
+            with _w_tab_asteroids:
+                st.markdown(t("asteroids_header"))
+                _use_adv_ast = st.session_state.get("_adv_asteroids", True)
+                if _use_adv_ast:
+                    _helio = st.session_state.get("_adv_helio", False)
+                    _grp_keys = st.session_state.get("_adv_ast_group_keys") or list(ASTEROID_GROUPS.keys())[:3]
+                    with st.spinner("Calculating asteroid positions…"):
+
+                        @st.cache_data(show_spinner=False)
+                        def _cached_asteroids(jd, helio, groups_tuple):
+                            return compute_asteroids(jd, heliocentric=helio,
+                                                     include_groups=list(groups_tuple))
+
+                        _asts = _cached_asteroids(
+                            w_chart.julian_day, _helio, tuple(_grp_keys),
+                        )
+                    if _asts:
+                        _ast_rows = []
+                        for _a in _asts:
+                            _ast_rows.append({
+                                t("adv_col_body"):    f"{_a.symbol} {_a.name} ({_a.name_cn})",
+                                t("adv_col_sign"):    _a.sign,
+                                t("adv_col_degree"):  f"{_a.sign_degree:.2f}°",
+                                t("adv_col_lat"):     f"{_a.latitude:.2f}°",
+                                t("adv_col_speed"):   f"{_a.speed:+.4f}°/d",
+                                t("adv_col_retro"):   "℞" if _a.retrograde else "",
+                                t("adv_col_meaning"): auto_cn(_a.meaning_cn),
+                            })
+                        st.dataframe(_ast_rows, width="stretch")
+
+                        # Aspects with traditional planets
+                        if st.session_state.get("_adv_ast_aspects", True):
+                            _p_lons = {p.name: p.longitude for p in w_chart.planets}
+                            _ast_aspects = get_asteroid_aspects(_asts, _p_lons)
+                            if _ast_aspects:
+                                st.markdown("##### Asteroid Aspects / 小行星相位")
+                                st.dataframe([{
+                                    t("adv_col_body"):   _aa.asteroid_name,
+                                    "Aspect":            f"{_aa.aspect_symbol} {_aa.aspect_name}",
+                                    "Planet":            _aa.planet_name,
+                                    t("adv_col_orb"):    f"{_aa.orb:.2f}°",
+                                } for _aa in _ast_aspects[:30]], width="stretch")
+                    else:
+                        st.info(t("adv_no_results"))
+                else:
+                    st.info("Enable 'Include Asteroids & Centaurs' in the sidebar.")
+
+            # ── Fixed Stars tab ───────────────────────────────────
+            with _w_tab_stars:
+                st.markdown(t("fixed_star_conjunctions_header"))
+                _use_adv_stars = st.session_state.get("_adv_fixed_stars", False)
+                if _use_adv_stars:
+                    _star_limit = st.session_state.get("_adv_stars_count", 30)
+                    if _star_limit == STAR_CATALOG_ALL:
+                        _star_limit = None  # all
+
+                    with st.spinner("Computing fixed star positions…"):
+
+                        @st.cache_data(show_spinner=False)
+                        def _cached_stars(jd, lim):
+                            return compute_fixed_star_positions(jd, limit=lim)
+
+                        _stars = _cached_stars(w_chart.julian_day, _star_limit)
+
+                    _p_lons = {p.name: p.longitude for p in w_chart.planets}
+                    _conjs = find_conjunctions(_stars, _p_lons)
+
+                    st.markdown(f"**{len(_stars)}** stars computed · **{len(_conjs)}** conjunctions (orb ≤ 1.5°)")
+
+                    if _conjs:
+                        st.dataframe([{
+                            t("adv_col_body"):         f"⭐ {c.star_name} ({c.star_cn})",
+                            "Planet":                  c.planet_name,
+                            t("adv_col_orb"):          f"{c.orb:.2f}°",
+                            t("adv_col_nature"):       c.nature,
+                            t("adv_col_meaning"):      auto_cn(c.meaning_cn),
+                        } for c in _conjs], width="stretch")
+
+                    with st.expander("All Stars / 全部恆星", expanded=False):
+                        st.dataframe([{
+                            t("adv_col_body"):          f"{s.name}",
+                            t("adv_col_cn_name"):       s.cn_name,
+                            t("adv_col_constellation"): s.constellation,
+                            t("adv_col_sign"):          s.sign,
+                            t("adv_col_degree"):        f"{s.sign_degree:.2f}°",
+                            t("adv_col_lat"):           f"{s.latitude:.2f}°",
+                            t("adv_col_magnitude"):     s.magnitude,
+                            t("adv_col_nature"):        s.nature,
+                            t("adv_col_meaning"):       auto_cn(s.meaning_cn),
+                        } for s in _stars], width="stretch")
+                else:
+                    st.info("Enable 'Include Fixed Stars' in the sidebar.")
+
+            # ── Parans tab ────────────────────────────────────────
+            with _w_tab_parans:
+                st.markdown("#### 🔱 " + t("western_subtab_parans"))
+                st.caption(t("adv_parans_tooltip"))
+                _use_parans = st.session_state.get("_adv_parans", False)
+                if _use_parans:
+                    _star_limit_p = st.session_state.get("_adv_stars_count", 30)
+                    if _star_limit_p == STAR_CATALOG_ALL:
+                        _star_limit_p = None
+
+                    with st.spinner("Calculating parans…"):
+
+                        @st.cache_data(show_spinner=False)
+                        def _cached_parans(jd, lat, lon, lim):
+                            _s = compute_fixed_star_positions(jd, limit=lim)
+                            return calculate_parans(jd, lat, lon, _s)
+
+                        _parans = _cached_parans(
+                            w_chart.julian_day,
+                            getattr(w_chart, "latitude", 0.0),
+                            getattr(w_chart, "longitude", 0.0),
+                            _star_limit_p,
+                        )
+
+                    if _parans:
+                        st.dataframe([{
+                            "Star / 恆星":           f"⭐ {p.star_name} ({p.star_cn})",
+                            t("adv_col_star_event"): p.star_event_cn,
+                            "Planet / 行星":         p.planet_name,
+                            t("adv_col_planet_event"): p.planet_event_cn,
+                            t("adv_col_orb"):        f"{p.orb:.2f}°",
+                            t("adv_col_nature"):     p.star_nature,
+                            t("adv_col_meaning"):    auto_cn(p.star_meaning_cn),
+                        } for p in _parans[:50]], width="stretch")
+                    else:
+                        st.info(t("adv_no_results"))
+                else:
+                    st.info("Enable 'Show Parans' in the sidebar.")
+
+            # ── Heliacal tab ──────────────────────────────────────
+            with _w_tab_heliacal:
+                st.markdown("#### 🌅 " + t("western_subtab_heliacal"))
+                st.caption(t("adv_heliacal_tooltip"))
+                _use_heliacal = st.session_state.get("_adv_heliacal", False)
+                if _use_heliacal:
+                    _star_limit_h = st.session_state.get("_adv_stars_count", 30)
+                    _heliacal_star_cap = 30  # heliacal_ut is computationally expensive
+                    if _star_limit_h == STAR_CATALOG_ALL or _star_limit_h > _heliacal_star_cap:
+                        _star_limit_h = _heliacal_star_cap
+                        st.caption(
+                            "ℹ️ Heliacal star search capped at 30 stars for performance. "
+                            "/ 偕日升沒恆星計算限於30顆以確保效能。"
+                        )
+
+                    with st.spinner("Calculating heliacal phenomena…"):
+                        try:
+                            @st.cache_data(show_spinner=False)
+                            def _cached_heliacal(jd, lat, lon, alt, lim):
+                                _s = compute_fixed_star_positions(jd, limit=lim)
+                                return calculate_heliacal(jd, lat, lon, alt, _s)
+
+                            _hels = _cached_heliacal(
+                                w_chart.julian_day,
+                                getattr(w_chart, "latitude", 0.0),
+                                getattr(w_chart, "longitude", 0.0),
+                                0.0,
+                                _star_limit_h,
+                            )
+                        except Exception as _he:
+                            _hels = []
+                            st.warning(t("adv_heliacal_unavail"))
+                            st.caption(str(_he))
+
+                    if _hels:
+                        st.dataframe([{
+                            t("adv_col_body"):       f"{'⭐' if h.is_star else '🪐'} {h.body_name} ({h.body_cn})",
+                            t("adv_col_event_type"): auto_cn(h.event_name_cn),
+                            t("adv_col_event_date"): h.event_date,
+                        } for h in _hels[:50]], width="stretch")
+                    else:
+                        st.info(t("adv_no_results"))
+                else:
+                    st.info("Enable 'Show Heliacal Phenomena' in the sidebar.")
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")

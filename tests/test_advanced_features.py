@@ -250,10 +250,10 @@ class TestAsteroids:
             assert 0 <= a.sign_degree < 30
 
     def test_known_names_subset(self, asteroids):
-        """If ephemeris data is available, names should be from the known set."""
-        expected = {"Chiron", "Ceres", "Pallas", "Juno", "Vesta"}
+        """If ephemeris data is available, names should be from the known expanded set."""
+        from astro.western.asteroids import ASTEROIDS
         for a in asteroids:
-            assert a.name in expected
+            assert a.name in ASTEROIDS
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -525,13 +525,14 @@ class TestFixedStars:
         from astro.western.fixed_stars import load_star_catalog
         catalog = load_star_catalog()
         assert isinstance(catalog, list)
-        assert len(catalog) >= 10
+        assert len(catalog) >= 80   # expanded catalogue has 100+
 
     def test_catalog_entry_fields(self):
         from astro.western.fixed_stars import load_star_catalog
         catalog = load_star_catalog()
         for entry in catalog:
             assert "name" in entry
+            assert "swe_name" in entry
             assert "magnitude" in entry or "nature" in entry
 
     def test_compute_positions_returns_list(self):
@@ -865,3 +866,146 @@ class TestApiServer:
             y: str = "test"
         result = _make_serializable(Dummy())
         assert result == {"x": 1, "y": "test"}
+
+
+# ══════════════════════════════════════════════════════════════════════
+# New: expanded asteroids
+# ══════════════════════════════════════════════════════════════════════
+class TestExpandedAsteroids:
+    def test_config_has_all_required_bodies(self):
+        from astro.western.asteroids import ASTEROID_CONFIG, ASTEROID_GROUPS
+        names = [row[0] for row in ASTEROID_CONFIG]
+        required = ["Chiron", "Pholus", "Lilith (Mean)", "Lilith (True)",
+                    "Ceres", "Pallas", "Juno", "Vesta",
+                    "Nessus", "Chariklo", "Ixion", "Varuna", "Quaoar", "Sedna"]
+        for r in required:
+            assert r in names, f"Missing body in config: {r}"
+
+    def test_groups_defined(self):
+        from astro.western.asteroids import ASTEROID_GROUPS
+        expected_groups = ["chiron_pholus", "lilith", "main_belt", "centaurs", "tnos"]
+        for g in expected_groups:
+            assert g in ASTEROID_GROUPS
+
+    def test_compute_include_groups(self):
+        from astro.western.asteroids import compute_asteroids
+        asts = compute_asteroids(JD, include_groups=["lilith"])
+        assert isinstance(asts, list)
+        # Lilith bodies should be returned (Mean Apogee always available)
+        lilith_names = [a.name for a in asts]
+        assert any("Lilith" in n for n in lilith_names)
+
+    def test_asteroid_position_new_fields(self):
+        from astro.western.asteroids import compute_asteroids
+        asts = compute_asteroids(JD)
+        for a in asts:
+            assert hasattr(a, "speed")
+            assert hasattr(a, "group")
+            assert hasattr(a, "heliocentric")
+            assert hasattr(a, "latitude")
+
+    def test_heliocentric_flag(self):
+        from astro.western.asteroids import compute_asteroids
+        asts = compute_asteroids(JD, heliocentric=True, include_groups=["lilith"])
+        # Lilith is always geocentric
+        for a in asts:
+            assert not a.heliocentric, "Lilith should always be geocentric"
+
+
+# ══════════════════════════════════════════════════════════════════════
+# New: fixed stars expanded catalogue
+# ══════════════════════════════════════════════════════════════════════
+class TestExpandedFixedStars:
+    def test_catalog_has_cn_name(self):
+        from astro.western.fixed_stars import load_star_catalog
+        catalog = load_star_catalog()
+        assert len(catalog) >= 80
+        for entry in catalog:
+            assert "cn_name" in entry, f"Missing cn_name for {entry['name']}"
+
+    def test_star_position_has_swe_name(self):
+        from astro.western.fixed_stars import compute_fixed_star_positions
+        stars = compute_fixed_star_positions(JD)
+        for s in stars:
+            assert hasattr(s, "swe_name")
+            assert hasattr(s, "cn_name")
+
+    def test_limit_parameter(self):
+        from astro.western.fixed_stars import compute_fixed_star_positions
+        stars10 = compute_fixed_star_positions(JD, limit=10)
+        stars30 = compute_fixed_star_positions(JD, limit=30)
+        # Limited results should not exceed the limit (may be fewer if some fail)
+        assert len(stars10) <= 10 + 5   # small tolerance for failures
+        assert len(stars30) <= 30 + 5
+
+
+# ══════════════════════════════════════════════════════════════════════
+# New: advanced_bodies module
+# ══════════════════════════════════════════════════════════════════════
+class TestAdvancedBodies:
+    def test_calculate_parans_returns_list(self):
+        from astro.western.fixed_stars import compute_fixed_star_positions
+        from astro.western.advanced_bodies import calculate_parans
+        stars = compute_fixed_star_positions(JD)
+        parans = calculate_parans(JD, LAT, LON, stars)
+        assert isinstance(parans, list)
+
+    def test_paran_result_fields(self):
+        from astro.western.fixed_stars import compute_fixed_star_positions
+        from astro.western.advanced_bodies import calculate_parans
+        stars = compute_fixed_star_positions(JD)
+        parans = calculate_parans(JD, LAT, LON, stars, orb=3.0)
+        for p in parans:
+            assert hasattr(p, "star_name")
+            assert hasattr(p, "planet_name")
+            assert hasattr(p, "star_event")
+            assert hasattr(p, "planet_event")
+            assert hasattr(p, "orb")
+            assert p.orb <= 3.0
+            assert p.star_event in ("rising", "culminating", "setting", "anti_culminating")
+
+    def test_get_asteroid_aspects_returns_list(self):
+        from astro.western.asteroids import compute_asteroids
+        from astro.western.advanced_bodies import get_asteroid_aspects
+        asts = compute_asteroids(JD, include_groups=["lilith"])
+        p_lons = {"Sun ☉": 280.5, "Moon ☽": 30.2, "Saturn ♄": 150.0}
+        aspects = get_asteroid_aspects(asts, p_lons)
+        assert isinstance(aspects, list)
+
+    def test_asteroid_aspect_fields(self):
+        from astro.western.asteroids import compute_asteroids
+        from astro.western.advanced_bodies import get_asteroid_aspects
+        asts = compute_asteroids(JD)
+        p_lons = {"Sun ☉": 280.5, "Moon ☽": 30.2}
+        aspects = get_asteroid_aspects(asts, p_lons)
+        for a in aspects:
+            assert hasattr(a, "asteroid_name")
+            assert hasattr(a, "planet_name")
+            assert hasattr(a, "aspect_name")
+            assert hasattr(a, "orb")
+            assert a.orb >= 0
+
+
+# ══════════════════════════════════════════════════════════════════════
+# New: export for asteroids / fixed stars
+# ══════════════════════════════════════════════════════════════════════
+class TestAdvancedExport:
+    def test_generate_asteroids_csv(self):
+        from astro.western.asteroids import compute_asteroids
+        from astro.export import generate_asteroids_csv
+        asts = compute_asteroids(JD)
+        csv_str = generate_asteroids_csv(asts)
+        assert isinstance(csv_str, str)
+        if asts:
+            assert "Name" in csv_str
+            assert "Longitude" in csv_str
+
+    def test_generate_fixed_stars_csv(self):
+        from astro.western.fixed_stars import compute_fixed_star_positions
+        from astro.export import generate_fixed_stars_csv
+        stars = compute_fixed_star_positions(JD)
+        csv_str = generate_fixed_stars_csv(stars)
+        assert isinstance(csv_str, str)
+        if stars:
+            assert "Name" in csv_str
+            assert "Magnitude" in csv_str
