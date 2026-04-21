@@ -141,7 +141,10 @@ DEFAULT_SYSTEM_PROMPT = (
     "- 中国传统占星（七政四餘、八字、紫微斗數、宿曜道、萬化仙禽）\n"
     "- 泰國占星、阿拉伯占星、卡巴拉占星\n"
     "- 瑪雅占星、緬甸占星（Mahabote）、蒙古祖爾海（Zurkhai）\n"
-    "- 古埃及十度區間（Decans）等\n\n"
+    "- 古埃及十度區間（Decans）、**日本九星氣學（Kyūsei Kigaku）** 等\n\n"
+    "若命盤包含九星氣學資料，請融合本命星（年）、月命星（月）、日命星（日）\n"
+    "與其他體系（紫微斗數、七政四餘、西洋占星、印度占星）進行交叉分析，\n"
+    "提供跨系統綜合洞察（例如：本命二黑土星 + 西洋土星在第四宮 = 家庭責任感深重…）。\n\n"
     "## 分析結構\n"
     "請按照以下清晰結構，以繁體中文、Markdown 格式呈現（使用 ##、###、項目符號、粗體提升可讀性）：\n\n"
     "### 1. 命盤整體格局總覽\n"
@@ -200,7 +203,10 @@ DEFAULT_SYSTEM_PROMPT_EN = (
     "- Chinese Traditional Astrology (Seven Governors & Four Remainders, BaZi, Zi Wei Dou Shu, Sukkayodo, Wan Hua Xian Qin)\\n"
     "- Thai Astrology, Arabic Astrology, Kabbalistic Astrology\\n"
     "- Mayan Astrology, Myanmar Astrology (Mahabote), Mongolian Zurkhai\\n"
-    "- Ancient Egyptian Decans, etc.\\n\\n"
+    "- Ancient Egyptian Decans, **Japanese Nine Star Ki (Kyūsei Kigaku)**, etc.\\n"
+    "- When Nine Star Ki data is provided, cross-reference Year Star (Honmeisei), "
+    "Month Star (Tsukimeisei), and Day Star (Himeisei) with other systems for synthesized insights "
+    "(e.g., Year Star 2 Black Earth + Western Saturn in 4th house = deep family responsibility...).\\n\\n"
     "## Analysis Structure\\n"
     "Please present your analysis in English, using clear Markdown formatting (##, ###, bullet points, bold), following this structure:\\n\\n"
     "### 1. Overall Chart Overview\\n"
@@ -467,7 +473,8 @@ def _format_houses(houses) -> str:
 
 
 def format_western_chart(chart) -> str:
-    """Format a Western chart for the AI prompt."""
+    """Format a Western chart for the AI prompt, including asteroid and star data."""
+    import streamlit as st
     sections = ["【西洋占星排盤 Western Chart】"]
     sections.append(f"ASC Sign: {_safe_getattr(chart, 'asc_sign')}")
     sections.append(f"MC Sign: {_safe_getattr(chart, 'mc_sign')}")
@@ -477,6 +484,92 @@ def format_western_chart(chart) -> str:
     sections.append(_format_houses(getattr(chart, 'houses', [])))
     sections.append("\n--- Aspects ---")
     sections.append(_format_aspects(getattr(chart, 'aspects', [])))
+
+    # ── Asteroids & Centaurs ─────────────────────────────────────────────
+    try:
+        if st.session_state.get("_adv_asteroids", False):
+            from astro.western.asteroids import compute_asteroids
+            _grp_keys = st.session_state.get("_adv_ast_group_keys") or ["chiron_pholus", "lilith", "main_belt"]
+            _helio = st.session_state.get("_adv_helio", False)
+            _asts = compute_asteroids(chart.julian_day, heliocentric=_helio,
+                                      include_groups=_grp_keys)
+            if _asts:
+                sections.append("\n--- Asteroids & Centaurs ---")
+                for a in _asts:
+                    r = "℞" if a.retrograde else ""
+                    sections.append(
+                        f"  {a.name} ({a.name_cn}) {a.symbol}: "
+                        f"{a.sign} {a.sign_degree:.2f}° {r}  "
+                        f"[{a.meaning_en}]"
+                    )
+                # Chiron interpretation note
+                chiron = next((a for a in _asts if a.name == "Chiron"), None)
+                if chiron:
+                    sections.append(
+                        f"  → Chiron (凱龍) in {chiron.sign}: the Wounded Healer archetype "
+                        f"manifests in the realm of {chiron.sign}."
+                    )
+                lilith = next((a for a in _asts if "Lilith" in a.name and "Mean" in a.name), None)
+                if lilith:
+                    sections.append(
+                        f"  → Black Moon Lilith (黑月麗莉絲) in {lilith.sign}: "
+                        f"raw instinct and shadow self in the area of {lilith.sign}."
+                    )
+    except Exception:
+        pass
+
+    # ── Fixed Star Conjunctions ─────────────────────────────────────────
+    try:
+        if st.session_state.get("_adv_fixed_stars", False):
+            from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
+            _lim = st.session_state.get("_adv_stars_count", 30)
+            if _lim == 103:
+                _lim = None
+            _stars = compute_fixed_star_positions(chart.julian_day, limit=_lim)
+            _p_lons = {p.name: p.longitude for p in chart.planets}
+            _conjs = find_conjunctions(_stars, _p_lons)
+            if _conjs:
+                sections.append("\n--- Fixed Star Conjunctions ---")
+                _notable = {
+                    "Sirius":    "fame and distinction (天狼星)",
+                    "Regulus":   "power and leadership (軒轅十四)",
+                    "Spica":     "gift and good fortune (角宿一)",
+                    "Algol":     "intense power and upheaval (大陵五)",
+                    "Antares":   "obsession and extremism (心宿二)",
+                    "Fomalhaut": "idealism and occult ability (北落師門)",
+                    "Aldebaran": "courage and integrity (畢宿五)",
+                    "Vega":      "artistic talent and idealism (織女一)",
+                }
+                for c in _conjs[:15]:
+                    note = _notable.get(c.star_name, c.meaning_en)
+                    sections.append(
+                        f"  {c.star_name} conjunct {c.planet_name} (orb {c.orb:.1f}°): "
+                        f"{note}"
+                    )
+    except Exception:
+        pass
+
+    # ── Parans ────────────────────────────────────────────────────────────
+    try:
+        if st.session_state.get("_adv_parans", False):
+            from astro.western.fixed_stars import compute_fixed_star_positions
+            from astro.western.advanced_bodies import calculate_parans
+            _lim = st.session_state.get("_adv_stars_count", 30)
+            if _lim == 103:
+                _lim = None
+            _stars_p = compute_fixed_star_positions(chart.julian_day, limit=_lim)
+            _parans = calculate_parans(chart.julian_day, chart.latitude, chart.longitude, _stars_p)
+            if _parans:
+                sections.append("\n--- Parans (Paranatellonta) ---")
+                for p in _parans[:10]:
+                    sections.append(
+                        f"  {p.star_name} ({p.star_event_en}) "
+                        f"paran {p.planet_name} ({p.planet_event_en}) "
+                        f"[orb {p.orb:.1f}°]: {p.star_meaning_en}"
+                    )
+    except Exception:
+        pass
+
     return "\n".join(sections)
 
 
@@ -744,6 +837,65 @@ def _format_acg_chart(chart) -> str:
     return format_acg_for_prompt(chart)
 
 
+def format_nine_star_ki_chart(chart) -> str:
+    """Format a NineStarKiChart (日本九星氣學) for the AI prompt."""
+    sections = ["【日本九星氣學排盤 Japanese Nine Star Ki Chart】"]
+    # Three stars
+    ys = getattr(chart, "year_star", "")
+    ms = getattr(chart, "month_star", "")
+    ds = getattr(chart, "day_star", "")
+    ys_info = getattr(chart, "year_star_info", {})
+    ms_info = getattr(chart, "month_star_info", {})
+    ds_info = getattr(chart, "day_star_info", {})
+    sections.append(
+        f"本命星 (Year Star): {ys} {ys_info.get('zh_name', '')} / {ys_info.get('en_name', '')}"
+    )
+    sections.append(
+        f"  五行: {ys_info.get('element_zh', '')} ({ys_info.get('element_en', '')}) | "
+        f"方位: {ys_info.get('direction_zh', '')} ({ys_info.get('direction_en', '')}) | "
+        f"顏色: {ys_info.get('color_zh', '')} | 性格: {ys_info.get('personality_zh', '')}"
+    )
+    sections.append(
+        f"月命星 (Month Star): {ms} {ms_info.get('zh_name', '')} / {ms_info.get('en_name', '')}"
+    )
+    sections.append(
+        f"  五行: {ms_info.get('element_zh', '')} ({ms_info.get('element_en', '')}) | "
+        f"方位: {ms_info.get('direction_zh', '')} | 性格: {ms_info.get('personality_zh', '')}"
+    )
+    sections.append(
+        f"日命星 (Day Star): {ds} {ds_info.get('zh_name', '')} / {ds_info.get('en_name', '')}"
+    )
+    sections.append(
+        f"  五行: {ds_info.get('element_zh', '')} ({ds_info.get('element_en', '')}) | "
+        f"方位: {ds_info.get('direction_zh', '')} | 性格: {ds_info.get('personality_zh', '')}"
+    )
+    # Adjusted year / Li Chun
+    adj_year = getattr(chart, "adjusted_year", "")
+    li_chun = getattr(chart, "li_chun_date", "")
+    is_before = getattr(chart, "is_before_li_chun", False)
+    sections.append(f"計算年份 (Adjusted Year): {adj_year} (立春: {li_chun}{'，出生於立春前' if is_before else ''})")
+    # Current annual/monthly star
+    cur_annual = getattr(chart, "current_year_star", "")
+    cur_monthly = getattr(chart, "current_year_month_star", "")
+    if cur_annual:
+        from astro.nine_star_ki import STAR_BY_NUM as _NSK_STARS
+        cas_name = _NSK_STARS.get(cur_annual, {}).get("zh_name", "")
+        cams_name = _NSK_STARS.get(cur_monthly, {}).get("zh_name", "")
+        sections.append(f"當前流年星 (Current Annual Star): {cur_annual} {cas_name}")
+        sections.append(f"當前流月星 (Current Monthly Star): {cur_monthly} {cams_name}")
+    # Compatibility
+    compat = getattr(chart, "compatibility", [])
+    if compat:
+        sections.append("\n--- 相性 (Compatibility) ---")
+        for c in compat:
+            other_info = c.get("other_star_info", {})
+            sections.append(
+                f"  vs {c.get('other_star', '')} {other_info.get('zh_name', '')}: "
+                f"{c.get('label_zh', '')} (score={c.get('score', '')})"
+            )
+    return "\n".join(sections)
+
+
 # Mapping from system key to formatter function
 SYSTEM_FORMATTERS = {
     "tab_chinese": format_chinese_chart,
@@ -764,6 +916,7 @@ SYSTEM_FORMATTERS = {
     "tab_chinstar": format_chinstar_chart,
     "tab_twelve_ci": _format_twelve_ci_chart,
     "tab_acg": _format_acg_chart,
+    "tab_nine_star_ki": format_nine_star_ki_chart,
 }
 
 

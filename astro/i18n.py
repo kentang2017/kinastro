@@ -1705,22 +1705,22 @@ transmitted by **Chen Xiyi**.
             "Find your best cities for career, love, health and growth."
         ),
     },
-    # ── Uranian Astrology (天王星派占星) ────────────────────────────────────────
+    # ── Uranian Astrology (天王星占星) ────────────────────────────────────────
     "tab_uranian": {
-        "zh": "♅ 天王星派占星",
+        "zh": "♅ 天王星占星",
         "en": "♅ Uranian Astrology",
     },
     "sys_hint_uranian": {
-        "zh": "漢堡學派：以天王星派虛點與和諧點進行精密分析",
+        "zh": "漢堡學派：以天王星虛點與和諧點進行精密分析",
         "en": "Hamburg School: midpoints & transneptunian planets for precision analysis",
     },
     "spinner_uranian": {
-        "zh": "正在計算天王星派（漢堡學派）命盤…",
+        "zh": "正在計算天王星（漢堡學派）命盤…",
         "en": "Computing Uranian (Hamburg School) chart…",
     },
     "desc_uranian": {
         "zh": (
-            "**天王星派占星（漢堡學派）** — 由 Alfred Witte 於 1920–1941 年創立。\n\n"
+            "**天王星占星（漢堡學派）** — 由 Alfred Witte 於 1920–1941 年創立。\n\n"
             "• 使用 90° 轉盤（Dial），將所有強相位（合、半刑、刑、倍半刑、沖）等同於合相處理。\n"
             "• 引入八顆超海王星虛點（TNPs）：Cupido、Hades、Zeus、Kronos、"
             "Apollon、Admetos、Vulkanus、Poseidon。\n"
@@ -2167,6 +2167,208 @@ transmitted by **Chen Xiyi**.
     "cross_system_api_missing": {
         "zh": "⚠️ 未設定 Cerebras API 金鑰，無法使用 AI 解讀。",
         "en": "⚠️ Cerebras API key not configured. AI analysis unavailable.",
+=======
+
+    # ── 日本九星氣學 (Japanese Nine Star Ki) ─────────────────────
+    "tab_nine_star_ki": {
+        "zh": "🌟 九星氣學",
+        "en": "🌟 Nine Star Ki",
+    },
+    "spinner_nine_star_ki": {
+        "zh": "正在計算九星氣學排盤...",
+        "en": "Calculating Nine Star Ki chart...",
+    },
+    "sys_hint_nine_star_ki": {
+        "zh": "日本九星氣學 — 洛書九宮飛星命理",
+        "en": "Japanese Nine Star Ki — Lo Shu Flying Star astrology",
+    },
+    "desc_nine_star_ki": {
+        "zh": """
+### 什麼是九星氣學 (Kyūsei Kigaku)？
+
+**九星氣學 (九星気学)** 是一種源自中國洛書、在日本廣泛發展的傳統命理體系：
+
+- **九顆飛星**：一白水星、二黑土星、三碧木星、四綠木星、五黃土星、
+  六白金星、七赤金星、八白土星、九紫火星
+- **洛書九宮 (Lo Shu Square)**：九星按陰遁（逆時針）順序在九宮中飛移
+- **立春 (Li Chun / Risshun)**：每年約2月4日為九星氣學新年的起點
+- **三命星**：本命星（年）、月命星（月）、日命星（日）
+- **五行與方位**：每星對應五行（水/木/火/土/金）及八方位
+
+輸入出生資料即可計算您的三命星及流年流月飛星。
+""",
+        "en": """
+### What is Nine Star Ki (Kyūsei Kigaku)?
+
+**Nine Star Ki (九星気学)** is a traditional divination system originating from the
+Chinese Lo Shu square, widely developed in Japan:
+
+- **Nine Flying Stars**: One White Water, Two Black Earth, Three Jade Wood, Four Green Wood,
+  Five Yellow Earth, Six White Metal, Seven Red Metal, Eight White Earth, Nine Purple Fire
+- **Lo Shu Square (洛書)**: The nine stars fly counterclockwise (Yin cycle) through nine palaces
+- **Li Chun (立春 / Risshun)**: ~Feb 4 each year marks the Nine Star Ki New Year
+- **Three Stars**: Year Star (Honmeisei), Month Star (Tsukimeisei), Day Star (Himeisei)
+- **Five Elements & Directions**: Each star corresponds to an element and cardinal direction
+
+Enter your birth information to calculate your Three Stars and annual flying star cycles.
+""",
+=======
+    # ── Advanced bodies — new section ─────────────────────────
+    "adv_bodies_header": {
+        "zh": "🌑 進階天體選項",
+        "en": "🌑 Advanced Bodies Options",
+    },
+    "adv_asteroids_toggle": {
+        "zh": "包含小行星 & 半人馬天體",
+        "en": "Include Asteroids & Centaurs",
+    },
+    "adv_asteroids_groups": {
+        "zh": "選擇天體組",
+        "en": "Select Body Groups",
+    },
+    "adv_asteroids_helio": {
+        "zh": "日心坐標（非地心）",
+        "en": "Heliocentric positions",
+    },
+    "adv_stars_toggle": {
+        "zh": "包含恆星",
+        "en": "Include Fixed Stars",
+    },
+    "adv_stars_count": {
+        "zh": "顯示恆星數量",
+        "en": "Stars to display",
+    },
+    "adv_parans_toggle": {
+        "zh": "顯示旁點（偕升偕降）",
+        "en": "Show Parans (Paranatellonta)",
+    },
+    "adv_parans_tooltip": {
+        "zh": "旁點（Parans）：計算在出生時刻同時升起、中天、降落或天底的恆星與行星對，是古典占星的重要技法。",
+        "en": "Parans (Paranatellonta): fixed stars and planets that simultaneously share the same horizon or meridian circle at birth — a key technique in classical astrology.",
+    },
+    "adv_heliacal_toggle": {
+        "zh": "顯示偕日升沒現象",
+        "en": "Show Heliacal Phenomena",
+    },
+    "adv_heliacal_tooltip": {
+        "zh": "偕日升沒（Heliacal）：行星或恆星在太陽光輝中首次或最後可見的天象，是古代占星的重要觀測技法。",
+        "en": "Heliacal phenomena: the first / last visibility of a planet or star in the solar glare — an important observational technique in ancient astrology.",
+    },
+    "adv_asteroid_aspects_toggle": {
+        "zh": "顯示小行星相位",
+        "en": "Show Asteroid Aspects",
+    },
+
+    # Tab labels
+    "western_subtab_asteroids": {
+        "zh": "小行星 & 半人馬",
+        "en": "Asteroids & Centaurs",
+    },
+    "western_subtab_fixed_stars": {
+        "zh": "恆星",
+        "en": "Fixed Stars",
+    },
+    "western_subtab_parans": {
+        "zh": "旁點",
+        "en": "Parans",
+    },
+    "western_subtab_heliacal": {
+        "zh": "偕日升沒",
+        "en": "Heliacal",
+    },
+
+    # Column / table labels
+    "adv_col_body": {
+        "zh": "天體",
+        "en": "Body",
+    },
+    "adv_col_sign": {
+        "zh": "星座",
+        "en": "Sign",
+    },
+    "adv_col_degree": {
+        "zh": "度數",
+        "en": "Degree",
+    },
+    "adv_col_lat": {
+        "zh": "黃緯",
+        "en": "Latitude",
+    },
+    "adv_col_speed": {
+        "zh": "速度",
+        "en": "Speed",
+    },
+    "adv_col_retro": {
+        "zh": "逆行",
+        "en": "Retro",
+    },
+    "adv_col_meaning": {
+        "zh": "含義",
+        "en": "Meaning",
+    },
+    "adv_col_magnitude": {
+        "zh": "星等",
+        "en": "Mag",
+    },
+    "adv_col_nature": {
+        "zh": "性質",
+        "en": "Nature",
+    },
+    "adv_col_constellation": {
+        "zh": "星座（西）",
+        "en": "Constellation",
+    },
+    "adv_col_cn_name": {
+        "zh": "中文星名",
+        "en": "CN Name",
+    },
+    "adv_col_star_event": {
+        "zh": "恆星方位",
+        "en": "Star Point",
+    },
+    "adv_col_planet_event": {
+        "zh": "行星方位",
+        "en": "Planet Point",
+    },
+    "adv_col_event_date": {
+        "zh": "日期",
+        "en": "Date",
+    },
+    "adv_col_event_type": {
+        "zh": "天象類型",
+        "en": "Event Type",
+    },
+    "adv_col_orb": {
+        "zh": "容許度",
+        "en": "Orb",
+    },
+    "adv_group_chiron_pholus": {
+        "zh": "凱龍 & 福魯斯",
+        "en": "Chiron & Pholus",
+    },
+    "adv_group_lilith": {
+        "zh": "黑月麗莉絲",
+        "en": "Black Moon Lilith",
+    },
+    "adv_group_main_belt": {
+        "zh": "主帶小行星（穀/智/婚/灶）",
+        "en": "Main Belt (Ceres/Pallas/Juno/Vesta)",
+    },
+    "adv_group_centaurs": {
+        "zh": "半人馬天體（涅索斯/卡莉克蘿）",
+        "en": "Centaurs (Nessus/Chariklo)",
+    },
+    "adv_group_tnos": {
+        "zh": "海外天體（伊/伐/夸/賽）",
+        "en": "TNOs (Ixion/Varuna/Quaoar/Sedna)",
+    },
+    "adv_no_results": {
+        "zh": "未找到結果。",
+        "en": "No results found.",
+    },
+    "adv_heliacal_unavail": {
+        "zh": "⚠️ 偕日升沒計算需要精確的觀測地點，且部分 Swiss Ephemeris 版本可能不支援。",
+        "en": "⚠️ Heliacal calculation requires precise observer location; may not be available in all Swiss Ephemeris builds.",
     },
 }
 
