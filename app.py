@@ -41,6 +41,7 @@ from astro.western.western import compute_western_chart, render_western_chart
 from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
 from astro.western.harmonic import render_harmonic_chart
+from astro.western.draconic import render_draconic_chart
 from astro.western.western_synastry import compute_synastry
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
 from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha
@@ -1447,13 +1448,14 @@ elif _selected_system == "tab_western":
                 w_params = dict(**_p, sidereal=sidereal_mode)
                 w_chart = compute_western_chart(**w_params)
 
-            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic = st.tabs([
+            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic = st.tabs([
                 t("western_subtab_natal"),
                 t("western_subtab_transit"),
                 t("western_subtab_return"),
                 t("western_subtab_synastry"),
                 t("western_subtab_dignity"),
                 t("western_subtab_harmonic"),
+                t("western_subtab_draconic"),
             ])
 
             with _w_tab_natal:
@@ -1613,6 +1615,9 @@ elif _selected_system == "tab_western":
 
             with _w_tab_harmonic:
                 render_harmonic_chart(w_chart, lang=get_lang())
+
+            with _w_tab_draconic:
+                render_draconic_chart(w_chart, lang=get_lang())
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")

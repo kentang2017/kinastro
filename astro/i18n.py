@@ -1101,6 +1101,11 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "谐波盘",
         "en": "Harmonics",
     },
+    "western_subtab_draconic": {
+        "zh": "龍頭星盤",
+        "zh_cn": "龙头星盘",
+        "en": "Draconic",
+    },
     "transit_target_date": {"zh": "過運日期", "en": "Transit Date"},
     "return_year_label": {"zh": "返照年份", "en": "Return Year"},
     "synastry_header": {"zh": "合盤比較", "en": "Synastry Comparison"},
