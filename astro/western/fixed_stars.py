@@ -13,6 +13,10 @@ from dataclasses import dataclass, field
 ZODIAC_SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
                 "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
 
+# Sentinel value meaning "all stars in the catalogue".
+# Must be kept in sync with the length of data/fixed_stars.json.
+STAR_CATALOG_ALL = -1
+
 _DATA_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "data")
 
 

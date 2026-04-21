@@ -425,8 +425,24 @@ def get_asteroid_aspects(
             for asp_name, symbol, angle, max_orb in aspect_defs:
                 orb = abs(diff - angle)
                 if orb <= max_orb:
-                    # Determine applying vs separating via speed sign
-                    is_applying = (ast.speed < 0) if angle != 0 else False
+                    # Determine applying vs separating:
+                    # Compute the signed angular separation (ast - planet), then
+                    # check whether the asteroid's motion (speed sign) is closing
+                    # or opening that gap toward the exact aspect angle.
+                    # This is an approximation assuming the planet is much slower.
+                    signed_diff = (ast.longitude - p_lon) % 360.0
+                    # For conjunction (angle=0): applying if signed_diff < 180 and ast moving forward (positive speed)
+                    # or signed_diff > 180 and ast retrograde.
+                    # General rule: reducing |diff - angle| over time = applying.
+                    is_applying = False
+                    if ast.speed != 0:
+                        # Estimate how diff changes with asteroid moving by a small step
+                        step = 0.001  # degrees
+                        future_lon = (ast.longitude + ast.speed * step) % 360.0
+                        future_diff = abs(future_lon - p_lon) % 360.0
+                        future_diff = min(future_diff, 360.0 - future_diff)
+                        future_orb = abs(future_diff - angle)
+                        is_applying = future_orb < orb
                     results.append(AsteroidAspect(
                         asteroid_name=ast.name,
                         planet_name=pname,
@@ -436,7 +452,7 @@ def get_asteroid_aspects(
                         orb=round(orb, 3),
                         is_applying=is_applying,
                     ))
-                    break   # take the first matching aspect (tightest)
+                    break   # take the first matching aspect
 
     results.sort(key=lambda a: a.orb)
     return results

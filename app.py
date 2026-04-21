@@ -80,7 +80,7 @@ from astro.western.hellenistic import (compute_hellenistic_chart, render_helleni
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg, build_k8538_planisphere_svg
 from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni_manzil_mandala_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
-from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
+from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions, STAR_CATALOG_ALL
 from astro.western.asteroids import compute_asteroids, ASTEROID_GROUPS
 from astro.western.advanced_bodies import (
     calculate_parans, calculate_heliacal, get_asteroid_aspects,
@@ -1057,10 +1057,10 @@ with st.sidebar:
         if _adv_stars:
             st.select_slider(
                 t("adv_stars_count"),
-                options=[10, 30, 50, 103],
+                options=[10, 30, 50, STAR_CATALOG_ALL],
                 value=30,
                 key="_adv_stars_count",
-                format_func=lambda v: ("全部 / All" if v == 103 else str(v)),
+                format_func=lambda v: ("全部 / All" if v == STAR_CATALOG_ALL else str(v)),
             )
 
         _adv_parans = st.toggle(
@@ -1721,7 +1721,7 @@ elif _selected_system == "tab_western":
                 _use_adv_stars = st.session_state.get("_adv_fixed_stars", False)
                 if _use_adv_stars:
                     _star_limit = st.session_state.get("_adv_stars_count", 30)
-                    if _star_limit == 103:
+                    if _star_limit == STAR_CATALOG_ALL:
                         _star_limit = None  # all
 
                     with st.spinner("Computing fixed star positions…"):
@@ -1768,7 +1768,7 @@ elif _selected_system == "tab_western":
                 _use_parans = st.session_state.get("_adv_parans", False)
                 if _use_parans:
                     _star_limit_p = st.session_state.get("_adv_stars_count", 30)
-                    if _star_limit_p == 103:
+                    if _star_limit_p == STAR_CATALOG_ALL:
                         _star_limit_p = None
 
                     with st.spinner("Calculating parans…"):
@@ -1807,8 +1807,13 @@ elif _selected_system == "tab_western":
                 _use_heliacal = st.session_state.get("_adv_heliacal", False)
                 if _use_heliacal:
                     _star_limit_h = st.session_state.get("_adv_stars_count", 30)
-                    if _star_limit_h == 103:
-                        _star_limit_h = 30  # cap for performance
+                    _heliacal_star_cap = 30  # heliacal_ut is computationally expensive
+                    if _star_limit_h == STAR_CATALOG_ALL or _star_limit_h > _heliacal_star_cap:
+                        _star_limit_h = _heliacal_star_cap
+                        st.caption(
+                            "ℹ️ Heliacal star search capped at 30 stars for performance. "
+                            "/ 偕日升沒恆星計算限於30顆以確保效能。"
+                        )
 
                     with st.spinner("Calculating heliacal phenomena…"):
                         try:
