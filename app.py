@@ -243,8 +243,8 @@ def _render_bphs_result(bphs_result):
     import pandas as pd
 
     # ── 1. 行星品位 (Dignity) ──
-    st.markdown("### 🏅 行星品位 (Graha Dignity)")
-    st.caption("根據 BPHS 第5章：行星高低點與基本三角")
+    st.markdown(t("bphs_section_dignity"))
+    st.caption(t("bphs_caption_dignity"))
     _dignity_rows = []
     for d in bphs_result.dignities:
         status_icon = ""
@@ -258,9 +258,9 @@ def _render_bphs_result(bphs_result):
             status_icon = "🏠"
         _dignity_rows.append({
             "": status_icon,
-            "行星": f"{d.planet_zh} ({d.planet})",
-            "星座": f"{d.rashi_zh} ({d.rashi_en})",
-            "品位": d.status_zh,
+            t("bphs_col_planet"): f"{auto_cn(d.planet_zh)} ({d.planet})",
+            t("bphs_col_sign"): f"{auto_cn(d.rashi_zh)} ({d.rashi_en})",
+            t("bphs_col_dignity"): auto_cn(d.status_zh),
         })
     if _dignity_rows:
         st.dataframe(pd.DataFrame(_dignity_rows), hide_index=True, width='stretch')
@@ -268,15 +268,15 @@ def _render_bphs_result(bphs_result):
     st.divider()
 
     # ── 2. 行星友敵關係 (Graha Maitri) ──
-    st.markdown("### 🤝 行星友敵關係 (Graha Maitri)")
-    st.caption("根據 BPHS 第6章：行星友敵關係")
+    st.markdown(t("bphs_section_maitri"))
+    st.caption(t("bphs_caption_maitri"))
     _maitri_rows = []
     for m in bphs_result.graha_maitri:
         _maitri_rows.append({
-            "行星": f"{m.planet_zh} ({m.planet})",
-            "友星 ✅": m.friends_zh,
-            "中性 ⚖️": m.neutral_zh,
-            "敵星 ❌": m.enemies_zh,
+            t("bphs_col_planet"): f"{auto_cn(m.planet_zh)} ({m.planet})",
+            t("bphs_col_friends"): auto_cn(m.friends_zh),
+            t("bphs_col_neutral"): auto_cn(m.neutral_zh),
+            t("bphs_col_enemies"): auto_cn(m.enemies_zh),
         })
     if _maitri_rows:
         st.dataframe(pd.DataFrame(_maitri_rows), hide_index=True, width='stretch')
@@ -284,71 +284,75 @@ def _render_bphs_result(bphs_result):
     st.divider()
 
     # ── 3. 行星阿瓦斯塔 (Graha Avastha) ──
-    st.markdown("### 🎭 行星阿瓦斯塔 (Graha Avastha)")
-    st.caption("根據 BPHS 第15章：行星狀態章 — 12種阿瓦斯塔決定行星實際表現")
+    st.markdown(t("bphs_section_avastha"))
+    st.caption(t("bphs_caption_avastha"))
+    _strength_icons = {auto_cn("強"): "💪", auto_cn("中"): "⚖️", auto_cn("弱"): "⚠️"}
     for av in bphs_result.avasthas:
-        strength_icon = {"強": "💪", "中": "⚖️", "弱": "⚠️"}.get(av.strength, "❓")
-        with st.expander(f"{strength_icon} {av.planet_zh} ({av.planet}) — {av.avastha_name} [{av.strength}]"):
-            st.markdown(f"**狀態 (Avastha):** {av.avastha_name}")
-            st.markdown(f"**強度:** {av.strength}")
-            st.markdown(f"**果報:** {av.reading_zh}")
+        _av_strength = auto_cn(av.strength)
+        strength_icon = _strength_icons.get(_av_strength, "❓")
+        with st.expander(f"{strength_icon} {auto_cn(av.planet_zh)} ({av.planet}) — {auto_cn(av.avastha_name)} [{_av_strength}]"):
+            st.markdown(f"**{t('bphs_label_avastha')}:** {auto_cn(av.avastha_name)}")
+            st.markdown(f"**{t('bphs_label_strength')}:** {_av_strength}")
+            st.markdown(f"**{t('bphs_label_effect')}:** {auto_cn(av.reading_zh)}")
 
     st.divider()
 
     # ── 4. 王者瑜伽 (Raja Yoga) ──
-    st.markdown("### 👑 王者瑜伽與特殊組合 (Raja Yoga & Special Yogas)")
-    st.caption("根據 BPHS 第14章：王者瑜伽與特殊瑜伽")
+    st.markdown(t("bphs_section_raja"))
+    st.caption(t("bphs_caption_raja"))
     for ry in bphs_result.raja_yogas:
         icon = "✅" if ry.is_present else "⬜"
-        with st.expander(f"{icon} {ry.name}"):
-            st.markdown(f"**說明:** {ry.description_zh}")
-            st.markdown(f"**判斷:** {ry.reason_zh}")
+        with st.expander(f"{icon} {auto_cn(ry.name)}"):
+            st.markdown(f"**{t('bphs_label_description')}:** {auto_cn(ry.description_zh)}")
+            st.markdown(f"**{t('bphs_label_judgment')}:** {auto_cn(ry.reason_zh)}")
 
     st.divider()
 
     # ── 5. 宮位果報 (Bhava Phala) ──
-    st.markdown("### 🏛️ 宮位果報 (Bhava Phala)")
-    st.caption("根據 BPHS 第13章：各宮位行星落入的具體果報")
+    st.markdown(t("bphs_section_bhava"))
+    st.caption(t("bphs_caption_bhava"))
     for br in bphs_result.bhava_readings:
-        label_parts = [f"第{br.bhava}宮 {br.bhava_zh}"]
+        _house_label = t("bphs_label_house_num").format(n=br.bhava)
+        label_parts = [f"{_house_label} {auto_cn(br.bhava_zh)}"]
         if br.signification:
             label_parts.append(f"— {br.signification}")
         label = " ".join(label_parts)
         with st.expander(label):
-            st.markdown(f"**宮主 (Lord):** {br.lord_zh} ({br.lord_key}) — 落在第 {br.lord_house} 宮")
+            _lord_in = t("bphs_label_lord_in_house").format(n=br.lord_house)
+            st.markdown(f"**{t('bphs_label_house_lord')}:** {auto_cn(br.lord_zh)} ({br.lord_key}) — {_lord_in}")
             if br.lord_placement_zh:
-                st.info(f"📖 宮主落宮解讀：{br.lord_placement_zh}")
+                st.info(f"{t('bphs_label_lord_reading')}：{auto_cn(br.lord_placement_zh)}")
             if br.planets_in_bhava:
-                st.markdown("**入宮行星解讀：**")
+                st.markdown(t("bphs_label_planets_in"))
                 for pk, pk_zh, reading, level in br.planets_in_bhava:
-                    level_str = f" [{level}]" if level else ""
-                    st.markdown(f"- **{pk_zh}** ({pk}){level_str}：{reading}")
+                    level_str = f" [{auto_cn(level)}]" if level else ""
+                    st.markdown(f"- **{auto_cn(pk_zh)}** ({pk}){level_str}：{auto_cn(reading)}")
             if br.special_yogas:
-                st.markdown("**相關特殊瑜伽：**")
+                st.markdown(t("bphs_label_special_yogas"))
                 for sy in br.special_yogas:
-                    st.markdown(f"- **{sy.get('name', '')}**：{sy.get('zh', '')}")
+                    st.markdown(f"- **{auto_cn(sy.get('name', ''))}**：{auto_cn(sy.get('zh', ''))}")
             if br.note_zh:
-                st.caption(f"💡 {br.note_zh}")
+                st.caption(f"💡 {auto_cn(br.note_zh)}")
 
     st.divider()
 
     # ── 6. 16分盤簡表 (Shodasa Varga Reference) ──
-    st.markdown("### 📊 十六分盤參考 (Shodasa Varga)")
-    st.caption("根據 BPHS 第9章：16種分盤的用途與判斷標準")
+    st.markdown(t("bphs_section_varga"))
+    st.caption(t("bphs_caption_varga"))
     _varga_rows = []
     for key, val in bphs_result.varga_info.get("vargas", {}).items():
         _varga_rows.append({
-            "分盤": key,
-            "名稱": val.get("zh", ""),
-            "切割": val.get("division", ""),
-            "用途": val.get("use", ""),
-            "判斷": val.get("judgment", ""),
+            "Chart": key,
+            t("bphs_col_varga_name"): auto_cn(val.get("zh", "")),
+            t("bphs_col_varga_division"): val.get("division", ""),
+            t("bphs_col_varga_use"): auto_cn(val.get("use", "")),
+            t("bphs_col_varga_judgment"): auto_cn(val.get("judgment", "")),
         })
     if _varga_rows:
         st.dataframe(pd.DataFrame(_varga_rows), hide_index=True, width='stretch')
     note = bphs_result.varga_info.get("general_note_zh", "")
     if note:
-        st.caption(f"💡 {note}")
+        st.caption(f"💡 {auto_cn(note)}")
 
 
 # ── Language switcher (dropdown above page title) ───────────────
@@ -1460,21 +1464,21 @@ elif _selected_system == "tab_western":
                     p_lons = {p.name: p.longitude for p in w_chart.planets}
                     conjs = find_conjunctions(stars, p_lons)
                     if conjs:
-                        st.markdown("#### ⭐ Fixed Star Conjunctions / 恆星合相")
+                        st.markdown(t("fixed_star_conjunctions_header"))
                         st.dataframe([{"Star": c.star_name, "Planet": c.planet_name,
                                        "Orb": f"{c.orb:.2f}°", "Nature": c.nature,
-                                       "Meaning": c.meaning_cn}
+                                       "Meaning": auto_cn(c.meaning_cn)}
                                       for c in conjs], width="stretch")
                     else:
                         st.info("No fixed star conjunctions within orb.")
                 if _show_asteroids:
                     asts = compute_asteroids(w_chart.julian_day)
                     if asts:
-                        st.markdown("#### ☄️ Asteroids / 小行星")
+                        st.markdown(t("asteroids_header"))
                         st.dataframe([{"Name": f"{a.name} {a.symbol} ({a.name_cn})",
                                        "Sign": a.sign, "Degree": f"{a.sign_degree:.2f}°",
                                        "R": "R" if a.retrograde else "",
-                                       "Meaning": a.meaning_cn}
+                                       "Meaning": auto_cn(a.meaning_cn)}
                                       for a in asts], width="stretch")
 
             with _w_tab_transit:
@@ -1708,7 +1712,7 @@ elif _selected_system == "tab_indian":
 
             with _v_tab_varga:
                 st.subheader("📊 " + t("vedic_subtab_varga"))
-                st.caption("根據 BPHS 第9章：Shodasa Varga 分盤系統 — 選擇分盤查看行星在各分盤中的位置")
+                st.caption(t("bphs_caption_varga_tab"))
                 _varga_tab_labels = [f"{k} {VARGA_INFO[k]['zh']}" for k in VARGA_KEYS]
                 _varga_tabs = st.tabs(_varga_tab_labels)
                 for _vi, _vk in enumerate(VARGA_KEYS):
@@ -1911,7 +1915,7 @@ elif _selected_system == "tab_arabic":
                     render_picatrix_browse()
 
                 with ptab_mansions:
-                    st.info(f"🌙 使用出生月亮黃經 (Birth Moon Longitude)：{_birth_moon_lon:.2f}°")
+                    st.info(t("picatrix_moon_lon_info").format(lon=_birth_moon_lon))
                     render_mansion_lookup(moon_lon=_birth_moon_lon)
 
                 with ptab_hours:
@@ -2292,26 +2296,26 @@ elif _selected_system == "tab_hellenistic":
             with _h_tab_prof:
                 if _hellen_chart.profection:
                     pf = _hellen_chart.profection
-                    st.subheader("Annual Profections / 年限推進")
+                    st.subheader(t("hellen_profections_header"))
                     st.metric("Age", pf.current_age)
-                    st.metric("Profected Sign", f"{pf.profected_sign} ({pf.profected_sign_cn})")
-                    st.metric("Time Lord", f"{pf.time_lord} ({pf.time_lord_cn})")
+                    st.metric("Profected Sign", f"{pf.profected_sign} ({auto_cn(pf.profected_sign_cn)})")
+                    st.metric("Time Lord", f"{pf.time_lord} ({auto_cn(pf.time_lord_cn)})")
                     st.info(f"House from Ascendant: {pf.house_from_asc}")
             with _h_tab_zr:
                 if _hellen_chart.zodiacal_releasing:
-                    st.subheader("Zodiacal Releasing (L1) / 黃道釋放")
-                    st.dataframe([{"Sign": p.sign, "CN": p.sign_cn,
+                    st.subheader(t("hellen_zr_header"))
+                    st.dataframe([{"Sign": p.sign, "CN": auto_cn(p.sign_cn),
                                    "Ruler": p.ruler, "Years": p.years,
                                    "Start": p.start_date, "End": p.end_date}
                                   for p in _hellen_chart.zodiacal_releasing],
                                  width="stretch")
             with _h_tab_lots:
                 if _hellen_chart.lots:
-                    st.subheader("Greek Lots / 希臘點")
-                    st.dataframe([{"Name": f"{l.name} ({l.name_cn})",
+                    st.subheader(t("hellen_lots_header"))
+                    st.dataframe([{"Name": f"{l.name} ({auto_cn(l.name_cn)})",
                                    "Sign": l.sign, "Degree": f"{l.sign_degree:.2f}°",
                                    "House": l.house, "Formula": l.formula_en,
-                                   "Meaning": l.meaning_cn}
+                                   "Meaning": auto_cn(l.meaning_cn)}
                                   for l in _hellen_chart.lots],
                                  width="stretch")
 
@@ -2323,22 +2327,22 @@ elif _selected_system == "tab_hellenistic":
                     render_valens_combinations(_hellen_ext.synkrasis)
 
             with _h_tab_centiloquy:
-                st.subheader("托勒密《百論》 / Ptolemy's Centiloquy")
+                st.subheader(t("centiloquy_header"))
                 from astro.classic.ptolemy_centiloquy import get_random_aphorism, search_aphorism, get_all_aphorisms, format_aphorism
                 # Daily aphorism
                 st.info(format_aphorism(get_random_aphorism()))
                 # Search
-                _cent_query = st.text_input("🔍 搜尋關鍵字 / Search keyword", key="centiloquy_search")
+                _cent_query = st.text_input(t("centiloquy_search_label"), key="centiloquy_search")
                 if _cent_query:
                     _results = search_aphorism(_cent_query)
                     if _results:
                         for _r in _results:
                             st.markdown(format_aphorism(_r))
                     else:
-                        st.warning("未找到匹配的格言 / No matching aphorisms found.")
+                        st.warning(t("centiloquy_no_match"))
                 else:
                     for _a in get_all_aphorisms():
-                        with st.expander(f"第 {_a['id']} 條"):
+                        with st.expander(t("centiloquy_aphorism_num").format(n=_a['id'])):
                             st.markdown(_a["text"])
 
         except Exception as _e:

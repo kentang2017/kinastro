@@ -1879,6 +1879,190 @@ transmitted by **Chen Xiyi**.
         "zh": "三式",
         "en": "Three Styles",
     },
+
+    # ── BPHS 帕拉夏拉 section headers & labels ────────────────
+    "bphs_section_dignity": {
+        "zh": "### 🏅 行星品位 (Graha Dignity)",
+        "en": "### 🏅 Graha Dignity",
+    },
+    "bphs_caption_dignity": {
+        "zh": "根據 BPHS 第5章：行星高低點與基本三角",
+        "en": "BPHS Ch.5: Planetary Exaltation, Debilitation & Moola-trikona",
+    },
+    "bphs_section_maitri": {
+        "zh": "### 🤝 行星友敵關係 (Graha Maitri)",
+        "en": "### 🤝 Graha Maitri (Planetary Friendships)",
+    },
+    "bphs_caption_maitri": {
+        "zh": "根據 BPHS 第6章：行星友敵關係",
+        "en": "BPHS Ch.6: Planetary Friendships & Enmities",
+    },
+    "bphs_section_avastha": {
+        "zh": "### 🎭 行星阿瓦斯塔 (Graha Avastha)",
+        "en": "### 🎭 Graha Avastha (Planetary States)",
+    },
+    "bphs_caption_avastha": {
+        "zh": "根據 BPHS 第15章：行星狀態章 — 12種阿瓦斯塔決定行星實際表現",
+        "en": "BPHS Ch.15: Graha Avasthas — 12 states determining actual planetary effects",
+    },
+    "bphs_section_raja": {
+        "zh": "### 👑 王者瑜伽與特殊組合 (Raja Yoga & Special Yogas)",
+        "en": "### 👑 Raja Yoga & Special Yogas",
+    },
+    "bphs_caption_raja": {
+        "zh": "根據 BPHS 第14章：王者瑜伽與特殊瑜伽",
+        "en": "BPHS Ch.14: Raja Yogas & Special Yogas",
+    },
+    "bphs_section_bhava": {
+        "zh": "### 🏛️ 宮位果報 (Bhava Phala)",
+        "en": "### 🏛️ Bhava Phala (House Readings)",
+    },
+    "bphs_caption_bhava": {
+        "zh": "根據 BPHS 第13章：各宮位行星落入的具體果報",
+        "en": "BPHS Ch.13: Specific planetary effects in each bhava (house)",
+    },
+    "bphs_section_varga": {
+        "zh": "### 📊 十六分盤參考 (Shodasa Varga)",
+        "en": "### 📊 Shodasa Varga (16 Divisional Charts)",
+    },
+    "bphs_caption_varga": {
+        "zh": "根據 BPHS 第9章：16種分盤的用途與判斷標準",
+        "en": "BPHS Ch.9: Purposes and assessment criteria of the 16 divisional charts",
+    },
+    "bphs_caption_varga_tab": {
+        "zh": "根據 BPHS 第9章：Shodasa Varga 分盤系統 — 選擇分盤查看行星在各分盤中的位置",
+        "en": "BPHS Ch.9: Shodasa Varga system — select a chart to view planetary positions",
+    },
+    "bphs_col_planet": {
+        "zh": "行星",
+        "en": "Planet",
+    },
+    "bphs_col_sign": {
+        "zh": "星座",
+        "en": "Sign",
+    },
+    "bphs_col_dignity": {
+        "zh": "品位",
+        "en": "Dignity",
+    },
+    "bphs_col_friends": {
+        "zh": "友星 ✅",
+        "en": "Friends ✅",
+    },
+    "bphs_col_neutral": {
+        "zh": "中性 ⚖️",
+        "en": "Neutral ⚖️",
+    },
+    "bphs_col_enemies": {
+        "zh": "敵星 ❌",
+        "en": "Enemies ❌",
+    },
+    "bphs_label_avastha": {
+        "zh": "狀態 (Avastha)",
+        "en": "State (Avastha)",
+    },
+    "bphs_label_strength": {
+        "zh": "強度",
+        "en": "Strength",
+    },
+    "bphs_label_effect": {
+        "zh": "果報",
+        "en": "Effect",
+    },
+    "bphs_label_description": {
+        "zh": "說明",
+        "en": "Description",
+    },
+    "bphs_label_judgment": {
+        "zh": "判斷",
+        "en": "Judgment",
+    },
+    "bphs_label_house_lord": {
+        "zh": "宮主 (Lord)",
+        "en": "House Lord",
+    },
+    "bphs_label_lord_reading": {
+        "zh": "📖 宮主落宮解讀",
+        "en": "📖 House Lord Placement",
+    },
+    "bphs_label_planets_in": {
+        "zh": "**入宮行星解讀：**",
+        "en": "**Planets in Bhava:**",
+    },
+    "bphs_label_special_yogas": {
+        "zh": "**相關特殊瑜伽：**",
+        "en": "**Related Special Yogas:**",
+    },
+    "bphs_label_house_num": {
+        "zh": "第{n}宮",
+        "en": "House {n}",
+    },
+    "bphs_label_lord_in_house": {
+        "zh": "落在第 {n} 宮",
+        "en": "in House {n}",
+    },
+    "bphs_col_varga_name": {
+        "zh": "名稱",
+        "en": "Name",
+    },
+    "bphs_col_varga_division": {
+        "zh": "切割",
+        "en": "Division",
+    },
+    "bphs_col_varga_use": {
+        "zh": "用途",
+        "en": "Use",
+    },
+    "bphs_col_varga_judgment": {
+        "zh": "判斷",
+        "en": "Judgment",
+    },
+
+    # ── Picatrix / Moon longitude ──────────────────────────────
+    "picatrix_moon_lon_info": {
+        "zh": "🌙 使用出生月亮黃經 (Birth Moon Longitude)：{lon:.2f}°",
+        "en": "🌙 Using Birth Moon Longitude: {lon:.2f}°",
+    },
+
+    # ── Hellenistic sub-sections ──────────────────────────────
+    "hellen_profections_header": {
+        "zh": "年限推進 (Annual Profections)",
+        "en": "Annual Profections",
+    },
+    "hellen_zr_header": {
+        "zh": "黃道釋放 Zodiacal Releasing (L1)",
+        "en": "Zodiacal Releasing (L1)",
+    },
+    "hellen_lots_header": {
+        "zh": "希臘點 (Greek Lots)",
+        "en": "Greek Lots",
+    },
+    "centiloquy_header": {
+        "zh": "托勒密《百論》 / Ptolemy's Centiloquy",
+        "en": "Ptolemy's Centiloquy",
+    },
+    "centiloquy_search_label": {
+        "zh": "🔍 搜尋關鍵字",
+        "en": "🔍 Search keyword",
+    },
+    "centiloquy_no_match": {
+        "zh": "未找到匹配的格言",
+        "en": "No matching aphorisms found.",
+    },
+    "centiloquy_aphorism_num": {
+        "zh": "第 {n} 條",
+        "en": "Aphorism {n}",
+    },
+
+    # ── Fixed stars / Asteroids headers ───────────────────────
+    "fixed_star_conjunctions_header": {
+        "zh": "#### ⭐ 恆星合相 (Fixed Star Conjunctions)",
+        "en": "#### ⭐ Fixed Star Conjunctions",
+    },
+    "asteroids_header": {
+        "zh": "#### ☄️ 小行星 (Asteroids)",
+        "en": "#### ☄️ Asteroids",
+    },
 }
 
 
