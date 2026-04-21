@@ -1093,14 +1093,14 @@ def render_streamlit(result: WarigaResult):
             "📜 古典 Lontar 模式",
             key="wariga_classic_mode",
             help="仿古棕櫚葉手稿風格，Palalintangan 方格矩陣視覺",
-            use_container_width=True,
+            width="stretch",
         )
     with col_mode2:
         modern_btn = st.button(
             "📊 現代表格模式",
             key="wariga_modern_mode",
             help="清晰現代表格佈局，快速查閱",
-            use_container_width=True,
+            width="stretch",
         )
 
     # 初始化模式狀態

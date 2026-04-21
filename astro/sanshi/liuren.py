@@ -501,7 +501,7 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
             if tj:
                 data["天將"] = tj
             df = pd.DataFrame(data)
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
 
     # ── 地轉天盤 / 地轉天將 ──
     for key in ("地轉天盤", "地轉天將"):
@@ -512,7 +512,7 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
                 df = pd.DataFrame(
                     [{"地支": k, "對應": v} for k, v in mapping.items()]
                 )
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width="stretch", hide_index=True)
 
     # ── 十二宮（需要本命地支）──
     if benming_zhi and benming_zhi in DIZHI:

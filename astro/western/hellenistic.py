@@ -1360,7 +1360,7 @@ def render_extended_lots(lots):
             "Meaning": lot.meaning_cn,
         })
     if lot_data:
-        st.dataframe(lot_data, use_container_width=True)
+        st.dataframe(lot_data, width="stretch")
 
 
 def render_valens_combinations(synkrasis):
@@ -1382,7 +1382,7 @@ def render_valens_combinations(synkrasis):
             "Keywords": " · ".join(c["valens_keywords"]),
         })
     if combo_data:
-        st.dataframe(combo_data, use_container_width=True)
+        st.dataframe(combo_data, width="stretch")
 
     # Show top 3 strongest combinations as highlights
     top3 = synkrasis[:3]

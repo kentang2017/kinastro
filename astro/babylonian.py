@@ -923,7 +923,7 @@ def render_babylonian_chart(chart, after_chart_hook=None):
             t("babylonian_col_house"): pos.house,
         })
     if pos_data:
-        st.dataframe(pos_data, use_container_width=True)
+        st.dataframe(pos_data, width="stretch")
 
     # ── Omens ─────────────────────────────────────────────────
     st.markdown("#### 📜 " + t("babylonian_omens_title"))
@@ -947,7 +947,7 @@ def render_babylonian_chart(chart, after_chart_hook=None):
                 t("babylonian_col_angle"): f"{asp['angle']:.2f}°",
                 t("babylonian_col_orb"): f"{asp['orb']:.2f}°",
             })
-        st.dataframe(asp_data, use_container_width=True)
+        st.dataframe(asp_data, width="stretch")
 
     # ── House cusps ───────────────────────────────────────────
     st.markdown("#### 🏛️ " + t("babylonian_houses_title"))
@@ -961,7 +961,7 @@ def render_babylonian_chart(chart, after_chart_hook=None):
             t("babylonian_col_akkadian"): bz[1],
             t("babylonian_col_sign_cn"): bz[2],
         })
-    st.dataframe(house_data, use_container_width=True)
+    st.dataframe(house_data, width="stretch")
 
     if after_chart_hook:
         after_chart_hook()
