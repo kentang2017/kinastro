@@ -11,6 +11,8 @@ astro/sanshi/taiyi.py — 太乙神數（命法）排盤模組
 
 from __future__ import annotations
 
+import re
+
 import streamlit as st
 
 from astro.i18n import auto_cn
@@ -86,8 +88,6 @@ def _post_process_svg(svg: str) -> str:
     better text contrast, softened stroke lines, and slightly larger fonts —
     all without altering the chart's data or geometry.
     """
-    import re
-
     # ── Radial gradient background + decorative centre circle ───────────────
     rich_defs = (
         "<defs>\n"
@@ -108,11 +108,17 @@ def _post_process_svg(svg: str) -> str:
     )
     svg = svg.replace("<defs>\n</defs>", rich_defs)
 
-    # ── Fix black-fill text (shows on gold/metal cells) → white ─────────────
-    # Must happen BEFORE bulk fill="black" replacement below.
-    svg = re.sub(r'fill="black"(\s+font-family)', r'fill="white"\1', svg)
+    # ── Fix black-fill text on dark backgrounds → white ─────────────────────
+    # Use a robust pattern that matches fill="black" anywhere inside a <text>
+    # tag, regardless of surrounding attribute order.  Must happen BEFORE the
+    # bulk fill="black" path replacement below.
+    svg = re.sub(
+        r'(<text\b[^>]*?)fill="black"([^>]*>)',
+        r'\1fill="white"\2',
+        svg,
+    )
 
-    # ── Jewel-tone 五行 colour palette ───────────────────────────────────────
+    # ── Jewel-tone 五行 colour palette (path fills only at this point) ────────
     palette = (
         # Inner 12-palace ring: flat gray → deep-indigo navy
         ('fill="gray"',  'fill="#1f3354"'),
@@ -129,8 +135,14 @@ def _post_process_svg(svg: str) -> str:
         # Outer oracle rings: pure black → midnight navy
         ('fill="black"', 'fill="#09152a"'),
     )
-    for old, new in palette:
-        svg = svg.replace(old, new)
+    # Build one combined regex for all palette substitutions so only a
+    # single pass over the string is needed.
+    _esc = re.escape
+    palette_re = re.compile(
+        "|".join(_esc(old) for old, _ in palette)
+    )
+    palette_map = {old: new for old, new in palette}
+    svg = palette_re.sub(lambda m: palette_map[m.group(0)], svg)
 
     # ── Soften ring dividers: hard white → translucent pearl ────────────────
     svg = svg.replace(
