@@ -2112,6 +2112,51 @@ transmitted by **Chen Xiyi**.
         "zh": "#### ☄️ 小行星 (Asteroids)",
         "en": "#### ☄️ Asteroids",
     },
+
+    # ── 日本九星氣學 (Japanese Nine Star Ki) ─────────────────────
+    "tab_nine_star_ki": {
+        "zh": "🌟 九星氣學",
+        "en": "🌟 Nine Star Ki",
+    },
+    "spinner_nine_star_ki": {
+        "zh": "正在計算九星氣學排盤...",
+        "en": "Calculating Nine Star Ki chart...",
+    },
+    "sys_hint_nine_star_ki": {
+        "zh": "日本九星氣學 — 洛書九宮飛星命理",
+        "en": "Japanese Nine Star Ki — Lo Shu Flying Star astrology",
+    },
+    "desc_nine_star_ki": {
+        "zh": """
+### 什麼是九星氣學 (Kyūsei Kigaku)？
+
+**九星氣學 (九星気学)** 是一種源自中國洛書、在日本廣泛發展的傳統命理體系：
+
+- **九顆飛星**：一白水星、二黑土星、三碧木星、四綠木星、五黃土星、
+  六白金星、七赤金星、八白土星、九紫火星
+- **洛書九宮 (Lo Shu Square)**：九星按陰遁（逆時針）順序在九宮中飛移
+- **立春 (Li Chun / Risshun)**：每年約2月4日為九星氣學新年的起點
+- **三命星**：本命星（年）、月命星（月）、日命星（日）
+- **五行與方位**：每星對應五行（水/木/火/土/金）及八方位
+
+輸入出生資料即可計算您的三命星及流年流月飛星。
+""",
+        "en": """
+### What is Nine Star Ki (Kyūsei Kigaku)?
+
+**Nine Star Ki (九星気学)** is a traditional divination system originating from the
+Chinese Lo Shu square, widely developed in Japan:
+
+- **Nine Flying Stars**: One White Water, Two Black Earth, Three Jade Wood, Four Green Wood,
+  Five Yellow Earth, Six White Metal, Seven Red Metal, Eight White Earth, Nine Purple Fire
+- **Lo Shu Square (洛書)**: The nine stars fly counterclockwise (Yin cycle) through nine palaces
+- **Li Chun (立春 / Risshun)**: ~Feb 4 each year marks the Nine Star Ki New Year
+- **Three Stars**: Year Star (Honmeisei), Month Star (Tsukimeisei), Day Star (Himeisei)
+- **Five Elements & Directions**: Each star corresponds to an element and cardinal direction
+
+Enter your birth information to calculate your Three Stars and annual flying star cycles.
+""",
+    },
 }
 
 
