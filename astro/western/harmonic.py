@@ -39,6 +39,17 @@ from .western import (
     _sign_degree,
     _format_deg,
 )
+from ..chart_theme import (
+    CHART_BG,
+    BG_LIGHT,
+    CHART_GRID_LINE,
+    CHART_RING_STROKE,
+    CHART_TEXT_COLOR,
+    TEXT_SECONDARY,
+    PRIMARY_COLOR,
+    SECONDARY_COLOR,
+    FONT_FAMILY,
+)
 
 # ============================================================
 # Number symbolism — drawn directly from Addey (1976)
@@ -519,24 +530,42 @@ def _render_harmonic_wheel(hchart: HarmonicChart):
     mc_sign_idx = _sign_index(hchart.midheaven)
     mc_sign_info = ZODIAC_SIGNS[mc_sign_idx]
 
+    # Theme-derived colour aliases for readability
+    _bg = CHART_BG                    # "#0F172A" deep indigo background
+    _cell_bg = BG_LIGHT               # "#1e1b4b" regular house cells
+    _asc_bg = "#251c00"               # warm dark gold tint for ASC cell
+    _mc_bg = "#160d30"                # cool dark purple tint for MC cell
+    _center_bg = CHART_BG             # same as overall background
+    _stroke = CHART_GRID_LINE         # "#2a2a5a"
+    _ring_stroke = CHART_RING_STROKE  # "#5a5a9a"
+    _text = CHART_TEXT_COLOR          # "#e0e0ff"
+    _text2 = TEXT_SECONDARY           # "#b0b0d0"
+    _text_muted = "#7070a0"
+    _gold = SECONDARY_COLOR           # "#EAB308"
+    _purple = PRIMARY_COLOR           # "#a78bfa"
+    _font = FONT_FAMILY
+
     parts: list[str] = []
     parts.append(
         f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
         f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'class="chart-wheel" '
         f'viewBox="0 0 {W} {H_SVG}" '
         f'style="width:100%;max-width:{W}px;display:block;margin:auto;'
-        f'font-family:sans-serif;">'
+        f'background:{_bg};border-radius:12px;'
+        f'border:1px solid rgba(167,139,250,0.15);'
+        f'font-family:{_font};">'
     )
 
     # Title
     parts.append(
         f'<text x="{W / 2}" y="18" text-anchor="middle" '
-        f'fill="#e0e0e0" font-size="14" font-weight="bold">'
+        f'fill="{_text}" font-size="14" font-weight="bold">'
         f'H{k} Harmonic Wheel — {k}th Harmonic (諧波盤)</text>'
     )
     parts.append(
         f'<text x="{W / 2}" y="36" text-anchor="middle" '
-        f'fill="#c8c8c8" font-size="11">'
+        f'fill="{_text2}" font-size="11">'
         f'▲ H-ASC {_esc(asc_sign_info[1])}{_esc(asc_sign_info[0])} '
         f'{_sign_degree(h_asc):.1f}°'
         f'  ⬡ H-MC {_esc(mc_sign_info[1])}{_esc(mc_sign_info[0])} '
@@ -564,19 +593,19 @@ def _render_harmonic_wheel(hchart: HarmonicChart):
 
                 parts.append(
                     f'<rect x="{mx}" y="{my}" width="{mw}" height="{mh}" '
-                    f'fill="#1a1a2e" stroke="#444" stroke-width="1" rx="2"/>'
+                    f'fill="{_center_bg}" stroke="{_ring_stroke}" stroke-width="1" rx="4"/>'
                 )
                 parts.append(
                     f'<text x="{mcx}" y="{mcy - 20}" text-anchor="middle" '
-                    f'fill="#c8a500" font-size="28" font-weight="bold">H{k}</text>'
+                    f'fill="{_gold}" font-size="28" font-weight="bold">H{k}</text>'
                 )
                 parts.append(
                     f'<text x="{mcx}" y="{mcy + 8}" text-anchor="middle" '
-                    f'fill="#aaa" font-size="11">Harmonic {k}</text>'
+                    f'fill="{_text2}" font-size="11">Harmonic {k}</text>'
                 )
                 parts.append(
                     f'<text x="{mcx}" y="{mcy + 26}" text-anchor="middle" '
-                    f'fill="#888" font-size="10">360° ÷ {k} = {360/k:.2f}°/pole</text>'
+                    f'fill="{_text_muted}" font-size="10">360° ÷ {k} = {360/k:.2f}°/pole</text>'
                 )
                 continue
 
@@ -585,27 +614,28 @@ def _render_harmonic_wheel(hchart: HarmonicChart):
             sign_info = ZODIAC_SIGNS[sign_idx]
             is_asc = house_num == 1
             is_mc = house_num == 10
-            fill = "#3d3010" if is_asc else ("#1a2a3d" if is_mc else "#1e1e2e")
+            fill = _asc_bg if is_asc else (_mc_bg if is_mc else _cell_bg)
 
             parts.append(
                 f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
-                f'fill="{fill}" stroke="#444" stroke-width="1" rx="2"/>'
+                f'fill="{fill}" stroke="{_stroke}" stroke-width="1" rx="2"/>'
             )
 
             marker = " ▲" if is_asc else (" ⬡" if is_mc else "")
+            marker_color = _gold if is_asc else (_purple if is_mc else _text)
             parts.append(
                 f'<text x="{cx}" y="{y + 18}" text-anchor="middle" '
-                f'fill="#e0e0e0" font-size="13" font-weight="bold">'
+                f'fill="{marker_color}" font-size="13" font-weight="bold">'
                 f'{house_num}{_esc(marker)}</text>'
             )
             parts.append(
                 f'<text x="{cx}" y="{y + 34}" text-anchor="middle" '
-                f'fill="#e0e0e0" font-size="11">'
+                f'fill="{_text}" font-size="11">'
                 f'{_esc(sign_info[1])} {_esc(sign_info[0])}</text>'
             )
             parts.append(
                 f'<text x="{cx}" y="{y + 48}" text-anchor="middle" '
-                f'fill="#aaa" font-size="10">{_esc(_format_deg(cusp_lon))}</text>'
+                f'fill="{_text2}" font-size="10">{_esc(_format_deg(cusp_lon))}</text>'
             )
 
             planets_in_house = house_planets.get(house_num, [])
@@ -623,7 +653,7 @@ def _render_harmonic_wheel(hchart: HarmonicChart):
                     row_count = min(per_row, n_p - row_idx * per_row)
                     px = cx + (col_idx - (row_count - 1) / 2) * p_spacing
                     py = y + p_base_y + row_idx * p_row_h
-                    color = PLANET_COLORS.get(planet.name, "#c8c8c8")
+                    color = PLANET_COLORS.get(planet.name, _text2)
                     parts.append(
                         f'<text x="{px}" y="{py}" text-anchor="middle" '
                         f'fill="{color}" font-size="{font_sz}" '
@@ -632,7 +662,7 @@ def _render_harmonic_wheel(hchart: HarmonicChart):
             else:
                 parts.append(
                     f'<text x="{cx}" y="{y + 68}" text-anchor="middle" '
-                    f'fill="#555" font-size="11">—</text>'
+                    f'fill="{_text_muted}" font-size="11">—</text>'
                 )
 
     parts.append("</svg></div>")
