@@ -2113,6 +2113,61 @@ transmitted by **Chen Xiyi**.
         "en": "#### ☄️ Asteroids",
     },
 
+    # ── Aspect Patterns ────────────────────────────────────────
+    "show_aspect_patterns": {
+        "zh": "🔷 顯示相位圖案 / Show Aspect Patterns",
+        "en": "🔷 Show Aspect Patterns",
+    },
+    "aspect_patterns_header": {
+        "zh": "🔷 相位圖案 (Aspect Patterns)",
+        "en": "🔷 Aspect Patterns",
+    },
+
+    # ── Cross-system synthesis ─────────────────────────────────
+    "enable_cross_system": {
+        "zh": "🔀 啟用多體系交叉比對",
+        "en": "🔀 Enable Cross-System Comparison",
+    },
+    "tab_cross_system": {
+        "zh": "🔀 多體系綜合解讀",
+        "en": "🔀 Cross-System Synthesis",
+    },
+    "cross_system_header": {
+        "zh": "## 🔀 多體系綜合解讀 (Cross-System Synthesis)",
+        "en": "## 🔀 Multi-System Cross-Comparison Synthesis",
+    },
+    "cross_system_intro": {
+        "zh": (
+            "本功能同時計算西洋、印度（Jyotish）、七政四餘、紫微斗數及希臘占星，"
+            "並讓 AI 進行跨體系的綜合解讀，找出各體系的共鳴、矛盾與獨特洞見。"
+        ),
+        "en": (
+            "This feature simultaneously calculates Western, Vedic (Jyotish), "
+            "Chinese Qi Zheng, Zi Wei Dou Shu, and Hellenistic charts, "
+            "and uses AI to deliver a synthesized cross-system interpretation — "
+            "highlighting agreements, contradictions, and unique insights."
+        ),
+    },
+    "cross_system_computing": {
+        "zh": "正在計算多體系排盤...",
+        "en": "Computing multi-system charts...",
+    },
+    "cross_system_ai_btn": {
+        "zh": "🤖 生成多體系 AI 綜合解讀",
+        "en": "🤖 Generate AI Cross-System Synthesis",
+    },
+    "cross_system_ai_generating": {
+        "zh": "AI 正在進行多體系交叉比對分析...",
+        "en": "AI is performing cross-system analysis...",
+    },
+    "cross_system_comparison_table": {
+        "zh": "#### 📊 行星跨體系對照表",
+        "en": "#### 📊 Planet Cross-System Comparison Table",
+    },
+    "cross_system_api_missing": {
+        "zh": "⚠️ 未設定 Cerebras API 金鑰，無法使用 AI 解讀。",
+        "en": "⚠️ Cerebras API key not configured. AI analysis unavailable.",
+=======
 
     # ── 日本九星氣學 (Japanese Nine Star Ki) ─────────────────────
     "tab_nine_star_ki": {

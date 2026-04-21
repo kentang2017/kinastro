@@ -962,3 +962,300 @@ def format_chart_for_prompt(
         structured += "\n\n--- 頁面附加資訊 (Additional Page Content) ---\n" + page_content
 
     return structured
+
+
+# ---------------------------------------------------------------------------
+# Cross-system synthesis
+# ---------------------------------------------------------------------------
+
+CROSS_SYSTEM_SYNTHESIS_PROMPT = (
+    "## 多體系交叉比對解讀指引 (Multi-System Cross-Comparison Synthesis)\n\n"
+    "你現在擁有來自多個占星體系的完整排盤數據。請提供一個跨體系的「綜合解讀」，"
+    "重點包括：\n\n"
+    "### 1. 各體系共同確認的核心主題\n"
+    "   找出在西洋、印度（Jyotish）、七政四餘、紫微、希臘等體系中"
+    "**都同時確認或強調**的性格特質、人生主題或運勢走向。\n\n"
+    "### 2. 體系間的有趣對應\n"
+    "   例如：西洋 T-Square 是否對應紫微某星曜的衝突？"
+    "印度 Yoga 是否與七政四餘的吉神相呼應？"
+    "Hellenistic 幸運點是否與印度福利點有類似能量？\n\n"
+    "### 3. 體系間的矛盾與張力\n"
+    "   誠實指出不同體系在判斷上的分歧之處，並解釋可能的原因"
+    "（如歲差差異、文化背景、詮釋傳統不同等）。\n\n"
+    "### 4. 各體系的獨特洞見\n"
+    "   說明哪些信息只有在某個特定體系中才能看到"
+    "（如印度大運預測、紫微星系格局、希臘命運詩籤等）。\n\n"
+    "### 5. 綜合建議\n"
+    "   整合所有體系給出最具實踐價值的人生建議。\n\n"
+    "請用繁體中文（或依用戶語言）呈現，以 Markdown 格式排版。\n"
+    "**嚴格依據下方提供的各體系排盤數據進行分析，不要憑空捏造數據。**\n\n"
+)
+
+CROSS_SYSTEM_SYNTHESIS_PROMPT_EN = (
+    "## Multi-System Cross-Comparison Synthesis Guidelines\n\n"
+    "You now have complete chart data from multiple astrological traditions. "
+    "Please provide a synthesized cross-system interpretation focusing on:\n\n"
+    "### 1. Core Themes Confirmed Across Systems\n"
+    "   Identify personality traits, life themes, or destiny directions that "
+    "are **simultaneously confirmed or emphasized** by Western, Vedic (Jyotish), "
+    "Chinese Seven Governors, Zi Wei, Hellenistic, and other systems.\n\n"
+    "### 2. Fascinating Cross-System Correspondences\n"
+    "   For example: Does a Western T-Square correspond to a Zi Wei conflicting star? "
+    "Does an Indian Yoga echo the Chinese auspicious deity? "
+    "Does the Hellenistic Lot of Fortune share energy with the Vedic Lot?\n\n"
+    "### 3. Contradictions and Tensions Between Systems\n"
+    "   Honestly note where different systems diverge in their judgments and "
+    "explain possible reasons (precession differences, cultural background, "
+    "interpretive traditions, etc.).\n\n"
+    "### 4. Unique Insights from Each Tradition\n"
+    "   Highlight what information can only be seen in a specific system "
+    "(e.g., Indian Dasha timing, Zi Wei star-cluster patterns, "
+    "Hellenistic Lots, etc.).\n\n"
+    "### 5. Integrated Recommendations\n"
+    "   Synthesize all systems to give the most practically valuable life guidance.\n\n"
+    "Present in English using Markdown formatting. "
+    "**Strictly base your analysis on the chart data provided below. "
+    "Do not fabricate data.**\n\n"
+)
+
+
+def get_cross_system_analysis(
+    western_chart=None,
+    vedic_chart=None,
+    chinese_chart=None,
+    ziwei_chart=None,
+    hellenistic_chart=None,
+    extra_charts: dict | None = None,
+    aspect_patterns: list | None = None,
+) -> dict:
+    """Build a structured dict of key insights from each available system.
+
+    This function extracts the most important data points from each chart
+    system so they can be fed into the Cerebras AI prompt for synthesized
+    cross-system interpretation.
+
+    Parameters
+    ----------
+    western_chart : WesternChart, optional
+    vedic_chart : VedicChart, optional
+    chinese_chart : QizhengChart, optional
+    ziwei_chart : ZiweiChart, optional
+    hellenistic_chart : HellenisticChart, optional
+    extra_charts : dict, optional
+        Additional charts keyed by system name.
+    aspect_patterns : list, optional
+        Output of ``detect_aspect_patterns()`` for inclusion.
+
+    Returns
+    -------
+    dict
+        Structured summary with keys matching each system.
+    """
+    result: dict = {}
+
+    # ── Western ──────────────────────────────────────────────────
+    if western_chart is not None:
+        w = {}
+        w["asc_sign"] = getattr(western_chart, "asc_sign", "")
+        w["mc_sign"] = getattr(western_chart, "mc_sign", "")
+        w["is_day_chart"] = getattr(western_chart, "is_day_chart", None)
+        w["chart_ruler"] = getattr(western_chart, "chart_ruler", "")
+        planets = getattr(western_chart, "planets", [])
+        w["planets"] = [
+            {
+                "name": getattr(p, "name", ""),
+                "sign": getattr(p, "sign", ""),
+                "degree": round(getattr(p, "sign_degree", 0.0), 2),
+                "house": getattr(p, "house", 0),
+                "retrograde": getattr(p, "retrograde", False),
+                "essential_dignity": getattr(p, "essential_dignity", ""),
+            }
+            for p in planets
+        ]
+        w["lot_of_fortune"] = round(getattr(western_chart, "lot_of_fortune", 0.0), 2)
+        result["western"] = w
+
+    # ── Vedic ─────────────────────────────────────────────────────
+    if vedic_chart is not None:
+        v = {}
+        v["lagna"] = _safe_getattr(vedic_chart, "lagna", "asc_rashi")
+        v["ayanamsa"] = round(float(_safe_getattr(vedic_chart, "ayanamsa") or 0), 2)
+        planets = getattr(vedic_chart, "planets", [])
+        v["planets"] = [
+            {
+                "name": getattr(p, "name", ""),
+                "rashi": getattr(p, "rashi", ""),
+                "nakshatra": getattr(p, "nakshatra", ""),
+                "house": getattr(p, "house", 0),
+            }
+            for p in planets
+        ]
+        result["vedic"] = v
+
+    # ── Chinese (七政四餘) ─────────────────────────────────────────
+    if chinese_chart is not None:
+        c = {}
+        c["ming_gong"] = _safe_getattr(chinese_chart, "ming_gong", "ming")
+        c["shen_gong"] = _safe_getattr(chinese_chart, "shen_gong", "shen")
+        bazi = getattr(chinese_chart, "bazi", None)
+        if bazi:
+            c["bazi"] = {
+                "year": _safe_getattr(bazi, "year"),
+                "month": _safe_getattr(bazi, "month"),
+                "day": _safe_getattr(bazi, "day"),
+                "hour": _safe_getattr(bazi, "hour"),
+            }
+        planets = getattr(chinese_chart, "planets", [])
+        c["planets"] = [
+            {
+                "name": getattr(p, "name", ""),
+                "sign": _safe_getattr(p, "sign", "sign_chinese"),
+                "mansion": getattr(p, "mansion", ""),
+            }
+            for p in planets
+        ]
+        result["chinese"] = c
+
+    # ── Zi Wei Dou Shu ────────────────────────────────────────────
+    if ziwei_chart is not None:
+        z = {}
+        z["ming_gong"] = _safe_getattr(ziwei_chart, "ming_gong")
+        z["shen_gong"] = _safe_getattr(ziwei_chart, "shen_gong")
+        z["ming_zhu"] = _safe_getattr(ziwei_chart, "ming_zhu")
+        z["shen_zhu"] = _safe_getattr(ziwei_chart, "shen_zhu")
+        palaces = getattr(ziwei_chart, "palaces", [])
+        z["palaces"] = [
+            {
+                "name": _safe_getattr(pal, "name", "palace_name"),
+                "branch": _safe_getattr(pal, "branch", "earthly_branch"),
+                "stars": _safe_getattr(pal, "stars", "star_list"),
+            }
+            for pal in palaces
+        ]
+        result["ziwei"] = z
+
+    # ── Hellenistic ───────────────────────────────────────────────
+    if hellenistic_chart is not None:
+        h = {}
+        h["asc_sign"] = _safe_getattr(hellenistic_chart, "asc_sign")
+        h["sect"] = _safe_getattr(hellenistic_chart, "sect")
+        h["lot_of_fortune"] = _safe_getattr(hellenistic_chart, "lot_of_fortune")
+        planets = getattr(hellenistic_chart, "planets", [])
+        h["planets"] = [
+            {
+                "name": getattr(p, "name", ""),
+                "sign": getattr(p, "sign", ""),
+                "house": getattr(p, "house", 0),
+            }
+            for p in planets
+        ]
+        result["hellenistic"] = h
+
+    # ── Extra charts ──────────────────────────────────────────────
+    if extra_charts:
+        result["extra"] = {k: str(v)[:500] for k, v in extra_charts.items()}
+
+    # ── Aspect patterns ───────────────────────────────────────────
+    if aspect_patterns:
+        result["aspect_patterns"] = [
+            {
+                "pattern": p.get("pattern", ""),
+                "pattern_cn": p.get("pattern_cn", ""),
+                "planets": p.get("planets", []),
+                "apex": p.get("apex", ""),
+                "element": p.get("element", ""),
+                "quality": p.get("quality", ""),
+                "description": p.get("description", ""),
+            }
+            for p in aspect_patterns
+        ]
+
+    return result
+
+
+def format_cross_system_for_prompt(analysis: dict) -> str:
+    """Convert the output of :func:`get_cross_system_analysis` to a prompt string.
+
+    Parameters
+    ----------
+    analysis : dict
+        Structured dict from ``get_cross_system_analysis()``.
+
+    Returns
+    -------
+    str
+        Human-readable multi-system chart data for the AI prompt.
+    """
+    sections: list[str] = ["=== 多體系排盤數據 (Multi-System Chart Data) ===\n"]
+
+    if "western" in analysis:
+        w = analysis["western"]
+        sections.append("【西洋占星 Western】")
+        sections.append(f"  ASC: {w.get('asc_sign', '—')}  MC: {w.get('mc_sign', '—')}")
+        sections.append(f"  Chart Ruler: {w.get('chart_ruler', '—')}")
+        sections.append(f"  Day Chart: {w.get('is_day_chart', '—')}")
+        sections.append(f"  Lot of Fortune: {w.get('lot_of_fortune', '—')}°")
+        for p in w.get("planets", []):
+            retro = " (R)" if p.get("retrograde") else ""
+            sections.append(
+                f"  {p['name']}: {p['sign']} {p['degree']}° H{p['house']}"
+                f"{retro}  [{p.get('essential_dignity', '')}]"
+            )
+
+    if "vedic" in analysis:
+        v = analysis["vedic"]
+        sections.append("\n【印度占星 Vedic / Jyotish】")
+        sections.append(f"  Lagna: {v.get('lagna', '—')}  Ayanamsa: {v.get('ayanamsa', '—')}°")
+        for p in v.get("planets", []):
+            sections.append(
+                f"  {p['name']}: {p.get('rashi', '—')} H{p.get('house', 0)}"
+                f"  Nakshatra: {p.get('nakshatra', '—')}"
+            )
+
+    if "chinese" in analysis:
+        c = analysis["chinese"]
+        sections.append("\n【七政四餘 Chinese Qi Zheng】")
+        sections.append(f"  命宮: {c.get('ming_gong', '—')}  身宮: {c.get('shen_gong', '—')}")
+        bazi = c.get("bazi", {})
+        if bazi:
+            sections.append(
+                f"  八字: 年={bazi.get('year', '—')} 月={bazi.get('month', '—')}"
+                f" 日={bazi.get('day', '—')} 時={bazi.get('hour', '—')}"
+            )
+        for p in c.get("planets", []):
+            sections.append(f"  {p.get('name', '—')}: {p.get('sign', '—')}  宿: {p.get('mansion', '—')}")
+
+    if "ziwei" in analysis:
+        z = analysis["ziwei"]
+        sections.append("\n【紫微斗數 Zi Wei Dou Shu】")
+        sections.append(
+            f"  命宮: {z.get('ming_gong', '—')}  身宮: {z.get('shen_gong', '—')}"
+            f"  命主: {z.get('ming_zhu', '—')}  身主: {z.get('shen_zhu', '—')}"
+        )
+        for pal in z.get("palaces", [])[:6]:
+            sections.append(f"  {pal.get('name', '—')}（{pal.get('branch', '—')}）: {pal.get('stars', '—')}")
+
+    if "hellenistic" in analysis:
+        h = analysis["hellenistic"]
+        sections.append("\n【希臘占星 Hellenistic】")
+        sections.append(
+            f"  ASC: {h.get('asc_sign', '—')}  Sect: {h.get('sect', '—')}"
+            f"  Lot of Fortune: {h.get('lot_of_fortune', '—')}"
+        )
+
+    if "aspect_patterns" in analysis:
+        sections.append("\n【相位圖案 Aspect Patterns】")
+        for pat in analysis["aspect_patterns"]:
+            planets_str = ", ".join(pat.get("planets", []))
+            apex = f"  apex={pat['apex']}" if pat.get("apex") else ""
+            sections.append(
+                f"  {pat['pattern']} ({pat['pattern_cn']}): {planets_str}{apex}"
+            )
+            sections.append(f"    → {pat.get('description', '')}")
+
+    if "extra" in analysis:
+        sections.append("\n【其他體系 Other Systems】")
+        for k, v in analysis["extra"].items():
+            sections.append(f"  {k}: {str(v)[:200]}")
+
+    return "\n".join(sections)
