@@ -1096,6 +1096,11 @@ transmitted by **Chen Xiyi**.
     "western_subtab_return": {"zh": "返照盤", "en": "Solar Return"},
     "western_subtab_synastry": {"zh": "合盤", "en": "Synastry"},
     "western_subtab_dignity": {"zh": "行星尊卑", "en": "Dignities"},
+    "western_subtab_harmonic": {
+        "zh": "諧波盤",
+        "zh_cn": "谐波盘",
+        "en": "Harmonics",
+    },
     "transit_target_date": {"zh": "過運日期", "en": "Transit Date"},
     "return_year_label": {"zh": "返照年份", "en": "Return Year"},
     "synastry_header": {"zh": "合盤比較", "en": "Synastry Comparison"},
