@@ -616,6 +616,7 @@ def _overall_assessment(
 # 主計算函數
 # ============================================================
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_qimen_luming(
     year: int,
     month: int,

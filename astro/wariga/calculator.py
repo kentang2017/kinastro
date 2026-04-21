@@ -940,3 +940,24 @@ class WarigaCalculator:
             "moon_longitude": r.moon_longitude,
             "julian_day": r.julian_day,
         }
+
+
+# ============================================================
+# 快取便利函式 (Cached convenience function)
+# ============================================================
+
+import streamlit as _st  # noqa: E402  — import after class definition
+
+
+@_st.cache_data(ttl=3600, show_spinner=False)
+def compute_wariga(
+    year: int, month: int, day: int,
+    hour: int, minute: int,
+    lat: float = -8.5069, lon: float = 115.2625,
+) -> "WarigaResult":
+    """Cached wrapper around :class:`WarigaCalculator`.compute_result()."""
+    return WarigaCalculator(
+        year=year, month=month, day=day,
+        hour=hour, minute=minute,
+        lat=lat, lon=lon,
+    ).compute_result()

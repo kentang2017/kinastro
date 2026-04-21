@@ -123,6 +123,7 @@ def _get_gangzhi(year: int, month: int, day: int, hour: int) -> dict:
     }
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_liuren_chart(
     year: int, month: int, day: int,
     hour: int, minute: int,
