@@ -1,5 +1,5 @@
 """
-astro/western/uranian.py — 漢堡學派天王星派占星
+astro/western/uranian.py — 漢堡學派天王星占星
 Uranian Astrology — Alfred Witte Hamburg School (1920–1941)
 
 Implements:
@@ -545,9 +545,13 @@ def render_uranian_chart(chart: UranianChart) -> None:
     """Render the full Uranian Astrology analysis in Streamlit."""
 
     st.markdown(
-        "## Uranian Astrology — Alfred Witte 漢堡學派\n"
+        "## 天王星占星 Uranian Astrology — Alfred Witte\n"
         "*Hamburg School · Regelwerk für Planetenbilder · 90° Dial*"
     )
+
+    # ── 90° Dial SVG chart shown first
+    _svg = _build_dial_svg(chart)
+    st.markdown(_svg, unsafe_allow_html=True)
 
     # ── Tab layout
     tab_dial, tab_tree, tab_pictures, tab_tnp = st.tabs([
@@ -595,10 +599,6 @@ def render_uranian_chart(chart: UranianChart) -> None:
                 st.markdown(
                     f"• `{dial_pos:.2f}°` on dial → {', '.join(member_labels)}"
                 )
-
-        # SVG 90° dial visualization
-        _svg = _build_dial_svg(chart)
-        st.markdown(_svg, unsafe_allow_html=True)
 
     # ── TAB 2: Midpoint Tree
     with tab_tree:
@@ -710,16 +710,16 @@ def _build_dial_svg(chart: UranianChart) -> str:
     W = 480
     CX, CY, R = W // 2, W // 2, 190
 
-    # Background and circle
+    # Background and circle — colours from KinAstro design system
     lines = [
         f'<svg width="{W}" height="{W}" xmlns="http://www.w3.org/2000/svg" '
-        f'style="background:#0d1117; border-radius:50%; display:block; margin:auto;">',
+        f'style="background:#0F172A; border-radius:50%; display:block; margin:auto;">',
         # Outer ring
-        f'<circle cx="{CX}" cy="{CY}" r="{R}" fill="none" stroke="#30363d" stroke-width="2"/>',
+        f'<circle cx="{CX}" cy="{CY}" r="{R}" fill="none" stroke="#5a5a9a" stroke-width="2"/>',
         # Inner ring
-        f'<circle cx="{CX}" cy="{CY}" r="{R - 20}" fill="none" stroke="#21262d" stroke-width="1"/>',
+        f'<circle cx="{CX}" cy="{CY}" r="{R - 20}" fill="none" stroke="#2a2a5a" stroke-width="1"/>',
         # Center dot
-        f'<circle cx="{CX}" cy="{CY}" r="4" fill="#58a6ff"/>',
+        f'<circle cx="{CX}" cy="{CY}" r="4" fill="#a78bfa"/>',
     ]
 
     # Degree marks (every 5° on 90° dial)
@@ -731,22 +731,22 @@ def _build_dial_svg(chart: UranianChart) -> str:
         y1 = CY + (R - 2) * math.sin(angle_rad)
         x2 = CX + (R - 2 - tick_len) * math.cos(angle_rad)
         y2 = CY + (R - 2 - tick_len) * math.sin(angle_rad)
-        color = "#58a6ff" if is_major else "#30363d"
+        color = "#a78bfa" if is_major else "#3a3a7a"
         lines.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
                       f'stroke="{color}" stroke-width="1"/>')
         if is_major:
             label_r = R + 12
             lx = CX + label_r * math.cos(angle_rad)
             ly = CY + label_r * math.sin(angle_rad)
-            lines.append(f'<text x="{lx:.1f}" y="{ly:.1f}" fill="#8b949e" '
+            lines.append(f'<text x="{lx:.1f}" y="{ly:.1f}" fill="#b0b0d0" '
                           f'font-size="9" text-anchor="middle" dominant-baseline="middle">'
                           f'{deg_mark}°</text>')
 
-    # Planet markers
+    # Planet markers — colours aligned with KinAstro theme
     colors = {
-        "personal": "#f85149",   # red for personal points
-        "tnp": "#d2a8ff",        # purple for TNPs
-        "planet": "#79c0ff",     # blue for regular planets
+        "personal": "#FF8C00",   # warm amber for personal points (Sun colour)
+        "tnp": "#d2a8ff",        # soft lavender for TNPs
+        "planet": "#79c0ff",     # sky blue for regular planets
     }
 
     for p in chart.positions:

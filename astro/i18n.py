@@ -1705,22 +1705,22 @@ transmitted by **Chen Xiyi**.
             "Find your best cities for career, love, health and growth."
         ),
     },
-    # ── Uranian Astrology (天王星派占星) ────────────────────────────────────────
+    # ── Uranian Astrology (天王星占星) ────────────────────────────────────────
     "tab_uranian": {
-        "zh": "♅ 天王星派占星",
+        "zh": "♅ 天王星占星",
         "en": "♅ Uranian Astrology",
     },
     "sys_hint_uranian": {
-        "zh": "漢堡學派：以天王星派虛點與和諧點進行精密分析",
+        "zh": "漢堡學派：以天王星虛點與和諧點進行精密分析",
         "en": "Hamburg School: midpoints & transneptunian planets for precision analysis",
     },
     "spinner_uranian": {
-        "zh": "正在計算天王星派（漢堡學派）命盤…",
+        "zh": "正在計算天王星（漢堡學派）命盤…",
         "en": "Computing Uranian (Hamburg School) chart…",
     },
     "desc_uranian": {
         "zh": (
-            "**天王星派占星（漢堡學派）** — 由 Alfred Witte 於 1920–1941 年創立。\n\n"
+            "**天王星占星（漢堡學派）** — 由 Alfred Witte 於 1920–1941 年創立。\n\n"
             "• 使用 90° 轉盤（Dial），將所有強相位（合、半刑、刑、倍半刑、沖）等同於合相處理。\n"
             "• 引入八顆超海王星虛點（TNPs）：Cupido、Hades、Zeus、Kronos、"
             "Apollon、Admetos、Vulkanus、Poseidon。\n"
