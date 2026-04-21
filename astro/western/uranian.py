@@ -26,6 +26,8 @@ import swisseph as swe
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+from astro.i18n import get_lang
+
 # ============================================================
 # Transneptunian Planet (TNP) Mean Longitudes
 # Using Witte / Sieggrün mean motions; epoch J2000.0 (JD 2451545.0)
@@ -218,6 +220,35 @@ SIGN_CN = {
     "Aries": "白羊", "Taurus": "金牛", "Gemini": "雙子", "Cancer": "巨蟹",
     "Leo": "獅子", "Virgo": "處女", "Libra": "天秤", "Scorpio": "天蠍",
     "Sagittarius": "射手", "Capricorn": "摩羯", "Aquarius": "水瓶", "Pisces": "雙魚",
+}
+
+# Chinese names for standard natal planets and points
+PLANET_CN: Dict[str, str] = {
+    "Sun": "太陽",
+    "Moon": "月亮",
+    "Mercury": "水星",
+    "Venus": "金星",
+    "Mars": "火星",
+    "Jupiter": "木星",
+    "Saturn": "土星",
+    "Uranus": "天王星",
+    "Neptune": "海王星",
+    "Pluto": "冥王星",
+    "Asc": "上升點",
+    "MC": "天頂",
+    "Node": "北交點",
+}
+
+# Chinese names for Transneptunian Planets
+TNP_CN: Dict[str, str] = {
+    "Cupido":   "丘比多",
+    "Hades":    "哈底斯",
+    "Zeus":     "宙斯",
+    "Kronos":   "克羅諾斯",
+    "Apollon":  "阿波羅",
+    "Admetos":  "阿德米托斯",
+    "Vulkanus": "伏爾坎努斯",
+    "Poseidon": "波塞頓",
 }
 
 
@@ -544,30 +575,62 @@ def _dial90_str(dial: float) -> str:
 def render_uranian_chart(chart: UranianChart) -> None:
     """Render the full Uranian Astrology analysis in Streamlit."""
 
-    st.markdown(
-        "## 天王星占星 Uranian Astrology — Alfred Witte\n"
-        "*Hamburg School · Regelwerk für Planetenbilder · 90° Dial*"
-    )
+    lang = get_lang()
+    is_zh = lang in ("zh", "zh_cn")
+
+    if is_zh:
+        st.markdown(
+            "## 天王星占星 — Alfred Witte\n"
+            "*漢堡學派 · 行星圖像規則 · 90° 轉盤*"
+        )
+    else:
+        st.markdown(
+            "## 天王星占星 Uranian Astrology — Alfred Witte\n"
+            "*Hamburg School · Regelwerk für Planetenbilder · 90° Dial*"
+        )
 
     # ── 90° Dial SVG chart shown first
     _svg = _build_dial_svg(chart)
     st.markdown(_svg, unsafe_allow_html=True)
 
     # ── Tab layout
-    tab_dial, tab_tree, tab_pictures, tab_tnp = st.tabs([
-        "🔵 90° Dial",
-        "🌿 Midpoint Tree",
-        "🔢 Planetary Pictures",
-        "🪐 Transneptunian Planets",
-    ])
+    if is_zh:
+        tab_dial, tab_tree, tab_pictures, tab_tnp = st.tabs([
+            "🔵 90° 轉盤",
+            "🌿 中點樹",
+            "🔢 行星圖像",
+            "🪐 超海王星虛點",
+        ])
+    else:
+        tab_dial, tab_tree, tab_pictures, tab_tnp = st.tabs([
+            "🔵 90° Dial",
+            "🌿 Midpoint Tree",
+            "🔢 Planetary Pictures",
+            "🪐 Transneptunian Planets",
+        ])
+
+    # helper: merged name map and localised planet display name
+    _name_map = {**PLANET_CN, **TNP_CN}
+
+    def _pname(name: str) -> str:
+        if is_zh:
+            return _name_map.get(name, name)
+        return name
 
     # ── TAB 1: 90° Dial summary
     with tab_dial:
-        st.subheader("90° Dial — Planet Positions")
-        st.caption(
-            "All hard aspects (0°, 45°, 90°, 135°, 180°) collapse to conjunctions "
-            "on the 90° Dial. Position = longitude mod 90°."
-        )
+        if is_zh:
+            st.subheader("90° 轉盤 — 行星位置")
+            st.caption(
+                "所有強相位（合、半刑、刑、倍半刑、沖）在 90° 轉盤上等同於合相。"
+                "位置 = 黃經 mod 90°。"
+            )
+        else:
+            st.subheader("90° Dial — Planet Positions")
+            st.caption(
+                "All hard aspects (0°, 45°, 90°, 135°, 180°) collapse to conjunctions "
+                "on the 90° Dial. Position = longitude mod 90°."
+            )
 
         # Planet position table
         rows = []
@@ -577,64 +640,97 @@ def render_uranian_chart(chart: UranianChart) -> None:
                 tag = "⭐"
             elif p.is_tnp:
                 tag = "🪐"
-            rows.append({
-                "": tag,
-                "Planet / Point": f"{p.symbol} {p.name}",
-                "Abs. Longitude": f"{p.longitude:.4f}°",
-                "Sign": f"{p.sign} {SIGN_CN.get(p.sign, '')} {p.sign_degree:.2f}°",
-                "90° Dial": f"{p.dial90:.4f}°",
-            })
+            if is_zh:
+                rows.append({
+                    "": tag,
+                    "行星 / 點": f"{p.symbol} {_pname(p.name)}",
+                    "絕對黃經": f"{p.longitude:.4f}°",
+                    "星座": f"{p.sign} {SIGN_CN.get(p.sign, '')} {p.sign_degree:.2f}°",
+                    "90° 轉盤": f"{p.dial90:.4f}°",
+                })
+            else:
+                rows.append({
+                    "": tag,
+                    "Planet / Point": f"{p.symbol} {p.name}",
+                    "Abs. Longitude": f"{p.longitude:.4f}°",
+                    "Sign": f"{p.sign} {SIGN_CN.get(p.sign, '')} {p.sign_degree:.2f}°",
+                    "90° Dial": f"{p.dial90:.4f}°",
+                })
         st.dataframe(rows, use_container_width=True, hide_index=True)
 
         # Dial clusters
         if chart.dial90_clusters:
-            st.subheader("📍 90° Dial Clusters (within orb)")
-            st.caption(f"Orb threshold: ±{ORB_DIAL}°")
+            if is_zh:
+                st.subheader("📍 90° 轉盤群集（容許度範圍內）")
+                st.caption(f"容許度：±{ORB_DIAL}°")
+            else:
+                st.subheader("📍 90° Dial Clusters (within orb)")
+                st.caption(f"Orb threshold: ±{ORB_DIAL}°")
             for dial_pos, members in sorted(chart.dial90_clusters, key=lambda x: x[0]):
                 member_labels = []
                 for m in members:
                     p = chart.get_position(m)
                     sym = p.symbol if p else m
-                    member_labels.append(f"**{sym} {m}**")
+                    member_labels.append(f"**{sym} {_pname(m)}**")
+                arrow = "轉盤上 →" if is_zh else "on dial →"
                 st.markdown(
-                    f"• `{dial_pos:.2f}°` on dial → {', '.join(member_labels)}"
+                    f"• `{dial_pos:.2f}°` {arrow} {', '.join(member_labels)}"
                 )
 
     # ── TAB 2: Midpoint Tree
     with tab_tree:
-        st.subheader("Midpoint Tree — Top Entries")
-        st.caption(
-            "Formula: M(A/B) = (A + B) / 2. "
-            "Listed entries have at least one planet within orb on the 90° Dial."
-        )
+        if is_zh:
+            st.subheader("中點樹 — 主要項目")
+            st.caption(
+                "公式：M(A/B) = (A + B) / 2。"
+                "列出的條目在 90° 轉盤上至少有一顆行星在容許度範圍內。"
+            )
+        else:
+            st.subheader("Midpoint Tree — Top Entries")
+            st.caption(
+                "Formula: M(A/B) = (A + B) / 2. "
+                "Listed entries have at least one planet within orb on the 90° Dial."
+            )
         if not chart.midpoint_tree:
-            st.info("No midpoints within orb found.")
+            st.info("未找到容許度範圍內的中點。" if is_zh else "No midpoints within orb found.")
         else:
             _top_n = min(15, len(chart.midpoint_tree))
             for entry in chart.midpoint_tree[:_top_n]:
                 parts = entry.focal_point.split("/")
                 has_p = any(p in PERSONAL_POINTS for p in parts)
                 label_color = "🔴" if has_p else "🔵"
+                # Build localised focal label
+                focal_label = "/".join(_pname(p) for p in parts) if is_zh else entry.focal_point
                 conj_strs = []
                 for (cname, clon, corb) in entry.conjunctions:
                     cp = chart.get_position(cname)
                     csym = cp.symbol if cp else cname
-                    conj_strs.append(f"{csym} **{cname}** (orb {corb:.2f}°)")
+                    conj_strs.append(f"{csym} **{_pname(cname)}** (orb {corb:.2f}°)")
+                dial_label = "轉盤" if is_zh else "dial"
                 st.markdown(
-                    f"{label_color} **{entry.focal_point}** = "
-                    f"`{entry.focal_lon:.2f}°` (dial `{entry.focal_dial:.2f}°`) "
+                    f"{label_color} **{focal_label}** = "
+                    f"`{entry.focal_lon:.2f}°` ({dial_label} `{entry.focal_dial:.2f}°`) "
                     f"→ {', '.join(conj_strs)}"
                 )
 
     # ── TAB 3: Planetary Pictures
     with tab_pictures:
-        st.subheader("Planetary Pictures — A + B − C = D")
-        st.caption(
-            "Witte's mathematical law: A + B − C = D on the 90° Dial. "
-            "All hard aspects treated as conjunctions."
-        )
+        if is_zh:
+            st.subheader("行星圖像 — A + B − C = D")
+            st.caption(
+                "威特數學定律：A + B − C = D 在 90° 轉盤上。所有強相位等同於合相。"
+            )
+        else:
+            st.subheader("Planetary Pictures — A + B − C = D")
+            st.caption(
+                "Witte's mathematical law: A + B − C = D on the 90° Dial. "
+                "All hard aspects treated as conjunctions."
+            )
         if not chart.planetary_pictures:
-            st.info("No significant Planetary Pictures found within orb.")
+            st.info(
+                "未找到容許度範圍內的顯著行星圖像。" if is_zh
+                else "No significant Planetary Pictures found within orb."
+            )
         else:
             for pic in chart.planetary_pictures:
                 pa = chart.get_position(pic.planet_a)
@@ -648,57 +744,101 @@ def render_uranian_chart(chart: UranianChart) -> None:
 
                 flags = []
                 if pic.involves_personal:
-                    flags.append("⭐ Personal")
+                    flags.append("⭐ " + ("個人點" if is_zh else "Personal"))
                 if pic.involves_tnp:
-                    flags.append("🪐 TNP")
+                    flags.append("🪐 " + ("虛點" if is_zh else "TNP"))
                 flag_str = " · ".join(flags)
 
+                na_disp = _pname(pic.planet_a)
+                nb_disp = _pname(pic.planet_b)
+                nc_disp = _pname(pic.planet_c)
+                nd_disp = _pname(pic.planet_d)
+
                 with st.expander(
-                    f"{sym_a}{pic.planet_a} + {sym_b}{pic.planet_b} − "
-                    f"{sym_c}{pic.planet_c} = {sym_d}{pic.planet_d} "
+                    f"{sym_a}{na_disp} + {sym_b}{nb_disp} − "
+                    f"{sym_c}{nc_disp} = {sym_d}{nd_disp} "
                     f"[orb {pic.orb:.2f}°] {flag_str}"
                 ):
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown(f"**Formula:** `{pic.formula}`")
-                        st.markdown(f"**Computed lon:** `{pic.computed_lon:.2f}°`")
-                        st.markdown(f"**{pic.planet_d} lon:** `{pic.target_lon:.2f}°`")
-                        st.markdown(f"**Orb:** `{pic.orb:.2f}°`")
+                        if is_zh:
+                            formula_zh = pic.formula
+                            for en_name, zh_name in sorted(
+                                _name_map.items(), key=lambda x: len(x[0]), reverse=True
+                            ):
+                                formula_zh = formula_zh.replace(en_name, zh_name)
+                            st.markdown(f"**公式：** `{formula_zh}`")
+                            st.markdown(f"**計算黃經：** `{pic.computed_lon:.2f}°`")
+                            st.markdown(f"**{nd_disp} 黃經：** `{pic.target_lon:.2f}°`")
+                            st.markdown(f"**容許度：** `{pic.orb:.2f}°`")
+                        else:
+                            st.markdown(f"**Formula:** `{pic.formula}`")
+                            st.markdown(f"**Computed lon:** `{pic.computed_lon:.2f}°`")
+                            st.markdown(f"**{pic.planet_d} lon:** `{pic.target_lon:.2f}°`")
+                            st.markdown(f"**Orb:** `{pic.orb:.2f}°`")
                     with col2:
-                        st.markdown(f"**Meaning (EN):** {pic.meaning_en}")
-                        st.markdown(f"**Meaning (ZH):** {pic.meaning_zh}")
+                        if is_zh:
+                            st.markdown(f"**詮釋：** {pic.meaning_zh}")
+                        else:
+                            st.markdown(f"**Meaning (EN):** {pic.meaning_en}")
+                            st.markdown(f"**Meaning (ZH):** {pic.meaning_zh}")
 
     # ── TAB 4: Transneptunian Planets
     with tab_tnp:
-        st.subheader("🪐 8 Transneptunian Planets (TNPs)")
-        st.caption(
-            "Alfred Witte's hypothetical planets. "
-            "Positions computed via Hamburg School linear ephemeris."
-        )
+        if is_zh:
+            st.subheader("🪐 八顆超海王星虛點（TNPs）")
+            st.caption(
+                "Alfred Witte 的假想星體。位置依漢堡學派線性星曆計算。"
+            )
+        else:
+            st.subheader("🪐 8 Transneptunian Planets (TNPs)")
+            st.caption(
+                "Alfred Witte's hypothetical planets. "
+                "Positions computed via Hamburg School linear ephemeris."
+            )
         tnp_rows = []
         for p in chart.positions:
             if not p.is_tnp:
                 continue
             meanings = TNP_MEANINGS.get(p.name, {})
-            tnp_rows.append({
-                "Symbol": TNP_SYMBOLS.get(p.name, ""),
-                "Name": p.name,
-                "Longitude": f"{p.longitude:.4f}°",
-                "Sign": f"{p.sign} ({SIGN_CN.get(p.sign, '')}) {p.sign_degree:.2f}°",
-                "90° Dial": f"{p.dial90:.4f}°",
-                "Meaning (EN)": meanings.get("en", ""),
-                "Meaning (ZH)": meanings.get("zh", ""),
-            })
+            if is_zh:
+                tnp_rows.append({
+                    "符號": TNP_SYMBOLS.get(p.name, ""),
+                    "名稱": f"{p.name}（{TNP_CN.get(p.name, p.name)}）",
+                    "黃經": f"{p.longitude:.4f}°",
+                    "星座": f"{p.sign} ({SIGN_CN.get(p.sign, '')}) {p.sign_degree:.2f}°",
+                    "90° 轉盤": f"{p.dial90:.4f}°",
+                    "意義": meanings.get("zh", ""),
+                })
+            else:
+                tnp_rows.append({
+                    "Symbol": TNP_SYMBOLS.get(p.name, ""),
+                    "Name": p.name,
+                    "Longitude": f"{p.longitude:.4f}°",
+                    "Sign": f"{p.sign} ({SIGN_CN.get(p.sign, '')}) {p.sign_degree:.2f}°",
+                    "90° Dial": f"{p.dial90:.4f}°",
+                    "Meaning (EN)": meanings.get("en", ""),
+                    "Meaning (ZH)": meanings.get("zh", ""),
+                })
         st.dataframe(tnp_rows, use_container_width=True, hide_index=True)
 
         st.markdown("---")
-        st.markdown("### TNP Keyword Reference")
-        for tnp_name, syms in TNP_SYMBOLS.items():
-            meanings = TNP_MEANINGS.get(tnp_name, {})
-            st.markdown(
-                f"**{syms} {tnp_name}** — "
-                f"{meanings.get('en', '')} · {meanings.get('zh', '')}"
-            )
+        if is_zh:
+            st.markdown("### 超海王星虛點關鍵詞參考")
+            for tnp_name, syms in TNP_SYMBOLS.items():
+                meanings = TNP_MEANINGS.get(tnp_name, {})
+                st.markdown(
+                    f"**{syms} {tnp_name}（{TNP_CN.get(tnp_name, tnp_name)}）** — "
+                    f"{meanings.get('zh', '')}"
+                )
+        else:
+            st.markdown("### TNP Keyword Reference")
+            for tnp_name, syms in TNP_SYMBOLS.items():
+                meanings = TNP_MEANINGS.get(tnp_name, {})
+                st.markdown(
+                    f"**{syms} {tnp_name}** — "
+                    f"{meanings.get('en', '')} · {meanings.get('zh', '')}"
+                )
 
 
 # ============================================================
@@ -751,7 +891,7 @@ def _build_dial_svg(chart: UranianChart) -> str:
 
     for p in chart.positions:
         angle_rad = math.radians(p.dial90 * 4 - 90)  # map 0–90° → 0–360°
-        marker_r = R - 30
+        marker_r = R - 40
         mx = CX + marker_r * math.cos(angle_rad)
         my = CY + marker_r * math.sin(angle_rad)
 
@@ -763,8 +903,8 @@ def _build_dial_svg(chart: UranianChart) -> str:
             col = colors["planet"]
 
         # Spoke line
-        spoke_r1 = R - 22
-        spoke_r2 = R - 42
+        spoke_r1 = R - 26
+        spoke_r2 = R - 52
         sx1 = CX + spoke_r1 * math.cos(angle_rad)
         sy1 = CY + spoke_r1 * math.sin(angle_rad)
         sx2 = CX + spoke_r2 * math.cos(angle_rad)

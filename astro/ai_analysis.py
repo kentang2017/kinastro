@@ -473,7 +473,8 @@ def _format_houses(houses) -> str:
 
 
 def format_western_chart(chart) -> str:
-    """Format a Western chart for the AI prompt."""
+    """Format a Western chart for the AI prompt, including asteroid and star data."""
+    import streamlit as st
     sections = ["【西洋占星排盤 Western Chart】"]
     sections.append(f"ASC Sign: {_safe_getattr(chart, 'asc_sign')}")
     sections.append(f"MC Sign: {_safe_getattr(chart, 'mc_sign')}")
@@ -483,6 +484,92 @@ def format_western_chart(chart) -> str:
     sections.append(_format_houses(getattr(chart, 'houses', [])))
     sections.append("\n--- Aspects ---")
     sections.append(_format_aspects(getattr(chart, 'aspects', [])))
+
+    # ── Asteroids & Centaurs ─────────────────────────────────────────────
+    try:
+        if st.session_state.get("_adv_asteroids", False):
+            from astro.western.asteroids import compute_asteroids
+            _grp_keys = st.session_state.get("_adv_ast_group_keys") or ["chiron_pholus", "lilith", "main_belt"]
+            _helio = st.session_state.get("_adv_helio", False)
+            _asts = compute_asteroids(chart.julian_day, heliocentric=_helio,
+                                      include_groups=_grp_keys)
+            if _asts:
+                sections.append("\n--- Asteroids & Centaurs ---")
+                for a in _asts:
+                    r = "℞" if a.retrograde else ""
+                    sections.append(
+                        f"  {a.name} ({a.name_cn}) {a.symbol}: "
+                        f"{a.sign} {a.sign_degree:.2f}° {r}  "
+                        f"[{a.meaning_en}]"
+                    )
+                # Chiron interpretation note
+                chiron = next((a for a in _asts if a.name == "Chiron"), None)
+                if chiron:
+                    sections.append(
+                        f"  → Chiron (凱龍) in {chiron.sign}: the Wounded Healer archetype "
+                        f"manifests in the realm of {chiron.sign}."
+                    )
+                lilith = next((a for a in _asts if "Lilith" in a.name and "Mean" in a.name), None)
+                if lilith:
+                    sections.append(
+                        f"  → Black Moon Lilith (黑月麗莉絲) in {lilith.sign}: "
+                        f"raw instinct and shadow self in the area of {lilith.sign}."
+                    )
+    except Exception:
+        pass
+
+    # ── Fixed Star Conjunctions ─────────────────────────────────────────
+    try:
+        if st.session_state.get("_adv_fixed_stars", False):
+            from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
+            _lim = st.session_state.get("_adv_stars_count", 30)
+            if _lim == 103:
+                _lim = None
+            _stars = compute_fixed_star_positions(chart.julian_day, limit=_lim)
+            _p_lons = {p.name: p.longitude for p in chart.planets}
+            _conjs = find_conjunctions(_stars, _p_lons)
+            if _conjs:
+                sections.append("\n--- Fixed Star Conjunctions ---")
+                _notable = {
+                    "Sirius":    "fame and distinction (天狼星)",
+                    "Regulus":   "power and leadership (軒轅十四)",
+                    "Spica":     "gift and good fortune (角宿一)",
+                    "Algol":     "intense power and upheaval (大陵五)",
+                    "Antares":   "obsession and extremism (心宿二)",
+                    "Fomalhaut": "idealism and occult ability (北落師門)",
+                    "Aldebaran": "courage and integrity (畢宿五)",
+                    "Vega":      "artistic talent and idealism (織女一)",
+                }
+                for c in _conjs[:15]:
+                    note = _notable.get(c.star_name, c.meaning_en)
+                    sections.append(
+                        f"  {c.star_name} conjunct {c.planet_name} (orb {c.orb:.1f}°): "
+                        f"{note}"
+                    )
+    except Exception:
+        pass
+
+    # ── Parans ────────────────────────────────────────────────────────────
+    try:
+        if st.session_state.get("_adv_parans", False):
+            from astro.western.fixed_stars import compute_fixed_star_positions
+            from astro.western.advanced_bodies import calculate_parans
+            _lim = st.session_state.get("_adv_stars_count", 30)
+            if _lim == 103:
+                _lim = None
+            _stars_p = compute_fixed_star_positions(chart.julian_day, limit=_lim)
+            _parans = calculate_parans(chart.julian_day, chart.latitude, chart.longitude, _stars_p)
+            if _parans:
+                sections.append("\n--- Parans (Paranatellonta) ---")
+                for p in _parans[:10]:
+                    sections.append(
+                        f"  {p.star_name} ({p.star_event_en}) "
+                        f"paran {p.planet_name} ({p.planet_event_en}) "
+                        f"[orb {p.orb:.1f}°]: {p.star_meaning_en}"
+                    )
+    except Exception:
+        pass
+
     return "\n".join(sections)
 
 
