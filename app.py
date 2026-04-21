@@ -81,6 +81,7 @@ from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
 from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions
 from astro.western.asteroids import compute_asteroids
+from astro.western.uranian import compute_uranian_chart, render_uranian_chart
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
 from astro.natal_summary import generate_natal_summary
 from astro.interpretations import (
@@ -3230,7 +3231,21 @@ elif _selected_system == "tab_acg":
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_acg"))
 
-# --- 巴厘 Wariga 傳統占星 (Balinese Wariga) ---
+# --- 天王星派占星 (Uranian / Hamburg School) ---
+elif _selected_system == "tab_uranian":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_uranian")):
+                _uranian_result = compute_uranian_chart(**_p)
+            render_uranian_chart(_uranian_result)
+            _render_ai_button("tab_uranian", _uranian_result, btn_key="uranian")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_uranian"))
 elif _selected_system == "tab_wariga":
     if _is_calculated:
         try:
