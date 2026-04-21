@@ -751,7 +751,7 @@ def _build_dial_svg(chart: UranianChart) -> str:
 
     for p in chart.positions:
         angle_rad = math.radians(p.dial90 * 4 - 90)  # map 0–90° → 0–360°
-        marker_r = R - 30
+        marker_r = R - 40
         mx = CX + marker_r * math.cos(angle_rad)
         my = CY + marker_r * math.sin(angle_rad)
 
@@ -763,8 +763,8 @@ def _build_dial_svg(chart: UranianChart) -> str:
             col = colors["planet"]
 
         # Spoke line
-        spoke_r1 = R - 22
-        spoke_r2 = R - 42
+        spoke_r1 = R - 26
+        spoke_r2 = R - 52
         sx1 = CX + spoke_r1 * math.cos(angle_rad)
         sy1 = CY + spoke_r1 * math.sin(angle_rad)
         sx2 = CX + spoke_r2 * math.cos(angle_rad)
