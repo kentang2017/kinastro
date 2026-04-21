@@ -67,7 +67,7 @@ from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
 from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
 from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
-from astro.wariga.calculator import WarigaCalculator
+from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
@@ -134,13 +134,22 @@ st.set_page_config(
 )
 
 
+@st.cache_data(show_spinner=False)
+def _load_custom_css() -> str:
+    """Load custom.css from disk (cached so the file is only read once)."""
+    _css_path = os.path.join(os.path.dirname(__file__), "styles", "custom.css")
+    if os.path.exists(_css_path):
+        with open(_css_path, "r", encoding="utf-8") as _f:
+            return _f.read()
+    return ""
+
+
 def inject_custom_css():
     """Inject all custom CSS (mobile + custom.css) into the page."""
     st.markdown(MOBILE_CSS, unsafe_allow_html=True)
-    _css_path = os.path.join(os.path.dirname(__file__), "styles", "custom.css")
-    if os.path.exists(_css_path):
-        with open(_css_path, "r", encoding="utf-8") as _css_f:
-            st.markdown(f"<style>{_css_f.read()}</style>", unsafe_allow_html=True)
+    _custom = _load_custom_css()
+    if _custom:
+        st.markdown(f"<style>{_custom}</style>", unsafe_allow_html=True)
 
     # Apply theme data attribute via JS
     _theme = st.session_state.get("_ka_theme", "modern")
@@ -161,8 +170,8 @@ def inject_custom_css():
 inject_custom_css()
 
 
-def _inject_star_particles():
-    """Inject CSS-based star particle background."""
+def _build_star_particles_html() -> str:
+    """Build CSS-based star particle background HTML (60 particles)."""
     parts = []
     for _ in range(60):
         x = random.uniform(0, 100)
@@ -180,8 +189,14 @@ def _inject_star_particles():
             f"--duration:{dur:.1f}s;--delay:{delay:.1f}s;"
             f'--max-opacity:{opacity:.2f};"></div>'
         )
-    particles_html = '<div class="star-particles">' + "".join(parts) + "</div>"
-    st.markdown(particles_html, unsafe_allow_html=True)
+    return '<div class="star-particles">' + "".join(parts) + "</div>"
+
+
+def _inject_star_particles():
+    """Inject CSS-based star particle background (cached per session)."""
+    if "_star_particles_html" not in st.session_state:
+        st.session_state["_star_particles_html"] = _build_star_particles_html()
+    st.markdown(st.session_state["_star_particles_html"], unsafe_allow_html=True)
 
 
 # Inject star particles if toggle is on (default: on for first visit)
@@ -3214,11 +3229,11 @@ elif _selected_system == "tab_wariga":
         try:
             _p = st.session_state["_calc_params"]
             with st.spinner(t("spinner_wariga")):
-                _wariga_result = WarigaCalculator(
+                _wariga_result = compute_wariga(
                     year=_p["year"], month=_p["month"], day=_p["day"],
                     hour=_p["hour"], minute=_p["minute"],
                     lat=_p["latitude"], lon=_p["longitude"],
-                ).compute_result()
+                )
             render_wariga_chart(_wariga_result)
             _render_ai_button("tab_wariga", _wariga_result, btn_key="wariga")
         except Exception as _e:

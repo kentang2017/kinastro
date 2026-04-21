@@ -2095,7 +2095,10 @@ try:
 except Exception:
     _T2S_CONVERTER = None
 
+from functools import lru_cache as _lru_cache
 
+
+@_lru_cache(maxsize=4096)
 def _t2s(text: str) -> str:
     """Convert Traditional Chinese text to Simplified Chinese using OpenCC."""
     if _T2S_CONVERTER is not None:

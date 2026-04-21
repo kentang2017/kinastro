@@ -18,6 +18,7 @@ import streamlit as st
 from astro.i18n import auto_cn
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_taiyi_chart(
     year: int, month: int, day: int,
     hour: int, minute: int,
