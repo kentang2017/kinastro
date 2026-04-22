@@ -2157,7 +2157,12 @@ Chinese Lo Shu square, widely developed in Japan:
 
 Enter your birth information to calculate your Three Stars and annual flying star cycles.
 """,
+    },
     # ── Advanced bodies — new section ─────────────────────────
+    "enable_cross_system": {
+        "zh": "🔀 啟用跨系統交叉比對",
+        "en": "🔀 Enable Cross-System Comparison",
+    },
     "adv_bodies_header": {
         "zh": "🌑 進階天體選項",
         "en": "🌑 Advanced Bodies Options",
@@ -2314,7 +2319,6 @@ Enter your birth information to calculate your Three Stars and annual flying sta
         "zh": "⚠️ 偕日升沒計算需要精確的觀測地點，且部分 Swiss Ephemeris 版本可能不支援。",
         "en": "⚠️ Heliacal calculation requires precise observer location; may not be available in all Swiss Ephemeris builds.",
     },
-}
 }
 
 def get_ui_lang() -> str:
