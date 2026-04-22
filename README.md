@@ -42,8 +42,6 @@
 | 🔮 **二十九體系合一** | 在同一個介面中切換二十九種占星體系，無需來回切換工具 | Switch between 29 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
-| 🔀 **多體系交叉比對解讀** | 同時計算西洋、印度、七政、紫微、希臘，由 AI 進行跨體系綜合解讀 | AI cross-system synthesis across Western, Vedic, Chinese, Zi Wei, Hellenistic |
-| 🔷 **相位圖案自動辨識** | 自動偵測大三角、T形相位、大十字、命運指、風箏等經典相位圖案 | Auto-detect Grand Trine, T-Square, Grand Cross, Yod, Kite, and more |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
 | 🌐 **中英雙語** | 介面支援中文與英文切換 | Full Chinese and English bilingual interface |
 | 🎨 **彩色互動介面** | Streamlit 驅動的現代化 Web UI，響應式排盤結果 | Modern interactive Web UI powered by Streamlit |
