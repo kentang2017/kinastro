@@ -2315,7 +2315,7 @@ Enter your birth information to calculate your Three Stars and annual flying sta
         "en": "⚠️ Heliacal calculation requires precise observer location; may not be available in all Swiss Ephemeris builds.",
     },
 }
-
+}
 
 def get_ui_lang() -> str:
     """Return the full UI language code: 'zh', 'zh_cn', or 'en'."""
