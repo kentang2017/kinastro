@@ -582,7 +582,7 @@ def _serialize_nine_star_ki(parent: ET.Element, chart: Any) -> None:
     _set_attr(parent, "adjusted_year", _g(chart, "adjusted_year"))
     _set_attr(parent, "li_chun_date", _g(chart, "li_chun_date"))
     _set_attr(parent, "current_year_star", _g(chart, "current_year_star"))
-    _set_attr(parent, "current_month_star", _g(chart, "current_year_month_star"))
+    _set_attr(parent, "current_year_month_star", _g(chart, "current_year_month_star"))
 
     for star_key in ("year_star_info", "month_star_info", "day_star_info"):
         info = _g_obj(chart, star_key)
@@ -679,11 +679,13 @@ def _indent(elem: ET.Element, level: int = 0) -> None:
             elem.text = indent + "  "
         if not elem.tail or not elem.tail.strip():
             elem.tail = indent
+        last_child = None
         for child in elem:
             _indent(child, level + 1)
+            last_child = child
         # Fix last child tail
-        if not child.tail or not child.tail.strip():  # type: ignore[possibly-undefined]
-            child.tail = indent  # type: ignore[possibly-undefined]
+        if last_child is not None and (not last_child.tail or not last_child.tail.strip()):
+            last_child.tail = indent
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = indent
