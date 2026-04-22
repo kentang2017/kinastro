@@ -59,6 +59,10 @@ from typing import Optional
 # year boundary.  The implementation handles this correctly for any date.
 
 TREE_MONTHS: list[dict] = [
+    # ── Month 1: Beth (Birch) ────────────────────────────────────────────
+    # NOTE: This month wraps the Gregorian year boundary (Dec 24 → Jan 20).
+    # The lookup function handles this via the `wraps_year` flag in
+    # `_is_between_md`.  start_md > end_md signals the wrap to the caller.
     {
         "month_number": 1,
         "gaelic": "Beth",
@@ -540,7 +544,7 @@ def render_celtic_tree_chart(
 
     with col_b:
         if is_doc:
-            title_zh = f"🌑 創造之日 · Day of Creation"
+            title_zh = "🌑 創造之日"
             title_en = "🌑 Day of Creation (December 23)"
             desc_zh  = "遊離於13個月之外的無名之日，如 Graves 所言，乃年外之日。"
             desc_en  = ("The extra day outside the 13 tree-months, as described "
@@ -550,8 +554,8 @@ def render_celtic_tree_chart(
             gaelic  = chart.tree_name_gaelic
             eng   = chart.tree_name_english
             cn    = chart.tree_name_chinese
-            title_zh = f"🌳 第{num}月 · {gaelic}（{eng} / {cn}）"
-            title_en = f"🌳 Month {num} · {gaelic} ({eng} / {cn})"
+            title_zh = f"🌳 第{num}月 · {gaelic}（{cn}）"
+            title_en = f"🌳 Month {num} · {gaelic} ({eng})"
             desc_zh  = chart.qualities_zh
             desc_en  = chart.qualities_en
 
