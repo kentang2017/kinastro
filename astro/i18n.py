@@ -1283,6 +1283,86 @@ transmitted by **Chen Xiyi**.
         "zh": "輸入您的 OpenAI API Key（以 sk- 開頭）。密鑰僅在本次會話中使用，不會被儲存。",
         "en": "Enter your OpenAI API Key (starts with sk-). The key is only used in this session and is never stored.",
     },
+    "ai_provider_custom": {
+        "zh": "第三方服務商",
+        "en": "Custom Provider",
+    },
+    "ai_custom_name_label": {
+        "zh": "名稱",
+        "en": "Name",
+    },
+    "ai_custom_name_placeholder": {
+        "zh": "例如：我的 LLM",
+        "en": "e.g. My LLM",
+    },
+    "ai_custom_api_mode_label": {
+        "zh": "API 模式",
+        "en": "API Mode",
+    },
+    "ai_custom_api_mode_openai": {
+        "zh": "OpenAI API 兼容",
+        "en": "OpenAI API Compatible",
+    },
+    "ai_custom_key_label": {
+        "zh": "API 密鑰",
+        "en": "API Key",
+    },
+    "ai_custom_key_help": {
+        "zh": "輸入第三方服務商的 API Key。密鑰僅在本次會話中使用，不會被儲存。",
+        "en": "Enter the API key for your custom provider. The key is only used in this session and is never stored.",
+    },
+    "ai_custom_host_label": {
+        "zh": "API 主機",
+        "en": "API Host",
+    },
+    "ai_custom_path_label": {
+        "zh": "API 路徑",
+        "en": "API Path",
+    },
+    "ai_custom_url_preview": {
+        "zh": "完整 URL：",
+        "en": "Full URL: ",
+    },
+    "ai_custom_models_header": {
+        "zh": "模型",
+        "en": "Models",
+    },
+    "ai_custom_models_add": {
+        "zh": "+ 新建",
+        "en": "+ Add",
+    },
+    "ai_custom_models_reset": {
+        "zh": "↺ 重置",
+        "en": "↺ Reset",
+    },
+    "ai_custom_models_fetch": {
+        "zh": "↻ 獲取",
+        "en": "↻ Fetch",
+    },
+    "ai_custom_model_new_placeholder": {
+        "zh": "輸入模型名稱",
+        "en": "Enter model name",
+    },
+    "ai_custom_key_missing": {
+        "zh": "⚠️ 請在「AI 分析設置」中輸入第三方服務商的 API Key。",
+        "en": "⚠️ Please enter the custom provider API key in AI Analysis Settings.",
+    },
+    "ai_custom_host_missing": {
+        "zh": "⚠️ 請在「AI 分析設置」中輸入 API 主機地址。",
+        "en": "⚠️ Please enter the API host in AI Analysis Settings.",
+    },
+    "ai_custom_model_missing": {
+        "zh": "⚠️ 請先添加至少一個模型。",
+        "en": "⚠️ Please add at least one model first.",
+    },
+    "ai_custom_fetch_ok": {
+        "zh": "✅ 成功獲取 {} 個模型。",
+        "en": "✅ Successfully fetched {} models.",
+    },
+    "ai_custom_fetch_fail": {
+        "zh": "❌ 獲取模型失敗：{}",
+        "en": "❌ Failed to fetch models: {}",
+    },
     "ai_error": {
         "zh": "❌ 調用 AI 時發生錯誤：{}",
         "en": "❌ Error calling AI: {}",

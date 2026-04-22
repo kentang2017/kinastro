@@ -95,6 +95,7 @@ from astro.interpretations import (
 from astro.ai_analysis import (
     CerebrasClient,
     OpenAIClient,
+    CustomProviderClient,
     RateLimitError,
     CEREBRAS_MODEL_OPTIONS,
     CEREBRAS_MODEL_DESCRIPTIONS,
@@ -1107,10 +1108,17 @@ with st.sidebar:
     with st.expander(t("ai_settings_header"), expanded=False):
 
         # Provider selector
+        def _fmt_provider(x):
+            if x == "cerebras":
+                return t("ai_provider_cerebras")
+            if x == "openai":
+                return t("ai_provider_openai")
+            return t("ai_provider_custom")
+
         _ai_provider = st.radio(
             t("ai_provider_label"),
-            options=["cerebras", "openai"],
-            format_func=lambda x: t("ai_provider_cerebras") if x == "cerebras" else t("ai_provider_openai"),
+            options=["cerebras", "openai", "custom"],
+            format_func=_fmt_provider,
             key="_ai_provider",
             horizontal=True,
         )
@@ -1132,6 +1140,115 @@ with st.sidebar:
                 help=t("ai_openai_key_help"),
                 placeholder="sk-...",
             )
+        elif _ai_provider == "custom":
+            # ── Custom / Third-party provider form ──────────────
+            st.text_input(
+                t("ai_custom_name_label"),
+                key="_ai_custom_name",
+                placeholder=t("ai_custom_name_placeholder"),
+            )
+            st.selectbox(
+                t("ai_custom_api_mode_label"),
+                options=["openai_compat"],
+                format_func=lambda x: t("ai_custom_api_mode_openai"),
+                key="_ai_custom_api_mode",
+            )
+            st.text_input(
+                t("ai_custom_key_label"),
+                type="password",
+                key="_ai_custom_key",
+                help=t("ai_custom_key_help"),
+            )
+            _host_col, _path_col = st.columns(2)
+            with _host_col:
+                st.text_input(
+                    t("ai_custom_host_label"),
+                    key="_ai_custom_host",
+                    placeholder="https://api.example.com/v1",
+                )
+            with _path_col:
+                st.text_input(
+                    t("ai_custom_path_label"),
+                    key="_ai_custom_path",
+                    placeholder="/chat/completions",
+                    value=st.session_state.get("_ai_custom_path", "/chat/completions"),
+                )
+            _host_val = st.session_state.get("_ai_custom_host", "").rstrip("/")
+            _path_val = st.session_state.get("_ai_custom_path", "/chat/completions")
+            if _host_val:
+                st.caption(f"{t('ai_custom_url_preview')}{_host_val}{_path_val}")
+
+            # Models management
+            if "_ai_custom_models" not in st.session_state:
+                st.session_state["_ai_custom_models"] = []
+
+            _m_label_col, _m_add_col, _m_reset_col, _m_fetch_col = st.columns([2, 1, 1, 1])
+            with _m_label_col:
+                st.markdown(f"**{t('ai_custom_models_header')}**")
+            with _m_add_col:
+                if st.button(t("ai_custom_models_add"), key="_btn_custom_add"):
+                    st.session_state["_ai_custom_model_adding"] = True
+            with _m_reset_col:
+                if st.button(t("ai_custom_models_reset"), key="_btn_custom_reset"):
+                    st.session_state["_ai_custom_models"] = []
+                    st.session_state.pop("_ai_custom_model_adding", None)
+            with _m_fetch_col:
+                if st.button(t("ai_custom_models_fetch"), key="_btn_custom_fetch"):
+                    _fetch_host = st.session_state.get("_ai_custom_host", "").rstrip("/")
+                    _fetch_key = st.session_state.get("_ai_custom_key", "").strip()
+                    if _fetch_host and _fetch_key:
+                        try:
+                            import openai as _oa
+                            _fc = _oa.OpenAI(api_key=_fetch_key, base_url=_fetch_host)
+                            _models_resp = _fc.models.list()
+                            _fetched = sorted([m.id for m in _models_resp.data])
+                            st.session_state["_ai_custom_models"] = _fetched
+                            st.success(t("ai_custom_fetch_ok").format(len(_fetched)))
+                        except Exception as _fe:
+                            st.error(t("ai_custom_fetch_fail").format(str(_fe)))
+
+            # Input row for adding a new model
+            if st.session_state.get("_ai_custom_model_adding"):
+                _new_model = st.text_input(
+                    "",
+                    key="_ai_custom_new_model_input",
+                    placeholder=t("ai_custom_model_new_placeholder"),
+                    label_visibility="collapsed",
+                )
+                _confirm_col, _cancel_col = st.columns(2)
+                with _confirm_col:
+                    if st.button("✔", key="_btn_custom_confirm"):
+                        _nm = st.session_state.get("_ai_custom_new_model_input", "").strip()
+                        if _nm and _nm not in st.session_state["_ai_custom_models"]:
+                            st.session_state["_ai_custom_models"].append(_nm)
+                        st.session_state.pop("_ai_custom_model_adding", None)
+                        st.rerun()
+                with _cancel_col:
+                    if st.button("✘", key="_btn_custom_cancel"):
+                        st.session_state.pop("_ai_custom_model_adding", None)
+                        st.rerun()
+
+            # Render model list
+            _custom_models = st.session_state.get("_ai_custom_models", [])
+            for _mi, _mname in enumerate(_custom_models):
+                _mrow_cols = st.columns([4, 1])
+                with _mrow_cols[0]:
+                    st.text(_mname)
+                with _mrow_cols[1]:
+                    if st.button("⊖", key=f"_btn_del_model_{_mi}"):
+                        st.session_state["_ai_custom_models"].pop(_mi)
+                        st.rerun()
+
+            # Model selector for active custom model
+            if _custom_models:
+                _ai_model = st.selectbox(
+                    t("ai_model_label"),
+                    options=_custom_models,
+                    key="_ai_model_select",
+                )
+            else:
+                _ai_model = ""
+                st.session_state["_ai_model_select"] = ""
         else:
             _ai_model = st.selectbox(
                 t("ai_model_label"),
@@ -1296,6 +1413,22 @@ def _render_global_ai_chat():
             if not _api_key:
                 st.error(t("ai_openai_key_missing"))
                 return
+        elif _provider == "custom":
+            _api_key = st.session_state.get("_ai_custom_key", "").strip()
+            if not _api_key:
+                st.error(t("ai_custom_key_missing"))
+                return
+            _custom_host = st.session_state.get("_ai_custom_host", "").strip().rstrip("/")
+            if not _custom_host:
+                st.error(t("ai_custom_host_missing"))
+                return
+            _custom_path = st.session_state.get("_ai_custom_path", "/chat/completions").strip()
+            _custom_base_url = f"{_custom_host}{_custom_path.rsplit('/', 1)[0]}" if _custom_path else _custom_host
+            # base_url should point to the API root (before /chat/completions)
+            _custom_base_url = _custom_host
+            if not st.session_state.get("_ai_custom_models"):
+                st.error(t("ai_custom_model_missing"))
+                return
         else:
             # Cerebras: try secrets then environment
             _api_key = ""
@@ -1336,6 +1469,8 @@ def _render_global_ai_chat():
                 try:
                     if _provider == "openai":
                         client = OpenAIClient(api_key=_api_key)
+                    elif _provider == "custom":
+                        client = CustomProviderClient(api_key=_api_key, base_url=_custom_base_url)
                     else:
                         client = CerebrasClient(api_key=_api_key)
                     result = client.chat(
