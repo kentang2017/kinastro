@@ -1041,7 +1041,7 @@ with st.sidebar:
     if _cross_system_on != st.session_state.get("_cross_system_enabled", False):
         st.session_state["_cross_system_enabled"] = _cross_system_on
         st.rerun()
-=======
+
     # ── Advanced Bodies settings ───────────────────────────────
     st.divider()
     with st.expander(t("adv_bodies_header"), expanded=False):
