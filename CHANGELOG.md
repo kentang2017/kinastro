@@ -2,6 +2,19 @@
 
 All notable changes to Kin Astro (堅占星) will be documented in this file.
 
+## [2.1.0] — 2026-04-22
+
+### Added
+
+#### New Astrology Systems
+- **九星氣學 Nine Star Ki** (`astro/nine_star_ki.py`): Japanese Nine Star Ki (Kyūsei Kigaku) — 本命星・月命星・日命星・洛書九宮・五行相性分析
+- **天王星漢堡學派 Uranian Astrology** (`astro/western/uranian.py`): Hamburg School — 8 超海王星虛點・90° 度盤・中點樹・行星圖像（Planetary Pictures）
+
+### Changed
+- **README.md**: Updated system count from 29 to 31; added new system entries and detail sections
+
+---
+
 ## [Unreleased]
 
 ### Added
