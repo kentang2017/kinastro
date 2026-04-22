@@ -2157,7 +2157,6 @@ Chinese Lo Shu square, widely developed in Japan:
 
 Enter your birth information to calculate your Three Stars and annual flying star cycles.
 """,
-=======
     # ── Advanced bodies — new section ─────────────────────────
     "adv_bodies_header": {
         "zh": "🌑 進階天體選項",
