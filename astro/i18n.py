@@ -2158,6 +2158,52 @@ Chinese Lo Shu square, widely developed in Japan:
 Enter your birth information to calculate your Three Stars and annual flying star cycles.
 """,
     },
+    # ── 凱爾特樹木曆法 (Celtic Tree Calendar — Robert Graves 1948) ────
+    "tab_celtic_tree": {
+        "zh": "🌳 凱爾特樹木曆",
+        "en": "🌳 Celtic Tree Calendar",
+    },
+    "spinner_celtic_tree": {
+        "zh": "正在計算凱爾特樹木曆法 (Graves 1948)...",
+        "en": "Calculating Celtic Tree Calendar (Graves 1948)...",
+    },
+    "sys_hint_celtic_tree": {
+        "zh": "Robert Graves 1948 年詩意重建的 Beth-Luis-Nion 樹木字母曆",
+        "en": "Beth-Luis-Nion poetic tree-alphabet calendar reconstructed by Robert Graves (1948)",
+    },
+    "desc_celtic_tree": {
+        "zh": """
+### 凱爾特樹木曆法 (Celtic Tree Calendar — Robert Graves 1948)
+
+**⚠️ 重要說明：此為 Robert Graves 1948 年《The White Goddess》所重建的現代樹木曆法，非古代凱爾特傳統。**
+
+**Beth-Luis-Nion 體系**由英國詩人兼學者 Robert Graves（1895–1985）在其1948年著作
+《The White Goddess: A Historical Grammar of Poetic Myth》中提出。
+
+#### 曆法結構
+- **13個月**，每月約28天，以13個歐甘字母（Ogham consonants）命名
+- 每年始於**12月24日**（Beth月 / 樺樹月）
+- **12月23日**為「創造之日」，遊離於13個月之外（如 Graves 所言）
+
+輸入出生資料即可查閱您的樹木月份及對應詩意屬性。
+""",
+        "en": """
+### Celtic Tree Calendar (Robert Graves 1948)
+
+**⚠️ This is a modern poetic reconstruction by Robert Graves (1948) — not historical ancient Celtic astrology.**
+
+The **Beth-Luis-Nion** system was devised by British poet and scholar Robert Graves (1895–1985)
+in his 1948 work *The White Goddess: A Historical Grammar of Poetic Myth*.
+
+#### Calendar Structure
+- **13 months** of ~28 days each, named after 13 Ogham consonants
+- The year begins on **December 24** (Beth / Birch month)
+- **December 23** is the "Day of Creation" — outside the 13 months (per Graves)
+
+Enter your birth information to look up your tree month and its poetic attributes.
+""",
+    },
+
     # ── Advanced bodies — new section ─────────────────────────
     "enable_cross_system": {
         "zh": "🔀 啟用跨系統交叉比對",

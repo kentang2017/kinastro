@@ -128,6 +128,7 @@ from astro.astrocartography import (
     ACG_PLANETS,
 )
 from astro.nine_star_ki import compute_nine_star_ki_chart, render_nine_star_ki_chart
+from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
 
 
 # ============================================================
@@ -874,7 +875,7 @@ with st.sidebar:
         ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
-        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
+        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian", "tab_celtic_tree"]),
     ]
 
     _CATEGORY_ICONS = {
@@ -919,6 +920,7 @@ with st.sidebar:
         "tab_liuren": t("tab_liuren"),
         "tab_taiyi": t("tab_taiyi"),
         "tab_qimen_luming": t("tab_qimen_luming"),
+        "tab_celtic_tree": t("tab_celtic_tree"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -954,6 +956,7 @@ with st.sidebar:
         "tab_liuren": t("sys_hint_liuren"),
         "tab_taiyi": t("sys_hint_taiyi"),
         "tab_qimen_luming": t("sys_hint_qimen_luming"),
+        "tab_celtic_tree": t("sys_hint_celtic_tree"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2538,6 +2541,27 @@ elif _selected_system == "tab_nine_star_ki":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_nine_star_ki"))
+
+# --- 凱爾特樹木曆法 (Celtic Tree Calendar — Robert Graves 1948) ---
+elif _selected_system == "tab_celtic_tree":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_celtic_tree")):
+                _celtic_chart = compute_celtic_tree_chart(**_p)
+            render_celtic_tree_chart(
+                _celtic_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_celtic_tree", _celtic_chart, btn_key="celtic_tree"
+                ),
+                lang=get_lang(),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_celtic_tree"))
 
 # --- 希臘占星 (Hellenistic) ---
 elif _selected_system == "tab_hellenistic":

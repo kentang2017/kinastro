@@ -141,7 +141,8 @@ DEFAULT_SYSTEM_PROMPT = (
     "- 中国传统占星（七政四餘、八字、紫微斗數、宿曜道、萬化仙禽）\n"
     "- 泰國占星、阿拉伯占星、卡巴拉占星\n"
     "- 瑪雅占星、緬甸占星（Mahabote）、蒙古祖爾海（Zurkhai）\n"
-    "- 古埃及十度區間（Decans）、**日本九星氣學（Kyūsei Kigaku）** 等\n\n"
+    "- 古埃及十度區間（Decans）、**日本九星氣學（Kyūsei Kigaku）**、\n"
+    "  **Robert Graves 1948 凱爾特樹木曆法（Beth-Luis-Nion，《The White Goddess》）**等\n\n"
     "若命盤包含九星氣學資料，請融合本命星（年）、月命星（月）、日命星（日）\n"
     "與其他體系（紫微斗數、七政四餘、西洋占星、印度占星）進行交叉分析，\n"
     "提供跨系統綜合洞察（例如：本命二黑土星 + 西洋土星在第四宮 = 家庭責任感深重…）。\n\n"
@@ -203,7 +204,8 @@ DEFAULT_SYSTEM_PROMPT_EN = (
     "- Chinese Traditional Astrology (Seven Governors & Four Remainders, BaZi, Zi Wei Dou Shu, Sukkayodo, Wan Hua Xian Qin)\\n"
     "- Thai Astrology, Arabic Astrology, Kabbalistic Astrology\\n"
     "- Mayan Astrology, Myanmar Astrology (Mahabote), Mongolian Zurkhai\\n"
-    "- Ancient Egyptian Decans, **Japanese Nine Star Ki (Kyūsei Kigaku)**, etc.\\n"
+    "- Ancient Egyptian Decans, **Japanese Nine Star Ki (Kyūsei Kigaku)**, "
+    "**Robert Graves' 1948 Celtic Tree Calendar (Beth-Luis-Nion, The White Goddess)**, etc.\\n"
     "- When Nine Star Ki data is provided, cross-reference Year Star (Honmeisei), "
     "Month Star (Tsukimeisei), and Day Star (Himeisei) with other systems for synthesized insights "
     "(e.g., Year Star 2 Black Earth + Western Saturn in 4th house = deep family responsibility...).\\n\\n"
@@ -917,6 +919,11 @@ SYSTEM_FORMATTERS = {
     "tab_twelve_ci": _format_twelve_ci_chart,
     "tab_acg": _format_acg_chart,
     "tab_nine_star_ki": format_nine_star_ki_chart,
+    "tab_celtic_tree": lambda chart: (
+        __import__("astro.celtic.celtic_tree_graves",
+                   fromlist=["format_celtic_tree_for_prompt"])
+        .format_celtic_tree_for_prompt(chart)
+    ),
 }
 
 

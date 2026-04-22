@@ -176,3 +176,109 @@ def add_babylonian_to_comparison(result, babylonian_chart):
     bab_asc_idx = int(getattr(babylonian_chart, "ascendant", 0) / 30) % 12  # 30° per sign
     result.babylonian_asc = BABYLONIAN_AKKADIAN_SIGNS[bab_asc_idx]
     return result
+
+
+# ============================================================
+# Celtic Tree Calendar cross-comparison helper (Graves 1948)
+# ============================================================
+
+def add_celtic_tree_to_comparison(result, celtic_chart):
+    """Augment a CrossCompareResult with Celtic Tree Calendar data (Graves 1948).
+
+    Adds a ``celtic_tree`` attribute to the result containing a summary
+    dict for display alongside planet positions.
+
+    Parameters
+    ----------
+    result : CrossCompareResult
+    celtic_chart : CelticTreeChart (from astro.celtic.celtic_tree_graves)
+
+    Returns
+    -------
+    CrossCompareResult — same object, with ``celtic_tree`` attribute added.
+    """
+    if celtic_chart is None:
+        return result
+
+    result.celtic_tree = {
+        "month_number": celtic_chart.month_number,
+        "gaelic": celtic_chart.tree_name_gaelic,
+        "english": celtic_chart.tree_name_english,
+        "chinese": celtic_chart.tree_name_chinese,
+        "ogham": celtic_chart.ogham_letter,
+        "date_range_en": celtic_chart.date_range_en,
+        "date_range_zh": celtic_chart.date_range_zh,
+        "qualities_en": celtic_chart.qualities_en,
+        "qualities_zh": celtic_chart.qualities_zh,
+        "western_overlap_en": celtic_chart.western_overlap_en,
+        "western_overlap_zh": celtic_chart.western_overlap_zh,
+        "note_en": celtic_chart.note_en,
+        "note_zh": celtic_chart.note_zh,
+    }
+    return result
+
+
+def render_celtic_tree_comparison(celtic_chart) -> None:
+    """Render a Celtic Tree Calendar cross-comparison section in Streamlit.
+
+    Shows how the birth tree-month aligns with Western zodiac signs and
+    provides a clear Graves attribution notice.
+
+    Parameters
+    ----------
+    celtic_chart : CelticTreeChart
+    """
+    import streamlit as st
+
+    lang = st.session_state.get("lang", "zh")
+    is_zh = lang in ("zh", "zh_cn")
+
+    st.subheader(
+        "🌿 凱爾特樹木曆 × 西洋占星 交叉比對 (Graves 1948)"
+        if is_zh else
+        "🌿 Celtic Tree Calendar × Western Astrology Cross-Reference (Graves 1948)"
+    )
+
+    st.caption(
+        celtic_chart.note_zh if is_zh else celtic_chart.note_en
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if is_zh:
+            st.metric(
+                "樹木月份 Tree Month",
+                f"#{celtic_chart.month_number} {celtic_chart.tree_name_gaelic}",
+                help=f"{celtic_chart.tree_name_english} / {celtic_chart.tree_name_chinese}",
+            )
+        else:
+            st.metric(
+                "Tree Month",
+                f"#{celtic_chart.month_number} {celtic_chart.tree_name_gaelic}",
+                help=f"{celtic_chart.tree_name_english} / {celtic_chart.tree_name_chinese}",
+            )
+    with col2:
+        if is_zh:
+            st.metric(
+                "西洋占星重疊 Western Zodiac Overlap",
+                celtic_chart.western_overlap_zh or "—",
+                help=celtic_chart.western_overlap_en,
+            )
+        else:
+            st.metric(
+                "Western Zodiac Overlap",
+                celtic_chart.western_overlap_en or "—",
+            )
+
+    import pandas as pd
+    data = {
+        ("歐甘字 / Ogham" if is_zh else "Ogham Letter"): celtic_chart.ogham_letter,
+        ("格里曆日期 / Date Range" if is_zh else "Date Range"): (
+            celtic_chart.date_range_zh if is_zh else celtic_chart.date_range_en
+        ),
+        ("詩意屬性 / Qualities" if is_zh else "Poetic Qualities"): (
+            celtic_chart.qualities_zh if is_zh else celtic_chart.qualities_en
+        ),
+    }
+    st.table(pd.DataFrame.from_dict(data, orient="index", columns=["值" if is_zh else "Value"]))
+

@@ -99,4 +99,5 @@ SYSTEM_CSS_CLASS: dict[str, str] = {
     "tab_aztec":        "aztec-chart",
     "tab_decans":       "egyptian-chart",
     "tab_babylonian":   "babylonian-chart",
+    "tab_celtic_tree":  "western-chart",
 }
