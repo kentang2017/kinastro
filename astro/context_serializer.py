@@ -697,9 +697,48 @@ def _indent(elem: ET.Element, level: int = 0) -> None:
 # Public API
 # ---------------------------------------------------------------------------
 
+def _serialize_sabian_symbols(parent: ET.Element, chart: Any) -> None:
+    """Serialise Sabian Symbols for planets in the chart.
+    
+    Parameters
+    ----------
+    parent : ET.Element
+        The parent XML element.
+    chart : Any
+        Chart data containing planet positions.
+    """
+    try:
+        from astro.sabian import get_sabian_for_planet
+    except ImportError:
+        return
+    
+    planets = ["Sun", "Moon", "Mercury", "Venus", "Mars", 
+               "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"]
+    
+    sabian_elem = ET.SubElement(parent, "sabian_symbols")
+    
+    for planet_name in planets:
+        sabian = get_sabian_for_planet(chart, planet_name)
+        if sabian:
+            # Create sabian_symbol element directly
+            ss_elem = ET.SubElement(sabian_elem, "sabian_symbol")
+            _set_attr(ss_elem, "planet", sabian.get("planet", ""))
+            _set_attr(ss_elem, "degree", str(sabian.get("degree", "")))
+            _set_attr(ss_elem, "sign", sabian.get("sign", ""))
+            _set_attr(ss_elem, "degree_in_sign", str(sabian.get("degree_in_sign", "")))
+            _set_attr(ss_elem, "keyword", sabian.get("keyword", ""))
+            _set_attr(ss_elem, "symbol", sabian.get("symbol", ""))
+            _set_attr(ss_elem, "positive", sabian.get("positive", ""))
+            _set_attr(ss_elem, "negative", sabian.get("negative", ""))
+            _set_attr(ss_elem, "formula", sabian.get("formula", ""))
+            _set_attr(ss_elem, "interpretation", sabian.get("interpretation", ""))
+            _set_attr(ss_elem, "planet_longitude", str(sabian.get("planet_longitude", "")))
+
+
 def to_context(
     chart_data: "dict | object",
     system: str = "all",
+    include_sabian: bool = False,
 ) -> str:
     """Convert kinastro chart data to a well-formed XML string for LLM context.
 
@@ -721,6 +760,9 @@ def to_context(
         When *chart_data* is not a dict this parameter names the system
         tag that wraps the output (default ``"all"`` maps to the
         generic serialiser).
+    
+    include_sabian : bool, optional
+        If True, include Sabian Symbols for all planets. Default is False.
 
     Returns
     -------
@@ -732,6 +774,7 @@ def to_context(
     --------
     >>> xml_str = to_context(western_chart, system="western")
     >>> xml_str = to_context({"western": w, "ziwei": z})
+    >>> xml_str = to_context(western_chart, include_sabian=True)
     """
     root = ET.Element("kinastro_context")
     root.set("version", "1.0")
@@ -751,6 +794,10 @@ def to_context(
             except Exception:
                 # Fallback: generic dump so we never lose data
                 _serialize_generic(sys_elem, chart_obj, tag)
+            
+            # Add Sabian Symbols if requested
+            if include_sabian and tag == "western":
+                _serialize_sabian_symbols(root, chart_obj)
     else:
         # Single chart object
         tag = _resolve_tag(system) if system != "all" else "chart"
@@ -760,6 +807,10 @@ def to_context(
             serializer(sys_elem, chart_data)
         except Exception:
             _serialize_generic(sys_elem, chart_data, tag)
+        
+        # Add Sabian Symbols if requested
+        if include_sabian:
+            _serialize_sabian_symbols(root, chart_data)
 
     _indent(root)
     return ET.tostring(root, encoding="unicode", xml_declaration=False)

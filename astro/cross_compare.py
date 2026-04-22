@@ -2,8 +2,17 @@
 astro/cross_compare.py — 跨體系比較 (Cross-System Comparison)
 
 Unified planet positions across Western, Vedic, and Chinese systems.
+Includes Sabian Symbols integration for degree-level interpretation.
 """
 from dataclasses import dataclass, field
+from typing import Optional
+
+# Sabian Symbols integration
+try:
+    from astro.sabian import get_sabian_symbol, get_sabian_for_planet
+    SABIAN_AVAILABLE = True
+except ImportError:
+    SABIAN_AVAILABLE = False
 
 PLANET_NAME_MAP = {
     "Sun": ("太陽", "Sun ☉", "Surya (太陽)"),
@@ -37,6 +46,10 @@ class UnifiedPlanetPosition:
     nakshatra: str = ""
     chinese_sign: str = ""
     mansion_chinese: str = ""
+    # Sabian Symbol fields
+    sabian_degree: int = 0
+    sabian_symbol: str = ""
+    sabian_keyword: str = ""
 
 
 @dataclass
@@ -48,6 +61,8 @@ class CrossCompareResult:
     chinese_ming: str = ""
     summary_en: str = ""
     summary_cn: str = ""
+    # Sabian Symbols summary
+    sabian_summary: Optional[str] = None
 
 
 def _find_planet(planets, target_names):
@@ -59,9 +74,27 @@ def _find_planet(planets, target_names):
     return None
 
 
-def compute_cross_comparison(chinese_chart, western_chart, vedic_chart):
-    """Unify planet positions across three chart systems."""
+def compute_cross_comparison(chinese_chart, western_chart, vedic_chart, include_sabian: bool = True):
+    """Unify planet positions across three chart systems.
+    
+    Parameters
+    ----------
+    chinese_chart : Any
+        Chinese astrology chart data.
+    western_chart : Any
+        Western astrology chart data.
+    vedic_chart : Any
+        Vedic astrology chart data.
+    include_sabian : bool, optional
+        If True, include Sabian Symbols for each planet. Default is True.
+    
+    Returns
+    -------
+    CrossCompareResult
+        Unified comparison result with optional Sabian Symbols.
+    """
     results = []
+    sabian_notes = []
 
     for canonical, (cn_name, w_name, v_name) in PLANET_NAME_MAP.items():
         w_planet = _find_planet(western_chart.planets, [w_name, canonical])
@@ -76,6 +109,14 @@ def compute_cross_comparison(chinese_chart, western_chart, vedic_chart):
             up.western_sign = getattr(w_planet, 'sign', '')
             up.western_sign_cn = WESTERN_SIGNS_CN.get(up.western_sign, '')
             up.western_degree = round(w_planet.longitude % 30, 2)
+            
+            # Add Sabian Symbol
+            if include_sabian and SABIAN_AVAILABLE:
+                sabian = get_sabian_symbol(w_planet.longitude)
+                up.sabian_degree = sabian.get('degree', 0)
+                up.sabian_symbol = sabian.get('symbol', '')
+                up.sabian_keyword = sabian.get('keyword', '')
+                sabian_notes.append(f"{canonical}: {sabian.get('keyword', '')}")
         if v_planet:
             up.sidereal_lon = round(v_planet.longitude, 4)
             up.vedic_rashi = getattr(v_planet, 'rashi', '')
@@ -94,7 +135,8 @@ def compute_cross_comparison(chinese_chart, western_chart, vedic_chart):
         sidereal_asc=getattr(vedic_chart, 'asc_rashi', ''),
         chinese_ming="",
         summary_en=f"Comparing {len(results)} planets across 3 systems (ayanamsa={ayanamsa:.2f}°)",
-        summary_cn=f"跨3個體系比較 {len(results)} 顆行星（歲差={ayanamsa:.2f}°）",
+        summary_cn=f"跨 3 個體系比較 {len(results)} 顆行星（歲差={ayanamsa:.2f}°）",
+        sabian_summary="; ".join(sabian_notes) if sabian_notes else None,
     )
 
 

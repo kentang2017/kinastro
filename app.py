@@ -876,7 +876,7 @@ with st.sidebar:
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
-        ("cat_western", ["tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
+        ("cat_western", ["tab_sabian", "tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
         ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
@@ -925,6 +925,7 @@ with st.sidebar:
         "tab_taiyi": t("tab_taiyi"),
         "tab_qimen_luming": t("tab_qimen_luming"),
         "tab_celtic_tree": t("tab_celtic_tree"),
+        "tab_sabian": t("sabian_system_label"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -961,6 +962,7 @@ with st.sidebar:
         "tab_taiyi": t("sys_hint_taiyi"),
         "tab_qimen_luming": t("sys_hint_qimen_luming"),
         "tab_celtic_tree": t("sys_hint_celtic_tree"),
+        "tab_sabian": t("sys_hint_sabian"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2047,6 +2049,68 @@ elif _selected_system == "tab_western":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_western"))
+
+# --- 薩比恩符號 ---
+elif _selected_system == "tab_sabian":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            sidereal_mode = st.checkbox(
+                t("sidereal_label"),
+                value=False,
+                help=t("sidereal_help"),
+            )
+            with st.spinner(t("spinner_western")):
+                w_params = dict(**_p, sidereal=sidereal_mode)
+                w_chart = compute_western_chart(**w_params)
+            
+            st.header(t("sabian_system_label"))
+            st.caption(t("sabian_symbols_help"))
+            
+            try:
+                from astro.sabian import get_sabian_for_planet, render_sabian_svg, load_sabian_symbols
+                
+                # Major planets list
+                _sabian_planets = ["Sun", "Moon", "Mercury", "Venus", "Mars",
+                                   "Jupiter", "Saturn", "Ascendant", "Midheaven"]
+                
+                # Display in two columns
+                for _i, _pname in enumerate(_sabian_planets):
+                    _sabian = get_sabian_for_planet({"planets": w_chart.planets}, _pname)
+                    if _sabian:
+                        _col1, _col2 = st.columns([2, 1])
+                        with _col1:
+                            st.markdown(f"**{_pname}** - {_sabian['sign']} {_sabian['degree_in_sign']}°")
+                            st.markdown(f"*{t('sabian_symbol_label')}:* {_sabian['symbol']}")
+                            st.markdown(f"*{t('sabian_keyword_label')}:* **{_sabian['keyword']}**")
+                            st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
+                            st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
+                            st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
+                        with _col2:
+                            _svg = render_sabian_svg(_sabian['planet_longitude'], size=200)
+                            st.markdown(_svg, unsafe_allow_html=True)
+                        st.divider()
+                
+                # Optional: Show all 360 symbols in an expander
+                with st.expander(t("sabian_show_all")):
+                    st.caption("360 Sabian Symbols (Marc Edmund Jones, 1953)")
+                    _all_symbols = load_sabian_symbols()
+                    for _sym in _all_symbols[:360]:
+                        st.markdown(f"**{_sym['degree']}° {_sym['sign']}:** {_sym['symbol']}")
+                        
+            except ImportError as _ie:
+                st.error("Sabian Symbols module not available.")
+                st.exception(_ie)
+            except Exception as _se:
+                st.error(f"Error loading Sabian Symbols: {_se}")
+                st.exception(_se)
+                
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_sabian") if hasattr(t, "desc_sabian") else "🔮 薩比恩符號：Marc Edmund Jones (1953) 原著的 360 個象徵圖像，每個黃道度數對應一個獨特的心理原型。")
 
 # --- 印度占星 ---
 elif _selected_system == "tab_indian":

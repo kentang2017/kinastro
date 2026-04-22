@@ -1106,6 +1106,92 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "龙头星盘",
         "en": "Draconic",
     },
+    "western_subtab_asteroids": {
+        "zh": "小行星",
+        "zh_cn": "小行星",
+        "en": "Asteroids",
+    },
+    "western_subtab_fixed_stars": {
+        "zh": "恆星",
+        "zh_cn": "恒星",
+        "en": "Fixed Stars",
+    },
+    "western_subtab_parans": {
+        "zh": "並升星",
+        "zh_cn": "并升星",
+        "en": "Parans",
+    },
+    "western_subtab_heliacal": {
+        "zh": "偕日升",
+        "zh_cn": "偕日升",
+        "en": "Heliacal",
+    },
+    # Sabian Symbols
+    "sabian_symbols_title": {
+        "zh": "🔮 薩比恩符號",
+        "zh_cn": "🔮 萨比恩符号",
+        "en": "🔮 Sabian Symbols",
+    },
+    "sabian_symbols_help": {
+        "zh": "Marc Edmund Jones (1953) 原著的 360 個薩比恩符號，每個黃道度數對應一個象徵圖像。",
+        "zh_cn": "Marc Edmund Jones (1953) 原著的 360 个萨比恩符号，每个黄道度数对应一个象征图像。",
+        "en": "360 Sabian Symbols from Marc Edmund Jones (1953), one symbolical image per zodiac degree.",
+    },
+    "sabian_show_symbols": {
+        "zh": "顯示薩比恩符號",
+        "zh_cn": "显示萨比恩符号",
+        "en": "Show Sabian Symbols",
+    },
+    "sabian_degree_label": {
+        "zh": "度數",
+        "zh_cn": "度数",
+        "en": "Degree",
+    },
+    "sabian_symbol_label": {
+        "zh": "象徵圖像",
+        "zh_cn": "象征图像",
+        "en": "Symbol",
+    },
+    "sabian_keyword_label": {
+        "zh": "關鍵字",
+        "zh_cn": "关键字",
+        "en": "Keyword",
+    },
+    "sabian_formula_label": {
+        "zh": "公式",
+        "zh_cn": "公式",
+        "en": "Formula",
+    },
+    "sabian_positive_label": {
+        "zh": "正面表達",
+        "zh_cn": "正面表达",
+        "en": "Positive",
+    },
+    "sabian_negative_label": {
+        "zh": "負面表達",
+        "zh_cn": "负面表达",
+        "en": "Negative",
+    },
+    "sabian_show_all": {
+        "zh": "📜 查看所有 360 個符號",
+        "zh_cn": "📜 查看所有 360 个符号",
+        "en": "📜 View All 360 Symbols",
+    },
+    "sabian_system_label": {
+        "zh": "🔮 薩比恩符號",
+        "zh_cn": "🔮 萨比恩符号",
+        "en": "🔮 Sabian Symbols",
+    },
+    "sys_hint_sabian": {
+        "zh": "Marc Edmund Jones (1953) 原著的 360 個薩比恩象徵，探索每個度數的心理原型。",
+        "zh_cn": "Marc Edmund Jones (1953) 原著的 360 个萨比恩象征，探索每个度数的心理原型。",
+        "en": "360 Sabian Symbols from Marc Edmund Jones (1953), exploring psychological archetypes per degree.",
+    },
+    "desc_sabian": {
+        "zh": "🔮 **薩比恩符號**（Sabian Symbols）是由 Marc Edmund Jones 於 1953 年出版的占星象徵系統。每個黃道度數（共 360 度）都對應一個獨特的象徵圖像，揭示該度數的心理原型和生命主題。本模組嚴格採用 Jones 原著的 wording，不使用後世改寫版本。",
+        "zh_cn": "🔮 **萨比恩符号**（Sabian Symbols）是由 Marc Edmund Jones 于 1953 年出版的占星象征系统。每个黄道度数（共 360 度）都对应一个独特的象征图像，揭示该度数的心理原型和生命主题。本模组严格采用 Jones 原著的 wording，不使用后世改写版本。",
+        "en": "🔮 **Sabian Symbols** is an astrological symbol system published by Marc Edmund Jones in 1953. Each zodiac degree (360 total) corresponds to a unique symbolical image, revealing the psychological archetype and life theme of that degree. This module strictly uses Jones' original wording, not later reinterpretations.",
+    },
     "transit_target_date": {"zh": "過運日期", "en": "Transit Date"},
     "return_year_label": {"zh": "返照年份", "en": "Return Year"},
     "synastry_header": {"zh": "合盤比較", "en": "Synastry Comparison"},
