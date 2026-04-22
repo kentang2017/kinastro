@@ -39,6 +39,28 @@ CEREBRAS_MODEL_DESCRIPTIONS = {
     "zai-glm-4.7": "Cerebras: Versatile model for general use.",
 }
 
+# ---------------------------------------------------------------------------
+# OpenAI model options
+# ---------------------------------------------------------------------------
+
+OPENAI_MODEL_OPTIONS = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo",
+]
+
+OPENAI_MODEL_DESCRIPTIONS = {
+    "gpt-4o": "OpenAI: Flagship multimodal model, best overall.",
+    "gpt-4o-mini": "OpenAI: Fast and cost-effective for everyday tasks.",
+    "gpt-4.1": "OpenAI: Latest GPT-4.1 model with improved capabilities.",
+    "gpt-4.1-mini": "OpenAI: Compact GPT-4.1 for quick and efficient responses.",
+    "gpt-4-turbo": "OpenAI: High-capability model with 128k context.",
+    "gpt-3.5-turbo": "OpenAI: Fast and affordable for simpler tasks.",
+}
+
 
 class RateLimitError(Exception):
     """Raised when the AI API returns a rate-limit (429) error after all retries."""
@@ -94,6 +116,48 @@ class CerebrasClient:
 
         # All retries exhausted — raise our own RateLimitError so the caller
         # can show a user-friendly message.
+        raise RateLimitError(str(last_exc)) from last_exc
+
+
+class OpenAIClient:
+    """Thin wrapper around the OpenAI Python SDK with retry logic."""
+
+    def __init__(self, api_key: str, max_retries: int = 3):
+        if not api_key:
+            raise ValueError("OpenAIClient requires a non-empty API key.")
+        import openai as _openai
+        self.client = _openai.OpenAI(api_key=api_key, max_retries=max_retries)
+
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        model: str = "gpt-4o",
+        **kwargs,
+    ) -> str:
+        """Send a chat completion request and return the assistant message text."""
+        import openai as _openai
+
+        last_exc: Exception | None = None
+        for attempt in range(_APP_MAX_RETRIES):
+            try:
+                response = self.client.chat.completions.create(
+                    messages=messages,
+                    model=model,
+                    **kwargs,
+                )
+                return response.choices[0].message.content or ""
+            except _openai.RateLimitError as exc:
+                last_exc = exc
+                if attempt < _APP_MAX_RETRIES - 1:
+                    delay = _APP_RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        "OpenAI rate limited (attempt %d/%d), retrying in %.1fs …",
+                        attempt + 1, _APP_MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+            except _openai.AuthenticationError as exc:
+                raise ValueError(str(exc)) from exc
+
         raise RateLimitError(str(last_exc)) from last_exc
 
 
