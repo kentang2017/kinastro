@@ -1016,6 +1016,22 @@ with st.sidebar:
         st.session_state["_star_particles"] = _particles_on
         st.rerun()
 
+    # ── Cross-system comparison toggle ────────────────────────
+    _cross_system_on = st.toggle(
+        t("enable_cross_system"),
+        value=st.session_state.get("_cross_system_enabled", False),
+        key="_cross_system_toggle",
+        help=(
+            "同時計算西洋、印度、七政四餘、紫微、希臘占星並進行 AI 交叉比對解讀"
+            if _cur_lang in ("zh", "zh_cn") else
+            "Compute Western, Vedic, Chinese, Zi Wei, and Hellenistic charts "
+            "together for AI cross-system synthesis"
+        ),
+    )
+    if _cross_system_on != st.session_state.get("_cross_system_enabled", False):
+        st.session_state["_cross_system_enabled"] = _cross_system_on
+        st.rerun()
+
     # ── Advanced Bodies settings ───────────────────────────────
     st.divider()
     with st.expander(t("adv_bodies_header"), expanded=False):
