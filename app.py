@@ -94,9 +94,12 @@ from astro.interpretations import (
 )
 from astro.ai_analysis import (
     CerebrasClient,
+    OpenAIClient,
     RateLimitError,
     CEREBRAS_MODEL_OPTIONS,
     CEREBRAS_MODEL_DESCRIPTIONS,
+    OPENAI_MODEL_OPTIONS,
+    OPENAI_MODEL_DESCRIPTIONS,
     DEFAULT_SYSTEM_PROMPT,
     DEFAULT_SYSTEM_PROMPT_EN,
     detect_language,
@@ -1103,13 +1106,40 @@ with st.sidebar:
     st.divider()
     with st.expander(t("ai_settings_header"), expanded=False):
 
-        _ai_model = st.selectbox(
-            t("ai_model_label"),
-            options=CEREBRAS_MODEL_OPTIONS,
-            index=0,
-            key="_ai_model_select",
-            help="\n".join(f"• {k}: {v}" for k, v in CEREBRAS_MODEL_DESCRIPTIONS.items()),
+        # Provider selector
+        _ai_provider = st.radio(
+            t("ai_provider_label"),
+            options=["cerebras", "openai"],
+            format_func=lambda x: t("ai_provider_cerebras") if x == "cerebras" else t("ai_provider_openai"),
+            key="_ai_provider",
+            horizontal=True,
         )
+
+        # Model selector — options change depending on provider
+        if _ai_provider == "openai":
+            _ai_model = st.selectbox(
+                t("ai_model_label"),
+                options=OPENAI_MODEL_OPTIONS,
+                index=0,
+                key="_ai_model_select",
+                help="\n".join(f"• {k}: {v}" for k, v in OPENAI_MODEL_DESCRIPTIONS.items()),
+            )
+            # OpenAI API key input
+            st.text_input(
+                t("ai_openai_key_label"),
+                type="password",
+                key="_ai_openai_key",
+                help=t("ai_openai_key_help"),
+                placeholder="sk-...",
+            )
+        else:
+            _ai_model = st.selectbox(
+                t("ai_model_label"),
+                options=CEREBRAS_MODEL_OPTIONS,
+                index=0,
+                key="_ai_model_select",
+                help="\n".join(f"• {k}: {v}" for k, v in CEREBRAS_MODEL_DESCRIPTIONS.items()),
+            )
 
         # Use the hardcoded default system prompt (no user editing)
         st.session_state.ai_system_prompt = DEFAULT_SYSTEM_PROMPT
@@ -1258,17 +1288,26 @@ def _render_global_ai_chat():
         with _chat_box.chat_message("user", avatar=_user_avatar):
             st.markdown(_user_input)
 
-        # Resolve API key
-        _api_key = ""
-        try:
-            _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
-        except (FileNotFoundError, KeyError, AttributeError):
-            pass
-        if not _api_key:
-            _api_key = os.environ.get("CEREBRAS_API_KEY", "")
-        if not _api_key:
-            st.error(t("ai_key_missing"))
-            return
+        # Determine provider and resolve API key
+        _provider = st.session_state.get("_ai_provider", "cerebras")
+
+        if _provider == "openai":
+            _api_key = st.session_state.get("_ai_openai_key", "").strip()
+            if not _api_key:
+                st.error(t("ai_openai_key_missing"))
+                return
+        else:
+            # Cerebras: try secrets then environment
+            _api_key = ""
+            try:
+                _api_key = st.secrets.get("CEREBRAS_API_KEY", "")
+            except (FileNotFoundError, KeyError, AttributeError):
+                pass
+            if not _api_key:
+                _api_key = os.environ.get("CEREBRAS_API_KEY", "")
+            if not _api_key:
+                st.error(t("ai_key_missing"))
+                return
 
         # Build messages list for the API
         chart_prompt = format_chart_for_prompt(
@@ -1295,7 +1334,10 @@ def _render_global_ai_chat():
         with _chat_box.chat_message("assistant", avatar="🧙"):
             with st.spinner(t("ai_analyzing")):
                 try:
-                    client = CerebrasClient(api_key=_api_key)
+                    if _provider == "openai":
+                        client = OpenAIClient(api_key=_api_key)
+                    else:
+                        client = CerebrasClient(api_key=_api_key)
                     result = client.chat(
                         messages=_api_messages,
                         model=st.session_state.get("_ai_model_select", CEREBRAS_MODEL_OPTIONS[0]),

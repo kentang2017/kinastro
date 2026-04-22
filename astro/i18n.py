@@ -1259,6 +1259,30 @@ transmitted by **Chen Xiyi**.
         "zh": "⚠️ 未設置 Cerebras API Key。請在 Streamlit Secrets 或環境變數中設定 CEREBRAS_API_KEY。",
         "en": "⚠️ Cerebras API Key not found. Set CEREBRAS_API_KEY in Streamlit Secrets or environment variables.",
     },
+    "ai_openai_key_missing": {
+        "zh": "⚠️ 請在「AI 分析設置」中輸入您的 OpenAI API Key。",
+        "en": "⚠️ Please enter your OpenAI API Key in the AI Analysis Settings.",
+    },
+    "ai_provider_label": {
+        "zh": "AI 服務提供商",
+        "en": "AI Provider",
+    },
+    "ai_provider_cerebras": {
+        "zh": "Cerebras（免費）",
+        "en": "Cerebras (Free)",
+    },
+    "ai_provider_openai": {
+        "zh": "OpenAI（自帶密鑰）",
+        "en": "OpenAI (Bring Your Own Key)",
+    },
+    "ai_openai_key_label": {
+        "zh": "OpenAI API Key",
+        "en": "OpenAI API Key",
+    },
+    "ai_openai_key_help": {
+        "zh": "輸入您的 OpenAI API Key（以 sk- 開頭）。密鑰僅在本次會話中使用，不會被儲存。",
+        "en": "Enter your OpenAI API Key (starts with sk-). The key is only used in this session and is never stored.",
+    },
     "ai_error": {
         "zh": "❌ 調用 AI 時發生錯誤：{}",
         "en": "❌ Error calling AI: {}",
