@@ -1422,9 +1422,6 @@ def _render_global_ai_chat():
             if not _custom_host:
                 st.error(t("ai_custom_host_missing"))
                 return
-            _custom_path = st.session_state.get("_ai_custom_path", "/chat/completions").strip()
-            _custom_base_url = f"{_custom_host}{_custom_path.rsplit('/', 1)[0]}" if _custom_path else _custom_host
-            # base_url should point to the API root (before /chat/completions)
             _custom_base_url = _custom_host
             if not st.session_state.get("_ai_custom_models"):
                 st.error(t("ai_custom_model_missing"))
