@@ -161,6 +161,54 @@ class OpenAIClient:
         raise RateLimitError(str(last_exc)) from last_exc
 
 
+class CustomProviderClient:
+    """OpenAI-compatible client for third-party LLM providers."""
+
+    def __init__(self, api_key: str, base_url: str, max_retries: int = 3):
+        if not api_key:
+            raise ValueError("CustomProviderClient requires a non-empty API key.")
+        if not base_url:
+            raise ValueError("CustomProviderClient requires a non-empty base URL.")
+        import openai as _openai
+        self.client = _openai.OpenAI(
+            api_key=api_key,
+            base_url=base_url,
+            max_retries=max_retries,
+        )
+
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        model: str,
+        **kwargs,
+    ) -> str:
+        """Send a chat completion request and return the assistant message text."""
+        import openai as _openai
+
+        last_exc: Exception | None = None
+        for attempt in range(_APP_MAX_RETRIES):
+            try:
+                response = self.client.chat.completions.create(
+                    messages=messages,
+                    model=model,
+                    **kwargs,
+                )
+                return response.choices[0].message.content or ""
+            except _openai.RateLimitError as exc:
+                last_exc = exc
+                if attempt < _APP_MAX_RETRIES - 1:
+                    delay = _APP_RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        "Custom provider rate limited (attempt %d/%d), retrying in %.1fs …",
+                        attempt + 1, _APP_MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+            except _openai.AuthenticationError as exc:
+                raise ValueError(str(exc)) from exc
+
+        raise RateLimitError(str(last_exc)) from last_exc
+
+
 # ---------------------------------------------------------------------------
 # System prompt management
 # ---------------------------------------------------------------------------
