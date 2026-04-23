@@ -3,7 +3,7 @@
 <!-- Logo / Hero -->
 <div align="center">
 
-![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星 -FF6B6B?style=for-the-badge&logo=star&logoColor=white)
+![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.2.0-00C853?style=for-the-badge)
 ![Systems](https://img.shields.io/badge/Systems-32-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
