@@ -38,6 +38,8 @@ SYSTEM_ICONS: dict[str, str] = {
     "tab_aztec":        "🦅",
     "tab_decans":       "🏺",
     "tab_babylonian":   "📜",
+    # ── KP Astrology ──
+    "tab_kp":           "🔮",
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -71,6 +73,8 @@ SYSTEM_ACCENT_COLORS: dict[str, str] = {
     "tab_aztec":        "#C44D2A",
     "tab_decans":       "#D4A04A",
     "tab_babylonian":   "#B8956A",
+    # ── KP Astrology → orange-red ──
+    "tab_kp":           "#FF6B35",
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -100,4 +104,6 @@ SYSTEM_CSS_CLASS: dict[str, str] = {
     "tab_decans":       "egyptian-chart",
     "tab_babylonian":   "babylonian-chart",
     "tab_celtic_tree":  "western-chart",
+    # ── KP Astrology ──
+    "tab_kp":           "kp-chart",
 }

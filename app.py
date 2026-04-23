@@ -877,7 +877,7 @@ with st.sidebar:
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_sabian", "tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
-        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
+        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_kp"]),
         ("cat_middle_east", ["tab_persian", "tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -927,6 +927,7 @@ with st.sidebar:
         "tab_celtic_tree": t("tab_celtic_tree"),
         "tab_sabian": t("sabian_system_label"),
         "tab_persian": t("tab_persian"),
+        "tab_kp": t("tab_kp"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -965,6 +966,7 @@ with st.sidebar:
         "tab_celtic_tree": t("sys_hint_celtic_tree"),
         "tab_sabian": t("sys_hint_sabian"),
         "tab_persian": t("sys_hint_persian"),
+        "tab_kp": t("sys_hint_kp"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2344,6 +2346,45 @@ elif _selected_system == "tab_persian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_persian"))
+
+# --- KP Astrology (Krishnamurti Paddhati) ---
+elif _selected_system == "tab_kp":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_kp") if hasattr(t, "spinner_kp") else "計算 KP 星盤..."):
+                from astro.kp import compute_kp_chart, render_kp_chart
+                
+                kp_chart = compute_kp_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    latitude=_p.get("lat", 0.0), longitude=_p.get("lon", 0.0),
+                    timezone=_p.get("tz", 0.0),
+                    language=get_lang()
+                )
+            
+            # KP Astrology main layout
+            st.header(t("kp_title"))
+            st.caption(t("kp_subtitle"))
+            
+            # KP vs Vedic note
+            st.info(t("kp_placidus_note"))
+            
+            # Render KP chart (tables + SVG placeholder)
+            render_kp_chart(kp_chart, language=get_lang())
+            
+            # AI Analysis button
+            _render_ai_button("tab_kp", kp_chart, btn_key="kp")
+            
+        except ImportError as _ie:
+            st.error("KP Astrology module not available.")
+            st.exception(_ie)
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_kp") if hasattr(t, "desc_kp") else "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti 創立的精確預測系統，使用宿度主星 (Sub Lord) 和時辰主星 (Ruling Planets) 判斷事件發生時機。")
 
 # --- 印度占星 ---
 elif _selected_system == "tab_indian":

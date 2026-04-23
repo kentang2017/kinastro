@@ -1203,6 +1203,21 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "古代波斯萨珊王朝（224–651 CE）占星技术，包含 Firdar 生命周期、Hyleg/Alcocoden 寿命推算。",
         "en": "Ancient Sassanian Persian astrology (224–651 CE), featuring Firdar time lords, Hyleg/Alcocoden longevity techniques.",
     },
+    "sys_hint_kp": {
+        "zh": "印度現代占星大師克里希納穆提創立的精確預測系統，使用宿度主星 (Sub Lord) 判斷事件發生時機。",
+        "zh_cn": "印度现代占星大师克里希纳穆提创立的精确预测系统，使用宿度主星 (Sub Lord) 判断事件发生时机。",
+        "en": "Modern Indian astrology system by K.S. Krishnamurti for precise event timing using Sub Lord analysis.",
+    },
+    "desc_kp": {
+        "zh": "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti (1908-1972) 創立的精確預測系統。\\\\n\\\\n核心特點：\\\\n- **Rasi/Star/Sub Lord 系統**：每顆行星/宮頭都有三層主星，Sub Lord 決定事件「是否成立」\\\\n- **27 宿 × 9 Sub**：249 個精確區間，嚴格按照 Vimshottari Dasha 比例分割\\\\n- **Placidus 宮位制**：採用西洋宮位系統，不同於傳統 Vedic 的整宮制\\\\n- **Ruling Planets**：時辰主星用於問卜 (Horary) 與應期判斷\\\\n- **Significators 分析**：根據宮位守護、佔據、宿度關係判斷行星影響力\\\\n\\\\n適用於：精確預測事件發生時機、問卜占卜、擇日擇時。",
+        "zh_cn": "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度现代占星大师 K.S. Krishnamurti (1908-1972) 创立的精确预测系统。\\\\n\\\\n核心特点：\\\\n- **Rasi/Star/Sub Lord 系统**：每颗行星/宫头都有三层主星，Sub Lord 决定事件「是否成立」\\\\n- **27 宿 × 9 Sub**：249 个精确区间，严格按照 Vimshottari Dasha 比例分割\\\\n- **Placidus 宫位制**：采用西洋宫位系统，不同于传统 Vedic 的整宫制\\\\n- **Ruling Planets**：时辰主星用于问卜 (Horary) 与应期判断\\\\n- **Significators 分析**：根据宫位守护、占据、宿度关系判断行星影响力\\\\n\\\\n适用于：精确预测事件发生时机、问卜占卜、择日择时。",
+        "en": "🔮 **KP Astrology (Krishnamurti Paddhati)** — Modern Indian astrology system by K.S. Krishnamurti (1908-1972) for precise event timing.\\\\n\\\\nKey Features:\\\\n- **Rasi/Star/Sub Lord System**: Three-tier lordship for each planet/cusp; Sub Lord determines 'whether event happens'\\\\n- **27 Nakshatras × 9 Subs**: 249 precise divisions following Vimshottari Dasha proportions\\\\n- **Placidus House System**: Western house calculation, different from traditional Vedic Whole Sign\\\\n- **Ruling Planets**: For Horary astrology and timing predictions\\\\n- **Significators Analysis**: Planet strength based on ownership, occupation, and star relationships\\\\n\\\\nBest for: Precise event timing, Horary占卜, electional astrology.",
+    },
+    "spinner_kp": {
+        "zh": "計算 KP 星盤...",
+        "zh_cn": "计算 KP 星盘...",
+        "en": "Computing KP chart...",
+    },
     "desc_persian": {
         "zh": "🔯 **波斯薩珊王朝占星**（Sassanian Astrology）是古代波斯帝國（224–651 CE）的占星傳統，對中世紀伊斯蘭占星和歐洲占星有深遠影響。本模組實現薩珊占星的核心技術：\\n\\n- **Firdar / Firdaria**（行星生命週期）：薩珊占星最具特色的預測技法，將人生劃分為不同行星統治的時期\\n- **Hyleg & Alcocoden**（生命給予者與壽命給予者）：古典壽命推算技術，判斷生命力和壽命長短\\n- **波斯式年度主限**：基於度數的連續移動（每年 30°），不同於希臘占星的星座主限\\n- **Almuten Figuris**（最強行星/命主星）：根據薩珊尊嚴規則計算的命主星\\n- **四顆皇家恆星**：波斯傳統的畢宿五、軒轅十四、心宿二、北落師門\\n- **波斯敏感點**：特殊的阿拉伯點計算\\n\\n此技術與現有阿拉伯占星互補但有獨立體系。",
         "zh_cn": "🔯 **波斯萨珊王朝占星**（Sassanian Astrology）是古代波斯帝国（224–651 CE）的占星传统，对中世纪伊斯兰占星和欧洲占星有深远影响。本模组实现萨珊占星的核心技术：\\n\\n- **Firdar / Firdaria**（行星生命周期）：萨珊占星最具特色的预测技法，将人生划分为不同行星统治的时期\\n- **Hyleg & Alcocoden**（生命给予者与寿命给予者）：古典寿命推算技术，判断生命力和寿命长短\\n- **波斯式年度主限**：基于度数的连续移动（每年 30°），不同于希腊占星的星座主限\\n- **Almuten Figuris**（最强行星/命主星）：根据萨珊尊严规则计算的命主星\\n- **四颗皇家恒星**：波斯传统的毕宿五、轩辕十四、心宿二、北落师门\\n- **波斯敏感点**：特殊的阿拉伯点计算\\n\\n此技术与现有阿拉伯占星互补但有独立体系。",
@@ -2679,6 +2694,187 @@ Enter your birth information to look up your tree month and its poetic attribute
     "adv_heliacal_unavail": {
         "zh": "⚠️ 偕日升沒計算需要精確的觀測地點，且部分 Swiss Ephemeris 版本可能不支援。",
         "en": "⚠️ Heliacal calculation requires precise observer location; may not be available in all Swiss Ephemeris builds.",
+    },
+    # ── KP Astrology (Krishnamurti Paddhati) ─────────────────────────────────
+    "tab_kp": {
+        "zh": "🔮 KP 占星",
+        "en": "🔮 KP Astrology",
+    },
+    "kp_title": {
+        "zh": "克里希納穆提占星術 (KP Astrology)",
+        "en": "Krishnamurti Paddhati (KP Astrology)",
+    },
+    "kp_subtitle": {
+        "zh": "精確預測事件發生時機的印度現代占星系統",
+        "en": "Modern Indian astrology system for precise event timing",
+    },
+    "kp_horary_mode": {
+        "zh": "問卜模式 (Horary)",
+        "en": "Horary Mode",
+    },
+    "kp_natal_mode": {
+        "zh": "本命模式 (Natal)",
+        "en": "Natal Mode",
+    },
+    "kp_planet_table": {
+        "zh": "🪐 行星位置 (Planetary Positions)",
+        "en": "🪐 Planetary Positions",
+    },
+    "kp_cusp_table": {
+        "zh": "🏠 宮頭 (House Cusps)",
+        "en": "🏠 House Cusps",
+    },
+    "kp_ruling_planets": {
+        "zh": "⏰ 時辰主星 (Ruling Planets)",
+        "en": "⏰ Ruling Planets",
+    },
+    "kp_ayanamsa": {
+        "zh": "📐 歲差 (Ayanamsa)",
+        "en": "📐 Ayanamsa",
+    },
+    "kp_ayanamsa_label": {
+        "zh": "KP New Ayanamsa",
+        "en": "KP New Ayanamsa",
+    },
+    "kp_ayanamsa_help": {
+        "zh": "克里希納穆提新歲差（與 Lahiri 相差約 0°00'10\"）",
+        "en": "KP New Ayanamsa (differs from Lahiri by ~0°00'10\")",
+    },
+    "kp_significators": {
+        "zh": "🎯 徵兆星分析 (Significators)",
+        "en": "🎯 Significators Analysis",
+    },
+    "kp_select_house": {
+        "zh": "選擇宮位",
+        "en": "Select House",
+    },
+    "kp_very_strong": {
+        "zh": "極強",
+        "en": "Very Strong",
+    },
+    "kp_strong": {
+        "zh": "強",
+        "en": "Strong",
+    },
+    "kp_weak": {
+        "zh": "弱",
+        "en": "Weak",
+    },
+    "kp_very_weak": {
+        "zh": "極弱",
+        "en": "Very Weak",
+    },
+    "kp_lordship_system": {
+        "zh": "📖 KP 主星系統說明",
+        "en": "📖 KP Lordship System",
+    },
+    "kp_rasi_lord": {
+        "zh": "星座主",
+        "en": "Rasi Lord",
+    },
+    "kp_star_lord": {
+        "zh": "宿度主",
+        "en": "Star Lord",
+    },
+    "kp_sub_lord": {
+        "zh": "分主",
+        "en": "Sub Lord",
+    },
+    "kp_sub_sub_lord": {
+        "zh": "細分主",
+        "en": "Sub-Sub Lord",
+    },
+    "kp_rasi_lord_desc": {
+        "zh": "決定事件的「性質」",
+        "en": "Determines the 'nature' of the event",
+    },
+    "kp_star_lord_desc": {
+        "zh": "顯示事件的「來源」",
+        "en": "Shows the 'source' of the event",
+    },
+    "kp_sub_lord_desc": {
+        "zh": "**最重要**：決定事件「是否成立」",
+        "en": "**Most Important**: Determines 'whether the event happens'",
+    },
+    "kp_sub_sub_lord_desc": {
+        "zh": "用於精確應期判斷",
+        "en": "Used for precise timing prediction",
+    },
+    "kp_horary_title": {
+        "zh": "🔮 KP 問卜 (Horary Astrology)",
+        "en": "🔮 KP Horary Astrology",
+    },
+    "kp_horary_desc": {
+        "zh": "通過提問時刻的星盤來解答問題",
+        "en": "Answer questions using the chart of the moment",
+    },
+    "kp_horary_question": {
+        "zh": "您的問題",
+        "en": "Your Question",
+    },
+    "kp_horary_question_placeholder": {
+        "zh": "請清晰、具體地提出您的問題...",
+        "en": "Ask your question clearly and specifically...",
+    },
+    "kp_horary_question_help": {
+        "zh": "問題越具體，答案越準確。避免假設性問題。",
+        "en": "The more specific the question, the more accurate the answer. Avoid hypothetical questions.",
+    },
+    "kp_horary_submit": {
+        "zh": "🔮 開始問卜",
+        "en": "🔮 Start Horary",
+    },
+    "kp_question_date": {
+        "zh": "提問日期",
+        "en": "Question Date",
+    },
+    "kp_question_time": {
+        "zh": "提問時間",
+        "en": "Question Time",
+    },
+    "kp_question_city": {
+        "zh": "提問城市（可選）",
+        "en": "Question City (optional)",
+    },
+    "kp_day_lord": {
+        "zh": "日主 (Day Lord)",
+        "en": "Day Lord",
+    },
+    "kp_moon_star_lord": {
+        "zh": "月亮宿度主",
+        "en": "Moon Star Lord",
+    },
+    "kp_moon_sign_lord": {
+        "zh": "月亮星座主",
+        "en": "Moon Sign Lord",
+    },
+    "kp_lagna_star_lord": {
+        "zh": "上升宿度主",
+        "en": "Lagna Star Lord",
+    },
+    "kp_lagna_sign_lord": {
+        "zh": "上升星座主",
+        "en": "Lagna Sign Lord",
+    },
+    "kp_nakshatra": {
+        "zh": "宿",
+        "en": "Nakshatra",
+    },
+    "kp_pada": {
+        "zh": "Padam",
+        "en": "Pada",
+    },
+    "kp_placidus_note": {
+        "zh": "KP 使用 Placidus 宮位系統（與傳統 Vedic 的整宮制不同）",
+        "en": "KP uses Placidus house system (different from Vedic Whole Sign)",
+    },
+    "kp_chart_svg_unavailable": {
+        "zh": "🚧 **KP 星盤圖 SVG 渲染器開發中**",
+        "en": "🚧 **KP SVG Chart Renderer In Development**",
+    },
+    "kp_chart_svg_features": {
+        "zh": "計劃功能：北半球式圓盤、Sub Lord 標註、宮頭線、Nakshatra 背景色塊、Ruling Planets 高亮",
+        "en": "Planned features: North Indian style, Sub Lord labels, Cusp lines, Nakshatra backgrounds, Ruling Planets highlights",
     },
 }
 

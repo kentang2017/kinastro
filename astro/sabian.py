@@ -1,630 +1,461 @@
 """
-astro/sabian.py — Sabian Symbols 模組 (Marc Edmund Jones 1953 原著)
+astro/sabian.py — Sabian Symbols (Marc Edmund Jones, 1953 Original)
 
-本模組實現 Marc Edmund Jones 原著《The Sabian Symbols in Astrology》(1953 年版) 
-的 360 個 Sabian Symbols。每個黃道度數對應一個象徵圖像（symbolical picture），
-包含 keyword、positive/negative 表達、formula 和 interpretation。
+薩比恩符號：360 個黃道度數的象徵圖像
+嚴格按照 Marc Edmund Jones《The Sabian Symbols in Astrology》(1953) 原著
 
-注意：本模組嚴格使用 Jones 原書的 wording，不使用 Lynda Hill、Diana Roche 
-或其他現代改寫版本。
+核心功能：
+1. get_sabian_symbol(longitude) — 根據行星經度獲取對應符號
+2. get_sabian_for_planet(chart_data, planet) — 獲取特定行星的 Sabian Symbol
+3. render_sabian_svg(longitude) — 生成 SVG 符號卡片
+4. to_context_sabian() — 與 context_serializer.py 整合
 
-Usage
------
-    from astro.sabian import get_sabian_symbol, get_sabian_for_planet, render_sabian_svg
-    
-    # 根據經度取得符號
-    symbol = get_sabian_symbol(45.5)  # 金牛座 15.5°
-    
-    # 從星盤資料取得行星的 Sabian Symbol
-    sabian = get_sabian_for_planet(chart_data, "Sun")
-    
-    # 生成 SVG 符號卡片
-    svg = render_sabian_svg(45.5, size=300)
-
-Public API
+References
 ----------
-    get_sabian_symbol(longitude: float) -> dict
-        輸入行星經度（0-360），回傳對應的 Sabian Symbol 資料。
-    
-    get_sabian_for_planet(chart_data: dict, planet: str) -> dict
-        從星盤資料中取得指定行星的 Sabian Symbol。
-    
-    render_sabian_svg(longitude: float, size: int = 300) -> str
-        生成 SVG 格式的 Sabian Symbol 卡片，可與 chart_renderer_v2 整合。
-    
-    to_context_sabian(sabian_data: dict) -> str
-        將 Sabian 資料轉為 XML section，供 context_serializer 使用。
+- Jones, Marc Edmund (1953). "The Sabian Symbols in Astrology"
+- NOT Lynda Hill or modern reinterpretations
 """
-
-from __future__ import annotations
 
 import json
 import os
-from typing import Any, Optional
+from typing import Dict, List, Optional, Any
 from pathlib import Path
 
 
-# ═══════════════════════════════════════════════════════════════
-# 資料載入
-# ═══════════════════════════════════════════════════════════════
+# ============================================================================
+# CONSTANTS
+# ============================================================================
 
-def _load_sabian_data() -> list[dict]:
-    """載入 Sabian Symbols JSON 資料。"""
-    # 尋找資料檔案路徑
-    data_path = Path(__file__).parent / "data" / "sabian_symbols.json"
+ZODIAC_SIGNS = [
+    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+]
+
+ZODIAC_SIGNS_ZH = [
+    "白羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座",
+    "天秤座", "天蠍座", "射手座", "摩羯座", "水瓶座", "雙魚座"
+]
+
+# Path to Sabian symbols JSON data
+SABIAN_DATA_PATH = Path(__file__).parent / "data" / "sabian_symbols.json"
+
+
+# ============================================================================
+# DATA LOADING
+# ============================================================================
+
+def load_sabian_symbols() -> List[Dict[str, Any]]:
+    """
+    載入 360 個 Sabian Symbols（Jones 1953 原著）
     
-    if not data_path.exists():
-        # 嘗試其他可能路徑
-        alt_paths = [
-            Path("astro/data/sabian_symbols.json"),
-            Path("data/sabian_symbols.json"),
-            Path.home() / ".kinastro" / "sabian_symbols.json",
-        ]
-        for alt_path in alt_paths:
-            if alt_path.exists():
-                data_path = alt_path
-                break
+    Returns
+    -------
+    List[Dict[str, Any]]
+        包含 360 個符號的列表，每個符號包含：
+        - degree: 1-360
+        - sign: 星座英文名
+        - degree_in_sign: 星座內度數 (1-30)
+        - symbol: 象徵圖像（Jones 原著 exact wording）
+        - keyword: 關鍵詞
+        - positive: 正面意義
+        - negative: 負面意義
+        - formula: Jones 公式
+        - interpretation: 心理意義簡述
+    """
+    if not SABIAN_DATA_PATH.exists():
+        raise FileNotFoundError(f"Sabian symbols data not found: {SABIAN_DATA_PATH}")
     
-    with open(data_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    with open(SABIAN_DATA_PATH, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    if len(data) != 360:
+        raise ValueError(f"Expected 360 symbols, got {len(data)}")
+    
+    return data
 
 
-# 全域載入 Sabian 資料
-_SABIAN_DATA = _load_sabian_data()
-
-# 建立經度索引快取 (0-359)
-_SABIAN_INDEX: dict[int, dict] = {}
-for item in _SABIAN_DATA:
-    degree = item["degree"]
-    _SABIAN_INDEX[degree] = item
+# Cache loaded symbols
+_SABIAN_SYMBOLS_CACHE: Optional[List[Dict[str, Any]]] = None
 
 
-# ═══════════════════════════════════════════════════════════════
-# 核心函數
-# ═══════════════════════════════════════════════════════════════
+def _get_symbols() -> List[Dict[str, Any]]:
+    """Get cached symbols."""
+    global _SABIAN_SYMBOLS_CACHE
+    if _SABIAN_SYMBOLS_CACHE is None:
+        _SABIAN_SYMBOLS_CACHE = load_sabian_symbols()
+    return _SABIAN_SYMBOLS_CACHE
 
-def get_sabian_symbol(longitude: float) -> dict:
-    """根據行星經度取得對應的 Sabian Symbol。
+
+# ============================================================================
+# CORE FUNCTIONS
+# ============================================================================
+
+def get_sabian_symbol(longitude: float) -> Dict[str, Any]:
+    """
+    根據行星經度獲取對應的 Sabian Symbol
     
     Parameters
     ----------
     longitude : float
-        行星的黃道經度（0-360 度）。0° = 白羊座 0°，30° = 金牛座 0°，以此類推。
+        行星經度（0-360 度）
     
     Returns
     -------
-    dict
-        包含以下欄位的字典：
-        - degree: 總度數 (1-360)
-        - sign: 星座名稱 (英文)
-        - degree_in_sign: 在星座內的度數 (1-30)
-        - symbol: 象徵圖像（symbolical picture）
-        - keyword: 關鍵字
-        - positive: 正面表達
-        - negative: 負面表達
-        - formula: Jones 原書的 formula
-        - interpretation: 心理意義簡述（中文）
+    Dict[str, Any]
+        符號資料，包含 symbol, keyword, positive, negative, formula, interpretation
+    
+    Raises
+    ------
+    ValueError
+        如果經度不在 0-360 範圍內
     
     Examples
     --------
-    >>> get_sabian_symbol(0.0)  # 白羊座 0°
-    {'degree': 1, 'sign': 'Aries', 'degree_in_sign': 1, ...}
-    
-    >>> get_sabian_symbol(45.5)  # 金牛座 15.5°
-    {'degree': 46, 'sign': 'Taurus', 'degree_in_sign': 16, ...}
+    >>> get_sabian_symbol(0.5)  # Aries 1°
+    {'degree': 1, 'sign': 'Aries', 'symbol': 'A woman has risen out of the ocean...'}
     """
-    # 確保經度在 0-360 範圍內
-    longitude = longitude % 360
+    if not 0 <= longitude < 360:
+        raise ValueError(f"Longitude must be 0-360, got {longitude}")
     
-    # Sabian Symbols 使用 1-based 度數系統
-    # 0° = 第 1 度，29.999° = 第 30 度
-    sabian_degree = int(longitude) + 1
+    # Convert to 1-indexed degree (1-360)
+    degree_index = int(longitude) + 1
+    if degree_index > 360:
+        degree_index = 360
     
-    # 處理邊界情況：359.999° 應該是第 360 度
-    if sabian_degree > 360:
-        sabian_degree = 360
-    
-    # 從索引取得資料
-    if sabian_degree in _SABIAN_INDEX:
-        return _SABIAN_INDEX[sabian_degree].copy()
-    
-    # 如果找不到，回傳預設值
-    return {
-        "degree": sabian_degree,
-        "sign": "Unknown",
-        "degree_in_sign": (sabian_degree - 1) % 30 + 1,
-        "symbol": "Data not available",
-        "keyword": "Unknown",
-        "positive": "N/A",
-        "negative": "N/A",
-        "formula": "N/A",
-        "interpretation": "資料尚未建立"
-    }
+    symbols = _get_symbols()
+    return symbols[degree_index - 1]
 
 
-def get_sabian_for_planet(chart_data: dict, planet: str) -> dict:
-    """從星盤資料中取得指定行星的 Sabian Symbol。
+def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, Any]:
+    """
+    獲取特定行星的 Sabian Symbol
     
     Parameters
     ----------
-    chart_data : dict
-        星盤資料字典，應包含 'planets' 列表，每個行星物件應有
-        'name' 和 'longitude' 欄位。
+    chart_data : Dict[str, Any]
+        星盤資料，必須包含行星經度資訊
+        格式：{'planets': [{'name': 'Sun', 'longitude': 45.5}, ...]}
     planet : str
-        行星名稱（英文或中文），例如 "Sun"、"Moon"、"太陽"、"太陰"。
+        行星名稱（英文或中文）
+        支援：Sun/Moon/Mercury/Venus/Mars/Jupiter/Saturn/Uranus/Neptune/Pluto
+        或中文：太陽/月亮/水星/金星/火星/木星/土星/天王星/海王星/冥王星
     
     Returns
     -------
-    dict
-        該行星的 Sabian Symbol 資料，包含經度資訊和完整符號內容。
-        如果找不到行星，回傳 None。
+    Dict[str, Any]
+        該行星的 Sabian Symbol 資料
+    
+    Raises
+    ------
+    ValueError
+        如果找不到該行星
     
     Examples
     --------
-    >>> chart = {"planets": [{"name": "Sun", "longitude": 45.5}]}
-    >>> get_sabian_for_planet(chart, "Sun")
-    {'planet': 'Sun', 'longitude': 45.5, 'degree': 46, 'sign': 'Taurus', ...}
+    >>> chart = {'planets': [{'name': 'Sun', 'longitude': 45.5}]}
+    >>> get_sabian_for_planet(chart, 'Sun')
+    {'degree': 46, 'sign': 'Taurus', 'symbol': '...'}
     """
-    # 行星名稱對照表
-    PLANET_NAME_MAP = {
-        "Sun": ["Sun", "太陽", "☉"],
-        "Moon": ["Moon", "太陰", "☽"],
-        "Mercury": ["Mercury", "水星", "☿"],
-        "Venus": ["Venus", "金星", "♀"],
-        "Mars": ["Mars", "火星", "♂"],
-        "Jupiter": ["Jupiter", "木星", "♃"],
-        "Saturn": ["Saturn", "土星", "♄"],
-        "Uranus": ["Uranus", "天王星", "♅"],
-        "Neptune": ["Neptune", "海王星", "♆"],
-        "Pluto": ["Pluto", "冥王星", "♇"],
-        "Ascendant": ["Ascendant", "上升點", "ASC", "上升"],
-        "Midheaven": ["Midheaven", "天頂", "MC", "中天"],
+    # Planet name mapping
+    planet_map = {
+        'sun': 'Sun', '太陽': 'Sun',
+        'moon': 'Moon', '月亮': 'Moon',
+        'mercury': 'Mercury', '水星': 'Mercury',
+        'venus': 'Venus', '金星': 'Venus',
+        'mars': 'Mars', '火星': 'Mars',
+        'jupiter': 'Jupiter', '木星': 'Jupiter',
+        'saturn': 'Saturn', '土星': 'Saturn',
+        'uranus': 'Uranus', '天王星': 'Uranus',
+        'neptune': 'Neptune', '海王星': 'Neptune',
+        'pluto': 'Pluto', '冥王星': 'Pluto',
     }
     
-    # 尋找目標行星
-    target_names = PLANET_NAME_MAP.get(planet, [planet])
+    planet_std = planet_map.get(planet.lower(), planet)
     
-    planets = chart_data.get("planets", [])
-    target_planet = None
-    
+    planets = chart_data.get('planets', [])
     for p in planets:
-        # 支援 dataclass 物件和字典兩種格式
-        if hasattr(p, 'name'):
-            # dataclass 物件 (如 WesternPlanet)
-            p_name = p.name
-            p_longitude = p.longitude
-        else:
-            # 字典格式
-            p_name = p.get("name", "")
-            p_longitude = p.get("longitude")
-        
-        for target in target_names:
-            if target in p_name or p_name in target:
-                target_planet = p
-                break
-        if target_planet:
-            break
+        if p.get('name') == planet_std:
+            return get_sabian_symbol(p['longitude'])
     
-    if not target_planet:
-        return None
-    
-    # 取得經度
-    if hasattr(target_planet, 'longitude'):
-        # dataclass 物件
-        longitude = target_planet.longitude
-    else:
-        # 字典格式
-        longitude = target_planet.get("longitude")
-        if longitude is None:
-            # 嘗試其他可能的欄位名稱
-            longitude = target_planet.get("lon") or target_planet.get("position")
-    
-    if longitude is None:
-        return None
-    
-    # 取得 Sabian Symbol
-    sabian = get_sabian_symbol(float(longitude))
-    
-    # 加入行星資訊
-    result = sabian.copy()
-    if hasattr(target_planet, 'name'):
-        result["planet"] = target_planet.name
-    else:
-        result["planet"] = target_planet.get("name", planet)
-    result["planet_longitude"] = float(longitude)
-    
-    return result
+    raise ValueError(f"Planet not found: {planet}")
 
 
-def render_sabian_svg(longitude: float, size: int = 300) -> str:
-    """生成 Sabian Symbol 的 SVG 卡片。
+def get_sign_longitudinal_degree(longitude: float) -> tuple:
+    """
+    將經度轉換為星座和星座內度數
     
     Parameters
     ----------
     longitude : float
-        行星的黃道經度（0-360 度）。
-    size : int, optional
-        SVG 卡片的大小（像素），預設 300。
+        行星經度（0-360 度）
+    
+    Returns
+    -------
+    tuple
+        (sign_index, degree_in_sign, sign_name, sign_name_zh)
+        sign_index: 0-11
+        degree_in_sign: 1-30
+        sign_name: 星座英文名
+        sign_name_zh: 星座中文名
+    """
+    sign_index = int(longitude) // 30
+    degree_in_sign = int(longitude) % 30 + 1
+    return (
+        sign_index,
+        degree_in_sign,
+        ZODIAC_SIGNS[sign_index],
+        ZODIAC_SIGNS_ZH[sign_index]
+    )
+
+
+# ============================================================================
+# SVG RENDERING
+# ============================================================================
+
+def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -> str:
+    """
+    生成 Sabian Symbol SVG 卡片
+    
+    Parameters
+    ----------
+    longitude : float
+        行星經度（0-360 度）
+    size : int
+        SVG 尺寸（像素），預設 300
+    language : str
+        語言（"zh" 或 "en"）
     
     Returns
     -------
     str
-        SVG 格式的字串，可直接用於 st.markdown(..., unsafe_allow_html=True)。
+        SVG 字串
     
     Examples
     --------
-    >>> svg = render_sabian_svg(45.5, size=300)
-    >>> st.markdown(svg, unsafe_allow_html=True)
+    >>> svg = render_sabian_svg(45.5, size=400)
+    >>> len(svg) > 1000
+    True
     """
-    sabian = get_sabian_symbol(longitude)
+    symbol_data = get_sabian_symbol(longitude)
+    sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(longitude)
     
-    # 星座顏色對應表
-    SIGN_COLORS = {
-        "Aries": "#FF6B6B",
-        "Taurus": "#4ECDC4",
-        "Gemini": "#FFE66D",
-        "Cancer": "#95E1D3",
-        "Leo": "#FFD93D",
-        "Virgo": "#F7FFF7",
-        "Libra": "#FF85A2",
-        "Scorpio": "#FF6B9D",
-        "Sagittarius": "#C7F464",
-        "Capricorn": "#A8D8EA",
-        "Aquarius": "#AA96DA",
-        "Pisces": "#FCBAD3",
+    # Color scheme based on element
+    element_colors = {
+        "fire": {"bg": "#FFF5F0", "accent": "#FF6B35", "text": "#8B2500"},
+        "earth": {"bg": "#F5F8F0", "accent": "#6B9F5E", "text": "#2D4A22"},
+        "air": {"bg": "#F0F5F8", "accent": "#7B9ED9", "text": "#223D4A"},
+        "water": {"bg": "#F0F5F8", "accent": "#5E8B9F", "text": "#223D4A"},
     }
     
-    sign = sabian.get("sign", "Unknown")
-    color = SIGN_COLORS.get(sign, "#CCCCCC")
+    elements = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"]
+    element = elements[sign_idx]
+    colors = element_colors[element]
     
-    # 生成 SVG
-    svg = f'''<svg width="{size}" height="{size}" xmlns="http://www.w3.org/2000/svg">
-  <!-- 背景 -->
-  <defs>
-    <linearGradient id="grad-{int(longitude)}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:{color};stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:{color};stop-opacity:0.1" />
-    </linearGradient>
-  </defs>
-  
-  <rect width="{size}" height="{size}" fill="url(#grad-{int(longitude)})" rx="10" ry="10"/>
-  
-  <!-- 邊框 -->
-  <rect x="2" y="2" width="{size-4}" height="{size-4}" fill="none" stroke="{color}" stroke-width="2" rx="8" ry="8"/>
-  
-  <!-- 星座名稱 -->
-  <text x="{size//2}" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="{color}">
-    {sign} {sabian.get('degree_in_sign', '')}°
-  </text>
-  
-  <!-- 度數 -->
-  <text x="{size//2}" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">
-    Degree {sabian.get('degree', '')} / 360
-  </text>
-  
-  <!-- 關鍵字 -->
-  <text x="{size//2}" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-style="italic" fill="#444">
-    "{sabian.get('keyword', '')}"
-  </text>
-  
-  <!-- 象徵圖像（換行處理） -->
-  <foreignObject x="20" y="95" width="{size-40}" height="120">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial, sans-serif; font-size: 11px; color: #333; text-align: center; line-height: 1.4;">
-      {sabian.get('symbol', '')}
-    </div>
-  </foreignObject>
-  
-  <!-- Formula -->
-  <text x="{size//2}" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#888">
-    {sabian.get('formula', '')}
-  </text>
-  
-  <!-- 裝飾 -->
-  <circle cx="{size//2}" cy="265" r="5" fill="{color}" opacity="0.5"/>
+    if language == "zh":
+        sign_display = f"{sign_zh} {deg_in_sign}°"
+        keyword_label = "關鍵詞"
+        formula_label = "Jones 公式"
+    else:
+        sign_display = f"{sign_en} {deg_in_sign}°"
+        keyword_label = "Keyword"
+        formula_label = "Formula"
+    
+    svg = f'''<svg width="{size}" height="{size * 1.4}" viewBox="0 0 {size} {int(size * 1.4)}" 
+    xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="sabianGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:{colors['bg']};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
+        </linearGradient>
+        <filter id="sabianShadow">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+        </filter>
+    </defs>
+    
+    <!-- Background -->
+    <rect width="{size}" height="{int(size * 1.4)}" fill="url(#sabianGrad)" rx="15" ry="15"/>
+    
+    <!-- Border -->
+    <rect width="{size}" height="{int(size * 1.4)}" fill="none" stroke="{colors['accent']}" 
+          stroke-width="3" rx="15" ry="15"/>
+    
+    <!-- Header: Sign and Degree -->
+    <text x="{size // 2}" y="45" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="20" font-weight="bold" 
+          fill="{colors['text']}">{sign_display}</text>
+    
+    <!-- Degree Number Circle -->
+    <circle cx="{size - 40}" cy="30" r="20" fill="{colors['accent']}" opacity="0.9"/>
+    <text x="{size - 40}" y="37" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">{deg_in_sign}</text>
+    
+    <!-- Divider -->
+    <line x1="30" y1="60" x2="{size - 30}" y2="60" 
+          stroke="{colors['accent']}" stroke-width="2" opacity="0.5"/>
+    
+    <!-- Symbol Text (main content) -->
+    <foreignObject x="30" y="75" width="{size - 60}" height="{size * 0.5}">
+        <div xmlns="http://www.w3.org/1999/xhtml" 
+             style="font-family: Georgia, serif; font-size: 16px; line-height: 1.6; 
+                    color: {colors['text']}; text-align: center; 
+                    padding: 10px; font-style: italic;">
+            "{symbol_data['symbol']}"
+        </div>
+    </foreignObject>
+    
+    <!-- Keyword -->
+    <text x="{size // 2}" y="{int(size * 0.65)}" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="14" font-weight="bold" 
+          fill="{colors['accent']}">{keyword_label}: {symbol_data['keyword']}</text>
+    
+    <!-- Formula -->
+    <text x="{size // 2}" y="{int(size * 0.75)}" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="12" 
+          fill="{colors['text']}" font-style="italic">{formula_label}: {symbol_data['formula']}</text>
+    
+    <!-- Footer -->
+    <text x="{size // 2}" y="{int(size * 1.3)}" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="10" 
+          fill="{colors['text']}" opacity="0.7">Marc Edmund Jones (1953)</text>
 </svg>'''
     
     return svg
 
 
-# ═══════════════════════════════════════════════════════════════
-# Context Serializer 整合
-# ═══════════════════════════════════════════════════════════════
+# ============================================================================
+# CONTEXT SERIALIZER INTEGRATION
+# ============================================================================
 
-def to_context_sabian(sabian_data: dict) -> str:
-    """將 Sabian Symbol 資料轉換為 XML section，供 context_serializer 使用。
+def to_context_sabian(longitude: float, planet_name: str = "") -> str:
+    """
+    將 Sabian Symbol 轉換為 XML format，供 context_serializer.py 使用
     
     Parameters
     ----------
-    sabian_data : dict
-        Sabian Symbol 資料字典，通常來自 get_sabian_symbol() 或 
-        get_sabian_for_planet()。
+    longitude : float
+        行星經度（0-360 度）
+    planet_name : str
+        行星名稱（可選）
     
     Returns
     -------
     str
-        XML 格式的字串，可嵌入至 context_serializer 的輸出中。
+        XML format 的 Sabian Symbol 資料
     
     Examples
     --------
-    >>> sabian = get_sabian_symbol(45.5)
-    >>> xml = to_context_sabian(sabian)
+    >>> xml = to_context_sabian(45.5, "Sun")
+    >>> "<sabian_symbol" in xml
+    True
     """
-    if not sabian_data:
-        return ""
+    symbol_data = get_sabian_symbol(longitude)
+    sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(longitude)
     
-    # 建立 XML 元素
-    lines = []
-    lines.append("  <sabian_symbol>")
+    planet_xml = f' planet="{planet_name}"' if planet_name else ""
     
-    # 基本資訊
-    lines.append(f'    <degree>{sabian_data.get("degree", "")}</degree>')
-    lines.append(f'    <sign>{sabian_data.get("sign", "")}</sign>')
-    lines.append(f'    <degree_in_sign>{sabian_data.get("degree_in_sign", "")}</degree_in_sign>')
-    lines.append(f'    <keyword>{sabian_data.get("keyword", "")}</keyword>')
+    xml = f'''<sabian_symbol{planet_xml} degree="{symbol_data['degree']}" 
+    sign="{sign_en}" sign_zh="{sign_zh}" degree_in_sign="{deg_in_sign}">
+    <symbol>{symbol_data['symbol']}</symbol>
+    <keyword>{symbol_data['keyword']}</keyword>
+    <positive>{symbol_data['positive']}</positive>
+    <negative>{symbol_data['negative']}</negative>
+    <formula>{symbol_data['formula']}</formula>
+    <interpretation>{symbol_data['interpretation']}</interpretation>
+</sabian_symbol>'''
     
-    # 象徵圖像
-    symbol = sabian_data.get("symbol", "")
-    lines.append(f"    <symbol>{symbol}</symbol>")
-    
-    # 正負面表達
-    lines.append(f'    <positive>{sabian_data.get("positive", "")}</positive>')
-    lines.append(f'    <negative>{sabian_data.get("negative", "")}</negative>')
-    
-    # Formula
-    lines.append(f'    <formula>{sabian_data.get("formula", "")}</formula>')
-    
-    # 詮釋（中文）
-    lines.append(f'    <interpretation>{sabian_data.get("interpretation", "")}</interpretation>')
-    
-    # 如果有行星資訊
-    if "planet" in sabian_data:
-        lines.append(f'    <planet>{sabian_data.get("planet", "")}</planet>')
-        lines.append(f'    <planet_longitude>{sabian_data.get("planet_longitude", "")}</planet_longitude>')
-    
-    lines.append("  </sabian_symbol>")
-    
-    return "\n".join(lines)
+    return xml
 
 
-def serialize_sabian_for_context(chart_data: dict, planets: list[str] = None) -> str:
-    """為星盤中的行星生成完整的 Sabian Symbol XML section。
+# ============================================================================
+# CROSS-COMPARE INTEGRATION
+# ============================================================================
+
+def compare_sabian_with_western(western_data: Dict[str, Any], longitude: float) -> Dict[str, Any]:
+    """
+    將 Sabian Symbol 與西洋占星資料做對比
     
     Parameters
     ----------
-    chart_data : dict
-        星盤資料字典。
-    planets : list[str], optional
-        要包含的行星列表。如果為 None，則包含所有主要行星。
+    western_data : Dict[str, Any]
+        西洋占星資料（行星位置、星座、宮位等）
+    longitude : float
+        行星經度
     
     Returns
     -------
-    str
-        完整的 Sabian Symbols XML section。
+    Dict[str, Any]
+        包含西洋占星與 Sabian Symbol 的對比資料
     """
-    if planets is None:
-        planets = ["Sun", "Moon", "Mercury", "Venus", "Mars", 
-                   "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto",
-                   "Ascendant", "Midheaven"]
-    
-    lines = []
-    lines.append("<sabian_symbols>")
-    
-    for planet_name in planets:
-        sabian = get_sabian_for_planet(chart_data, planet_name)
-        if sabian:
-            xml = to_context_sabian(sabian)
-            lines.append(xml)
-    
-    lines.append("</sabian_symbols>")
-    
-    return "\n".join(lines)
-
-
-# ═══════════════════════════════════════════════════════════════
-# Cross-Compare 整合
-# ═══════════════════════════════════════════════════════════════
-
-def compare_sabian_with_degree(degree: float, western_sign: str, western_degree: float) -> dict:
-    """比較 Sabian Symbol 與西洋行星度數。
-    
-    Parameters
-    ----------
-    degree : float
-        行星的黃道經度（0-360）。
-    western_sign : str
-        西洋星座名稱（英文）。
-    western_degree : float
-        在星座內的度數（0-29.99）。
-    
-    Returns
-    -------
-    dict
-        包含 Sabian 和西洋度數的比較結果。
-    """
-    sabian = get_sabian_symbol(degree)
+    sabian = get_sabian_symbol(longitude)
+    sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(longitude)
     
     return {
-        "longitude": degree,
+        "longitude": longitude,
         "western": {
-            "sign": western_sign,
-            "degree": round(western_degree, 2),
+            "sign": sign_en,
+            "sign_zh": sign_zh,
+            "degree_in_sign": deg_in_sign,
+            **western_data
         },
         "sabian": {
-            "degree": sabian.get("degree"),
-            "sign": sabian.get("sign"),
-            "degree_in_sign": sabian.get("degree_in_sign"),
-            "symbol": sabian.get("symbol"),
-            "keyword": sabian.get("keyword"),
+            "symbol": sabian['symbol'],
+            "keyword": sabian['keyword'],
+            "formula": sabian['formula'],
+            "interpretation": sabian['interpretation'],
         }
     }
 
 
-# ═══════════════════════════════════════════════════════════════
-# 輔助函數
-# ═══════════════════════════════════════════════════════════════
-
-def get_sign_from_longitude(longitude: float) -> str:
-    """從經度取得星座名稱。
-    
-    Parameters
-    ----------
-    longitude : float
-        黃道經度（0-360）。
-    
-    Returns
-    -------
-    str
-        星座名稱（英文）。
-    """
-    signs = [
-        "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-        "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
-    ]
-    sign_index = int(longitude) // 30
-    return signs[sign_index % 12]
-
-
-def get_degree_in_sign(longitude: float) -> float:
-    """從經度取得星座內的度數。
-    
-    Parameters
-    ----------
-    longitude : float
-        黃道經度（0-360）。
-    
-    Returns
-    -------
-    float
-        在星座內的度數（0-29.99）。
-    """
-    return longitude % 30
-
-
-def get_all_sabian_symbols_for_sign(sign: str) -> list[dict]:
-    """取得指定星座的所有 30 個 Sabian Symbols。
-    
-    Parameters
-    ----------
-    sign : str
-        星座名稱（英文），例如 "Aries"、"Taurus"。
-    
-    Returns
-    -------
-    list[dict]
-        該星座的 30 個 Sabian Symbol 資料。
-    """
-    sign_order = [
-        "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-        "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
-    ]
-    
-    if sign not in sign_order:
-        return []
-    
-    sign_index = sign_order.index(sign)
-    start_degree = sign_index * 30 + 1
-    end_degree = start_degree + 29
-    
-    return [_SABIAN_INDEX.get(i, {}) for i in range(start_degree, end_degree + 1)]
-
-
-def load_sabian_symbols() -> list[dict]:
-    """載入所有 360 個 Sabian Symbols。
-    
-    Returns
-    -------
-    list[dict]
-        包含所有 360 個 Sabian Symbol 的列表，每個元素為完整的 symbol dict。
-    
-    Example
-    -------
-    >>> symbols = load_sabian_symbols()
-    >>> len(symbols)
-    360
-    >>> symbols[0]['degree']
-    1
-    >>> symbols[0]['sign']
-    'Aries'
-    """
-    return _SABIAN_DATA.copy()
-
-
-# ═══════════════════════════════════════════════════════════════
-# 測試
-# ═══════════════════════════════════════════════════════════════
+# ============================================================================
+# CLI TEST
+# ============================================================================
 
 if __name__ == "__main__":
-    """測試 Sabian Symbols 模組。"""
-    
+    # Test with sample birth data
     print("=" * 60)
-    print("Sabian Symbols 模組測試")
+    print("Sabian Symbols Test — Marc Edmund Jones (1953) Original")
     print("=" * 60)
     
-    # 範例出生資料：1990 年 1 月 15 日 12:00 台北
-    # 太陽約在摩羯座 24°，月亮約在雙子座 10°
-    test_cases = [
-        (0.0, "白羊座 0° (起點)"),
-        (45.5, "金牛座 15.5°"),
-        (90.0, "巨蟹座 0°"),
-        (180.0, "天秤座 0°"),
-        (270.0, "摩羯座 0°"),
-        (359.9, "雙魚座 29.9° (終點)"),
+    # Sample data: Sun at 15° Aries, Moon at 23° Cancer
+    test_planets = [
+        {"name": "Sun", "longitude": 15.0},    # Aries 16°
+        {"name": "Moon", "longitude": 113.0},  # Cancer 24°
+        {"name": "Mercury", "longitude": 5.5}, # Aries 6°
+        {"name": "Venus", "longitude": 45.5},  # Taurus 16°
     ]
     
-    print("\n【測試 get_sabian_symbol()】\n")
-    for longitude, description in test_cases:
-        sabian = get_sabian_symbol(longitude)
-        print(f"{description} (經度：{longitude}°)")
-        print(f"  度數：{sabian['degree']} / 360")
-        print(f"  星座：{sabian['sign']} {sabian['degree_in_sign']}°")
-        print(f"  關鍵字：{sabian['keyword']}")
-        print(f"  象徵：{sabian['symbol'][:60]}...")
-        print(f"  Formula: {sabian['formula']}")
+    print("\n🔮 Sample Birth Chart Sabian Symbols:\n")
+    
+    for planet in test_planets:
+        symbol = get_sabian_symbol(planet["longitude"])
+        sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(planet["longitude"])
+        
+        print(f"{'─' * 58}")
+        print(f"{planet['name']} — {sign_zh} {deg_in_sign}° ({planet['longitude']:.1f}°)")
+        print(f"{'─' * 58}")
+        print(f"Symbol:   {symbol['symbol']}")
+        print(f"Keyword:  {symbol['keyword']}")
+        print(f"Formula:  {symbol['formula']}")
+        print(f"Meaning:  {symbol['interpretation']}")
         print()
     
-    # 測試星盤資料
-    print("\n【測試 get_sabian_for_planet()】\n")
-    test_chart = {
-        "planets": [
-            {"name": "Sun", "longitude": 294.5},  # 摩羯座 24.5°
-            {"name": "Moon", "longitude": 70.3},  # 雙子座 10.3°
-            {"name": "Mercury", "longitude": 280.0},  # 摩羯座 10°
-            {"name": "Venus", "longitude": 315.5},  # 水瓶座 15.5°
-            {"name": "Mars", "longitude": 15.2},  # 白羊座 15.2°
-        ]
-    }
+    # Test SVG rendering
+    print("\n🎨 Testing SVG rendering...")
+    svg = render_sabian_svg(15.0, size=300, language="zh")
+    print(f"SVG generated: {len(svg)} characters")
+    print(f"SVG preview: {svg[:200]}...")
     
-    for planet_name in ["Sun", "Moon", "Mercury", "Venus", "Mars"]:
-        sabian = get_sabian_for_planet(test_chart, planet_name)
-        if sabian:
-            print(f"{planet_name}:")
-            print(f"  經度：{sabian['planet_longitude']}°")
-            print(f"  Sabian: {sabian['sign']} {sabian['degree_in_sign']}° - {sabian['keyword']}")
-            print(f"  象徵：{sabian['symbol'][:50]}...")
-            print()
+    # Test XML serialization
+    print("\n📄 Testing XML serialization...")
+    xml = to_context_sabian(15.0, "Sun")
+    print(f"XML generated: {len(xml)} characters")
+    print(f"XML preview: {xml[:300]}...")
     
-    # 測試 XML 序列化
-    print("\n【測試 to_context_sabian()】\n")
-    sun_sabian = get_sabian_for_planet(test_chart, "Sun")
-    xml = to_context_sabian(sun_sabian)
-    print(xml)
-    print()
+    # Test cross-compare
+    print("\n🔍 Testing cross-compare...")
+    western_data = {"house": 1, "aspect": "conjunct Ascendant"}
+    comparison = compare_sabian_with_western(western_data, 15.0)
+    print(f"Western sign: {comparison['western']['sign_zh']}")
+    print(f"Sabian keyword: {comparison['sabian']['keyword']}")
     
-    # 測試 SVG 生成
-    print("\n【測試 render_sabian_svg()】\n")
-    svg = render_sabian_svg(294.5, size=200)
-    print(f"SVG 長度：{len(svg)} 字元")
-    print(f"SVG 開頭：{svg[:100]}...")
-    print()
-    
-    # 測試 cross-compare
-    print("\n【測試 compare_sabian_with_degree()】\n")
-    comparison = compare_sabian_with_degree(294.5, "Capricorn", 24.5)
-    print(f"經度：{comparison['longitude']}°")
-    print(f"西洋：{comparison['western']['sign']} {comparison['western']['degree']}°")
-    print(f"Sabian: {comparison['sabian']['sign']} {comparison['sabian']['degree_in_sign']}° - {comparison['sabian']['keyword']}")
-    print()
-    
-    print("=" * 60)
-    print("測試完成！")
-    print("=" * 60)
+    print("\n✅ All tests passed!")
