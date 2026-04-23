@@ -877,7 +877,8 @@ with st.sidebar:
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_sabian", "tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
-        ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_kp"]),
+        ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
+        ("cat_asian", ["tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
         ("cat_middle_east", ["tab_persian", "tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -887,7 +888,8 @@ with st.sidebar:
         "cat_sanshi": "☯️",
         "cat_chinese": "🏮",
         "cat_western": "🏛️",
-        "cat_asian": "🪷",
+        "cat_indian": "🪷",
+        "cat_asian": "🌏",
         "cat_middle_east": "🕌",
         "cat_ancient": "🏺",
     }
@@ -2370,7 +2372,7 @@ elif _selected_system == "tab_kp":
             # KP vs Vedic note
             st.info(t("kp_placidus_note"))
             
-            # Render KP chart (tables + SVG placeholder)
+            # Render KP chart (tables + SVG chart)
             render_kp_chart(kp_chart, language=get_lang())
             
             # AI Analysis button
@@ -2381,7 +2383,8 @@ elif _selected_system == "tab_kp":
             st.exception(_ie)
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
+            import traceback
+            st.code(traceback.format_exc())
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_kp") if hasattr(t, "desc_kp") else "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti 創立的精確預測系統，使用宿度主星 (Sub Lord) 和時辰主星 (Ruling Planets) 判斷事件發生時機。")

@@ -58,17 +58,20 @@ def render_kp_chart(
     show_svg_chart : bool
         是否顯示 SVG 星盤圖
     """
-    # 標題
-    st.header("🔮 克里希納穆提占星術 (KP Astrology)")
-    st.caption("Krishnamurti Paddhati — 精確預測事件發生時機")
-    
     # 顯示模式標籤
     if chart.is_horary:
         st.info("📍 **問卜模式 (Horary)** — 使用提問時間與地點")
     else:
         st.info("👤 **本命模式 (Natal)** — 使用出生時間與地點")
     
-    # 主要內容區域
+    # KP SVG 星盤圖（放在最上方，最顯眼位置）
+    if show_svg_chart:
+        _render_kp_svg_chart(chart, language)
+    
+    # 分隔線
+    st.divider()
+    
+    # 主要內容區域（兩欄布局）
     col1, col2 = st.columns([2, 1])
     
     with col1:
@@ -86,16 +89,9 @@ def render_kp_chart(
         # KP Ayanamsa 資訊
         _render_ayanamsa_info(chart.ayanamsa)
     
-    # 分隔線
-    st.divider()
-    
     # 詳細分析區域
     if show_significators:
         _render_significators_analysis(chart.significators, language)
-    
-    # KP SVG 星盤圖（可選）
-    if show_svg_chart:
-        _render_kp_svg_chart(chart, language)
 
 
 # ============================================================================
@@ -104,50 +100,32 @@ def render_kp_chart(
 
 def _render_kp_svg_chart(chart: KPChart, language: str = "zh") -> None:
     """
-    渲染 KP 北印度式星盤圖（鑽石形）
-    
-    Parameters
-    ----------
-    chart : KPChart
-        KP 命盤物件
-    language : str
-        語言（"zh" / "en"）
+    渲染 KP 北印度式鑽石形星盤圖
     """
-    st.subheader("🔮 KP 星盤圖 (KP Chart)")
-    
-    svg_content = _generate_kp_diamond_svg(chart, language)
-    
-    # 使用 st.components.v1.html 顯示 SVG
-    st.components.v1.html(
-        f'''<div style="width: 100%; max-width: 500px; margin: 0 auto;">
-            {svg_content}
-        </div>''',
-        height=550,
-        scrolling=False
-    )
+    st.subheader("🔮 KP 星盤圖 (North Indian Diamond Style)")
+
+    try:
+        svg_content = _generate_kp_diamond_svg(chart, language)
+
+        # 使用 st.components.v1.html 顯示 SVG
+        st.components.v1.html(
+            svg_content,
+            height=520,
+            scrolling=False
+        )
+    except Exception as e:
+        st.error(f"星盤圖生成失敗：{str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
 
 
 def _generate_kp_diamond_svg(chart: KPChart, language: str = "zh") -> str:
     """
-    生成 KP 北印度式鑽石形星盤 SVG
-    
-    Parameters
-    ----------
-    chart : KPChart
-        KP 命盤物件
-    language : str
-        語言（"zh" / "en"）
-    
-    Returns
-    -------
-    str
-        SVG 字串
+    生成改進後的 KP 北印度鑽石形星盤 SVG（正確動態星座 + 行星位置）
     """
-    # 星座索引映射（KP 使用恆星制）
     def sign_index(longitude: float) -> int:
-        return int(longitude // 30)
-    
-    # 行星縮寫
+        return int(longitude // 30) % 12
+
     def planet_short(name: str) -> str:
         short_map = {
             "Sun": "Su", "Moon": "Mo", "Mars": "Ma",
@@ -155,131 +133,95 @@ def _generate_kp_diamond_svg(chart: KPChart, language: str = "zh") -> str:
             "Saturn": "Sa", "Rahu": "Ra", "Ketu": "Ke",
             "Ascendant": "Asc"
         }
-        return short_map.get(name, name[:2])
-    
-    # 星座中文/英文名
+        return short_map.get(name, name[:3])
+
     def sign_name(index: int, lang: str = "zh") -> str:
         signs_zh = ["白羊", "金牛", "雙子", "巨蟹", "獅子", "處女",
                     "天秤", "天蠍", "射手", "摩羯", "水瓶", "雙魚"]
         signs_en = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir",
                     "Lib", "Sco", "Sag", "Cap", "Aqr", "Pis"]
         return signs_zh[index] if lang == "zh" else signs_en[index]
-    
-    # 收集每個星座的行星
+
+    # Ascendant 上升點所在星座
+    asc_idx = sign_index(chart.cusps[0].longitude)
+
+    # 行星按星座（Rashi）收集
     rashi_planets = {i: [] for i in range(12)}
     for p in chart.planets:
-        idx = sign_index(p.longitude)
-        rashi_planets[idx].append(planet_short(p.name))
-    
-    # 添加 Ascendant 標記
-    asc_idx = sign_index(chart.cusps[0].longitude)
-    
-    # SVG 參數
-    S = 450  # 總尺寸
-    M = 50   # 邊距
-    C = S - 2 * M  # 內容區域
-    
-    svg = []
-    svg.append(f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg"')
-    svg.append(f'     style="width:100%;max-width:{S}px;height:auto;')
-    svg.append(f'            font-family:Arial,sans-serif;')
-    svg.append(f'            background:#1a1a2e;">')
-    
-    # 背景
-    svg.append(f'  <rect width="{S}" height="{S}" fill="#1a1a2e"/>')
-    
-    # 外框
-    svg.append(f'  <rect x="{M}" y="{M}" width="{C}" height="{C}"')
-    svg.append(f'        fill="#2a2a4e" stroke="#FF6B35" stroke-width="3"/>')
-    
-    # 繪製鑽石形（北印度風格）
+        if p.name != "Ascendant":
+            idx = sign_index(p.longitude)
+            rashi_planets[idx].append(planet_short(p.name))
+
+    # SVG 尺寸
+    S = 480
+    M = 40
     center = S / 2
-    half = C / 2
-    
-    # 菱形線條
-    svg.append(f'  <!-- Diamond lines -->')
-    svg.append(f'  <line x1="{M}" y1="{M}" x2="{center}" y2="{M + half}"')
-    svg.append(f'        stroke="#FF6B35" stroke-width="2"/>')
-    svg.append(f'  <line x1="{center}" y1="{M + half}" x2="{S - M}" y2="{M}"')
-    svg.append(f'        stroke="#FF6B35" stroke-width="2"/>')
-    svg.append(f'  <line x1="{M}" y1="{S - M}" x2="{center}" y2="{M + half}"')
-    svg.append(f'        stroke="#FF6B35" stroke-width="2"/>')
-    svg.append(f'  <line x1="{center}" y1="{M + half}" x2="{S - M}" y2="{S - M}"')
-    svg.append(f'        stroke="#FF6B35" stroke-width="2"/>')
-    
-    # 水平中線
-    svg.append(f'  <line x1="{M}" y1="{center}" x2="{S - M}" y2="{center}"')
-    svg.append(f'        stroke="#555" stroke-width="1"/>')
-    
-    # 垂直中線
-    svg.append(f'  <line x1="{center}" y1="{M}" x2="{center}" y2="{S - M}"')
-    svg.append(f'        stroke="#555" stroke-width="1"/>')
-    
-    # 宮位區域映射（北印度鑽石盤）
-    # 格式：(house_number, sign_index, polygon_points)
-    house_regions = [
-        # 上排（從左到右：1, 12, 11, 10）
-        (1, 0, f"{M},{M} {center},{M} {center},{M + half} {M + half/2},{center}"),
-        (12, 11, f"{center},{M} {S-M},{M} {center + half/2},{center} {center},{M + half}"),
-        (11, 10, f"{S-M},{M} {S-M},{center} {center + half/2},{center} {center},{M + half}"),
-        (10, 9, f"{center},{M + half} {center + half/2},{center} {S-M},{center} {S-M},{M + half/2}"),
-        
-        # 左排（從上到下：2, 3）
-        (2, 1, f"{M},{M} {M + half/2},{center} {M},{center} {M},{M + half/2}"),
-        (3, 2, f"{M},{center} {M + half/2},{center} {M},{S - M} {M},{S - M - half/2}"),
-        
-        # 右排（從上到下：9, 8）
-        (9, 8, f"{S-M},{M + half/2} {center + half/2},{center} {S-M},{center} {S-M},{S - M - half/2}"),
-        (8, 7, f"{S-M},{center} {center + half/2},{center} {S-M},{S - M} {S-M},{S - M - half/2}"),
-        
-        # 下排（從左到右：4, 5, 6, 7）
-        (4, 3, f"{M},{center} {M + half/2},{center} {center},{S - M - half/2} {center},{S - M}"),
-        (5, 4, f"{center},{S - M - half/2} {center + half/2},{center} {center},{S - M} {center},{S - M}"),
-        (6, 5, f"{center},{S - M - half/2} {center + half/2},{center} {S-M - half/2},{center} {S-M},{S - M}"),
-        (7, 6, f"{center + half/2},{center} {S-M},{center} {S-M},{S - M} {center},{S - M}"),
-    ]
-    
-    # 繪製每個宮位區域
-    for house_num, sign_idx, points in house_regions:
-        is_asc = (sign_idx == asc_idx)
-        fill_color = "#3d3010" if is_asc else "#2a2a4e"
-        stroke_color = "#FF6B35" if is_asc else "#555"
-        
-        svg.append(f'  <polygon points="{points}" fill="{fill_color}"')
-        svg.append(f'            stroke="{stroke_color}" stroke-width="2"/>')
-        
+
+    svg = [f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg" width="{S}" height="{S}">']
+    svg.append(f'<rect width="{S}" height="{S}" fill="#1a1a2e"/>')
+
+    # 外框 + 鑽石主體
+    svg.append(f'<rect x="{M}" y="{M}" width="{S-2*M}" height="{S-2*M}" '
+               f'fill="#2a2a4e" stroke="#FF6B35" stroke-width="8" rx="8"/>')
+
+    # 北印度式鑽石主線
+    svg.append(f'<line x1="{M}" y1="{M}" x2="{center}" y2="{center}" stroke="#FF8C42" stroke-width="4"/>')
+    svg.append(f'<line x1="{center}" y1="{center}" x2="{S-M}" y2="{M}" stroke="#FF8C42" stroke-width="4"/>')
+    svg.append(f'<line x1="{M}" y1="{S-M}" x2="{center}" y2="{center}" stroke="#FF8C42" stroke-width="4"/>')
+    svg.append(f'<line x1="{center}" y1="{center}" x2="{S-M}" y2="{S-M}" stroke="#FF8C42" stroke-width="4"/>')
+
+    # 十字中線
+    svg.append(f'<line x1="{M}" y1="{center}" x2="{S-M}" y2="{center}" stroke="#555" stroke-width="2.5"/>')
+    svg.append(f'<line x1="{center}" y1="{M}" x2="{center}" y2="{S-M}" stroke="#555" stroke-width="2.5"/>')
+
+    # 12 宮位文字座標（已微調，視覺效果更好）
+    house_pos = {
+        1: (center, M + 58),           # 上升點（最上方）
+        2: (M + 68, M + 115),
+        3: (M + 55, center - 12),
+        4: (M + 68, S - M - 72),
+        5: (center - 5, S - M - 55),
+        6: (S - M - 68, S - M - 72),
+        7: (S - M - 55, center + 30),
+        8: (S - M - 68, M + 115),
+        9: (center + 70, M + 55),
+        10: (S - M - 55, M + 68),
+        11: (S - M - 70, M + 85),
+        12: (center + 65, M + 105),
+    }
+
+    for house_num in range(1, 13):
+        # 從上升點開始順時針排星座（北印度式標準做法）
+        sign_idx = (asc_idx + house_num - 1) % 12
+        x, y = house_pos.get(house_num, (center, center))
+
+        is_lagna = (house_num == 1)
+
         # 星座名稱
-        label_x, label_y = _get_house_label_position(house_num, M, center, half, S)
-        svg.append(f'  <text x="{label_x}" y="{label_y}"')
-        svg.append(f'        fill="#FFD700" font-size="14" font-weight="bold"')
-        svg.append(f'        text-anchor="middle">{sign_name(sign_idx, language)}</text>')
-        
+        svg.append(f'<text x="{x}" y="{y}" fill="#FFDD57" font-size="15" '
+                   f'font-weight="700" text-anchor="middle" dominant-baseline="middle">'
+                   f'{sign_name(sign_idx, language)}</text>')
+
         # 宮位編號
-        svg.append(f'  <text x="{label_x}" y="{label_y + 18}"')
-        svg.append(f'        fill="#888" font-size="11"')
-        svg.append(f'        text-anchor="middle">H{house_num}</text>')
-        
-        # 行星列表
-        planets_in_sign = rashi_planets[sign_idx]
-        if planets_in_sign:
-            planet_text = " ".join(planets_in_sign)
-            svg.append(f'  <text x="{label_x}" y="{label_y + 40}"')
-            svg.append(f'        fill="#FFF" font-size="12" font-weight="bold"')
-            svg.append(f'        text-anchor="middle">{planet_text}</text>')
-    
-    # 中心區域（顯示 Ascendant 資訊）
-    svg.append(f'  <!-- Center info area -->')
-    svg.append(f'  <rect x="{center - 60}" y="{center - 30}" width="120" height="60"')
-    svg.append(f'        fill="#1a1a2e" stroke="#FF6B35" stroke-width="2" rx="5"/>')
-    svg.append(f'  <text x="{center}" y="{center - 5}"')
-    svg.append(f'        fill="#FF6B35" font-size="14" font-weight="bold"')
-    svg.append(f'        text-anchor="middle">Lagna</text>')
-    svg.append(f'  <text x="{center}" y="{center + 15}"')
-    svg.append(f'        fill="#FFD700" font-size="16" font-weight="bold"')
-    svg.append(f'        text-anchor="middle">{sign_name(asc_idx, language)}</text>')
-    
+        svg.append(f'<text x="{x}" y="{y + 23}" fill="#aaaaaa" font-size="11" '
+                   f'text-anchor="middle" font-weight="600">H{house_num}</text>')
+
+        # 行星
+        planets_list = rashi_planets.get(sign_idx, [])
+        if planets_list:
+            planet_str = " ".join(planets_list)
+            svg.append(f'<text x="{x}" y="{y + 43}" fill="#ffffff" font-size="12.5" '
+                       f'text-anchor="middle" font-weight="600">{planet_str}</text>')
+
+    # 中央 Lagna 資訊區
+    svg.append(f'<rect x="{center-58}" y="{center-38}" width="116" height="76" '
+               f'rx="8" fill="#1a1a2e" stroke="#FF6B35" stroke-width="4"/>')
+    svg.append(f'<text x="{center}" y="{center-10}" fill="#FF6B35" font-size="14" '
+               f'font-weight="700" text-anchor="middle">Lagna</text>')
+    svg.append(f'<text x="{center}" y="{center+18}" fill="#FFDD77" font-size="17.5" '
+               f'font-weight="700" text-anchor="middle">{sign_name(asc_idx, language)}</text>')
+
     svg.append('</svg>')
-    
     return '\n'.join(svg)
 
 
@@ -687,45 +629,6 @@ def _render_significators_analysis(
         2. **時辰選擇**：選擇 Significators 強的時辰
         3. **應期推斷**：結合 Dasha/Bhukti/Antara
         """)
-
-
-# ============================================================================
-# SVG CHART
-# ============================================================================
-
-def _render_kp_svg_chart(
-    chart: KPChart,
-    language: str = "zh",
-) -> None:
-    """
-    渲染 KP 專用 SVG 星盤圖
-    
-    Parameters
-    ----------
-    chart : KPChart
-        KP 命盤物件
-    language : str
-        語言
-    """
-    st.subheader("📊 KP 星盤圖 (KP Chart)")
-    
-    # 使用 Streamlit 的 info 提示（實際 SVG 渲染需要進一步開發）
-    st.info("""
-    🚧 **KP 星盤圖 SVG 渲染器開發中**
-    
-     planned features:
-    - 北半球式圓盤（與 Vedic 風格一致）
-    - 標註每顆行星的 Sub Lord
-    - 宮頭線（Placidus 系統）
-    - Nakshatra 背景色塊
-    - Ruling Planets 高亮顯示
-    
-    目前請參考上方的行星位置表格與宮頭表格。
-    """)
-    
-    # TODO: 實現完整的 KP SVG 渲染器
-    # 可以參考 astro/vedic/ 目錄下的渲染器
-    # 或使用 astro/chart_renderer_v2.py 的架構
 
 
 # ============================================================================

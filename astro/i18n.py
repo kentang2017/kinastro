@@ -248,7 +248,7 @@ TRANSLATIONS = {
         "en": "🇲🇳 Mongolian Zurkhai",
     },
     "tab_jaimini": {
-        "zh": "🕉️ Jaimini 占星",
+        "zh": "🕉️ 闍彌尼占星",
         "en": "🕉️ Jaimini Astrology",
     },
     "tab_picatrix": {
@@ -1638,6 +1638,7 @@ transmitted by **Chen Xiyi**.
     "cat_popular": {"zh": "最熱門", "en": "Most Popular"},
     "cat_chinese": {"zh": "中華傳統", "en": "Chinese Traditions"},
     "cat_western": {"zh": "西方體系", "en": "Western Systems"},
+    "cat_indian": {"zh": "印度體系", "en": "Indian Systems"},
     "cat_asian": {"zh": "亞洲體系", "en": "Asian Systems"},
     "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
     "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
