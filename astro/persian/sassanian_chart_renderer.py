@@ -38,7 +38,7 @@ _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 def generate_sassanian_svg(
     chart_data: Dict,
     width: int = 500,
-    height: int = 600,
+    height: int = 650,
     show_pahlavi: bool = True,
     show_royal_stars: bool = True,
     show_firdar: bool = True,
@@ -294,7 +294,7 @@ def generate_sassanian_svg(
 
     # Firdar 時間線（底部）
     if show_firdar:
-        firdar_y = outer_y + outer_height + 50
+        firdar_y = outer_y + outer_height + 60  # y=560，增加間距
         firdar_height = 45
         firdar_width = outer_width
         
@@ -315,7 +315,7 @@ def generate_sassanian_svg(
         svg_parts.append(f'''
   <!-- Firdar 生命週期 -->
   <g>
-    <text x="{width/2}" y="{firdar_y - 8}" font-family="serif" font-size="16"
+    <text x="{width/2}" y="{firdar_y - 10}" font-family="serif" font-size="16"
           fill="{palette['crimson']}" text-anchor="middle" font-weight="bold">
       Firdar 生命週期
     </text>
@@ -339,7 +339,7 @@ def generate_sassanian_svg(
         svg_parts.append('  </g>\n')
 
     # 歷史說明
-    disclaimer_y = height - 20
+    disclaimer_y = base_height - 15  # y=635
     svg_parts.append(f'''
   <!-- 歷史說明 -->
   <text x="{width/2}" y="{disclaimer_y}" font-family="serif" font-size="12"
@@ -424,7 +424,7 @@ def save_sassanian_svg(
 def render_sassanian_banner_chart(
     chart_data: Dict,
     width: int = 500,
-    height: int = 600,
+    height: int = 650,
     show_pahlavi: bool = True,
 ) -> str:
     """
@@ -473,12 +473,12 @@ if __name__ == "__main__":
     }
 
     print("\n生成薩珊星盤 SVG...")
-    svg_content = generate_sassanian_svg(test_chart, width=500, height=600)
+    svg_content = generate_sassanian_svg(test_chart, width=500, height=650)
     print(f"  SVG 長度：{len(svg_content)} 字元")
-    print(f"  SVG 尺寸：500x600")
+    print(f"  SVG 尺寸：500x650 (viewBox)")
 
     output_path = "/tmp/sassanian_chart.svg"
-    save_sassanian_svg(test_chart, output_path, width=500, height=600)
+    save_sassanian_svg(test_chart, output_path, width=500, height=650)
     print(f"  已保存至：{output_path}")
 
     print("\n" + "=" * 60)

@@ -2153,19 +2153,19 @@ elif _selected_system == "tab_persian":
                 svg_content = generate_sassanian_svg(
                     chart_data=chart_data,
                     width=500,
-                    height=600,
+                    height=650,
                     show_pahlavi=False,
                     show_royal_stars=True,
                     show_firdar=True,
                 )
                 
                 # 使用 st.components.v1.html 顯示 SVG（響應式高度）
-                # viewBox 500x600，使用 width: 100% 確保 PC/手機皆完整顯示
+                # viewBox 500x650，使用 width: 100% 確保 PC/手機皆完整顯示
                 st.components.v1.html(
                     f'''<div style="width: 100%; max-width: 600px; margin: 0 auto;">
                         {svg_content}
                     </div>''',
-                    height=680,
+                    height=720,
                     scrolling=False
                 )
                 
