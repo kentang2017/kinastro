@@ -1020,6 +1020,16 @@ with st.sidebar:
                     _selected_system = _sk
                     st.rerun()
 
+    # ── History of Astrology link ─────────────────────────────
+    if st.button(
+        t("tab_history"),
+        key="_btn_history",
+        width="stretch",
+        type="secondary",
+    ):
+        st.session_state["_system_select"] = "tab_history"
+        st.rerun()
+
     # ── Star particles toggle ──────────────────────────────────
     st.divider()
     _particles_on = st.toggle(
@@ -1029,16 +1039,6 @@ with st.sidebar:
     )
     if _particles_on != st.session_state.get("_star_particles", True):
         st.session_state["_star_particles"] = _particles_on
-        st.rerun()
-
-    # ── History of Astrology link ─────────────────────────────
-    if st.button(
-        "📜 " + t("tab_history"),
-        key="_btn_history",
-        width="stretch",
-        type="secondary",
-    ):
-        st.session_state["_system_select"] = "tab_history"
         st.rerun()
 
     # ── Cross-system comparison toggle ────────────────────────
