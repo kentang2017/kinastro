@@ -878,7 +878,7 @@ with st.sidebar:
         ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
         ("cat_western", ["tab_sabian", "tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_asian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
-        ("cat_middle_east", ["tab_arabic", "tab_yemeni"]),
+        ("cat_middle_east", ["tab_persian", "tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
 
@@ -926,6 +926,7 @@ with st.sidebar:
         "tab_qimen_luming": t("tab_qimen_luming"),
         "tab_celtic_tree": t("tab_celtic_tree"),
         "tab_sabian": t("sabian_system_label"),
+        "tab_persian": t("tab_persian"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -963,6 +964,7 @@ with st.sidebar:
         "tab_qimen_luming": t("sys_hint_qimen_luming"),
         "tab_celtic_tree": t("sys_hint_celtic_tree"),
         "tab_sabian": t("sys_hint_sabian"),
+        "tab_persian": t("sys_hint_persian"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2111,6 +2113,227 @@ elif _selected_system == "tab_sabian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_sabian") if hasattr(t, "desc_sabian") else "🔮 薩比恩符號：Marc Edmund Jones (1953) 原著的 360 個象徵圖像，每個黃道度數對應一個獨特的心理原型。")
+
+# --- 波斯薩珊占星 ---
+elif _selected_system == "tab_persian":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_persian")):
+                from astro.persian import compute_sassanian_chart
+                
+                p_chart = compute_sassanian_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    latitude=_p.get("lat", 0.0), longitude=_p.get("lon", 0.0),
+                    timezone=_p.get("tz", 0.0),
+                    language=get_lang()
+                )
+            
+            # Main tabs for Persian astrology
+            _p_tab_overview, _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
+                t("western_subtab_natal"),
+                t("persian_firdar_title"),
+                t("persian_hyleg_title"),
+                t("persian_profections_title"),
+                t("persian_almuten_title"),
+                t("persian_royal_stars_title"),
+                t("persian_lots_title"),
+            ])
+            
+            with _p_tab_overview:
+                st.header(t("tab_persian"))
+                st.caption(t("desc_persian"))
+                
+                # 薩珊傳統星盤圖（方形格式）
+                st.subheader("🏛️ 薩珊傳統星盤（方形格式）")
+                st.info(t("sassanian_chart_disclaimer"))
+                
+                try:
+                    from astro.persian.sassanian_chart_renderer import generate_sassanian_chart
+                    
+                    chart_data = {
+                        "year": _p["year"], "month": _p["month"], "day": _p["day"],
+                        "hour": _p["hour"], "minute": _p["minute"],
+                        "longitude": _p.get("lon", 0.0),
+                        "latitude": _p.get("lat", 0.0),
+                        "timezone": _p.get("tz", 0.0),
+                    }
+                    
+                    sassanian_fig = generate_sassanian_chart(
+                        chart_data=chart_data,
+                        width=1000,
+                        height=800,
+                        show_pahlavi=False,
+                        show_royal_stars=True,
+                        show_firdar=True,
+                    )
+                    st.plotly_chart(sassanian_fig, use_container_width=True)
+                except Exception as e:
+                    st.error(f"星盤渲染失敗：{str(e)}")
+                
+                # Basic chart info
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.info(f"**{t('persian_current_firdar')}:** {p_chart.current_firdar.lord} ({p_chart.current_firdar.lord_cn})" if p_chart.current_firdar else "當前 Firdar: N/A")
+                with col2:
+                    st.info(f"**{t('persian_current_sub')}:** {p_chart.current_sub_period.lord} ({p_chart.current_sub_period.lord_cn})" if p_chart.current_sub_period else "當前子週期：N/A")
+                
+                # Planet positions table
+                st.subheader("行星位置")
+                planet_data = []
+                for planet in p_chart.planets:
+                    planet_data.append({
+                        "行星": f"{planet.name} ({planet.name_cn})",
+                        "經度": f"{planet.longitude:.2f}°",
+                        "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
+                        "宮位": f"第{planet.house}宮",
+                        "尊嚴": planet.essential_dignity,
+                        "逆行": "✓" if planet.retrograde else "",
+                    })
+                st.dataframe(planet_data, use_container_width=True)
+                
+                # AI Analysis button
+                _render_ai_button("tab_persian", p_chart, btn_key="persian")
+            
+            with _p_tab_firdar:
+                st.header(t("persian_firdar_title"))
+                st.caption(t("persian_firdar_help"))
+                
+                # Timeline visualization
+                st.subheader("Firdar 生命週期時間軸")
+                
+                for i, firdar_period in enumerate(p_chart.firdar):
+                    is_current = (p_chart.current_firdar and firdar_period.lord == p_chart.current_firdar.lord)
+                    expander_label = f"**{i+1}. {firdar_period.lord} ({firdar_period.lord_cn})** — {firdar_period.start_date} 至 {firdar_period.end_date} ({firdar_period.duration_years:.1f}年)"
+                    if is_current:
+                        expander_label = f"🔮 {expander_label} **(當前)**"
+                    
+                    with st.expander(expander_label, expanded=is_current):
+                        # Sub-periods table
+                        sub_data = []
+                        for sp in firdar_period.sub_periods:
+                            is_current_sub = (p_chart.current_sub_period and sp.lord == p_chart.current_sub_period.lord and sp.start_date == p_chart.current_sub_period.start_date)
+                            sub_data.append({
+                                "子週期": f"{'🔮 ' if is_current_sub else ''}{sp.lord} ({sp.lord_cn})",
+                                "起始": sp.start_date,
+                                "結束": sp.end_date,
+                                "年數": f"{sp.duration_years:.2f}",
+                            })
+                        st.dataframe(sub_data, use_container_width=True)
+            
+            with _p_tab_hyleg:
+                st.header(t("persian_hyleg_title"))
+                st.caption(t("persian_hyleg_help"))
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader(t("persian_hyleg_label"))
+                    if p_chart.hyleg:
+                        st.info(f"**類型:** {p_chart.hyleg.hyleg_type} ({p_chart.hyleg.hyleg_name_cn})\\n\\n"
+                               f"**位置:** {p_chart.hyleg.sign} {p_chart.hyleg.degree:.1f}°\\n\\n"
+                               f"**宮位:** 第{p_chart.hyleg.house}宮\\n\\n"
+                               f"**原因:** {p_chart.hyleg.reason}")
+                    else:
+                        st.warning("無法計算 Hyleg")
+                
+                with col2:
+                    st.subheader(t("persian_alcocoden_label"))
+                    if p_chart.alcocoden:
+                        st.info(f"**守護星:** {p_chart.alcocoden.alcocoden_lord} ({p_chart.alcocoden.alcocoden_lord_cn})\\n\\n"
+                               f"**{t('persian_planetary_years')}:** {p_chart.alcocoden.planetary_years}年\\n\\n"
+                               f"**{t('persian_modified_years')}:** {p_chart.alcocoden.modified_years:.1f}年\\n\\n"
+                               f"**{t('persian_aspects')}:** {', '.join(p_chart.alcocoden.aspects) if p_chart.alcocoden.aspects else '無'}\\n\\n"
+                               f"**說明:** {p_chart.alcocoden.reason}")
+                    else:
+                        st.warning("無法計算 Alcocoden")
+            
+            with _p_tab_profections:
+                st.header(t("persian_profections_title"))
+                st.caption("波斯式年度主限：每年移動 30°，從上升點開始連續計算。")
+                
+                # Show first 30 years
+                prof_data = []
+                for prof in p_chart.profections[:30]:
+                    prof_data.append({
+                        "年齡": prof.age,
+                        "主限星座": f"{prof.profection_sign_cn} {prof.profection_degree:.1f}°",
+                        "年度守護星": f"{prof.lord_of_year} ({prof.lord_of_year_cn})",
+                        "起始": prof.start_date,
+                        "結束": prof.end_date,
+                    })
+                st.dataframe(prof_data, use_container_width=True)
+            
+            with _p_tab_almuten:
+                st.header(t("persian_almuten_title"))
+                st.caption("Almuten Figuris 是根據薩珊尊嚴規則計算的最強行星，代表命主星。")
+                
+                if p_chart.almuten_figuris:
+                    st.info(f"**最強行星:** {p_chart.almuten_figuris.planet} ({p_chart.almuten_figuris.planet_cn})\\n\\n"
+                           f"**{t('persian_dignity_score')}:** {p_chart.almuten_figuris.total_score}\\n\\n"
+                           f"**說明:** {p_chart.almuten_figuris.reason}")
+                    
+                    # Dignity breakdown
+                    if p_chart.almuten_figuris.dignity_scores:
+                        st.subheader("尊嚴分數細項")
+                        score_data = []
+                        for key, score in p_chart.almuten_figuris.dignity_scores.items():
+                            score_data.append({"關鍵點": key, "分數": score})
+                        st.dataframe(score_data, use_container_width=True)
+                else:
+                    st.warning("無法計算 Almuten Figuris")
+            
+            with _p_tab_stars:
+                st.header(t("persian_royal_stars_title"))
+                st.caption("四顆皇家恆星是波斯傳統的重要恆星，與行星合相時具有特殊意義。")
+                
+                prominent_stars = [rs for rs in p_chart.royal_stars if rs.is_prominent]
+                
+                if prominent_stars:
+                    st.success(f"找到 {len(prominent_stars)} 顆顯著的皇家恆星：")
+                    for rs in prominent_stars:
+                        st.info(f"**{rs.star_name} ({rs.star_name_cn})**\\n\\n"
+                               f"**合相行星:** {rs.conjunction_planet} ({rs.conjunction_planet_cn})\\n\\n"
+                               f"**容許度:** {rs.orb}°\\n\\n"
+                               f"**意義:** {rs.meaning_cn}")
+                else:
+                    st.info(t("persian_no_prominent_stars"))
+                
+                # Show all royal stars
+                st.subheader("所有皇家恆星")
+                star_data = []
+                for rs in p_chart.royal_stars:
+                    star_data.append({
+                        "恆星": f"{rs.star_name} ({rs.star_name_cn})",
+                        "經度": f"{rs.star_longitude:.1f}°",
+                        "合相": f"{rs.conjunction_planet} ({rs.conjunction_planet_cn})" if rs.conjunction_planet else "無",
+                        "容許度": f"{rs.orb}°" if rs.orb > 0 else "—",
+                        "顯著": "✓" if rs.is_prominent else "",
+                    })
+                st.dataframe(star_data, use_container_width=True)
+            
+            with _p_tab_lots:
+                st.header(t("persian_lots_title"))
+                st.caption("波斯敏感點（Lots）是根據上升點、太陽、月亮計算的敏感點位。")
+                
+                lots_data = []
+                for lot in p_chart.persian_lots:
+                    lots_data.append({
+                        "名稱": f"{lot.name_en}\\n({lot.name_cn})",
+                        "阿拉伯名": lot.name_arabic,
+                        "經度": f"{lot.longitude:.2f}°",
+                        "星座": f"{lot.sign_cn} {lot.degree:.1f}°",
+                        "宮位": f"第{lot.house}宮",
+                    })
+                st.dataframe(lots_data, use_container_width=True)
+                
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_persian"))
 
 # --- 印度占星 ---
 elif _selected_system == "tab_indian":
