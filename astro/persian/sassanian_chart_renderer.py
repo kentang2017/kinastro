@@ -1,35 +1,21 @@
 """
-astro/sassanian/sassanian_chart_renderer.py — 薩珊傳統占星星盤渲染器（最終版 v4）
+astro/persian/sassanian_chart_renderer.py — 薩珊傳統占星星盤渲染器（純 SVG 版本）
 
-Sassanian Traditional Star Chart Renderer
-基於薩珊王朝藝術風格的方形/橫幅格式星盤
+Sassanian Traditional Star Chart Renderer (Pure SVG)
+基於用戶提供的菱形 12 宮設計，完全按照參考 SVG 結構
 
-參考文獻（已融入 Masha'allah 傳統）
-----------------------------------------
-- Masha'allah (8世紀波斯猶太占星家) 使用 Sassanian ayanamsa + Whole Sign houses
-  （見 International Society of Classical Astrologers「Reading Māshā’allāh : Sassanian Ayanamsa」）
-- Greater Bundahishn（皇家恆星：Sirius/Tishtar 為東方主星等）
-- Dorotheus of Sidon Pahlavi 譯本（Pingree 1976）
-- Sassanian silver plates、Taq-e Bostan 浮雕、出土印章
-- Pingree, D. (1963). "Classical and Byzantine Astrology in Sassanian Persia"
-
-此渲染器完全符合 Masha'allah 時代的薩珊占星實踐：
-- 使用 Sassanian ayanamsa 計算行星與宮位
-- Whole Sign houses（薩珊標準）
-- 皇家恆星（含 Bundahishn 所述 Tishtar 等）
-- Firdar 生命週期（薩珊傳統行星大限）
-
-已全面修正所有視覺問題：
-- SVG 圖示（Faravahar、火壇、八芒星、石榴邊框）正確顯示，無斷裂、無 artifact
-- 無多餘線條、彩色勾線、紫點
-- 宮位網格、Firdar 時間線、角落裝飾位置精準
-- 更接近薩珊銀盤與手稿風格
+References
+----------
+- Sassanian silver plates (Metropolitan Museum, Louvre)
+- Taq-e Bostan rock reliefs (6th-7th century CE)
+- Greater Bundahishn illustrations
+- Dorotheus of Sidon, Pahlavi translation (Pingree, 1976)
 """
 
-from typing import Dict, List
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+from typing import Dict, List, Optional
 import swisseph as swe
+import json
+import os
 import base64
 
 from astro.persian.sassanian_astronomy import (
@@ -40,66 +26,51 @@ from astro.persian.sassanian_astronomy import (
 )
 from astro.persian.sassanian_symbols import (
     get_sassanian_color_palette,
-    render_faravahar_element,
-    render_eight_pointed_star,
-    render_fire_altar,
-    render_pomegranate_border,
+    get_pahlavi_name,
+    get_royal_star_pahlavi,
+    get_zodiac_glyph,
     get_planet_glyph,
 )
 
-
-def _add_svg_icon(
-    fig: go.Figure,
-    svg_str: str,
-    x: float,
-    y: float,
-    size: float,
-    row: int = 1,
-    layer: str = "above",
-    opacity: float = 0.95,
-) -> None:
-    """最終版 SVG 渲染核心函數（徹底解決斷裂、artifact、錯位問題）"""
-    if not svg_str or not svg_str.strip():
-        return
-
-    svg_str = svg_str.strip()
-    # 強制標準化 SVG 標頭 + viewBox，確保所有自訂符號完美縮放
-    if not svg_str.startswith("<svg"):
-        svg_str = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" '
-            f'width="{int(size)}" height="{int(size)}" '
-            f'viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">'
-            f'{svg_str}</svg>'
-        )
-
-    b64 = base64.b64encode(svg_str.encode("utf-8")).decode("utf-8")
-
-    fig.add_layout_image(
-        dict(
-            source=f"data:image/svg+xml;base64,{b64}",
-            xref="x", yref="y",
-            x=x, y=y,
-            sizex=size, sizey=size,
-            sizing="contain",
-            opacity=opacity,
-            layer=layer,
-            xanchor="center",
-            yanchor="middle",
-        ),
-        row=row, col=1
-    )
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def generate_sassanian_chart(
+def generate_sassanian_svg(
     chart_data: Dict,
-    width: int = 1280,
-    height: int = 920,
+    width: int = 500,
+    height: int = 600,
     show_pahlavi: bool = True,
     show_royal_stars: bool = True,
     show_firdar: bool = True,
-) -> go.Figure:
+) -> str:
     """
-    生成薩珊傳統占星星盤（Masha'allah / Sassanian 風格）
+    生成薩珊傳統占星星盤（純 SVG 格式）
+    
+    完全按照用戶提供的菱形 12 宮設計：
+    - 外框正方形
+    - 內框正方形（菱形）
+    - 對角線連接形成 12 宮
+    - 星座符號在外圍 12 個位置
+
+    Parameters
+    ----------
+    chart_data : Dict
+        星盤資料
+    width : int
+        SVG 寬度（像素）
+    height : int
+        SVG 高度（像素）
+    show_pahlavi : bool
+        是否顯示 Pahlavi 文字
+    show_royal_stars : bool
+        是否顯示皇家恆星
+    show_firdar : bool
+        是否顯示 Firdar 時間線
+
+    Returns
+    -------
+    str
+        SVG 字串
     """
     palette = get_sassanian_color_palette()
 
@@ -113,274 +84,402 @@ def generate_sassanian_chart(
     latitude = chart_data.get("latitude", 0)
     timezone = chart_data.get("timezone", 0)
 
+    # 計算儒略日
     julian_day = swe.julday(year, month, day, hour + minute / 60.0)
 
-    # 計算薩珊行星位置與宮位（已使用 Sassanian ayanamsa + Whole Sign）
+    # 計算薩珊行星位置
     planet_positions = compute_sassanian_planet_positions(
-        year, month, day, hour, minute, longitude, latitude, timezone
+        year, month, day, hour, minute,
+        longitude, latitude, timezone
     )
+
+    # 計算薩珊宮位
     houses = get_sassanian_houses(
-        year, month, day, hour, minute, longitude, latitude, timezone
+        year, month, day, hour, minute,
+        longitude, latitude, timezone
     )
+
+    # 獲取皇家恆星位置
     royal_stars = get_royal_stars_positions(julian_day) if show_royal_stars else {}
 
-    # 子圖佈局（加大 Firdar 間距，避免重疊）
+    # 計算縮放比例（基於 viewBox 500x650）
+    base_width = 500
+    base_height = 650
+    scale_x = width / base_width
+    scale_y = height / base_height
+    scale = min(scale_x, scale_y)
+    
+    # viewBox 始終保持 500x650 座標系統（增加 50px 給 Firdar 時間線）
+    viewBox = f"0 0 {base_width} {base_height}"
+    
+    # 計算幾何結構（完全按照參考 SVG，使用 500x650 座標系統）
+    # 外框：x=50, y=100, width=400, height=400
+    outer_x = 50
+    outer_y = 100
+    outer_width = 400
+    outer_height = 400
+    
+    # 內框（菱形）：x=150, y=200, width=200, height=200
+    inner_x = 150
+    inner_y = 200
+    inner_width = 200
+    inner_height = 200
+    
+    # 中心點
+    center_x = outer_x + outer_width / 2  # 250
+    center_y = outer_y + outer_height / 2  # 300
+
+    # 12 宮位區域的星座位置（按照參考 SVG 的 12 個位置）
+    # 從頂部開始，順時針方向（使用固定座標，不需縮放）
+    zodiac_positions = [
+        # 頂部（3 個）
+        {"sign_index": 7, "x": center_x, "y": outer_y - 15, "label": "top_center"},  # ♏ Scorpio
+        {"sign_index": 8, "x": center_x - outer_width/4, "y": outer_y - 15, "label": "top_left"},  # ♐ Sagittarius
+        {"sign_index": 6, "x": center_x + outer_width/4, "y": outer_y - 15, "label": "top_right"},  # ♎ Libra
+        
+        # 左側（3 個）
+        {"sign_index": 9, "x": outer_x - 15, "y": outer_y + outer_height/4, "label": "left_top"},  # ♑ Capricorn
+        {"sign_index": 10, "x": outer_x - 15, "y": center_y, "label": "left_center"},  # ♒ Aquarius
+        {"sign_index": 11, "x": outer_x - 15, "y": outer_y + outer_height*3/4, "label": "left_bottom"},  # ♓ Pisces
+        
+        # 底部（3 個）
+        {"sign_index": 0, "x": center_x - outer_width/4, "y": outer_y + outer_height + 15, "label": "bottom_left"},  # ♈ Aries
+        {"sign_index": 1, "x": center_x, "y": outer_y + outer_height + 15, "label": "bottom_center"},  # ♉ Taurus
+        {"sign_index": 2, "x": center_x + outer_width/4, "y": outer_y + outer_height + 15, "label": "bottom_right"},  # ♊ Gemini
+        
+        # 右側（3 個）
+        {"sign_index": 3, "x": outer_x + outer_width + 15, "y": outer_y + outer_height*3/4, "label": "right_bottom"},  # ♋ Cancer
+        {"sign_index": 4, "x": outer_x + outer_width + 15, "y": center_y, "label": "right_center"},  # ♌ Leo
+        {"sign_index": 5, "x": outer_x + outer_width + 15, "y": outer_y + outer_height/4, "label": "right_top"},  # ♍ Virgo
+    ]
+
+    # 開始構建 SVG
+    svg_parts = []
+
+    # SVG 開頭（使用 viewBox 確保正確縮放）
+    svg_parts.append(f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="{viewBox}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:{palette['gold_gradient_start']};stop-opacity:1" />
+      <stop offset="100%" style="stop-color:{palette['gold_gradient_end']};stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="parchmentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:{palette['parchment']};stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E8D5C4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="{base_width}" height="{base_height}" fill="url(#parchmentGradient)" />
+''')
+
+    # 標題
+    title_text = "薩珊傳統占星星盤"
+    if show_pahlavi:
+        title_text += " | 𐭮𐭠𐭮𐭠𐭭 𐭲𐭠𐭫𐭹𐭹𐭠"
+
+    svg_parts.append(f'''
+  <!-- 標題 -->
+  <text x="{width/2}" y="50" font-family="serif" font-size="28" font-weight="bold"
+        fill="{palette['crimson']}" text-anchor="middle" letter-spacing="8">
+    {title_text}
+  </text>
+''')
+
+    # 星盤框架（完全按照參考 SVG）
+    svg_parts.append(f'''
+  <!-- 星盤框架 -->
+  <g stroke="{palette['black']}" stroke-width="2" fill="none">
+    <!-- 外框正方形 -->
+    <rect x="{outer_x}" y="{outer_y}" width="{outer_width}" height="{outer_height}" />
+    
+    <!-- 內框正方形（菱形） -->
+    <rect x="{inner_x}" y="{inner_y}" width="{inner_width}" height="{inner_height}" />
+    
+    <!-- 四角對角線 -->
+    <line x1="{outer_x}" y1="{outer_y}" x2="{inner_x}" y2="{inner_y}" />
+    <line x1="{outer_x + outer_width}" y1="{outer_y}" x2="{inner_x + inner_width}" y2="{inner_y}" />
+    <line x1="{outer_x}" y1="{outer_y + outer_height}" x2="{inner_x}" y2="{inner_y + inner_height}" />
+    <line x1="{outer_x + outer_width}" y1="{outer_y + outer_height}" x2="{inner_x + inner_width}" y2="{inner_y + inner_height}" />
+    
+    <!-- 菱形到外框的連接線（形成 12 宮） -->
+    <line x1="{center_x}" y1="{outer_y}" x2="{outer_x}" y2="{outer_y + outer_height/2}" />
+    <line x1="{outer_x}" y1="{outer_y + outer_height/2}" x2="{center_x}" y2="{outer_y + outer_height}" />
+    <line x1="{center_x}" y1="{outer_y + outer_height}" x2="{outer_x + outer_width}" y2="{outer_y + outer_height/2}" />
+    <line x1="{outer_x + outer_width}" y1="{outer_y + outer_height/2}" x2="{center_x}" y2="{outer_y}" />
+  </g>
+''')
+
+    # 12 星座符號（外圍 12 個位置）
+    svg_parts.append(f'''
+  <!-- 12 星座符號 -->
+  <g font-family="serif" font-size="24" fill="{palette['black']}" text-anchor="middle">
+''')
+
+    zodiac_signs = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"]
+    
+    for pos in zodiac_positions:
+        sign_glyph = zodiac_signs[pos["sign_index"]]
+        svg_parts.append(f'''    <text x="{pos['x']}" y="{pos['y']}">{sign_glyph}</text>\n''')
+
+    svg_parts.append('  </g>\n')
+
+    # 行星位置（在 12 宮區域內）
+    svg_parts.append(f'''
+  <!-- 行星位置 -->
+  <g font-family="serif" font-size="22" fill="{palette['black']}">
+''')
+
+    # 根據行星所在的宮位，放置在對應區域
+    for planet in planet_positions:
+        # 簡化：根據行星的星座索引確定大致位置
+        sign_index = int(planet.longitude_sidereal // 30)
+        
+        # 找到對應的位置區域
+        for pos in zodiac_positions:
+            if pos["sign_index"] == sign_index:
+                # 在該區域內放置行星符號
+                planet_glyph = get_planet_glyph(planet.name)
+                planet_label = f"{planet_glyph}"
+                
+                # 根據宮位調整位置（在區域內偏移）
+                offset_x = 0
+                offset_y = 0
+                if planet.house <= 4:
+                    offset_y = 25
+                elif planet.house <= 8:
+                    offset_x = -20
+                    offset_y = 15
+                else:
+                    offset_x = 20
+                    offset_y = -15
+                
+                svg_parts.append(f'''    <text x="{pos['x'] + offset_x}" y="{pos['y'] + offset_y}">{planet_label}</text>\n''')
+                break
+
+    svg_parts.append('  </g>\n')
+
+    # 皇家恆星標記（如果有合相）
+    if show_royal_stars and royal_stars:
+        svg_parts.append(f'''
+  <!-- 皇家恆星 -->
+  <g font-family="serif" font-size="16" fill="{palette['gold_leaf']}" text-anchor="middle">
+''')
+        
+        for star_name, star_data in royal_stars.items():
+            star_longitude = star_data["sassanian_longitude"]
+            star_sign_index = int(star_longitude // 30)
+            
+            # 找到對應的星座位置
+            for pos in zodiac_positions:
+                if pos["sign_index"] == star_sign_index:
+                    # 八芒星標記
+                    star_size = 10
+                    cx, cy = pos['x'], pos['y'] - 35
+                    
+                    svg_parts.append(f'''
+    <!-- {star_data['name_pahlavi']} -->
+    <g transform="translate({cx}, {cy})">
+      <path d="M 0,-{star_size} L {star_size*0.4},-{star_size*0.4} L {star_size},0 L {star_size*0.4},{star_size*0.4}
+               L 0,{star_size} L -{star_size*0.4},{star_size*0.4} L -{star_size},0 L -{star_size*0.4},-{star_size*0.4} Z"
+            fill="url(#goldGradient)" stroke="{palette['crimson']}" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="{star_size*0.25}" fill="{palette['turquoise']}"/>
+    </g>
+    <text x="{cx}" y="{cy - 20}" font-size="14" fill="{palette['crimson']}">{star_data['name_pahlavi']}</text>
+''')
+                    break
+        
+        svg_parts.append('  </g>\n')
+
+    # Firdar 時間線（底部）
     if show_firdar:
-        fig = make_subplots(
-            rows=2, cols=1,
-            row_heights=[0.72, 0.28],
-            vertical_spacing=0.12,
-            specs=[[{"type": "scatter"}], [{"type": "scatter"}]]
+        firdar_y = outer_y + outer_height + 50
+        firdar_height = 45
+        firdar_width = outer_width
+        
+        firdar_periods = [
+            {"planet": "Sun", "pahlavi": "Khwarshid", "years": 120, "glyph": "☉"},
+            {"planet": "Moon", "pahlavi": "Mah", "years": 108, "glyph": "☽"},
+            {"planet": "Saturn", "pahlavi": "Keyvan", "years": 135, "glyph": "♄"},
+            {"planet": "Jupiter", "pahlavi": "Ohrmazd", "years": 108, "glyph": "♃"},
+            {"planet": "Mars", "pahlavi": "Warhran", "years": 105, "glyph": "♂"},
+            {"planet": "Venus", "pahlavi": "Anahid", "years": 108, "glyph": "♀"},
+            {"planet": "Mercury", "pahlavi": "Tir", "years": 108, "glyph": "☿"},
+        ]
+        
+        total_years = sum(p["years"] for p in firdar_periods)
+        x_scale_firdar = firdar_width / total_years
+        current_x = outer_x
+        
+        svg_parts.append(f'''
+  <!-- Firdar 生命週期 -->
+  <g>
+    <text x="{width/2}" y="{firdar_y - 8}" font-family="serif" font-size="16"
+          fill="{palette['crimson']}" text-anchor="middle" font-weight="bold">
+      Firdar 生命週期
+    </text>
+''')
+        
+        for i, period in enumerate(firdar_periods):
+            period_width = period["years"] * x_scale_firdar
+            fill_color = palette["gold_leaf"] if i % 2 == 0 else f"rgba(212, 175, 55, 0.3)"
+            
+            svg_parts.append(f'''
+    <rect x="{current_x}" y="{firdar_y}" width="{period_width - 1}" height="{firdar_height}"
+          fill="{fill_color}" stroke="{palette['crimson']}" stroke-width="1" />
+    <text x="{current_x + period_width/2}" y="{firdar_y + firdar_height/2 + 5}"
+          font-family="serif" font-size="12" fill="{palette['dark_indigo']}"
+          text-anchor="middle">
+      {period['glyph']} {period['years']}
+    </text>
+''')
+            current_x += period_width
+        
+        svg_parts.append('  </g>\n')
+
+    # 歷史說明
+    disclaimer_y = height - 20
+    svg_parts.append(f'''
+  <!-- 歷史說明 -->
+  <text x="{width/2}" y="{disclaimer_y}" font-family="serif" font-size="12"
+        fill="{palette['dark_indigo']}" text-anchor="middle" font-style="italic">
+    薩珊傳統占星（Bundahishn、Dorotheus Pahlavi）
+  </text>
+''')
+
+    # SVG 結尾
+    svg_parts.append('</svg>')
+
+    return ''.join(svg_parts)
+
+
+def generate_sassanian_chart(
+    chart_data: Dict,
+    width: int = 400,
+    height: int = 450,
+    show_pahlavi: bool = True,
+    show_royal_stars: bool = True,
+    show_firdar: bool = True,
+):
+    """
+    生成薩珊傳統占星星盤（返回 Plotly Figure，使用 SVG 作為底圖）
+    """
+    import plotly.graph_objects as go
+
+    svg_content = generate_sassanian_svg(
+        chart_data, width, height,
+        show_pahlavi, show_royal_stars, show_firdar
+    )
+
+    svg_base64 = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
+
+    fig = go.Figure()
+
+    fig.add_layout_image(
+        dict(
+            source=f"data:image/svg+xml;base64,{svg_base64}",
+            xref="paper",
+            yref="paper",
+            x=0,
+            y=1,
+            sizex=1,
+            sizey=1,
+            sizing="contain",
+            opacity=1,
+            layer="below"
         )
-        main_height = height * 0.72
-    else:
-        fig = make_subplots(rows=1, cols=1, specs=[[{"type": "scatter"}]])
-        main_height = height
+    )
 
     fig.update_layout(
         width=width,
         height=height,
-        plot_bgcolor=palette["parchment"],
-        paper_bgcolor=palette["parchment"],
-        margin=dict(l=20, r=20, t=65, b=35 if show_firdar else 30),
-        showlegend=False,
-        font_family="serif",
+        xaxis=dict(visible=False, range=[0, 1]),
+        yaxis=dict(visible=False, range=[0, 1], scaleanchor="x"),
+        margin=dict(l=0, r=0, t=0, b=0),
     )
-
-    # 鎖定像素座標（消除所有軸線 artifact）
-    fig.update_xaxes(range=[0, width], visible=False, showgrid=False, zeroline=False, showticklabels=False, row=1, col=1)
-    fig.update_yaxes(range=[0, main_height], visible=False, showgrid=False, zeroline=False, showticklabels=False, row=1, col=1)
-    if show_firdar:
-        fig.update_xaxes(range=[0, width], visible=False, showgrid=False, zeroline=False, showticklabels=False, row=2, col=1)
-        fig.update_yaxes(range=[0, height*0.28], visible=False, showgrid=False, zeroline=False, showticklabels=False, row=2, col=1)
-
-    fig.add_trace(go.Scatter(x=[0, width], y=[0, main_height], mode="markers",
-                             marker=dict(color="rgba(0,0,0,0)"), hoverinfo="skip"), row=1, col=1)
-
-    # 石榴邊框（層級 below）
-    border_svg = render_pomegranate_border(0, 0, width, main_height)
-    if border_svg:
-        _add_svg_icon(fig, border_svg, width/2, main_height/2,
-                      size=max(width, main_height) * 1.015,
-                      row=1, layer="below", opacity=0.85)
-
-    # 主星盤渲染
-    _render_square_chart(
-        fig=fig, row=1,
-        houses=houses,
-        planet_positions=planet_positions,
-        royal_stars=royal_stars,
-        palette=palette,
-        show_pahlavi=show_pahlavi,
-        width=width,
-        height=main_height,
-    )
-
-    if show_firdar:
-        _render_firdar_timeline(fig, row=2, chart_data=chart_data, palette=palette,
-                                show_pahlavi=show_pahlavi, width=width, height=height*0.28)
-
-    # 角落 Faravahar（薩珊經典對稱裝飾）
-    corner_size = 48
-    faravahar_svg = render_faravahar_element(0, 0, corner_size)
-    _add_svg_icon(fig, faravahar_svg, corner_size + 8, main_height - corner_size - 8,
-                  size=corner_size * 2.0, row=1, layer="above")
-    _add_svg_icon(fig, faravahar_svg, width - corner_size - 8, main_height - corner_size - 8,
-                  size=corner_size * 2.0, row=1, layer="above")
-
-    # 標題（融入 Masha'allah 傳統）
-    title_text = "波斯薩珊傳統占星星盤 | Sassanian Traditional Horoscope"
-    if show_pahlavi:
-        title_text += "\n𐭮𐭠𐭮𐭠𐭭 𐭲𐭠𐭫𐭹𐭹𐭠 (Māshā’allāh / Sassanian Astrology)"
-
-    fig.add_annotation(x=width/2, y=height-28, text=title_text,
-                       xref="x", yref="y", showarrow=False,
-                       font=dict(size=18, color=palette["crimson"], family="serif"),
-                       align="center")
-
-    # 歷史說明（參考 Masha'allah 文章）
-    disclaimer = (
-        "此星盤依據薩珊王朝古文獻（Bundahishn、Dorotheus Pahlavi 譯本）"
-        "與 Masha'allah（8世紀）使用之 Sassanian ayanamsa + Whole Sign houses "
-        "及出土波斯銀盤、印章藝術風格重建，非現代圓形輪盤。"
-    )
-    fig.add_annotation(x=width/2, y=14, text=disclaimer,
-                       xref="x", yref="y", showarrow=False,
-                       font=dict(size=9.5, color=palette["dark_indigo"]),
-                       align="center")
 
     return fig
 
 
-def _render_square_chart(
-    fig: go.Figure,
-    row: int,
-    houses: List[Dict],
-    planet_positions: List[SassanianPlanetPosition],
-    royal_stars: Dict,
-    palette: Dict[str, str],
-    show_pahlavi: bool,
-    width: int,
-    height: int,
-) -> None:
-    """渲染 3×4 方形宮位網格（薩珊/Masha'allah 傳統格式）"""
-    grid_cols = 4
-    grid_rows = 3
-    cell_width = width / grid_cols
-    cell_height = height / grid_rows
-
-    # 宮位順序：左下角為第 1 宮，逆時針（薩珊標準）
-    house_positions = [
-        (0, 0), (1, 0), (2, 0), (3, 0),   # 底部 1-4 宮
-        (0, 1), (1, 1), (2, 1), (3, 1),   # 中間 5-8 宮
-        (0, 2), (1, 2), (2, 2), (3, 2),   # 頂部 9-12 宮
-    ]
-
-    for i, house in enumerate(houses):
-        col, row_idx = house_positions[i]
-        x = col * cell_width
-        y = row_idx * cell_height
-
-        # 宮位邊框
-        fig.add_shape(type="rect", x0=x+6, y0=y+6, x1=x+cell_width-6, y1=y+cell_height-6,
-                      xref="x", yref="y",
-                      line=dict(color=palette["gold_leaf"], width=2.8),
-                      fillcolor=palette["dark_indigo"] if i == 0 else "rgba(26,35,126,0.22)")
-
-        # 宮位標籤
-        house_label = f"宮 {house['house_number']}"
-        if show_pahlavi:
-            house_label += f"\n({house.get('meaning_pahlavi', '')})"
-        fig.add_annotation(x=x+cell_width/2, y=y+cell_height-20,
-                           text=house_label, xref="x", yref="y", showarrow=False,
-                           font=dict(size=11.5, color=palette["gold_leaf"]), align="center")
-
-        # 星座
-        sign_label = house.get("sign", "")
-        if show_pahlavi:
-            sign_label += f"\n({house.get('sign_pahlavi', '')})"
-        fig.add_annotation(x=x+cell_width/2, y=y+cell_height/2,
-                           text=sign_label, xref="x", yref="y", showarrow=False,
-                           font=dict(size=13, color=palette["turquoise"]), align="center")
-
-        # 行星
-        planets_in_house = [p for p in planet_positions if p.house == house["house_number"]]
-        for j, planet in enumerate(planets_in_house):
-            py = y + cell_height/2 - 30 - j*23
-            label = f"{get_planet_glyph(planet.name)} {planet.name}"
-            if show_pahlavi:
-                label += f" ({planet.name_pahlavi})"
-            if planet.is_retrograde:
-                label += " ℞"
-            fig.add_annotation(x=x+cell_width/2, y=py,
-                               text=label, xref="x", yref="y", showarrow=False,
-                               font=dict(size=10.5, color=palette["white"]), align="center")
-
-    # 上升點火壇（第1宮標記）
-    asc_col, asc_row = house_positions[0]
-    _add_svg_icon(fig, render_fire_altar(0, 0, 42),
-                  x=asc_col*cell_width + 35,
-                  y=asc_row*cell_height + cell_height - 42,
-                  size=42, row=row)
-
-    # 皇家恆星（含 Bundahishn 所述 Tishtar 等）
-    for star_name, star_data in royal_stars.items():
-        star_longitude = star_data["sassanian_longitude"]
-        star_sign_index = int(star_longitude // 30)
-        for i, house in enumerate(houses):
-            if int(house["longitude_start"] // 30) == star_sign_index:
-                col, row_idx = house_positions[i]
-                x_pos = col * cell_width + cell_width - 34
-                y_pos = row_idx * cell_height + 35
-                _add_svg_icon(fig, render_eight_pointed_star(0, 0, 26),
-                              x=x_pos, y=y_pos, size=26, row=row)
-                star_label = star_data.get("name_pahlavi", star_data.get("name_en", ""))
-                fig.add_annotation(x=x_pos, y=y_pos-31,
-                                   text=star_label, xref="x", yref="y", showarrow=False,
-                                   font=dict(size=9.5, color=palette["gold_leaf"]), align="center")
-                break
-
-
-def _render_firdar_timeline(
-    fig: go.Figure,
-    row: int,
+def save_sassanian_svg(
     chart_data: Dict,
-    palette: Dict[str, str],
-    show_pahlavi: bool,
-    width: int,
-    height: int,
+    output_path: str,
+    width: int = 400,
+    height: int = 450,
+    show_pahlavi: bool = True,
+    show_royal_stars: bool = True,
+    show_firdar: bool = True,
 ) -> None:
-    """Firdar 生命週期時間線（薩珊傳統行星大限）"""
-    firdar_periods = [
-        {"planet": "Sun", "pahlavi": "Khwarshid", "years": 120, "glyph": "☉"},
-        {"planet": "Moon", "pahlavi": "Mah", "years": 108, "glyph": "☽"},
-        {"planet": "Saturn", "pahlavi": "Keyvan", "years": 135, "glyph": "♄"},
-        {"planet": "Jupiter", "pahlavi": "Ohrmazd", "years": 108, "glyph": "♃"},
-        {"planet": "Mars", "pahlavi": "Warhran", "years": 105, "glyph": "♂"},
-        {"planet": "Venus", "pahlavi": "Anahid", "years": 108, "glyph": "♀"},
-        {"planet": "Mercury", "pahlavi": "Tir", "years": 108, "glyph": "☿"},
-    ]
+    """保存薩珊星盤 SVG 到檔案"""
+    svg_content = generate_sassanian_svg(
+        chart_data, width, height,
+        show_pahlavi, show_royal_stars, show_firdar
+    )
 
-    total_years = sum(p["years"] for p in firdar_periods)
-    x_start = 25
-    timeline_width = width - 50
-    x_scale = timeline_width / total_years
-    current_x = x_start
-
-    for i, period in enumerate(firdar_periods):
-        pw = period["years"] * x_scale
-        fig.add_shape(type="rect",
-                      x0=current_x, y0=25, x1=current_x+pw, y1=height-30,
-                      xref="x", yref="y",
-                      line=dict(color=palette["gold_leaf"], width=1.8),
-                      fillcolor=palette["gold_leaf"] if i % 2 == 0 else "rgba(212,175,55,0.38)")
-
-        label = f"{period['glyph']} {period['planet']}"
-        if show_pahlavi:
-            label += f"\n({period['pahlavi']})"
-        label += f"\n{period['years']}年"
-
-        fig.add_annotation(x=current_x + pw/2, y=height/2 + 18,
-                           text=label, xref="x", yref="y", showarrow=False,
-                           font=dict(size=10, color=palette["dark_indigo"]),
-                           align="center", textangle=90)
-        current_x += pw
-
-    fig.add_annotation(x=width/2, y=height-10,
-                       text="Firdar 生命週期 | Sassanian Planetary Periods (Māshā’allāh 傳統)",
-                       xref="x", yref="y", showarrow=False,
-                       font=dict(size=13.5, color=palette["crimson"]), align="center")
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(svg_content)
 
 
 def render_sassanian_banner_chart(
     chart_data: Dict,
-    width: int = 1400,
+    width: int = 500,
     height: int = 600,
     show_pahlavi: bool = True,
-) -> go.Figure:
-    """橫幅格式（適合寬螢幕與列印）"""
-    return generate_sassanian_chart(
+) -> str:
+    """
+    渲染橫幅格式薩珊星盤（純 SVG）
+    
+    Parameters
+    ----------
+    chart_data : Dict
+        星盤資料
+    width : int
+        寬度
+    height : int
+        高度
+    show_pahlavi : bool
+        是否顯示 Pahlavi 文字
+    
+    Returns
+    -------
+    str
+        SVG 字串
+    """
+    return generate_sassanian_svg(
         chart_data=chart_data,
         width=width,
         height=height,
         show_pahlavi=show_pahlavi,
+        show_royal_stars=True,
         show_firdar=False,
     )
 
 
 if __name__ == "__main__":
-    print("=" * 80)
-    print("薩珊星盤渲染器 — 最終版 v4（參考 Masha'allah 文章）")
-    print("=" * 80)
+    print("=" * 60)
+    print("薩珊星盤渲染測試（菱形 12 宮設計）")
+    print("=" * 60)
 
     test_chart = {
-        "year": 1980, "month": 1, "day": 15,
-        "hour": 10, "minute": 30,
-        "longitude": 121.5, "latitude": 25.0, "timezone": 8.0,
+        "year": 1980,
+        "month": 1,
+        "day": 15,
+        "hour": 10,
+        "minute": 30,
+        "longitude": 121.5,
+        "latitude": 25.0,
+        "timezone": 8.0,
     }
 
-    fig = generate_sassanian_chart(test_chart, width=1280, height=920)
-    fig.write_image("sassanian_chart_final_v4.svg", format="svg", engine="kaleido")
-    print("✅ 已儲存 sassanian_chart_final_v4.svg（高品質向量圖）")
-    print("   完全符合薩珊/Masha'allah 傳統視覺風格")
-    print("\n在 Streamlit 中使用 st.plotly_chart(fig) 顯示")
+    print("\n生成薩珊星盤 SVG...")
+    svg_content = generate_sassanian_svg(test_chart, width=500, height=600)
+    print(f"  SVG 長度：{len(svg_content)} 字元")
+    print(f"  SVG 尺寸：500x600")
+
+    output_path = "/tmp/sassanian_chart.svg"
+    save_sassanian_svg(test_chart, output_path, width=500, height=600)
+    print(f"  已保存至：{output_path}")
+
+    print("\n" + "=" * 60)
+    print("測試完成")

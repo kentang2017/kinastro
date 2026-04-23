@@ -2130,9 +2130,76 @@ elif _selected_system == "tab_persian":
                     language=get_lang()
                 )
             
-            # Main tabs for Persian astrology
-            _p_tab_overview, _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
-                t("western_subtab_natal"),
+            # 波斯傳統占星主頁面 - 先顯示星盤圖案，再顯示 subtabs
+            st.header(t("tab_persian"))
+            st.caption(t("desc_persian"))
+            
+            # 薩珊傳統星盤圖（方形格式，純 SVG）- 置頂顯示
+            st.subheader("🏛️ 薩珊傳統星盤（方形格式）")
+            st.info(t("sassanian_chart_disclaimer"))
+            
+            try:
+                from astro.persian.sassanian_chart_renderer import generate_sassanian_svg
+                
+                chart_data = {
+                    "year": _p["year"], "month": _p["month"], "day": _p["day"],
+                    "hour": _p["hour"], "minute": _p["minute"],
+                    "longitude": _p.get("lon", 0.0),
+                    "latitude": _p.get("lat", 0.0),
+                    "timezone": _p.get("tz", 0.0),
+                }
+                
+                # 生成 SVG 並直接顯示（響應式設計，PC/手機皆 100% 顯示）
+                svg_content = generate_sassanian_svg(
+                    chart_data=chart_data,
+                    width=500,
+                    height=600,
+                    show_pahlavi=False,
+                    show_royal_stars=True,
+                    show_firdar=True,
+                )
+                
+                # 使用 st.components.v1.html 顯示 SVG（響應式高度）
+                # viewBox 500x600，使用 width: 100% 確保 PC/手機皆完整顯示
+                st.components.v1.html(
+                    f'''<div style="width: 100%; max-width: 600px; margin: 0 auto;">
+                        {svg_content}
+                    </div>''',
+                    height=680,
+                    scrolling=False
+                )
+                
+            except Exception as e:
+                st.error(f"星盤渲染失敗：{str(e)}")
+            
+            # Basic chart info
+            col1, col2 = st.columns(2)
+            with col1:
+                st.info(f"**{t('persian_current_firdar')}:** {p_chart.current_firdar.lord} ({p_chart.current_firdar.lord_cn})" if p_chart.current_firdar else "當前 Firdar: N/A")
+            with col2:
+                st.info(f"**{t('persian_current_sub')}:** {p_chart.current_sub_period.lord} ({p_chart.current_sub_period.lord_cn})" if p_chart.current_sub_period else "當前子週期：N/A")
+            
+            # Planet positions table
+            st.subheader("行星位置")
+            planet_data = []
+            for planet in p_chart.planets:
+                planet_data.append({
+                    "行星": f"{planet.name} ({planet.name_cn})",
+                    "經度": f"{planet.longitude:.2f}°",
+                    "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
+                    "宮位": f"第{planet.house}宮",
+                    "尊嚴": planet.essential_dignity,
+                    "逆行": "✓" if planet.retrograde else "",
+                })
+            st.dataframe(planet_data, use_container_width=True)
+            
+            # AI Analysis button
+            _render_ai_button("tab_persian", p_chart, btn_key="persian")
+            
+            st.divider()
+            
+            # Main tabs for Persian astrology (subtabs after chart)
+            _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
                 t("persian_firdar_title"),
                 t("persian_hyleg_title"),
                 t("persian_profections_title"),
@@ -2140,61 +2207,6 @@ elif _selected_system == "tab_persian":
                 t("persian_royal_stars_title"),
                 t("persian_lots_title"),
             ])
-            
-            with _p_tab_overview:
-                st.header(t("tab_persian"))
-                st.caption(t("desc_persian"))
-                
-                # 薩珊傳統星盤圖（方形格式）
-                st.subheader("🏛️ 薩珊傳統星盤（方形格式）")
-                st.info(t("sassanian_chart_disclaimer"))
-                
-                try:
-                    from astro.persian.sassanian_chart_renderer import generate_sassanian_chart
-                    
-                    chart_data = {
-                        "year": _p["year"], "month": _p["month"], "day": _p["day"],
-                        "hour": _p["hour"], "minute": _p["minute"],
-                        "longitude": _p.get("lon", 0.0),
-                        "latitude": _p.get("lat", 0.0),
-                        "timezone": _p.get("tz", 0.0),
-                    }
-                    
-                    sassanian_fig = generate_sassanian_chart(
-                        chart_data=chart_data,
-                        width=1000,
-                        height=800,
-                        show_pahlavi=False,
-                        show_royal_stars=True,
-                        show_firdar=True,
-                    )
-                    st.plotly_chart(sassanian_fig, use_container_width=True)
-                except Exception as e:
-                    st.error(f"星盤渲染失敗：{str(e)}")
-                
-                # Basic chart info
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.info(f"**{t('persian_current_firdar')}:** {p_chart.current_firdar.lord} ({p_chart.current_firdar.lord_cn})" if p_chart.current_firdar else "當前 Firdar: N/A")
-                with col2:
-                    st.info(f"**{t('persian_current_sub')}:** {p_chart.current_sub_period.lord} ({p_chart.current_sub_period.lord_cn})" if p_chart.current_sub_period else "當前子週期：N/A")
-                
-                # Planet positions table
-                st.subheader("行星位置")
-                planet_data = []
-                for planet in p_chart.planets:
-                    planet_data.append({
-                        "行星": f"{planet.name} ({planet.name_cn})",
-                        "經度": f"{planet.longitude:.2f}°",
-                        "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
-                        "宮位": f"第{planet.house}宮",
-                        "尊嚴": planet.essential_dignity,
-                        "逆行": "✓" if planet.retrograde else "",
-                    })
-                st.dataframe(planet_data, use_container_width=True)
-                
-                # AI Analysis button
-                _render_ai_button("tab_persian", p_chart, btn_key="persian")
             
             with _p_tab_firdar:
                 st.header(t("persian_firdar_title"))
