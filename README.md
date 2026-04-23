@@ -4,17 +4,17 @@
 <div align="center">
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
-![Version](https://img.shields.io/badge/Version-2.2.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-32-FFD700?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-2.3.0-00C853?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-33-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**三十二體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・天王星漢堡學派・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯**
+**三十三體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・天王星漢堡學派・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・KP 克里希納穆提**
 
-*32-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Uranian (Hamburg School), Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian*
+*33-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Uranian (Hamburg School), Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, KP Krishnamurti Paddhati*
 
 </div>
 
@@ -82,23 +82,24 @@
 | | **🌏 亞洲 Asian** | | |
 | 16 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
 | 17 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
-| 18 | 🕉️ Jaimini 占星 | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
-| 19 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
-| 20 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
-| 21 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
-| 22 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
-| 23 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
-| 24 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
-| 25 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
+| 18 | 🕉️ 闍彌尼 Jaimini | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
+| 19 | 🔮 KP 占星 Krishnamurti Paddhati | 恆星 Sidereal | Rasi/Star/Sub Lords・Ruling Planets・Significators・Horary 問卜・北印度鑽石盤 |
+| 20 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
+| 21 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
+| 22 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
+| 23 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
+| 24 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
+| 25 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
+| 26 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
 | | **☪ 中東 Middle East** | | |
-| 26 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
-| 27 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
-| 28 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
+| 27 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
+| 28 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
+| 29 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
 | | **🏺 古代文明 Ancient** | | |
-| 29 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
-| 30 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
-| 31 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
-| 32 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| 30 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 31 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
+| 32 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 33 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
 
 ---
 
@@ -496,6 +497,37 @@
 </details>
 
 <details>
+<summary><strong>🔮 KP 占星（Krishnamurti Paddhati / KP Astrology）</strong></summary>
+
+由印度占星家 K.S. Krishnamurti (1908-1972) 創立，結合了西洋占星的宮位系統與印度占星的 Nakshatra（27 宿）系統，以精確預測事件發生時機而聞名。
+
+*Created by Indian astrologer K.S. Krishnamurti (1908-1972), combining Western house systems with Vedic Nakshatras (27 lunar mansions), renowned for precise event timing predictions.*
+
+- **KP New Ayanamsa**：固定值 23.848333°，與 Lahiri 略有不同 — Fixed value 23.848333°, slightly different from Lahiri
+- **Placidus 宮位系統**：使用西洋占星的 Placidus 宮位制計算 12 宮頭 — Western Placidus house system for 12 cusps
+- **Rasi/Star/Sub Lords（三層主星）**：每顆行星/宮頭都有星座主、宿度主、分主 — Three-tier lordship: Rasi, Star, and Sub Lords
+- **249 個 Sub 區間**：27 宿 × 9 Sub，嚴格按照 Vimshottari Dasha 比例分割 — 27 Nakshatras × 9 Subs = 249 divisions, following Vimshottari Dasha proportions
+- **Ruling Planets（時辰主星）**：用於 Horary 問卜與事件擇時 — Used for Horary astrology and event timing
+- **Significators（徵兆星）**：分類為 Very Strong / Strong / Weak 三個等級 — Classified into Very Strong, Strong, and Weak categories
+
+<details>
+<summary>📂 核心功能 | Core Features</summary>
+
+| 功能 | 說明 |
+|---|---|
+| **Rasi/Star/Sub Lords** | 每顆行星的三層主星系統 |
+| **Ruling Planets** | 時辰主星計算（Day Lord + Star Lord + Sub Lord + Moon Sign Lord + Moon Star Lord） |
+| **Significators** | 12 宮徵兆星分析（Very Strong / Strong / Weak） |
+| **Horary Mode** | 問卜模式，使用提問時間與地點 |
+| **北印度鑽石盤** | North Indian Diamond Style SVG 星盤圖 |
+
+</details>
+
+---
+
+</details>
+
+<details>
 <summary><strong>🇲🇳 蒙古祖爾海（Mongolian Zurkhai）</strong></summary>
 
 蒙古傳統占星術 (Зурхай / Shar Zurkhai)，源自藏傳佛教曆算體系。
@@ -836,6 +868,7 @@ uvicorn api_server:app --reload
 | `POST /api/ziwei` | 紫微斗數 Zi Wei |
 | `POST /api/western` | 西洋占星 Western |
 | `POST /api/vedic` | 印度占星 Vedic |
+| `POST /api/kp` | KP 占星 Krishnamurti Paddhati |
 | `POST /api/thai` | 泰國占星 Thai |
 | `POST /api/kabbalistic` | 卡巴拉 Kabbalah |
 | `POST /api/arabic` | 阿拉伯 Arabic |

@@ -1031,6 +1031,16 @@ with st.sidebar:
         st.session_state["_star_particles"] = _particles_on
         st.rerun()
 
+    # ── History of Astrology link ─────────────────────────────
+    if st.button(
+        "📜 " + t("tab_history"),
+        key="_btn_history",
+        width="stretch",
+        type="secondary",
+    ):
+        st.session_state["_system_select"] = "tab_history"
+        st.rerun()
+
     # ── Cross-system comparison toggle ────────────────────────
     _cross_system_on = st.toggle(
         t("enable_cross_system"),
@@ -2388,6 +2398,24 @@ elif _selected_system == "tab_kp":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_kp") if hasattr(t, "desc_kp") else "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti 創立的精確預測系統，使用宿度主星 (Sub Lord) 和時辰主星 (Ruling Planets) 判斷事件發生時機。")
+
+# --- History of Astrology ---
+elif _selected_system == "tab_history":
+    st.header("📜 " + t("tab_history"))
+    st.caption("占星術是人類最古老的知識體系之一，跨越五千年文明，連結天上與地下。" if _cur_lang in ("zh", "zh_cn") else "Astrology is one of humanity's oldest knowledge systems, spanning five millennia of civilization.")
+    
+    st.divider()
+    
+    # Load and render markdown file
+    try:
+        with open("docs/astrology_history.md", "r", encoding="utf-8") as f:
+            history_md = f.read()
+        st.markdown(history_md)
+    except FileNotFoundError:
+        st.error("占星歷史文件尚未建立 / Astrology history file not found: `docs/astrology_history.md`")
+        st.info("請先建立文件 / Please create the document first.")
+    
+    _render_ai_button("tab_history", {"system": "astrology_history"}, btn_key="history")
 
 # --- 印度占星 ---
 elif _selected_system == "tab_indian":

@@ -1622,6 +1622,7 @@ transmitted by **Chen Xiyi**.
         "en": "🗑️ Clear Chat",
     },
     "tab_contact": {"zh": "📬 關於 / 聯繫", "en": "📬 About / Contact"},
+    "tab_history": {"zh": "📜 占星歷史", "en": "📜 History of Astrology"},
     "contact_title": {"zh": "開發者資訊", "en": "Developer Info"},
     "contact_wechat": {"zh": "微信公眾號：**探究三式**", "en": "WeChat Official Account: **探究三式**"},
     "contact_wechat_id": {
