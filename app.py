@@ -2130,14 +2130,9 @@ elif _selected_system == "tab_persian":
                     language=get_lang()
                 )
             
-            # 波斯傳統占星主頁面 - 先顯示星盤圖案，再顯示 subtabs
-            st.header(t("tab_persian"))
-            st.caption(t("desc_persian"))
+            # 波斯傳統占星 - 直接顯示星盤圖案（緊湊佈局）
             
-            # 薩珊傳統星盤圖（方形格式，純 SVG）- 置頂顯示
-            st.subheader("🏛️ 薩珊傳統星盤（方形格式）")
-            st.info(t("sassanian_chart_disclaimer"))
-            
+            # 薩珊傳統星盤圖（方形格式，純 SVG）
             try:
                 from astro.persian.sassanian_chart_renderer import generate_sassanian_svg
                 
@@ -2172,34 +2167,16 @@ elif _selected_system == "tab_persian":
             except Exception as e:
                 st.error(f"星盤渲染失敗：{str(e)}")
             
-            # Basic chart info
+            # Basic chart info（緊貼星盤下方）
             col1, col2 = st.columns(2)
             with col1:
                 st.info(f"**{t('persian_current_firdar')}:** {p_chart.current_firdar.lord} ({p_chart.current_firdar.lord_cn})" if p_chart.current_firdar else "當前 Firdar: N/A")
             with col2:
                 st.info(f"**{t('persian_current_sub')}:** {p_chart.current_sub_period.lord} ({p_chart.current_sub_period.lord_cn})" if p_chart.current_sub_period else "當前子週期：N/A")
             
-            # Planet positions table
-            st.subheader("行星位置")
-            planet_data = []
-            for planet in p_chart.planets:
-                planet_data.append({
-                    "行星": f"{planet.name} ({planet.name_cn})",
-                    "經度": f"{planet.longitude:.2f}°",
-                    "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
-                    "宮位": f"第{planet.house}宮",
-                    "尊嚴": planet.essential_dignity,
-                    "逆行": "✓" if planet.retrograde else "",
-                })
-            st.dataframe(planet_data, use_container_width=True)
-            
-            # AI Analysis button
-            _render_ai_button("tab_persian", p_chart, btn_key="persian")
-            
-            st.divider()
-            
-            # Main tabs for Persian astrology (subtabs after chart)
-            _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
+            # Main tabs for Persian astrology
+            _p_tab_intro, _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
+                t("western_subtab_natal"),
                 t("persian_firdar_title"),
                 t("persian_hyleg_title"),
                 t("persian_profections_title"),
@@ -2207,6 +2184,27 @@ elif _selected_system == "tab_persian":
                 t("persian_royal_stars_title"),
                 t("persian_lots_title"),
             ])
+            
+            with _p_tab_intro:
+                st.header(t("tab_persian"))
+                st.caption(t("desc_persian"))
+                
+                # Planet positions table
+                st.subheader("行星位置")
+                planet_data = []
+                for planet in p_chart.planets:
+                    planet_data.append({
+                        "行星": f"{planet.name} ({planet.name_cn})",
+                        "經度": f"{planet.longitude:.2f}°",
+                        "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
+                        "宮位": f"第{planet.house}宮",
+                        "尊嚴": planet.essential_dignity,
+                        "逆行": "✓" if planet.retrograde else "",
+                    })
+                st.dataframe(planet_data, use_container_width=True)
+                
+                # AI Analysis button
+                _render_ai_button("tab_persian", p_chart, btn_key="persian")
             
             with _p_tab_firdar:
                 st.header(t("persian_firdar_title"))

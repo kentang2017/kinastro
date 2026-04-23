@@ -3,18 +3,18 @@
 <!-- Logo / Hero -->
 <div align="center">
 
-![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
-![Version](https://img.shields.io/badge/Version-2.1.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-31-FFD700?style=for-the-badge)
+![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星 -FF6B6B?style=for-the-badge&logo=star&logoColor=white)
+![Version](https://img.shields.io/badge/Version-2.2.0-00C853?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-32-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**三十一體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・天王星漢堡學派・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫**
+**三十二體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・天王星漢堡學派・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯**
 
-*31-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Uranian (Hamburg School), Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian*
+*32-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Uranian (Hamburg School), Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian*
 
 </div>
 
@@ -39,7 +39,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **三十一體系合一** | 在同一個介面中切換三十一種占星體系，無需來回切換工具 | Switch between 31 astrology systems in one unified interface |
+| 🔮 **三十二體系合一** | 在同一個介面中切換三十二種占星體系，無需來回切換工具 | Switch between 32 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
@@ -93,11 +93,12 @@
 | | **☪ 中東 Middle East** | | |
 | 26 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
 | 27 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
+| 28 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
 | | **🏺 古代文明 Ancient** | | |
-| 28 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
-| 29 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
-| 30 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
-| 31 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| 29 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 30 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
+| 31 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 32 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
 
 ---
 
