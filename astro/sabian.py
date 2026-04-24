@@ -168,9 +168,35 @@ def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, 
         'uranus': 'Uranus', '天王星': 'Uranus',
         'neptune': 'Neptune', '海王星': 'Neptune',
         'pluto': 'Pluto', '冥王星': 'Pluto',
+        'ascendant': 'Ascendant', '上升': 'Ascendant', 'asc': 'Ascendant',
+        'midheaven': 'Midheaven', '中天': 'Midheaven', 'mc': 'Midheaven',
     }
     
     planet_std = planet_map.get(planet.lower(), planet)
+    
+    # Handle Ascendant and Midheaven specially
+    if planet_std in ['Ascendant', 'Midheaven']:
+        # Try to find in chart_data directly
+        if planet_std == 'Ascendant' and 'ascendant' in chart_data:
+            asc_lon = chart_data.get('ascendant', 0)
+            result = get_sabian_symbol(asc_lon)
+            result['planet_longitude'] = asc_lon
+            return result
+        elif planet_std == 'Midheaven' and 'midheaven' in chart_data:
+            mc_lon = chart_data.get('midheaven', 0)
+            result = get_sabian_symbol(mc_lon)
+            result['planet_longitude'] = mc_lon
+            return result
+        # Try to get from WesternChart object attributes
+        if hasattr(chart_data, 'ascendant') and planet_std == 'Ascendant':
+            result = get_sabian_symbol(chart_data.ascendant)
+            result['planet_longitude'] = chart_data.ascendant
+            return result
+        if hasattr(chart_data, 'midheaven') and planet_std == 'Midheaven':
+            result = get_sabian_symbol(chart_data.midheaven)
+            result['planet_longitude'] = chart_data.midheaven
+            return result
+        raise ValueError(f"{planet_std} not found in chart data")
     
     planets = chart_data.get('planets', [])
     for p in planets:
