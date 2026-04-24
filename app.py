@@ -874,7 +874,6 @@ with st.sidebar:
 
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
-        ("cat_popular", []),  # Popular moved to respective categories
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
@@ -885,7 +884,6 @@ with st.sidebar:
     ]
 
     _CATEGORY_ICONS = {
-        "cat_popular": "⭐",
         "cat_sanshi": "☯️",
         "cat_chinese": "🏮",
         "cat_western": "🏛️",
@@ -2093,9 +2091,16 @@ elif _selected_system == "tab_sabian":
                 _sabian_planets = ["Sun", "Moon", "Mercury", "Venus", "Mars",
                                    "Jupiter", "Saturn", "Ascendant", "Midheaven"]
                 
+                # Pass full chart data including ascendant and midheaven
+                _chart_data = {
+                    "planets": w_chart.planets,
+                    "ascendant": w_chart.ascendant,
+                    "midheaven": w_chart.midheaven,
+                }
+                
                 # Display in two columns
                 for _i, _pname in enumerate(_sabian_planets):
-                    _sabian = get_sabian_for_planet({"planets": w_chart.planets}, _pname)
+                    _sabian = get_sabian_for_planet(_chart_data, _pname)
                     if _sabian:
                         _col1, _col2 = st.columns([2, 1])
                         with _col1:
@@ -2107,7 +2112,8 @@ elif _selected_system == "tab_sabian":
                             st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
                         with _col2:
                             _svg = render_sabian_svg(_sabian['planet_longitude'], size=200)
-                            st.markdown(_svg, unsafe_allow_html=True)
+                            # Use st.components.v1.html for proper SVG rendering
+                            st.components.v1.html(_svg, height=300)
                         st.divider()
                 
                 # Optional: Show all 360 symbols in an expander
