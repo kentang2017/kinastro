@@ -4,17 +4,16 @@
 <div align="center">
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
-![Version](https://img.shields.io/badge/Version-2.3.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-33-FFD700?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-2.4.0-00C853?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-36-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**三十三體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・天王星漢堡學派・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・KP 克里希納穆提**
-
-*33-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Uranian (Hamburg School), Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, KP Krishnamurti Paddhati*
+**三十六體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・鐵板神數・西洋・天王星漢堡學派・Sabian 符號・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・KP 克里希納穆提**
+*36-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Tie Ban Shen Shu, Western, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, KP Krishnamurti Paddhati*
 
 </div>
 
@@ -39,7 +38,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **三十二體系合一** | 在同一個介面中切換三十二種占星體系，無需來回切換工具 | Switch between 32 astrology systems in one unified interface |
+| 🔮 **三十六體系合一** | 在同一個介面中切換三十六種占星體系，無需來回切換工具 | Switch between 36 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
@@ -64,42 +63,44 @@
 | 1 | 🌍 西洋占星 Western | 回歸 Tropical | 本命盤・行星過運・太陽回歸・合盤比較・Ptolemy 尊貴 |
 | 2 | 🌟 紫微斗數 Zi Wei | 農曆 Lunar | 十四主星・十二宮位・五行局 |
 | | **🔮 三式 Three Formulae** | | |
-| 3 | 🔮 六壬祿命 Da Liu Ren | 農曆 Lunar | 天地盤・四課・三傳・十二宮・論命分析 |
-| 4 | 🌟 太乙命法 Taiyi | 農曆 Lunar | 命宮身宮・十二宮・陽九百六行限・出身卦・五柱卦象 |
-| 5 | 🔮 奇門祿命 Qimen Destiny | 農曆 Lunar | 奇門遁甲局・六親分析・八門八神九星・格局推斷 |
+| 3 | 🔮 六壬祿命 Da Liu Ren | 農曆 Lunar | 天地盤・四課・三傳・十二宮・論命分析・響應式手機版 |
+| 4 | 🔢 鐵板神數 Tie Ban Shen Shu | 農曆 Lunar | 八卦加則・安命安身・考刻分・條文查詢・萬千百十號 |
+| 5 | 🌟 太乙命法 Taiyi | 農曆 Lunar | 命宮身宮・十二宮・陽九百六行限・出身卦・五柱卦象 |
+| 6 | 🔮 奇門祿命 Qimen Destiny | 農曆 Lunar | 奇門遁甲局・六親分析・八門八神九星・格局推斷 |
 | | **🀄 中國 Chinese** | | |
-| 6 | 🀄 七政四餘 Chinese | 恆星 Sidereal | 本命盤・神煞・年限大運・流時對盤・張果星宗・擇日 |
-| 7 | 🐦‍⬛ 萬化仙禽 WanHua XianQin | 農曆 Lunar | 二十八宿禽星・十二宮・吞啗合戰・相胎賦・貴賤格 |
-| 8 | 🔢 十二星次 Twelve Ci | 回歸 Tropical | 木星分野・十二次環形盤・歲星方位 |
-| 9 | 🌠 策天飛星 Ce Tian | 農曆 Lunar | 十八飛星・十一正曜七副曜・飛星四化・單宮獨斷 |
-| 10 | 🖐️ 達摩一掌經 Damo | 農曆 Lunar | 十二宮掌紋・前世今生六道・四柱星宮・互動手掌 SVG |
+| 7 | 🀄 七政四餘 Chinese | 恆星 Sidereal | 本命盤・神煞・年限大運・流時對盤・張果星宗・擇日 |
+| 8 | 🐦‍⬛ 萬化仙禽 WanHua XianQin | 農曆 Lunar | 二十八宿禽星・十二宮・吞啗合戰・相胎賦・貴賤格 |
+| 9 | 🔢 十二星次 Twelve Ci | 回歸 Tropical | 木星分野・十二次環形盤・歲星方位 |
+| 10 | 🌠 策天飛星 Ce Tian | 農曆 Lunar | 十八飛星・十一正曜七副曜・飛星四化・單宮獨斷 |
+| 11 | 🖐️ 達摩一掌經 Damo | 農曆 Lunar | 十二宮掌紋・前世今生六道・四柱星宮・互動手掌 SVG |
 | | **🏛️ 西方 Western** | | |
-| 11 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing・擴充 Lots・Valens Synkrasis・百論 |
-| 12 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
-| 13 | ✡ 猶太 Mazzalot | 恆星 Sidereal | 大衛之星盤・十二支派・Sefer Yetzirah 字母 |
-| 14 | 🗺️ Astrocartography 地點占星 | 回歸 Tropical | AC/MC/IC/DC 搬遷線・互動 Plotly 地圖・過運搬遷線 |
-| 15 | ♅ 天王星漢堡學派 Uranian | 回歸 Tropical | 8 超海王星虛點・90° 度盤・中點樹・行星圖像 |
+| 12 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing・擴充 Lots・Valens Synkrasis・百論 |
+| 13 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
+| 14 | ✡ 猶太 Mazzalot | 恆星 Sidereal | 大衛之星盤・十二支派・Sefer Yetzirah 字母 |
+| 15 | 🗺️ Astrocartography 地點占星 | 回歸 Tropical | AC/MC/IC/DC 搬遷線・互動 Plotly 地圖・過運搬遷線 |
+| 16 | ♅ 天王星漢堡學派 Uranian | 回歸 Tropical | 8 超海王星虛點・90° 度盤・中點樹・行星圖像 |
+| 17 | 🌟 Sabian Symbols | 回歸 Tropical | 360 度符號・Marc Edmund Jones 原著・SVG 視覺化・關鍵字解讀 |
 | | **🌏 亞洲 Asian** | | |
-| 16 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
-| 17 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
-| 18 | 🕉️ 闍彌尼 Jaimini | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
-| 19 | 🔮 KP 占星 Krishnamurti Paddhati | 恆星 Sidereal | Rasi/Star/Sub Lords・Ruling Planets・Significators・Horary 問卜・北印度鑽石盤 |
-| 20 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
-| 21 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
-| 22 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
-| 23 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
-| 24 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
-| 25 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
-| 26 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
+| 18 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
+| 19 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
+| 20 | 🕉️ 闍彌尼 Jaimini | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
+| 21 | 🔮 KP 占星 Krishnamurti Paddhati | 恆星 Sidereal | Rasi/Star/Sub Lords・Ruling Planets・Significators・Horary 問卜・北印度鑽石盤 |
+| 22 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
+| 23 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
+| 24 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
+| 25 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
+| 26 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
+| 27 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
+| 28 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
 | | **☪ 中東 Middle East** | | |
-| 27 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
-| 28 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
-| 29 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
+| 29 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
+| 30 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
+| 31 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
 | | **🏺 古代文明 Ancient** | | |
-| 30 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
-| 31 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
-| 32 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
-| 33 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| 32 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 33 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
+| 34 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 35 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
 
 ---
 
@@ -802,6 +803,38 @@
 - **六親分析 / Six Relations**：父母、兄弟、子孫、官祿、妻財、疾厄宮位分析 — Analysis of six relational palaces
 - **八門八神九星 / Eight Gates, Eight Spirits, Nine Stars**：奇門遁甲核心要素解讀 — Core Qi Men elements interpretation
 - **格局推斷 / Pattern Deduction**：吉格凶格判斷，推斷一生命運走向 — Auspicious/inauspicious pattern assessment for life trajectory
+
+</details>
+
+<details>
+<summary><strong>🔢 鐵板神數（Tie Ban Shen Shu / Iron Plate Divination）</strong></summary>
+
+中國傳統命理學中的高階數術，以八卦、干支、納音五行為基礎，透過嚴密的數理推算生成萬千百十號與條文斷語。
+
+*An advanced Chinese numerological divination system using Bagua, Ganzhi, and Nayin Five Elements to generate unique identification numbers and destiny verses through precise calculations.*
+
+- **八卦加則例 / Bagua Addition Rules**：天干配卦、地支配卦、河洛配數 — Heavenly Stem to Trigram, Earthly Branch to Trigram, He-Luo number mapping
+- **安命安身 / Life & Body Palace**：推算命宮與身宮位置 — Calculate Life Palace and Body Palace positions
+- **紫微斗數安星 / Zi Wei Star Placement**：安紫微斗數十四主星 — Place the 14 Major Stars of Zi Wei Dou Shu
+- **六十納音五行局 / Sixty Nayin Five Elements**：納音五行局數計算 — Nayin Five Element group calculation
+- **考刻分 / Time Refinement**：時分 8 刻×15 分=120 分精細推算 — Refine birth time into 8 ke × 15 fen = 120 divisions
+- **秘鈔密碼表 / Secret Code Tables**：條文查詢與萬千百十號生成 — Verse lookup and unique ID number generation
+- **條文查詢 / Verse Lookup**：數千條命運斷語查詢 — Access thousands of destiny verses
+
+</details>
+
+<details>
+<summary><strong>🌟 Sabian Symbols（薩比安符號）</strong></summary>
+
+由 Marc Edmund Jones 於 1925 年創立，將黃道 360 度每度賦予一個獨特的象徵符號與關鍵字，是現代占星學重要的解讀工具。
+
+*Created by Marc Edmund Jones in 1925, assigning a unique symbolic image and keyword to each of the 360 zodiac degrees, an essential interpretive tool in modern astrology.*
+
+- **360 個符號 / 360 Symbols**：黃道每度對應一個獨特象徵圖像 — Unique symbolic image for each zodiac degree
+- **Marc Edmund Jones 原著 / Original Jones Version**：1953 年原始版本，非 Lynda Hill 現代改編 — 1953 original version, not the modern Lynda Hill adaptation
+- **SVG 視覺化 / SVG Visualization**：純 SVG 渲染的符號盤面 — Pure SVG-rendered symbol chart
+- **關鍵字解讀 / Keyword Interpretation**：每個符號含關鍵字、正負面詮釋、公式 — Each symbol includes keyword, positive/negative interpretation, formula
+- **行星符號查詢 / Planetary Symbol Lookup**：查詢任意行星所在度數的薩比安符號 — Look up Sabian symbols for any planetary position
 
 </details>
 
