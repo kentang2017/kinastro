@@ -63,6 +63,7 @@ from astro.brahma_jati import (
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart, build_mazzalot_star_of_david_svg
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
+from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
@@ -875,7 +876,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_popular", ["tab_western", "tab_ziwei"]),
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo"]),
+        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban"]),
         ("cat_western", ["tab_sabian", "tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
@@ -930,6 +931,7 @@ with st.sidebar:
         "tab_sabian": t("sabian_system_label"),
         "tab_persian": t("tab_persian"),
         "tab_kp": t("tab_kp"),
+        "tab_tieban": t("tab_tieban"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -969,6 +971,7 @@ with st.sidebar:
         "tab_sabian": t("sys_hint_sabian"),
         "tab_persian": t("sys_hint_persian"),
         "tab_kp": t("sys_hint_kp"),
+        "tab_tieban": t("sys_hint_tieban"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2398,6 +2401,128 @@ elif _selected_system == "tab_kp":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_kp") if hasattr(t, "desc_kp") else "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti 創立的精確預測系統，使用宿度主星 (Sub Lord) 和時辰主星 (Ruling Planets) 判斷事件發生時機。")
+
+# --- 鐵板神數 (Tie Ban Shen Shu) ---
+elif _selected_system == "tab_tieban":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_tieban") if hasattr(t, "spinner_tieban") else "計算鐵板神數..."):
+                # 鐵板神數需要父母信息，此處為簡化示例
+                from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
+                from astro.tieban.tieban_calculator import Ganzhi
+                
+                # 計算干支
+                tbss = TieBanShenShu()
+                ganzhi = tbss.calculate_ganzhi(
+                    datetime(
+                        _p["year"], _p["month"], _p["day"],
+                        _p["hour"], _p["minute"]
+                    )
+                )
+                
+                # 創建出生資料（完整版需用戶輸入父母信息）
+                birth_data = TieBanBirthData(
+                    birth_dt=datetime(_p["year"], _p["month"], _p["day"], _p["hour"], _p["minute"]),
+                    year_gz=ganzhi['year'],
+                    month_gz=ganzhi['month'],
+                    day_gz=ganzhi['day'],
+                    hour_gz=ganzhi['hour'],
+                    gender=st.session_state.get("_calc_gender", "男"),
+                )
+                
+                # 計算
+                tb_result = tbss.calculate(birth_data)
+            
+            # 鐵板神數主界面
+            st.header(t("tieban_title") if hasattr(t, "tieban_title") else "🔮 鐵板神數")
+            st.caption(t("tieban_subtitle") if hasattr(t, "tieban_subtitle") else "清刻足本 · 秘鈔密碼表 · 考刻分")
+            
+            # 顯示 SVG 星盤圖
+            svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
+            st.components.v1.html(svg_chart, height=650)
+            
+            # 詳細信息
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+**命宮**: {tb_result.ming_palace}  
+**身宮**: {tb_result.shen_palace}  
+**五行局**: {tb_result.wuxing_ju}  
+**刻**: {tb_result.ke}  
+**分**: {tb_result.fen}
+""")
+            with col2:
+                st.markdown(f"""
+**河洛數**: {tb_result.he_luo_number}  
+**神數號碼**: `{tb_result.tieban_number}`  
+**密碼**: {tb_result.secret_code}
+""")
+            
+            # 條文
+            st.divider()
+            st.subheader("📜 " + (t("tieban_main_verse") if hasattr(t, "tieban_main_verse") else "條文"))
+            
+            # 主條文（神數號碼對應）
+            st.info(tb_result.verse)
+            
+            # 十二宮條文詳情
+            st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else "十二宮條文") + "**")
+            
+            # 使用摺疊區域顯示 12 宮
+            expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else "查看十二宮詳細條文"
+            with st.expander(expander_label, expanded=False):
+                # 分 3 列顯示 12 宮
+                cols = st.columns(3)
+                palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
+                               "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
+                
+                # 宮位名稱翻譯
+                palace_names_en = {
+                    "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
+                    "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
+                    "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
+                    "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
+                }
+                
+                # 分類翻譯
+                category_trans = {
+                    "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
+                    "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
+                    "事業": "Career", "健康": "Health", "災厄": "Disaster",
+                    "遷移": "Travel",
+                }
+                
+                for idx, palace_name in enumerate(palace_order):
+                    col_idx = idx % 3
+                    with cols[col_idx]:
+                        palace_info = tb_result.palace_verses.get(palace_name, {})
+                        verse = palace_info.get('verse', t('no_verse') if hasattr(t, 'no_verse') else '暫無條文')
+                        category = palace_info.get('category', '')
+                        branch = palace_info.get('branch', '')
+                        
+                        # 根據語言顯示宮位名稱
+                        display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == 'en' else palace_name
+                        
+                        st.markdown(f"""
+**{display_name}** ({branch})  
+{verse}
+""")
+                        if category:
+                            # 翻譯分類
+                            display_category = category_trans.get(category, category) if get_lang() == 'en' else category
+                            st.caption(f"{t('tieban_category') if hasattr(t, 'tieban_category') else '分類'}: {display_category}")
+            
+            # AI 分析按鈕
+            _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
+            
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            import traceback
+            st.code(traceback.format_exc())
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_tieban") if hasattr(t, "desc_tieban") else "🔮 **鐵板神數** — 源自宋代邵雍《皇極經世》，清代发展为精密考刻分系統。每時分 8 刻、每刻 15 分（共 120 分），結合父母六親信息精確定位命運條文。號稱「鐵口直斷」，是中國傳統術數中最精密的查表法系統。")
 
 # --- History of Astrology ---
 elif _selected_system == "tab_history":

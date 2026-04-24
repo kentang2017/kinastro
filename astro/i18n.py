@@ -2878,6 +2878,178 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "計劃功能：北半球式圓盤、Sub Lord 標註、宮頭線、Nakshatra 背景色塊、Ruling Planets 高亮",
         "en": "Planned features: North Indian style, Sub Lord labels, Cusp lines, Nakshatra backgrounds, Ruling Planets highlights",
     },
+    # ── 鐵板神數 (Tie Ban Shen Shu) ─────────────────────────────────
+    "tab_tieban": {
+        "zh": "🔮 鐵板神數",
+        "en": "🔮 Tie Ban Shen Shu",
+    },
+    "tieban_title": {
+        "zh": "鐵板神數",
+        "en": "Iron Plate Divine Numbers",
+    },
+    "tieban_subtitle": {
+        "zh": "清刻足本 · 秘鈔密碼表 · 考刻分",
+        "en": "Qing Edition · Secret Code Table · Ke Fen Calculation",
+    },
+    "desc_tieban": {
+        "zh": "🔮 **鐵板神數** — 源自宋代邵雍《皇極經世》，清代发展为精密考刻分系統。每時分 8 刻、每刻 15 分（共 120 分），結合父母六親信息精確定位命運條文。號稱「鐵口直斷」，是中國傳統術數中最精密的查表法系統。",
+        "en": "🔮 **Tie Ban Shen Shu** — Originating from Shao Yong's 'Huang Ji Jing Shi' (Song Dynasty), developed into a precise Ke Fen system in Qing Dynasty. Each hour divided into 8 Ke, each Ke into 15 Fen (120 Fen total). Combined with parents' and relatives' information to precisely locate destiny verses. Known as 'Iron Mouth Direct Judgment', it is the most precise lookup system in traditional Chinese metaphysics.",
+    },
+    "spinner_tieban": {
+        "zh": "計算鐵板神數...",
+        "en": "Calculating Tie Ban Shen Shu...",
+    },
+    "sys_hint_tieban": {
+        "zh": "精密考刻分系統，需父母六親信息佐證",
+        "en": "Precise Ke Fen system requiring parents and relatives information",
+    },
+    "tieban_ming_palace": {
+        "zh": "命宮",
+        "en": "Life Palace",
+    },
+    "tieban_shen_palace": {
+        "zh": "身宮",
+        "en": "Body Palace",
+    },
+    "tieban_wuxing_ju": {
+        "zh": "五行局",
+        "en": "Five Elements Bureau",
+    },
+    "tieban_ke": {
+        "zh": "刻",
+        "en": "Ke",
+    },
+    "tieban_fen": {
+        "zh": "分",
+        "en": "Fen",
+    },
+    "tieban_he_luo": {
+        "zh": "河洛數",
+        "en": "He Luo Number",
+    },
+    "tieban_number": {
+        "zh": "神數號碼",
+        "en": "Divine Number",
+    },
+    "tieban_secret_code": {
+        "zh": "密碼",
+        "en": "Secret Code",
+    },
+    "tieban_verse": {
+        "zh": "條文",
+        "en": "Verse",
+    },
+    "tieban_parents_note": {
+        "zh": "💡 **提示**：鐵板神數考刻分需要父母生卒年月日時及六親信息。完整版請在側邊欄輸入父母資料以獲得更精確的結果。",
+        "en": "💡 **Note**: Tie Ban Shen Shu Ke Fen calculation requires parents' birth/death dates and relatives information. For more accurate results, please input parents' data in the sidebar.",
+    },
+    # 十二宮名稱 (Twelve Palaces)
+    "palace_life": {
+        "zh": "命宮",
+        "en": "Life Palace",
+    },
+    "palace_siblings": {
+        "zh": "兄弟宮",
+        "en": "Siblings Palace",
+    },
+    "palace_spouse": {
+        "zh": "夫妻宮",
+        "en": "Spouse Palace",
+    },
+    "palace_children": {
+        "zh": "子女宮",
+        "en": "Children Palace",
+    },
+    "palace_wealth": {
+        "zh": "財帛宮",
+        "en": "Wealth Palace",
+    },
+    "palace_health": {
+        "zh": "疾厄宮",
+        "en": "Health Palace",
+    },
+    "palace_travel": {
+        "zh": "遷移宮",
+        "en": "Travel Palace",
+    },
+    "palace_friends": {
+        "zh": "交友宮",
+        "en": "Friends Palace",
+    },
+    "palace_career": {
+        "zh": "官祿宮",
+        "en": "Career Palace",
+    },
+    "palace_property": {
+        "zh": "田宅宮",
+        "en": "Property Palace",
+    },
+    "palace_fortune": {
+        "zh": "福德宮",
+        "en": "Fortune Palace",
+    },
+    "palace_parents": {
+        "zh": "父母宮",
+        "en": "Parents Palace",
+    },
+    # 條文分類 (Verse Categories)
+    "category_general": {
+        "zh": "綜合",
+        "en": "General",
+    },
+    "category_parents": {
+        "zh": "父母",
+        "en": "Parents",
+    },
+    "category_siblings": {
+        "zh": "兄弟",
+        "en": "Siblings",
+    },
+    "category_spouse": {
+        "zh": "夫妻",
+        "en": "Spouse",
+    },
+    "category_children": {
+        "zh": "子女",
+        "en": "Children",
+    },
+    "category_wealth": {
+        "zh": "財運",
+        "en": "Wealth",
+    },
+    "category_career": {
+        "zh": "事業",
+        "en": "Career",
+    },
+    "category_health": {
+        "zh": "健康",
+        "en": "Health",
+    },
+    "category_disaster": {
+        "zh": "災厄",
+        "en": "Disaster",
+    },
+    "category_travel": {
+        "zh": "遷移",
+        "en": "Travel",
+    },
+    # UI 元素
+    "tieban_main_verse": {
+        "zh": "主條文（神數號碼）",
+        "en": "Main Verse (Divine Number)",
+    },
+    "tieban_palace_verses": {
+        "zh": "十二宮條文",
+        "en": "Twelve Palaces Verses",
+    },
+    "tieban_view_palace_verses": {
+        "zh": "查看十二宮詳細條文",
+        "en": "View Twelve Palaces Verses",
+    },
+    "tieban_category": {
+        "zh": "分類",
+        "en": "Category",
+    },
 }
 
 def get_ui_lang() -> str:

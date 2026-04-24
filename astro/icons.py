@@ -40,6 +40,8 @@ SYSTEM_ICONS: dict[str, str] = {
     "tab_babylonian":   "📜",
     # ── KP Astrology ──
     "tab_kp":           "🔮",
+    # ── Tie Ban Shen Shu ──
+    "tab_tieban":       "🔮",
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -75,6 +77,8 @@ SYSTEM_ACCENT_COLORS: dict[str, str] = {
     "tab_babylonian":   "#B8956A",
     # ── KP Astrology → orange-red ──
     "tab_kp":           "#FF6B35",
+    # ── Tie Ban Shen Shu → traditional red-gold ──
+    "tab_tieban":       "#C9A84C",
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -106,4 +110,6 @@ SYSTEM_CSS_CLASS: dict[str, str] = {
     "tab_celtic_tree":  "western-chart",
     # ── KP Astrology ──
     "tab_kp":           "kp-chart",
+    # ── Tie Ban Shen Shu ──
+    "tab_tieban":       "chinese-chart",
 }
