@@ -173,24 +173,40 @@ def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, 
     planet_std = planet_map.get(planet.lower(), planet)
     
     planets = chart_data.get('planets', [])
+    
+    # Debug: print first planet to understand structure
+    if planets:
+        p0 = planets[0]
+        print(f"DEBUG: planet type={type(p0)}, dir={dir(p0)[:5]}")
+        if hasattr(p0, 'name'):
+            print(f"DEBUG: WesternPlanet name='{p0.name}'")
+        elif isinstance(p0, dict):
+            print(f"DEBUG: dict keys={p0.keys()}")
+    
     for p in planets:
         # Handle both dict and WesternPlanet dataclass
         if hasattr(p, 'name'):
             # WesternPlanet dataclass object
             p_name = p.name
             p_longitude = p.longitude
-        else:
+            print(f"DEBUG: checking planet='{p_name}', looking for='{planet_std}'")
+        elif isinstance(p, dict):
             # Dictionary
             p_name = p.get('name')
             p_longitude = p.get('longitude')
+            print(f"DEBUG: checking dict planet='{p_name}', looking for='{planet_std}'")
+        else:
+            continue
+        
         # Match planet name with or without glyph symbols
         # e.g., "Sun ☉" matches "Sun", "Moon ☽" matches "Moon"
         p_name_clean = p_name.split()[0] if p_name else None  # Remove glyph: "Sun ☉" -> "Sun"
         
         if p_name_clean == planet_std or p_name == planet_std:
-            if p_name == planet_std:
-                return get_sabian_symbol(p_longitude)
+            print(f"DEBUG: FOUND match! returning symbol for {p_longitude}")
+            return get_sabian_symbol(p_longitude)
     
+    print(f"DEBUG: Planet NOT found: {planet}, available: {[p.name if hasattr(p,'name') else p.get('name') for p in planets]}")
     raise ValueError(f"Planet not found: {planet}")
 
 

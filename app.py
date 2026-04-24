@@ -874,13 +874,13 @@ with st.sidebar:
 
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
-        ("cat_popular", ["tab_western", "tab_ziwei"]),
+        ("cat_popular", []),  # Popular moved to respective categories
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban"]),
-        ("cat_western", ["tab_sabian", "tab_hellenistic", "tab_kabbalistic", "tab_mazzalot", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
-        ("cat_middle_east", ["tab_persian", "tab_arabic", "tab_yemeni"]),
+        ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
 

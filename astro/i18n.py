@@ -1914,7 +1914,7 @@ transmitted by **Chen Xiyi**.
     },
 
     # ── Jewish Mazzalot Astrology (猶太 Mazzalot 占星) ─────────
-    "tab_mazzalot": {"zh": "✡ 猶太 Mazzalot 占星", "en": "✡ Jewish Mazzalot"},
+    "tab_mazzalot": {"zh": "✡ 猶太占星", "en": "✡ Jewish Astrology"},
     "desc_mazzalot": {
         "zh": (
             "**猶太 Mazzalot 占星（Jewish Mazzalot Astrology）**\n\n"
