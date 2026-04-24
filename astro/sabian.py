@@ -184,7 +184,11 @@ def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, 
             p_name = p.get('name')
             p_longitude = p.get('longitude')
         
-        if p_name == planet_std:
+        # Match planet name with or without glyph symbols
+        # e.g., "Sun ☉" matches "Sun", "Moon ☽" matches "Moon"
+        p_name_clean = p_name.split()[0] if p_name else None  # Remove glyph: "Sun ☉" -> "Sun"
+        
+        if p_name_clean == planet_std or p_name == planet_std:
             return get_sabian_symbol(p_longitude)
     
     raise ValueError(f"Planet not found: {planet}")
