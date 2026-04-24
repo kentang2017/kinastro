@@ -258,26 +258,6 @@ def get_sign_longitudinal_degree(longitude: float) -> tuple:
 def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -> str:
     """
     生成 Sabian Symbol SVG 卡片
-    
-    Parameters
-    ----------
-    longitude : float
-        行星經度（0-360 度）
-    size : int
-        SVG 尺寸（像素），預設 300
-    language : str
-        語言（"zh" 或 "en"）
-    
-    Returns
-    -------
-    str
-        SVG 字串
-    
-    Examples
-    --------
-    >>> svg = render_sabian_svg(45.5, size=400)
-    >>> len(svg) > 1000
-    True
     """
     symbol_data = get_sabian_symbol(longitude)
     sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(longitude)
@@ -297,69 +277,70 @@ def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -
     if language == "zh":
         sign_display = f"{sign_zh} {deg_in_sign}°"
         keyword_label = "關鍵詞"
-        formula_label = "Jones 公式"
     else:
         sign_display = f"{sign_en} {deg_in_sign}°"
         keyword_label = "Keyword"
-        formula_label = "Formula"
     
-    svg = f'''<svg width="{size}" height="{size * 1.4}" viewBox="0 0 {size} {int(size * 1.4)}" 
-    xmlns="http://www.w3.org/2000/svg">
+    height = int(size * 1.4)
+    
+    svg = f'''<svg width="{size}" height="{height}" viewBox="0 0 {size} {height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient id="sabianGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:{colors['bg']};stop-opacity:1" />
             <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
         </linearGradient>
-        <filter id="sabianShadow">
-            <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
-        </filter>
     </defs>
     
     <!-- Background -->
-    <rect width="{size}" height="{int(size * 1.4)}" fill="url(#sabianGrad)" rx="15" ry="15"/>
+    <rect width="{size}" height="{height}" fill="url(#sabianGrad)" rx="15" ry="15"/>
     
     <!-- Border -->
-    <rect width="{size}" height="{int(size * 1.4)}" fill="none" stroke="{colors['accent']}" 
-          stroke-width="3" rx="15" ry="15"/>
+    <rect width="{size}" height="{height}" fill="none" stroke="{colors['accent']}" stroke-width="3" rx="15" ry="15"/>
     
-    <!-- Header: Sign and Degree -->
-    <text x="{size // 2}" y="45" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="20" font-weight="bold" 
-          fill="{colors['text']}">{sign_display}</text>
+    <!-- Header -->
+    <text x="{size // 2}" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="{colors['text']}">{sign_display}</text>
     
-    <!-- Degree Number Circle -->
-    <circle cx="{size - 40}" cy="30" r="20" fill="{colors['accent']}" opacity="0.9"/>
-    <text x="{size - 40}" y="37" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">{deg_in_sign}</text>
+    <!-- Degree Circle -->
+    <circle cx="{size - 50}" cy="35" r="20" fill="{colors['accent']}" opacity="0.9"/>
+    <text x="{size - 50}" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">{deg_in_sign}</text>
     
     <!-- Divider -->
-    <line x1="30" y1="60" x2="{size - 30}" y2="60" 
-          stroke="{colors['accent']}" stroke-width="2" opacity="0.5"/>
+    <line x1="40" y1="65" x2="{size - 40}" y2="65" stroke="{colors['accent']}" stroke-width="2" opacity="0.5"/>
     
-    <!-- Symbol Text (main content) -->
-    <foreignObject x="30" y="75" width="{size - 60}" height="{size * 0.5}">
-        <div xmlns="http://www.w3.org/1999/xhtml" 
-             style="font-family: Georgia, serif; font-size: 16px; line-height: 1.6; 
-                    color: {colors['text']}; text-align: center; 
-                    padding: 10px; font-style: italic;">
-            "{symbol_data['symbol']}"
-        </div>
-    </foreignObject>
+    <!-- Symbol Text - split into multiple lines -->
+'''
     
+    # Split symbol text into multiple lines (max 35 chars per line)
+    symbol_text = symbol_data['symbol']
+    words = symbol_text.split()
+    lines = []
+    current_line = ""
+    
+    for word in words:
+        if len(current_line + " " + word) <= 35:
+            current_line = (current_line + " " + word).strip()
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+    
+    # Add symbol text lines
+    text_y = 95
+    line_height = 22
+    for line in lines:
+        svg += f'    <text x="{size // 2}" y="{text_y}" text-anchor="middle" font-family="Georgia, serif" font-size="15" fill="{colors["text"]}">{line}</text>\n'
+        text_y += line_height
+    
+    # Keyword
+    keyword_y = text_y + 30
+    svg += f'''
     <!-- Keyword -->
-    <text x="{size // 2}" y="{int(size * 0.65)}" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="14" font-weight="bold" 
-          fill="{colors['accent']}">{keyword_label}: {symbol_data['keyword']}</text>
-    
-    <!-- Formula -->
-    <text x="{size // 2}" y="{int(size * 0.75)}" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="12" 
-          fill="{colors['text']}" font-style="italic">{formula_label}: {symbol_data['formula']}</text>
+    <text x="{size // 2}" y="{keyword_y}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="{colors['accent']}">{keyword_label}: {symbol_data['keyword']}</text>
     
     <!-- Footer -->
-    <text x="{size // 2}" y="{int(size * 1.3)}" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="10" 
-          fill="{colors['text']}" opacity="0.7">Marc Edmund Jones (1953)</text>
+    <text x="{size // 2}" y="{height - 30}" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="{colors['text']}" opacity="0.7">Marc Edmund Jones (1953)</text>
 </svg>'''
     
     return svg
