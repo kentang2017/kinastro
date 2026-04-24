@@ -2165,6 +2165,33 @@ transmitted by **Chen Xiyi**.
     },
     "spinner_liuren": {"zh": "正在計算大六壬排盤…", "en": "Computing Da Liu Ren chart…"},
 
+    # ── 鬼谷分定經 (Ghost Valley Fen Ding Jing) ─────────────────────────────
+    "tab_fendjing": {
+        "zh": "🔮 鬼谷分定經",
+        "en": "🔮 Ghost Valley Fen Ding Jing",
+    },
+    "sys_hint_fendjing": {
+        "zh": "又名兩頭鉗，以年時天干排盤推斷命運",
+        "en": "Also known as Two-End Pincers — destiny analysis using year and hour stems",
+    },
+    "desc_fendjing": {
+        "zh": (
+            "**鬼谷分定經**\\n\\n"
+            "鬼谷分定經，又名兩頭鉗，相傳為戰國時期鬼谷子所創。"
+            "以出生年干與時干為「兩頭」排盤，配合十二宮與星曜，推斷一生命運。\\n\\n"
+            "排盤包含：四柱干支、兩頭鉗組合、判斷、命格、基業、兄弟、行藏、婚姻、子息、收成等。"
+        ),
+        "en": (
+            "**Ghost Valley Fen Ding Jing (Two-End Pincers)**\\n\\n"
+            "Attributed to the Warring States period sage Ghost Valley (Guiguzi), "
+            "also known as \\\"Two-End Pincers.\\\" Uses birth year and hour Heavenly Stems "
+            "to arrange the chart with twelve palaces and stars for destiny analysis.\\n\\n"
+            "Chart includes: Four Pillars, Two-End combination, judgments, life patterns, "
+            "foundation, siblings, career, marriage, children, and harvest."
+        ),
+    },
+    "spinner_fendjing": {"zh": "正在計算鬼谷分定經…", "en": "Computing Ghost Valley chart…"},
+
     # ── 奇門遁甲 (Qi Men Dun Jia) ─────────────────────────────
     "tab_qimen": {
         "zh": "🚪 奇門遁甲",
