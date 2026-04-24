@@ -13,7 +13,6 @@
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
 **三十三體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・萬化仙禽・六壬祿命・太乙命法・奇門祿命・西洋・天王星漢堡學派・Astrocartography・希臘・印度・Jaimini・納迪・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・KP 克里希納穆提**
-
 *33-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Western, Uranian (Hamburg School), Astrocartography, Hellenistic, Vedic, Jaimini, Nadi, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, KP Krishnamurti Paddhati*
 
 </div>
