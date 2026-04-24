@@ -48,23 +48,23 @@ def render_tieban_chart_svg(result: TieBanResult,
                              width: int = 500,
                              height: int = 600) -> str:
     """
-    渲染鐵板神數 SVG 星盤圖
+    渲染鐵板神數 SVG 星盤圖（響應式設計）
     
     Parameters
     ----------
     result : TieBanResult
         鐵板神數推算結果
     language : str
-        語言 ('zh' 繁體中文)
+        語言 ('zh' 繁體中文 或 'en' 英文)
     width : int
-        SVG 寬度
+        SVG 參考寬度（實際由容器控制）
     height : int
-        SVG 高度
+        SVG 參考高度（實際由容器控制）
     
     Returns
     -------
     str
-        SVG XML 字符串
+        SVG XML 字符串（包含響應式 HTML 容器）
     """
     # 顏色配置（鐵板神數傳統配色：橙紅 #FF6B35）
     colors = {
@@ -106,9 +106,9 @@ def render_tieban_chart_svg(result: TieBanResult,
     
     svg_parts.append(f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" 
-     width="{width}" 
-     height="{height}" 
-     viewBox="0 0 {width} {height}">
+     viewBox="0 0 {width} {height}"
+     preserveAspectRatio="xMidYMid meet"
+     style="width: 100%; height: auto; max-width: 100%;">
     
     <!-- 背景 -->
     <rect width="{width}" height="{height}" fill="{colors['bg']}"/>
@@ -290,7 +290,48 @@ def render_tieban_chart_svg(result: TieBanResult,
 </svg>
 ''')
     
-    return ''.join(svg_parts)
+    svg_content = ''.join(svg_parts)
+    
+    # 響應式 HTML 容器包裝（帶 CSS 樣式）
+    html = f'''
+<style>
+.tieban-chart-container {{
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+}}
+
+.tieban-chart-container svg {{
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}}
+
+/* 移動端適配 */
+@media (max-width: 768px) {{
+    .tieban-chart-container {{
+        max-width: 100%;
+        padding: 5px;
+    }}
+}}
+
+/* 桌面端適配 */
+@media (min-width: 769px) {{
+    .tieban-chart-container {{
+        max-width: 600px;
+    }}
+}}
+</style>
+
+<div class="tieban-chart-container">
+    <div style="position: relative; width: 100%; height: auto; aspect-ratio: 500/600;">
+        {svg_content}
+    </div>
+</div>
+'''
+    
+    return html
 
 
 def _calculate_palace_positions(ming_palace_branch: str, 

@@ -2438,9 +2438,9 @@ elif _selected_system == "tab_tieban":
             st.header(t("tieban_title") if hasattr(t, "tieban_title") else "🔮 鐵板神數")
             st.caption(t("tieban_subtitle") if hasattr(t, "tieban_subtitle") else "清刻足本 · 秘鈔密碼表 · 考刻分")
             
-            # 顯示 SVG 星盤圖
+            # 顯示 SVG 星盤圖（響應式）
             svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
-            st.components.v1.html(svg_chart, height=650)
+            st.components.v1.html(svg_chart, height=650, scrolling=False)
             
             # 詳細信息
             col1, col2 = st.columns(2)
