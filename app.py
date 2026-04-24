@@ -874,6 +874,7 @@ with st.sidebar:
 
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
+        ("cat_popular", []),  # Popular moved to respective categories
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
@@ -884,6 +885,7 @@ with st.sidebar:
     ]
 
     _CATEGORY_ICONS = {
+        "cat_popular": "⭐",
         "cat_sanshi": "☯️",
         "cat_chinese": "🏮",
         "cat_western": "🏛️",
