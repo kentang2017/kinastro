@@ -419,7 +419,25 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
 
     st.markdown(f"### 🔮 {auto_cn('大六壬排盤')}")
 
-    # ── 基本資訊 ──
+    # ── 六壬盤式（方盤）── 移到最前面
+    st.markdown(f"#### {auto_cn('六壬盤式')}")
+    board_html = _build_liuren_board_html(chart, benming_zhi=benming_zhi)
+    # 增加高度並添加響應式設計，確保完整顯示方盤
+    components.html(
+        f'''
+        <div style="background:#1E1E2E;padding:16px;border-radius:12px;
+                    overflow-x:auto;min-height:480px;">
+            <div style="min-width:520px;">
+                {board_html}
+            </div>
+        </div>
+        ''',
+        height=520,
+    )
+
+    st.divider()
+
+    # ── 基本資訊 ── 移到盤式之後
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(auto_cn("節氣"), chart.get("_jieqi", ""))
@@ -429,17 +447,6 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
         st.metric(auto_cn("日干支"), chart.get("_day_gz", ""))
     with col4:
         st.metric(auto_cn("時干支"), chart.get("_hour_gz", ""))
-
-    st.divider()
-
-    # ── 六壬盤式（方盤）──
-    st.markdown(f"#### {auto_cn('六壬盤式')}")
-    board_html = _build_liuren_board_html(chart, benming_zhi=benming_zhi)
-    components.html(
-        f'<div style="background:#1E1E2E;padding:12px;border-radius:8px;">'
-        f'{board_html}</div>',
-        height=420,
-    )
 
     st.divider()
 

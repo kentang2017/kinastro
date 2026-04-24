@@ -770,129 +770,224 @@ def render_qimen_luming(result: dict, after_chart_hook=None):
     benming_gong = result.get("本命宮", "")
     benming_info = result.get("本命宮資訊", {})
 
-    # ── 基本資訊 ──
-    st.markdown(f"#### {auto_cn('基本資訊')}")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(auto_cn("年柱"), sizhu.get("年柱", ""))
-    with col2:
-        st.metric(auto_cn("月柱"), sizhu.get("月柱", ""))
-    with col3:
-        st.metric(auto_cn("日柱"), sizhu.get("日柱", ""))
-    with col4:
-        st.metric(auto_cn("時柱"), sizhu.get("時柱", ""))
-
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        st.metric(auto_cn("排局"), chart.get("排局", ""))
-    with col_b:
-        st.metric(auto_cn("節氣"), chart.get("節氣", ""))
-    with col_c:
-        st.metric(auto_cn("排盤方式"), chart.get("排盤方式", ""))
-
-    st.divider()
-
-    # ── 本命宮 ──
-    st.markdown(f"#### {auto_cn('本命宮')}")
-    st.markdown(
-        f"**{auto_cn('本命干')}**：{benming_gan}（{GAN_WUXING.get(benming_gan, '')}）　"
-        f"**{auto_cn('本命宮')}**：{benming_gong or '未找到'}"
-    )
-    if benming_info:
-        bcols = st.columns(5)
-        labels = ["天干", "地干", "門", "星", "神"]
-        for i, label in enumerate(labels):
-            with bcols[i]:
-                val = benming_info.get(label, "")
-                display = val
-                if label == "神":
-                    display = SHEN_FULLNAME.get(val, val)
-                st.metric(auto_cn(label), display)
-
-    st.divider()
-
-    # ── 值符值使 ──
-    st.markdown(f"#### {auto_cn('值符值使')}")
-    zhifu = result.get("值符宮", {})
-    zhishi = result.get("值使宮", {})
-    zc1, zc2 = st.columns(2)
-    with zc1:
-        st.markdown(f"**{auto_cn('值符宮')}**：{zhifu.get('宮位', '')}")
-        st.caption(auto_cn(zhifu.get("意義", "")))
-        zf_info = zhifu.get("資訊", {})
-        if zf_info:
-            st.markdown(
-                f"{auto_cn('天')}：{zf_info.get('天干', '')} / "
-                f"{auto_cn('地')}：{zf_info.get('地干', '')} / "
-                f"{auto_cn('門')}：{zf_info.get('門', '')} / "
-                f"{auto_cn('星')}：{zf_info.get('星', '')} / "
-                f"{auto_cn('神')}：{SHEN_FULLNAME.get(zf_info.get('神', ''), zf_info.get('神', ''))}"
-            )
-    with zc2:
-        st.markdown(f"**{auto_cn('值使宮')}**：{zhishi.get('宮位', '')}")
-        st.caption(auto_cn(zhishi.get("意義", "")))
-        zs_info = zhishi.get("資訊", {})
-        if zs_info:
-            st.markdown(
-                f"{auto_cn('天')}：{zs_info.get('天干', '')} / "
-                f"{auto_cn('地')}：{zs_info.get('地干', '')} / "
-                f"{auto_cn('門')}：{zs_info.get('門', '')} / "
-                f"{auto_cn('星')}：{zs_info.get('星', '')} / "
-                f"{auto_cn('神')}：{SHEN_FULLNAME.get(zs_info.get('神', ''), zs_info.get('神', ''))}"
-            )
-
-    st.divider()
-
-    # ── 九宮盤（3×3 格局）──
+    # ── 九宮盤（3×3 格局）── 移到最前面，手機版優先
     st.markdown(f"#### {auto_cn('九宮盤')}")
+    
+    # 手機版響應式 CSS
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        .qimen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 8px 0; }
+        .qimen-cell { border: 1px solid #555; border-radius: 6px; padding: 4px; text-align: center; font-size: 9px; min-height: 50px; }
+        .qimen-cell.benming { border: 2px solid #EF4444; background: rgba(239,68,68,0.08); }
+        .qimen-cell.zhong { border: 2px solid #EAB308; background: rgba(234,179,8,0.1); }
+        .qimen-shen { color: #EAB308; }
+        .qimen-xing { color: #A78BFA; }
+        .qimen-men { color: #60A5FA; }
+    }
+    @media (min-width: 769px) {
+        .qimen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+        .qimen-cell { border: 1px solid #555; border-radius: 8px; padding: 8px; text-align: center; min-height: 100px; }
+        .qimen-cell.benming { border: 3px solid #EF4444; background: rgba(239,68,68,0.08); }
+        .qimen-cell.zhong { border: 2px solid #EAB308; background: rgba(234,179,8,0.1); }
+        .qimen-shen { color: #EAB308; font-size: 1rem; }
+        .qimen-xing { color: #A78BFA; font-size: 1rem; }
+        .qimen-men { color: #60A5FA; font-size: 1rem; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # 構建九宮盤 HTML
     tian_pan = chart.get("天盤", {})
     di_pan = chart.get("地盤", {})
     men_map = chart.get("門", {})
     xing_map = chart.get("星", {})
     shen_map = chart.get("神", {})
-
+    
+    grid_html = '<div class="qimen-grid">'
     for row in GONG_GRID:
-        cols = st.columns(3)
-        for ci, gong in enumerate(row):
-            with cols[ci]:
-                tp = tian_pan.get(gong, "")
-                dp = di_pan.get(gong, "")
-                m = men_map.get(gong, "")
-                x = xing_map.get(gong, "")
-                s = shen_map.get(gong, "")
+        for gong in row:
+            tp = tian_pan.get(gong, "")
+            dp = di_pan.get(gong, "")
+            m = men_map.get(gong, "")
+            x = xing_map.get(gong, "")
+            s = shen_map.get(gong, "")
+            
+            is_benming = (gong == benming_gong)
+            cell_class = "qimen-cell benming" if is_benming else "qimen-cell"
+            if gong == "中":
+                cell_class += " zhong"
+            
+            label = f"<b>{gong}</b>"
+            if is_benming:
+                label += f" <span style='color:#EF4444;'>★{auto_cn('本命')}</span>"
+            
+            if gong == "中":
+                content = f"{label}<br>{auto_cn('天乙')}：{chart.get('天乙', '')}<br>{auto_cn('地')}：{dp}"
+            else:
+                content = f"{label}<br><span class='qimen-shen'>{auto_cn('神')}：{SHEN_FULLNAME.get(s, s)}</span><br><span class='qimen-xing'>{auto_cn('星')}：{x}</span><br><span class='qimen-men'>{auto_cn('門')}：{m}</span><br>{auto_cn('天')}：{tp} / {auto_cn('地')}：{dp}"
+            
+            grid_html += f'<div class="{cell_class}">{content}</div>'
+    
+    grid_html += '</div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
 
-                is_benming = (gong == benming_gong)
-                border_color = "#EF4444" if is_benming else "#555"
-                border_width = "3px" if is_benming else "1px"
-                bg = "rgba(239,68,68,0.08)" if is_benming else "transparent"
-                label = f"<b>{gong}</b>"
-                if is_benming:
-                    label += f" <span style='color:#EF4444;'>★{auto_cn('本命')}</span>"
-
-                if gong == "中":
-                    st.markdown(
-                        f"<div style='border:2px solid #EAB308;border-radius:8px;"
-                        f"padding:8px;text-align:center;background:rgba(234,179,8,0.1);'>"
-                        f"<b>{auto_cn('中宮')}</b><br>"
-                        f"{auto_cn('天乙')}：{chart.get('天乙', '')}<br>"
-                        f"{auto_cn('地盤')}：{dp}"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(
-                        f"<div style='border:{border_width} solid {border_color};border-radius:8px;"
-                        f"padding:8px;text-align:center;min-height:120px;background:{bg};'>"
-                        f"{label}<br>"
-                        f"<span style='color:#EAB308;'>{auto_cn('神')}：{SHEN_FULLNAME.get(s, s)}</span><br>"
-                        f"<span style='color:#A78BFA;'>{auto_cn('星')}：{x}</span><br>"
-                        f"<span style='color:#60A5FA;'>{auto_cn('門')}：{m}</span><br>"
-                        f"{auto_cn('天')}：{tp} / {auto_cn('地')}：{dp}"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
-
+    # ── 基本資訊 + 本命宮 + 值符值使（緊湊佈局，手機版一頁可見）──
+    # 構建完整 HTML
+    info_cards_html = []
+    
+    # 基本資訊（四柱 + 排局）
+    info_cards_html.append(f'''
+    <div class="qimen-info-card">
+        <h4>四柱</h4>
+        <div class="qimen-sizhu">
+            <span>年：{sizhu.get("年柱", "")}</span>
+            <span>月：{sizhu.get("月柱", "")}</span>
+            <span>日：{sizhu.get("日柱", "")}</span>
+            <span>時：{sizhu.get("時柱", "")}</span>
+        </div>
+        <div style="margin-top:6px;font-size:12px;">
+            排局：<b>{chart.get("排局", "")}</b> | 
+            節氣：<b>{chart.get("節氣", "")}</b>
+        </div>
+    </div>
+    ''')
+    
+    # 本命宮
+    if benming_info:
+        info_cards_html.append(f'''
+        <div class="qimen-info-card qimen-benming">
+            <h4>★ 本命宮</h4>
+            <div style="font-size:13px;margin-bottom:4px;">
+                <b>{benming_gong}</b> ({benming_gan} {GAN_WUXING.get(benming_gan, "")})
+            </div>
+            <div style="font-size:11px;line-height:1.6;">
+                <div>天：{benming_info.get("天干", "")}</div>
+                <div>地：{benming_info.get("地干", "")}</div>
+                <div>門：{benming_info.get("門", "")}</div>
+                <div>星：{benming_info.get("星", "")}</div>
+                <div>神：{SHEN_FULLNAME.get(benming_info.get("神", ""), benming_info.get("神", ""))}</div>
+            </div>
+        </div>
+        ''')
+    
+    # 值符宮
+    zhifu = result.get("值符宮", {})
+    if zhifu and zhifu.get("宮位"):
+        zf_info = zhifu.get("資訊", {})
+        info_cards_html.append(f'''
+        <div class="qimen-info-card qimen-zhifu">
+            <h4>值符</h4>
+            <div style="font-size:13px;margin-bottom:4px;">
+                <b>{zhifu.get("宮位", "")}</b>
+            </div>
+            <div style="font-size:11px;line-height:1.6;">
+                <div>天：{zf_info.get("天干", "")}</div>
+                <div>地：{zf_info.get("地干", "")}</div>
+                <div>門：{zf_info.get("門", "")}</div>
+                <div>星：{zf_info.get("星", "")}</div>
+                <div>神：{SHEN_FULLNAME.get(zf_info.get("神", ""), zf_info.get("神", ""))}</div>
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:#888;">
+                {zhifu.get("意義", "")}
+            </div>
+        </div>
+        ''')
+    
+    # 值使宮
+    zhishi = result.get("值使宮", {})
+    if zhishi and zhishi.get("宮位"):
+        zs_info = zhishi.get("資訊", {})
+        info_cards_html.append(f'''
+        <div class="qimen-info-card qimen-zhifu">
+            <h4>值使</h4>
+            <div style="font-size:13px;margin-bottom:4px;">
+                <b>{zhishi.get("宮位", "")}</b>
+            </div>
+            <div style="font-size:11px;line-height:1.6;">
+                <div>天：{zs_info.get("天干", "")}</div>
+                <div>地：{zs_info.get("地干", "")}</div>
+                <div>門：{zs_info.get("門", "")}</div>
+                <div>星：{zs_info.get("星", "")}</div>
+                <div>神：{SHEN_FULLNAME.get(zs_info.get("神", ""), zs_info.get("神", ""))}</div>
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:#888;">
+                {zhishi.get("意義", "")}
+            </div>
+        </div>
+        ''')
+    
+    # 組合完整 HTML
+    full_html = f'''
+    <style>
+    @media (max-width: 768px) {{
+        .qimen-info-grid {{ 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 8px; 
+            margin: 12px 0;
+            font-size: 11px;
+        }}
+        .qimen-info-card {{
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            color: #ffffff;
+            min-height: 140px;
+        }}
+        .qimen-info-card h4 {{
+            margin: 0 0 8px 0;
+            color: #EAB308;
+            font-size: 13px;
+            font-weight: bold;
+        }}
+        .qimen-info-card .info-row {{
+            line-height: 1.8;
+            font-size: 12px;
+        }}
+        .qimen-sizhu {{ display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }}
+        .qimen-sizhu span {{ background: #333; padding: 3px 8px; border-radius: 4px; font-size: 11px; color: #ffffff; }}
+        .qimen-benming {{ background: rgba(239,68,68,0.15); border-color: #EF4444; }}
+        .qimen-zhifu {{ background: rgba(234,179,8,0.15); border-color: #EAB308; }}
+    }}
+    @media (min-width: 769px) {{
+        .qimen-info-grid {{ 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 12px; 
+            margin: 16px 0;
+        }}
+        .qimen-info-card {{
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            color: #ffffff;
+            min-height: 150px;
+        }}
+        .qimen-info-card h4 {{
+            margin: 0 0 10px 0;
+            color: #EAB308;
+            font-size: 14px;
+            font-weight: bold;
+        }}
+        .qimen-info-card .info-row {{
+            line-height: 1.8;
+            font-size: 13px;
+        }}
+    }}
+    </style>
+    <div class="qimen-info-grid">{''.join(info_cards_html)}</div>
+    '''
+    
+    import streamlit.components.v1 as components
+    components.html(full_html, height=380)
     st.divider()
+
+    # ── 六親分析 ──
 
     # ── 六親分析 ──
     st.markdown(f"#### {auto_cn('六親分析')}")
