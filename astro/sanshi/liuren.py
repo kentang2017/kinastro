@@ -426,13 +426,15 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
     components.html(
         f'''
         <div style="background:#1E1E2E;padding:16px;border-radius:12px;
-                    overflow-x:auto;min-height:480px;">
-            <div style="min-width:520px;">
+                    overflow-x:auto;overflow-y:visible;min-height:480px;
+                    -webkit-overflow-scrolling:touch;">
+            <div style="min-width:520px;width:max-content;">
                 {board_html}
             </div>
         </div>
         ''',
         height=520,
+        scrolling=False,
     )
 
     st.divider()
