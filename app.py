@@ -939,7 +939,7 @@ with st.sidebar:
 
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
-        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
+        ("cat_sanshi", ["tab_liuren", "tab_fendjing", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
@@ -988,6 +988,7 @@ with st.sidebar:
         "tab_acg": t("tab_acg"),
         "tab_uranian": t("tab_uranian"),
         "tab_liuren": t("tab_liuren"),
+        "tab_fendjing": t("tab_fendjing"),
         "tab_taiyi": t("tab_taiyi"),
         "tab_qimen_luming": t("tab_qimen_luming"),
         "tab_celtic_tree": t("tab_celtic_tree"),
@@ -1028,6 +1029,7 @@ with st.sidebar:
         "tab_acg": t("sys_hint_acg"),
         "tab_uranian": t("sys_hint_uranian"),
         "tab_liuren": t("sys_hint_liuren"),
+        "tab_fendjing": t("sys_hint_fendjing"),
         "tab_taiyi": t("sys_hint_taiyi"),
         "tab_qimen_luming": t("sys_hint_qimen_luming"),
         "tab_celtic_tree": t("sys_hint_celtic_tree"),
@@ -3893,6 +3895,27 @@ elif _selected_system == "tab_liuren":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_liuren"))
+
+# --- 鬼谷分定經 (Ghost Valley Fen Ding Jing) ---
+elif _selected_system == "tab_fendjing":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_fendjing") if hasattr(t, "spinner_fendjing") else "計算鬼谷分定經..."):
+                from astro.fendjing import compute_fendjing_chart, render_fendjing_chart
+                _fendjing_chart = compute_fendjing_chart(**_p)
+            render_fendjing_chart(
+                _fendjing_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_fendjing", _fendjing_chart, btn_key="fendjing"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_fendjing") if hasattr(t, "desc_fendjing") else "🔮 **鬼谷分定經** — 相傳為戰國時期鬼谷子所創，又名兩頭鉗，以出生年時天干排盤，配合十二宮與星曜，推斷一生命運的古典命理系統。")
 
 # --- 太乙命法 (Taiyi Life Method) ---
 elif _selected_system == "tab_taiyi":
