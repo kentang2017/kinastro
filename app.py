@@ -137,6 +137,71 @@ from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
 
 
 # ============================================================
+# Homepage Landing Page (當未選擇體系時顯示)
+# ============================================================
+def render_homepage():
+    """Render the beautiful homepage similar to index.html"""
+    
+    # Hero Section
+    st.markdown("""
+    <div style="text-align: center; padding: 4rem 2rem; background: radial-gradient(ellipse at center, #1a1a3e 0%, #06060f 100%); border-radius: 16px; margin-bottom: 2rem;">
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(124,106,255,0.12); border: 1px solid rgba(124,106,255,0.3); border-radius: 20px; padding: 0.35rem 1rem; margin-bottom: 2rem; font-size: 0.8rem; color: #a899ff; font-family: 'Inter', sans-serif;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #00ff88; display: inline-block; animation: pulse 2s infinite;"></span>
+            <span>線上免費使用 · Open Source · MIT License</span>
+        </div>
+        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; background: linear-gradient(135deg, #fff 0%, #ffe580 40%, #a899ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; font-family: 'Noto Serif TC', serif;">三十六體系占星排盤平台</h1>
+        <p style="font-size: clamp(0.95rem, 2vw, 1.15rem); color: #8888aa; max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.8;">
+            從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、從三式（六壬、太乙、奇門）到 Astrocartography、九星氣學、天王星漢堡學派、薩珊波斯占星、從瑪雅曆法到巴比倫星表——<br/>
+            堅占星將全球三十六種占星體系融合為一，讓千年星學智慧觸手可及。
+        </p>
+        <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin-top: 2rem;">
+            <div style="text-align: center;">
+                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">36</div>
+                <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">占星體系 Systems</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">90+</div>
+                <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">子功能分頁 Sub-tabs</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">100%</div>
+                <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">免費開源 Free</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Features Section
+    st.markdown("### ✨ 核心特色")
+    cols = st.columns(3)
+    features = [
+        ("🔮", "三十六體系合一", "在同一個介面中切換中國七政四餘、紫微斗數、六壬太乙奇門三式、西洋占星、印度 Vedic、九星氣學等三十六種占星體系"),
+        ("🪐", "精密天文計算", "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算，確保行星位置精確無誤"),
+        ("🤖", "AI 智慧分析", "整合 Cerebras AI，提供專業命理解讀，支援中英雙語"),
+        ("📊", "精美 SVG 圖表", "純 SVG 渲染，清晰美觀，支援響應式設計，手機平板完美顯示"),
+        ("🌍", "中英雙語", "繁體中文、簡體中文、英文即時切換"),
+        ("🆓", "完全免費", "開源免費，MIT License，無任何費用"),
+    ]
+    for i, (icon, title, desc) in enumerate(features):
+        with cols[i % 3]:
+            st.markdown(f"""
+            <div style="background: #161835; border: 1px solid #1e2048; border-radius: 16px; padding: 2rem 1.5rem; margin-bottom: 1rem;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">{icon}</div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">{title}</h3>
+                <p style="font-size: 0.85rem; color: #8888aa; line-height: 1.7;">{desc}</p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # Quick start hint
+    st.markdown("### 🚀 使用說明")
+    st.info("請從左側側邊欄選擇您想使用的占星體系，然後輸入出生資訊進行排盤。")
+
+
+
+
+# ============================================================
 # 頁面設定
 # ============================================================
 st.set_page_config(
@@ -975,10 +1040,8 @@ with st.sidebar:
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
     _cur_lang = st.session_state.get("lang", "zh")
 
-    # Resolve current selection
-    if "_system_select" not in st.session_state:
-        st.session_state["_system_select"] = "tab_western"
-    _selected_system = st.session_state["_system_select"]
+    # Resolve current selection - only if already selected
+    _selected_system = st.session_state.get("_system_select", None)
 
     # Filter systems by search query
     _search_q = _system_search.strip().lower() if _system_search else ""
@@ -998,7 +1061,7 @@ with st.sidebar:
             _filtered = _cat_systems
 
         # Determine if this category contains the active system
-        _cat_has_active = _selected_system in _filtered
+        _cat_has_active = _selected_system is not None and _selected_system in _filtered
         _cat_icon = _CATEGORY_ICONS.get(_cat_key, "📌")
         _cat_label = f"{_cat_icon} {t(_cat_key)}"
 
@@ -1540,6 +1603,13 @@ def _render_welcome():
 
 
 # ============================================================
+# Homepage Check - 如果未選擇體系，顯示首頁
+# ============================================================
+if "_system_select" not in st.session_state:
+    render_homepage()
+    st.stop()  # Stop rendering main area when showing homepage
+
+# ============================================================
 # Main Area — Render the selected astrology system
 # 主區域 — 根據側邊欄選擇顯示對應占星體系
 # ============================================================
@@ -1556,11 +1626,6 @@ st.session_state["_calc_gender"] = gender
 st.session_state["_calculated"] = True
 
 _is_calculated = True
-
-# ── Show welcome onboarding for first-time visitors ────────────
-if "_has_seen_welcome" not in st.session_state:
-    _render_welcome()
-    st.session_state["_has_seen_welcome"] = True
 
 # --- 七政四餘（中國） ---
 if _selected_system == "tab_chinese":
