@@ -58,6 +58,8 @@ _SYSTEM_TAG_MAP = {
     "tab_sanshi":      "sanshi",
     "tab_qimen":       "qimen",
     "tab_liuren":      "liuren",
+    "tab_fendjing":    "fendjing",
+    "tab_taiyi":       "taiyi",
     # plain keys (without "tab_" prefix) are also accepted
     "western":     "western",
     "qizheng":     "qizheng",
