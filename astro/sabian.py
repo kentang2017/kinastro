@@ -174,8 +174,18 @@ def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, 
     
     planets = chart_data.get('planets', [])
     for p in planets:
-        if p.get('name') == planet_std:
-            return get_sabian_symbol(p['longitude'])
+        # Handle both dict and WesternPlanet dataclass
+        if hasattr(p, 'name'):
+            # WesternPlanet dataclass object
+            p_name = p.name
+            p_longitude = p.longitude
+        else:
+            # Dictionary
+            p_name = p.get('name')
+            p_longitude = p.get('longitude')
+        
+        if p_name == planet_std:
+            return get_sabian_symbol(p_longitude)
     
     raise ValueError(f"Planet not found: {planet}")
 
