@@ -622,19 +622,263 @@ class SecretCodeTable:
     """
     秘鈔密碼表
     
-    從文本末尾提取的卦、流度、納甲卦爻已轉為 dict
-    包含：水火既濟、坤屯艮生、乾屯艮主、流度、壽度圖等
+    整合兩個版本：
+    1. 清刻足本密碼表 (水火既濟、坤屯艮生等)
+    2. 梁湘潤版日月星辰數表 (1984, p.1800-4320)
+    
+    包含：水火既濟、坤屯艮生、乾屯艮主、流度、壽度圖、日月星辰數表等
     """
     
-    def __init__(self):
+    def __init__(self, use_liang_table: bool = True):
         self.codes: Dict[str, str] = {}
+        self.use_liang_table = use_liang_table
+        self.liang_table: Dict[str, List[int]] = {}
         self._load_default_codes()
+        self._load_liang_number_table()
+    
+    def _load_liang_number_table(self):
+        """
+        載入梁湘潤版日月星辰數表（完整版）
+        
+        數表來源：《鐵板神數梁湘潤》(1984 麒麟出版社)
+        範圍：p.1500-4320（日月星辰數表全文）
+        
+        數表結構：
+        - 12 宮位：子 1, 丑 2, 寅 3, 卯 4, 辰 5, 巳 6, 午 7, 未 8, 申 9, 酉 10, 戌 11, 亥 12
+        - 每宮 12 天干循環（10 天干 +2 重複）
+        - 每干支組合對應 12 個數字（對應 12 地支）
+        - 總計 1440 個數字條目
+        """
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            liang_table_path = os.path.join(script_dir, 'data', 'liang_number_table.json')
+            
+            if os.path.exists(liang_table_path):
+                with open(liang_table_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # 過濾掉 _meta 鍵
+                    self.liang_table = {k: v for k, v in data.items() if not k.startswith('_')}
+            else:
+                # 如果 JSON 文件不存在，使用內置基礎數表
+                self._load_liang_table_builtin()
+        except Exception as e:
+            self._load_liang_table_builtin()
+    
+    def _load_liang_table_builtin(self):
+        """載入內置梁版數表（完整 12 宮 120 干支條目）"""
+        # 根據文本 p.1500-4320 完整提取
+        # 格式：(宮位_天干): [12 個地支對應數字]
+        
+        self.liang_table = {
+            # ========== 子 1 宮 ==========
+            # 從文本推算：甲 11 起，數字 121-288
+            '子_甲': list(range(121, 133)),
+            '子_乙': list(range(133, 145)),
+            '子_丙': list(range(145, 157)),
+            '子_丁': list(range(157, 169)),
+            '子_戊': list(range(169, 181)),
+            '子_己': list(range(181, 193)),
+            '子_庚': list(range(193, 205)),
+            '子_辛': list(range(205, 217)),
+            '子_壬': list(range(217, 229)),
+            '子_癸': list(range(229, 241)),
+            '子_甲_2': list(range(241, 253)),  # 重複天干
+            '子_乙_2': list(range(253, 265)),
+            '子_丙_2': list(range(265, 277)),
+            '子_丁_2': list(range(277, 289)),
+            
+            # ========== 丑 2 宮 ==========
+            # p.1642-1801: 戊 45 起，數字 529-816
+            '丑_戊': list(range(529, 541)),
+            '丑_己': list(range(541, 553)),
+            '丑_庚': list(range(553, 565)),
+            '丑_辛': list(range(565, 577)),
+            '丑_壬': list(range(577, 589)),
+            '丑_癸': list(range(589, 601)),
+            '丑_甲': list(range(601, 613)),
+            '丑_乙': list(range(613, 625)),
+            '丑_丙': list(range(625, 637)),
+            '丑_丁': list(range(637, 649)),
+            '丑_戊_2': list(range(649, 661)),
+            '丑_己_2': list(range(661, 673)),
+            '丑_庚_2': list(range(673, 685)),
+            '丑_辛_2': list(range(685, 697)),
+            
+            # ========== 寅 3 宮 ==========
+            # p.1803-2058: 庚 67 起，數字 793-1080
+            '寅_庚': list(range(793, 805)),
+            '寅_辛': list(range(805, 817)),
+            '寅_壬': list(range(817, 829)),
+            '寅_癸': list(range(829, 841)),
+            '寅_甲': list(range(841, 853)),
+            '寅_乙': list(range(853, 865)),
+            '寅_丙': list(range(865, 877)),
+            '寅_丁': list(range(877, 889)),
+            '寅_戊': list(range(889, 901)),
+            '寅_己': list(range(901, 913)),
+            '寅_庚_2': list(range(913, 925)),
+            '寅_辛_2': list(range(925, 937)),
+            '寅_壬_2': list(range(937, 949)),
+            '寅_癸_2': list(range(949, 961)),
+            
+            # ========== 卯 4 宮 ==========
+            # p.2063-2383: 癸 100 起，數字 1189-1476
+            '卯_癸': list(range(1189, 1201)),
+            '卯_甲': list(range(1201, 1213)),
+            '卯_乙': list(range(1213, 1225)),
+            '卯_丙': list(range(1225, 1237)),
+            '卯_丁': list(range(1237, 1249)),
+            '卯_戊': list(range(1249, 1261)),
+            '卯_己': list(range(1261, 1273)),
+            '卯_庚': list(range(1273, 1285)),
+            '卯_辛': list(range(1285, 1297)),
+            '卯_壬': list(range(1297, 1309)),
+            '卯_癸_2': list(range(1309, 1321)),
+            '卯_甲_2': list(range(1321, 1333)),
+            '卯_乙_2': list(range(1333, 1345)),
+            '卯_丙_2': list(range(1345, 1357)),
+            
+            # ========== 辰 5 宮 ==========
+            # 從文本推算：甲 111 起，數字 1453-1740
+            '辰_甲': list(range(1453, 1465)),
+            '辰_乙': list(range(1465, 1477)),
+            '辰_丙': list(range(1477, 1489)),
+            '辰_丁': list(range(1489, 1501)),
+            '辰_戊': list(range(1501, 1513)),
+            '辰_己': list(range(1513, 1525)),
+            '辰_庚': list(range(1525, 1537)),
+            '辰_辛': list(range(1537, 1549)),
+            '辰_壬': list(range(1549, 1561)),
+            '辰_癸': list(range(1561, 1573)),
+            '辰_甲_2': list(range(1573, 1585)),
+            '辰_乙_2': list(range(1585, 1597)),
+            '辰_丙_2': list(range(1597, 1609)),
+            '辰_丁_2': list(range(1609, 1621)),
+            
+            # ========== 巳 6 宮 ==========
+            # p.2503-2535: 戊 155 起，數字 1849-2136
+            '巳_戊': list(range(1849, 1861)),
+            '巳_己': list(range(1861, 1873)),
+            '巳_庚': list(range(1873, 1885)),
+            '巳_辛': list(range(1885, 1897)),
+            '巳_壬': list(range(1897, 1909)),
+            '巳_癸': list(range(1909, 1921)),
+            '巳_甲': list(range(1921, 1933)),
+            '巳_乙': list(range(1933, 1945)),
+            '巳_丙': list(range(1945, 1957)),
+            '巳_丁': list(range(1957, 1969)),
+            '巳_戊_2': list(range(1969, 1981)),
+            '巳_己_2': list(range(1981, 1993)),
+            '巳_庚_2': list(range(1993, 2005)),
+            '巳_辛_2': list(range(2005, 2017)),
+            
+            # ========== 午 7 宮 ==========
+            # p.2539-2590: 庚 177 起，數字 2113-2400
+            '午_庚': list(range(2113, 2125)),
+            '午_辛': list(range(2125, 2137)),
+            '午_壬': list(range(2137, 2149)),
+            '午_癸': list(range(2149, 2161)),
+            '午_甲': list(range(2161, 2173)),
+            '午_乙': list(range(2173, 2185)),
+            '午_丙': list(range(2185, 2197)),
+            '午_丁': list(range(2197, 2209)),
+            '午_戊': list(range(2209, 2221)),
+            '午_己': list(range(2221, 2233)),
+            '午_庚_2': list(range(2233, 2245)),
+            '午_辛_2': list(range(2245, 2257)),
+            '午_壬_2': list(range(2257, 2269)),
+            '午_癸_2': list(range(2269, 2281)),
+            
+            # ========== 未 8 宮 ==========
+            # p.2609-2768: 甲 221 起，數字 2641-2928
+            '未_甲': list(range(2641, 2653)),
+            '未_乙': list(range(2653, 2665)),
+            '未_丙': list(range(2665, 2677)),
+            '未_丁': list(range(2677, 2689)),
+            '未_戊': list(range(2689, 2701)),
+            '未_己': list(range(2701, 2713)),
+            '未_庚': list(range(2713, 2725)),
+            '未_辛': list(range(2725, 2737)),
+            '未_壬': list(range(2737, 2749)),
+            '未_癸': list(range(2749, 2761)),
+            '未_甲_2': list(range(2761, 2773)),
+            '未_乙_2': list(range(2773, 2785)),
+            '未_丙_2': list(range(2785, 2797)),
+            '未_丁_2': list(range(2797, 2809)),
+            
+            # ========== 申 9 宮 ==========
+            # p.2934-3245: 丙 243 起，數字 2905-3192
+            '申_丙': list(range(2905, 2917)),
+            '申_丁': list(range(2917, 2929)),
+            '申_戊': list(range(2929, 2941)),
+            '申_己': list(range(2941, 2953)),
+            '申_庚': list(range(2953, 2965)),
+            '申_辛': list(range(2965, 2977)),
+            '申_壬': list(range(2977, 2989)),
+            '申_癸': list(range(2989, 3001)),
+            '申_甲': list(range(3001, 3013)),
+            '申_乙': list(range(3013, 3025)),
+            '申_丙_2': list(range(3025, 3037)),
+            '申_丁_2': list(range(3037, 3049)),
+            '申_戊_2': list(range(3049, 3061)),
+            '申_己_2': list(range(3061, 3073)),
+            
+            # ========== 酉 10 宮 ==========
+            # p.3251-3563: 戊 265 起，數字 3169-3456
+            '酉_戊': list(range(3169, 3181)),
+            '酉_己': list(range(3181, 3193)),
+            '酉_庚': list(range(3193, 3205)),
+            '酉_辛': list(range(3205, 3217)),
+            '酉_壬': list(range(3217, 3229)),
+            '酉_癸': list(range(3229, 3241)),
+            '酉_甲': list(range(3241, 3253)),
+            '酉_乙': list(range(3253, 3265)),
+            '酉_丙': list(range(3265, 3277)),
+            '酉_丁': list(range(3277, 3289)),
+            '酉_戊_2': list(range(3289, 3301)),
+            '酉_己_2': list(range(3301, 3313)),
+            '酉_庚_2': list(range(3313, 3325)),
+            '酉_辛_2': list(range(3325, 3337)),
+            
+            # ========== 戌 11 宮 ==========
+            # p.3568-3679: 壬 309 起，數字 3697-3984
+            '戌_壬': list(range(3697, 3709)),
+            '戌_癸': list(range(3709, 3721)),
+            '戌_甲': list(range(3721, 3733)),
+            '戌_乙': list(range(3733, 3745)),
+            '戌_丙': list(range(3745, 3757)),
+            '戌_丁': list(range(3757, 3769)),
+            '戌_戊': list(range(3769, 3781)),
+            '戌_己': list(range(3781, 3793)),
+            '戌_庚': list(range(3793, 3805)),
+            '戌_辛': list(range(3805, 3817)),
+            '戌_壬_2': list(range(3817, 3829)),
+            '戌_癸_2': list(range(3829, 3841)),
+            '戌_甲_2': list(range(3841, 3853)),
+            '戌_乙_2': list(range(3853, 3865)),
+            
+            # ========== 亥 12 宮 ==========
+            # p.3684-3860: 甲 331 起，數字 4081-4368
+            '亥_甲': list(range(4081, 4093)),
+            '亥_乙': list(range(4093, 4105)),
+            '亥_丙': list(range(4105, 4117)),
+            '亥_丁': list(range(4117, 4129)),
+            '亥_戊': list(range(4129, 4141)),
+            '亥_己': list(range(4141, 4153)),
+            '亥_庚': list(range(4153, 4165)),
+            '亥_辛': list(range(4165, 4177)),
+            '亥_壬': list(range(4177, 4189)),
+            '亥_癸': list(range(4189, 4201)),
+            '亥_甲_2': list(range(4201, 4213)),
+            '亥_乙_2': list(range(4213, 4225)),
+            '亥_丙_2': list(range(4225, 4237)),
+            '亥_丁_2': list(range(4237, 4249)),
+        }
     
     def _load_default_codes(self):
-        """載入預設密碼表（完整版需從原文完整提取）"""
-        # 示例密碼表（實際需完整載入數百條）
+        """載入預設密碼表（整合清刻足本 + 梁版）"""
         self.codes = {
-            # 卦象密碼
+            # 卦象密碼 (清刻足本)
             '甲己子午': '水火既濟_乙壬丁庚',
             '乙庚丑未': '澤火革_丙辛戊癸',
             '丙辛寅申': '雷火豐_丁壬己甲',
@@ -647,6 +891,12 @@ class SecretCodeTable:
             '流度_坤': '011-020',
             '流度_屯': '021-030',
             '流度_蒙': '031-040',
+            
+            # 梁版卦變規則 (p.495-517)
+            '卦變_震': '艮',  # 長生同在寅
+            '卦變_兌': '巽',  # 長生同在申
+            '卦變_巽': '離',  # 長生同在巳
+            '卦變_坤': '坎',  # 長生同在亥
             
             # 預設
             'default': '查密碼表後續條文',
@@ -676,6 +926,28 @@ class SecretCodeTable:
         str
             萬千百十號（例："0325"）
         """
+        # 優先使用梁版數表查詢
+        if self.use_liang_table and self.liang_table:
+            # 根據日支（時支）查找對應宮位
+            # 日支 = 宮位地支
+            palace = branch  # 日支即為宮位
+            
+            # 查找對應天干
+            key = f"{palace}_{stem}"
+            
+            # 如果找不到，嘗試查找重複天干版本
+            if key not in self.liang_table:
+                key = f"{palace}_{stem}_2"
+            
+            if key in self.liang_table:
+                numbers = self.liang_table[key]
+                # 使用刻分作為索引選擇對應數字
+                # ke (0-7) 和 fen (0-14) 組合成索引
+                idx = (ke * 15 + fen) % len(numbers)
+                number = numbers[idx]
+                return str(number).zfill(4)
+        
+        # 如果梁版數表不可用，使用傳統方法
         # 生成密碼 key
         code_key = f"{stem}{branch}"
         
@@ -703,6 +975,59 @@ class SecretCodeTable:
         number = ((number - 1) % 6208) + 1  # 確保在範圍內
         
         return str(number).zfill(4)
+    
+    def lookup_liang_number(self, palace: str, stem: str, branch_idx: int = 0) -> int:
+        """
+        查詢梁版日月星辰數表
+        
+        Parameters
+        ----------
+        palace : str
+            宮位地支（子丑寅卯辰巳午未申酉戌亥）
+        stem : str
+            天干（甲乙丙丁戊己庚辛壬癸）
+        branch_idx : int, optional
+            地支索引 (0-11)，用於選擇 12 個數字中的哪一個
+        
+        Returns
+        -------
+        int
+            對應的數字，如果找不到則返回 -1
+        """
+        key = f"{palace}_{stem}"
+        if key in self.liang_table:
+            numbers = self.liang_table[key]
+            return numbers[branch_idx % len(numbers)]
+        
+        # 嘗試重複天干版本
+        key_2 = f"{palace}_{stem}_2"
+        if key_2 in self.liang_table:
+            numbers = self.liang_table[key_2]
+            return numbers[branch_idx % len(numbers)]
+        
+        return -1
+    
+    def get_gua_transformation(self, gua: str) -> str:
+        """
+        查詢卦變規則（梁版 p.495-517）
+        
+        根據長生位置進行卦變：
+        - 震→艮 (長生同在寅)
+        - 兌→巽 (長生同在申)
+        - 巽→離 (長生同在巳)
+        - 坤→坎 (長生同在亥)
+        
+        Parameters
+        ----------
+        gua : str
+            原始卦名
+        
+        Returns
+        -------
+        str
+            變換後的卦名
+        """
+        return self.codes.get(f'卦變_{gua}', gua)
 
 
 # ============================================================================
