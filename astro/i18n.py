@@ -1644,6 +1644,7 @@ transmitted by **Chen Xiyi**.
     "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
     "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
     "cat_korean": {"zh": "韓國體系", "en": "Korean Systems"},
+    "cat_khmer": {"zh": "高棉體系", "en": "Khmer Systems"},
 
     # ── GUI Optimization: Short beginner-friendly system descriptions ──
     "sys_hint_western": {"zh": "最廣為人知的星座運勢", "en": "The most well-known horoscope system"},
@@ -2176,6 +2177,32 @@ transmitted by **Chen Xiyi**.
         "zh": "🔮 土亭數",
         "en": "🔮 Tojeong Shu",
     },
+    "tab_khmer": {
+        "zh": "🇰🇭 高棉占星",
+        "en": "🇰🇭 Khmer Astrology",
+    },
+    "sys_hint_khmer": {
+        "zh": "柬埔寨 Reamker 史詩占星系統",
+        "en": "Cambodian Reamker epic astrology system",
+    },
+    "desc_khmer": {
+        "zh": (
+            "**高棉占星（Khmer Astrology / ហោរាសាស្ត្រ Reamker）**\n\n"
+            "基於 François Bizot 2013 年論文《柬埔寨占星師遺失的星盤》與 Prochom Horasastra 高棉占星彙編，"
+            "重建吳哥時期失傳的 Reamker（羅摩衍那高棉版）占星系統。\n\n"
+            "包含：高棉 12 生肖、ដីណាំង 八大命主、32 格預言表、ព្រួញព្រះរាម 羅摩之箭，"
+            "以及傳統 bè 祭壇化解儀式。"
+        ),
+        "en": (
+            "**Khmer Astrology (ហោរាសាស្ត្រ Reamker)**\n\n"
+            "Based on François Bizot's 2013 paper \"The Lost Astrological Charts of Cambodia\" "
+            "and Prochom Horasastra, reconstructing the lost Reamker (Khmer Ramayana) astrology "
+            "system from the Angkor period.\n\n"
+            "Includes: Khmer 12 Zodiac,ដីណាំង Eight Great Influences, 32-cell prophecy table, "
+            "ព្រួញព្រះរាម Rama Arrows, and traditional bè altar remedy rituals."
+        ),
+    },
+    "spinner_khmer": {"zh": "正在計算高棉占星盤…", "en": "Computing Khmer astrology chart…"},
     "sys_hint_fendjing": {
         "zh": "又名兩頭鉗，以年時天干排盤推斷命運",
         "en": "Also known as Two-End Pincers — destiny analysis using year and hour stems",
