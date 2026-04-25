@@ -149,18 +149,18 @@ def render_homepage():
             <span style="width: 8px; height: 8px; border-radius: 50%; background: #00ff88; display: inline-block; animation: pulse 2s infinite;"></span>
             <span>線上免費使用 · Open Source · MIT License</span>
         </div>
-        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; background: linear-gradient(135deg, #fff 0%, #ffe580 40%, #a899ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; font-family: 'Noto Serif TC', serif;">三十六體系占星排盤平台</h1>
+        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; background: linear-gradient(135deg, #fff 0%, #ffe580 40%, #a899ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; font-family: 'Noto Serif TC', serif;">三十八體系占星排盤平台</h1>
         <p style="font-size: clamp(0.95rem, 2vw, 1.15rem); color: #8888aa; max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.8;">
-            從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、從三式（六壬、太乙、奇門）到 Astrocartography、九星氣學、天王星漢堡學派、薩珊波斯占星、從瑪雅曆法到巴比倫星表——<br/>
-            堅占星將全球三十六種占星體系融合為一，讓千年星學智慧觸手可及。
+            從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、從三式（六壬、太乙、奇門）到 Astrocartography、九星氣學、天王星漢堡學派、薩珊波斯占星、從瑪雅曆法到巴比倫星表、從韓國土亭數到鐵板神數——<br/>
+            堅占星將全球三十八種占星體系融合為一，讓千年星學智慧觸手可及。
         </p>
         <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin-top: 2rem;">
             <div style="text-align: center;">
-                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">36</div>
+                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">38</div>
                 <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">占星體系 Systems</div>
             </div>
             <div style="text-align: center;">
-                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">90+</div>
+                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">95+</div>
                 <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">子功能分頁 Sub-tabs</div>
             </div>
             <div style="text-align: center;">
@@ -175,7 +175,7 @@ def render_homepage():
     st.markdown("### ✨ 核心特色")
     cols = st.columns(3)
     features = [
-        ("🔮", "三十六體系合一", "在同一個介面中切換中國七政四餘、紫微斗數、六壬太乙奇門三式、西洋占星、印度 Vedic、九星氣學等三十六種占星體系"),
+        ("🔮", "三十八體系合一", "在同一個介面中切換中國七政四餘、紫微斗數、六壬太乙奇門三式、西洋占星、印度 Vedic、韓國土亭數、九星氣學等三十八種占星體系"),
         ("🪐", "精密天文計算", "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算，確保行星位置精確無誤"),
         ("🤖", "AI 智慧分析", "整合 Cerebras AI，提供專業命理解讀，支援中英雙語"),
         ("📊", "精美 SVG 圖表", "純 SVG 渲染，清晰美觀，支援響應式設計，手機平板完美顯示"),
@@ -942,6 +942,7 @@ with st.sidebar:
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing"]),
         ("cat_korean", ["tab_tojeong"]),
+        ("cat_khmer", ["tab_khmer"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
@@ -953,6 +954,7 @@ with st.sidebar:
         "cat_sanshi": "☯️",
         "cat_chinese": "🏮",
         "cat_korean": "🇰🇷",
+        "cat_khmer": "🇰🇭",
         "cat_western": "🏛️",
         "cat_indian": "🪷",
         "cat_asian": "🌏",
@@ -999,6 +1001,7 @@ with st.sidebar:
         "tab_kp": t("tab_kp"),
         "tab_tieban": t("tab_tieban"),
         "tab_tojeong": t("tab_tojeong"),
+        "tab_khmer": t("tab_khmer"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1041,6 +1044,7 @@ with st.sidebar:
         "tab_kp": t("sys_hint_kp"),
         "tab_tieban": t("sys_hint_tieban"),
         "tab_tojeong": t("sys_hint_tojeong"),
+        "tab_khmer": t("sys_hint_khmer"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -3945,6 +3949,34 @@ elif _selected_system == "tab_tojeong":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_tojeong") if hasattr(t, "desc_tojeong") else "🔮 **土亭數** — 朝鮮時代土亭李先生所創的占數系統，以先天數、後天數計算格局代碼，查 129 格局斷語推斷吉凶。")
+
+# --- 高棉占星 (Khmer Astrology / Reamker) ---
+elif _selected_system == "tab_khmer":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _g = st.session_state["_calc_gender"]
+            _khmer_gender = "male" if _g in ("male", "男", "M") else "female"
+            _age = _p.get("age", 2026 - _p.get("year", 1995))
+            with st.spinner(t("spinner_khmer") if hasattr(t, "spinner_khmer") else "計算高棉占星盤..."):
+                from astro.khmer import ReamkerAstrology, render_khmer_chart
+                astro = ReamkerAstrology()
+                _khmer_chart = astro.full_reading(
+                    birth_year=_p.get("year", 1995),
+                    gender=_khmer_gender,
+                    current_age=_age,
+                    language=st.session_state.get("lang", "zh")
+                )
+            # Render SVG charts
+            st.markdown(render_khmer_chart(_khmer_chart, language=st.session_state.get("lang", "zh")), unsafe_allow_html=True)
+            # AI interpretation button
+            _render_ai_button("tab_khmer", _khmer_chart, btn_key="khmer")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_khmer") if hasattr(t, "desc_khmer") else "🇰🇭 **高棉占星** — 基於 François Bizot 2013 年論文與 Prochom Horasastra，重建吳哥時期失傳的 Reamker 占星系統。")
 
 # --- 太乙命法 (Taiyi Life Method) ---
 elif _selected_system == "tab_taiyi":
