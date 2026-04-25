@@ -1643,6 +1643,7 @@ transmitted by **Chen Xiyi**.
     "cat_asian": {"zh": "亞洲體系", "en": "Asian Systems"},
     "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
     "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
+    "cat_korean": {"zh": "韓國體系", "en": "Korean Systems"},
 
     # ── GUI Optimization: Short beginner-friendly system descriptions ──
     "sys_hint_western": {"zh": "最廣為人知的星座運勢", "en": "The most well-known horoscope system"},
@@ -1665,6 +1666,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_cetian_ziwei": {"zh": "古法十八飛星紫微斗數", "en": "Ancient 18 Flying Stars Zi Wei Dou Shu"},
     "sys_hint_jaimini": {"zh": "Jaimini Sutras 古法占星", "en": "Jaimini Sutras ancient Vedic astrology"},
     "sys_hint_twelve_ci": {"zh": "中國古代木星分野系統", "en": "Ancient Chinese Jupiter-station system"},
+    "sys_hint_tojeong": {"zh": "朝鮮時代土亭子占數系統", "en": "Joseon Dynasty Tojeong numerology system"},
 
     # ── 十二星次 (Twelve Ci) ────────────────────────────────────
     "tab_twelve_ci": {"zh": "🌌 十二星次", "en": "🌌 Twelve Ci"},
@@ -2169,6 +2171,10 @@ transmitted by **Chen Xiyi**.
     "tab_fendjing": {
         "zh": "🔮 鬼谷分定經",
         "en": "🔮 Ghost Valley Fen Ding Jing",
+    },
+    "tab_tojeong": {
+        "zh": "🔮 土亭數",
+        "en": "🔮 Tojeong Shu",
     },
     "sys_hint_fendjing": {
         "zh": "又名兩頭鉗，以年時天干排盤推斷命運",
