@@ -941,6 +941,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing"]),
+        ("cat_korean", ["tab_tojeong"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki"]),
@@ -951,6 +952,7 @@ with st.sidebar:
     _CATEGORY_ICONS = {
         "cat_sanshi": "☯️",
         "cat_chinese": "🏮",
+        "cat_korean": "🇰🇷",
         "cat_western": "🏛️",
         "cat_indian": "🪷",
         "cat_asian": "🌏",
@@ -996,6 +998,7 @@ with st.sidebar:
         "tab_persian": t("tab_persian"),
         "tab_kp": t("tab_kp"),
         "tab_tieban": t("tab_tieban"),
+        "tab_tojeong": t("tab_tojeong"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1037,6 +1040,7 @@ with st.sidebar:
         "tab_persian": t("sys_hint_persian"),
         "tab_kp": t("sys_hint_kp"),
         "tab_tieban": t("sys_hint_tieban"),
+        "tab_tojeong": t("sys_hint_tojeong"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -3916,6 +3920,31 @@ elif _selected_system == "tab_fendjing":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_fendjing") if hasattr(t, "desc_fendjing") else "🔮 **鬼谷分定經** — 相傳為戰國時期鬼谷子所創，又名兩頭鉗，以出生年時天干排盤，配合十二宮與星曜，推斷一生命運的古典命理系統。")
+
+# --- 土亭數 (Tojeong Shu) ---
+elif _selected_system == "tab_tojeong":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            _g = st.session_state["_calc_gender"]
+            _tojeong_gender = "male" if _g in ("male", "男", "M") else "female"
+            # compute_tojeong_chart only accepts: year, month, day, hour, gender, solar_term
+            _tojeong_params = {k: v for k, v in _p.items() if k in ("year", "month", "day", "hour")}
+            with st.spinner(t("spinner_tojeong") if hasattr(t, "spinner_tojeong") else "計算土亭數..."):
+                from astro.tojeong import compute_tojeong_chart, render_tojeong_chart
+                _tojeong_chart = compute_tojeong_chart(**_tojeong_params, gender=_tojeong_gender)
+            render_tojeong_chart(
+                _tojeong_chart,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_tojeong", _tojeong_chart, btn_key="tojeong"
+                ),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_tojeong") if hasattr(t, "desc_tojeong") else "🔮 **土亭數** — 朝鮮時代土亭李先生所創的占數系統，以先天數、後天數計算格局代碼，查 129 格局斷語推斷吉凶。")
 
 # --- 太乙命法 (Taiyi Life Method) ---
 elif _selected_system == "tab_taiyi":
