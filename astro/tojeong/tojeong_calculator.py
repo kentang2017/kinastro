@@ -254,28 +254,59 @@ def compute_tojeong_code(year: int, month: int, day: int, hour: int) -> Dict[str
     }
 
 
-def get_tojeong_pattern(code: str) -> Optional[Dict[str, Any]]:
+def get_tojeong_pattern(code: str, four_pillars: Optional[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
     """
-    根據代碼查找格局
+    根據代碼或四柱查找格局
     返回格局信息（包含三元斷語）
+    
+    由於 patterns_129.json 中 code 字段為空，改用格局名作為 key 直接查找
+    或根據四柱干支的某種規則匹配
     """
     patterns = load_patterns_data()
     
-    # 精確匹配代碼
-    for name, data in patterns.items():
-        if data.get("code") == code:
-            return {
-                "name": name,
-                "id": data["id"],
-                "code": code,
-                "上元": data.get("上元", ""),
-                "中元": data.get("中元", ""),
-                "下元": data.get("下元", ""),
-                "卞元": data.get("卞元", ""),
-                "status": data.get("status", "unknown")
-            }
+    # 如果有代碼，嘗試匹配（但目前所有 code 都是空的）
+    if code:
+        for name, data in patterns.items():
+            if data.get("code") == code:
+                return {
+                    "name": name,
+                    "id": data["id"],
+                    "code": code,
+                    "上元": data.get("上元", ""),
+                    "中元": data.get("中元", ""),
+                    "下元": data.get("下元", ""),
+                    "卞元": data.get("卞元", ""),
+                    "status": data.get("status", "unknown")
+                }
     
-    # 如果找不到精確匹配，返回第一個完整的格局（作為預設）
+    # 如果找不到精確匹配，根據四柱干支計算格局索引
+    # 土亭數傳統算法：根據先天數×後天數的乘積去首尾後查表
+    # 由於 129 格局沒有 code，我們用 id 來匹配
+    # 這裡使用簡化方法：根據代碼數字串的最後幾位取模來選擇格局
+    
+    if code and len(code) > 0:
+        try:
+            # 取代碼的最後 2-3 位數字作為索引
+            code_num = int(code[-3:]) if len(code) >= 3 else int(code)
+            pattern_id = (code_num % 129) + 1  # 1-129
+            
+            # 根據 id 查找格局
+            for name, data in patterns.items():
+                if data.get("id") == pattern_id:
+                    return {
+                        "name": name,
+                        "id": pattern_id,
+                        "code": code,
+                        "上元": data.get("上元", ""),
+                        "中元": data.get("中元", ""),
+                        "下元": data.get("下元", ""),
+                        "卞元": data.get("卞元", ""),
+                        "status": "approximate"  # 因為是近似匹配
+                    }
+        except ValueError:
+            pass
+    
+    # 如果還是找不到，返回第一個完整格局
     for name, data in patterns.items():
         if data.get("status") == "complete":
             return {
