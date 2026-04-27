@@ -559,8 +559,7 @@ def _build_timeline_figure(
         plot_bgcolor="rgba(8,8,30,0.90)",
         font=dict(family="Noto Serif TC, Cinzel, sans-serif", color="#C0C0FF"),
         xaxis=dict(
-            title="公曆年份 Year" if lang in ("zh", "zh_cn") else "Year",
-            titlefont=dict(color="#A78BFA"),
+            title=dict(text="公曆年份 Year" if lang in ("zh", "zh_cn") else "Year", font=dict(color="#A78BFA")),
             tickfont=dict(color="#8080CC"),
             gridcolor="rgba(100,80,200,0.08)",
             showgrid=True,
