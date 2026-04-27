@@ -40,7 +40,7 @@ def render_khmer_zodiac_svg(zodiac_data: Dict, language: str = "zh") -> str:
         label_zodiac = "Zodiac / ឆ្នាំ"
         label_element = "Element"
 
-    svg = f'''<svg viewBox="0 0 520 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px">
+    svg = f'''<svg viewBox="0 0 520 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:0 auto">
   <defs>
     <linearGradient id="zodBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0f172a"/>
@@ -387,7 +387,7 @@ def render_khmer_chart(chart_data: Dict, language: str = "zh") -> str:
           {_html_escape(note_zh)}
         </div>'''
 
-    html = f'''<div style="display:flex;flex-direction:column;gap:10px;align-items:center;padding:4px">
+    html = f'''<div style="display:flex;flex-direction:column;gap:10px;padding:4px;box-sizing:border-box;width:100%">
   {zodiac_svg}
   {reamker_html}
   {arrows_html}
