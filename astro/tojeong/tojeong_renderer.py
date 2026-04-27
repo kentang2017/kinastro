@@ -252,8 +252,7 @@ def render_tojeong_chart(chart: Dict[str, Any],
         birth_label=birth_label,
         yuan=yuan,
     )
-    # 使用 components.html 渲染 SVG，避免 Streamlit markdown 淨化器
-    # 剝除 SVG defs/gradient 和 style 屬性
+    # 使用 components.html 渲染 SVG，避免 Streamlit markdown 淨化器剝除 SVG defs/gradient 和 style 屬性
     html_doc = f"""<!DOCTYPE html>
 <html><head>
 <meta charset="UTF-8">
