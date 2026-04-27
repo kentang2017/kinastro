@@ -3981,7 +3981,7 @@ elif _selected_system == "tab_khmer":
             _khmer_html = render_khmer_chart(_khmer_chart, language=_khmer_lang)
             st.components.v1.html(
                 f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
-                height=950,
+                height=1050,
                 scrolling=False,
             )
             # AI interpretation button
