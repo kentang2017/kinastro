@@ -142,27 +142,13 @@ from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
 def render_homepage():
     """Render the aesthetic homepage landing page."""
 
-    # ── Google Fonts ──────────────────────────────────────────
-    st.markdown(
-        '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        '<link href="https://fonts.googleapis.com/css2?'
-        'family=Cinzel:wght@400;600;700;900'
-        '&family=Noto+Serif+TC:wght@300;400;700;900'
-        '&family=Space+Grotesk:wght@300;400;500;600;700'
-        '&family=Noto+Sans+TC:wght@300;400;500;700'
-        '&family=Inter:wght@300;400;500;600'
-        '&display=swap" rel="stylesheet">',
-        unsafe_allow_html=True,
-    )
-
     # ── Hero Section ──────────────────────────────────────────
     st.markdown("""
     <div class="hp-hero">
       <!-- Constellation SVG background -->
       <div class="hp-constellation">
         <svg width="100%" height="100%" viewBox="0 0 900 420"
-             preserveAspectRatio="xMidYMid slice"
+             preserveAspectRatio="xMidYMid slice" aria-hidden="true"
              style="position:absolute;inset:0;width:100%;height:100%;">
           <!-- Stars -->
           <circle cx="80"  cy="60"  r="1.8" fill="#EAB308" opacity="0.75"/>
@@ -366,6 +352,19 @@ def _load_custom_css() -> str:
 
 def inject_custom_css():
     """Inject all custom CSS (mobile + custom.css) into the page."""
+    # Google Fonts — loaded once at the top of every page
+    st.markdown(
+        '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        '<link href="https://fonts.googleapis.com/css2?'
+        'family=Cinzel:wght@400;600;700;900'
+        '&family=Noto+Serif+TC:wght@300;400;700;900'
+        '&family=Space+Grotesk:wght@300;400;500;600;700'
+        '&family=Noto+Sans+TC:wght@300;400;500;700'
+        '&family=Inter:wght@300;400;500;600'
+        '&display=swap" rel="stylesheet">',
+        unsafe_allow_html=True,
+    )
     st.markdown(MOBILE_CSS, unsafe_allow_html=True)
     _custom = _load_custom_css()
     if _custom:

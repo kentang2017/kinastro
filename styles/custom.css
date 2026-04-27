@@ -1169,3 +1169,16 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     }
     .hp-cta-box { padding: 2rem 1rem; }
 }
+
+/* ── Reduced-motion accessibility ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .hp-badge-dot,
+    .hp-cta-hint,
+    .hp-cta-stars {
+        animation: none;
+    }
+    .hp-title-line1 {
+        animation: none;
+        background-position: 0% center;
+    }
+}
