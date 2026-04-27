@@ -191,6 +191,22 @@ def _yuan_card_html(yuan_label: str, text: str,
     </div>"""
 
 
+def _format_birth_label(birth_info: Dict[str, Any], yuan: str) -> str:
+    """格式化出生資訊標籤（處理缺失值）"""
+    year  = birth_info.get("year",  "?")
+    month = birth_info.get("month", "?")
+    day   = birth_info.get("day",   "?")
+    hour  = birth_info.get("hour",  "?")
+    gender_ch = "男" if birth_info.get("gender") != "female" else "女"
+    try:
+        m_str = f"{int(month):02d}"
+        d_str = f"{int(day):02d}"
+    except (TypeError, ValueError):
+        m_str = str(month)
+        d_str = str(day)
+    return f"{year}年{m_str}月{d_str}日  {hour}時  {gender_ch}命  {yuan}"
+
+
 def render_tojeong_chart(chart: Dict[str, Any],
                          after_chart_hook: Optional[callable] = None):
     """
@@ -206,14 +222,8 @@ def render_tojeong_chart(chart: Dict[str, Any],
     pattern      = chart.get("pattern")
     yuan         = chart.get("yuan", "上元")
 
-    year  = birth_info.get("year",  "?")
-    month = birth_info.get("month", "?")
-    day   = birth_info.get("day",   "?")
-    hour  = birth_info.get("hour",  "?")
     is_male   = birth_info.get("gender") != "female"
-    gender_ch = "男" if is_male else "女"
-
-    birth_label = f"{year}年{month:02d}月{day:02d}日  {hour}時  {gender_ch}命  {yuan}"
+    birth_label = _format_birth_label(birth_info, yuan)
 
     pattern_name = "未知格局"
     if pattern:
@@ -383,12 +393,7 @@ def render_tojeong_svg(chart: Dict[str, Any]) -> str:
         pattern_name = pattern.get("name", "未知格局")
 
     code = calculation.get("code", "")
-    year  = birth_info.get("year",  "")
-    month = birth_info.get("month", "")
-    day   = birth_info.get("day",   "")
-    hour  = birth_info.get("hour",  "")
-    gender_ch = "男" if birth_info.get("gender") != "female" else "女"
-    birth_label = f"{year}年{month}月{day}日  {hour}時  {gender_ch}命  {yuan}"
+    birth_label = _format_birth_label(birth_info, yuan)
 
     return _build_tojeong_svg(
         four_pillars=four_pillars,

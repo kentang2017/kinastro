@@ -4094,7 +4094,7 @@ elif _selected_system == "tab_tojeong":
     margin-bottom:20px;
     text-align:center;
 ">
-  <div style="font-size:52px;margin-bottom:10px;">🇰🇷</div>
+  <div role="img" aria-label="韓國國旗" style="font-size:52px;margin-bottom:10px;">🇰🇷</div>
   <div style="font-size:22px;font-weight:700;color:#C9A84C;letter-spacing:2px;margin-bottom:8px;">
     土亭數命盤
   </div>
