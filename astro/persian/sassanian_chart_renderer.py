@@ -272,7 +272,8 @@ def generate_sassanian_svg(
 
     svg_parts.append('\n  <!-- 12 宮位填色 -->\n')
     for i, triangle in enumerate(house_triangles):
-        sign_idx = zodiac_positions[i]["sign_index"] if i < len(zodiac_positions) else i % 12
+        # zodiac_positions and house_triangles both have exactly 12 entries
+        sign_idx = zodiac_positions[i]["sign_index"]
         elem_idx = sign_element[sign_idx % 12]
         fill_color = element_colors[elem_idx]
         pts = " ".join(f"{p[0]},{p[1]}" for p in triangle)

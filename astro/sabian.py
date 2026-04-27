@@ -17,6 +17,7 @@ References
 """
 
 import json
+import math
 import os
 from typing import Dict, List, Optional, Any
 from pathlib import Path
@@ -299,7 +300,7 @@ def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -
     # 分割符號文字（每行最多 32 字符）
     symbol_text = symbol_data['symbol']
     words = symbol_text.split()
-    lines: list = []
+    lines: List[str] = []
     current_line = ""
     for word in words:
         test = (current_line + " " + word).strip()
@@ -321,7 +322,6 @@ def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -
     # 黃道輪弧形裝飾（頂部）：顯示度數在 360° 中的位置
     arc_deg = (longitude / 360) * 340  # 映射到 340° 弧
     # SVG arc 計算：從 -170° 到 170° (以 top 為 0°)
-    import math
     r = 28
     angle_start = math.radians(-170)
     angle_end   = math.radians(-170 + arc_deg)
