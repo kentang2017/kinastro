@@ -4085,8 +4085,34 @@ elif _selected_system == "tab_tojeong":
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
     else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_tojeong") if hasattr(t, "desc_tojeong") else "🔮 **土亭數** — 朝鮮時代土亭李先生所創的占數系統，以先天數、後天數計算格局代碼，查 129 格局斷語推斷吉凶。")
+        st.markdown("""
+<div style="
+    background:linear-gradient(135deg,#0f1e35 0%,#1a0d28 100%);
+    border:1px solid rgba(201,168,76,0.35);
+    border-radius:16px;
+    padding:28px 24px 24px 24px;
+    margin-bottom:20px;
+    text-align:center;
+">
+  <div role="img" aria-label="韓國國旗" style="font-size:52px;margin-bottom:10px;">🇰🇷</div>
+  <div style="font-size:22px;font-weight:700;color:#C9A84C;letter-spacing:2px;margin-bottom:8px;">
+    土亭數命盤
+  </div>
+  <div style="font-size:13px;color:#8888aa;line-height:1.7;max-width:380px;margin:0 auto 18px auto;">
+    朝鮮時代土亭李先生所創的占數系統<br>
+    以先天數、後天數計算格局代碼<br>
+    查 129 格局斷語推斷吉凶
+  </div>
+  <div style="
+    display:inline-block;
+    background:rgba(205,46,58,0.15);
+    border:1px solid rgba(205,46,58,0.4);
+    border-radius:8px;
+    padding:8px 20px;
+    font-size:13px;
+    color:#f87171;
+  ">👈 請在左側填寫出生年月日時，即可起盤</div>
+</div>""", unsafe_allow_html=True)
 
 # --- 高棉占星 (Khmer Astrology / Reamker) ---
 elif _selected_system == "tab_khmer":
