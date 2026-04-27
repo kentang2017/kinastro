@@ -2656,7 +2656,7 @@ elif _selected_system == "tab_tieban":
             # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
             # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
             svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
-            st.components.v1.html(svg_chart, height=520, scrolling=False)
+            st.components.v1.html(svg_chart, height=620, scrolling=False)
 
             # ② 核心數字卡片（HTML，手機單列）
             _tb_lang = get_lang()
