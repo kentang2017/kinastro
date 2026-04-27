@@ -1172,6 +1172,11 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "负面表达",
         "en": "Negative",
     },
+    "sabian_interpretation_label": {
+        "zh": "心理詮釋",
+        "zh_cn": "心理诠释",
+        "en": "Interpretation",
+    },
     "sabian_show_all": {
         "zh": "📜 查看所有 360 個符號",
         "zh_cn": "📜 查看所有 360 个符号",
