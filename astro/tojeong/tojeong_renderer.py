@@ -28,36 +28,37 @@ _TEXT_SIL  = "#c8c8e8"   # 銀白文字
 def _pillar_svg(cx: float, label: str, tg: str, dz: str,
                 shi_val: Any, fa_val: Any, prod_val: Any) -> str:
     """生成單柱 SVG 群組（以中心 x 座標定位）"""
+    _cjk_font = "'Noto Serif TC','Noto Serif SC','Source Han Serif','SimSun',serif"
     w, h = 78, 220
     x0 = cx - w / 2
     return f"""
-  <g transform="translate({x0:.1f}, 60)">
+  <g transform="translate({x0:.1f}, 82)">
     <rect width="{w}" height="{h}" rx="10"
           fill="{_BG_CARD}" stroke="{_KR_GOLD}" stroke-width="1.2" opacity="0.95"/>
     <!-- 柱標籤 -->
     <text x="{w/2:.1f}" y="22" text-anchor="middle"
-          font-family="serif" font-size="13" font-weight="bold"
+          font-family="{_cjk_font}" font-size="13" font-weight="bold"
           fill="{_KR_RED}">{label}</text>
     <line x1="8" y1="30" x2="{w-8:.0f}" y2="30"
           stroke="{_KR_GOLD}" stroke-width="0.6" opacity="0.5"/>
     <!-- 天干 -->
     <text x="{w/2:.1f}" y="85" text-anchor="middle"
-          font-family="serif" font-size="46" font-weight="bold"
+          font-family="{_cjk_font}" font-size="46" font-weight="bold"
           fill="#FFFFFF">{tg}</text>
     <!-- 地支 -->
     <text x="{w/2:.1f}" y="142" text-anchor="middle"
-          font-family="serif" font-size="46" font-weight="bold"
+          font-family="{_cjk_font}" font-size="46" font-weight="bold"
           fill="{_KR_GOLD2}">{dz}</text>
     <!-- 數字行 -->
     <line x1="8" y1="154" x2="{w-8:.0f}" y2="154"
           stroke="{_KR_GOLD}" stroke-width="0.5" opacity="0.35"/>
     <text x="{w/2:.1f}" y="170" text-anchor="middle"
-          font-family="monospace" font-size="10" fill="{_TEXT_DIM}">實 {shi_val}</text>
+          font-family="monospace" font-size="10" fill="{_TEXT_DIM}">&#x5BE6; {shi_val}</text>
     <text x="{w/2:.1f}" y="184" text-anchor="middle"
-          font-family="monospace" font-size="10" fill="{_TEXT_DIM}">法 {fa_val}</text>
+          font-family="monospace" font-size="10" fill="{_TEXT_DIM}">&#x6CD5; {fa_val}</text>
     <text x="{w/2:.1f}" y="200" text-anchor="middle"
           font-family="monospace" font-size="11" font-weight="bold"
-          fill="{_KR_GOLD}">× {prod_val}</text>
+          fill="{_KR_GOLD}">&#xD7; {prod_val}</text>
   </g>"""
 
 
@@ -99,7 +100,7 @@ def _build_tojeong_svg(four_pillars: Dict, calculation: Dict,
     code_display = "  ".join(str(c) for c in str(code)) if code else "—"
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 {vw} 360"
+     viewBox="0 0 {vw} 400"
      style="width:100%;max-width:540px;display:block;margin:0 auto;">
   <defs>
     <linearGradient id="tj_bg" x1="0" y1="0" x2="0" y2="1">
@@ -114,43 +115,52 @@ def _build_tojeong_svg(four_pillars: Dict, calculation: Dict,
   </defs>
 
   <!-- 背景 -->
-  <rect width="{vw}" height="360" fill="url(#tj_bg)" rx="14"/>
+  <rect width="{vw}" height="400" fill="url(#tj_bg)" rx="14"/>
   <!-- 外框 -->
-  <rect x="2" y="2" width="{vw-4}" height="356"
+  <rect x="2" y="2" width="{vw-4}" height="396"
         fill="none" stroke="{_KR_GOLD}" stroke-width="1.2" rx="12" opacity="0.45"/>
 
   <!-- 頂部裝飾線 -->
-  <line x1="{pad}" y1="50" x2="{vw-pad}" y2="50"
+  <line x1="{pad}" y1="76" x2="{vw-pad}" y2="76"
         stroke="url(#tj_gold_h)" stroke-width="0.8" opacity="0.6"/>
 
+  <!-- 主標題裝飾菱形 -->
+  <polygon points="{vw/2:.0f},18 {vw/2-8:.0f},28 {vw/2:.0f},38 {vw/2+8:.0f},28"
+           fill="none" stroke="{_KR_GOLD2}" stroke-width="1.2" opacity="0.7"/>
+  <circle cx="{vw/2:.0f}" cy="28" r="3" fill="{_KR_GOLD2}" opacity="0.9"/>
+
   <!-- 主標題 -->
-  <text x="{vw/2:.0f}" y="32" text-anchor="middle"
-        font-family="serif" font-size="18" font-weight="bold"
-        fill="{_KR_GOLD2}">🔮 土亭數命盤</text>
+  <text x="{vw/2:.0f}" y="54" text-anchor="middle"
+        font-family="'Noto Serif TC','Noto Serif SC','Source Han Serif','SimSun',serif"
+        font-size="17" font-weight="bold"
+        fill="{_KR_GOLD2}">&#x571F;&#x4EAD;&#x6578;&#x547D;&#x76E4;</text>
 
   <!-- 出生資訊 -->
-  <text x="{vw/2:.0f}" y="46" text-anchor="middle"
-        font-family="serif" font-size="11" fill="{_TEXT_SIL}">{birth_label}</text>
+  <text x="{vw/2:.0f}" y="68" text-anchor="middle"
+        font-family="'Noto Serif TC','Noto Serif SC','Source Han Serif','SimSun',serif"
+        font-size="11" fill="{_TEXT_SIL}">{birth_label}</text>
 
   <!-- 四柱 -->
   {pillar_svgs}
 
   <!-- 底部分隔 -->
-  <line x1="{pad}" y1="294" x2="{vw-pad}" y2="294"
+  <line x1="{pad}" y1="318" x2="{vw-pad}" y2="318"
         stroke="url(#tj_gold_h)" stroke-width="0.8" opacity="0.5"/>
 
   <!-- 格局代碼標籤 -->
-  <text x="{vw/2:.0f}" y="314" text-anchor="middle"
-        font-family="serif" font-size="12" fill="{_TEXT_DIM}">格局代碼</text>
+  <text x="{vw/2:.0f}" y="339" text-anchor="middle"
+        font-family="'Noto Serif TC','Noto Serif SC','SimSun',serif"
+        font-size="12" fill="{_TEXT_DIM}">&#x683C;&#x5C40;&#x4EE3;&#x78BC;</text>
 
   <!-- 格局代碼值 -->
-  <text x="{vw/2:.0f}" y="342" text-anchor="middle"
+  <text x="{vw/2:.0f}" y="374" text-anchor="middle"
         font-family="monospace" font-size="28" font-weight="bold"
         letter-spacing="6" fill="{_KR_GOLD2}">{code_display}</text>
 
   <!-- 三元標籤 (右下) -->
-  <text x="{vw - pad}" y="356" text-anchor="end"
-        font-family="serif" font-size="10" fill="{_KR_GOLD}" opacity="0.8">{yuan}</text>
+  <text x="{vw - pad}" y="393" text-anchor="end"
+        font-family="'Noto Serif TC','Noto Serif SC','SimSun',serif"
+        font-size="10" fill="{_KR_GOLD}" opacity="0.8">{yuan}</text>
 </svg>"""
 
 
@@ -216,6 +226,8 @@ def render_tojeong_chart(chart: Dict[str, Any],
     - chart: compute_tojeong_chart() 返回的命盤數據
     - after_chart_hook: 渲染完成後的回調函數（用於 AI 按鈕等）
     """
+    import streamlit.components.v1 as components
+
     birth_info  = chart.get("birth_info", {})
     four_pillars = chart.get("four_pillars", {})
     calculation  = chart.get("calculation", {})
@@ -240,10 +252,18 @@ def render_tojeong_chart(chart: Dict[str, Any],
         birth_label=birth_label,
         yuan=yuan,
     )
-    st.markdown(
-        f'<div style="margin:0 auto 16px auto;width:100%;">{svg_html}</div>',
-        unsafe_allow_html=True,
-    )
+    # 使用 components.html 渲染 SVG，避免 Streamlit markdown 淨化器剝除 SVG defs/gradient 和 style 屬性
+    html_doc = f"""<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {{ margin:0; padding:0; box-sizing:border-box; }}
+html, body {{ background:transparent; overflow:hidden; }}
+svg {{ width:100%; height:auto; display:block; max-width:540px; margin:0 auto; }}
+</style>
+</head><body>{svg_html}</body></html>"""
+    components.html(html_doc, height=430, scrolling=False)
 
     # ── ② 格局名稱橫幅 ──────────────────────────────────────
     status     = pattern.get("status", "unknown") if pattern else "unknown"
@@ -267,7 +287,7 @@ def render_tojeong_chart(chart: Dict[str, Any],
             ">
               <div style="font-size:20px;font-weight:700;color:{_KR_GOLD2};
                           letter-spacing:2px;margin-bottom:6px;">
-                📜 {pattern_name}
+                &#x1F4DC; {pattern_name}
               </div>
               <div style="font-size:13px;color:{status_color};">{status_label}</div>
             </div>""",
@@ -279,7 +299,7 @@ def render_tojeong_chart(chart: Dict[str, Any],
     # ── ③ 三元斷語卡片（後字）──────────────────────────────
     st.markdown(
         f'<div style="font-size:15px;font-weight:600;color:{_TEXT_SIL};'
-        f'margin:0 0 10px 0;">📖 格局斷語</div>',
+        f'margin:0 0 10px 0;">&#x1F4D6; 格局斷語</div>',
         unsafe_allow_html=True,
     )
 
