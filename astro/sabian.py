@@ -257,92 +257,163 @@ def get_sign_longitudinal_degree(longitude: float) -> tuple:
 
 def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -> str:
     """
-    生成 Sabian Symbol SVG 卡片
+    生成 Sabian Symbol SVG 卡片（響應式，適配各種螢幕寬度）
     """
     symbol_data = get_sabian_symbol(longitude)
     sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(longitude)
-    
+
     # Color scheme based on element
     element_colors = {
-        "fire": {"bg": "#FFF5F0", "accent": "#FF6B35", "text": "#8B2500"},
-        "earth": {"bg": "#F5F8F0", "accent": "#6B9F5E", "text": "#2D4A22"},
-        "air": {"bg": "#F0F5F8", "accent": "#7B9ED9", "text": "#223D4A"},
-        "water": {"bg": "#F0F5F8", "accent": "#5E8B9F", "text": "#223D4A"},
+        "fire":  {"bg": "#FFF5F0", "accent": "#C84B1A", "text": "#6B1700", "light": "#FFDDD0"},
+        "earth": {"bg": "#F5F8F0", "accent": "#4A7C3F", "text": "#2D4A22", "light": "#D6EDCC"},
+        "air":   {"bg": "#F0F5FC", "accent": "#3A6DAE", "text": "#1A3560", "light": "#D0E4F8"},
+        "water": {"bg": "#EFF5FB", "accent": "#1F6E8C", "text": "#0D3D52", "light": "#C8E6F4"},
     }
-    
-    elements = ["fire", "earth", "air", "water", "fire", "earth", "air", "water", "fire", "earth", "air", "water"]
+
+    elements = ["fire", "earth", "air", "water", "fire", "earth",
+                "air", "water", "fire", "earth", "air", "water"]
     element = elements[sign_idx]
     colors = element_colors[element]
-    
+
+    element_label = {"fire": "🔥 火象", "earth": "🌿 土象", "air": "💨 風象", "water": "💧 水象"}
+    element_en    = {"fire": "Fire", "earth": "Earth", "air": "Air", "water": "Water"}
+
+    # 星座符號
+    zodiac_glyphs = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"]
+    sign_glyph = zodiac_glyphs[sign_idx]
+
     if language == "zh":
         sign_display = f"{sign_zh} {deg_in_sign}°"
         keyword_label = "關鍵詞"
+        elem_display = element_label[element]
+        source_text = "Marc Edmund Jones (1953)"
     else:
         sign_display = f"{sign_en} {deg_in_sign}°"
         keyword_label = "Keyword"
-    
-    height = int(size * 1.4)
-    
-    svg = f'''<svg width="{size}" height="{height}" viewBox="0 0 {size} {height}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="sabianGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:{colors['bg']};stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
-        </linearGradient>
-    </defs>
-    
-    <!-- Background -->
-    <rect width="{size}" height="{height}" fill="url(#sabianGrad)" rx="15" ry="15"/>
-    
-    <!-- Border -->
-    <rect width="{size}" height="{height}" fill="none" stroke="{colors['accent']}" stroke-width="3" rx="15" ry="15"/>
-    
-    <!-- Header -->
-    <text x="{size // 2}" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="{colors['text']}">{sign_display}</text>
-    
-    <!-- Degree Circle -->
-    <circle cx="{size - 50}" cy="35" r="20" fill="{colors['accent']}" opacity="0.9"/>
-    <text x="{size - 50}" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">{deg_in_sign}</text>
-    
-    <!-- Divider -->
-    <line x1="40" y1="65" x2="{size - 40}" y2="65" stroke="{colors['accent']}" stroke-width="2" opacity="0.5"/>
-    
-    <!-- Symbol Text - split into multiple lines -->
-'''
-    
-    # Split symbol text into multiple lines (max 35 chars per line)
+        elem_display = element_en[element]
+        source_text = "Marc Edmund Jones (1953)"
+
+    # SVG 尺寸（響應式：viewBox 固定，width="100%"）
+    vw, vh = 300, 420
+
+    # 分割符號文字（每行最多 32 字符）
     symbol_text = symbol_data['symbol']
     words = symbol_text.split()
-    lines = []
+    lines: list = []
     current_line = ""
-    
     for word in words:
-        if len(current_line + " " + word) <= 35:
-            current_line = (current_line + " " + word).strip()
+        test = (current_line + " " + word).strip()
+        if len(test) <= 32:
+            current_line = test
         else:
             if current_line:
                 lines.append(current_line)
             current_line = word
     if current_line:
         lines.append(current_line)
-    
-    # Add symbol text lines
-    text_y = 95
-    line_height = 22
+
+    # 動態計算文字區高度
+    line_h = 24
+    symbol_block_h = max(70, len(lines) * line_h + 20)
+    total_content_h = 130 + symbol_block_h + 80  # header + symbol + keyword+footer
+    vh = max(380, total_content_h)
+
+    # 黃道輪弧形裝飾（頂部）：顯示度數在 360° 中的位置
+    arc_deg = (longitude / 360) * 340  # 映射到 340° 弧
+    # SVG arc 計算：從 -170° 到 170° (以 top 為 0°)
+    import math
+    r = 28
+    angle_start = math.radians(-170)
+    angle_end   = math.radians(-170 + arc_deg)
+    ax1 = vw/2 + r * math.sin(angle_start)
+    ay1 = 38  + r * (-math.cos(angle_start))
+    ax2 = vw/2 + r * math.sin(angle_end)
+    ay2 = 38  + r * (-math.cos(angle_end))
+    large_arc = 1 if arc_deg > 180 else 0
+
+    svg = f'''<svg width="100%" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg"
+     style="max-width:{size}px;display:block;margin:0 auto">
+  <defs>
+    <linearGradient id="sabGrad{sign_idx}" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   style="stop-color:{colors['bg']};stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="arcGrad{sign_idx}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   style="stop-color:{colors['accent']};stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:{colors['accent']};stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="{vw}" height="{vh}" fill="url(#sabGrad{sign_idx})" rx="14" ry="14"/>
+  <!-- 外框 -->
+  <rect width="{vw}" height="{vh}" fill="none" stroke="{colors['accent']}" stroke-width="2.5"
+        rx="14" ry="14"/>
+  <!-- 頂部裝飾色帶 -->
+  <rect width="{vw}" height="76" fill="{colors['accent']}" opacity="0.12" rx="14" ry="14"/>
+  <rect width="{vw}" height="5" y="71" fill="{colors['accent']}" opacity="0.3"/>
+
+  <!-- 黃道輪弧（度數進度） -->
+  <circle cx="{vw/2}" cy="38" r="{r}" fill="none" stroke="{colors['light']}" stroke-width="5"/>
+  <path d="M {ax1:.1f},{ay1:.1f} A {r},{r} 0 {large_arc},1 {ax2:.1f},{ay2:.1f}"
+        fill="none" stroke="url(#arcGrad{sign_idx})" stroke-width="5" stroke-linecap="round"/>
+  <!-- 度數圓圈 -->
+  <circle cx="{vw/2}" cy="38" r="18" fill="{colors['accent']}" opacity="0.92"/>
+  <text x="{vw/2}" y="44" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="16" font-weight="bold" fill="white">{deg_in_sign}</text>
+
+  <!-- 星座符號（右上） -->
+  <text x="{vw-28}" y="34" text-anchor="middle" font-family="serif"
+        font-size="26" fill="{colors['accent']}" opacity="0.85">{sign_glyph}</text>
+
+  <!-- 元素標籤（左上） -->
+  <text x="14" y="20" font-family="Arial,sans-serif" font-size="10"
+        fill="{colors['accent']}" opacity="0.8">{elem_display}</text>
+
+  <!-- 星座 + 度數標題 -->
+  <text x="{vw/2}" y="68" text-anchor="middle" font-family="'Noto Serif','Georgia',serif"
+        font-size="18" font-weight="bold" fill="{colors['text']}">{sign_display}</text>
+
+  <!-- 分隔線 -->
+  <line x1="24" y1="82" x2="{vw-24}" y2="82" stroke="{colors['accent']}" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- 符號文字 -->
+'''
+
+    # 添加符號文字行
+    text_y = 106
     for line in lines:
-        svg += f'    <text x="{size // 2}" y="{text_y}" text-anchor="middle" font-family="Georgia, serif" font-size="15" fill="{colors["text"]}">{line}</text>\n'
-        text_y += line_height
-    
-    # Keyword
-    keyword_y = text_y + 30
+        # 轉義 HTML 特殊字符
+        esc_line = (line.replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;")
+                        .replace('"', "&quot;"))
+        svg += (f'  <text x="{vw/2}" y="{text_y}" text-anchor="middle" '
+                f'font-family="\'Georgia\',\'Noto Serif\',serif" font-size="14" '
+                f'fill="{colors["text"]}" font-style="italic">{esc_line}</text>\n')
+        text_y += line_h
+
+    # 關鍵詞區
+    kw_y = text_y + 22
+    kw_box_h = 36
     svg += f'''
-    <!-- Keyword -->
-    <text x="{size // 2}" y="{keyword_y}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="{colors['accent']}">{keyword_label}: {symbol_data['keyword']}</text>
-    
-    <!-- Footer -->
-    <text x="{size // 2}" y="{height - 30}" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="{colors['text']}" opacity="0.7">Marc Edmund Jones (1953)</text>
+  <!-- 關鍵詞背景 -->
+  <rect x="18" y="{kw_y - 22}" width="{vw - 36}" height="{kw_box_h}"
+        rx="8" fill="{colors['accent']}" opacity="0.1"/>
+  <text x="{vw/2}" y="{kw_y}" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="12" fill="{colors['accent']}" opacity="0.75">{keyword_label}</text>
+  <text x="{vw/2}" y="{kw_y + 16}" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="15" font-weight="bold" fill="{colors['accent']}">{symbol_data['keyword']}</text>
+
+  <!-- 正負面意義 -->
+  <line x1="24" y1="{kw_y + 30}" x2="{vw-24}" y2="{kw_y + 30}"
+        stroke="{colors['accent']}" stroke-width="1" opacity="0.3"/>
+
+  <!-- 底部來源 -->
+  <text x="{vw/2}" y="{vh - 10}" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="9.5" fill="{colors['text']}" opacity="0.5">{source_text}</text>
 </svg>'''
-    
+
     return svg
 
 

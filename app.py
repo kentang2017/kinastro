@@ -2174,21 +2174,30 @@ elif _selected_system == "tab_sabian":
                 }
                 
                 # Display in two columns
+                _sabian_lang = st.session_state.get("lang", "zh")
                 for _i, _pname in enumerate(_sabian_planets):
                     _sabian = get_sabian_for_planet(_chart_data, _pname)
                     if _sabian:
-                        _col1, _col2 = st.columns([2, 1])
+                        _col1, _col2 = st.columns([3, 2])
                         with _col1:
-                            st.markdown(f"**{_pname}** - {_sabian['sign']} {_sabian['degree_in_sign']}°")
+                            st.markdown(f"**{_pname}** — {_sabian['sign']} {_sabian['degree_in_sign']}°")
                             st.markdown(f"*{t('sabian_symbol_label')}:* {_sabian['symbol']}")
                             st.markdown(f"*{t('sabian_keyword_label')}:* **{_sabian['keyword']}**")
                             st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
                             st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
                             st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
                         with _col2:
-                            _svg = render_sabian_svg(_sabian['planet_longitude'], size=200)
-                            # Use st.components.v1.html for proper SVG rendering
-                            st.components.v1.html(_svg, height=300)
+                            _svg = render_sabian_svg(
+                                _sabian['planet_longitude'],
+                                size=280,
+                                language=_sabian_lang,
+                            )
+                            # Wrap in a div so the SVG scales to column width
+                            st.components.v1.html(
+                                f'<div style="width:100%">{_svg}</div>',
+                                height=440,
+                                scrolling=False,
+                            )
                         st.divider()
                 
                 # Optional: Show all 360 symbols in an expander
