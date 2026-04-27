@@ -140,63 +140,205 @@ from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
 # Homepage Landing Page (當未選擇體系時顯示)
 # ============================================================
 def render_homepage():
-    """Render the beautiful homepage similar to index.html"""
-    
-    # Hero Section
+    """Render the aesthetic homepage landing page."""
+
+    # ── Google Fonts ──────────────────────────────────────────
+    st.markdown(
+        '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        '<link href="https://fonts.googleapis.com/css2?'
+        'family=Cinzel:wght@400;600;700;900'
+        '&family=Noto+Serif+TC:wght@300;400;700;900'
+        '&family=Space+Grotesk:wght@300;400;500;600;700'
+        '&family=Noto+Sans+TC:wght@300;400;500;700'
+        '&family=Inter:wght@300;400;500;600'
+        '&display=swap" rel="stylesheet">',
+        unsafe_allow_html=True,
+    )
+
+    # ── Hero Section ──────────────────────────────────────────
     st.markdown("""
-    <div style="text-align: center; padding: 4rem 2rem; background: radial-gradient(ellipse at center, #1a1a3e 0%, #06060f 100%); border-radius: 16px; margin-bottom: 2rem;">
-        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(124,106,255,0.12); border: 1px solid rgba(124,106,255,0.3); border-radius: 20px; padding: 0.35rem 1rem; margin-bottom: 2rem; font-size: 0.8rem; color: #a899ff; font-family: 'Inter', sans-serif;">
-            <span style="width: 8px; height: 8px; border-radius: 50%; background: #00ff88; display: inline-block; animation: pulse 2s infinite;"></span>
-            <span>線上免費使用 · Open Source · MIT License</span>
+    <div class="hp-hero">
+      <!-- Constellation SVG background -->
+      <div class="hp-constellation">
+        <svg width="100%" height="100%" viewBox="0 0 900 420"
+             preserveAspectRatio="xMidYMid slice"
+             style="position:absolute;inset:0;width:100%;height:100%;">
+          <!-- Stars -->
+          <circle cx="80"  cy="60"  r="1.8" fill="#EAB308" opacity="0.75"/>
+          <circle cx="140" cy="110" r="1.2" fill="#A78BFA" opacity="0.6"/>
+          <circle cx="210" cy="45"  r="2.2" fill="#EAB308" opacity="0.8"/>
+          <circle cx="270" cy="140" r="1.0" fill="#E0E0FF" opacity="0.5"/>
+          <circle cx="340" cy="80"  r="1.8" fill="#A78BFA" opacity="0.7"/>
+          <circle cx="400" cy="165" r="1.4" fill="#EAB308" opacity="0.65"/>
+          <circle cx="460" cy="55"  r="2.6" fill="#EAB308" opacity="0.85"/>
+          <circle cx="530" cy="130" r="1.0" fill="#E0E0FF" opacity="0.5"/>
+          <circle cx="590" cy="85"  r="1.8" fill="#A78BFA" opacity="0.7"/>
+          <circle cx="660" cy="40"  r="1.4" fill="#EAB308" opacity="0.6"/>
+          <circle cx="720" cy="150" r="2.2" fill="#A78BFA" opacity="0.75"/>
+          <circle cx="790" cy="70"  r="1.2" fill="#E0E0FF" opacity="0.55"/>
+          <circle cx="840" cy="120" r="1.8" fill="#EAB308" opacity="0.7"/>
+          <circle cx="50"  cy="200" r="1.0" fill="#A78BFA" opacity="0.4"/>
+          <circle cx="180" cy="280" r="1.4" fill="#EAB308" opacity="0.5"/>
+          <circle cx="320" cy="310" r="1.0" fill="#E0E0FF" opacity="0.35"/>
+          <circle cx="500" cy="290" r="1.6" fill="#A78BFA" opacity="0.5"/>
+          <circle cx="700" cy="270" r="1.2" fill="#EAB308" opacity="0.45"/>
+          <circle cx="860" cy="250" r="1.0" fill="#E0E0FF" opacity="0.4"/>
+          <!-- Constellation lines -->
+          <line x1="80"  y1="60"  x2="140" y2="110" stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
+          <line x1="140" y1="110" x2="210" y2="45"  stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
+          <line x1="340" y1="80"  x2="400" y2="165" stroke="#EAB308" stroke-width="0.5" opacity="0.3"/>
+          <line x1="460" y1="55"  x2="530" y2="130" stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
+          <line x1="590" y1="85"  x2="660" y2="40"  stroke="#EAB308" stroke-width="0.5" opacity="0.3"/>
+          <line x1="720" y1="150" x2="790" y2="70"  stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
+          <line x1="790" y1="70"  x2="840" y2="120" stroke="#A78BFA" stroke-width="0.5" opacity="0.3"/>
+          <!-- Zodiac wheel rings -->
+          <circle cx="450" cy="210" r="130" fill="none" stroke="rgba(167,139,250,0.08)" stroke-width="1"/>
+          <circle cx="450" cy="210" r="105" fill="none" stroke="rgba(234,179,8,0.06)"   stroke-width="1" stroke-dasharray="5,8"/>
+          <circle cx="450" cy="210" r="78"  fill="none" stroke="rgba(167,139,250,0.05)" stroke-width="1"/>
+          <!-- 12 spokes -->
+          <line x1="450" y1="80"  x2="450" y2="340" stroke="rgba(167,139,250,0.06)" stroke-width="0.6"/>
+          <line x1="320" y1="210" x2="580" y2="210" stroke="rgba(167,139,250,0.06)" stroke-width="0.6"/>
+          <line x1="337" y1="127" x2="563" y2="293" stroke="rgba(167,139,250,0.05)" stroke-width="0.5"/>
+          <line x1="563" y1="127" x2="337" y2="293" stroke="rgba(167,139,250,0.05)" stroke-width="0.5"/>
+          <line x1="370" y1="98"  x2="530" y2="322" stroke="rgba(167,139,250,0.04)" stroke-width="0.5"/>
+          <line x1="530" y1="98"  x2="370" y2="322" stroke="rgba(167,139,250,0.04)" stroke-width="0.5"/>
+          <!-- Center glyph -->
+          <text x="450" y="218" text-anchor="middle" font-size="22"
+                fill="rgba(234,179,8,0.2)" font-family="serif">☽</text>
+        </svg>
+      </div>
+
+      <!-- Hero Content -->
+      <div class="hp-hero-content">
+        <div class="hp-badge">
+          <span class="hp-badge-dot"></span>
+          <span>線上免費使用 · Open Source · MIT License</span>
         </div>
-        <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; background: linear-gradient(135deg, #fff 0%, #ffe580 40%, #a899ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; font-family: 'Noto Serif TC', serif;">三十八體系占星排盤平台</h1>
-        <p style="font-size: clamp(0.95rem, 2vw, 1.15rem); color: #8888aa; max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.8;">
-            從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、從三式（六壬、太乙、奇門）到 Astrocartography、九星氣學、天王星漢堡學派、薩珊波斯占星、從瑪雅曆法到巴比倫星表、從韓國土亭數到鐵板神數——<br/>
-            堅占星將全球三十八種占星體系融合為一，讓千年星學智慧觸手可及。
+
+        <h1 class="hp-title">
+          <span class="hp-title-line1">堅占星</span>
+          <span class="hp-title-line2">KinAstro</span>
+          <span class="hp-title-sub">三十八體系占星排盤平台</span>
+        </h1>
+
+        <p class="hp-desc">
+          從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
+          從三式（六壬、太乙、奇門）到 Astrocartography、九星氣學、天王星漢堡學派、<br/>
+          薩珊波斯占星、瑪雅曆法到巴比倫星表——<br/>
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球三十八種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
-        <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin-top: 2rem;">
-            <div style="text-align: center;">
-                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">38</div>
-                <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">占星體系 Systems</div>
-            </div>
-            <div style="text-align: center;">
-                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">95+</div>
-                <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">子功能分頁 Sub-tabs</div>
-            </div>
-            <div style="text-align: center;">
-                <div style="font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; background: linear-gradient(135deg, #f0c040, #a899ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">100%</div>
-                <div style="font-size: 0.8rem; color: #8888aa; font-family: 'Inter', sans-serif;">免費開源 Free</div>
-            </div>
+
+        <div class="hp-stats">
+          <div class="hp-stat">
+            <div class="hp-stat-num">38</div>
+            <div class="hp-stat-label">占星體系 Systems</div>
+          </div>
+          <div class="hp-stat-sep">✦</div>
+          <div class="hp-stat">
+            <div class="hp-stat-num">95<span style="font-size:1.1rem">+</span></div>
+            <div class="hp-stat-label">子功能分頁 Sub-tabs</div>
+          </div>
+          <div class="hp-stat-sep">✦</div>
+          <div class="hp-stat">
+            <div class="hp-stat-num">100<span style="font-size:1.1rem">%</span></div>
+            <div class="hp-stat-label">免費開源 Free &amp; Open</div>
+          </div>
         </div>
+
+        <div class="hp-cta-hint">← 請從左側側邊欄選擇占星體系開始排盤</div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Features Section
-    st.markdown("### ✨ 核心特色")
-    cols = st.columns(3)
-    features = [
-        ("🔮", "三十八體系合一", "在同一個介面中切換中國七政四餘、紫微斗數、六壬太乙奇門三式、西洋占星、印度 Vedic、韓國土亭數、九星氣學等三十八種占星體系"),
-        ("🪐", "精密天文計算", "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算，確保行星位置精確無誤"),
-        ("🤖", "AI 智慧分析", "整合 Cerebras AI，提供專業命理解讀，支援中英雙語"),
-        ("📊", "精美 SVG 圖表", "純 SVG 渲染，清晰美觀，支援響應式設計，手機平板完美顯示"),
-        ("🌍", "中英雙語", "繁體中文、簡體中文、英文即時切換"),
-        ("🆓", "完全免費", "開源免費，MIT License，無任何費用"),
+
+    # ── System Categories Showcase ────────────────────────────
+    st.markdown('<div class="hp-section-title">占星體系總覽</div>', unsafe_allow_html=True)
+
+    _categories = [
+        ("☯️", "三式神機", "San Shi Divination",
+         ["大六壬", "太乙神數", "奇門遁甲"],
+         "#C9A84C", "rgba(201,168,76,0.12)", "rgba(201,168,76,0.28)"),
+        ("🏮", "中式占星", "Chinese Systems",
+         ["七政四餘", "紫微斗數", "萬花仙琴", "鐵板神數", "達摩占星", "十二次分野", "測字", "分金"],
+         "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
+        ("🏛️", "西洋占星", "Western Astrology",
+         ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "凱爾特樹"],
+         "#7B9ED9", "rgba(123,158,217,0.1)", "rgba(123,158,217,0.22)"),
+        ("🪷", "印度占星", "Vedic Jyotish",
+         ["Jyotish", "納迪占星", "Jaimini", "KP 占星"],
+         "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
+        ("🌏", "亞洲體系", "Asian Systems",
+         ["宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "祖爾海", "藏曆", "九星氣學"],
+         "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
+        ("🕌", "中東體系", "Middle Eastern",
+         ["卡巴拉", "猶太星宿", "薩珊波斯", "阿拉伯占星", "葉門占星"],
+         "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
+        ("🏺", "古代文明", "Ancient Civilizations",
+         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星"],
+         "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
     ]
-    for i, (icon, title, desc) in enumerate(features):
-        with cols[i % 3]:
-            st.markdown(f"""
-            <div style="background: #161835; border: 1px solid #1e2048; border-radius: 16px; padding: 2rem 1.5rem; margin-bottom: 1rem;">
-                <div style="font-size: 2rem; margin-bottom: 1rem;">{icon}</div>
-                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">{title}</h3>
-                <p style="font-size: 0.85rem; color: #8888aa; line-height: 1.7;">{desc}</p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    st.divider()
-    
-    # Quick start hint
-    st.markdown("### 🚀 使用說明")
-    st.info("請從左側側邊欄選擇您想使用的占星體系，然後輸入出生資訊進行排盤。")
+
+    _cat_html = '<div class="hp-cat-grid">'
+    for icon, title_zh, title_en, systems, accent, bg, border_col in _categories:
+        _pills = "".join(f'<span class="hp-sys-pill">{s}</span>' for s in systems[:4])
+        if len(systems) > 4:
+            _pills += f'<span class="hp-sys-pill hp-sys-pill-more">+{len(systems) - 4}</span>'
+        _cat_html += (
+            f'<div class="hp-cat-card" style="'
+            f'--cat-accent:{accent};--cat-bg:{bg};--cat-border:{border_col};">'
+            f'<div class="hp-cat-icon">{icon}</div>'
+            f'<div class="hp-cat-title">{title_zh}</div>'
+            f'<div class="hp-cat-en">{title_en}</div>'
+            f'<div class="hp-cat-pills">{_pills}</div>'
+            f'</div>'
+        )
+    _cat_html += '</div>'
+    st.markdown(_cat_html, unsafe_allow_html=True)
+
+    # ── Feature Cards ─────────────────────────────────────────
+    st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
+
+    _features = [
+        ("🔮", "三十八體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球三十八種占星體系"),
+        ("🪐", "精密天文計算",
+         "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
+        ("🤖", "AI 智慧分析",
+         "整合 Cerebras / OpenAI，提供專業命理解讀，支援中英雙語互動問答"),
+        ("📊", "精美 SVG 圖表",
+         "純 SVG 渲染，清晰美觀，支援響應式設計，手機平板完美顯示"),
+        ("🌍", "三語介面",
+         "繁體中文、簡體中文、English 即時切換，無需重新載入"),
+        ("🆓", "完全免費開源",
+         "MIT License，永久免費，無任何隱藏費用，歡迎 Fork 與貢獻"),
+    ]
+
+    _feat_html = '<div class="hp-feat-grid">'
+    for icon, title, desc in _features:
+        _feat_html += (
+            f'<div class="hp-feat-card glass-card">'
+            f'<div class="hp-feat-icon">{icon}</div>'
+            f'<div class="hp-feat-title">{title}</div>'
+            f'<div class="hp-feat-desc">{desc}</div>'
+            f'</div>'
+        )
+    _feat_html += '</div>'
+    st.markdown(_feat_html, unsafe_allow_html=True)
+
+    # ── Getting Started CTA ───────────────────────────────────
+    st.markdown("""
+    <div class="hp-cta-box">
+      <div class="hp-cta-stars">✦ ✧ ✦ ✧ ✦</div>
+      <h3 class="hp-cta-title">開始您的星象之旅</h3>
+      <p class="hp-cta-body">
+        在左側側邊欄輸入出生日期、時間與地點，<br/>
+        然後選擇您想探索的占星體系，即可立即排盤。
+      </p>
+      <div class="hp-cta-tips">
+        <span class="hp-tip">💡 初學者推薦從「西洋占星」或「紫微斗數」開始</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 
