@@ -1126,6 +1126,11 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "偕日升",
         "en": "Heliacal",
     },
+    "western_subtab_predictive": {
+        "zh": "🔮 預測技術全套",
+        "zh_cn": "🔮 预测技术全套",
+        "en": "🔮 Predictive Suite",
+    },
     # Sabian Symbols
     "sabian_symbols_title": {
         "zh": "🔮 薩比恩符號",
