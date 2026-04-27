@@ -2653,95 +2653,180 @@ elif _selected_system == "tab_tieban":
                 # 計算
                 tb_result = tbss.calculate(birth_data)
             
-            # 鐵板神數主界面
-            st.header(t("tieban_title") if hasattr(t, "tieban_title") else "🔮 鐵板神數")
-            st.caption(t("tieban_subtitle") if hasattr(t, "tieban_subtitle") else "清刻足本 · 秘鈔密碼表 · 考刻分")
-            
-            # 顯示 SVG 星盤圖（響應式）
+            # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
+            # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
             svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
-            st.components.v1.html(svg_chart, height=650, scrolling=False)
-            
-            # 詳細信息
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"""
-**命宮**: {tb_result.ming_palace}  
-**身宮**: {tb_result.shen_palace}  
-**五行局**: {tb_result.wuxing_ju}  
-**刻**: {tb_result.ke}  
-**分**: {tb_result.fen}
-""")
-            with col2:
-                st.markdown(f"""
-**河洛數**: {tb_result.he_luo_number}  
-**神數號碼**: `{tb_result.tieban_number}`  
-**密碼**: {tb_result.secret_code}
-""")
-            
-            # 條文
+            st.components.v1.html(svg_chart, height=520, scrolling=False)
+
+            # ② 核心數字卡片（HTML，手機單列）
+            _tb_lang = get_lang()
+            _tb_num_label   = "神數號碼"   if _tb_lang != "en" else "Divine Number"
+            _tb_ke_label    = "刻"         if _tb_lang != "en" else "Ke"
+            _tb_fen_label   = "分"         if _tb_lang != "en" else "Fen"
+            _tb_helo_label  = "河洛數"     if _tb_lang != "en" else "He Luo"
+            _tb_ming_label  = "命宮"       if _tb_lang != "en" else "Life Palace"
+            _tb_shen_label  = "身宮"       if _tb_lang != "en" else "Body Palace"
+            _tb_wx_label    = "五行局"     if _tb_lang != "en" else "Element Cycle"
+            _tb_code_label  = "密碼"       if _tb_lang != "en" else "Secret Code"
+            st.markdown(f"""
+<div style="
+    display:flex;flex-wrap:wrap;gap:8px;
+    margin:0 0 16px 0;
+">
+  <div style="flex:1 1 140px;min-width:140px;
+      background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.4);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_num_label}</div>
+    <div style="font-size:26px;font-weight:700;color:#FF6B35;letter-spacing:3px;">{tb_result.tieban_number}</div>
+  </div>
+  <div style="flex:1 1 80px;min-width:80px;
+      background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ke_label}</div>
+    <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.ke}</div>
+  </div>
+  <div style="flex:1 1 80px;min-width:80px;
+      background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_fen_label}</div>
+    <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.fen}</div>
+  </div>
+  <div style="flex:1 1 80px;min-width:80px;
+      background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_helo_label}</div>
+    <div style="font-size:22px;font-weight:700;color:#6BCB77;">{tb_result.he_luo_number}</div>
+  </div>
+  <div style="flex:1 1 100px;min-width:100px;
+      background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ming_label}</div>
+    <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.ming_palace}</div>
+  </div>
+  <div style="flex:1 1 100px;min-width:100px;
+      background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_shen_label}</div>
+    <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.shen_palace}</div>
+  </div>
+  <div style="flex:1 1 100px;min-width:100px;
+      background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_wx_label}</div>
+    <div style="font-size:15px;font-weight:700;color:#C9A84C;">{tb_result.wuxing_ju}</div>
+  </div>
+  <div style="flex:1 1 100px;min-width:100px;
+      background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.25);
+      border-radius:12px;padding:12px 14px;text-align:center;">
+    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_code_label}</div>
+    <div style="font-size:15px;font-weight:700;color:#E94560;">{tb_result.secret_code}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+            # ③ 字：主條文
             st.divider()
-            st.subheader("📜 " + (t("tieban_main_verse") if hasattr(t, "tieban_main_verse") else "條文"))
-            
-            # 主條文（神數號碼對應）
+            _verse_title = t("tieban_main_verse") if hasattr(t, "tieban_main_verse") else "條文"
+            st.subheader("📜 " + _verse_title)
             st.info(tb_result.verse)
-            
+
             # 十二宮條文詳情
             st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else "十二宮條文") + "**")
-            
-            # 使用摺疊區域顯示 12 宮
+
             expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else "查看十二宮詳細條文"
             with st.expander(expander_label, expanded=False):
-                # 分 3 列顯示 12 宮
-                cols = st.columns(3)
                 palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
                                "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
-                
-                # 宮位名稱翻譯
                 palace_names_en = {
                     "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
                     "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
                     "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
                     "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
                 }
-                
-                # 分類翻譯
                 category_trans = {
                     "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
                     "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
                     "事業": "Career", "健康": "Health", "災厄": "Disaster",
                     "遷移": "Travel",
                 }
-                
-                for idx, palace_name in enumerate(palace_order):
-                    col_idx = idx % 3
-                    with cols[col_idx]:
-                        palace_info = tb_result.palace_verses.get(palace_name, {})
-                        verse = palace_info.get('verse', t('no_verse') if hasattr(t, 'no_verse') else '暫無條文')
-                        category = palace_info.get('category', '')
-                        branch = palace_info.get('branch', '')
-                        
-                        # 根據語言顯示宮位名稱
-                        display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == 'en' else palace_name
-                        
-                        st.markdown(f"""
-**{display_name}** ({branch})  
-{verse}
-""")
-                        if category:
-                            # 翻譯分類
-                            display_category = category_trans.get(category, category) if get_lang() == 'en' else category
-                            st.caption(f"{t('tieban_category') if hasattr(t, 'tieban_category') else '分類'}: {display_category}")
-            
+                # 手機友好：以 HTML 卡片列表代替三列
+                _palace_cards = ""
+                for palace_name in palace_order:
+                    palace_info = tb_result.palace_verses.get(palace_name, {})
+                    verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else "暫無條文")
+                    category = palace_info.get("category", "")
+                    branch = palace_info.get("branch", "")
+                    display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
+                    display_category = category_trans.get(category, category) if get_lang() == "en" else category
+                    cat_badge = (
+                        f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
+                        f'【{display_category}】</span>'
+                    ) if display_category else ""
+                    _palace_cards += f"""
+<div style="border-left:3px solid rgba(255,107,53,0.5);
+     padding:10px 12px;margin-bottom:10px;
+     background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">
+  <div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">
+    {display_name}
+    <span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({branch})</span>
+    {cat_badge}
+  </div>
+  <div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{verse}</div>
+</div>"""
+                st.markdown(f'<div style="width:100%;">{_palace_cards}</div>', unsafe_allow_html=True)
+
             # AI 分析按鈕
             _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
-            
+
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             import traceback
             st.code(traceback.format_exc())
     else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_tieban") if hasattr(t, "desc_tieban") else "🔮 **鐵板神數** — 源自宋代邵雍《皇極經世》，清代发展为精密考刻分系統。每時分 8 刻、每刻 15 分（共 120 分），結合父母六親信息精確定位命運條文。號稱「鐵口直斷」，是中國傳統術數中最精密的查表法系統。")
+        st.markdown("""
+<div style="
+    background:linear-gradient(135deg,#1a0828 0%,#0f1e35 100%);
+    border:1px solid rgba(255,107,53,0.35);
+    border-radius:16px;
+    padding:28px 24px 24px 24px;
+    margin-bottom:20px;
+    text-align:center;
+">
+  <div style="font-size:52px;margin-bottom:12px;">🔮</div>
+  <div style="font-size:22px;font-weight:700;color:#FF6B35;letter-spacing:2px;margin-bottom:6px;">
+    鐵板神數
+  </div>
+  <div style="font-size:12px;color:#9090b0;margin-bottom:14px;letter-spacing:1px;">
+    Tie Ban Shen Shu &middot; Iron Plate Divine Numbers
+  </div>
+  <div style="font-size:13px;color:#8888aa;line-height:1.8;max-width:380px;margin:0 auto 18px auto;">
+    源自宋代邵雍《皇極經世》，清代發展為精密考刻分系統<br>
+    每時分 8 刻、每刻 15 分（共 120 分）<br>
+    號稱「鐵口直斷」，中國傳統術數中最精密的查表法系統
+  </div>
+  <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+    <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+         border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+      📅 輸入出生年月日時
+    </div>
+    <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+         border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+      ⚡ 一鍵推算神數
+    </div>
+    <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+         border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+      📜 查閱十二宮條文
+    </div>
+  </div>
+  <div style="
+    display:inline-block;
+    background:rgba(205,46,58,0.15);
+    border:1px solid rgba(205,46,58,0.4);
+    border-radius:8px;
+    padding:8px 20px;
+    font-size:13px;
+    color:#f87171;
+  ">👈 請在左側填寫出生年月日時，即可起盤</div>
+</div>""", unsafe_allow_html=True)
 
 # --- History of Astrology ---
 elif _selected_system == "tab_history":
