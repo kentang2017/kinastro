@@ -12,6 +12,7 @@ Multi-System Astrology Chart Application
 
 import os
 import random
+import textwrap
 import streamlit as st
 from datetime import datetime, date, time
 
@@ -143,14 +144,12 @@ def render_homepage():
     """Render the aesthetic homepage landing page."""
 
     # ── Hero Section ──────────────────────────────────────────
-    st.markdown("""
+    st.markdown(textwrap.dedent("""
     <div class="hp-hero">
-      <!-- Constellation SVG background -->
       <div class="hp-constellation">
         <svg width="100%" height="100%" viewBox="0 0 900 420"
              preserveAspectRatio="xMidYMid slice" aria-hidden="true"
              style="position:absolute;inset:0;width:100%;height:100%;">
-          <!-- Stars -->
           <circle cx="80"  cy="60"  r="1.8" fill="#EAB308" opacity="0.75"/>
           <circle cx="140" cy="110" r="1.2" fill="#A78BFA" opacity="0.6"/>
           <circle cx="210" cy="45"  r="2.2" fill="#EAB308" opacity="0.8"/>
@@ -170,7 +169,6 @@ def render_homepage():
           <circle cx="500" cy="290" r="1.6" fill="#A78BFA" opacity="0.5"/>
           <circle cx="700" cy="270" r="1.2" fill="#EAB308" opacity="0.45"/>
           <circle cx="860" cy="250" r="1.0" fill="#E0E0FF" opacity="0.4"/>
-          <!-- Constellation lines -->
           <line x1="80"  y1="60"  x2="140" y2="110" stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
           <line x1="140" y1="110" x2="210" y2="45"  stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
           <line x1="340" y1="80"  x2="400" y2="165" stroke="#EAB308" stroke-width="0.5" opacity="0.3"/>
@@ -178,43 +176,35 @@ def render_homepage():
           <line x1="590" y1="85"  x2="660" y2="40"  stroke="#EAB308" stroke-width="0.5" opacity="0.3"/>
           <line x1="720" y1="150" x2="790" y2="70"  stroke="#A78BFA" stroke-width="0.5" opacity="0.35"/>
           <line x1="790" y1="70"  x2="840" y2="120" stroke="#A78BFA" stroke-width="0.5" opacity="0.3"/>
-          <!-- Zodiac wheel rings -->
           <circle cx="450" cy="210" r="130" fill="none" stroke="rgba(167,139,250,0.08)" stroke-width="1"/>
           <circle cx="450" cy="210" r="105" fill="none" stroke="rgba(234,179,8,0.06)"   stroke-width="1" stroke-dasharray="5,8"/>
           <circle cx="450" cy="210" r="78"  fill="none" stroke="rgba(167,139,250,0.05)" stroke-width="1"/>
-          <!-- 12 spokes -->
           <line x1="450" y1="80"  x2="450" y2="340" stroke="rgba(167,139,250,0.06)" stroke-width="0.6"/>
           <line x1="320" y1="210" x2="580" y2="210" stroke="rgba(167,139,250,0.06)" stroke-width="0.6"/>
           <line x1="337" y1="127" x2="563" y2="293" stroke="rgba(167,139,250,0.05)" stroke-width="0.5"/>
           <line x1="563" y1="127" x2="337" y2="293" stroke="rgba(167,139,250,0.05)" stroke-width="0.5"/>
           <line x1="370" y1="98"  x2="530" y2="322" stroke="rgba(167,139,250,0.04)" stroke-width="0.5"/>
           <line x1="530" y1="98"  x2="370" y2="322" stroke="rgba(167,139,250,0.04)" stroke-width="0.5"/>
-          <!-- Center glyph -->
           <text x="450" y="218" text-anchor="middle" font-size="22"
-                fill="rgba(234,179,8,0.2)" font-family="serif">☽</text>
+                fill="rgba(234,179,8,0.2)" font-family="serif">&#9789;</text>
         </svg>
       </div>
-
-      <!-- Hero Content -->
       <div class="hp-hero-content">
         <div class="hp-badge">
           <span class="hp-badge-dot"></span>
           <span>線上免費使用 · Open Source · MIT License</span>
         </div>
-
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
           <span class="hp-title-sub">三十八體系占星排盤平台</span>
         </h1>
-
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、九星氣學、天王星漢堡學派、<br/>
           薩珊波斯占星、瑪雅曆法到巴比倫星表——<br/>
           堅占星將<strong style="color:#EAB308;font-weight:600;">全球三十八種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
-
         <div class="hp-stats">
           <div class="hp-stat">
             <div class="hp-stat-num">38</div>
@@ -231,11 +221,10 @@ def render_homepage():
             <div class="hp-stat-label">免費開源 Free &amp; Open</div>
           </div>
         </div>
-
         <div class="hp-cta-hint">← 請從左側側邊欄選擇占星體系開始排盤</div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     # ── System Categories Showcase ────────────────────────────
     st.markdown('<div class="hp-section-title">占星體系總覽</div>', unsafe_allow_html=True)
@@ -312,7 +301,7 @@ def render_homepage():
     st.markdown(_feat_html, unsafe_allow_html=True)
 
     # ── Getting Started CTA ───────────────────────────────────
-    st.markdown("""
+    st.markdown(textwrap.dedent("""
     <div class="hp-cta-box">
       <div class="hp-cta-stars">✦ ✧ ✦ ✧ ✦</div>
       <h3 class="hp-cta-title">開始您的星象之旅</h3>
@@ -324,7 +313,7 @@ def render_homepage():
         <span class="hp-tip">💡 初學者推薦從「西洋占星」或「紫微斗數」開始</span>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 
 
