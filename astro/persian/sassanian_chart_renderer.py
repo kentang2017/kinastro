@@ -153,6 +153,16 @@ def generate_sassanian_svg(
         {"sign_index": 5, "x": outer_x + outer_width + 15, "y": outer_y + outer_height/4, "label": "right_top"},  # ♍ Virgo
     ]
 
+    # 宮位元素顏色（薩珊傳統：火土風水輪流，從牡羊起）
+    element_colors = [
+        palette["burnt_orange"],  # 火 - 牡羊、獅子、射手
+        palette["bronze"],        # 土 - 金牛、處女、摩羯
+        palette["turquoise"],     # 風 - 雙子、天秤、水瓶
+        palette["lapis_lazuli"],  # 水 - 巨蟹、天蠍、雙魚
+    ]
+    # 每個星座的元素索引 (0=火, 1=土, 2=風, 3=水)
+    sign_element = [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]
+
     # 開始構建 SVG
     svg_parts = []
 
@@ -166,84 +176,183 @@ def generate_sassanian_svg(
     </linearGradient>
     <linearGradient id="parchmentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:{palette['parchment']};stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#E8D5C4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EDD9C0;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:{palette['crimson']};stop-opacity:0.12" />
+      <stop offset="100%" style="stop-color:{palette['gold_gradient_end']};stop-opacity:0.18" />
+    </linearGradient>
+    <!-- 裝飾紋樣濾鏡 -->
+    <filter id="softGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
 
-  <!-- 背景 -->
+  <!-- 背景（羊皮紙） -->
   <rect width="{base_width}" height="{base_height}" fill="url(#parchmentGradient)" />
+
+  <!-- 外裝飾框（雙層金邊） -->
+  <rect x="6" y="6" width="{base_width-12}" height="{base_height-12}"
+        rx="4" fill="none" stroke="{palette['gold_leaf']}" stroke-width="3" opacity="0.7"/>
+  <rect x="11" y="11" width="{base_width-22}" height="{base_height-22}"
+        rx="2" fill="none" stroke="{palette['crimson']}" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- 四角裝飾：八芒星（薩珊皇室紋章） -->
+  {_sassanian_corner_star(14, 14, 14, palette['gold_leaf'], palette['crimson'])}
+  {_sassanian_corner_star(base_width-14, 14, 14, palette['gold_leaf'], palette['crimson'])}
+  {_sassanian_corner_star(14, base_height-14, 14, palette['gold_leaf'], palette['crimson'])}
+  {_sassanian_corner_star(base_width-14, base_height-14, 14, palette['gold_leaf'], palette['crimson'])}
 ''')
 
-    # 標題
+    # 標題區（帶裝飾背景）
     title_text = "薩珊傳統占星星盤"
-    if show_pahlavi:
-        title_text += " | 𐭮𐭠𐭮𐭠𐭭 𐭲𐭠𐭫𐭹𐭹𐭠"
+    pahlavi_subtitle = "𐭮𐭠𐭮𐭠𐭭 𐭲𐭠𐭫𐭹𐭹𐭠 · Sassanian Astrology" if show_pahlavi else "Sassanian Astrology · Bundahishn"
 
     svg_parts.append(f'''
-  <!-- 標題 -->
-  <text x="{width/2}" y="50" font-family="serif" font-size="28" font-weight="bold"
-        fill="{palette['crimson']}" text-anchor="middle" letter-spacing="8">
+  <!-- 標題背景 -->
+  <rect x="30" y="22" width="{base_width-60}" height="70" rx="8" fill="url(#headerGrad)"
+        stroke="{palette['gold_leaf']}" stroke-width="1.5"/>
+  <!-- 標題裝飾橫線 -->
+  <line x1="50" y1="48" x2="{base_width-50}" y2="48"
+        stroke="{palette['gold_leaf']}" stroke-width="0.8" opacity="0.6"/>
+  <line x1="50" y1="84" x2="{base_width-50}" y2="84"
+        stroke="{palette['gold_leaf']}" stroke-width="0.8" opacity="0.6"/>
+
+  <!-- 標題文字 -->
+  <text x="{base_width/2}" y="44" font-family="'Noto Serif', serif" font-size="22" font-weight="bold"
+        fill="{palette['crimson']}" text-anchor="middle" letter-spacing="4">
     {title_text}
   </text>
+  <text x="{base_width/2}" y="78" font-family="serif" font-size="13"
+        fill="{palette['dark_indigo']}" text-anchor="middle" letter-spacing="2" font-style="italic">
+    {pahlavi_subtitle}
+  </text>
 ''')
+
+    # 12 宮三角形填色（先填色，再畫框線）
+    # 定義 12 個三角形的頂點（順時針）
+    # 外框四角：(50,100), (450,100), (450,500), (50,500)
+    # 外框中點：(250,100), (50,300), (250,500), (450,300)
+    # 內框四角：(150,200), (350,200), (350,400), (150,400)
+    ox, oy = outer_x, outer_y
+    ow, oh = outer_width, outer_height
+    cx2, cy2 = center_x, center_y
+    ix, iy = inner_x, inner_y
+    iw, ih = inner_width, inner_height
+
+    # 12 個宮位三角形頂點（從頂部開始，順時針）
+    house_triangles = [
+        # 宮位 1 (頂中→頂左角→內左上)
+        [(cx2, oy), (ox, oy), (ix, iy)],
+        # 宮位 2 (頂左角→左中→內左上)
+        [(ox, oy), (ox, cy2), (ix, iy)],
+        # 宮位 3 (左中→底左角→內左下)
+        [(ox, cy2), (ox, oy+oh), (ix, iy+ih)],
+        # 宮位 4 (底左角→底中→內左下)
+        [(ox, oy+oh), (cx2, oy+oh), (ix, iy+ih)],
+        # 宮位 5 (底中→底右角→內右下)
+        [(cx2, oy+oh), (ox+ow, oy+oh), (ix+iw, iy+ih)],
+        # 宮位 6 (底右角→右中→內右下)
+        [(ox+ow, oy+oh), (ox+ow, cy2), (ix+iw, iy+ih)],
+        # 宮位 7 (右中→頂右角→內右上)
+        [(ox+ow, cy2), (ox+ow, oy), (ix+iw, iy)],
+        # 宮位 8 (頂右角→頂中→內右上)
+        [(ox+ow, oy), (cx2, oy), (ix+iw, iy)],
+        # 內框四個三角（菱形被對角線分割）
+        # 宮位 9 (內上)
+        [(ix, iy), (cx2, oy), (ix+iw, iy)],
+        # 宮位 10 (內右)
+        [(ix+iw, iy), (ox+ow, cy2), (ix+iw, iy+ih)],
+        # 宮位 11 (內下)
+        [(ix+iw, iy+ih), (cx2, oy+oh), (ix, iy+ih)],
+        # 宮位 12 (內左)
+        [(ix, iy+ih), (ox, cy2), (ix, iy)],
+    ]
+
+    svg_parts.append('\n  <!-- 12 宮位填色 -->\n')
+    for i, triangle in enumerate(house_triangles):
+        # zodiac_positions and house_triangles both have exactly 12 entries
+        sign_idx = zodiac_positions[i]["sign_index"]
+        elem_idx = sign_element[sign_idx % 12]
+        fill_color = element_colors[elem_idx]
+        pts = " ".join(f"{p[0]},{p[1]}" for p in triangle)
+        svg_parts.append(
+            f'  <polygon points="{pts}" fill="{fill_color}" opacity="0.12" stroke="none"/>\n'
+        )
 
     # 星盤框架（完全按照參考 SVG）
     svg_parts.append(f'''
   <!-- 星盤框架 -->
-  <g stroke="{palette['black']}" stroke-width="2" fill="none">
-    <!-- 外框正方形 -->
-    <rect x="{outer_x}" y="{outer_y}" width="{outer_width}" height="{outer_height}" />
-    
-    <!-- 內框正方形（菱形） -->
-    <rect x="{inner_x}" y="{inner_y}" width="{inner_width}" height="{inner_height}" />
-    
+  <g stroke="{palette['crimson']}" stroke-width="2" fill="none">
+    <!-- 外框正方形（金色雙線） -->
+    <rect x="{outer_x}" y="{outer_y}" width="{outer_width}" height="{outer_height}"
+          stroke="{palette['gold_leaf']}" stroke-width="3"/>
+    <rect x="{outer_x+3}" y="{outer_y+3}" width="{outer_width-6}" height="{outer_height-6}"
+          stroke="{palette['crimson']}" stroke-width="1" opacity="0.5"/>
+
+    <!-- 內框正方形（菱形，金色） -->
+    <rect x="{inner_x}" y="{inner_y}" width="{inner_width}" height="{inner_height}"
+          stroke="{palette['gold_leaf']}" stroke-width="2.5"/>
+
     <!-- 四角對角線 -->
     <line x1="{outer_x}" y1="{outer_y}" x2="{inner_x}" y2="{inner_y}" />
     <line x1="{outer_x + outer_width}" y1="{outer_y}" x2="{inner_x + inner_width}" y2="{inner_y}" />
     <line x1="{outer_x}" y1="{outer_y + outer_height}" x2="{inner_x}" y2="{inner_y + inner_height}" />
     <line x1="{outer_x + outer_width}" y1="{outer_y + outer_height}" x2="{inner_x + inner_width}" y2="{inner_y + inner_height}" />
-    
+
     <!-- 菱形到外框的連接線（形成 12 宮） -->
     <line x1="{center_x}" y1="{outer_y}" x2="{outer_x}" y2="{outer_y + outer_height/2}" />
     <line x1="{outer_x}" y1="{outer_y + outer_height/2}" x2="{center_x}" y2="{outer_y + outer_height}" />
     <line x1="{center_x}" y1="{outer_y + outer_height}" x2="{outer_x + outer_width}" y2="{outer_y + outer_height/2}" />
     <line x1="{outer_x + outer_width}" y1="{outer_y + outer_height/2}" x2="{center_x}" y2="{outer_y}" />
   </g>
+
+  <!-- 中心裝飾：Faravahar 圓環（薩珊王室標誌） -->
+  <circle cx="{center_x}" cy="{center_y}" r="28" fill="{palette['parchment']}"
+          stroke="{palette['gold_leaf']}" stroke-width="2.5"/>
+  <circle cx="{center_x}" cy="{center_y}" r="20" fill="none"
+          stroke="{palette['crimson']}" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="{center_x}" y="{center_y + 7}" text-anchor="middle"
+        font-family="serif" font-size="20" fill="{palette['crimson']}">𐩾</text>
 ''')
 
     # 12 星座符號（外圍 12 個位置）
+    zodiac_signs = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"]
+
     svg_parts.append(f'''
   <!-- 12 星座符號 -->
-  <g font-family="serif" font-size="24" fill="{palette['black']}" text-anchor="middle">
+  <g font-family="serif" text-anchor="middle">
 ''')
 
-    zodiac_signs = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"]
-    
     for pos in zodiac_positions:
-        sign_glyph = zodiac_signs[pos["sign_index"]]
-        svg_parts.append(f'''    <text x="{pos['x']}" y="{pos['y']}">{sign_glyph}</text>\n''')
+        sign_idx = pos["sign_index"]
+        sign_glyph = zodiac_signs[sign_idx]
+        elem_idx = sign_element[sign_idx % 12]
+        sign_color = element_colors[elem_idx]
+        # 星座符號背景小圓
+        svg_parts.append(
+            f'    <circle cx="{pos["x"]}" cy="{pos["y"]-8}" r="14" fill="{sign_color}" opacity="0.18"/>\n'
+            f'    <text x="{pos["x"]}" y="{pos["y"]}" font-size="22" fill="{palette["crimson"]}">{sign_glyph}</text>\n'
+        )
 
     svg_parts.append('  </g>\n')
 
     # 行星位置（在 12 宮區域內）
     svg_parts.append(f'''
   <!-- 行星位置 -->
-  <g font-family="serif" font-size="22" fill="{palette['black']}">
+  <g font-family="serif" font-size="20" text-anchor="middle">
 ''')
 
-    # 根據行星所在的宮位，放置在對應區域
     for planet in planet_positions:
-        # 簡化：根據行星的星座索引確定大致位置
         sign_index = int(planet.longitude_sidereal // 30)
-        
-        # 找到對應的位置區域
+
         for pos in zodiac_positions:
             if pos["sign_index"] == sign_index:
-                # 在該區域內放置行星符號
                 planet_glyph = get_planet_glyph(planet.name)
-                planet_label = f"{planet_glyph}"
-                
-                # 根據宮位調整位置（在區域內偏移）
+                if not planet_glyph:
+                    break
+
                 offset_x = 0
                 offset_y = 0
                 if planet.house <= 4:
@@ -254,8 +363,14 @@ def generate_sassanian_svg(
                 else:
                     offset_x = 20
                     offset_y = -15
-                
-                svg_parts.append(f'''    <text x="{pos['x'] + offset_x}" y="{pos['y'] + offset_y}">{planet_label}</text>\n''')
+
+                px = pos['x'] + offset_x
+                py = pos['y'] + offset_y
+                # 行星背景小圓
+                svg_parts.append(
+                    f'    <circle cx="{px}" cy="{py-8}" r="12" fill="{palette["dark_indigo"]}" opacity="0.25"/>\n'
+                    f'    <text x="{px}" y="{py}" fill="{palette["dark_indigo"]}" font-weight="bold">{planet_glyph}</text>\n'
+                )
                 break
 
     svg_parts.append('  </g>\n')
@@ -263,88 +378,100 @@ def generate_sassanian_svg(
     # 皇家恆星標記（如果有合相）
     if show_royal_stars and royal_stars:
         svg_parts.append(f'''
-  <!-- 皇家恆星 -->
-  <g font-family="serif" font-size="16" fill="{palette['gold_leaf']}" text-anchor="middle">
+  <!-- 皇家恆星（八芒星標記） -->
+  <g font-family="serif" font-size="13" text-anchor="middle">
 ''')
-        
+
         for star_name, star_data in royal_stars.items():
             star_longitude = star_data["sassanian_longitude"]
             star_sign_index = int(star_longitude // 30)
-            
-            # 找到對應的星座位置
+
             for pos in zodiac_positions:
                 if pos["sign_index"] == star_sign_index:
-                    # 八芒星標記
-                    star_size = 10
-                    cx, cy = pos['x'], pos['y'] - 35
-                    
+                    s = 9
+                    cx3, cy3 = pos['x'], pos['y'] - 32
                     svg_parts.append(f'''
-    <!-- {star_data['name_pahlavi']} -->
-    <g transform="translate({cx}, {cy})">
-      <path d="M 0,-{star_size} L {star_size*0.4},-{star_size*0.4} L {star_size},0 L {star_size*0.4},{star_size*0.4}
-               L 0,{star_size} L -{star_size*0.4},{star_size*0.4} L -{star_size},0 L -{star_size*0.4},-{star_size*0.4} Z"
-            fill="url(#goldGradient)" stroke="{palette['crimson']}" stroke-width="1.5"/>
-      <circle cx="0" cy="0" r="{star_size*0.25}" fill="{palette['turquoise']}"/>
+    <!-- {star_data.get('name_pahlavi', star_name)} -->
+    <g transform="translate({cx3}, {cy3})">
+      <path d="M 0,-{s} L {s*0.4},-{s*0.4} L {s},0 L {s*0.4},{s*0.4}
+               L 0,{s} L -{s*0.4},{s*0.4} L -{s},0 L -{s*0.4},-{s*0.4} Z"
+            fill="url(#goldGradient)" stroke="{palette['crimson']}" stroke-width="1.2"/>
+      <circle cx="0" cy="0" r="{s*0.28}" fill="{palette['turquoise']}"/>
     </g>
-    <text x="{cx}" y="{cy - 20}" font-size="14" fill="{palette['crimson']}">{star_data['name_pahlavi']}</text>
+    <text x="{cx3}" y="{cy3 - 16}" font-size="11" fill="{palette['crimson']}"
+          font-style="italic">{star_data.get('name_pahlavi', star_name)}</text>
 ''')
                     break
-        
+
         svg_parts.append('  </g>\n')
 
     # Firdar 時間線（底部）
     if show_firdar:
-        firdar_y = outer_y + outer_height + 60  # y=560，增加間距
-        firdar_height = 45
+        firdar_y = outer_y + outer_height + 52
+        firdar_height = 42
         firdar_width = outer_width
-        
+
         firdar_periods = [
-            {"planet": "Sun", "pahlavi": "Khwarshid", "years": 120, "glyph": "☉"},
-            {"planet": "Moon", "pahlavi": "Mah", "years": 108, "glyph": "☽"},
-            {"planet": "Saturn", "pahlavi": "Keyvan", "years": 135, "glyph": "♄"},
-            {"planet": "Jupiter", "pahlavi": "Ohrmazd", "years": 108, "glyph": "♃"},
-            {"planet": "Mars", "pahlavi": "Warhran", "years": 105, "glyph": "♂"},
-            {"planet": "Venus", "pahlavi": "Anahid", "years": 108, "glyph": "♀"},
-            {"planet": "Mercury", "pahlavi": "Tir", "years": 108, "glyph": "☿"},
+            {"planet": "Sun",     "pahlavi": "Khwarshid", "years": 120, "glyph": "☉"},
+            {"planet": "Moon",    "pahlavi": "Māh",       "years": 108, "glyph": "☽"},
+            {"planet": "Saturn",  "pahlavi": "Kēwān",     "years": 135, "glyph": "♄"},
+            {"planet": "Jupiter", "pahlavi": "Ohrmazd",   "years": 108, "glyph": "♃"},
+            {"planet": "Mars",    "pahlavi": "Wahrām",    "years": 105, "glyph": "♂"},
+            {"planet": "Venus",   "pahlavi": "Anāhīd",    "years": 108, "glyph": "♀"},
+            {"planet": "Mercury", "pahlavi": "Tīr",       "years": 108, "glyph": "☿"},
         ]
-        
+
         total_years = sum(p["years"] for p in firdar_periods)
         x_scale_firdar = firdar_width / total_years
         current_x = outer_x
-        
+
         svg_parts.append(f'''
-  <!-- Firdar 生命週期 -->
+  <!-- Firdar 生命週期（Bundahishn 星主時系） -->
   <g>
-    <text x="{width/2}" y="{firdar_y - 10}" font-family="serif" font-size="16"
-          fill="{palette['crimson']}" text-anchor="middle" font-weight="bold">
-      Firdar 生命週期
+    <!-- Firdar 標題 -->
+    <rect x="{outer_x}" y="{firdar_y - 24}" width="{firdar_width}" height="20" rx="4"
+          fill="{palette['crimson']}" opacity="0.12"/>
+    <text x="{base_width/2}" y="{firdar_y - 9}" font-family="serif" font-size="13"
+          fill="{palette['crimson']}" text-anchor="middle" font-weight="bold" letter-spacing="2">
+      Firdar 星主生命週期 · Bundahishn
     </text>
 ''')
-        
+
+        firdar_planet_colors = [
+            palette['gold_leaf'], palette['silver'],   palette['dark_indigo'],
+            palette['turquoise'], palette['burnt_orange'], palette['gold_gradient_start'],
+            palette['turquoise'],
+        ]
+
         for i, period in enumerate(firdar_periods):
             period_width = period["years"] * x_scale_firdar
-            fill_color = palette["gold_leaf"] if i % 2 == 0 else f"rgba(212, 175, 55, 0.3)"
-            
+            fill_color = firdar_planet_colors[i % len(firdar_planet_colors)]
+
             svg_parts.append(f'''
     <rect x="{current_x}" y="{firdar_y}" width="{period_width - 1}" height="{firdar_height}"
-          fill="{fill_color}" stroke="{palette['crimson']}" stroke-width="1" />
-    <text x="{current_x + period_width/2}" y="{firdar_y + firdar_height/2 + 5}"
-          font-family="serif" font-size="12" fill="{palette['dark_indigo']}"
+          fill="{fill_color}" opacity="0.25" stroke="{palette['crimson']}" stroke-width="1" rx="2"/>
+    <text x="{current_x + period_width/2}" y="{firdar_y + 16}"
+          font-family="serif" font-size="14" fill="{palette['dark_indigo']}"
+          text-anchor="middle" font-weight="bold">
+      {period['glyph']}
+    </text>
+    <text x="{current_x + period_width/2}" y="{firdar_y + 34}"
+          font-family="serif" font-size="10" fill="{palette['dark_indigo']}"
           text-anchor="middle">
-      {period['glyph']} {period['years']}
+      {period['years']}yr
     </text>
 ''')
             current_x += period_width
-        
+
         svg_parts.append('  </g>\n')
 
     # 歷史說明
-    disclaimer_y = base_height - 15  # y=635
+    disclaimer_y = base_height - 10
     svg_parts.append(f'''
   <!-- 歷史說明 -->
-  <text x="{width/2}" y="{disclaimer_y}" font-family="serif" font-size="12"
-        fill="{palette['dark_indigo']}" text-anchor="middle" font-style="italic">
-    薩珊傳統占星（Bundahishn、Dorotheus Pahlavi）
+  <text x="{base_width/2}" y="{disclaimer_y}" font-family="serif" font-size="11"
+        fill="{palette['crimson']}" text-anchor="middle" font-style="italic" opacity="0.7">
+    薩珊傳統占星 · Bundahishn · Dorotheus Pahlavi Translation (Pingree 1976)
   </text>
 ''')
 
@@ -352,6 +479,17 @@ def generate_sassanian_svg(
     svg_parts.append('</svg>')
 
     return ''.join(svg_parts)
+
+
+def _sassanian_corner_star(cx: float, cy: float, size: float, fill: str, stroke: str) -> str:
+    """渲染角落裝飾八芒星（內聯 SVG 元素字串）"""
+    s = size
+    return (
+        f'<path d="M {cx},{cy-s} L {cx+s*0.38},{cy-s*0.38} L {cx+s},{cy} L {cx+s*0.38},{cy+s*0.38} '
+        f'L {cx},{cy+s} L {cx-s*0.38},{cy+s*0.38} L {cx-s},{cy} L {cx-s*0.38},{cy-s*0.38} Z" '
+        f'fill="{fill}" stroke="{stroke}" stroke-width="1" opacity="0.75"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="{s*0.28}" fill="{stroke}" opacity="0.6"/>'
+    )
 
 
 def generate_sassanian_chart(
