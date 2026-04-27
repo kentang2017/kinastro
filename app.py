@@ -88,6 +88,7 @@ from astro.western.advanced_bodies import (
     calculate_parans, calculate_heliacal, get_asteroid_aspects,
 )
 from astro.western.uranian import compute_uranian_chart, render_uranian_chart
+from astro.western.predictive_ui import render_predictive_suite
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
 from astro.natal_summary import generate_natal_summary
 from astro.interpretations import (
@@ -1936,7 +1937,7 @@ elif _selected_system == "tab_western":
                 w_params = dict(**_p, sidereal=sidereal_mode)
                 w_chart = compute_western_chart(**w_params)
 
-            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal = st.tabs([
+            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
                 t("western_subtab_natal"),
                 t("western_subtab_transit"),
                 t("western_subtab_return"),
@@ -1948,6 +1949,7 @@ elif _selected_system == "tab_western":
                 t("western_subtab_fixed_stars"),
                 t("western_subtab_parans"),
                 t("western_subtab_heliacal"),
+                t("western_subtab_predictive"),
             ])
 
             with _w_tab_natal:
@@ -2264,6 +2266,25 @@ elif _selected_system == "tab_western":
                         st.info(t("adv_no_results"))
                 else:
                     st.info("Enable 'Show Heliacal Phenomena' in the sidebar.")
+
+            # ── Predictive Suite tab ──────────────────────────────────
+            with _w_tab_predictive:
+                try:
+                    def _w_predictive_ai_callback(prompt_text: str):
+                        """將預測技術 AI 提示傳給現有 AI 分析框架"""
+                        _render_ai_button(
+                            "tab_western", w_chart,
+                            btn_key="western_predictive",
+                            page_content=prompt_text,
+                        )
+                    render_predictive_suite(
+                        w_chart,
+                        lang=get_lang(),
+                        ai_callback=_w_predictive_ai_callback,
+                    )
+                except Exception as _pred_e:
+                    st.error(f"預測技術計算錯誤 / Predictive error: {_pred_e}")
+                    st.exception(_pred_e)
 
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
