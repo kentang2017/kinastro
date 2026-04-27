@@ -151,6 +151,16 @@ PREDICTIVE_CSS = """
 # 輔助渲染函數
 # ============================================================
 
+def _first_two_words(s: str) -> str:
+    """Extract the first two whitespace-separated words from a string.
+
+    Used to match aspect names like 'Conjunction ☌' or 'Trine △' from
+    longer strings such as 'Conjunction ☌ (some details)'.
+    """
+    parts = s.split()
+    return " ".join(parts[:2]) if len(parts) >= 2 else s
+
+
 def _render_technique_badges():
     """渲染技術徽章列表"""
     badges = [
@@ -260,7 +270,7 @@ def _render_secondary_progressions(
                 "Trine △":       "#6EE7B7",
                 "Square □":      "#F97316",
                 "Sextile ⚹":     "#7DD3FC",
-            }.get(asp["aspect"].split()[0] + " " + asp["aspect"].split()[1] if len(asp["aspect"].split()) > 1 else asp["aspect"], "#A78BFA")
+            }.get(_first_two_words(asp["aspect"]), "#A78BFA")
             st.markdown(
                 f'<div class="pred-planet-card">'
                 f'<span style="color:{PLANET_COLORS.get(pp.name, "#A78BFA")};font-weight:700">{pp.name}</span> '
@@ -1093,8 +1103,8 @@ def render_predictive_suite(
                         lang=lang,
                     )
                 try:
-                    # 嘗試確認是否為 PDF
-                    is_pdf = pdf_bytes[:4] == b"%PDF"
+                    # 嘗試確認是否為 PDF（先確認長度再比較 magic bytes）
+                    is_pdf = len(pdf_bytes) >= 4 and pdf_bytes[:4] == b"%PDF"
                 except Exception:
                     is_pdf = False
 

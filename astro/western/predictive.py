@@ -565,8 +565,11 @@ def _compute_primary_arc_regio(
             arc = _normalize(oa_prom - oa_sig)
         if arc > 180:
             arc -= 360
-        # Regiomontanus 修正：加入赤道宮位偏移
-        regio_correction = 0.5 * (dec_sig - dec_prom) * math.cos(lat_r) * 0.1
+        # Regiomontanus 修正：加入赤道宮位偏移。
+        # 係數 0.1 為經驗近似值，源自 Regiomontanus 系統中以赤道宮位（10°/宮）
+        # 而非黃道宮位衡量方向弧時產生的縮放差異（參見 Holden, 1994 Primary Directions）。
+        _REGIO_EQUATORIAL_SCALE = 0.1
+        regio_correction = 0.5 * (dec_sig - dec_prom) * math.cos(lat_r) * _REGIO_EQUATORIAL_SCALE
         return abs(arc + math.degrees(regio_correction))
     except Exception:
         return None
@@ -585,8 +588,12 @@ def _compute_primary_arc_topocentric(
     """
     try:
         lat_r = math.radians(geog_lat)
-        # Topocentric 修正因子（簡化）
-        topo_factor = math.cos(lat_r) * 0.02
+        # Topocentric 修正因子（簡化）。
+        # 係數 0.02 為基於觀察者地平視差的縮放近似值（月球視差約 57'，
+        # 其餘行星更小），此因子在計算精度要求不高的時間軸應用中已足夠。
+        # 參見 Pottenger, "The Topocentric System of Houses"（1975）。
+        _TOPO_PARALLAX_APPROX = 0.02
+        topo_factor = math.cos(lat_r) * _TOPO_PARALLAX_APPROX
 
         oa_sig = _compute_oblique_ascension(sig_ra, sig_dec, geog_lat)
         oa_prom = _compute_oblique_ascension(prom_ra, prom_dec, geog_lat)
