@@ -45,10 +45,10 @@ def get_palace_name(palace_name: str, language: str = 'zh') -> str:
 
 def render_tieban_chart_svg(result: TieBanResult, 
                              language: str = 'zh',
-                             width: int = 500,
-                             height: int = 600) -> str:
+                             width: int = 520,
+                             height: int = 740) -> str:
     """
-    渲染鐵板神數 SVG 星盤圖（響應式設計）
+    渲染鐵板神數 SVG 星盤圖（響應式設計，手機優先）
     
     Parameters
     ----------
@@ -66,329 +66,303 @@ def render_tieban_chart_svg(result: TieBanResult,
     str
         SVG XML 字符串（包含響應式 HTML 容器）
     """
-    # 顏色配置（鐵板神數傳統配色：橙紅 #FF6B35）
+    # 顏色配置（鐵板神數傳統配色）
     colors = {
         'bg': '#1a1a2e',
+        'bg_card': '#16213e',
         'outer_square': '#FF6B35',
         'inner_diamond': '#FFD93D',
         'text_primary': '#FFFFFF',
-        'text_secondary': '#A0A0A0',
+        'text_secondary': '#9090b0',
         'accent': '#6BCB77',
         'palace_bg': '#16213e',
         'highlight': '#E94560',
+        'gold': '#C9A84C',
     }
-    
-    # 中心點
-    cx = width // 2
-    cy = height // 2 - 50
-    
-    # 外層正方形（300x300）
-    square_size = 300
-    outer_x = cx - square_size // 2
-    outer_y = cy - square_size // 2
-    
-    # 內層菱形（150x150）
-    diamond_size = 150
-    diamond_x = cx - diamond_size // 2
-    diamond_y = cy - diamond_size // 2
-    
-    # 計算 12 宮位位置（環繞外層正方形）
-    # 3 上、3 左、3 下、3 右
-    palace_positions = _calculate_palace_positions(result.ming_palace, outer_x, outer_y, square_size)
-    
-    # SVG 內容
+
+    # 版面常數（手機優先，確保宮位不超出 viewBox）
+    cx = width // 2           # 260
+    cy = 295                  # 垂直中心稍偏上，留空間給底部資訊
+
+    square_size = 254         # 外框正方形邊長
+    palace_w = 80             # 宮位卡片寬
+    palace_h = 56             # 宮位卡片高
+    palace_gap = 10           # 宮位卡片與正方形邊框的間距
+
+    outer_x = cx - square_size // 2   # 133
+    outer_y = cy - square_size // 2   # 168
+
+    # 底部資訊卡起始 Y（確保在宮位下方，不重疊）
+    info_y = outer_y + square_size + palace_gap + palace_h + 16   # ≈ 510
+
+    # 菱形半對角線（內層裝飾菱形）
+    diamond_half = 78
+
+    # 計算 12 宮位位置
+    palace_positions = _calculate_palace_positions(
+        result.ming_palace, outer_x, outer_y, square_size,
+        palace_w, palace_h
+    )
+
     svg_parts = []
-    
-    # SVG 頭
-    title_zh = "鐵板神數"
-    title_en = "Iron Plate Divine Numbers"
-    subtitle = "Tie Ban Shen Shu · Iron Plate Divine Numbers"
-    
+
+    # ── SVG 開頭 ──────────────────────────────────────────────────────────────
     svg_parts.append(f'''<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" 
+<svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 {width} {height}"
      preserveAspectRatio="xMidYMid meet"
-     style="width: 100%; height: auto; max-width: 100%;">
-    
-    <!-- 背景 -->
-    <rect width="{width}" height="{height}" fill="{colors['bg']}"/>
-    
-    <!-- 標題 -->
-    <text x="{cx}" y="40" text-anchor="middle" 
-          font-size="24" font-weight="bold" fill="{colors['text_primary']}">
-        {title_zh if language == 'zh' else title_en}
-    </text>
-    <text x="{cx}" y="65" text-anchor="middle" 
-          font-size="14" fill="{colors['text_secondary']}">
-        {subtitle}
-    </text>
+     style="width:100%;height:auto;max-width:100%;display:block;">
+
+  <!-- 背景 -->
+  <rect width="{width}" height="{height}" fill="{colors['bg']}"/>
+
+  <!-- 頂部裝飾光帶 -->
+  <rect x="0" y="0" width="{width}" height="3"
+        fill="url(#topGlow)"/>
+
+  <!-- 漸層定義 -->
+  <defs>
+    <linearGradient id="topGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FFD93D" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="numberGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#E94560"/>
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 標題區 -->
+  <text x="{cx}" y="30" text-anchor="middle"
+        font-size="22" font-weight="bold" fill="{colors['text_primary']}"
+        letter-spacing="4">
+    {"鐵板神數" if language == 'zh' else "Iron Plate Divine Numbers"}
+  </text>
+  <text x="{cx}" y="50" text-anchor="middle"
+        font-size="11" fill="{colors['text_secondary']}" letter-spacing="1">
+    Tie Ban Shen Shu · Iron Plate Divine Numbers
+  </text>
+  <!-- 標題分隔線 -->
+  <line x1="{cx - 100}" y1="58" x2="{cx + 100}" y2="58"
+        stroke="{colors['outer_square']}" stroke-width="0.8" opacity="0.5"/>
 ''')
-    
-    # 外層正方形
+
+    # ── 外層正方形 ────────────────────────────────────────────────────────────
     svg_parts.append(f'''
-    <!-- 外層正方形 -->
-    <rect x="{outer_x}" y="{outer_y}" 
-          width="{square_size}" height="{square_size}" 
-          fill="none" stroke="{colors['outer_square']}" stroke-width="3"/>
+  <!-- 外層正方形 -->
+  <rect x="{outer_x}" y="{outer_y}"
+        width="{square_size}" height="{square_size}"
+        fill="rgba(22,33,62,0.6)" stroke="{colors['outer_square']}" stroke-width="2.5" rx="2"/>
 ''')
-    
-    # 內層菱形（旋轉 45 度的正方形）
-    diamond_points = f"{cx},{diamond_y - diamond_size//2} {diamond_x + diamond_size//2},{cy} {cx},{diamond_y + diamond_size//2} {diamond_x - diamond_size//2},{cy}"
+
+    # ── 對角線 ────────────────────────────────────────────────────────────────
     svg_parts.append(f'''
-    <!-- 內層菱形 -->
-    <polygon points="{diamond_points}" 
-             fill="none" stroke="{colors['inner_diamond']}" stroke-width="2"/>
+  <!-- 對角線 -->
+  <line x1="{outer_x}" y1="{outer_y}" x2="{outer_x + square_size}" y2="{outer_y + square_size}"
+        stroke="{colors['text_secondary']}" stroke-width="1" opacity="0.35"/>
+  <line x1="{outer_x + square_size}" y1="{outer_y}" x2="{outer_x}" y2="{outer_y + square_size}"
+        stroke="{colors['text_secondary']}" stroke-width="1" opacity="0.35"/>
 ''')
-    
-    # 對角線（連接外層正方形四角）
+
+    # ── 內層菱形 ──────────────────────────────────────────────────────────────
     svg_parts.append(f'''
-    <!-- 對角線 -->
-    <line x1="{outer_x}" y1="{outer_y}" x2="{outer_x + square_size}" y2="{outer_y + square_size}" 
-          stroke="{colors['text_secondary']}" stroke-width="1" opacity="0.5"/>
-    <line x1="{outer_x + square_size}" y1="{outer_y}" x2="{outer_x}" y2="{outer_y + square_size}" 
-          stroke="{colors['text_secondary']}" stroke-width="1" opacity="0.5"/>
+  <!-- 內層菱形 -->
+  <polygon points="{cx},{cy - diamond_half} {cx + diamond_half},{cy} {cx},{cy + diamond_half} {cx - diamond_half},{cy}"
+           fill="none" stroke="{colors['inner_diamond']}" stroke-width="1.8" opacity="0.85"/>
+  <!-- 菱形中心點 -->
+  <circle cx="{cx}" cy="{cy}" r="4" fill="{colors['inner_diamond']}" opacity="0.6"/>
 ''')
-    
-    # 12 宮位
-    svg_parts.append('''
-    <!-- 12 宮位 -->
-''')
-    
+
+    # ── 12 宮位卡片 ───────────────────────────────────────────────────────────
+    svg_parts.append('  <!-- 12 宮位 -->\n')
+
     for i, (palace_name, branch) in enumerate(result.palaces.items()):
         pos = palace_positions[i]
-        is_ming_palace = (palace_name == '命宮')
-        
-        # 宮位背景
-        bg_color = colors['highlight'] if is_ming_palace else colors['palace_bg']
-        text_color = colors['bg'] if is_ming_palace else colors['text_primary']
-        
-        # 獲取該宮位的條文
+        is_ming = (palace_name == '命宮')
+
+        border_color = colors['highlight'] if is_ming else colors['outer_square']
+        bg_fill = 'rgba(233,69,96,0.18)' if is_ming else 'rgba(22,33,62,0.9)'
+        name_color = '#FF9999' if is_ming else colors['text_secondary']
+        branch_color = '#FF8888' if is_ming else colors['inner_diamond']
+
         palace_verse_info = result.palace_verses.get(palace_name, {})
         verse_text = palace_verse_info.get('verse', '')
         verse_number = palace_verse_info.get('number', '')
-        # 截斷條文（最多 10 字）
-        verse_preview = verse_text[:10] + "…" if len(verse_text) > 10 else verse_text
-        
-        # 宮位名稱（支持英文）
+        verse_preview = verse_text[:9] + "…" if len(verse_text) > 9 else verse_text
+
         palace_display_name = get_palace_name(palace_name, language)
-        
-        svg_parts.append(f'''
-    <!-- {palace_name} -->
-    <rect x="{pos['x']}" y="{pos['y']}" width="80" height="50" 
-          fill="{bg_color}" stroke="{colors['outer_square']}" stroke-width="1" rx="5"/>
-    <text x="{pos['x'] + 40}" y="{pos['y'] + 14}" text-anchor="middle" 
-          font-size="9" font-weight="bold" fill="{text_color}">
-        {palace_display_name}
-    </text>
-    <text x="{pos['x'] + 40}" y="{pos['y'] + 28}" text-anchor="middle" 
-          font-size="13" font-weight="bold" fill="{colors['inner_diamond']}">
-        {branch}
-    </text>
-    <text x="{pos['x'] + 40}" y="{pos['y'] + 40}" text-anchor="middle" 
-          font-size="7" fill="{colors['text_secondary']}">
-        {verse_preview}
-    </text>
-    <text x="{pos['x'] + 5}" y="{pos['y'] + 48}" text-anchor="start" 
-          font-size="6" fill="{colors['highlight']}">
-        #{verse_number}
-    </text>
+        px, py = pos['x'], pos['y']
+
+        svg_parts.append(f'''  <!-- {palace_name} -->
+  <rect x="{px}" y="{py}" width="{palace_w}" height="{palace_h}"
+        fill="{bg_fill}" stroke="{border_color}" stroke-width="{2 if is_ming else 1}" rx="6"/>
+  <text x="{px + palace_w // 2}" y="{py + 13}" text-anchor="middle"
+        font-size="9" font-weight="bold" fill="{name_color}">{palace_display_name}</text>
+  <text x="{px + palace_w // 2}" y="{py + 30}" text-anchor="middle"
+        font-size="16" font-weight="bold" fill="{branch_color}" filter="url(#softGlow)">{branch}</text>
+  <text x="{px + palace_w // 2}" y="{py + 43}" text-anchor="middle"
+        font-size="7" fill="{colors['text_secondary']}">{verse_preview}</text>
+  <text x="{px + 4}" y="{py + 53}" text-anchor="start"
+        font-size="6" fill="{colors['highlight']}" opacity="0.8">#{verse_number}</text>
 ''')
-    
-    # 中心信息區
-    info_y = cy + square_size // 2 + 30
+
+    # ── 命宮 / 身宮 / 五行局 標註 ────────────────────────────────────────────
+    label_y = info_y - 14
     svg_parts.append(f'''
-    <!-- 中心信息區 -->
-    <rect x="{cx - 120}" y="{info_y}" width="240" height="120" 
-          fill="{colors['palace_bg']}" stroke="{colors['accent']}" stroke-width="2" rx="10"/>
-    
-    <!-- 鐵板神數號碼 -->
-    <text x="{cx}" y="{info_y + 25}" text-anchor="middle" 
-          font-size="14" fill="{colors['text_secondary']}">
-        鐵板神數號碼
-    </text>
-    <text x="{cx}" y="{info_y + 50}" text-anchor="middle" 
-          font-size="24" font-weight="bold" fill="{colors['highlight']}">
-        {result.tieban_number}
-    </text>
-    
-    <!-- 刻分 -->
-    <text x="{cx - 60}" y="{info_y + 80}" text-anchor="middle" 
-          font-size="12" fill="{colors['text_primary']}">
-        刻：{result.ke}
-    </text>
-    <text x="{cx + 60}" y="{info_y + 80}" text-anchor="middle" 
-          font-size="12" fill="{colors['text_primary']}">
-        分：{result.fen}
-    </text>
-    
-    <!-- 河洛數 -->
-    <text x="{cx}" y="{info_y + 105}" text-anchor="middle" 
-          font-size="12" fill="{colors['text_secondary']}">
-        河洛數：{result.he_luo_number}
-    </text>
+  <!-- 命宮身宮五行局標籤列 -->
+  <text x="{cx - square_size // 2 + 10}" y="{label_y}" text-anchor="start"
+        font-size="11" fill="{colors['accent']}">命：{result.ming_palace}</text>
+  <text x="{cx}" y="{label_y}" text-anchor="middle"
+        font-size="11" fill="{colors['gold']}">{result.wuxing_ju}</text>
+  <text x="{cx + square_size // 2 - 10}" y="{label_y}" text-anchor="end"
+        font-size="11" fill="{colors['accent']}">身：{result.shen_palace}</text>
 ''')
-    
-    # 命宮身宮信息
+
+    # ── 底部資訊卡 ────────────────────────────────────────────────────────────
+    card_w = width - 40
+    card_x = 20
+    card_h = 110
     svg_parts.append(f'''
-    <!-- 命宮身宮 -->
-    <text x="{cx - 150}" y="{info_y - 15}" text-anchor="middle" 
-          font-size="12" fill="{colors['accent']}">
-        命宮：{result.ming_palace}
-    </text>
-    <text x="{cx + 150}" y="{info_y - 15}" text-anchor="middle" 
-          font-size="12" fill="{colors['accent']}">
-        身宮：{result.shen_palace}
-    </text>
+  <!-- 底部資訊卡 -->
+  <rect x="{card_x}" y="{info_y}" width="{card_w}" height="{card_h}"
+        fill="{colors['bg_card']}" stroke="{colors['accent']}" stroke-width="1.5" rx="12"/>
+
+  <!-- 神數號碼標籤 -->
+  <text x="{cx}" y="{info_y + 22}" text-anchor="middle"
+        font-size="11" fill="{colors['text_secondary']}" letter-spacing="1">
+    {"鐵板神數號碼" if language == 'zh' else "Divine Number"}
+  </text>
+  <!-- 神數號碼大字 -->
+  <text x="{cx}" y="{info_y + 54}" text-anchor="middle"
+        font-size="30" font-weight="bold" fill="url(#numberGlow)"
+        filter="url(#softGlow)" letter-spacing="4">
+    {result.tieban_number}
+  </text>
+
+  <!-- 刻 / 分 / 河洛數 三欄 -->
+  <line x1="{cx - card_w // 2 + 20}" y1="{info_y + 66}" x2="{cx + card_w // 2 - 20}" y2="{info_y + 66}"
+        stroke="{colors['accent']}" stroke-width="0.6" opacity="0.5"/>
+
+  <text x="{cx - 100}" y="{info_y + 83}" text-anchor="middle"
+        font-size="11" fill="{colors['text_primary']}">{"刻" if language == "zh" else "Ke"}</text>
+  <text x="{cx - 100}" y="{info_y + 100}" text-anchor="middle"
+        font-size="16" font-weight="bold" fill="{colors['inner_diamond']}">{result.ke}</text>
+
+  <text x="{cx}" y="{info_y + 83}" text-anchor="middle"
+        font-size="11" fill="{colors['text_primary']}">{"分" if language == "zh" else "Fen"}</text>
+  <text x="{cx}" y="{info_y + 100}" text-anchor="middle"
+        font-size="16" font-weight="bold" fill="{colors['inner_diamond']}">{result.fen}</text>
+
+  <text x="{cx + 100}" y="{info_y + 83}" text-anchor="middle"
+        font-size="11" fill="{colors['text_primary']}">{"河洛數" if language == "zh" else "HeLuo"}</text>
+  <text x="{cx + 100}" y="{info_y + 100}" text-anchor="middle"
+        font-size="16" font-weight="bold" fill="{colors['accent']}">{result.he_luo_number}</text>
 ''')
-    
-    # 五行局
-    svg_parts.append(f'''
-    <!-- 五行局 -->
-    <text x="{cx}" y="{info_y - 15}" text-anchor="middle" 
-          font-size="12" fill="{colors['inner_diamond']}">
-        {result.wuxing_ju}
-    </text>
-''')
-    
-    # 條文預覽（截斷）
-    verse_preview = result.verse[:40] + "..." if len(result.verse) > 40 else result.verse
-    verse_y = info_y + 160
-    
-    # 條文分類和標籤
+
+    # ── 條文預覽 ──────────────────────────────────────────────────────────────
+    verse_preview_full = result.verse[:44] + "…" if len(result.verse) > 44 else result.verse
+    verse_y = info_y + card_h + 18
     category = result.verse_data.get('category', '') if isinstance(result.verse_data, dict) else ''
     tags = result.verse_data.get('tags', []) if isinstance(result.verse_data, dict) else []
-    
+
     svg_parts.append(f'''
-    <!-- 條文預覽 -->
-    <text x="{cx}" y="{verse_y}" text-anchor="middle" 
-          font-size="11" fill="{colors['text_secondary']}">
-        {verse_preview}
-    </text>
+  <!-- 條文預覽 -->
+  <text x="{cx}" y="{verse_y}" text-anchor="middle"
+        font-size="11" fill="{colors['text_secondary']}">{verse_preview_full}</text>
 ''')
-    
-    # 條文分類
     if category:
-        svg_parts.append(f'''
-    <text x="{cx}" y="{verse_y + 18}" text-anchor="middle" 
-          font-size="10" fill="{colors['accent']}">
-        【{category}】
-    </text>
+        svg_parts.append(f'''  <text x="{cx}" y="{verse_y + 17}" text-anchor="middle"
+        font-size="10" fill="{colors['accent']}">【{category}】</text>
 ''')
-    
-    # 標籤（最多顯示 3 個）
     if tags:
-        tags_text = " · ".join(tags[:3])
-        svg_parts.append(f'''
-    <text x="{cx}" y="{verse_y + 32}" text-anchor="middle" 
-          font-size="9" fill="{colors['text_secondary']}">
-        {tags_text}
-    </text>
+        svg_parts.append(f'''  <text x="{cx}" y="{verse_y + 31}" text-anchor="middle"
+        font-size="9" fill="{colors['text_secondary']}">{" · ".join(tags[:3])}</text>
 ''')
-    
-    # SVG 尾
-    svg_parts.append('''
-</svg>
-''')
-    
+
+    svg_parts.append('</svg>\n')
     svg_content = ''.join(svg_parts)
-    
-    # 響應式 HTML 容器包裝（帶 CSS 樣式）
-    html = f'''
-<style>
-.tieban-chart-container {{
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 10px;
-}}
 
-.tieban-chart-container svg {{
-    width: 100%;
-    height: auto;
-    max-width: 100%;
+    # ── 響應式 HTML 容器 ──────────────────────────────────────────────────────
+    html = f'''<style>
+.tieban-wrap {{
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 4px;
+  box-sizing: border-box;
 }}
-
-/* 移動端適配 */
-@media (max-width: 768px) {{
-    .tieban-chart-container {{
-        max-width: 100%;
-        padding: 5px;
-    }}
+.tieban-wrap svg {{
+  width: 100%;
+  height: auto;
+  display: block;
 }}
-
-/* 桌面端適配 */
-@media (min-width: 769px) {{
-    .tieban-chart-container {{
-        max-width: 600px;
-    }}
+@media (max-width: 480px) {{
+  .tieban-wrap {{ padding: 2px; }}
 }}
 </style>
-
-<div class="tieban-chart-container">
-    <div style="position: relative; width: 100%; height: auto; aspect-ratio: 500/600;">
-        {svg_content}
-    </div>
-</div>
+<div class="tieban-wrap">{svg_content}</div>
 '''
-    
     return html
 
 
-def _calculate_palace_positions(ming_palace_branch: str, 
-                                 outer_x: int, 
-                                 outer_y: int, 
-                                 square_size: int) -> list:
+def _calculate_palace_positions(ming_palace_branch: str,
+                                 outer_x: int,
+                                 outer_y: int,
+                                 square_size: int,
+                                 palace_width: int = 80,
+                                 palace_height: int = 56) -> list:
     """
-    計算 12 宮位位置（環繞外層正方形）
-    
+    計算 12 宮位位置（環繞外層正方形，手機優先）
+
     排列方式：
-    - 上方 3 宮（從右到左：父母、福德、田宅）
-    - 左方 3 宮（從上到下：官祿、交友、遷移）
-    - 下方 3 宮（從左到右：疾厄、財帛、子女）
-    - 右方 3 宮（從下到上：夫妻、兄弟、命宮）
-    
+    - 上方 3 宮（從右到左）
+    - 左方 3 宮（從上到下）
+    - 下方 3 宮（從左到右）
+    - 右方 3 宮（從下到上）
+
     Returns
     -------
     list
-        [{x, y}, ...] 12 個位置
+        [{'x': int, 'y': int}, ...] 12 個位置
     """
     positions = []
-    
-    # 宮位間距
-    gap = square_size // 3
-    palace_width = 80
-    palace_height = 50
-    
+    gap = square_size // 3          # 每段間距
+    pad = 8                          # 宮位卡片與正方形邊框的間距
+
     # 上方 3 宮（從右到左）
     for i in range(3):
-        x = outer_x + square_size - palace_width - (i * gap) + gap // 2 - 10
-        y = outer_y - palace_height - 10
+        x = outer_x + square_size - palace_width - (i * gap) + gap // 2 - palace_width // 6
+        y = outer_y - palace_height - pad
         positions.append({'x': x, 'y': y})
-    
+
     # 左方 3 宮（從上到下）
     for i in range(3):
-        x = outer_x - palace_width - 10
+        x = outer_x - palace_width - pad
         y = outer_y + (i * gap) + gap // 2 - palace_height // 2
         positions.append({'x': x, 'y': y})
-    
+
     # 下方 3 宮（從左到右）
     for i in range(3):
-        x = outer_x + (i * gap) + gap // 2 - palace_width // 2 - 10
-        y = outer_y + square_size + 10
+        x = outer_x + (i * gap) + gap // 2 - palace_width // 2
+        y = outer_y + square_size + pad
         positions.append({'x': x, 'y': y})
-    
+
     # 右方 3 宮（從下到上）
     for i in range(3):
-        x = outer_x + square_size + 10
-        y = outer_y + square_size - palace_height - (i * gap) + gap // 2 - 10
+        x = outer_x + square_size + pad
+        y = outer_y + square_size - palace_height - (i * gap) + gap // 2 - palace_height // 6
         positions.append({'x': x, 'y': y})
-    
-    # 根據命宮位置調整順序（使命宮在右方第一位）
+
+    # 根據命宮地支旋轉位置列表
     if ming_palace_branch:
         ming_idx = EARTHLY_BRANCHES.index(ming_palace_branch)
-        # 旋轉位置列表使命宮對應正確
         positions = positions[ming_idx:] + positions[:ming_idx]
-    
+
     return positions
 
 
