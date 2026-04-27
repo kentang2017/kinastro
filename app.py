@@ -2373,7 +2373,7 @@ elif _selected_system == "tab_sabian":
                     {_cards_html}
                 </div>
                 <p style="text-align:center;font-size:10px;opacity:0.5;margin-top:2px;">
-                    ← 左右滑動查看所有行星 →
+                    {t('sabian_scroll_hint')}
                 </p>
                 """
                 st.components.v1.html(_scroll_component, height=360, scrolling=False)
@@ -2381,7 +2381,7 @@ elif _selected_system == "tab_sabian":
                 st.divider()
 
                 # Detail section: use tabs for each planet (compact vertical space)
-                _tab_labels = [f"{_planet_glyphs.get(n,'')}{n}" for n, _ in _sabian_data_list]
+                _tab_labels = [f"{_planet_glyphs.get(n, '')} {n}" for n, _ in _sabian_data_list]
                 _tabs = st.tabs(_tab_labels)
                 for _tab, (_pname, _sabian) in zip(_tabs, _sabian_data_list):
                     with _tab:
