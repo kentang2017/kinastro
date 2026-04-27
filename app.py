@@ -2324,31 +2324,81 @@ elif _selected_system == "tab_sabian":
                     "midheaven": w_chart.midheaven,
                 }
                 
-                # Display in two columns
+                # Pre-fetch all Sabian data
                 _sabian_lang = st.session_state.get("lang", "zh")
-                for _i, _pname in enumerate(_sabian_planets):
-                    _sabian = get_sabian_for_planet(_chart_data, _pname)
-                    if _sabian:
-                        _col1, _col2 = st.columns([2, 3])
-                        with _col2:
-                            _svg = render_sabian_svg(
-                                _sabian['planet_longitude'],
-                                size=340,
-                                language=_sabian_lang,
-                            )
-                            # Wrap in a div so the SVG scales to column width
-                            st.components.v1.html(
-                                f'<div style="width:100%">{_svg}</div>',
-                                height=460,
-                                scrolling=False,
-                            )
-                        with _col1:
-                            st.markdown(f"### {_pname}")
-                            st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
-                            st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
-                            st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
-                            st.markdown(f"*{t('sabian_interpretation_label')}:* {_sabian['interpretation']}")
-                        st.divider()
+                _sabian_data_list = []
+                for _pname in _sabian_planets:
+                    try:
+                        _sabian = get_sabian_for_planet(_chart_data, _pname)
+                        if _sabian:
+                            _sabian_data_list.append((_pname, _sabian))
+                    except Exception:
+                        pass
+
+                # Build a horizontal-scroll card strip at the top
+                _planet_glyphs = {
+                    "Sun": "☉", "Moon": "☽", "Mercury": "☿", "Venus": "♀",
+                    "Mars": "♂", "Jupiter": "♃", "Saturn": "♄",
+                    "Ascendant": "AC", "Midheaven": "MC",
+                }
+                _cards_html = ""
+                for _pname, _sabian in _sabian_data_list:
+                    _svg = render_sabian_svg(
+                        _sabian['planet_longitude'],
+                        size=220,
+                        language=_sabian_lang,
+                    )
+                    _glyph = _planet_glyphs.get(_pname, _pname[:2])
+                    _cards_html += f"""
+                    <div style="
+                        display:inline-block;
+                        vertical-align:top;
+                        width:220px;
+                        margin-right:12px;
+                        flex-shrink:0;
+                    ">
+                        <div style="text-align:center;font-size:11px;font-weight:600;
+                                    margin-bottom:4px;opacity:0.7;">{_glyph} {_pname}</div>
+                        {_svg}
+                    </div>"""
+
+                _scroll_component = f"""
+                <div style="
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    white-space: nowrap;
+                    padding: 8px 4px 12px 4px;
+                    scroll-snap-type: x mandatory;
+                ">
+                    {_cards_html}
+                </div>
+                <p style="text-align:center;font-size:10px;opacity:0.5;margin-top:2px;">
+                    {t('sabian_scroll_hint')}
+                </p>
+                """
+                st.components.v1.html(_scroll_component, height=360, scrolling=False)
+
+                st.divider()
+
+                # Detail section: use tabs for each planet (compact vertical space)
+                _tab_labels = [f"{_planet_glyphs.get(n, '')} {n}" for n, _ in _sabian_data_list]
+                _tabs = st.tabs(_tab_labels)
+                for _tab, (_pname, _sabian) in zip(_tabs, _sabian_data_list):
+                    with _tab:
+                        _svg = render_sabian_svg(
+                            _sabian['planet_longitude'],
+                            size=300,
+                            language=_sabian_lang,
+                        )
+                        st.components.v1.html(
+                            f'<div style="width:100%;max-width:320px;margin:0 auto">{_svg}</div>',
+                            height=380,
+                            scrolling=False,
+                        )
+                        st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
+                        st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
+                        st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
+                        st.markdown(f"*{t('sabian_interpretation_label')}:* {_sabian['interpretation']}")
                 
                 # Optional: Show all 360 symbols in an expander
                 with st.expander(t("sabian_show_all")):

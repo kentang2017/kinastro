@@ -1187,6 +1187,11 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "📜 查看所有 360 个符号",
         "en": "📜 View All 360 Symbols",
     },
+    "sabian_scroll_hint": {
+        "zh": "← 左右滑動查看所有行星 →",
+        "zh_cn": "← 左右滑动查看所有行星 →",
+        "en": "← Swipe to see all planets →",
+    },
     "sabian_system_label": {
         "zh": "🔮 薩比恩符號",
         "zh_cn": "🔮 萨比恩符号",
