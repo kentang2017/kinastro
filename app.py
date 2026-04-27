@@ -3976,8 +3976,14 @@ elif _selected_system == "tab_khmer":
                     current_age=_age,
                     language=st.session_state.get("lang", "zh")
                 )
-            # Render SVG charts
-            st.markdown(render_khmer_chart(_khmer_chart, language=st.session_state.get("lang", "zh")), unsafe_allow_html=True)
+            # Render chart via components.v1.html for full CSS/flexbox support
+            _khmer_lang = st.session_state.get("lang", "zh")
+            _khmer_html = render_khmer_chart(_khmer_chart, language=_khmer_lang)
+            st.components.v1.html(
+                f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
+                height=1050,
+                scrolling=False,
+            )
             # AI interpretation button
             _render_ai_button("tab_khmer", _khmer_chart, btn_key="khmer")
         except Exception as _e:
