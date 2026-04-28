@@ -41,12 +41,19 @@ _NUM_TO_ZH: Dict[str, str] = {"1": "一", "2": "二", "3": "三"}
 # 首序號（1-80）→ 字典鍵的有序列表
 _SORTED_KEYS: List[int] = sorted(_TAIXUAN_DICT.keys()) if _TAIXUAN_DICT else []
 
+# 太玄計算常數
+DAYS_PER_YEAR: float = 365.25          # 儒略年天數
+TOTAL_SHOU_COUNT: int = 80             # 太玄八十首總數
+ZHAN_COUNT: int = 9                    # 每首九贊
+HOURS_PER_DAY: int = 24                # 每日二十四小時
+
 # 四時段定義（小時範圍）
+# 注意：夜中（21, 3）為跨午夜段，_hour_to_sishi 使用 else 語句處理
 SISHI_MAP: Dict[str, Tuple[int, int]] = {
     "旦": (3, 9),       # 03:00–08:59
     "日中": (9, 15),    # 09:00–14:59
     "夕": (15, 21),     # 15:00–20:59
-    "夜中": (21, 3),    # 21:00–02:59（跨午夜）
+    "夜中": (21, 3),    # 21:00–02:59（跨午夜，實際以 else 判斷）
 }
 
 # 四時段 → 贊索引範圍（對應 ZHAN_NAMES，0-based）
@@ -104,9 +111,10 @@ def _julian_day(year: int, month: int, day: int) -> float:
 
 
 def _winter_solstice_jd(year: int) -> float:
-    """估算某年冬至（12月）的儒略日（近似值）"""
-    # 冬至大約在 12月21-22日
-    # 使用簡化計算：冬至 ≈ 12月22日
+    """估算某年冬至（12月）的儒略日（近似值）
+    
+    冬至通常落在 12月21-22日，此處取12月22日為近似值。
+    """
     return _julian_day(year, 12, 22)
 
 
@@ -292,9 +300,9 @@ class TaiXuanCalculator:
         if days_since_ws < 0:
             ws_jd = _winter_solstice_jd(ws_year - 1)
             days_since_ws = birth_jd - ws_jd
-        # 4. 每首覆蓋天數 ≈ 365.25/80 ≈ 4.566 天
-        days_per_shou = 365.25 / 80.0
-        serial = int(days_since_ws / days_per_shou) % 80 + 1
+        # 4. 每首覆蓋天數 ≈ DAYS_PER_YEAR / TOTAL_SHOU_COUNT ≈ 4.566 天
+        days_per_shou = DAYS_PER_YEAR / TOTAL_SHOU_COUNT
+        serial = int(days_since_ws / days_per_shou) % TOTAL_SHOU_COUNT + 1
         # 5. 四時段 & 贊
         sishi = _hour_to_sishi(self.hour)
         zhan_idx = self._pick_zhan_by_hour(self.hour)
@@ -361,10 +369,9 @@ class TaiXuanCalculator:
     # ── 輔助構建方法 ────────────────────────────────────────
 
     def _pick_zhan_by_hour(self, hour: int) -> int:
-        """根據小時選擇九贊索引（0-based）"""
-        # 將 24 小時均分為 9 段
-        zhan_idx = (hour * 9) // 24
-        return min(zhan_idx, 8)
+        """根據小時選擇九贊索引（0-based），將 24 小時均分為 9 段"""
+        zhan_idx = (hour * ZHAN_COUNT) // HOURS_PER_DAY
+        return min(zhan_idx, ZHAN_COUNT - 1)
 
     def _build_shou(self, serial: int, sishi: str, zhan_idx: int) -> TaiXuanShou:
         """根據序號構建 TaiXuanShou"""
@@ -426,7 +433,7 @@ class TaiXuanCalculator:
         # 行年大限：每年以流年干支起首，從本命首起順推
         for offset in range(0, 81):
             year = birth_year + offset
-            serial = (natal_serial - 1 + offset) % 80 + 1
+            serial = (natal_serial - 1 + offset) % TOTAL_SHOU_COUNT + 1
             key = _serial_to_key(serial)
             name = _key_to_name(key) if key else "——"
             gua_title = "——"

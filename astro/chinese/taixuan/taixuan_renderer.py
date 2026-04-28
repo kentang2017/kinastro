@@ -16,6 +16,7 @@ from .taixuan_calculator import (
     TaiXuanShou,
     ZHAN_NAMES,
     TWENTY_EIGHT_MANSIONS,
+    TOTAL_SHOU_COUNT,
     _SORTED_KEYS,
     _TAIXUAN_DICT,
     _key_to_name,
@@ -32,6 +33,10 @@ _CYAN_DIM = "rgba(56,189,248,0.10)"
 _RED = "#F87171"
 _RED_DIM = "rgba(248,113,113,0.10)"
 _BG_DARK = "rgba(10,10,20,0.95)"
+
+# 顯示常數
+_MAX_ANNUAL_DISPLAY_YEARS: int = 18    # 聯動表最多顯示的行年數
+_MAX_TEXT_DISPLAY_LENGTH: int = 30     # 完整表格卦辭截斷長度
 
 # 方位顏色（三方：天/地/人）
 _FANG_COLORS = {
@@ -539,7 +544,7 @@ def _render_linkage_table(result: TaiXuanResult, is_en: bool) -> None:
         unsafe_allow_html=True,
     )
     rows = []
-    for d in result.annual_shou_list[:18]:   # 顯示前 18 年
+    for d in result.annual_shou_list[:_MAX_ANNUAL_DISPLAY_YEARS]:   # 顯示前 N 年
         rows.append({
             "年份" if not is_en else "Year": d["年份"],
             "年干支" if not is_en else "GanZhi": d["年干支"],
@@ -560,7 +565,7 @@ def _render_full_table(all_table: List[Dict], active_serial: int, is_en: bool) -
             "序" if not is_en else "#": d["序"],
             "首名" if not is_en else "Name": d["首名"],
             "卦名" if not is_en else "Gua": d["卦名"],
-            "卦辭" if not is_en else "Text": d["卦辭"][:30] + "…" if len(d["卦辭"]) > 30 else d["卦辭"],
+            "卦辭" if not is_en else "Text": d["卦辭"][:_MAX_TEXT_DISPLAY_LENGTH] + "…" if len(d["卦辭"]) > _MAX_TEXT_DISPLAY_LENGTH else d["卦辭"],
             "二十八宿" if not is_en else "Mansion": d["二十八宿"],
             "七政" if not is_en else "Planet": d["七政"],
         })
