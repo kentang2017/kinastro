@@ -3125,6 +3125,32 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "分類",
         "en": "Category",
     },
+
+    # ── 太玄數占星 ──────────────────────────────────────────
+    "tab_taixuan": {
+        "zh": "☰ 太玄數占星",
+        "en": "☰ Tai Xuan Shu",
+    },
+    "sys_hint_taixuan": {
+        "zh": "揚雄《太玄》八十首，干支七政聯動",
+        "en": "Yang Xiong's Tai Xuan Jing, 80 Shou linked to GanZhi & Seven Luminaries",
+    },
+    "desc_taixuan": {
+        "zh": "☰ **太玄數占星** — 源自西漢揚雄《太玄經》，仿《易》三才三分取象，八十一首×九贊，配二十八宿、七政四餘，為中國最獨特的三進制宇宙哲學體系。支援本命排盤與即時問卜雙模式。",
+        "en": "☰ **Tai Xuan Shu Astrology** — Based on Yang Xiong's Tai Xuan Jing (Han Dynasty), modeled after the I Ching with a ternary cosmological system. 81 Shou × 9 Zhan, aligned with 28 Mansions and Seven Luminaries. Supports natal charting and real-time divination.",
+    },
+    "spinner_taixuan": {
+        "zh": "計算太玄命宮首……",
+        "en": "Calculating Tai Xuan Shou…",
+    },
+    "taixuan_natal_tab": {
+        "zh": "🌟 本命排盤",
+        "en": "🌟 Natal Chart",
+    },
+    "taixuan_qigua_tab": {
+        "zh": "🎴 即時問卜",
+        "en": "🎴 Divination",
+    },
 }
 
 def get_ui_lang() -> str:
