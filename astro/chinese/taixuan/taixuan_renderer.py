@@ -58,9 +58,9 @@ def build_taixuan_svg(result: TaiXuanResult, width: int = 560) -> str:
     serial = result.shou.serial
 
     svg_parts: List[str] = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}" '
-        f'style="background:#080818;border-radius:16px;font-family:\'Noto Serif TC\',serif;">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" '
+        f'viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" '
+        f'style="display:block;background:#080818;border-radius:16px;font-family:\'Noto Serif TC\',serif;">',
         # 漸層定義
         "<defs>",
         "<radialGradient id='bg-grad' cx='50%' cy='50%' r='70%'>",
@@ -168,9 +168,9 @@ def build_zhan_radar_svg(shou: TaiXuanShou, size: int = 320) -> str:
     active_idx = ZHAN_NAMES.index(shou.zhan_name) if shou.zhan_name in ZHAN_NAMES else 0
 
     svg_parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
-        f'viewBox="0 0 {size} {size}" '
-        f'style="background:#080818;border-radius:50%;overflow:visible;">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" '
+        f'viewBox="0 0 {size} {size}" preserveAspectRatio="xMidYMid meet" '
+        f'style="display:block;background:#080818;border-radius:50%;overflow:visible;">',
         "<defs>",
         f"<radialGradient id='zhan-bg' cx='50%' cy='50%' r='50%'>",
         f"  <stop offset='0%' stop-color='#1a1040'/>",
@@ -380,15 +380,15 @@ def render_taixuan_chart(result: TaiXuanResult, after_chart_hook=None) -> None:
         # 九宮星盤 SVG
         svg_chart = build_taixuan_svg(result)
         st.components.v1.html(
-            f'<div style="background:#080818;border-radius:16px;overflow:hidden;">{svg_chart}</div>',
-            height=560,
+            f'<div style="background:#080818;border-radius:16px;width:100%;">{svg_chart}</div>',
+            height=640,
         )
     with c2:
         # 九贊雷達圖
         radar_svg = build_zhan_radar_svg(shou)
         st.components.v1.html(
-            f'<div style="background:#080818;border-radius:50%;overflow:hidden;">{radar_svg}</div>',
-            height=330,
+            f'<div style="background:#080818;border-radius:50%;width:100%;">{radar_svg}</div>',
+            height=340,
         )
         # 干支四柱（本命模式）
         if result.mode == "natal":
@@ -512,8 +512,8 @@ def _render_all_zhan(shou: TaiXuanShou, is_en: bool) -> None:
         f'letter-spacing:2px;margin-bottom:12px;">☰ 九贊全文 · Nine Praises</div>',
         unsafe_allow_html=True,
     )
-    cols = st.columns(3)
-    for i, zn in enumerate(ZHAN_NAMES):
+    items_html = ""
+    for zn in ZHAN_NAMES:
         is_active = (zn == shou.zhan_name)
         text = shou.all_zhan.get(zn, "")
         border = _GOLD_BORDER if is_active else "rgba(201,168,76,0.12)"
@@ -524,15 +524,19 @@ def _render_all_zhan(shou: TaiXuanShou, is_en: bool) -> None:
             f'background:rgba(201,168,76,0.2);border-radius:4px;padding:1px 5px;">當值</span>'
             if is_active else ""
         )
-        with cols[i % 3]:
-            st.markdown(f"""
+        items_html += f"""
 <div style="background:{bg};border:1px solid {border};
-    border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+    border-radius:10px;padding:12px 14px;">
   <div style="font-size:12px;font-weight:700;color:{label_color};margin-bottom:6px;">
     {zn}{active_badge}
   </div>
   <div style="font-size:12px;color:rgba(220,220,240,0.75);line-height:1.7;">{text}</div>
-</div>""", unsafe_allow_html=True)
+</div>"""
+    st.markdown(
+        f'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));'
+        f'gap:10px;margin-bottom:10px;">{items_html}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def _render_linkage_table(result: TaiXuanResult, is_en: bool) -> None:
