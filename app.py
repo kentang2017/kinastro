@@ -136,6 +136,12 @@ from astro.astrocartography import (
 )
 from astro.nine_star_ki import compute_nine_star_ki_chart, render_nine_star_ki_chart
 from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
+from astro.chinese.taixuan import TaiXuanCalculator
+from astro.chinese.taixuan.taixuan_renderer import (
+    render_taixuan_chart,
+    render_taixuan_intro,
+    render_qigua_ui,
+)
 
 
 # ============================================================
@@ -1071,7 +1077,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer"]),
@@ -1129,6 +1135,7 @@ with st.sidebar:
         "tab_tieban": t("tab_tieban"),
         "tab_tojeong": t("tab_tojeong"),
         "tab_khmer": t("tab_khmer"),
+        "tab_taixuan": t("tab_taixuan"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1172,6 +1179,7 @@ with st.sidebar:
         "tab_tieban": t("sys_hint_tieban"),
         "tab_tojeong": t("sys_hint_tojeong"),
         "tab_khmer": t("sys_hint_khmer"),
+        "tab_taixuan": t("sys_hint_taixuan"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -2894,6 +2902,61 @@ elif _selected_system == "tab_tieban":
     color:#f87171;
   ">👈 請在左側填寫出生年月日時，即可起盤</div>
 </div>""", unsafe_allow_html=True)
+
+# --- 太玄數占星 ---
+elif _selected_system == "tab_taixuan":
+    # 子頁籤：本命排盤 / 即時問卜
+    _tx_natal_label = t("taixuan_natal_tab")
+    _tx_qigua_label = t("taixuan_qigua_tab")
+    _tx_tab_natal, _tx_tab_qigua = st.tabs([_tx_natal_label, _tx_qigua_label])
+
+    with _tx_tab_natal:
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_taixuan")):
+                    _tx_calc = TaiXuanCalculator(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        mode="natal",
+                    )
+                    _tx_result = _tx_calc.calculate()
+                render_taixuan_chart(
+                    _tx_result,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_taixuan",
+                        {
+                            "shou_name": _tx_result.shou.name,
+                            "gua_title": _tx_result.shou.gua_title,
+                            "gua_text": _tx_result.shou.gua_text,
+                            "zhan_name": _tx_result.shou.zhan_name,
+                            "zhan_text": _tx_result.shou.zhan_text,
+                            "year_gz": _tx_result.year_gz,
+                            "day_gz": _tx_result.day_gz,
+                            "sishi": _tx_result.sishi,
+                            "mansion": _tx_result.shou.mansion,
+                            "planet": _tx_result.shou.planet,
+                        },
+                        btn_key="taixuan_natal",
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                import traceback
+                st.code(traceback.format_exc())
+        else:
+            render_taixuan_intro()
+
+    with _tx_tab_qigua:
+        render_qigua_ui(
+            after_chart_hook=lambda: _render_ai_button(
+                "tab_taixuan",
+                {"mode": "qigua"},
+                btn_key="taixuan_qigua",
+            )
+        )
 
 # --- History of Astrology ---
 elif _selected_system == "tab_history":
