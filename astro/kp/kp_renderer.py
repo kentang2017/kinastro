@@ -30,6 +30,11 @@ from astro.kp.kp_utils import (
     get_significators,
 )
 
+# ── SVG 星盤圖常數 ──────────────────────────────────────────────────────────
+_CHART_FONT = "'PingFang TC','Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif"
+_CHART_PLANETS_PER_ROW = 3   # 每行最多顯示的行星數
+_CHART_MAX_PLANETS = 6        # 每宮最多顯示的行星數（2 行 × 3 顆）
+
 
 # ============================================================================
 # MAIN RENDERING FUNCTION
@@ -161,7 +166,7 @@ def _generate_kp_diamond_svg(chart: KPChart, language: str = "zh") -> str:
     生成 KP 北印度鑽石形星盤 SVG（響應式 + 美化版）
     SVG 使用 viewBox 而不固定 width/height，由外層 CSS 控制縮放。
     """
-    FONT = "'PingFang TC','Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif"
+    FONT = _CHART_FONT
 
     def sign_index(longitude: float) -> int:
         return int(longitude // 30) % 12
@@ -296,10 +301,13 @@ def _generate_kp_diamond_svg(chart: KPChart, language: str = "zh") -> str:
             f'H{house_num}</text>'
         )
 
-        # 行星列表：每行最多 3 個，最多顯示 2 行（6 顆）
+        # 行星列表：每行最多 _CHART_PLANETS_PER_ROW 個，最多顯示 _CHART_MAX_PLANETS 顆
         planets_list = rashi_planets.get(sign_idx, [])
         if planets_list:
-            chunks = [planets_list[i:i+3] for i in range(0, min(len(planets_list), 6), 3)]
+            chunks = [
+                planets_list[i:i + _CHART_PLANETS_PER_ROW]
+                for i in range(0, min(len(planets_list), _CHART_MAX_PLANETS), _CHART_PLANETS_PER_ROW)
+            ]
             for row_i, chunk in enumerate(chunks):
                 py = y + 36 + row_i * 16
                 svg.append(
