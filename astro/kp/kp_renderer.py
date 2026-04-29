@@ -30,6 +30,11 @@ from astro.kp.kp_utils import (
     get_significators,
 )
 
+# ── SVG 星盤圖常數 ──────────────────────────────────────────────────────────
+_CHART_FONT = "'PingFang TC','Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif"
+_CHART_PLANETS_PER_ROW = 3   # 每行最多顯示的行星數
+_CHART_MAX_PLANETS = 6        # 每宮最多顯示的行星數（2 行 × 3 顆）
+
 
 # ============================================================================
 # MAIN RENDERING FUNCTION
@@ -100,19 +105,56 @@ def render_kp_chart(
 
 def _render_kp_svg_chart(chart: KPChart, language: str = "zh") -> None:
     """
-    渲染 KP 北印度式鑽石形星盤圖
+    渲染 KP 北印度式鑽石形星盤圖（響應式）
     """
     st.subheader("🔮 KP 星盤圖 (North Indian Diamond Style)")
 
     try:
         svg_content = _generate_kp_diamond_svg(chart, language)
 
-        # 使用 st.components.v1.html 顯示 SVG
-        st.components.v1.html(
-            svg_content,
-            height=520,
-            scrolling=False
-        )
+        # 以完整 HTML 頁面包裝 SVG，實現響應式縮放
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    html, body {{ width: 100%; background: transparent; overflow: hidden; }}
+    .chart-wrap {{
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      aspect-ratio: 1 / 1;
+    }}
+    .chart-wrap svg {{
+      width: 100%;
+      height: 100%;
+      display: block;
+    }}
+  </style>
+</head>
+<body>
+  <div class="chart-wrap" id="chartWrap">
+    {svg_content}
+  </div>
+  <script>
+    function reportHeight() {{
+      var h = document.getElementById('chartWrap').getBoundingClientRect().height;
+      window.parent.postMessage({{type: 'streamlit:setFrameHeight', height: Math.ceil(h) + 4}}, '*');
+    }}
+    if (window.ResizeObserver) {{
+      new ResizeObserver(reportHeight).observe(document.getElementById('chartWrap'));
+    }} else {{
+      window.addEventListener('resize', reportHeight);
+    }}
+    window.addEventListener('load', reportHeight);
+    setTimeout(reportHeight, 150);
+  </script>
+</body>
+</html>"""
+
+        # 使用 st.components.v1.html 顯示響應式 SVG
+        st.components.v1.html(html, height=600, scrolling=False)
     except Exception as e:
         st.error(f"星盤圖生成失敗：{str(e)}")
         import traceback
@@ -121,8 +163,11 @@ def _render_kp_svg_chart(chart: KPChart, language: str = "zh") -> None:
 
 def _generate_kp_diamond_svg(chart: KPChart, language: str = "zh") -> str:
     """
-    生成改進後的 KP 北印度鑽石形星盤 SVG（正確動態星座 + 行星位置）
+    生成 KP 北印度鑽石形星盤 SVG（響應式 + 美化版）
+    SVG 使用 viewBox 而不固定 width/height，由外層 CSS 控制縮放。
     """
+    FONT = _CHART_FONT
+
     def sign_index(longitude: float) -> int:
         return int(longitude // 30) % 12
 
@@ -152,74 +197,142 @@ def _generate_kp_diamond_svg(chart: KPChart, language: str = "zh") -> str:
             idx = sign_index(p.longitude)
             rashi_planets[idx].append(planet_short(p.name))
 
-    # SVG 尺寸
+    # SVG 邏輯尺寸（僅用於 viewBox，不作為實際像素）
     S = 480
     M = 40
-    center = S / 2
+    C = S / 2  # center
 
-    svg = [f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg" width="{S}" height="{S}">']
-    svg.append(f'<rect width="{S}" height="{S}" fill="#1a1a2e"/>')
+    # ── SVG 開頭：width/height 設為 100%，由外層 CSS aspect-ratio 控制比例 ──
+    svg = [
+        f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg" '
+        f'width="100%" height="100%" preserveAspectRatio="xMidYMid meet">'
+    ]
 
-    # 外框 + 鑽石主體
-    svg.append(f'<rect x="{M}" y="{M}" width="{S-2*M}" height="{S-2*M}" '
-               f'fill="#2a2a4e" stroke="#FF6B35" stroke-width="8" rx="8"/>')
+    # ── defs：漸層背景 + 橘色光暈濾鏡 ──
+    svg.append('<defs>')
+    svg.append(
+        '<linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">'
+        '<stop offset="0%" style="stop-color:#0e0e22;stop-opacity:1"/>'
+        '<stop offset="100%" style="stop-color:#1c1c3a;stop-opacity:1"/>'
+        '</linearGradient>'
+    )
+    svg.append(
+        '<linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">'
+        '<stop offset="0%" style="stop-color:#22224a;stop-opacity:1"/>'
+        '<stop offset="100%" style="stop-color:#2a2a52;stop-opacity:1"/>'
+        '</linearGradient>'
+    )
+    svg.append(
+        '<filter id="glow" x="-25%" y="-25%" width="150%" height="150%">'
+        '<feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>'
+        '<feMerge>'
+        '<feMergeNode in="coloredBlur"/>'
+        '<feMergeNode in="SourceGraphic"/>'
+        '</feMerge>'
+        '</filter>'
+    )
+    svg.append(
+        '<filter id="centerGlow" x="-50%" y="-50%" width="200%" height="200%">'
+        '<feGaussianBlur stdDeviation="4" result="coloredBlur"/>'
+        '<feMerge>'
+        '<feMergeNode in="coloredBlur"/>'
+        '<feMergeNode in="SourceGraphic"/>'
+        '</feMerge>'
+        '</filter>'
+    )
+    svg.append('</defs>')
 
-    # 北印度式鑽石主線
-    svg.append(f'<line x1="{M}" y1="{M}" x2="{center}" y2="{center}" stroke="#FF8C42" stroke-width="4"/>')
-    svg.append(f'<line x1="{center}" y1="{center}" x2="{S-M}" y2="{M}" stroke="#FF8C42" stroke-width="4"/>')
-    svg.append(f'<line x1="{M}" y1="{S-M}" x2="{center}" y2="{center}" stroke="#FF8C42" stroke-width="4"/>')
-    svg.append(f'<line x1="{center}" y1="{center}" x2="{S-M}" y2="{S-M}" stroke="#FF8C42" stroke-width="4"/>')
+    # ── 背景 ──
+    svg.append(f'<rect width="{S}" height="{S}" fill="url(#bgGrad)"/>')
 
-    # 十字中線
-    svg.append(f'<line x1="{M}" y1="{center}" x2="{S-M}" y2="{center}" stroke="#555" stroke-width="2.5"/>')
-    svg.append(f'<line x1="{center}" y1="{M}" x2="{center}" y2="{S-M}" stroke="#555" stroke-width="2.5"/>')
+    # ── 外框 ──
+    svg.append(
+        f'<rect x="{M}" y="{M}" width="{S-2*M}" height="{S-2*M}" '
+        f'fill="url(#innerGrad)" stroke="#E8632A" stroke-width="2.5" rx="6" '
+        f'filter="url(#glow)"/>'
+    )
 
-    # 12 宮位文字座標（已微調，視覺效果更好）
+    # ── 北印度式四對角線（帶光暈） ──
+    diag_style = 'stroke="#D4622A" stroke-width="1.8" filter="url(#glow)"'
+    svg.append(f'<line x1="{M}" y1="{M}" x2="{C}" y2="{C}" {diag_style}/>')
+    svg.append(f'<line x1="{C}" y1="{C}" x2="{S-M}" y2="{M}" {diag_style}/>')
+    svg.append(f'<line x1="{M}" y1="{S-M}" x2="{C}" y2="{C}" {diag_style}/>')
+    svg.append(f'<line x1="{C}" y1="{C}" x2="{S-M}" y2="{S-M}" {diag_style}/>')
+
+    # ── 十字中線 ──
+    cross_style = 'stroke="#3a3a6a" stroke-width="1.5"'
+    svg.append(f'<line x1="{M}" y1="{C}" x2="{S-M}" y2="{C}" {cross_style}/>')
+    svg.append(f'<line x1="{C}" y1="{M}" x2="{C}" y2="{S-M}" {cross_style}/>')
+
+    # ── 12 宮位文字座標 ──
     house_pos = {
-        1: (center, M + 58),           # 上升點（最上方）
-        2: (M + 68, M + 115),
-        3: (M + 55, center - 12),
-        4: (M + 68, S - M - 72),
-        5: (center - 5, S - M - 55),
-        6: (S - M - 68, S - M - 72),
-        7: (S - M - 55, center + 30),
-        8: (S - M - 68, M + 115),
-        9: (center + 70, M + 55),
-        10: (S - M - 55, M + 68),
-        11: (S - M - 70, M + 85),
-        12: (center + 65, M + 105),
+        1:  (C,         M + 58),
+        2:  (M + 68,    M + 115),
+        3:  (M + 55,    C - 12),
+        4:  (M + 68,    S - M - 72),
+        5:  (C - 5,     S - M - 55),
+        6:  (S-M - 68,  S - M - 72),
+        7:  (S-M - 55,  C + 30),
+        8:  (S-M - 68,  M + 115),
+        9:  (C + 70,    M + 55),
+        10: (S-M - 55,  M + 68),
+        11: (S-M - 70,  M + 85),
+        12: (C + 65,    M + 105),
     }
 
     for house_num in range(1, 13):
-        # 從上升點開始順時針排星座（北印度式標準做法）
         sign_idx = (asc_idx + house_num - 1) % 12
-        x, y = house_pos.get(house_num, (center, center))
-
-        is_lagna = (house_num == 1)
+        x, y = house_pos[house_num]
 
         # 星座名稱
-        svg.append(f'<text x="{x}" y="{y}" fill="#FFDD57" font-size="15" '
-                   f'font-weight="700" text-anchor="middle" dominant-baseline="middle">'
-                   f'{sign_name(sign_idx, language)}</text>')
+        svg.append(
+            f'<text x="{x}" y="{y}" '
+            f'fill="#FFD966" font-size="14" font-weight="700" '
+            f'font-family={FONT} '
+            f'text-anchor="middle" dominant-baseline="middle">'
+            f'{sign_name(sign_idx, language)}</text>'
+        )
 
-        # 宮位編號
-        svg.append(f'<text x="{x}" y="{y + 23}" fill="#aaaaaa" font-size="11" '
-                   f'text-anchor="middle" font-weight="600">H{house_num}</text>')
+        # 宮位編號（小字，灰色）
+        svg.append(
+            f'<text x="{x}" y="{y + 20}" '
+            f'fill="#888aaa" font-size="10" font-weight="600" '
+            f'font-family={FONT} text-anchor="middle">'
+            f'H{house_num}</text>'
+        )
 
-        # 行星
+        # 行星列表：每行最多 _CHART_PLANETS_PER_ROW 個，最多顯示 _CHART_MAX_PLANETS 顆
         planets_list = rashi_planets.get(sign_idx, [])
         if planets_list:
-            planet_str = " ".join(planets_list)
-            svg.append(f'<text x="{x}" y="{y + 43}" fill="#ffffff" font-size="12.5" '
-                       f'text-anchor="middle" font-weight="600">{planet_str}</text>')
+            chunks = [
+                planets_list[i:i + _CHART_PLANETS_PER_ROW]
+                for i in range(0, min(len(planets_list), _CHART_MAX_PLANETS), _CHART_PLANETS_PER_ROW)
+            ]
+            for row_i, chunk in enumerate(chunks):
+                py = y + 36 + row_i * 16
+                svg.append(
+                    f'<text x="{x}" y="{py}" '
+                    f'fill="#7ecfff" font-size="11.5" font-weight="600" '
+                    f'font-family={FONT} text-anchor="middle">'
+                    f'{" ".join(chunk)}</text>'
+                )
 
-    # 中央 Lagna 資訊區
-    svg.append(f'<rect x="{center-58}" y="{center-38}" width="116" height="76" '
-               f'rx="8" fill="#1a1a2e" stroke="#FF6B35" stroke-width="4"/>')
-    svg.append(f'<text x="{center}" y="{center-10}" fill="#FF6B35" font-size="14" '
-               f'font-weight="700" text-anchor="middle">Lagna</text>')
-    svg.append(f'<text x="{center}" y="{center+18}" fill="#FFDD77" font-size="17.5" '
-               f'font-weight="700" text-anchor="middle">{sign_name(asc_idx, language)}</text>')
+    # ── 中央 Lagna 資訊區（帶光暈） ──
+    svg.append(
+        f'<rect x="{C-56}" y="{C-38}" width="112" height="74" '
+        f'rx="10" fill="#14143a" stroke="#E8632A" stroke-width="2" '
+        f'filter="url(#centerGlow)"/>'
+    )
+    svg.append(
+        f'<text x="{C}" y="{C-12}" fill="#E8632A" font-size="13" '
+        f'font-weight="700" font-family={FONT} text-anchor="middle" '
+        f'letter-spacing="1">Lagna</text>'
+    )
+    svg.append(
+        f'<text x="{C}" y="{C+16}" fill="#FFE066" font-size="17" '
+        f'font-weight="700" font-family={FONT} text-anchor="middle">'
+        f'{sign_name(asc_idx, language)}</text>'
+    )
 
     svg.append('</svg>')
     return '\n'.join(svg)
