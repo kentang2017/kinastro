@@ -53,7 +53,7 @@
 
 ## 🧭 體系總覽 | Systems at a Glance
 
-> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 韓國 → 高棉 → 西方 → 印度 → 亞洲 → 中東 → 古代文明
+> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 → 古代文明
 >
 > *Systems displayed by category: Popular → Three Formulae → Chinese → Korean → Khmer → Western → Indian → Asian → Middle East → Ancient*
 
@@ -74,29 +74,27 @@
 | 10 | 🔢 十二星次 Twelve Ci | 回歸 Tropical | 木星分野・十二次環形盤・歲星方位 |
 | 11 | 🌠 策天飛星 Ce Tian | 農曆 Lunar | 十八飛星・十一正曜七副曜・飛星四化・單宮獨斷 |
 | 12 | 🖐️ 達摩一掌經 Damo | 農曆 Lunar | 十二宮掌紋・前世今生六道・四柱星宮・互動手掌 SVG |
-| | **🇰🇷 韓國 Korean** | | |
-| 13 | 🔮 土亭數 Tojeong Shu | 農曆 Lunar | 先天數後天數・格局代碼・129 格局斷語・三元卞元 |
-| | **🇰🇭 高棉 Khmer** | | |
-| 14 | 🇰🇭 高棉占星 Khmer Astrology | 數理 Numerology | Reamker 史詩・32 格預言・八大命主・羅摩之箭・bè 祭壇儀式 |
 | | **🏛️ 西方 Western** | | |
-| 15 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing・擴充 Lots・Valens Synkrasis・百論 |
-| 16 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
-| 17 | ✡ 猶太 Mazzalot | 恆星 Sidereal | 大衛之星盤・十二支派・Sefer Yetzirah 字母 |
-| 18 | 🗺️ Astrocartography 地點占星 | 回歸 Tropical | AC/MC/IC/DC 搬遷線・互動 Plotly 地圖・過運搬遷線 |
-| 19 | ♅ 天王星漢堡學派 Uranian | 回歸 Tropical | 8 超海王星虛點・90° 度盤・中點樹・行星圖像 |
-| 20 | 🌟 Sabian Symbols | 回歸 Tropical | 360 度符號・Marc Edmund Jones 原著・SVG 視覺化・關鍵字解讀 |
+| 13 | 🏺 希臘 Hellenistic | 回歸 Tropical | Greek Lots・Egyptian Bounds・Profections・Zodiacal Releasing・擴充 Lots・Valens Synkrasis・百論 |
+| 14 | ✡ 卡巴拉 Kabbalah | 回歸 Tropical | 生命之樹・希伯來字母・塔羅 |
+| 15 | ✡ 猶太 Mazzalot | 恆星 Sidereal | 大衛之星盤・十二支派・Sefer Yetzirah 字母 |
+| 16 | 🗺️ Astrocartography 地點占星 | 回歸 Tropical | AC/MC/IC/DC 搬遷線・互動 Plotly 地圖・過運搬遷線 |
+| 17 | ♅ 天王星漢堡學派 Uranian | 回歸 Tropical | 8 超海王星虛點・90° 度盤・中點樹・行星圖像 |
+| 18 | 🌟 Sabian Symbols | 回歸 Tropical | 360 度符號・Marc Edmund Jones 原著・SVG 視覺化・關鍵字解讀 |
 | | **🌏 亞洲 Asian** | | |
-| 21 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
-| 22 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
-| 23 | 🕉️ 闍彌尼 Jaimini | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
-| 24 | 🔮 KP 占星 Krishnamurti Paddhati | 恆星 Sidereal | Rasi/Star/Sub Lords・Ruling Planets・Significators・Horary 問卜・北印度鑽石盤 |
-| 25 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
-| 26 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
-| 27 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
-| 28 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210 天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
-| 29 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
-| 30 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
-| 31 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
+| 19 | 🙏 印度占星 Vedic | 恆星 Sidereal | 星座盤・大運 Dasha・Ashtakavarga・Yogas・BPHS・Varga 分盤 |
+| 20 | 🔱 納迪 Nadi | 恆星 Sidereal | 三大脈輪・27 星宿・納迪宮分 |
+| 21 | 🕉️ 闍彌尼 Jaimini | 恆星 Sidereal | Chara Karaka・Rashi Drishti・Argala・Arudha Pada・Chara Dasha |
+| 22 | 🔮 KP 占星 Krishnamurti Paddhati | 恆星 Sidereal | Rasi/Star/Sub Lords・Ruling Planets・Significators・Horary 問卜・北印度鑽石盤 |
+| 23 | 🈳 宿曜道 Sukkayodo | 恆星 Sidereal | 二十八宿・六曜・方盤 |
+| 24 | 🐘 泰國占星 Thai | 恆星 Sidereal | 泰式盤面・九宮格占卜・พรหมชาติ |
+| 25 | 🇲🇲 緬甸 Mahabote | 星期制 Weekday | 八方位・七宮・行星大運 |
+| 26 | 🏝️ 巴厘 Wariga | 巴厘曆 Wuku | Wuku 210 天週期・Wewaran 九層週期・Neptu 數值・吉凶判斷 |
+| 27 | 🇲🇳 祖爾海 Zurkhai | 藏曆 Tibetan | 12 生肖・五行・擇吉 |
+| 28 | 🏔️ 藏傳時輪金剛 Tibetan | 藏曆 Tibetan | Mewa 九宮・Parkha 八卦・五力系統・時輪金剛曼荼羅 |
+| 29 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
+| 30 | 🔮 土亭數 Tojeong Shu | 農曆 Lunar | 先天數後天數・格局代碼・129 格局斷語・三元 |
+| 31 | 🇰🇭 高棉占星 Khmer Astrology | 數理 Numerology | Reamker 史詩・32 格預言・八大命主・羅摩之箭・bè 祭壇儀式 |
 | | **☪ 中東 Middle East** | | |
 | 32 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
 | 33 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
