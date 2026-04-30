@@ -115,17 +115,11 @@
 ### 核心文獻
 ### Core Texts
 
-| 著作 | 作者 | 時期 | 貢獻 |
+| 著作 Work | 作者 Author | 時期 Period | 貢獻 Contribution |
 |---|---|---|---|
-| 《四書》Tetrabiblos | 托勒密 Ptolemy | 公元 150 年 | 系統化占星理論 |
-| 《選集》Anthology | 瓦倫斯 Vettius Valens | 公元 170 年 | 實占案例集 |
-| 《數學論》Mathesis | Firmicus Maternus | 公元 330 年 | 拉丁文占星大全 |
-
-| Work | Author | Period | Contribution |
-|---|---|---|---|
-| Tetrabiblos | Ptolemy | 150 CE | Systematic astrological theory |
-| Anthology | Vettius Valens | 170 CE | Collection of practical charts |
-| Mathesis | Firmicus Maternus | 330 CE | Comprehensive Latin astrology |
+| 《四書》Tetrabiblos | 托勒密 Ptolemy | 公元 150 年 / 150 CE | 系統化占星理論 / Systematic astrological theory |
+| 《選集》Anthology | 瓦倫斯 Vettius Valens | 公元 170 年 / 170 CE | 實占案例集 / Collection of practical charts |
+| 《數學論》Mathesis | Firmicus Maternus | 公元 330 年 / 330 CE | 拉丁文占星大全 / Comprehensive Latin astrology |
 
 ### 希臘化技術
 ### Hellenistic Techniques
@@ -200,19 +194,12 @@
 ### 重要占星家
 ### Important Astrologers
 
-| 占星家 | 時期 | 貢獻 |
+| 占星家 Astrologer | 時期 Period | 貢獻 Contribution |
 |---|---|---|
-| Masha'allah | 740-815 | 擇時占星、世界年 |
-| Al-Kindi | 801-873 | 占星數學、影像魔法 |
-| Albumasar | 787-886 | 《占星學入門》影響歐洲千年 |
-| Al-Biruni | 973-1048 | 比較占星學、印度研究 |
-
-| Astrologer | Period | Contribution |
-|---|---|---|
-| Masha'allah | 740-815 | Electional astrology, World Years |
-| Al-Kindi | 801-873 | Astrological mathematics, talismanic magic |
-| Albumasar | 787-886 | Introduction to Astrology influenced Europe for millennium |
-| Al-Biruni | 973-1048 | Comparative astrology, Indian studies |
+| Masha'allah | 740–815 | 擇時占星、世界年 / Electional astrology, World Years |
+| Al-Kindi | 801–873 | 占星數學、影像魔法 / Astrological mathematics, talismanic magic |
+| Albumasar | 787–886 | 《占星學入門》影響歐洲千年 / Introduction to Astrology influenced Europe for a millennium |
+| Al-Biruni | 973–1048 | 比較占星學、印度研究 / Comparative astrology, Indian studies |
 
 ### Picatrix《賢者之目標》
 ### Picatrix (Ghayat al-Hakim)
@@ -330,17 +317,11 @@
 ### 天文學家兼占星師
 ### Astronomer-Astrologers
 
-| 人物 | 時期 | 貢獻 |
+| 人物 Figure | 時期 Period | 貢獻 Contribution |
 |---|---|---|
-| 第谷·布拉赫 Tycho Brahe | 1546-1601 | 精密天文觀測，為開普勒奠定基礎 |
-| 約翰內斯·開普勒 Johannes Kepler | 1571-1630 | 行星運動定律，占星理論著作 |
-| William Lilly | 1602-1681 | 《基督教占星學》英國傳統奠基 |
-
-| Figure | Period | Contribution |
-|---|---|---|
-| Tycho Brahe | 1546-1601 | Precise astronomical observations, foundation for Kepler |
-| Johannes Kepler | 1571-1630 | Planetary motion laws, astrological theoretical works |
-| William Lilly | 1602-1681: Christian Astrology, foundation of English tradition |
+| 第谷·布拉赫 Tycho Brahe | 1546–1601 | 精密天文觀測，為開普勒奠定基礎 / Precise astronomical observations, foundation for Kepler |
+| 約翰內斯·開普勒 Johannes Kepler | 1571–1630 | 行星運動定律，占星理論著作 / Planetary motion laws, astrological theoretical works |
+| William Lilly | 1602–1681 | 《基督教占星學》英國傳統奠基 / Christian Astrology, foundation of English tradition |
 
 </details>
 
@@ -435,7 +416,7 @@
 ### Psychological Astrology
 
 - **卡爾·榮格**（1875-1961）：原型、共時性理論
-- **綠 Liz Greene**（1946-）：榮格派占星心理學
+- **Liz Greene**（1946-）：榮格派占星心理學
 - **應用**：自我認識、心理治療輔助
 
 *Carl Jung (1875-1961): archetypes, synchronicity theory. Liz Greene (1946-): Jungian astrological psychology. Application: self-knowledge, psychotherapy aid.*
@@ -567,7 +548,7 @@
 - **本命星**：出生年對應星曜
 - **應用**：方位學、相性分析
 
-*Origins: Japan, based on Chinese feng shui. Nine Palaces: Lo Shu nine-grid.本命星 (Life Star): birth year corresponding star. Application: directionology, compatibility analysis.*
+*Origins: Japan, based on Chinese feng shui. Nine Palaces: Lo Shu nine-grid. Life Star (本命星): birth year corresponding star. Application: directionology, compatibility analysis.*
 
 </details>
 
@@ -688,7 +669,7 @@
 9. **《Picatrix》** (Ghayat al-Hakim). Spain, c. 1000 CE.
 10. **Rasulid Hexaglot**. Yemen, 13th century.
 11. **張果 Zhang Guo**. 《張果星宗》Zhang Guo Xing Zong. Tang Dynasty.
-12. ** Lilly, W.** *Christian Astrology*. London, 1647.
+12. **Lilly, W.** *Christian Astrology*. London, 1647.
 
 ### 現代研究 | Modern Research
 
