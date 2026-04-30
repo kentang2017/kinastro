@@ -265,7 +265,7 @@ def _build_liuren_board_html(
         return (
             f'<td style="border:1px solid rgba(120,120,140,0.35);'
             f'text-align:center;vertical-align:middle;'
-            f'padding:6px 4px;min-width:68px;'
+            f'padding:6px 4px;'
             f'background:rgba(30,30,45,0.45);">'
             f'{palace_html}'
             f'<div style="color:{jcolor};font-size:12px;line-height:1.4;'
@@ -400,10 +400,10 @@ def _build_liuren_board_html(
         rows_html += "</tr>"
 
     table_html = (
-        f'<div style="overflow-x:auto;">'
+        f'<div style="width:100%;">'
         f'<div style="text-align:center;font-size:13px;color:#B0B0C8;'
         f'margin-bottom:8px;letter-spacing:1px;">{header_info}</div>'
-        f'<table style="margin:auto;border-collapse:collapse;'
+        f'<table style="width:100%;table-layout:fixed;border-collapse:collapse;'
         f'border:1px solid rgba(120,120,140,0.4);'
         f'border-radius:4px;overflow:hidden;">'
         f'{rows_html}'
@@ -426,9 +426,8 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
     components.html(
         f'''
         <div style="background:#1E1E2E;padding:16px;border-radius:12px;
-                    overflow-x:auto;overflow-y:visible;min-height:480px;
-                    -webkit-overflow-scrolling:touch;">
-            <div style="min-width:520px;width:max-content;">
+                    overflow:hidden;width:100%;min-height:480px;">
+            <div style="width:100%;">
                 {board_html}
             </div>
         </div>
