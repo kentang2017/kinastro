@@ -41,6 +41,7 @@ class PlanetPosition:
     mansion_degree: float = 0.0  # 在宿中的度數
     sign_element: str = ""  # 所在星座五行屬性
     is_qidu: bool = False   # 是否處於岐度（宮/宿交界）
+    altitude: float = 0.0   # 高度角（地平坐標，正值在地平線上方）
 
 
 @dataclass
@@ -413,6 +414,17 @@ def compute_chart(
         palace_idx = branch_to_palace.get(planet_branch, 0)
         planet.palace_index = palace_idx
         houses[palace_idx].planets.append(planet.name)
+
+    # 計算高度角（地平坐標）—— 觀測者位於出生地
+    try:
+        geopos_obs = (longitude, latitude, 0.0)
+        for planet in planets:
+            # swe.azalt params: jd, flag, geopos, atm_press, atm_temp, ecliptic_coords
+            azalt_result = swe.azalt(jd, swe.ECL2HOR, geopos_obs, 0, 0,
+                                     (planet.longitude, planet.latitude, 0))
+            planet.altitude = round(azalt_result[1], 1)
+    except Exception:
+        pass  # 若計算失敗保留預設值 0.0
 
     return ChartData(
         year=year,

@@ -88,11 +88,11 @@ def _render_planet_group(planets: list):
     """渲染一組星曜的表格"""
     header = (
         "| 星曜 | 五行 | 黃經 | 星座 | 度數 | 宮五行 "
-        "| 星次 | 二十八宿 | 入宿度 | 岐度 | 逆行 |"
+        "| 星次 | 二十八宿 | 入宿度 | 高度角 | 岐度 | 逆行 |"
     )
     separator = (
         "|:----:|:----:|:----:|:----:|:----:|:------:"
-        "|:----:|:--------:|:------:|:----:|:----:|"
+        "|:----:|:--------:|:------:|:------:|:----:|:----:|"
     )
     rows = [header, separator]
 
@@ -101,11 +101,13 @@ def _render_planet_group(planets: list):
         qidu = "⚠" if p.is_qidu else ""
         color = PLANET_COLORS.get(p.name, "#c8c8c8")
         name_styled = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
+        alt_val = getattr(p, "altitude", 0.0)
+        alt_str = f"{alt_val:+.1f}°"
         rows.append(
             f"| {name_styled} | {p.element} | {format_degree(p.longitude)} "
             f"| {p.sign_western} | {p.sign_degree:.2f}° | {p.sign_element} "
             f"| {p.sign_chinese} | {p.mansion_name} | {p.mansion_degree:.2f}° "
-            f"| {qidu} | {retro} |"
+            f"| {alt_str} | {qidu} | {retro} |"
         )
 
     st.markdown("\n".join(rows), unsafe_allow_html=True)
@@ -1300,11 +1302,13 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
             color = PLANET_COLORS.get(p.name, "#c8c8c8")
             retro = " ℞" if p.retrograde else ""
             qidu = " ⚠岐度" if p.is_qidu else ""
+            alt_val = getattr(p, "altitude", 0.0)
+            alt_str = f" **{alt_val:+.1f}°**"
             st.markdown(
                 f'<span style="color:{color};font-weight:bold">{p.name}</span> '
                 f'{p.sign_chinese} {p.sign_degree:.2f}° · '
                 f'{p.mansion_name} {p.mansion_degree:.2f}°'
-                f'{retro}{qidu}',
+                f'{retro}{qidu}{alt_str}',
                 unsafe_allow_html=True,
             )
 
@@ -1312,10 +1316,12 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
         for p in chart.planets[7:]:
             color = PLANET_COLORS.get(p.name, "#c8c8c8")
             retro = " ℞" if p.retrograde else ""
+            alt_val = getattr(p, "altitude", 0.0)
+            alt_str = f" **{alt_val:+.1f}°**"
             st.markdown(
                 f'<span style="color:{color};font-weight:bold">{p.name}</span> '
                 f'{p.sign_chinese} {p.sign_degree:.2f}° · '
-                f'{p.mansion_name} {p.mansion_degree:.2f}°{retro}',
+                f'{p.mansion_name} {p.mansion_degree:.2f}°{retro}{alt_str}',
                 unsafe_allow_html=True,
             )
 
