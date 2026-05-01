@@ -447,16 +447,16 @@ class TestMOIRAMansionBoundaries:
             assert m["element"] in valid_elements, f"{m['name']}宿元素 '{m['element']}' 無效"
 
 
-class TestTrueNodeUsage:
-    """測試使用真交點 (TRUE_NODE) 而非平均交點"""
+class TestMeanNodeUsage:
+    """測試使用平均交點 (MEAN_NODE) 而非真交點，符合傳統七政四餘做法"""
 
-    def test_four_remainders_uses_true_node(self):
-        """四餘配置應使用 TRUE_NODE"""
+    def test_four_remainders_uses_mean_node(self):
+        """四餘配置應使用 MEAN_NODE（傳統七政四餘使用平均交點）"""
         import swisseph as swe
-        assert FOUR_REMAINDERS["羅睺"] == swe.TRUE_NODE
+        assert FOUR_REMAINDERS["羅睺"] == swe.MEAN_NODE
 
-    def test_rahu_true_node_vs_mean_node_differ(self):
-        """真交點與平均交點應有差異"""
+    def test_rahu_mean_node_vs_true_node_differ(self):
+        """平均交點與真交點應有差異"""
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)

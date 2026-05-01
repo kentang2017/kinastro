@@ -282,7 +282,7 @@ def compute_chart(
         planets.append(pos)
 
     # 計算四餘位置
-    # 羅睺 (Rahu) = True North Node（參考 MOIRA 使用真交點）
+    # 羅睺 (Rahu) = Mean North Node（傳統七政四餘使用平均交點）
     rahu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["羅睺"])
     rahu_lon = _normalize_degree(rahu_result[0])
     _mn, _md, _mi, _mw = _get_mansion_info(rahu_lon)
