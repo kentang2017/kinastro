@@ -35,24 +35,24 @@ PLANET_PERIOD_YEARS = {
     "土星": 22,
 }
 
-# 十二宮主星對應（七政四餘傳統）：
+# 十二宮主星對應（七政四餘傳統，依西方傳統行星守護）：
 # 每個宮位（地支）有一個主星，決定該宮行限年數
-# 戌宮→太陽, 酉宮→太陰, 申宮→火星, 未宮→水星,
-# 午宮→木星, 巳宮→金星, 辰宮→土星, 卯宮→太陽,
-# 寅宮→木星, 丑宮→土星, 子宮→金星, 亥宮→水星
+# 戌宮→火星(Aries), 酉宮→金星(Taurus), 申宮→水星(Gemini), 未宮→太陰(Cancer),
+# 午宮→太陽(Leo), 巳宮→水星(Virgo), 辰宮→金星(Libra), 卯宮→火星(Scorpio),
+# 寅宮→木星(Sagittarius), 丑宮→土星(Capricorn), 子宮→土星(Aquarius), 亥宮→木星(Pisces)
 BRANCH_LORD = {
-    10: "火星",   # 戌
-    9: "金星",    # 酉
-    8: "水星",    # 申
-    7: "太陰",    # 未
-    6: "太陽",    # 午
-    5: "水星",    # 巳
-    4: "金星",    # 辰
-    3: "木星",    # 卯
-    2: "火星",    # 寅
-    1: "土星",    # 丑
-    0: "土星",    # 子
-    11: "木星",   # 亥
+    10: "火星",   # 戌 (Aries → Mars)
+    9: "金星",    # 酉 (Taurus → Venus)
+    8: "水星",    # 申 (Gemini → Mercury)
+    7: "太陰",    # 未 (Cancer → Moon)
+    6: "太陽",    # 午 (Leo → Sun)
+    5: "水星",    # 巳 (Virgo → Mercury)
+    4: "金星",    # 辰 (Libra → Venus)
+    3: "火星",    # 卯 (Scorpio → Mars)
+    2: "木星",    # 寅 (Sagittarius → Jupiter)
+    1: "土星",    # 丑 (Capricorn → Saturn)
+    0: "土星",    # 子 (Aquarius → Saturn)
+    11: "木星",   # 亥 (Pisces → Jupiter)
 }
 
 EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳",

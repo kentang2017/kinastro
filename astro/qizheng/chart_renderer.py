@@ -43,15 +43,17 @@ _ELEMENT_COLORS = {
     "日": "#FF4500", "月": "#C0C0C0", "火": "#DC143C", "水": "#4169E1",
 }
 
-# 用度/恩用難仇 (simplified mapping for display)
+# 用度/恩用難仇 — 五行生剋對應表（依命度所在二十八宿元素）
+# 難=克我者, 仇=我克者, 恩=生我者, 用=我生者
+# 日/月 依五行屬性：日=火, 月=水
 _YONGDU_MAP = {
-    "日": {"恩": "木", "用": "火", "難": "水", "仇": "金"},
-    "月": {"恩": "金", "用": "水", "難": "火", "仇": "木"},
-    "木": {"恩": "水", "用": "木", "難": "金", "仇": "土"},
-    "火": {"恩": "木", "用": "火", "難": "水", "仇": "金"},
-    "土": {"恩": "火", "用": "土", "難": "木", "仇": "水"},
-    "金": {"恩": "土", "用": "金", "難": "火", "仇": "木"},
-    "水": {"恩": "金", "用": "水", "難": "土", "仇": "火"},
+    "日": {"恩": "木", "用": "土", "難": "水", "仇": "金"},  # 日=火: 木生火, 火生土, 水克火, 火克金
+    "月": {"恩": "金", "用": "木", "難": "土", "仇": "火"},  # 月=水: 金生水, 水生木, 土克水, 水克火
+    "木": {"恩": "水", "用": "火", "難": "金", "仇": "土"},  # 水生木, 木生火, 金克木, 木克土
+    "火": {"恩": "木", "用": "土", "難": "水", "仇": "金"},  # 木生火, 火生土, 水克火, 火克金
+    "土": {"恩": "火", "用": "金", "難": "木", "仇": "水"},  # 火生土, 土生金, 木克土, 土克水
+    "金": {"恩": "土", "用": "水", "難": "火", "仇": "木"},  # 土生金, 金生水, 火克金, 金克木
+    "水": {"恩": "金", "用": "木", "難": "土", "仇": "火"},  # 金生水, 水生木, 土克水, 水克火
 }
 
 
@@ -1089,7 +1091,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         f'<text x="{CX}" y="{CY + 18}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#d4af37" '
         f'font-size="10" font-family="serif">'
-        f'立命 {format_degree(chart.ascendant)}</text>'
+        f'立命 {ming_branch} {format_degree(chart.ascendant)}</text>'
     )
     svg.append(
         f'<text x="{CX}" y="{CY + 34}" text-anchor="middle" '
@@ -1105,8 +1107,8 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             f'<text x="{CX}" y="{CY + 52}" text-anchor="middle" '
             f'dominant-baseline="central" fill="#a080c0" '
             f'font-size="9" font-family="serif">'
-            f'行限 {cp.palace_name} {cp.branch_name} '
-            f'({cp.start_age}-{cp.end_age}歲)</text>'
+            f'行限 {cp.palace_name} '
+            f'({cp.start_age}-{cp.start_age + cp.years}歲)</text>'
         )
 
     svg.append(
@@ -1172,12 +1174,13 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     )
 
     # === 用度恩仇 (bottom-right corner) ===
-    # Show which elements are favourable/unfavourable based on ming palace element
+    # Show which elements are favourable/unfavourable based on the mansion element
+    # at the 命宮 cusp position (二十八宿元素法)
     ming_element = ""
     for h in chart.houses:
         if h.branch == chart.ming_gong_branch:
-            sign_idx = int(h.cusp / 30.0) % 12
-            ming_element = ZODIAC_SIGN_ELEMENTS[sign_idx]
+            mansion_name, mansion_deg, mansion_idx, mansion_width = _get_mansion_info(h.cusp)
+            ming_element = TWENTY_EIGHT_MANSIONS[mansion_idx]["element"]
             break
 
     if ming_element and ming_element in _YONGDU_MAP:
