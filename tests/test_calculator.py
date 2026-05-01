@@ -164,12 +164,18 @@ class TestComputeChart:
         diff = abs(rahu.longitude - ketu.longitude)
         assert abs(diff - 180.0) < 0.01
 
-    def test_ziqi_opposite_yuebei(self, sample_chart):
-        """紫氣應在月孛對面 (相差 180°)"""
+    def test_ziqi_independent_of_yuebei(self, sample_chart):
+        """紫氣使用真實遠地點（oscillating apogee），與月孛（平均遠地點）不同，不要求相差 180°"""
         yuebei = next(p for p in sample_chart.planets if p.name == "月孛")
         ziqi = next(p for p in sample_chart.planets if p.name == "紫氣")
-        diff = abs(yuebei.longitude - ziqi.longitude)
-        assert abs(diff - 180.0) < 0.01
+        # Both should be valid longitudes
+        assert 0 <= yuebei.longitude < 360
+        assert 0 <= ziqi.longitude < 360
+        # They are computed independently (mean vs osculating apogee), so are NOT 180° apart
+        diff = abs(yuebei.longitude - ziqi.longitude) % 360
+        if diff > 180:
+            diff = 360 - diff
+        assert diff != 180.0, "紫氣 and 月孛 should NOT be exactly 180° apart (different formulas)"
 
     def test_ascendant_in_range(self, sample_chart):
         assert 0 <= sample_chart.ascendant < 360
@@ -450,10 +456,10 @@ class TestMOIRAMansionBoundaries:
 class TestMeanNodeUsage:
     """測試使用平均交點 (MEAN_NODE) 而非真交點，符合傳統七政四餘做法"""
 
-    def test_four_remainders_uses_mean_node(self):
-        """四餘配置應使用 MEAN_NODE（傳統七政四餘使用平均交點）"""
+    def test_four_remainders_ketu_uses_mean_node(self):
+        """計都應使用 MEAN_NODE（升交點/北交點，傳統七政四餘使用平均交點）"""
         import swisseph as swe
-        assert FOUR_REMAINDERS["羅睺"] == swe.MEAN_NODE
+        assert FOUR_REMAINDERS["計都"] == swe.MEAN_NODE
 
     def test_rahu_mean_node_vs_true_node_differ(self):
         """平均交點與真交點應有差異"""
@@ -466,6 +472,46 @@ class TestMeanNodeUsage:
         diff = abs(true_result[0] - mean_result[0])
         assert diff > 0.01, "TRUE_NODE and MEAN_NODE should differ"
         assert diff < 5.0, "Difference should be reasonable (< 5°)"
+
+
+class TestFourRemaindersCorrectness:
+    """回歸測試：驗證四餘計算符合傳統七政四餘定義
+    參考盤: 1985年8月26日2:55 香港 (UTC+8)
+    計都(升交點)=酉宮, 羅睺(降交點)=卯宮, 月孛=酉宮, 紫氣=戌宮, 木星=子宮
+    """
+
+    @pytest.fixture
+    def hk_1985_chart(self):
+        return compute_chart(
+            year=1985, month=8, day=26, hour=2, minute=55,
+            timezone=8.0, latitude=22.2728, longitude=114.1722,
+            location_name="香港",
+        )
+
+    def test_rahu_in_mao_gong(self, hk_1985_chart):
+        """羅睺（降交點/南交點）應在卯宮"""
+        rahu = next(p for p in hk_1985_chart.planets if p.name == "羅睺")
+        assert "卯宮" in rahu.sign_chinese, f"羅睺應在卯宮，實得 {rahu.sign_chinese}"
+
+    def test_ketu_in_you_gong(self, hk_1985_chart):
+        """計都（升交點/北交點）應在酉宮"""
+        ketu = next(p for p in hk_1985_chart.planets if p.name == "計都")
+        assert "酉宮" in ketu.sign_chinese, f"計都應在酉宮，實得 {ketu.sign_chinese}"
+
+    def test_yuebei_in_you_gong(self, hk_1985_chart):
+        """月孛（平均遠地點）應在酉宮"""
+        yuebei = next(p for p in hk_1985_chart.planets if p.name == "月孛")
+        assert "酉宮" in yuebei.sign_chinese, f"月孛應在酉宮，實得 {yuebei.sign_chinese}"
+
+    def test_ziqi_in_xu_gong(self, hk_1985_chart):
+        """紫氣（真實遠地點）應在戌宮"""
+        ziqi = next(p for p in hk_1985_chart.planets if p.name == "紫氣")
+        assert "戌宮" in ziqi.sign_chinese, f"紫氣應在戌宮，實得 {ziqi.sign_chinese}"
+
+    def test_jupiter_in_zi_gong(self, hk_1985_chart):
+        """木星應在子宮"""
+        jupiter = next(p for p in hk_1985_chart.planets if p.name == "木星")
+        assert "子宮" in jupiter.sign_chinese, f"木星應在子宮，實得 {jupiter.sign_chinese}"
 
 
 class TestMingGongClassicalFormula:

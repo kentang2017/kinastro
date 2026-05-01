@@ -77,19 +77,21 @@ def compute_transit(
         planets.append(pos)
 
     # 四餘
-    rahu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["羅睺"])
-    rahu_lon = _normalize_degree(rahu_result[0])
+    # 計都 (Ketu) = 升交點 / North Node
+    ketu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["計都"])
+    ketu_lon = _normalize_degree(ketu_result[0])
+    # 羅睺 (Rahu) = 降交點 / South Node = 計都 + 180°
+    rahu_lon = _normalize_degree(ketu_lon + 180.0)
     planets.append(PlanetPosition(
-        name="羅睺", longitude=rahu_lon, latitude=rahu_result[1],
+        name="羅睺", longitude=rahu_lon, latitude=-ketu_result[1],
         sign_western=_get_western_sign(rahu_lon),
         sign_chinese=_get_chinese_sign(rahu_lon),
         sign_degree=_degree_to_sign_degree(rahu_lon),
         element=FIVE_ELEMENTS.get("羅睺", ""), retrograde=False,
     ))
 
-    ketu_lon = _normalize_degree(rahu_lon + 180.0)
     planets.append(PlanetPosition(
-        name="計都", longitude=ketu_lon, latitude=-rahu_result[1],
+        name="計都", longitude=ketu_lon, latitude=ketu_result[1],
         sign_western=_get_western_sign(ketu_lon),
         sign_chinese=_get_chinese_sign(ketu_lon),
         sign_degree=_degree_to_sign_degree(ketu_lon),
@@ -106,9 +108,11 @@ def compute_transit(
         element=FIVE_ELEMENTS.get("月孛", ""), retrograde=False,
     ))
 
-    ziqi_lon = _normalize_degree(yuebei_lon + 180.0)
+    # 紫氣 (Ziqi) = Osculating Apogee (True Apogee)
+    ziqi_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["紫氣"])
+    ziqi_lon = _normalize_degree(ziqi_result[0])
     planets.append(PlanetPosition(
-        name="紫氣", longitude=ziqi_lon, latitude=-yuebei_result[1],
+        name="紫氣", longitude=ziqi_lon, latitude=ziqi_result[1],
         sign_western=_get_western_sign(ziqi_lon),
         sign_chinese=_get_chinese_sign(ziqi_lon),
         sign_degree=_degree_to_sign_degree(ziqi_lon),
