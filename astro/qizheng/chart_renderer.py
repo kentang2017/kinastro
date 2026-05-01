@@ -1473,6 +1473,8 @@ def render_zhangguo(chart: ChartData, result: ZhangguoResult):
 # 命宮特徵解讀 (Life Palace Interpretations from 七政.txt)
 # ============================================================
 
+_MING_GONG_INDEX = 0  # palace_index of 命宮 is always 0
+
 def render_ming_gong_interpretations(chart: ChartData):
     """渲染命宮特徵文字描述（依七政.txt）。
 
@@ -1484,7 +1486,7 @@ def render_ming_gong_interpretations(chart: ChartData):
 
     st.subheader("🔮 命宮特徵解讀")
 
-    ming_house = chart.houses[0]   # palace_index 0 is always 命宮
+    ming_house = chart.houses[_MING_GONG_INDEX]
     branch_char = ming_house.branch_name  # e.g. "子", "丑", …
     planets_in_ming = ming_house.planets  # list of planet name strings
 

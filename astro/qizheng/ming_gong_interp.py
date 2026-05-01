@@ -55,7 +55,7 @@ def _is_palace_marker(line: str) -> bool:
 
 
 @st.cache_data(show_spinner=False)
-def _load_texts() -> tuple[dict[str, str], dict[str, str]]:
+def _load_texts() -> tuple[dict[str, str], dict[str, str]]:  # (li_ming_dict, planet_dict)
     """Parse 七政.txt and return (li_ming_dict, planet_dict).
 
     li_ming_dict  : branch_char → interpretation text (立命X宮 sections)
@@ -91,7 +91,8 @@ def _load_texts() -> tuple[dict[str, str], dict[str, str]]:
             end_idx = sorted_starts[idx + 1][1]
         else:
             end_idx = start_idx + _DEFAULT_SECTION_END_OFFSET
-            for j in range(start_idx + 1, min(start_idx + _MAX_SEARCH_LINES, len(lines))):
+            search_end = min(start_idx + _MAX_SEARCH_LINES, len(lines))
+            for j in range(start_idx + 1, search_end):
                 if "十二宮論凶吉" in lines[j]:
                     end_idx = j
                     break
