@@ -282,16 +282,19 @@ def compute_chart(
         planets.append(pos)
 
     # 計算四餘位置
-    # 羅睺 (Rahu) = Mean North Node（傳統七政四餘使用平均交點）
-    rahu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["羅睺"])
-    rahu_lon = _normalize_degree(rahu_result[0])
+    # 計都 (Ketu) = 升交點 / North Node（傳統七政四餘使用平均交點）
+    ketu_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["計都"])
+    ketu_lon = _normalize_degree(ketu_result[0])
+
+    # 羅睺 (Rahu) = 降交點 / South Node = 計都 + 180°
+    rahu_lon = _normalize_degree(ketu_lon + 180.0)
     _mn, _md, _mi, _mw = _get_mansion_info(rahu_lon)
     _sd = _degree_to_sign_degree(rahu_lon)
     _se = _get_sign_element(rahu_lon)
     planets.append(PlanetPosition(
         name="羅睺",
         longitude=rahu_lon,
-        latitude=rahu_result[1],
+        latitude=-ketu_result[1],
         sign_western=_get_western_sign(rahu_lon),
         sign_chinese=_get_chinese_sign(rahu_lon),
         sign_degree=_sd,
@@ -303,15 +306,13 @@ def compute_chart(
         is_qidu=_check_qidu(_sd, _md, _mw),
     ))
 
-    # 計都 (Ketu) = 羅睺 + 180°
-    ketu_lon = _normalize_degree(rahu_lon + 180.0)
     _mn, _md, _mi, _mw = _get_mansion_info(ketu_lon)
     _sd = _degree_to_sign_degree(ketu_lon)
     _se = _get_sign_element(ketu_lon)
     planets.append(PlanetPosition(
         name="計都",
         longitude=ketu_lon,
-        latitude=-rahu_result[1],
+        latitude=ketu_result[1],
         sign_western=_get_western_sign(ketu_lon),
         sign_chinese=_get_chinese_sign(ketu_lon),
         sign_degree=_sd,
@@ -344,15 +345,16 @@ def compute_chart(
         is_qidu=_check_qidu(_sd, _md, _mw),
     ))
 
-    # 紫氣 (Ziqi) = 月孛 + 180°
-    ziqi_lon = _normalize_degree(yuebei_lon + 180.0)
+    # 紫氣 (Ziqi) = Osculating Apogee (True Apogee)
+    ziqi_result, _ = swe.calc_ut(jd, FOUR_REMAINDERS["紫氣"])
+    ziqi_lon = _normalize_degree(ziqi_result[0])
     _mn, _md, _mi, _mw = _get_mansion_info(ziqi_lon)
     _sd = _degree_to_sign_degree(ziqi_lon)
     _se = _get_sign_element(ziqi_lon)
     planets.append(PlanetPosition(
         name="紫氣",
         longitude=ziqi_lon,
-        latitude=-yuebei_result[1],
+        latitude=ziqi_result[1],
         sign_western=_get_western_sign(ziqi_lon),
         sign_chinese=_get_chinese_sign(ziqi_lon),
         sign_degree=_sd,

@@ -21,16 +21,17 @@ SEVEN_GOVERNORS = {
 
 # ============================================================
 # 四餘 (Four Remainders) - 四顆虛星
-# 羅睺 (Rahu) = 北交點 (Mean Node，傳統七政四餘使用平均交點)
-# 計都 (Ketu) = 南交點 (北交點 + 180°)
+# 傳統七政四餘定義 (Traditional Chinese 七政四餘 definitions):
+# 羅睺 (Rahu) = 降交點 / South Node (= 計都 + 180°，計算時由 calculator 推導)
+# 計都 (Ketu) = 升交點 / North Node (Mean Node，傳統七政四餘使用平均交點)
 # 月孛 (Yuebei) = 平均遠地點 (Mean Apogee / Lilith)
-# 紫氣 (Ziqi) = 平均近地點 (計算方式: 月孛 + 180°)
+# 紫氣 (Ziqi) = 真實遠地點 (Osculating / True Apogee)
 # ============================================================
 FOUR_REMAINDERS = {
-    "羅睺": swe.MEAN_NODE,       # Rahu / North Node (Mean Node)
-    "計都": None,                 # Ketu / South Node (= Rahu + 180°)
+    "羅睺": None,                 # 降交點 / South Node = MEAN_NODE + 180° (computed in calculator)
+    "計都": swe.MEAN_NODE,       # 升交點 / North Node (Mean Node)
     "月孛": swe.MEAN_APOG,       # Mean Apogee / Lilith
-    "紫氣": None,                 # Purple Gas (= 月孛 + 180°)
+    "紫氣": swe.OSCU_APOG,       # Osculating Apogee (True Apogee)
 }
 
 # ============================================================
