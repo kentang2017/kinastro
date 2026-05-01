@@ -160,19 +160,22 @@ def _ganzhi_year(year: int) -> Tuple[str, str]:
 
 def _ganzhi_month(year: int, month: int) -> Tuple[str, str]:
     """計算農曆月的天干地支（簡化節氣法）"""
-    # 簡化：以節為分界
-    dz_idx = (month + 1) % 12
-    # 月干取決於年干
+    # 地支：寅月對應 calendar month 2，申月對應 calendar month 8，以此類推
+    dz_idx = month % 12
+    # 月干取決於年干；五虎遁年起月法：甲/己年起丙寅，乙/庚年起戊寅，以此類推
     year_tg_idx = (year - 4) % 10
-    tg_base = (year_tg_idx % 5) * 2
-    tg_idx = (tg_base + month - 1) % 10
+    tg_base = ((year_tg_idx % 5) * 2 + 2) % 10  # 寅月干支起始天干
+    month_idx = (month - 2) % 12               # 距寅月的月數（0-based）
+    tg_idx = (tg_base + month_idx) % 10
     return TIANGAN[tg_idx], DIZHI[dz_idx]
 
 
 def _ganzhi_day(year: int, month: int, day: int) -> Tuple[str, str]:
     """計算日柱天干地支"""
     jd = _julian_day(year, month, day)
-    idx = int(jd) + 49
+    # _julian_day 回傳的儒略日以正午為起點，午夜值帶 .5 小數；
+    # 加 0.5 後取整可得整數儒略日（以午夜為基準）。
+    idx = int(jd + 0.5) + 49
     tg_idx = idx % 10
     dz_idx = idx % 12
     return TIANGAN[tg_idx], DIZHI[dz_idx]
