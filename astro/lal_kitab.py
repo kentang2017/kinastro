@@ -8,6 +8,7 @@ House = Sign index + 1 (fixed, never Lagna-based).
 
 import swisseph as swe
 import streamlit as st
+import pandas as pd
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 
@@ -555,7 +556,7 @@ def _get_upay(planet: str, house: int, lang: str = "zh") -> List[str]:
         if planet in ["Sun", "Moon"] and house == 7:
             remedies.append("日月在七宮：每日尊重配偶，避免自我中心，家和萬事興")
         if planet == "Mars" and house in [1, 2, 4, 7, 8]:
-            remedies.append("火星在此宮（Mangal Dosha）：婚前需進行甘聶沙普賈（Ganesh Puja），或先嫁給神（Kumbh Vivah）")
+            remedies.append("火星在此宮（Mangal Dosha）：婚前需進行甘尼許普賈（Ganesh Puja），或先嫁給神（Kumbh Vivah）")
     else:
         if planet == "Saturn" and house in [1, 4, 7, 10]:
             remedies.append("Saturn in angular house: Distribute bread to 7 poor people every Saturday to mitigate karmic impact")
@@ -1091,11 +1092,10 @@ def render_lal_kitab_chart(
         else:
             st.markdown("#### \U0001fa90 Planetary Positions")
 
-        import pandas as pd
         rows = []
         for p in chart.planets:
             deg = int(p.sign_degree)
-            minute_ = int((p.sign_degree - deg) * 60)
+            arc_minute = int((p.sign_degree - deg) * 60)
             retro_str = "\u211e" if p.retrograde and p.name not in ("Rahu", "Ketu") else ""
             pakka_str = "\u2605 Pakka Ghar" if p.in_pakka_ghar else ""
             if lang in ("zh", "zh_cn"):
@@ -1103,7 +1103,7 @@ def render_lal_kitab_chart(
                     "\u884c\u661f": f"{p.glyph} {p.name_zh}",
                     "\u5bae\u4f4d": p.house,
                     "\u661f\u5ea7": f"{p.sign_glyph} {p.sign_zh}",
-                    "\u5bae\u5167\u5ea6\u6578": f"{deg}\u00b0{minute_:02d}'",
+                    "\u5bae\u5167\u5ea6\u6578": f"{deg}\u00b0{arc_minute:02d}'",
                     "\u9006\u884c": retro_str,
                     "\u672c\u4f4d": pakka_str,
                 })
@@ -1112,7 +1112,7 @@ def render_lal_kitab_chart(
                     "Planet": f"{p.glyph} {p.name_zh}",
                     "House": p.house,
                     "Sign": f"{p.sign_glyph} {p.sign}",
-                    "Degree": f"{deg}\u00b0{minute_:02d}'",
+                    "Degree": f"{deg}\u00b0{arc_minute:02d}'",
                     "Retro": retro_str,
                     "Status": pakka_str,
                 })
