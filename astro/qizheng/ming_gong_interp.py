@@ -42,8 +42,20 @@ _PALACE_MARKERS = {"財帛宮", "兄弟宮", "田宅宮", "男女宮", "奴僕�
                    "夫妻宮", "疾厄宮", "遷移宮", "官祿宮", "福德宮", "相貌宮"}
 
 
+def _is_palace_marker(line: str) -> bool:
+    """Return True if *line* is the heading of a non-命宮 palace section.
+
+    These headings look like "　　財帛宮：…" inside a planet block and signal
+    that the 本命宮 excerpt has ended.
+    """
+    stripped = line.strip()
+    if "：" not in stripped:
+        return False
+    return any(marker in stripped for marker in _PALACE_MARKERS)
+
+
 @st.cache_data(show_spinner=False)
-def _load_texts() -> tuple:
+def _load_texts() -> tuple[dict[str, str], dict[str, str]]:
     """Parse 七政.txt and return (li_ming_dict, planet_dict).
 
     li_ming_dict  : branch_char → interpretation text (立命X宮 sections)
@@ -78,8 +90,8 @@ def _load_texts() -> tuple:
         if idx + 1 < len(sorted_starts):
             end_idx = sorted_starts[idx + 1][1]
         else:
-            end_idx = start_idx + 200  # generous fallback
-            for j in range(start_idx + 1, min(start_idx + 300, len(lines))):
+            end_idx = start_idx + _DEFAULT_SECTION_END_OFFSET
+            for j in range(start_idx + 1, min(start_idx + _MAX_SEARCH_LINES, len(lines))):
                 if "十二宮論凶吉" in lines[j]:
                     end_idx = j
                     break
@@ -106,23 +118,18 @@ def _load_texts() -> tuple:
     planet_in_ming: dict[str, str] = {}
     for key, start_idx in planet_starts.items():
         collected = []
-        for j in range(start_idx, min(start_idx + 30, len(lines))):
+        for j in range(start_idx, min(start_idx + _MAX_PLANET_SECTION_LINES, len(lines))):
             raw = lines[j]
             stripped = raw.strip()
 
-            # Stop at the first non-命宮 palace heading (財帛宮：…, etc.)
+            # After the first line, stop at a non-命宮 palace heading
             if j > start_idx:
-                for marker in _PALACE_MARKERS:
-                    if marker in stripped and "：" in stripped:
-                        break
-                else:
-                    if stripped:
-                        collected.append(stripped)
-                    continue
-                break  # palace marker found — stop
-
-            # First line: always include
-            if stripped:
+                if _is_palace_marker(raw):
+                    break
+                if stripped:
+                    collected.append(stripped)
+            elif stripped:
+                # First line: always include
                 collected.append(stripped)
 
         planet_in_ming[key] = "\n".join(collected)
