@@ -1377,8 +1377,11 @@ def _render_1952_tab(chart: "LalKitabChart", lang: str = "zh") -> None:
         st.caption("Auspicious/inauspicious status and remedies for each planetary period.")
 
     cycle_data = calculate_35_year_cycle(birth_date, planets_in_house)
+    # Show only the first 35-year cycle (keys starting with "週期1")
     rows_35 = []
-    for period_key, info in list(cycle_data.items())[:35]:  # show 1st full cycle (35 entries max)
+    for period_key, info in cycle_data.items():
+        if not period_key.startswith("週期1"):
+            continue
         if lang in ("zh", "zh_cn"):
             rows_35.append({
                 "週期/年齡": period_key,

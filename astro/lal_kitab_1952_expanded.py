@@ -286,7 +286,7 @@ def calculate_35_year_cycle(
     """
     cycle: Dict[str, Any] = {}
     age = 0
-    for i in range(3):  # 計算三個35年週期
+    for i in range(3):  # 計算三個連續的35年週期（每週期9顆行星，合計105年）
         for planet, years in PLANET_DASHA_YEARS.items():
             house = planets_in_house.get(planet, 1)
             status = (
@@ -773,6 +773,7 @@ class FarmanRuleEngine:
                 matched = True
             if condition is not None and condition.lower() in rule.get("condition", "").lower():
                 matched = True
+            # Note: substring matching is intentional to allow flexible keyword queries
             if matched:
                 results.append({
                     "farman_number": fnum,
