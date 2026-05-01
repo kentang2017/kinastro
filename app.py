@@ -32,6 +32,7 @@ from astro.qizheng.chart_renderer import (
     render_dasha,
     render_transit_comparison,
     render_zhangguo,
+    render_ming_gong_interpretations,
 )
 from astro.qizheng.shensha import compute_shensha
 from astro.qizheng.qizheng_dasha import compute_dasha
@@ -1814,6 +1815,8 @@ if _selected_system == "tab_chinese":
                 render_house_table(chart)
                 st.divider()
                 render_aspect_summary(chart)
+                st.divider()
+                render_ming_gong_interpretations(chart)
 
             with _ch_tab_shensha:
                 _shensha = compute_shensha(
