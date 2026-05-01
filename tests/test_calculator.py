@@ -166,17 +166,16 @@ class TestComputeChart:
 
     def test_ziqi_independent_of_yuebei(self, sample_chart):
         """紫氣使用真實遠地點（oscillating apogee），與月孛（平均遠地點）不同，不要求相差 180°"""
-        import swisseph as swe
         yuebei = next(p for p in sample_chart.planets if p.name == "月孛")
         ziqi = next(p for p in sample_chart.planets if p.name == "紫氣")
         # Both should be valid longitudes
         assert 0 <= yuebei.longitude < 360
         assert 0 <= ziqi.longitude < 360
-        # They are computed independently (mean vs osculating apogee) and need not be 180° apart
+        # They are computed independently (mean vs osculating apogee), so are NOT 180° apart
         diff = abs(yuebei.longitude - ziqi.longitude) % 360
         if diff > 180:
             diff = 360 - diff
-        assert diff < 180  # just verify it's a reasonable value, not necessarily 180°
+        assert diff != 180.0, "紫氣 and 月孛 should NOT be exactly 180° apart (different formulas)"
 
     def test_ascendant_in_range(self, sample_chart):
         assert 0 <= sample_chart.ascendant < 360
