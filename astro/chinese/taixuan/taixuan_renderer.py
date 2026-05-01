@@ -58,6 +58,9 @@ def build_taixuan_svg(result: TaiXuanResult, width: int = 560) -> str:
     height = cell_size * 9 + 60   # 頂部留 60px 標題
     serial = result.shou.serial
 
+    _LEGEND_H = 30   # dedicated legend area below the grid
+    height += _LEGEND_H
+
     svg_parts: List[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" '
         f'viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" '
@@ -381,8 +384,8 @@ def render_taixuan_chart(result: TaiXuanResult, after_chart_hook=None) -> None:
         # 九宮星盤 SVG
         svg_chart = build_taixuan_svg(result)
         st.components.v1.html(
-            f'<div style="background:#080818;border-radius:16px;width:100%;">{svg_chart}</div>',
-            height=640,
+            f'<div style="background:#080818;border-radius:16px;width:100%;max-width:560px;">{svg_chart}</div>',
+            height=700,
         )
     with c2:
         # 九贊雷達圖
