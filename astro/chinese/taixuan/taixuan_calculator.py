@@ -64,13 +64,34 @@ SISHI_ZHAN_RANGE: Dict[str, Tuple[int, int]] = {
     "夜中": (8, 8),  # 上九
 }
 
-# 二十八宿（與太玄首一一對應，每首對應若干宿）
+# 二十八宿（順序排列）
 TWENTY_EIGHT_MANSIONS: List[str] = [
     "角", "亢", "氐", "房", "心", "尾", "箕",
     "斗", "牛", "女", "虛", "危", "室", "壁",
     "奎", "婁", "胃", "昴", "畢", "觜", "參",
     "井", "鬼", "柳", "星", "張", "翼", "軫",
 ]
+
+# 二十八宿傳統入宿度（從冬至斗宿起，依太玄年序排列）
+# 傳統度數總和為 365，對應太玄年
+_MANSION_WIDTHS_FROM_DOU: List[Tuple[str, int]] = [
+    ("斗", 26), ("牛", 8),  ("女", 12), ("虛", 10), ("危", 17), ("室", 16), ("壁", 9),
+    ("奎", 16), ("婁", 12), ("胃", 14), ("昴", 11), ("畢", 16), ("觜", 2),  ("參", 9),
+    ("井", 33), ("鬼", 4),  ("柳", 15), ("星", 7),  ("張", 18), ("翼", 18), ("軫", 17),
+    ("角", 12), ("亢", 9),  ("氐", 15), ("房", 5),  ("心", 5),  ("尾", 18), ("箕", 11),
+]
+_MANSION_TOTAL_DEGREES: int = sum(w for _, w in _MANSION_WIDTHS_FROM_DOU)  # 365
+
+# 數字→漢字（用於星宿度數顯示）
+_DEGREE_TO_ZH: Dict[int, str] = {
+    1: "一", 2: "二", 3: "三", 4: "四", 5: "五",
+    6: "六", 7: "七", 8: "八", 9: "九", 10: "十",
+    11: "十一", 12: "十二", 13: "十三", 14: "十四", 15: "十五",
+    16: "十六", 17: "十七", 18: "十八", 19: "十九", 20: "二十",
+    21: "二十一", 22: "二十二", 23: "二十三", 24: "二十四", 25: "二十五",
+    26: "二十六", 27: "二十七", 28: "二十八", 29: "二十九", 30: "三十",
+    31: "三十一", 32: "三十二", 33: "三十三",
+}
 
 # 天干地支（用於干支聯動）
 TIANGAN: List[str] = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
@@ -198,6 +219,23 @@ def _mansion_for_serial(serial: int) -> str:
     return TWENTY_EIGHT_MANSIONS[idx % len(TWENTY_EIGHT_MANSIONS)]
 
 
+def _mansion_degree_for_days(days_since_ws: float) -> Tuple[str, int]:
+    """根據距冬至天數計算二十八宿及入宿度（1起）。
+
+    太玄年從冬至（斗宿初度）起算，每傳統度 ≈ 1 日，
+    二十八宿傳統度數總和為 365 度，依序循環。
+    """
+    days_mod = days_since_ws % _MANSION_TOTAL_DEGREES
+    cumulative = 0.0
+    for mansion, width in _MANSION_WIDTHS_FROM_DOU:
+        if cumulative + width >= days_mod:
+            degree = int(days_mod - cumulative) + 1
+            return mansion, max(1, degree)
+        cumulative += width
+    # fallback：處理浮點精度邊界情況
+    return _MANSION_WIDTHS_FROM_DOU[-1][0], 1
+
+
 def _planet_for_serial(serial: int) -> str:
     """根據首序號取對應七政行星"""
     for planet, serials in PLANET_SHOU_MAP.items():
@@ -220,6 +258,7 @@ class TaiXuanShou:
     zhan_text: str       # 贊辭 + 測曰
     sishi: str           # 四時段
     mansion: str         # 對應二十八宿
+    mansion_degree: int  # 入宿度（宿內度數，1起）
     planet: str          # 對應七政行星
     all_zhan: Dict[str, str] = field(default_factory=dict)  # 全部九贊
 
@@ -306,16 +345,18 @@ class TaiXuanCalculator:
         # 5. 四時段 & 贊
         sishi = _hour_to_sishi(self.hour)
         zhan_idx = self._pick_zhan_by_hour(self.hour)
-        # 6. 取首資料
-        shou = self._build_shou(serial, sishi, zhan_idx)
-        # 7. 干支四柱
+        # 6. 加入時辰分數以精確星宿度數
+        days_precise = days_since_ws + self.hour / HOURS_PER_DAY
+        # 7. 取首資料（含星宿度數）
+        shou = self._build_shou(serial, sishi, zhan_idx, days_precise)
+        # 8. 干支四柱
         year_tg, year_dz = _ganzhi_year(self.year)
         month_tg, month_dz = _ganzhi_month(self.year, self.month)
         day_tg, day_dz = _ganzhi_day(self.year, self.month, self.day)
         hour_tg, hour_dz = _ganzhi_hour(self.hour, day_tg)
-        # 8. 行年大限（未來 81 年，每 4.5 年一首）
+        # 9. 行年大限（未來 81 年，每 4.5 年一首）
         annual_list = self._calc_annual_shous(serial, self.year)
-        # 9. 完整 81 首表
+        # 10. 完整 81 首表
         all_table = self._build_all_table()
 
         dt = datetime(self.year, self.month, self.day, self.hour)
@@ -338,10 +379,20 @@ class TaiXuanCalculator:
 
     def _calc_qigua(self) -> TaiXuanResult:
         """即時問卜：蓍草亂數法"""
+        dt = datetime.now()
+        # 計算即時星宿度數（按當下天體軌跡）
+        ws_year = dt.year - 1 if dt.month < 12 else dt.year
+        ws_jd = _winter_solstice_jd(ws_year)
+        now_jd = _julian_day(dt.year, dt.month, dt.day)
+        days_since_ws = now_jd - ws_jd + dt.hour / HOURS_PER_DAY + dt.minute / (HOURS_PER_DAY * 60)
+        if days_since_ws < 0:
+            ws_jd = _winter_solstice_jd(ws_year - 1)
+            days_since_ws = now_jd - ws_jd + dt.hour / HOURS_PER_DAY + dt.minute / (HOURS_PER_DAY * 60)
+
         if _PKG_AVAILABLE:
             gua_number, gua_name, gua, gua_details, zhan_number, zhan = _taixuan_qigua()
             serial = _key_to_serial(gua_number)
-            sishi = _hour_to_sishi(datetime.now().hour)
+            sishi = _hour_to_sishi(dt.hour)
             zhan_idx = ZHAN_NAMES.index(zhan_number) if zhan_number in ZHAN_NAMES else 0
             shou = self._build_shou_from_dict(
                 serial=serial,
@@ -350,15 +401,15 @@ class TaiXuanCalculator:
                 gua_details=gua_details,
                 sishi=sishi,
                 zhan_idx=zhan_idx,
+                days_since_ws=days_since_ws,
             )
         else:
             # 備援：直接亂數
             serial = random.randint(1, 80)
             zhan_idx = random.randint(0, 8)
             sishi = random.choice(list(SISHI_MAP.keys()))
-            shou = self._build_shou(serial, sishi, zhan_idx)
+            shou = self._build_shou(serial, sishi, zhan_idx, days_since_ws)
 
-        dt = datetime.now()
         return TaiXuanResult(
             mode="qigua",
             shou=shou,
@@ -373,7 +424,7 @@ class TaiXuanCalculator:
         zhan_idx = (hour * ZHAN_COUNT) // HOURS_PER_DAY
         return min(zhan_idx, ZHAN_COUNT - 1)
 
-    def _build_shou(self, serial: int, sishi: str, zhan_idx: int) -> TaiXuanShou:
+    def _build_shou(self, serial: int, sishi: str, zhan_idx: int, days_since_ws: Optional[float] = None) -> TaiXuanShou:
         """根據序號構建 TaiXuanShou"""
         key = _serial_to_key(serial)
         if key is None or key not in _TAIXUAN_DICT:
@@ -381,7 +432,7 @@ class TaiXuanCalculator:
             return TaiXuanShou(
                 serial=serial, key=0, name="——", gua_title="——",
                 gua_text="", zhan_name="——", zhan_text="",
-                sishi=sishi, mansion="——", planet="——",
+                sishi=sishi, mansion="——", mansion_degree=1, planet="——",
             )
         gua_details = _TAIXUAN_DICT[key]
         return self._build_shou_from_dict(
@@ -389,6 +440,7 @@ class TaiXuanCalculator:
             name=_key_to_name(key),
             gua_details=gua_details,
             sishi=sishi, zhan_idx=zhan_idx,
+            days_since_ws=days_since_ws,
         )
 
     def _build_shou_from_dict(
@@ -399,6 +451,7 @@ class TaiXuanCalculator:
         gua_details: dict,
         sishi: str,
         zhan_idx: int,
+        days_since_ws: Optional[float] = None,
     ) -> TaiXuanShou:
         """從字典資料構建 TaiXuanShou"""
         # 卦辭
@@ -412,6 +465,12 @@ class TaiXuanCalculator:
         # 當值贊
         zhan_name = ZHAN_NAMES[zhan_idx]
         zhan_text = all_zhan.get(zhan_name, "")
+        # 星宿及入宿度（按太玄年曆距冬至天數推算）
+        if days_since_ws is not None:
+            mansion_name, mansion_deg = _mansion_degree_for_days(days_since_ws)
+        else:
+            mansion_name = _mansion_for_serial(serial)
+            mansion_deg = 1
         return TaiXuanShou(
             serial=serial,
             key=key,
@@ -421,7 +480,8 @@ class TaiXuanCalculator:
             zhan_name=zhan_name,
             zhan_text=zhan_text,
             sishi=sishi,
-            mansion=_mansion_for_serial(serial),
+            mansion=mansion_name,
+            mansion_degree=mansion_deg,
             planet=_planet_for_serial(serial),
             all_zhan=all_zhan,
         )
