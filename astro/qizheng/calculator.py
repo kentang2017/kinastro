@@ -372,9 +372,11 @@ def compute_chart(
     # 時辰地支
     hour_branch = _get_hour_branch(hour, minute)
 
-    # 命宮地支：使用傳統虎月法（參考 MOIRA 排盤計算方式）
-    # 公式：(1 + solar_month - hour_branch) % 12
-    ming_gong_branch = _get_ming_gong_branch(solar_month, hour_branch)
+    # 命宮地支：依天文上升點（立命）所在星座確定，與 MOIRA 相同
+    # 星座索引 sign_index 與地支的對應關係：
+    #   戌(10)=0°, 酉(9)=30°, 申(8)=60°, ..., 亥(11)=330°
+    # 故地支 = (10 - sign_index) % 12
+    ming_gong_branch = (10 - _degree_to_sign_index(ascendant)) % 12
 
     # ---- 建立宮位資料 (按命宮地支及性別方向排列) ----
     # 男命：順時針 (地支遞減)；女命：逆時針 (地支遞增)

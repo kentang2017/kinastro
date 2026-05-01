@@ -469,15 +469,24 @@ class TestTrueNodeUsage:
 
 
 class TestMingGongClassicalFormula:
-    """測試命宮使用傳統虎月法公式"""
+    """測試命宮使用天文上升點（MOIRA 方式）"""
 
-    def test_ming_gong_uses_solar_month_formula(self):
-        """命宮應使用 (1 + solar_month - hour_branch) % 12 公式"""
+    def test_ming_gong_uses_ascendant(self):
+        """命宮應依天文上升點所在星座確定（MOIRA 方式）"""
         chart = compute_chart(
             1990, 1, 1, 12, 0, 8.0, 39.9042, 116.4074, "北京",
         )
-        expected = _get_ming_gong_branch(chart.solar_month, chart.hour_branch)
+        # 上升點所在星座索引決定命宮地支: (10 - sign_index) % 12
+        expected = (10 - _degree_to_sign_index(chart.ascendant)) % 12
         assert chart.ming_gong_branch == expected
+
+    def test_ming_gong_1900_hk_is_wu(self):
+        """1900-04-19 13:30 香港，上升點在 137.6°(Leo/午), 命宮應為午(6)"""
+        chart = compute_chart(
+            1900, 4, 19, 13, 30, 8.0, 22.3193, 114.1694, "香港",
+        )
+        # Ascendant ≈ 137.6° → Leo (sign index 4) → branch (10-4)%12 = 6 (午)
+        assert chart.ming_gong_branch == 6  # 午
 
     def test_ming_gong_month1_zi(self):
         """正月子時命宮應在寅 (索引2)"""
