@@ -12,6 +12,24 @@ import pandas as pd
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 
+from astro.lal_kitab_1952_expanded import (
+    PLANET_IN_HOUSE_FULL,
+    HOUSE_COLOR_RULES,
+    WEEKDAY_DIRECTIONS,
+    TIME_DIRECTIONS,
+    FARMAN_RULES,
+    GENERAL_REMEDIES,
+    HOUSE_COLOR_REMEDIES,
+    PalmistryLongevityCalculator,
+    FarmanRuleEngine,
+    get_auspicious_direction,
+    get_complete_remedies,
+    get_full_lal_kitab_analysis,
+    get_palmistry_and_farman_analysis,
+    calculate_35_year_cycle,
+    is_blind_planet,
+)
+
 # ============================================================
 # Constants
 # ============================================================
@@ -1033,11 +1051,23 @@ def render_lal_kitab_chart(
 
     # Tabs
     if lang in ("zh", "zh_cn"):
-        tab_labels = ["\U0001f4dc \u547d\u76e4\u5716", "\U0001fa90 \u884c\u661f\u8a73\u89e3", "\U0001f534 \u6d88\u7a3d\u5316\u89e3\uff08Upay\uff09", "\u2728 \u547d\u5c40\u7e3d\u7d50"]
+        tab_labels = [
+            "\U0001f4dc \u547d\u76e4\u5716",
+            "\U0001fa90 \u884c\u661f\u8a73\u89e3",
+            "\U0001f534 \u6d88\u7a3d\u5316\u89e3\uff08Upay\uff09",
+            "\u2728 \u547d\u5c40\u7e3d\u7d50",
+            "\U0001f4d6 1952\u5e74\u7248",
+        ]
     else:
-        tab_labels = ["\U0001f4dc Chart", "\U0001fa90 Planet Details", "\U0001f534 Remedies (Upay)", "\u2728 Life Summary"]
+        tab_labels = [
+            "\U0001f4dc Chart",
+            "\U0001fa90 Planet Details",
+            "\U0001f534 Remedies (Upay)",
+            "\u2728 Life Summary",
+            "\U0001f4d6 1952 Edition",
+        ]
 
-    tab_chart, tab_planets, tab_upay, tab_summary = st.tabs(tab_labels)
+    tab_chart, tab_planets, tab_upay, tab_summary, tab_1952 = st.tabs(tab_labels)
 
     # ── Tab 1: Kundli Chart ───────────────────────────────────
     with tab_chart:
@@ -1253,5 +1283,178 @@ def render_lal_kitab_chart(
                 st.markdown(f"**\U0001f4bc Upachaya Houses (2/6/10) Planets**: {pnames2}")
                 st.caption("Planets in Upachaya houses strengthen material achievements, career and health.")
 
+    # ── Tab 5: 1952 Edition ───────────────────────────────────
+    with tab_1952:
+        _render_1952_tab(chart, lang)
+
     if after_chart_hook:
         after_chart_hook()
+
+
+def _render_1952_tab(chart: "LalKitabChart", lang: str = "zh") -> None:
+    """Render the Lal Kitab 1952 expanded edition tab."""
+    import datetime as _dt
+
+    planets_in_house = {p.name: p.house for p in chart.planets}
+    birth_date = _dt.date(chart.year, chart.month, chart.day)
+
+    # derive weekday string
+    _weekday_map = {
+        0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday",
+        4: "Friday", 5: "Saturday", 6: "Sunday",
+    }
+    birth_weekday = _weekday_map[birth_date.weekday()]
+
+    if lang in ("zh", "zh_cn"):
+        st.markdown("#### \U0001f4d6 Lal Kitab 1952 年版完整分析")
+        st.caption(
+            "基於 Lal Kitab 1952 年最終版（Pt. Roop Chand Joshi）提煉，"
+            "涵蓋完整宮位解釋、盲星判定、吉方位、三十五年週期、"
+            "房屋顏色補救、手相壽命及 Farman 規則引擎。"
+        )
+    else:
+        st.markdown("#### \U0001f4d6 Lal Kitab 1952 Edition — Complete Analysis")
+        st.caption(
+            "Extracted from the Lal Kitab 1952 Final Edition (Pt. Roop Chand Joshi). "
+            "Includes full house interpretations, blind-planet status, auspicious directions, "
+            "35-year cycle, house colour remedies, palmistry longevity and Farman engine."
+        )
+
+    # ── Section A: Full house interpretations + blind status ──
+    if lang in ("zh", "zh_cn"):
+        st.markdown("##### \U0001fa90 完整宮位解釋（1952年版）與盲星狀態")
+    else:
+        st.markdown("##### \U0001fa90 Full House Interpretations (1952) & Blind-Planet Status")
+
+    for p in chart.planets:
+        interp = PLANET_IN_HOUSE_FULL.get(p.name, {}).get(p.house, "")
+        blind = is_blind_planet(p.name, p.house)
+        if lang in ("zh", "zh_cn"):
+            label = f"{p.glyph} {p.name_zh} — 第{p.house}宮 | {blind}"
+        else:
+            label = f"{p.glyph} {p.name_zh} — House {p.house} | {blind}"
+        with st.expander(label, expanded=False):
+            if interp:
+                st.markdown(f"\U0001f4d6 {interp}")
+            color_info = HOUSE_COLOR_RULES.get(p.house, {})
+            if color_info:
+                if lang in ("zh", "zh_cn"):
+                    st.markdown(
+                        f"**房屋顏色**：推薦 {color_info.get('recommended','')} "
+                        f"| 避免 {color_info.get('avoid','')} "
+                        f"| 備注：{color_info.get('note','')}"
+                    )
+                else:
+                    st.markdown(
+                        f"**House Colour**: Recommended {color_info.get('recommended','')} "
+                        f"| Avoid {color_info.get('avoid','')} "
+                        f"| Note: {color_info.get('note','')}"
+                    )
+
+    # ── Section B: Auspicious directions ──────────────────────
+    st.divider()
+    day_dir, hour_dir = get_auspicious_direction(birth_weekday, chart.hour)
+    if lang in ("zh", "zh_cn"):
+        st.markdown(f"##### \U0001f9ed 出生日時吉利方位")
+        st.markdown(
+            f"- **出生星期**：{birth_weekday} → 吉方位：**{day_dir}**\n"
+            f"- **出生時辰**：{chart.hour:02d}:00 → 吉方位：**{hour_dir}**"
+        )
+    else:
+        st.markdown("##### \U0001f9ed Auspicious Birth Directions")
+        st.markdown(
+            f"- **Birth Weekday**: {birth_weekday} → Direction: **{day_dir}**\n"
+            f"- **Birth Hour**: {chart.hour:02d}:00 → Direction: **{hour_dir}**"
+        )
+
+    # ── Section C: 35-year cycle ───────────────────────────────
+    st.divider()
+    if lang in ("zh", "zh_cn"):
+        st.markdown("##### \U0001f501 三十五年週期（35-Year Cycle）")
+        st.caption("每個行星主運的吉凶狀態及建議補救，基於宮位判定。")
+    else:
+        st.markdown("##### \U0001f501 35-Year Planetary Cycle")
+        st.caption("Auspicious/inauspicious status and remedies for each planetary period.")
+
+    cycle_data = calculate_35_year_cycle(birth_date, planets_in_house)
+    # Show only the first 35-year cycle (keys starting with "週期1")
+    rows_35 = []
+    for period_key, info in cycle_data.items():
+        if not period_key.startswith("週期1"):
+            continue
+        if lang in ("zh", "zh_cn"):
+            rows_35.append({
+                "週期/年齡": period_key,
+                "行星": info["planet_zh"],
+                "年數": info["years"],
+                "宮位": info["house"],
+                "狀態": info["status"],
+                "補救": info["remedy"],
+            })
+        else:
+            rows_35.append({
+                "Period/Age": period_key,
+                "Planet": info["planet_zh"],
+                "Years": info["years"],
+                "House": info["house"],
+                "Status": info["status"],
+                "Remedy": info["remedy"],
+            })
+    if rows_35:
+        st.dataframe(pd.DataFrame(rows_35), hide_index=True, use_container_width=True)
+
+    # ── Section D: House colour remedies ──────────────────────
+    st.divider()
+    if lang in ("zh", "zh_cn"):
+        st.markdown("##### \U0001f3e0 房屋顏色補救一覽")
+    else:
+        st.markdown("##### \U0001f3e0 House Colour Remedies")
+
+    color_rows = []
+    for house_num, remedies_list in HOUSE_COLOR_REMEDIES.items():
+        if lang in ("zh", "zh_cn"):
+            color_rows.append({"宮位": house_num, "補救建議": "；".join(remedies_list)})
+        else:
+            color_rows.append({"House": house_num, "Remedies": "; ".join(remedies_list)})
+    st.dataframe(pd.DataFrame(color_rows), hide_index=True, use_container_width=True)
+
+    # ── Section E: Farman Engine ───────────────────────────────
+    st.divider()
+    if lang in ("zh", "zh_cn"):
+        st.markdown("##### \U0001f4dc Farman 規則引擎")
+        st.caption("根據行星宮位自動匹配1952年版Farman規則。")
+    else:
+        st.markdown("##### \U0001f4dc Farman Rule Engine")
+        st.caption("Auto-matches 1952 Farman rules based on planetary house placements.")
+
+    farman_results = FarmanRuleEngine.get_all_house_farmans(planets_in_house)
+    for planet_name, fdata in farman_results.items():
+        pobj = next((p for p in chart.planets if p.name == planet_name), None)
+        glyph = pobj.glyph if pobj else ""
+        zh_name = pobj.name_zh if pobj else planet_name
+        house_n = planets_in_house.get(planet_name, "?")
+        if lang in ("zh", "zh_cn"):
+            flabel = f"{glyph} {zh_name} — 第{house_n}宮"
+        else:
+            flabel = f"{glyph} {zh_name} — House {house_n}"
+        with st.expander(flabel, expanded=False):
+            for fm in fdata.get("matched_farmans", []):
+                if lang in ("zh", "zh_cn"):
+                    st.markdown(f"**Farman {fm['farman_number']}**：{fm['rule']}")
+                    st.markdown(f"補救：{', '.join(fm['remedy']) if isinstance(fm['remedy'], list) else fm['remedy']}")
+                    st.caption(f"備注：{fm.get('note', '')}")
+                else:
+                    st.markdown(f"**Farman {fm['farman_number']}**: {fm['rule']}")
+                    st.markdown(f"Remedy: {', '.join(fm['remedy']) if isinstance(fm['remedy'], list) else fm['remedy']}")
+                    st.caption(f"Note: {fm.get('note', '')}")
+
+    # ── Section F: General remedies ───────────────────────────
+    st.divider()
+    if lang in ("zh", "zh_cn"):
+        st.markdown("##### \U0001f538 通用補救建議")
+        for r in GENERAL_REMEDIES:
+            st.markdown(f'<div class="lk-upay-item">\U0001f538 {r}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown("##### \U0001f538 General Remedies")
+        for r in GENERAL_REMEDIES:
+            st.markdown(f'<div class="lk-upay-item">\U0001f538 {r}</div>', unsafe_allow_html=True)
