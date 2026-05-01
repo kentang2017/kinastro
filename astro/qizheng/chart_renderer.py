@@ -1469,3 +1469,43 @@ def render_zhangguo(chart: ChartData, result: ZhangguoResult):
                 st.markdown("\n".join(rows), unsafe_allow_html=True)
 
 
+# ============================================================
+# 命宮特徵解讀 (Life Palace Interpretations from 七政.txt)
+# ============================================================
+
+_MING_GONG_INDEX = 0  # palace_index of 命宮 is always 0
+
+def render_ming_gong_interpretations(chart: ChartData):
+    """渲染命宮特徵文字描述（依七政.txt）。
+
+    顯示兩類解讀：
+    1. 立命X宮 — 命宮所在地支的推命文字
+    2. X入本命宮 — 各星曜入命宮的文字描述
+    """
+    from .ming_gong_interp import get_li_ming_text, get_planet_in_ming_text
+
+    st.subheader("🔮 命宮特徵解讀")
+
+    ming_house = chart.houses[_MING_GONG_INDEX]
+    branch_char = ming_house.branch_name  # e.g. "子", "丑", …
+    planets_in_ming = ming_house.planets  # list of planet name strings
+
+    # ── 1. 立命X宮 ─────────────────────────────────────────────────────────
+    li_ming_text = get_li_ming_text(branch_char)
+    if li_ming_text:
+        with st.expander(f"📖 立命{branch_char}宮（推命文字）", expanded=True):
+            st.markdown(li_ming_text)
+
+    # ── 2. 星曜入命宮 ──────────────────────────────────────────────────────
+    if planets_in_ming:
+        st.markdown(
+            f"**命宮（{branch_char}宮）入宮星曜：** {'、'.join(planets_in_ming)}"
+        )
+        for planet_name in planets_in_ming:
+            text = get_planet_in_ming_text(planet_name)
+            if text:
+                with st.expander(f"⭐ {planet_name}入本命宮", expanded=True):
+                    st.markdown(text)
+    else:
+        st.info("命宮無入宮星曜。")
+
