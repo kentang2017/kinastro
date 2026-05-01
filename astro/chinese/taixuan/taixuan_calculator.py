@@ -228,11 +228,11 @@ def _mansion_degree_for_days(days_since_ws: float) -> Tuple[str, int]:
     days_mod = days_since_ws % _MANSION_TOTAL_DEGREES
     cumulative = 0.0
     for mansion, width in _MANSION_WIDTHS_FROM_DOU:
-        if cumulative + width > days_mod:
+        if cumulative + width >= days_mod:
             degree = int(days_mod - cumulative) + 1
             return mansion, max(1, degree)
         cumulative += width
-    # fallback（理論上不會到達）
+    # fallback：處理浮點精度邊界情況
     return _MANSION_WIDTHS_FROM_DOU[-1][0], 1
 
 
@@ -424,7 +424,7 @@ class TaiXuanCalculator:
         zhan_idx = (hour * ZHAN_COUNT) // HOURS_PER_DAY
         return min(zhan_idx, ZHAN_COUNT - 1)
 
-    def _build_shou(self, serial: int, sishi: str, zhan_idx: int, days_since_ws: float = 0.0) -> TaiXuanShou:
+    def _build_shou(self, serial: int, sishi: str, zhan_idx: int, days_since_ws: Optional[float] = None) -> TaiXuanShou:
         """根據序號構建 TaiXuanShou"""
         key = _serial_to_key(serial)
         if key is None or key not in _TAIXUAN_DICT:
@@ -451,7 +451,7 @@ class TaiXuanCalculator:
         gua_details: dict,
         sishi: str,
         zhan_idx: int,
-        days_since_ws: float = 0.0,
+        days_since_ws: Optional[float] = None,
     ) -> TaiXuanShou:
         """從字典資料構建 TaiXuanShou"""
         # 卦辭
@@ -466,7 +466,7 @@ class TaiXuanCalculator:
         zhan_name = ZHAN_NAMES[zhan_idx]
         zhan_text = all_zhan.get(zhan_name, "")
         # 星宿及入宿度（按太玄年曆距冬至天數推算）
-        if days_since_ws > 0:
+        if days_since_ws is not None:
             mansion_name, mansion_deg = _mansion_degree_for_days(days_since_ws)
         else:
             mansion_name = _mansion_for_serial(serial)
