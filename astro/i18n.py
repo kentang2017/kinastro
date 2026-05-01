@@ -2773,6 +2773,32 @@ Enter your birth information to look up your tree month and its poetic attribute
         "en": "⚠️ Heliacal calculation requires precise observer location; may not be available in all Swiss Ephemeris builds.",
     },
     # ── KP Astrology (Krishnamurti Paddhati) ─────────────────────────────────
+    "tab_lal_kitab": {
+        "zh": "📕 紅皮書占星",
+        "en": "📕 Lal Kitab",
+    },
+    "sys_hint_lal_kitab": {
+        "zh": "印度紅皮書業力化解占星",
+        "en": "Indian Red Book karma-remedy astrology",
+    },
+    "desc_lal_kitab": {
+        "zh": (
+            "**紅皮書（Lal Kitab）**\n\n"
+            "印度占星師 Pt. Roop Chand Joshi 的傳奇占星系統，"
+            "以固定的卡爾普拉什坤德里（白羊=第一宮）為基礎，"
+            "強調業力化解（Upay）的實用方法。"
+        ),
+        "en": (
+            "**Lal Kitab (Red Book)**\n\n"
+            "The legendary Indian astrology system by Pt. Roop Chand Joshi, "
+            "using the fixed Kal Purush Kundli (Aries = House 1) "
+            "and renowned for its practical karma-dissolving Upay (remedies)."
+        ),
+    },
+    "spinner_lal_kitab": {
+        "zh": "🔮 計算紅皮書命盤中…",
+        "en": "🔮 Computing Lal Kitab chart…",
+    },
     "tab_kp": {
         "zh": "🔮 KP 占星",
         "en": "🔮 KP Astrology",

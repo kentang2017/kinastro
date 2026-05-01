@@ -46,6 +46,7 @@ from astro.western.harmonic import render_harmonic_chart
 from astro.western.draconic import render_draconic_chart
 from astro.western.western_synastry import compute_synastry
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
+from astro.lal_kitab import compute_lal_kitab_chart, render_lal_kitab_chart
 from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha
 from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
 from astro.vedic.ashtakavarga import compute_ashtakavarga
@@ -1082,7 +1083,7 @@ with st.sidebar:
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
-        ("cat_indian", ["tab_indian", "tab_nadi", "tab_jaimini", "tab_kp"]),
+        ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
@@ -1103,6 +1104,7 @@ with st.sidebar:
         "tab_ziwei": t("tab_ziwei"),
         "tab_western": t("tab_western"),
         "tab_indian": t("tab_indian"),
+        "tab_lal_kitab": t("tab_lal_kitab"),
         "tab_sukkayodo": t("tab_sukkayodo"),
         "tab_thai": t("tab_thai"),
         "tab_kabbalistic": t("tab_kabbalistic"),
@@ -1147,6 +1149,7 @@ with st.sidebar:
         "tab_ziwei": t("sys_hint_ziwei"),
         "tab_chinese": t("sys_hint_chinese"),
         "tab_indian": t("sys_hint_indian"),
+        "tab_lal_kitab": t("sys_hint_lal_kitab"),
         "tab_thai": t("sys_hint_thai"),
         "tab_kabbalistic": t("sys_hint_kabbalistic"),
         "tab_mazzalot": t("sys_hint_mazzalot"),
@@ -3109,6 +3112,26 @@ elif _selected_system == "tab_indian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_indian"))
+
+# --- 宿曜道 ---
+elif _selected_system == "tab_lal_kitab":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_lal_kitab")):
+                _lk_chart = compute_lal_kitab_chart(**_p)
+            _lk_lang = st.session_state.get("lang", "zh")
+            render_lal_kitab_chart(
+                _lk_chart,
+                lang=_lk_lang,
+                after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", _lk_chart, btn_key="lal_kitab"),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_lal_kitab"))
 
 # --- 宿曜道 ---
 elif _selected_system == "tab_sukkayodo":
