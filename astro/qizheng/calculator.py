@@ -417,11 +417,12 @@ def compute_chart(
 
     # 計算高度角（地平坐標）—— 觀測者位於出生地
     try:
-        _geopos = (longitude, latitude, 0.0)
+        geopos_obs = (longitude, latitude, 0.0)
         for planet in planets:
-            _topo = swe.azalt(jd, swe.ECL2HOR, _geopos, 0, 0,
-                              (planet.longitude, planet.latitude, 0))
-            planet.altitude = round(_topo[1], 1)
+            # swe.azalt params: jd, flag, geopos, atm_press, atm_temp, ecliptic_coords
+            azalt_result = swe.azalt(jd, swe.ECL2HOR, geopos_obs, 0, 0,
+                                     (planet.longitude, planet.latitude, 0))
+            planet.altitude = round(azalt_result[1], 1)
     except Exception:
         pass  # 若計算失敗保留預設值 0.0
 

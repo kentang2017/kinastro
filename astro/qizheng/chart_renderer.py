@@ -1303,7 +1303,7 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
             retro = " ℞" if p.retrograde else ""
             qidu = " ⚠岐度" if p.is_qidu else ""
             alt_val = getattr(p, "altitude", 0.0)
-            alt_str = f" **{alt_val:+.1f}°**" if alt_val != 0.0 else ""
+            alt_str = f" **{alt_val:+.1f}°**"
             st.markdown(
                 f'<span style="color:{color};font-weight:bold">{p.name}</span> '
                 f'{p.sign_chinese} {p.sign_degree:.2f}° · '
