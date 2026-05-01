@@ -15,6 +15,13 @@ _TXT_PATH = os.path.normpath(
 
 _BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
+# Maximum lines to scan after a 立命X宮 header when no next header is found
+_DEFAULT_SECTION_END_OFFSET = 200
+# Lines to search within for the "十二宮論凶吉" section terminator
+_MAX_SEARCH_LINES = 300
+# Maximum lines to collect within a single planet's 本命宮 section
+_MAX_PLANET_SECTION_LINES = 30
+
 # Planet display name → lookup prefix for "X入本命宮："
 _PLANET_TO_KEY = {
     "太陽": "日",
