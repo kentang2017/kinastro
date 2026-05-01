@@ -11,3 +11,4 @@ opencc-python-reimplemented>=0.1.7
 kinqimen>=0.0.6.6
 kintaiyi @ git+https://github.com/kentang2017/kintaiyi.git
 sxtwl>=2.0.6
+taixuanshifa>=1.0.8

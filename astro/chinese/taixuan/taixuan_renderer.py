@@ -19,6 +19,7 @@ from .taixuan_calculator import (
     TOTAL_SHOU_COUNT,
     _SORTED_KEYS,
     _TAIXUAN_DICT,
+    _DEGREE_TO_ZH,
     _key_to_name,
 )
 
@@ -168,9 +169,9 @@ def build_zhan_radar_svg(shou: TaiXuanShou, size: int = 320) -> str:
     active_idx = ZHAN_NAMES.index(shou.zhan_name) if shou.zhan_name in ZHAN_NAMES else 0
 
     svg_parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" '
-        f'viewBox="0 0 {size} {size}" preserveAspectRatio="xMidYMid meet" '
-        f'style="display:block;background:#080818;border-radius:50%;overflow:visible;">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
+        f'viewBox="0 0 {size} {size}" '
+        f'style="display:block;background:#080818;border-radius:50%;">',
         "<defs>",
         f"<radialGradient id='zhan-bg' cx='50%' cy='50%' r='50%'>",
         f"  <stop offset='0%' stop-color='#1a1040'/>",
@@ -367,7 +368,7 @@ def render_taixuan_chart(result: TaiXuanResult, after_chart_hook=None) -> None:
         {'Active Praise' if is_en else '當值贊'}
       </div>
       <div style="margin-top:6px;font-size:11px;color:rgba(167,139,250,0.8);">
-        {shou.sishi}&ensp;·&ensp;{shou.mansion}宿&ensp;·&ensp;{shou.planet}
+        {shou.sishi}&ensp;·&ensp;{shou.mansion}宿{_DEGREE_TO_ZH.get(shou.mansion_degree, str(shou.mansion_degree))}度&ensp;·&ensp;{shou.planet}
       </div>
     </div>
   </div>
@@ -387,8 +388,8 @@ def render_taixuan_chart(result: TaiXuanResult, after_chart_hook=None) -> None:
         # 九贊雷達圖
         radar_svg = build_zhan_radar_svg(shou)
         st.components.v1.html(
-            f'<div style="background:#080818;border-radius:50%;width:100%;">{radar_svg}</div>',
-            height=340,
+            f'<div style="background:#080818;border-radius:50%;width:100%;display:flex;justify-content:center;">{radar_svg}</div>',
+            height=360,
         )
         # 干支四柱（本命模式）
         if result.mode == "natal":
@@ -494,7 +495,7 @@ def _render_shou_detail_card(shou: TaiXuanShou, is_en: bool) -> None:
     </div>
     <div style="background:{_CYAN_DIM};border:1px solid rgba(56,189,248,0.3);
          border-radius:8px;padding:6px 12px;font-size:11px;color:{_CYAN};">
-      {shou.mansion}宿
+      {shou.mansion}宿{_DEGREE_TO_ZH.get(shou.mansion_degree, str(shou.mansion_degree))}度
     </div>
     <div style="background:{_GOLD_DIM};border:1px solid {_GOLD_BORDER};
          border-radius:8px;padding:6px 12px;font-size:11px;color:{_GOLD};">
