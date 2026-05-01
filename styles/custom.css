@@ -1182,3 +1182,41 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
         background-position: 0% center;
     }
 }
+
+/* ── Homepage PC / wide-screen enhancements ─────────────────── */
+@media (min-width: 900px) {
+    .hp-hero {
+        padding: 5.5rem 4rem 5rem;
+        min-height: 460px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .hp-hero-content {
+        width: 100%;
+        max-width: 820px;
+        margin: 0 auto;
+    }
+    .hp-desc {
+        max-width: 780px;
+        font-size: 1rem;
+    }
+    .hp-title-line1 {
+        font-size: clamp(3.6rem, 8vw, 5.5rem);
+    }
+    .hp-title-sub {
+        font-size: 1.3rem;
+        letter-spacing: 0.18em;
+    }
+    .hp-stat-num {
+        font-size: clamp(2.4rem, 4vw, 3.2rem);
+    }
+    .hp-cat-grid {
+        grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+        gap: 16px;
+    }
+    .hp-feat-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+}

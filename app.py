@@ -602,11 +602,13 @@ with _lang_drop:
         label_visibility="collapsed",
     )
 
-st.title(t("app_title"))
-st.markdown(
-    '<p class="app-subtitle">' + t("app_subtitle") + "</p>",
-    unsafe_allow_html=True,
-)
+# Only show title/subtitle on chart pages; homepage has its own hero section
+if "_system_select" in st.session_state:
+    st.title(t("app_title"))
+    st.markdown(
+        '<p class="app-subtitle">' + t("app_subtitle") + "</p>",
+        unsafe_allow_html=True,
+    )
 
 # ============================================================
 # 世界城市資料 (城市, 緯度, 經度, 時區)
