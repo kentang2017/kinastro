@@ -993,8 +993,8 @@ with st.sidebar:
     birth_date = st.date_input(
         t("birth_date"),
         value=date(1990, 1, 1),
-        min_value=date(1900, 1, 1),
-        max_value=date(2100, 12, 31),
+        min_value=date(1, 1, 1),
+        max_value=date(date.today().year, 12, 31),
         key="birth_date_input",
     )
     birth_time = st.time_input(
