@@ -1458,3 +1458,806 @@ def _render_1952_tab(chart: "LalKitabChart", lang: str = "zh") -> None:
         st.markdown("##### \U0001f538 General Remedies")
         for r in GENERAL_REMEDIES:
             st.markdown(f'<div class="lk-upay-item">\U0001f538 {r}</div>', unsafe_allow_html=True)
+
+
+# ============================================================
+# Lal Kitab 1952 Full Page Renderer (7 tabs)
+# ============================================================
+
+def _generate_pdf_text(chart: "LalKitabChart", lang: str = "zh") -> str:
+    """Generate a plain-text report suitable for download as a PDF stand-in."""
+    import datetime as _dt
+
+    planets_in_house = {p.name: p.house for p in chart.planets}
+    birth_date = _dt.date(chart.year, chart.month, chart.day)
+    weekday_map = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday",
+                   4: "Friday", 5: "Saturday", 6: "Sunday"}
+    weekday = weekday_map[birth_date.weekday()]
+    day_dir, hour_dir = get_auspicious_direction(weekday, chart.hour)
+
+    lines = [
+        "=" * 60,
+        "  लाल किताब · Lal Kitab 1952 · 紅皮書命盤報告",
+        "=" * 60,
+        f"出生日期：{chart.year}/{chart.month:02d}/{chart.day:02d}",
+        f"出生時間：{chart.hour:02d}:{chart.minute:02d} UTC{chart.timezone:+.1f}",
+        f"地點：{chart.location_name or 'N/A'}",
+        f"歲差（Ayanamsa）：{chart.ayanamsa:.4f}°",
+        f"出生上升：{chart.lagna_sign}（第{chart.lagna_house}宮）",
+        "",
+        "── 行星宮位 ──",
+    ]
+    for p in chart.planets:
+        pk = " ★本位" if p.in_pakka_ghar else ""
+        rt = " ℞逆行" if p.retrograde and p.name not in ("Rahu", "Ketu") else ""
+        lines.append(f"  {p.name_zh}：第{p.house}宮 {p.sign_zh}{pk}{rt}")
+
+    lines += ["", "── 行星宮位完整解釋（1952年版）──"]
+    for p in chart.planets:
+        interp = PLANET_IN_HOUSE_FULL.get(p.name, {}).get(p.house, "")
+        if interp:
+            lines.append(f"\n{p.name_zh}（第{p.house}宮）：{interp}")
+
+    lines += ["", "── 吉利方位 ──",
+              f"  出生星期 {weekday} → {day_dir}",
+              f"  出生時辰 {chart.hour:02d}:00 → {hour_dir}"]
+
+    cycle = calculate_35_year_cycle(birth_date, planets_in_house)
+    lines += ["", "── 三十五年週期（第一循環）──"]
+    for k, v in cycle.items():
+        if k.startswith("週期1"):
+            lines.append(f"  {k}：{v['planet_zh']} {v['years']}年 第{v['house']}宮 {v['status']}")
+
+    lines += ["", "── 房屋顏色建議 ──"]
+    for h, rule in HOUSE_COLOR_RULES.items():
+        lines.append(f"  第{h}宮：推薦 {rule['recommended']} | 避免 {rule['avoid']}")
+
+    lines += ["", "=" * 60, "  報告由 KinAstro (kinastro.streamlit.app) 自動生成", "=" * 60]
+    return "\n".join(lines)
+
+
+def render_lal_kitab_1952_page(
+    chart: "LalKitabChart",
+    lang: str = "zh",
+    after_chart_hook=None,
+) -> None:
+    """Render the comprehensive Lal Kitab 1952 7-tab page.
+
+    Tabs:
+        1. 【星盤總覽】 — SVG chart + planet table + birth info
+        2. 【宮位解釋】 — PLANET_IN_HOUSE_FULL interpretations + blind status
+        3. 【補救措施】 — get_complete_remedies() Upay display
+        4. 【35年大運】 — calculate_35_year_cycle() with metrics
+        5. 【手相壽命】 — interactive PalmistryLongevityCalculator form
+        6. 【Farman 法則】 — FarmanRuleEngine matched rules
+        7. 【房屋顏色與方位】 — HOUSE_COLOR_RULES + get_auspicious_direction()
+    """
+    import datetime as _dt
+
+    st.markdown(_LK_CSS, unsafe_allow_html=True)
+
+    planets_in_house: Dict[str, int] = {p.name: p.house for p in chart.planets}
+    try:
+        birth_date = _dt.date(chart.year, chart.month, chart.day)
+    except ValueError:
+        birth_date = _dt.date.today()
+    weekday_map = {
+        0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday",
+        4: "Friday", 5: "Saturday", 6: "Sunday",
+    }
+    birth_weekday = weekday_map[birth_date.weekday()]
+
+    # ── Title banner ──────────────────────────────────────────
+    if lang in ("zh", "zh_cn"):
+        title = "लाल किताब · 拉爾基塔布 1952 · 紅皮書完整命盤"
+        subtitle = "Lal Kitab 1952 Final Edition · Pt. Roop Chand Joshi · 卡爾普拉什固定宮位系統"
+    else:
+        title = "लाल किताब · Lal Kitab 1952 Complete Chart"
+        subtitle = "Lal Kitab 1952 Final Edition · Pt. Roop Chand Joshi · Kal Purush Fixed House System"
+
+    st.markdown(
+        f'<div class="lk-title-banner">'
+        f'<div class="lk-title">{title}</div>'
+        f'<div class="lk-subtitle">{subtitle}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── PDF download button ───────────────────────────────────
+    pdf_text = _generate_pdf_text(chart, lang)
+    col_dl, col_sp = st.columns([1, 3])
+    with col_dl:
+        st.download_button(
+            label="📄 一鍵下載報告 (TXT)" if lang in ("zh", "zh_cn") else "📄 Download Report (TXT)",
+            data=pdf_text.encode("utf-8"),
+            file_name=f"lal_kitab_1952_{chart.year}{chart.month:02d}{chart.day:02d}.txt",
+            mime="text/plain",
+        )
+
+    # ── 7 Tabs ────────────────────────────────────────────────
+    if lang in ("zh", "zh_cn"):
+        tab_labels = [
+            "🌟 星盤總覽",
+            "🔮 宮位解釋",
+            "🔴 補救措施",
+            "🔄 35年大運",
+            "✋ 手相壽命",
+            "📜 Farman 法則",
+            "🏠 房屋顏色與方位",
+        ]
+    else:
+        tab_labels = [
+            "🌟 Chart Overview",
+            "🔮 House Interpretations",
+            "🔴 Remedies (Upay)",
+            "🔄 35-Year Cycle",
+            "✋ Palmistry Longevity",
+            "📜 Farman Rules",
+            "🏠 House Colours & Directions",
+        ]
+
+    (
+        tab_overview,
+        tab_interp,
+        tab_remedies,
+        tab_cycle,
+        tab_palm,
+        tab_farman,
+        tab_house,
+    ) = st.tabs(tab_labels)
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 1: 星盤總覽
+    # ──────────────────────────────────────────────────────────
+    with tab_overview:
+        col_svg, col_info = st.columns([1, 1])
+
+        with col_svg:
+            svg = _build_lal_kitab_svg(chart, width=480)
+            st.markdown(
+                f'<div style="display:flex;justify-content:center;margin:8px 0;">{svg}</div>',
+                unsafe_allow_html=True,
+            )
+            if lang in ("zh", "zh_cn"):
+                st.caption("★ = Pakka Ghar 本位　℞ = 逆行　顏色對應各行星能量")
+            else:
+                st.caption("★ = Pakka Ghar (permanent house)　℞ = Retrograde")
+
+        with col_info:
+            if lang in ("zh", "zh_cn"):
+                st.markdown("**📐 基本資訊**")
+                st.markdown(
+                    f"- **歲差（Ayanamsa）**：{chart.ayanamsa:.4f}°\n"
+                    f"- **出生上升**：{chart.lagna_sign}（第{chart.lagna_house}宮）\n"
+                    f"- **出生日期**：{chart.year}/{chart.month:02d}/{chart.day:02d}\n"
+                    f"- **出生時間**：{chart.hour:02d}:{chart.minute:02d} UTC{chart.timezone:+.1f}\n"
+                    f"- **地點**：{chart.location_name or 'N/A'}"
+                )
+                st.divider()
+                st.markdown("**📖 拉爾基塔布系統說明**")
+                st.info(
+                    "拉爾基塔布使用**卡爾普拉什固定宮位**：白羊座永遠是第一宮，"
+                    "無論上升星座。每顆行星所在**星座**即決定其**宮位**。\n\n"
+                    "⭐ **Pakka Ghar（本位）**：行星在其永久本宮時，力量最強，影響最大。\n\n"
+                    "🔵 **盲星**：羅睺/計都永遠是盲星。土星/火星在角宮為半盲星。"
+                )
+            else:
+                st.markdown("**📐 Chart Information**")
+                st.markdown(
+                    f"- **Ayanamsa**：{chart.ayanamsa:.4f}°\n"
+                    f"- **Natal Lagna**：{chart.lagna_sign} (House {chart.lagna_house})\n"
+                    f"- **Date**：{chart.year}/{chart.month:02d}/{chart.day:02d}\n"
+                    f"- **Time**：{chart.hour:02d}:{chart.minute:02d} UTC{chart.timezone:+.1f}\n"
+                    f"- **Location**：{chart.location_name or 'N/A'}"
+                )
+                st.divider()
+                st.markdown("**📖 About Lal Kitab**")
+                st.info(
+                    "Lal Kitab uses the **Kal Purush fixed house** system: Aries is always House 1, "
+                    "regardless of Lagna. Each planet's **sign** determines its house number.\n\n"
+                    "⭐ **Pakka Ghar**: Planet in its permanent house has maximum strength.\n\n"
+                    "🔵 **Blind planets**: Rahu/Ketu are always blind. Saturn/Mars in angular houses are semi-blind."
+                )
+
+        # Planet metrics row
+        st.divider()
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### 🪐 行星位置一覽")
+        else:
+            st.markdown("#### 🪐 Planetary Positions")
+
+        metric_cols = st.columns(len(chart.planets))
+        for col, p in zip(metric_cols, chart.planets):
+            with col:
+                deg = int(p.sign_degree)
+                arc_minutes = int((p.sign_degree - deg) * 60)
+                retro = " ℞" if p.retrograde and p.name not in ("Rahu", "Ketu") else ""
+                pk = " ★" if p.in_pakka_ghar else ""
+                st.metric(
+                    label=f"{p.glyph} {PLANET_ZH_SHORT.get(p.name, p.name[0])}",
+                    value=f"第{p.house}宮" if lang in ("zh", "zh_cn") else f"H{p.house}",
+                    delta=f"{p.sign_zh}{retro}{pk}" if lang in ("zh", "zh_cn") else f"{p.sign}{retro}{pk}",
+                )
+
+        # Detailed table
+        rows = []
+        for p in chart.planets:
+            deg = int(p.sign_degree)
+            arc_minutes = int((p.sign_degree - deg) * 60)
+            retro_str = "℞" if p.retrograde and p.name not in ("Rahu", "Ketu") else ""
+            pakka_str = "★ 本位" if p.in_pakka_ghar else ""
+            blind = is_blind_planet(p.name, p.house)
+            if lang in ("zh", "zh_cn"):
+                rows.append({
+                    "行星": f"{p.glyph} {p.name_zh}",
+                    "宮位": p.house,
+                    "星座": f"{p.sign_glyph} {p.sign_zh}",
+                    "宮內度數": f"{deg}°{arc_minutes:02d}'",
+                    "逆行": retro_str,
+                    "本位": pakka_str,
+                    "盲星狀態": blind,
+                })
+            else:
+                rows.append({
+                    "Planet": f"{p.glyph} {p.name_zh}",
+                    "House": p.house,
+                    "Sign": f"{p.sign_glyph} {p.sign}",
+                    "Degree": f"{deg}°{arc_minutes:02d}'",
+                    "Retro": retro_str,
+                    "Pakka": pakka_str,
+                    "Blind Status": blind,
+                })
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+        if after_chart_hook:
+            after_chart_hook()
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 2: 宮位解釋
+    # ──────────────────────────────────────────────────────────
+    with tab_interp:
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### 🔮 行星宮位完整解釋（1952年版）")
+            st.caption("使用 PLANET_IN_HOUSE_FULL 字典，1952年版原典詳細果報（吉凶、財富、婚姻、健康）。")
+        else:
+            st.markdown("#### 🔮 Planet-in-House Full Interpretations (1952 Edition)")
+            st.caption("From PLANET_IN_HOUSE_FULL — detailed karmic outcomes per planet/house (1952 Final Edition).")
+
+        for p in chart.planets:
+            interp = PLANET_IN_HOUSE_FULL.get(p.name, {}).get(p.house, "")
+            blind = is_blind_planet(p.name, p.house)
+            if lang in ("zh", "zh_cn"):
+                pk_note = "（★ 本位加成）" if p.in_pakka_ghar else ""
+                rt_note = "（℞ 逆行）" if p.retrograde and p.name not in ("Rahu", "Ketu") else ""
+                label = f"{p.glyph} {p.name_zh} — 第{p.house}宮 {p.sign_glyph}{p.sign_zh} {pk_note}{rt_note} | {blind}"
+            else:
+                pk_note = " (★ Pakka Ghar)" if p.in_pakka_ghar else ""
+                rt_note = " (℞ Retrograde)" if p.retrograde and p.name not in ("Rahu", "Ketu") else ""
+                label = f"{p.glyph} {p.name_zh} — House {p.house} {p.sign_glyph}{p.sign} {pk_note}{rt_note} | {blind}"
+
+            with st.expander(label, expanded=False):
+                if interp:
+                    st.markdown(f"📖 {interp}")
+                else:
+                    st.info("此宮位解釋待補充。" if lang in ("zh", "zh_cn") else "Interpretation not available.")
+
+                if p.in_pakka_ghar:
+                    if lang in ("zh", "zh_cn"):
+                        st.success(f"✨ 此行星位於其永久本宮（Pakka Ghar：{p.pakka_ghar}），力量最強！")
+                    else:
+                        st.success(f"✨ Planet is in Pakka Ghar (Permanent House {p.pakka_ghar}) — maximum strength!")
+
+                if p.retrograde and p.name not in ("Rahu", "Ketu"):
+                    if lang in ("zh", "zh_cn"):
+                        st.warning("⚠️ 此行星逆行，相關事務需加倍努力或進行特殊消解儀式。")
+                    else:
+                        st.warning("⚠️ This planet is retrograde — related matters need extra effort or specific rituals.")
+
+                color_info = HOUSE_COLOR_RULES.get(p.house, {})
+                if color_info and lang in ("zh", "zh_cn"):
+                    st.markdown(
+                        f"**🏠 房屋顏色提示**：推薦 {color_info.get('recommended','')} "
+                        f"| 避免 {color_info.get('avoid','')} "
+                        f"| {color_info.get('note','')}"
+                    )
+                elif color_info:
+                    st.markdown(
+                        f"**🏠 House Colour Tip**: Recommended {color_info.get('recommended','')} "
+                        f"| Avoid {color_info.get('avoid','')} "
+                        f"| {color_info.get('note','')}"
+                    )
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 3: 補救措施
+    # ──────────────────────────────────────────────────────────
+    with tab_remedies:
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### 🔴 專屬 Upay 補救措施（完整版）")
+            st.caption(
+                "使用 get_complete_remedies() 函式，顯示每顆行星在其宮位的具體 Upay，"
+                "含行星特定補救、房屋顏色、捐贈物品、餵食動物等。"
+            )
+        else:
+            st.markdown("#### 🔴 Complete Upay Remedies")
+            st.caption(
+                "From get_complete_remedies() — planet+house specific Upay, house colour remedies, "
+                "donations, and animal offerings."
+            )
+
+        all_remedies = get_complete_remedies(planets_in_house)
+
+        # General remedies
+        if lang in ("zh", "zh_cn"):
+            with st.expander("🌐 通用補救建議（適用所有人）", expanded=True):
+                for r in all_remedies.get("general", []):
+                    st.markdown(f'<div class="lk-upay-item">🔸 {r}</div>', unsafe_allow_html=True)
+        else:
+            with st.expander("🌐 General Remedies (For Everyone)", expanded=True):
+                for r in all_remedies.get("general", []):
+                    st.markdown(f'<div class="lk-upay-item">🔸 {r}</div>', unsafe_allow_html=True)
+
+        st.divider()
+
+        # Per-planet remedies
+        for p in chart.planets:
+            planet_data = all_remedies.get(p.name, {})
+            specific = planet_data.get("specific_remedies", [])
+            house_col = planet_data.get("house_color", [])
+            day_str = PLANET_DAYS.get(p.name, "")
+            if lang in ("zh", "zh_cn"):
+                label = f"{p.glyph} {p.name_zh} — 第{p.house}宮 · 化解日：{day_str}"
+            else:
+                label = f"{p.glyph} {p.name_zh} — House {p.house} · Remedy Day: {day_str}"
+
+            with st.expander(label, expanded=False):
+                c1, c2 = st.columns(2)
+                with c1:
+                    if lang in ("zh", "zh_cn"):
+                        st.markdown(f"**捐贈物品**：{PLANET_DONATIONS.get(p.name, '')}")
+                        st.markdown(f"**餵食動物**：{PLANET_FEED_ANIMALS.get(p.name, '')}")
+                        st.markdown(f"**吉祥顏色**：{PLANET_ASSOC_COLORS.get(p.name, '')}")
+                    else:
+                        st.markdown(f"**Donation Items**：{PLANET_DONATIONS.get(p.name, '')}")
+                        st.markdown(f"**Feed Animals**：{PLANET_FEED_ANIMALS.get(p.name, '')}")
+                        st.markdown(f"**Auspicious Colour**：{PLANET_ASSOC_COLORS.get(p.name, '')}")
+
+                with c2:
+                    if lang in ("zh", "zh_cn"):
+                        st.markdown(f"**房屋顏色補救**：{'；'.join(house_col)}")
+                    else:
+                        st.markdown(f"**House Colour Remedy**：{'; '.join(house_col)}")
+
+                st.divider()
+                if lang in ("zh", "zh_cn"):
+                    st.markdown("**具體化解法（1952年版）：**")
+                else:
+                    st.markdown("**Specific Remedies (1952 Edition):**")
+
+                for i, remedy in enumerate(specific, 1):
+                    st.markdown(
+                        f'<div class="lk-upay-item">🔸 {i}. {remedy}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 4: 35年大運
+    # ──────────────────────────────────────────────────────────
+    with tab_cycle:
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### 🔄 三十五年週期大運（35-Year Planetary Cycle）")
+            st.caption(
+                "拉爾基塔布1952年版獨有的三十五年週期，以9顆行星循環計算，"
+                "每個行星主運的吉凶狀態取決於其所在宮位。"
+            )
+        else:
+            st.markdown("#### 🔄 35-Year Planetary Cycle (Lal Kitab 1952)")
+            st.caption(
+                "Unique to the 1952 Final Edition — nine planets in a 35-year repeating cycle. "
+                "Auspiciousness depends on each planet's house placement."
+            )
+
+        cycle_data = calculate_35_year_cycle(birth_date, planets_in_house)
+
+        # Current age to highlight active period
+        today = _dt.date.today()
+        current_age = today.year - birth_date.year - (
+            (today.month, today.day) < (birth_date.month, birth_date.day)
+        )
+
+        if lang in ("zh", "zh_cn"):
+            st.metric("🎂 目前年齡", f"{current_age} 歲")
+        else:
+            st.metric("🎂 Current Age", f"{current_age} years")
+
+        st.divider()
+
+        for cycle_num in range(1, 4):
+            cycle_prefix = f"週期{cycle_num}"
+            if lang in ("zh", "zh_cn"):
+                st.markdown(f"##### 第 {cycle_num} 輪 35 年週期")
+            else:
+                st.markdown(f"##### Cycle {cycle_num} of 35 Years")
+
+            rows_35: List[Dict] = []
+            is_active_cycle = False
+            cumulative_age = 0
+            for period_key, info in cycle_data.items():
+                if not period_key.startswith(cycle_prefix):
+                    continue
+                # Derive age range from cumulative tracking (robust, not string-parsing)
+                age_start = cumulative_age
+                age_end = cumulative_age + info["years"]
+                cumulative_age = age_end
+                is_active = age_start <= current_age < age_end
+                if is_active:
+                    is_active_cycle = True
+
+                auspicious = "🟢 吉" if info["house"] in {1, 4, 5, 9, 10, 11} else "🔴 需補救"
+                if lang in ("zh", "zh_cn"):
+                    rows_35.append({
+                        "週期/年齡": f"{'▶ ' if is_active else ''}{period_key}",
+                        "行星": info["planet_zh"],
+                        "年數": info["years"],
+                        "宮位": info["house"],
+                        "狀態": auspicious + " " + info["status"],
+                        "補救": info["remedy"],
+                    })
+                else:
+                    status_en = "🟢 Prosperous" if info["house"] in {1, 4, 5, 9, 10, 11} else "🔴 Needs Remedy"
+                    rows_35.append({
+                        "Period/Age": f"{'▶ ' if is_active else ''}{period_key}",
+                        "Planet": info["planet_zh"],
+                        "Years": info["years"],
+                        "House": info["house"],
+                        "Status": status_en,
+                        "Remedy": info["remedy"],
+                    })
+
+            if rows_35:
+                if is_active_cycle:
+                    st.info("▶ 目前正在此週期中！" if lang in ("zh", "zh_cn") else "▶ Currently in this cycle!")
+                st.dataframe(pd.DataFrame(rows_35), hide_index=True, use_container_width=True)
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 5: 手相壽命
+    # ──────────────────────────────────────────────────────────
+    with tab_palm:
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### ✋ 手相壽命計算器（1952年版第1161-1167頁）")
+            st.caption(
+                "根據拉爾基塔布1952年版手相篇，輸入生命線長度描述、心臟線交叉年齡、"
+                "主要掌紋數量，即時計算預估壽命與死亡徵兆警告。"
+            )
+        else:
+            st.markdown("#### ✋ Palmistry Longevity Calculator (1952 Edition, pp.1161-1167)")
+            st.caption(
+                "Based on the palmistry chapter of Lal Kitab 1952. Enter life line description, "
+                "heart line crossing age and major lines count to estimate longevity."
+            )
+
+        with st.container():
+            col_a, col_b, col_c = st.columns(3)
+
+            life_line_options = list(PalmistryLongevityCalculator.LIFE_LINE_AGES.keys())
+            with col_a:
+                if lang in ("zh", "zh_cn"):
+                    life_line_sel = st.selectbox(
+                        "🖐 生命線長度描述",
+                        options=life_line_options,
+                        index=life_line_options.index("生命線末端"),
+                        help="根據手掌上的生命線終止位置選擇",
+                    )
+                    total_lines = st.number_input(
+                        "📊 主要掌紋數量（1-4）",
+                        min_value=1, max_value=4, value=3, step=1,
+                        help="手掌上的主要掌紋總數（生命線、感情線、智慧線、事業線）",
+                    )
+                else:
+                    life_line_sel = st.selectbox(
+                        "🖐 Life Line Description",
+                        options=life_line_options,
+                        index=life_line_options.index("生命線末端"),
+                        help="Select based on where the life line ends on the palm",
+                    )
+                    total_lines = st.number_input(
+                        "📊 Major Lines Count (1-4)",
+                        min_value=1, max_value=4, value=3, step=1,
+                        help="Total major palm lines (life, heart, head, fate)",
+                    )
+
+            heart_crossing_options = [None, 35, 45, 56]
+            heart_label_map = {
+                None: "無交叉" if lang in ("zh", "zh_cn") else "No crossing",
+                35: "35歲（農業線×心臟線）" if lang in ("zh", "zh_cn") else "Age 35 (field × heart)",
+                45: "45歲（生命線×心臟線）" if lang in ("zh", "zh_cn") else "Age 45 (life × heart)",
+                56: "56歲（農業線×心臟線）" if lang in ("zh", "zh_cn") else "Age 56 (field × heart)",
+            }
+            with col_b:
+                if lang in ("zh", "zh_cn"):
+                    heart_sel_label = st.selectbox(
+                        "💓 心臟線交叉年齡",
+                        options=list(heart_label_map.values()),
+                        index=0,
+                        help="心臟線與其他掌紋的交叉年齡（第1166頁）",
+                    )
+                else:
+                    heart_sel_label = st.selectbox(
+                        "💓 Heart Line Crossing Age",
+                        options=list(heart_label_map.values()),
+                        index=0,
+                        help="Age at which heart line crosses another line (p.1166)",
+                    )
+                heart_sel = next(
+                    (k for k, v in heart_label_map.items() if v == heart_sel_label), None
+                )
+
+            warning_options = list(PalmistryLongevityCalculator.DEATH_WARNINGS.keys())
+            with col_c:
+                if lang in ("zh", "zh_cn"):
+                    selected_warnings = st.multiselect(
+                        "⚠️ 特殊死亡徵兆（可多選）",
+                        options=warning_options,
+                        default=[],
+                        help="選擇手掌上出現的特殊徵兆（第1166-1167頁）",
+                    )
+                else:
+                    selected_warnings = st.multiselect(
+                        "⚠️ Special Death Omens (optional)",
+                        options=warning_options,
+                        default=[],
+                        help="Select special signs on the palm (pp.1166-1167)",
+                    )
+
+        result = PalmistryLongevityCalculator.calculate_longevity(
+            life_line_desc=life_line_sel,
+            heart_line_cross_year=heart_sel,
+            total_major_lines=total_lines,
+            special_warnings=selected_warnings if selected_warnings else None,
+        )
+
+        st.divider()
+
+        res_c1, res_c2, res_c3 = st.columns(3)
+        with res_c1:
+            if lang in ("zh", "zh_cn"):
+                st.metric("🕯️ 預估壽命", result["estimated_longevity"], delta=f"信心：{result['confidence']}")
+            else:
+                est = result["estimated_longevity"]
+                st.metric("🕯️ Estimated Longevity", est, delta=f"Confidence: {result['confidence']}")
+        with res_c2:
+            if lang in ("zh", "zh_cn"):
+                st.metric("🖐 生命線", result["base_life_line"])
+            else:
+                st.metric("🖐 Life Line", result["base_life_line"])
+        with res_c3:
+            if lang in ("zh", "zh_cn"):
+                st.metric("📊 掌紋數量加成", f"{total_lines} 條")
+            else:
+                st.metric("📊 Lines Bonus", f"{total_lines} lines")
+
+        warnings = result.get("heart_line_warning", [])
+        if warnings:
+            for w in warnings:
+                st.warning(f"⚠️ {w}")
+
+        if lang in ("zh", "zh_cn"):
+            st.info(f"💊 補救建議：{result.get('remedy_suggestion', '')}")
+            with st.expander("📋 完整死亡徵兆對照表（1952年版）", expanded=False):
+                for sign, meaning in PalmistryLongevityCalculator.DEATH_WARNINGS.items():
+                    st.markdown(f"- **{sign}**：{meaning}")
+            with st.expander("📋 心臟線交叉年齡說明（1952年版）", expanded=False):
+                for age, desc in PalmistryLongevityCalculator.HEART_LINE_CROSSINGS.items():
+                    st.markdown(f"- **{age}歲**：{desc}")
+        else:
+            st.info(f"💊 Remedy: {result.get('remedy_suggestion', '')}")
+            with st.expander("📋 Full Death Omen Reference (1952 Edition)", expanded=False):
+                for sign, meaning in PalmistryLongevityCalculator.DEATH_WARNINGS.items():
+                    st.markdown(f"- **{sign}**: {meaning}")
+            with st.expander("📋 Heart Line Crossing Ages (1952 Edition)", expanded=False):
+                for age, desc in PalmistryLongevityCalculator.HEART_LINE_CROSSINGS.items():
+                    st.markdown(f"- **Age {age}**: {desc}")
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 6: Farman 法則
+    # ──────────────────────────────────────────────────────────
+    with tab_farman:
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### 📜 Farman 規則引擎（1952年版第7-12號法則）")
+            st.caption(
+                "使用 FarmanRuleEngine 自動匹配此命盤觸發的 Farman 法則（第7至12號），"
+                "顯示每顆行星對應的具體 Farman 建議與補救。"
+            )
+        else:
+            st.markdown("#### 📜 Farman Rule Engine (1952 Edition, Rules 7-12)")
+            st.caption(
+                "FarmanRuleEngine auto-matches Farman rules 7-12 triggered by this chart's "
+                "planetary placements, showing specific advice and remedies."
+            )
+
+        # Show Farman rules reference table
+        with st.expander(
+            "📋 Farman 規則一覽表（7-12）" if lang in ("zh", "zh_cn") else "📋 Farman Rules Reference (7-12)",
+            expanded=False,
+        ):
+            farman_rows = []
+            for fnum, frule in FARMAN_RULES.items():
+                if lang in ("zh", "zh_cn"):
+                    farman_rows.append({
+                        "法則編號": fnum,
+                        "適用條件": frule["condition"],
+                        "法則內容": frule["rule"],
+                        "補救方法": "、".join(frule["remedy"]) if isinstance(frule["remedy"], list) else frule["remedy"],
+                        "備注": frule.get("note", ""),
+                    })
+                else:
+                    farman_rows.append({
+                        "Farman #": fnum,
+                        "Condition": frule["condition"],
+                        "Rule": frule["rule"],
+                        "Remedy": ", ".join(frule["remedy"]) if isinstance(frule["remedy"], list) else frule["remedy"],
+                        "Note": frule.get("note", ""),
+                    })
+            if farman_rows:
+                st.dataframe(pd.DataFrame(farman_rows), hide_index=True, use_container_width=True)
+
+        st.divider()
+
+        farman_results = FarmanRuleEngine.get_all_house_farmans(planets_in_house)
+        for planet_name, fdata in farman_results.items():
+            pobj = next((p for p in chart.planets if p.name == planet_name), None)
+            glyph = pobj.glyph if pobj else ""
+            zh_name = pobj.name_zh if pobj else planet_name
+            house_n = planets_in_house.get(planet_name, "?")
+
+            if lang in ("zh", "zh_cn"):
+                flabel = f"{glyph} {zh_name} — 第{house_n}宮 · 匹配 {fdata.get('total_matches', 0)} 條 Farman"
+            else:
+                flabel = f"{glyph} {zh_name} — House {house_n} · {fdata.get('total_matches', 0)} Farman match(es)"
+
+            with st.expander(flabel, expanded=False):
+                for fm in fdata.get("matched_farmans", []):
+                    if lang in ("zh", "zh_cn"):
+                        st.markdown(f"**Farman {fm['farman_number']}**：{fm['rule']}")
+                        remedy_text = (
+                            "、".join(fm["remedy"])
+                            if isinstance(fm["remedy"], list)
+                            else fm["remedy"]
+                        )
+                        st.markdown(f"補救：{remedy_text}")
+                        if fm.get("note"):
+                            st.caption(f"備注：{fm['note']}")
+                    else:
+                        st.markdown(f"**Farman {fm['farman_number']}**: {fm['rule']}")
+                        remedy_text = (
+                            ", ".join(fm["remedy"])
+                            if isinstance(fm["remedy"], list)
+                            else fm["remedy"]
+                        )
+                        st.markdown(f"Remedy: {remedy_text}")
+                        if fm.get("note"):
+                            st.caption(f"Note: {fm['note']}")
+
+        # Full integrated analysis summary
+        st.divider()
+        if lang in ("zh", "zh_cn"):
+            with st.expander("🌟 一鍵完整報告（Farman + 手相整合分析）", expanded=False):
+                full_report = get_palmistry_and_farman_analysis(planets_in_house)
+                palm_data = full_report.get("palmistry_longevity", {})
+                st.markdown(f"**手相預估壽命**：{palm_data.get('estimated_longevity', 'N/A')}")
+                st.markdown(f"**信心程度**：{palm_data.get('confidence', 'N/A')}")
+                st.markdown(f"**整合補救建議**：{full_report.get('combined_remedy', '')}")
+        else:
+            with st.expander("🌟 Integrated Report (Farman + Palmistry)", expanded=False):
+                full_report = get_palmistry_and_farman_analysis(planets_in_house)
+                palm_data = full_report.get("palmistry_longevity", {})
+                st.markdown(f"**Estimated Longevity**: {palm_data.get('estimated_longevity', 'N/A')}")
+                st.markdown(f"**Confidence**: {palm_data.get('confidence', 'N/A')}")
+                st.markdown(f"**Combined Remedy**: {full_report.get('combined_remedy', '')}")
+
+    # ──────────────────────────────────────────────────────────
+    # Tab 7: 房屋顏色與方位
+    # ──────────────────────────────────────────────────────────
+    with tab_house:
+        if lang in ("zh", "zh_cn"):
+            st.markdown("#### 🏠 房屋顏色規則與出生吉利方位")
+            st.caption("來自1952年版第11章，房屋顏色吉凶建議與出生日時吉利方位。")
+        else:
+            st.markdown("#### 🏠 House Colour Rules & Auspicious Directions")
+            st.caption("From Chapter 11 of the 1952 Final Edition — house colour advice and birth direction guidance.")
+
+        # Auspicious direction
+        day_dir, hour_dir = get_auspicious_direction(birth_weekday, chart.hour)
+        dir_c1, dir_c2, dir_c3 = st.columns(3)
+        with dir_c1:
+            if lang in ("zh", "zh_cn"):
+                st.metric("📅 出生星期", birth_weekday)
+            else:
+                st.metric("📅 Birth Weekday", birth_weekday)
+        with dir_c2:
+            if lang in ("zh", "zh_cn"):
+                st.metric("🧭 星期吉方位", day_dir)
+            else:
+                st.metric("🧭 Weekday Direction", day_dir)
+        with dir_c3:
+            if lang in ("zh", "zh_cn"):
+                st.metric("🕐 時辰吉方位", hour_dir)
+            else:
+                st.metric("🕐 Birth Hour Direction", hour_dir)
+
+        st.divider()
+
+        # Full weekday/time direction tables
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            if lang in ("zh", "zh_cn"):
+                st.markdown("**📅 出生星期吉方位一覽**")
+                wd_rows = [{"星期": k, "吉利方位": " / ".join(v)} for k, v in WEEKDAY_DIRECTIONS.items()]
+            else:
+                st.markdown("**📅 Weekday Auspicious Directions**")
+                wd_rows = [{"Weekday": k, "Auspicious Directions": " / ".join(v)} for k, v in WEEKDAY_DIRECTIONS.items()]
+            st.dataframe(pd.DataFrame(wd_rows), hide_index=True, use_container_width=True)
+
+        with col_t2:
+            if lang in ("zh", "zh_cn"):
+                st.markdown("**🕐 時辰吉方位一覽**")
+                td_rows = [{"時辰": k, "吉利方位": " / ".join(v)} for k, v in TIME_DIRECTIONS.items()]
+            else:
+                st.markdown("**🕐 Birth Hour Auspicious Directions**")
+                td_rows = [{"Time Slot": k, "Auspicious Directions": " / ".join(v)} for k, v in TIME_DIRECTIONS.items()]
+            st.dataframe(pd.DataFrame(td_rows), hide_index=True, use_container_width=True)
+
+        st.divider()
+
+        # House colour rules
+        if lang in ("zh", "zh_cn"):
+            st.markdown("**🎨 十二宮房屋顏色吉凶規則**")
+        else:
+            st.markdown("**🎨 12-House Colour Rules**")
+
+        color_cols = st.columns(3)
+        for i, (house_num, rule) in enumerate(HOUSE_COLOR_RULES.items()):
+            col = color_cols[i % 3]
+            with col:
+                planets_here = [p.name_zh for p in chart.planets if p.house == house_num]
+                planet_note = f"（{', '.join(planets_here)}）" if planets_here else ""
+                if lang in ("zh", "zh_cn"):
+                    with st.container():
+                        st.markdown(
+                            f"**第{house_num}宮** {planet_note}\n\n"
+                            f"✅ 推薦：{rule['recommended']}\n\n"
+                            f"❌ 避免：{rule['avoid']}\n\n"
+                            f"📝 {rule['note']}"
+                        )
+                else:
+                    with st.container():
+                        st.markdown(
+                            f"**House {house_num}** {planet_note}\n\n"
+                            f"✅ Recommended: {rule['recommended']}\n\n"
+                            f"❌ Avoid: {rule['avoid']}\n\n"
+                            f"📝 {rule['note']}"
+                        )
+
+        st.divider()
+
+        # House colour remedies from expanded module
+        if lang in ("zh", "zh_cn"):
+            st.markdown("**🔨 十二宮補救色彩措施一覽**")
+        else:
+            st.markdown("**🔨 House Colour Remedy Actions**")
+
+        hcr_rows = []
+        for hnum, rem_list in HOUSE_COLOR_REMEDIES.items():
+            planets_in_h = [p.name_zh for p in chart.planets if p.house == hnum]
+            if lang in ("zh", "zh_cn"):
+                hcr_rows.append({
+                    "宮位": hnum,
+                    "居住行星": "、".join(planets_in_h) if planets_in_h else "空宮",
+                    "補救建議": "；".join(rem_list),
+                })
+            else:
+                hcr_rows.append({
+                    "House": hnum,
+                    "Planets": ", ".join(planets_in_h) if planets_in_h else "Empty",
+                    "Remedy": "; ".join(rem_list),
+                })
+        st.dataframe(pd.DataFrame(hcr_rows), hide_index=True, use_container_width=True)
