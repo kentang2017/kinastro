@@ -80,6 +80,8 @@ from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.jawa_weton.calculator import WetonCalculator, compute_weton
 from astro.jawa_weton.renderer import render_streamlit as render_jawa_weton_chart
+from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
+from astro.polynesian_hawaiian.renderer import render_streamlit as render_polynesian_chart_ui
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
@@ -1090,7 +1092,7 @@ with st.sidebar:
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
-        ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer"]),
+        ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
@@ -1122,6 +1124,7 @@ with st.sidebar:
         "tab_mahabote": t("tab_mahabote"),
         "tab_wariga": t("tab_wariga"),
         "tab_jawa_weton": t("tab_jawa_weton"),
+        "tab_polynesian": t("tab_polynesian"),
         "tab_decans": t("tab_decans"),
         "tab_nadi": t("tab_nadi"),
         "tab_jaimini": t("tab_jaimini"),
@@ -1168,6 +1171,7 @@ with st.sidebar:
         "tab_mahabote": t("sys_hint_mahabote"),
         "tab_wariga": t("sys_hint_wariga"),
         "tab_jawa_weton": t("sys_hint_jawa_weton"),
+        "tab_polynesian": t("sys_hint_polynesian"),
         "tab_decans": t("sys_hint_decans"),
         "tab_nadi": t("sys_hint_nadi"),
         "tab_jaimini": t("sys_hint_jaimini"),
@@ -4851,6 +4855,28 @@ elif _selected_system == "tab_jawa_weton":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_jawa_weton"))
+
+elif _selected_system == "tab_polynesian":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_polynesian")):
+                _poly_result = compute_polynesian_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p["minute"],
+                    lat=_p.get("latitude", 21.3),
+                    lon=_p.get("longitude", -157.8),
+                    timezone_offset=_p.get("timezone", 0.0),
+                    location_name=_p.get("location_name", ""),
+                )
+            render_polynesian_chart_ui(_poly_result)
+            _render_ai_button("tab_polynesian", _poly_result, btn_key="polynesian")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_polynesian"))
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom

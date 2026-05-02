@@ -239,6 +239,10 @@ TRANSLATIONS = {
         "zh": "🏺 爪哇 Weton / Primbon",
         "en": "🏺 Javanese Weton / Primbon",
     },
+    "tab_polynesian": {
+        "zh": "🌺 波利尼西亞／夏威夷星辰知識",
+        "en": "🌺 Polynesian / Hawaiian Star Lore",
+    },
     "tab_decans": {
         "zh": "🏛️ 古埃及十度區間",
         "en": "🏛️ Egyptian Decans",
@@ -371,6 +375,10 @@ TRANSLATIONS = {
     "spinner_jawa_weton": {
         "zh": "正在計算爪哇 Weton 排盤...",
         "en": "Calculating Javanese Weton chart...",
+    },
+    "spinner_polynesian": {
+        "zh": "正在計算夏威夷星辰排盤...",
+        "en": "Calculating Hawaiian Star Lore chart...",
     },
     "spinner_decans": {
         "zh": "正在計算古埃及十度區間排盤...",
@@ -888,6 +896,30 @@ a combination of Saptawara (7-day week) × Pancawara (5-day market week) = 35 de
 - **Neptu**: Numerological value used for marriage compatibility and electional purposes
 - **35-day Weton cycle**: 7 × 5 = 35 unique Weton combinations repeating every 35 days
 - **Marriage compatibility**: Sum of two Weton Neptus mapped to classical Primbon results
+""",
+    },
+    "desc_polynesian": {
+        "zh": """
+### 波利尼西亞／夏威夷星辰知識 Polynesian / Hawaiian Star Lore
+
+**夏威夷星辰知識**是玻里尼西亞非儀器航海傳統的核心，由航海大師 **Nainoa Thompson** 重振，
+透過 **Hōkūleʻa**（喜悅之星，即大角星）引航雙體獨木舟橫越太平洋。
+
+- **32星屋羅盤**：將地平線分為32等份，用於識別星辰升起/落下的方位
+- **主要星線**：Ka Iwikuamoʻo（脊椎星線）、Ke Ka o Makaliʻi（馬卡利伊的弦）
+- **馬卡希基節**：當 Makaliʻi（昴星團）於日落時升起，標誌夏威夷新年
+- **守護星屋**：你出生時 Hōkūleʻa 所在的星屋，象徵你的航海命運
+""",
+        "en": """
+### Polynesian / Hawaiian Star Lore
+
+**Hawaiian Star Lore** is the core of Polynesian non-instrument wayfinding, revived by master navigator
+**Nainoa Thompson**, guiding the double-hulled canoe *Hōkūleʻa* across the Pacific by stars alone.
+
+- **32-House Star Compass**: Divides the horizon into 32 houses for star rising/setting bearings
+- **Star Lines**: Ka Iwikuamoʻo (The Backbone), Ke Ka o Makaliʻi (The Canoe Bailer)
+- **Makahiki Season**: When Makaliʻi (Pleiades) rises at sunset, marking the Hawaiian New Year
+- **Guardian House**: The compass house where Hōkūleʻa stood at your birth
 """,
     },
     "desc_nadi": {
@@ -1708,6 +1740,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_mahabote": {"zh": "緬甸出生星期推算", "en": "Myanmar weekday-based astrology"},
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
     "sys_hint_jawa_weton": {"zh": "爪哇 Weton 命理 + 合婚計算", "en": "Javanese Weton destiny & marriage compatibility"},
+    "sys_hint_polynesian": {"zh": "夏威夷 / 玻里尼西亞星辰知識與航海星羅盤", "en": "Hawaiian / Polynesian Star Lore & Navigation Compass"},
     "sys_hint_decans": {"zh": "古埃及十度區間預測", "en": "Ancient Egyptian decan predictions"},
     "sys_hint_nadi": {"zh": "南印度棕櫚葉手稿", "en": "South Indian palm-leaf readings"},
     "sys_hint_zurkhai": {"zh": "蒙古藏傳佛教占星", "en": "Mongolian Tibetan Buddhist astrology"},
