@@ -3212,6 +3212,24 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "🎴 即時問卜",
         "en": "🎴 Divination",
     },
+
+    # ── Picatrix + Behenian 固定星 ──────────────────────────────
+    "tab_picatrix_behenian": {
+        "zh": "✦ Picatrix 占星魔法",
+        "en": "✦ Picatrix Star Magic",
+    },
+    "sys_hint_picatrix_behenian": {
+        "zh": "Picatrix 十五顆 Behenian 根源恆星魔法護符系統",
+        "en": "Picatrix Behenian 15 fixed-stars talisman magic system",
+    },
+    "desc_picatrix_behenian": {
+        "zh": "✦ **Picatrix 占星魔法 + Behenian 固定星** — 源自《賢者之目的》(Ghayat al-Hakim, c.10th CE) 及 Agrippa《神秘哲學三書》(1531)，涵蓋十五顆 Behenian 根源恆星的行星主星、寶石、草藥、護符圖像與召喚詞，可偵測星盤激活並推薦最佳護符製作時機。",
+        "en": "✦ **Picatrix Star Magic + Behenian Fixed Stars** — Drawn from the Ghayat al-Hakim (Picatrix, c.10th CE) and Agrippa's Three Books of Occult Philosophy (1531). Features all 15 Behenian root stars with planetary rulers, gemstones, herbs, talisman images, and invocations. Detects chart activations and recommends optimal talisman-making windows.",
+    },
+    "spinner_picatrix_behenian": {
+        "zh": "計算 Behenian 恆星激活……",
+        "en": "Computing Behenian star activations…",
+    },
 }
 
 def get_ui_lang() -> str:
