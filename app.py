@@ -75,7 +75,7 @@ from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
 from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
-from astro.mahabote import compute_mahabote_chart, render_mahabote_chart
+from astro.burmese_mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.jawa_weton.calculator import WetonCalculator, compute_weton

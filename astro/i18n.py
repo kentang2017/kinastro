@@ -228,8 +228,8 @@ TRANSLATIONS = {
         "en": "🦅 Aztec Astrology",
     },
     "tab_mahabote": {
-        "zh": "🇲🇲 緬甸占星",
-        "en": "🇲🇲 Myanmar (Mahabote)",
+        "zh": "🇲🇲 緬甸／撣族 Mahabote",
+        "en": "🇲🇲 Burmese/Shan Mahabote",
     },
     "tab_wariga": {
         "zh": "🏝️ 巴厘 Wariga",
@@ -1737,7 +1737,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_arabic": {"zh": "伊斯蘭黃金時代占星術", "en": "Islamic Golden Age astrology"},
     "sys_hint_maya": {"zh": "瑪雅文明曆法占卜", "en": "Mayan calendar-based divination"},
     "sys_hint_aztec": {"zh": "阿茲特克文明神聖曆占卜", "en": "Aztec Tonalpohualli sacred calendar divination"},
-    "sys_hint_mahabote": {"zh": "緬甸出生星期推算", "en": "Myanmar weekday-based astrology"},
+    "sys_hint_mahabote": {"zh": "緬甸／撣族 Mahabote 深度排盤", "en": "Burmese/Shan Mahabote deep astrology"},
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
     "sys_hint_jawa_weton": {"zh": "爪哇 Weton 命理 + 合婚計算", "en": "Javanese Weton destiny & marriage compatibility"},
     "sys_hint_polynesian": {"zh": "夏威夷 / 玻里尼西亞星辰知識與航海星羅盤", "en": "Hawaiian / Polynesian Star Lore & Navigation Compass"},
