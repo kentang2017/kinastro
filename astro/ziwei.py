@@ -19,12 +19,15 @@ from dataclasses import dataclass, field
 
 from astro.ziwei_vietnamese import (
     get_zodiac_year_label,
+    get_vietnamese_zodiac_name,
     get_star_vietnamese_info,
     get_palace_vietnamese_info,
     get_marriage_compatibility,
     build_vietnam_mode_header_html,
     VIETNAMESE_DA_XIAN_TIPS,
     VIETNAMESE_CULTURAL_NOTE,
+    VIETNAMESE_MARRIAGE_COMPAT,
+    VIETNAMESE_ZODIAC_NAMES,
     VI_FLAG,
     VI_ACCENT_COLOR,
     VI_STAR_COLOR,
@@ -1049,9 +1052,9 @@ def _center_info_html(chart: ZiweiChart) -> str:
     if chart.vietnam_mode:
         title_text = f"{VI_FLAG} 越南 Tử Vi 命盤"
         title_color = VI_STAR_COLOR
-        zodiac_vi = ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ",
-                     "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"]
-        yb_vi = zodiac_vi[chart.lunar_year_branch]
+        _zh, yb_vi_full = VIETNAMESE_ZODIAC_NAMES[chart.lunar_year_branch]
+        # yb_vi_full is like "Tý / Chuột"; take the first part
+        yb_vi = yb_vi_full.split(" / ")[0]
         year_line = (
             f'{chart.lunar_year}年 {ys}{yb}年（{zodiac_label}年/{yb_vi}）'
         )
@@ -1190,7 +1193,7 @@ def _render_star_table(chart: ZiweiChart) -> None:
         hua_str = f"化{hua}" if hua else ""
         if chart.vietnam_mode:
             vi_info = get_star_vietnamese_info(star)
-            vi_name = vi_info["vi_name"] if vi_info else alias
+            vi_name = vi_info["vi_name"] if vi_info else star
             rows.append(
                 f"| {name_html} | {vi_name} | {wuxing} "
                 f"| {palace.name}{marker} "
@@ -1339,12 +1342,6 @@ def _render_palace_details(chart: ZiweiChart) -> None:
 
 def _render_vietnam_cultural_section(chart: ZiweiChart) -> None:
     """渲染越南 Tử Vi 文化特色說明區塊（僅在越南模式時顯示）。"""
-    from astro.ziwei_vietnamese import (
-        get_vietnamese_zodiac_name,
-        VIETNAMESE_MARRIAGE_COMPAT,
-        VIETNAMESE_ZODIAC_NAMES,
-    )
-
     st.markdown(f"#### {VI_FLAG} 越南 Tử Vi 特色說明")
 
     # 文化說明

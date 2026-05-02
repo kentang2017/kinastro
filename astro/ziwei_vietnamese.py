@@ -17,8 +17,6 @@ References:
   - Tử Vi Toàn Thư - traditional Vietnamese manuscript
 """
 
-from __future__ import annotations
-
 # ============================================================
 # 生肖覆寫 (Zodiac Animal Overrides)
 # ============================================================
@@ -460,7 +458,9 @@ def get_vietnamese_zodiac_name(branch_idx: int) -> tuple[str, str]:
         地支 3（卯）在越南為貓（Mèo）而非兔（Thỏ）。
         地支 1（丑）在越南為水牛（Trâu）。
     """
-    zh, vi = VIETNAMESE_ZODIAC_NAMES.get(branch_idx, ("", ""))
+    if branch_idx < 0 or branch_idx > 11:
+        raise ValueError(f"branch_idx must be 0-11, got {branch_idx}")
+    zh, vi = VIETNAMESE_ZODIAC_NAMES[branch_idx]
     return zh, vi
 
 
@@ -520,11 +520,11 @@ def get_marriage_compatibility(branch1: int, branch2: int) -> dict[str, str]:
     Returns:
         包含 level, vi, note 的字典；若無特殊記錄則回傳普通相容。
     """
+    _DEFAULT_COMPAT: dict[str, str] = {
+        "level": "一般", "vi": "Bình Thường", "note": "需進一步查看夫妻宮星曜",
+    }
     key = (min(branch1, branch2), max(branch1, branch2))
-    return VIETNAMESE_MARRIAGE_COMPAT.get(
-        key,
-        {"level": "一般", "vi": "Bình Thường", "note": "需進一步查看夫妻宮星曜"},
-    )
+    return VIETNAMESE_MARRIAGE_COMPAT.get(key, _DEFAULT_COMPAT)
 
 
 def build_vietnam_mode_header_html() -> str:
