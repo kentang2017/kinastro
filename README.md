@@ -878,8 +878,6 @@
 
 </details>
 
----
-
 <details>
 <summary><strong>☰ 太玄數占星（Tai Xuan Shu）</strong></summary>
 
@@ -894,9 +892,6 @@
 - **即時問卜 / Real-time Divination**：以當前時間起卦，支援即時問事 — Real-time divination mode
 
 </details>
-
----
-
 <details>
 <summary><strong>🌳 凱爾特樹木曆（Celtic Tree Calendar — Graves 1948）</strong></summary>
 
@@ -913,8 +908,6 @@
 - **守護樹 / Guardian Tree**：依出生日期確定個人守護樹及其凱爾特神話象徵 — Personal guardian tree determined by birth date
 
 </details>
-
----
 
 <details>
 <summary><strong>📕 紅皮書占星 Lal Kitab（Red Book Astrology）</strong></summary>
