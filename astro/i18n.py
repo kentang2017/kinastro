@@ -3301,14 +3301,25 @@ def _t2s(text: str) -> str:
     return text
 
 
-def auto_cn(text: str) -> str:
-    """Return *text* converted to Simplified Chinese when the UI language is
-    ``zh_cn``; otherwise return the original text unchanged.
+def auto_cn(text: str, en_text: str = "") -> str:
+    """Return *text* in the appropriate language.
+
+    When an *en_text* fallback is supplied the function acts as a bilingual
+    selector: Chinese variants (``zh`` / ``zh_cn``) receive *text* and all
+    other languages receive *en_text*.  For ``zh_cn``, *text* is additionally
+    converted from Traditional to Simplified Chinese.
+
+    When called with only *text* (no *en_text*), the original behaviour is
+    preserved: *text* is returned as-is for non-Simplified UI languages, and
+    converted to Simplified Chinese for ``zh_cn``.
 
     Use this helper to wrap any Chinese string that is **not** sourced from
     ``TRANSLATIONS`` (which is already handled by :func:`t`).
     """
-    if get_ui_lang() == "zh_cn":
+    lang = get_ui_lang()
+    if en_text and lang not in ("zh", "zh_cn"):
+        return en_text
+    if lang == "zh_cn":
         return _t2s(text)
     return text
 
