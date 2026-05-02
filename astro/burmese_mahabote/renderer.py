@@ -56,6 +56,14 @@ _TEXT_DIM   = "#aaaaaa"
 _TEXT_WHITE = "#ffffff"
 _CENTER_BG  = "#0d0d1a"
 
+# Fortune quality → color mapping (used across multiple render functions)
+_QUALITY_COLOR: dict = {
+    "大吉": "#FFD700",
+    "吉":   "#32CD32",
+    "中性": "#87CEEB",
+    "凶":   "#DC143C",
+}
+
 
 # ============================================================
 # SVG 輪盤 (8-Sector Wheel)
@@ -99,10 +107,14 @@ def _build_wheel_svg(chart: MahaboteChart, size: int = 480) -> str:
         a_mid = math.radians((a_start + a_end) / 2)
 
         # Pie-slice path (outer → inner arc)
-        x1o = cx + r_outer * math.cos(a1); y1o = cy + r_outer * math.sin(a1)
-        x2o = cx + r_outer * math.cos(a2); y2o = cy + r_outer * math.sin(a2)
-        x1i = cx + r_inner * math.cos(a1); y1i = cy + r_inner * math.sin(a1)
-        x2i = cx + r_inner * math.cos(a2); y2i = cy + r_inner * math.sin(a2)
+        x1o = cx + r_outer * math.cos(a1)
+        y1o = cy + r_outer * math.sin(a1)
+        x2o = cx + r_outer * math.cos(a2)
+        y2o = cy + r_outer * math.sin(a2)
+        x1i = cx + r_inner * math.cos(a1)
+        y1i = cy + r_inner * math.sin(a1)
+        x2i = cx + r_inner * math.cos(a2)
+        y2i = cy + r_inner * math.sin(a2)
 
         color = PLANET_COLORS.get(sec["planet"], "#888")
         is_birth = (sec["planet"] == chart.birth_planet)
@@ -438,10 +450,7 @@ def _render_house_table(chart: MahaboteChart) -> None:
 
 def _render_direction_omens(chart: MahaboteChart) -> None:
     st.subheader("🔮 八方位吉凶預兆")
-    fortune_color = {
-        "大吉": "#FFD700", "吉": "#32CD32",
-        "中性": "#87CEEB", "凶": "#DC143C", "凶中帶吉": "#FF8C00",
-    }
+    fortune_color = {**_QUALITY_COLOR, "凶中帶吉": "#FF8C00"}
     birth_dir = None
     for d in DIRECTIONS_8:
         if d["planet"] == chart.birth_planet:
@@ -551,9 +560,7 @@ def _render_tab_periods(chart: MahaboteChart) -> None:
     current_minor = next((m for m in chart.minor_periods if m.is_current), None)
     if current_minor:
         color = PLANET_COLORS.get(current_minor.planet, "#888")
-        quality_color = {"大吉": "#FFD700", "吉": "#32CD32", "中性": "#87CEEB", "凶": "#DC143C"}.get(
-            current_minor.quality, "#888"
-        )
+        quality_color = _QUALITY_COLOR.get(current_minor.quality, "#888")
         st.markdown(
             f'<div style="background:{color}20;border:2px solid {color};'
             f'padding:12px;border-radius:10px;color:white;margin-bottom:10px;">'
@@ -576,9 +583,7 @@ def _render_tab_periods(chart: MahaboteChart) -> None:
         color   = PLANET_COLORS.get(m.planet, "#888")
         current = "👈" if m.is_current else ""
         sd_m    = BIRTH_SIGN_DATA[m.sign_key]
-        quality_color = {"大吉": "#FFD700", "吉": "#32CD32", "中性": "#87CEEB", "凶": "#DC143C"}.get(
-            m.quality, "#888"
-        )
+        quality_color = _QUALITY_COLOR.get(m.quality, "#888")
         p_html  = (
             f'<span style="color:{color};font-weight:bold;">'
             f'{m.planet_symbol} {m.planet_cn}</span>'

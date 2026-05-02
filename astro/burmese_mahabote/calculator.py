@@ -202,6 +202,32 @@ class MahaboteChart:
 
 
 # ============================================================
+# Module-level static lookup tables
+# ============================================================
+
+# House name → minor period quality (static, moved out of function)
+_HOUSE_QUALITY_MAP: Dict[str, str] = {
+    "Bhin":   "吉",
+    "Ayu":    "吉",
+    "Winya":  "中性",
+    "Kiya":   "吉",
+    "Hein":   "大吉",
+    "Marana": "凶",
+    "Thila":  "吉",
+    "Kamma":  "中性",
+}
+
+# Named house-pair interactions for year chart (static data)
+_YEAR_CHART_INTERACTIONS: Dict[Tuple[str, str], str] = {
+    ("Hein",   "Hein"):   "雙重權勢宮激活，事業大進，宜積極開創",
+    ("Bhin",   "Hein"):   "本命宮配合權勢，個人魅力強，貴人多助",
+    ("Marana", "Marana"): "雙重死亡宮疊加，需謹慎防災，多積善德",
+    ("Thila",  "Hein"):   "道德宮與權勢宮合，名聲大好，適合公益",
+    ("Kamma",  "Marana"): "業力宮遇衰退，舊業浮現，宜還願化解",
+}
+
+
+# ============================================================
 # 輔助函數 (Helper Functions)
 # ============================================================
 
@@ -334,22 +360,10 @@ def _compute_minor_periods(
     minor: List[MinorPeriod] = []
     current_age = current_year - birth_year
 
-    # Quality mapping: house meaning → 吉/凶/中性
-    _quality_map = {
-        "Bhin":   "吉",
-        "Ayu":    "吉",
-        "Winya":  "中性",
-        "Kiya":   "吉",
-        "Hein":   "大吉",
-        "Marana": "凶",
-        "Thila":  "吉",
-        "Kamma":  "中性",
-    }
-
     for age in range(0, 81):
         house_idx = age % 8
         h = houses[house_idx]
-        quality = _quality_map.get(h.name_en, "中性")
+        quality = _HOUSE_QUALITY_MAP.get(h.name_en, "中性")
         minor.append(MinorPeriod(
             age=age,
             house_index=house_idx,
@@ -379,20 +393,15 @@ def _compute_year_chart(
     age = chart_year - birth_year
     transit_house_idx = age % 8
 
-    _interactions = {
-        ("Hein", "Hein"):     "雙重權勢宮激活，事業大進，宜積極開創",
-        ("Bhin", "Hein"):     "本命宮配合權勢，個人魅力強，貴人多助",
-        ("Marana", "Marana"): "雙重死亡宮疊加，需謹慎防災，多積善德",
-        ("Thila", "Hein"):    "道德宮與權勢宮合，名聲大好，適合公益",
-        ("Kamma", "Marana"):  "業力宮遇衰退，舊業浮現，宜還願化解",
-    }
-
     entries: List[YearChartEntry] = []
     for i in range(8):
         h = houses[i]
         transit_h = houses[(i + transit_house_idx) % 8]
         key = (h.name_en, transit_h.name_en)
-        interaction = _interactions.get(key, f"本命{h.name_cn}遇流年{transit_h.name_cn}，宜觀察此宮主題的發展")
+        interaction = _YEAR_CHART_INTERACTIONS.get(
+            key,
+            f"本命{h.name_cn}遇流年{transit_h.name_cn}，宜觀察此宮主題的發展",
+        )
         entries.append(YearChartEntry(
             house_index=i,
             house_name_cn=h.name_cn,
@@ -466,7 +475,7 @@ def _build_houses(
 # 主計算函數 (Main Calculation)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=86400, show_spinner=False)
 def compute_mahabote_chart(
     year: int,
     month: int,
