@@ -235,6 +235,10 @@ TRANSLATIONS = {
         "zh": "🏝️ 巴厘 Wariga",
         "en": "🏝️ Balinese Wariga",
     },
+    "tab_jawa_weton": {
+        "zh": "🏺 爪哇 Weton / Primbon",
+        "en": "🏺 Javanese Weton / Primbon",
+    },
     "tab_decans": {
         "zh": "🏛️ 古埃及十度區間",
         "en": "🏛️ Egyptian Decans",
@@ -363,6 +367,10 @@ TRANSLATIONS = {
     "spinner_wariga": {
         "zh": "正在計算巴厘 Wariga 日曆...",
         "en": "Calculating Balinese Wariga calendar...",
+    },
+    "spinner_jawa_weton": {
+        "zh": "正在計算爪哇 Weton 排盤...",
+        "en": "Calculating Javanese Weton chart...",
     },
     "spinner_decans": {
         "zh": "正在計算古埃及十度區間排盤...",
@@ -854,6 +862,32 @@ Reference: https://www.azteccalendar.com/
 - **Ingkel, Watek, Lintang**: Animal classification, auspice attributes, and stellar guardians
 - **Sasih (Months)**: Corresponds to Balinese traditional lunar months and dry/wet season divisions
 - **Waluku (Orion) Reference**: Used for seasonal verification and farming timing
+""",
+    },
+    "desc_jawa_weton": {
+        "zh": """
+### 什麼是爪哇 Weton / Primbon？
+
+**Weton**（韋東）是爪哇傳統命理體系 **Primbon** 的核心概念，
+以 Saptawara（七日週期）× Pancawara（五日市集週期）= 35 種命理組合。
+
+- **Saptawara**：對應七大行星能量（日、月、火、水、木、金、土）
+- **Pancawara（Pasaran）**：純爪哇本土的五日市集週期（Legi、Pahing、Pon、Wage、Kliwon）
+- **Neptu**：每個曆日的命理數值，用於合婚計算與擇日判斷
+- **35 天 Weton 循環**：7 × 5 = 35 天完整週期，每人出生 Weton 主導命運特質
+- **合婚計算**：兩人 Neptu 相加對照古典 Primbon，判斷婚配吉凶
+""",
+        "en": """
+### What is Javanese Weton / Primbon?
+
+**Weton** is the core concept of the Javanese **Primbon** tradition —
+a combination of Saptawara (7-day week) × Pancawara (5-day market week) = 35 destiny types.
+
+- **Saptawara**: 7 planetary weekdays (Sun through Sat)
+- **Pancawara (Pasaran)**: Native Javanese 5-day market cycle (Legi, Pahing, Pon, Wage, Kliwon)
+- **Neptu**: Numerological value used for marriage compatibility and electional purposes
+- **35-day Weton cycle**: 7 × 5 = 35 unique Weton combinations repeating every 35 days
+- **Marriage compatibility**: Sum of two Weton Neptus mapped to classical Primbon results
 """,
     },
     "desc_nadi": {
@@ -1673,6 +1707,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_aztec": {"zh": "阿茲特克文明神聖曆占卜", "en": "Aztec Tonalpohualli sacred calendar divination"},
     "sys_hint_mahabote": {"zh": "緬甸出生星期推算", "en": "Myanmar weekday-based astrology"},
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
+    "sys_hint_jawa_weton": {"zh": "爪哇 Weton 命理 + 合婚計算", "en": "Javanese Weton destiny & marriage compatibility"},
     "sys_hint_decans": {"zh": "古埃及十度區間預測", "en": "Ancient Egyptian decan predictions"},
     "sys_hint_nadi": {"zh": "南印度棕櫚葉手稿", "en": "South Indian palm-leaf readings"},
     "sys_hint_zurkhai": {"zh": "蒙古藏傳佛教占星", "en": "Mongolian Tibetan Buddhist astrology"},
