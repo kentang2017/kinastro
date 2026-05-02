@@ -409,13 +409,20 @@ def _render_compat_tab(result: WetonResult) -> None:
             st.session_state["_weton_compat_computed"] = True
 
     # ── 計算並顯示結果 ──
-    if st.session_state.get("_weton_compat_computed", False) or True:
+    if st.session_state.get("_weton_compat_computed", False):
         try:
             w2 = WetonCalculator.compute_weton_for_date(p2_date)
             compat = WetonCalculator.compute_compatibility(w1, w2)
             _render_compat_result(compat)
         except Exception as e:
             st.error(f"計算出錯：{e}")
+    else:
+        # 顯示乙方 Weton 預覽
+        try:
+            w2_preview = WetonCalculator.compute_weton_for_date(p2_date)
+            st.info(f"乙方 Weton：**{w2_preview.weton_name}** (Neptu {w2_preview.neptu_total})  ← 點擊「計算合婚」查看詳細結果")
+        except Exception:
+            pass
 
     # ── 所有相容組合預覽 ──
     st.divider()
@@ -572,14 +579,6 @@ def _render_electional_tab(result: WetonResult) -> None:
 
         # 活動篩選
         if activity_filter != "全部":
-            if neptu >= 15:
-                advice = "高吉" in level
-            elif neptu >= 10:
-                advice = "吉" in level
-            else:
-                advice = False
-
-            act_dict = day_info.date  # placeholder
             # 簡化篩選：高 Neptu 適合重要活動
             if activity_filter in ("結婚", "開業", "重要決策") and neptu < 10:
                 continue
