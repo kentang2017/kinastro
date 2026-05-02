@@ -3263,6 +3263,35 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "計算 Behenian 恆星激活……",
         "en": "Computing Behenian star activations…",
     },
+
+    # ── 出生時間校正 Birth Chart Rectification ──────────────────
+    "tab_rectification": {
+        "zh": "🔮 出生時間校正",
+        "en": "🔮 Rectification",
+    },
+    "sys_hint_rectification": {
+        "zh": "多技術古典校正：初級方向 · 太陽弧 · 次進法 · 小限 · 黃道釋放",
+        "en": "Multi-technique classical rectification: Primary Dirs · Solar Arcs · Progressions",
+    },
+    "desc_rectification": {
+        "zh": (
+            "🔮 **出生時間校正** — 結合初級方向（Primary Directions）、太陽弧（Solar Arcs）、"
+            "次進法（Secondary Progressions）、流年小限（Annual Profections）、"
+            "黃道釋放（Zodiacal Releasing）及行星過境（Transits）六大技術，"
+            "以加權評分算法對候選出生時間進行排名。"
+            "依據 Vettius Valens《Anthology》、William Lilly《Christian Astrology》等古典文獻。"
+        ),
+        "en": (
+            "🔮 **Birth Chart Rectification** — Combines Primary Directions, Solar Arcs, "
+            "Secondary Progressions, Annual Profections, Zodiacal Releasing, and Transits "
+            "with weighted scoring to rank candidate birth times. "
+            "Based on Vettius Valens' Anthology and Lilly's Christian Astrology."
+        ),
+    },
+    "spinner_rectification": {
+        "zh": "校正計算中，請稍候……",
+        "en": "Running rectification, please wait…",
+    },
 }
 
 def get_ui_lang() -> str:

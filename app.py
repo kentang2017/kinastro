@@ -152,6 +152,7 @@ from astro.chinese.taixuan.taixuan_renderer import (
     render_taixuan_intro,
     render_qigua_ui,
 )
+from astro.rectification.renderer import render_streamlit as render_rectification_page
 
 
 # ============================================================
@@ -1090,7 +1091,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1152,6 +1153,7 @@ with st.sidebar:
         "tab_khmer": t("tab_khmer"),
         "tab_taixuan": t("tab_taixuan"),
         "tab_picatrix_behenian": t("tab_picatrix_behenian"),
+        "tab_rectification": t("tab_rectification"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1200,6 +1202,7 @@ with st.sidebar:
         "tab_khmer": t("sys_hint_khmer"),
         "tab_taixuan": t("sys_hint_taixuan"),
         "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
+        "tab_rectification": t("sys_hint_rectification"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -4902,6 +4905,19 @@ elif _selected_system == "tab_polynesian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_polynesian"))
+
+# --- 出生時間校正 Birth Chart Rectification ---
+elif _selected_system == "tab_rectification":
+    _p = st.session_state.get("_calc_params", {})
+    render_rectification_page(
+        default_date=(
+            date(_p["year"], _p["month"], _p["day"])
+            if _p else None
+        ),
+        default_lat=_p.get("latitude", 22.3193),
+        default_lon=_p.get("longitude", 114.1694),
+        default_tz=_p.get("timezone", 8.0),
+    )
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom
