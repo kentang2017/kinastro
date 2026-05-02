@@ -591,7 +591,14 @@ _HOUSE_NAMES_CW = [
 ]
 
 def _quadrant_for(idx: int) -> str:
-    """Return the wind quadrant name for a 0-based house index (0-31)."""
+    """Return the wind quadrant name for a 0-based house index (0-31).
+
+    The 32 houses are ordered clockwise from North at 11.25° spacing:
+      0– 5 → Koʻolau  (N through NE, indices  0– 5)
+      6–11 → Malanai  (E through SE, indices  6–11)
+     12–17 → Kona     (S through SW, indices 12–17)
+     18–31 → Hoʻolua  (W through NW, indices 18–31)
+    """
     if idx <= 5:
         return "Koʻolau"
     if idx <= 11:

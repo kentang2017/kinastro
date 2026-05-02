@@ -14,6 +14,16 @@ import swisseph as swe
 from .constants import HAWAIIAN_STARS, COMPASS_HOUSES, STAR_LINES, SEASONS
 
 # ============================================================
+# Star-status classification thresholds
+# ============================================================
+# Altitude range (degrees) around the horizon used to classify a star as rising/setting.
+HORIZON_THRESHOLD_DEG: float = 2.0
+# Minimum altitude (degrees) for a star to be considered culminating (near meridian).
+CULMINATION_ALT_THRESHOLD: float = 60.0
+# Maximum absolute hour angle (degrees) for a star to be considered at culmination.
+CULMINATION_HA_THRESHOLD: float = 15.0
+
+# ============================================================
 # Swiss Ephemeris initialisation
 # ============================================================
 
@@ -136,7 +146,9 @@ def _alt_az(ra_deg: float, dec_deg: float,
         cos_az = max(-1.0, min(1.0, cos_az))
         az = math.degrees(math.acos(cos_az))
         if math.sin(ha) > 0:
-            az = 360.0 - az  # star is setting (HA > 0 → west of meridian)
+            # HA > 0 means the star is west of the meridian (setting side);
+            # the standard formula gives az measured from N, so we mirror it.
+            az = 360.0 - az
 
     return alt, az
 
@@ -262,9 +274,9 @@ def compute_polynesian_chart(
             ha_deg -= 360.0
 
         # Determine status
-        if -2.0 <= alt <= 2.0:
+        if -HORIZON_THRESHOLD_DEG <= alt <= HORIZON_THRESHOLD_DEG:
             status = "rising" if ha_deg < 0 else "setting"
-        elif alt > 60.0 and abs(ha_deg) < 15.0:
+        elif alt > CULMINATION_ALT_THRESHOLD and abs(ha_deg) < CULMINATION_HA_THRESHOLD:
             status = "culminating"
         elif alt > 0.0:
             status = "above"

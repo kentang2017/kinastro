@@ -29,6 +29,19 @@ _HAW_OCEAN = "#1A6BA0"
 _HAW_RED = "#C0392B"
 
 # ============================================================
+# Compass plot coordinate constants
+# ============================================================
+# Stars with altitude 0°–90° are mapped to radius 0.9 (horizon) → 0.05 (zenith).
+_COMPASS_RADIUS_HORIZON: float = 0.9   # radius for a star on the horizon
+_COMPASS_RADIUS_ZENITH: float = 0.05   # radius for a star at zenith (alt=90°)
+_COMPASS_ALT_MAX: float = 90.0         # degrees; full scale for altitude mapping
+
+# Star marker sizes (matplotlib scatter `s` units)
+_MARKER_SIZE_MIN: float = 20.0         # minimum marker area
+_MARKER_SIZE_BASE: float = 120.0       # base area (magnitude 0 star)
+_MARKER_SIZE_MAG_SCALE: float = 30.0   # area reduction per magnitude unit
+
+# ============================================================
 # Internal helpers
 # ============================================================
 
@@ -143,11 +156,15 @@ def _render_compass_tab(result: "PolynesianResult") -> None:
         az_rad = math.radians(sp["azimuth"])
         theta = math.pi / 2 - az_rad
         alt = sp["altitude"]
-        # Map altitude to radius: higher altitude → closer to center
-        r = max(0.05, 0.9 - alt / 100.0)
+        # Map altitude 0°–90° linearly to radius _COMPASS_RADIUS_HORIZON–_COMPASS_RADIUS_ZENITH
+        r = max(
+            _COMPASS_RADIUS_ZENITH,
+            _COMPASS_RADIUS_HORIZON - alt / _COMPASS_ALT_MAX * (_COMPASS_RADIUS_HORIZON - _COMPASS_RADIUS_ZENITH),
+        )
 
         mag = sp.get("magnitude", 2.0)
-        size = max(20, 120 - mag * 30)
+        # Larger magnitude (dimmer) → smaller marker; clamp to minimum
+        size = max(_MARKER_SIZE_MIN, _MARKER_SIZE_BASE - mag * _MARKER_SIZE_MAG_SCALE)
         color = _HAW_BORDER if sp["status"] == "culminating" else _HAW_TEAL
 
         ax.scatter([theta], [r], s=size, color=color, zorder=5,
@@ -334,6 +351,18 @@ def _render_guardian_tab(result: "PolynesianResult") -> None:
         st.info(auto_cn("無法計算守護星屋。", "Guardian house could not be computed."))
         return
 
+    # Use actual computed guardian star data; fall back to Hōkūleʻa defaults
+    gs_hawaiian = gs.get("hawaiian_name", "Hōkūleʻa") if gs else "Hōkūleʻa"
+    gs_western = gs.get("western_name", "Arcturus") if gs else "Arcturus"
+    gs_meaning = auto_cn(
+        gs.get("meaning_cn", "喜悅之星") if gs else "喜悅之星",
+        gs.get("meaning", "Star of Gladness") if gs else "Star of Gladness",
+    )
+    gs_key_use = auto_cn(
+        gs.get("key_use_cn", "夏威夷天頂星") if gs else "夏威夷天頂星",
+        gs.get("key_use", "Zenith Star of Hawaiʻi") if gs else "Zenith Star of Hawaiʻi",
+    )
+
     st.markdown(
         f"""<div style="
             background:linear-gradient(135deg,{_HAW_CARD},{_HAW_BG});
@@ -342,10 +371,10 @@ def _render_guardian_tab(result: "PolynesianResult") -> None:
             <div style="font-size:2.2em;text-align:center;
                 color:{_HAW_BORDER};margin-bottom:8px;">⭐</div>
             <h3 style="color:{_HAW_HEADER};text-align:center;margin:0;">
-                Hōkūleʻa (Arcturus)
+                {gs_hawaiian} ({gs_western})
             </h3>
             <p style="color:{_HAW_TEXT};text-align:center;margin:4px 0 16px;">
-                {auto_cn("喜悅之星 · 夏威夷天頂星", "Star of Gladness · Zenith Star of Hawaiʻi")}
+                {gs_meaning} · {gs_key_use}
             </p>
             <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:12px;">
                 <div style="text-align:center;">
