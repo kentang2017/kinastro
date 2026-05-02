@@ -17,6 +17,19 @@ import swisseph as swe
 import streamlit as st
 from dataclasses import dataclass, field
 
+from astro.ziwei_vietnamese import (
+    get_zodiac_year_label,
+    get_star_vietnamese_info,
+    get_palace_vietnamese_info,
+    get_marriage_compatibility,
+    build_vietnam_mode_header_html,
+    VIETNAMESE_DA_XIAN_TIPS,
+    VIETNAMESE_CULTURAL_NOTE,
+    VI_FLAG,
+    VI_ACCENT_COLOR,
+    VI_STAR_COLOR,
+)
+
 # ============================================================
 # 常量 (Constants)
 # ============================================================
@@ -307,6 +320,9 @@ class ZiweiChart:
 
     # 三合組
     sanhe_groups: list = field(default_factory=list)  # List of (branch1, branch2, branch3)
+
+    # 越南模式
+    vietnam_mode: bool = False  # True = 越南 Tử Vi 模式（以貓代兔）
 
 
 # ============================================================
@@ -774,6 +790,7 @@ def compute_ziwei_chart(
     longitude: float,
     location_name: str = "",
     gender: str = "男",
+    vietnam_mode: bool = False,
 ) -> ZiweiChart:
     """
     計算紫微斗數命盤。
@@ -786,6 +803,7 @@ def compute_ziwei_chart(
         longitude:        經度（排盤資訊用途）
         location_name:    地點名稱
         gender:           性別（"男" or "女"）
+        vietnam_mode:     是否啟用越南 Tử Vi 模式（以貓代兔等越南特色）
 
     Returns:
         ZiweiChart: 命盤資料
@@ -860,6 +878,7 @@ def compute_ziwei_chart(
         wu_xing_ju=wu_xing_ju, ziwei_branch=ziwei_branch,
         yin_yang=yin_yang, ming_zhu=ming_zhu, shen_zhu=shen_zhu,
         sihua=sihua, palaces=palaces, sanhe_groups=sanhe_groups,
+        vietnam_mode=vietnam_mode,
     )
 
 
@@ -869,7 +888,11 @@ def compute_ziwei_chart(
 
 def render_ziwei_chart(chart: ZiweiChart, after_chart_hook=None) -> None:
     """渲染完整的紫微斗數命盤。"""
-    st.subheader("🌟 紫微斗數命盤")
+    if chart.vietnam_mode:
+        st.markdown(build_vietnam_mode_header_html(), unsafe_allow_html=True)
+        st.subheader(f"{VI_FLAG} 越南 Tử Vi Đẩu Số 命盤")
+    else:
+        st.subheader("🌟 紫微斗數命盤")
     _render_sihua_legend()
     _render_palace_grid(chart)
     if after_chart_hook:
@@ -882,6 +905,9 @@ def render_ziwei_chart(chart: ZiweiChart, after_chart_hook=None) -> None:
     _render_feixing_table(chart)
     st.divider()
     _render_palace_details(chart)
+    if chart.vietnam_mode:
+        st.divider()
+        _render_vietnam_cultural_section(chart)
 
 
 def _render_info(chart: ZiweiChart) -> None:
@@ -1018,6 +1044,22 @@ def _center_info_html(chart: ZiweiChart) -> str:
     ys = HEAVENLY_STEMS[chart.lunar_year_stem]
     yb = EARTHLY_BRANCHES[chart.lunar_year_branch]
 
+    # 越南模式：生肖名稱覆寫（卯→貓）
+    zodiac_label = get_zodiac_year_label(chart.lunar_year_branch, chart.vietnam_mode)
+    if chart.vietnam_mode:
+        title_text = f"{VI_FLAG} 越南 Tử Vi 命盤"
+        title_color = VI_STAR_COLOR
+        zodiac_vi = ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ",
+                     "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"]
+        yb_vi = zodiac_vi[chart.lunar_year_branch]
+        year_line = (
+            f'{chart.lunar_year}年 {ys}{yb}年（{zodiac_label}年/{yb_vi}）'
+        )
+    else:
+        title_text = "紫微斗數命盤"
+        title_color = "#c8a96e"
+        year_line = f'{chart.lunar_year}年 {ys}{yb}年'
+
     sihua_html = ""
     SIHUA_COLORS = {"祿": "#00E676", "權": "#FF5252", "科": "#42A5F5", "忌": "#FF9800"}
     for star, hua in chart.sihua.items():
@@ -1025,15 +1067,15 @@ def _center_info_html(chart: ZiweiChart) -> str:
         sihua_html += f'<span style="color:{hc};font-size:11px;margin:0 3px">{star}化{hua}</span>'
 
     return (
-        f'<div style="background:#0d0d1a;border:2px solid #c8a96e;border-radius:10px;'
+        f'<div style="background:#0d0d1a;border:2px solid {title_color};border-radius:10px;'
         f'padding:12px;text-align:center;height:100%;color:#e0d5b0;'
         f'display:flex;flex-direction:column;justify-content:center;">'
-        f'<div style="font-size:20px;font-weight:bold;color:#c8a96e;margin-bottom:4px">'
-        f'紫微斗數命盤</div>'
+        f'<div style="font-size:20px;font-weight:bold;color:{title_color};margin-bottom:4px">'
+        f'{title_text}</div>'
         f'<div style="font-size:12px;margin:2px 0">'
         f'{chart.gender}命 / {chart.yin_yang}{chart.gender} / {wu_ju}</div>'
         f'<div style="font-size:12px;margin:2px 0">'
-        f'{chart.lunar_year}年 {ys}{yb}年</div>'
+        f'{year_line}</div>'
         f'<div style="font-size:12px;margin:2px 0">'
         f'{lm}{leap} {ld} {HOUR_BRANCH_NAMES[chart.hour_branch]}</div>'
         f'<div style="font-size:11px;margin:2px 0;color:#aaa">'
@@ -1115,13 +1157,20 @@ def _render_palace_grid(chart: ZiweiChart) -> None:
 
 def _render_star_table(chart: ZiweiChart) -> None:
     """渲染主星位置匯總表格。"""
-    st.markdown("#### ⭐ 主星分佈表")
+    if chart.vietnam_mode:
+        st.markdown("#### ⭐ 主星分佈表（越南 Tử Vi）")
+    else:
+        st.markdown("#### ⭐ 主星分佈表")
 
     all_stars = list(ZIWEI_GROUP.keys()) + list(TIANFU_GROUP.keys())
     branch_to_palace: dict[int, ZiweiPalace] = {p.branch: p for p in chart.palaces}
 
-    header = "| 星曜 | 五行 | 別稱 | 所在宮位 | 地支 | 亮度 | 四化 |"
-    sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+    if chart.vietnam_mode:
+        header = "| 星曜 | 越南名 (Tên Việt) | 五行 | 所在宮位 | 亮度 | 四化 |"
+        sep = "|:---:|:---:|:---:|:---:|:---:|:---:|"
+    else:
+        header = "| 星曜 | 五行 | 別稱 | 所在宮位 | 地支 | 亮度 | 四化 |"
+        sep = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
     rows = [header, sep]
 
     for star in all_stars:
@@ -1139,13 +1188,23 @@ def _render_star_table(chart: ZiweiChart) -> None:
         bright = palace.brightness.get(star, "")
         hua = chart.sihua.get(star, "")
         hua_str = f"化{hua}" if hua else ""
-        rows.append(
-            f"| {name_html} | {wuxing} | {alias} "
-            f"| {palace.name}{marker} "
-            f"| {palace.branch_name} "
-            f"| {bright} "
-            f"| {hua_str} |"
-        )
+        if chart.vietnam_mode:
+            vi_info = get_star_vietnamese_info(star)
+            vi_name = vi_info["vi_name"] if vi_info else alias
+            rows.append(
+                f"| {name_html} | {vi_name} | {wuxing} "
+                f"| {palace.name}{marker} "
+                f"| {bright} "
+                f"| {hua_str} |"
+            )
+        else:
+            rows.append(
+                f"| {name_html} | {wuxing} | {alias} "
+                f"| {palace.name}{marker} "
+                f"| {palace.branch_name} "
+                f"| {bright} "
+                f"| {hua_str} |"
+            )
 
     st.markdown("\n".join(rows), unsafe_allow_html=True)
 
@@ -1194,7 +1253,10 @@ def _render_feixing_table(chart: ZiweiChart) -> None:
 
 def _render_palace_details(chart: ZiweiChart) -> None:
     """渲染十二宮位詳細說明。"""
-    st.markdown("#### 📋 十二宮位詳情")
+    if chart.vietnam_mode:
+        st.markdown("#### 📋 十二宮位詳情（越南 Tử Vi）")
+    else:
+        st.markdown("#### 📋 十二宮位詳情")
 
     _PALACE_DESC = {
         "命宮":  "代表人的個性、才能、命運走向",
@@ -1241,18 +1303,97 @@ def _render_palace_details(chart: ZiweiChart) -> None:
             if palace.branch == chart.shen_gong_branch:
                 markers.append("🔵身")
             marker_str = " ".join(markers)
-            desc = _PALACE_DESC.get(palace.name, "")
 
             # 四化
             sihua_str = ""
             for star, hua in palace.sihua.items():
                 sihua_str += f" {star}化{hua}"
 
-            st.markdown(
-                f"**{palace.stem_name}{palace.branch_name} {palace.name}** "
-                f"{marker_str} 大限:{palace.da_xian}\n\n"
-                f"⭐ 主星: {stars_str}\n\n"
-                f"🔹 輔星: {aux_str}\n\n"
-                + (f"🔸 四化: {sihua_str}\n\n" if sihua_str else "")
-                + f"*{desc}*"
+            if chart.vietnam_mode:
+                vi_info = get_palace_vietnamese_info(palace.name)
+                vi_name = vi_info["vi_name"] if vi_info else ""
+                desc = vi_info["zh_interp"] if vi_info else _PALACE_DESC.get(palace.name, "")
+                vi_desc = vi_info["vi_interp"] if vi_info else ""
+                st.markdown(
+                    f"**{palace.stem_name}{palace.branch_name} {palace.name}**"
+                    + (f" *{vi_name}*" if vi_name else "")
+                    + f" {marker_str} 大限:{palace.da_xian}\n\n"
+                    f"⭐ 主星: {stars_str}\n\n"
+                    f"🔹 輔星: {aux_str}\n\n"
+                    + (f"🔸 四化: {sihua_str}\n\n" if sihua_str else "")
+                    + f"*{desc}*\n\n"
+                    + (f'<span style="color:#aaa;font-size:11px">🇻🇳 {vi_desc}</span>' if vi_desc else ""),
+                    unsafe_allow_html=True,
+                )
+            else:
+                desc = _PALACE_DESC.get(palace.name, "")
+                st.markdown(
+                    f"**{palace.stem_name}{palace.branch_name} {palace.name}** "
+                    f"{marker_str} 大限:{palace.da_xian}\n\n"
+                    f"⭐ 主星: {stars_str}\n\n"
+                    f"🔹 輔星: {aux_str}\n\n"
+                    + (f"🔸 四化: {sihua_str}\n\n" if sihua_str else "")
+                    + f"*{desc}*"
+                )
+
+
+def _render_vietnam_cultural_section(chart: ZiweiChart) -> None:
+    """渲染越南 Tử Vi 文化特色說明區塊（僅在越南模式時顯示）。"""
+    from astro.ziwei_vietnamese import (
+        get_vietnamese_zodiac_name,
+        VIETNAMESE_MARRIAGE_COMPAT,
+        VIETNAMESE_ZODIAC_NAMES,
+    )
+
+    st.markdown(f"#### {VI_FLAG} 越南 Tử Vi 特色說明")
+
+    # 文化說明
+    st.info(VIETNAMESE_CULTURAL_NOTE)
+
+    # 生肖資訊：特別標示「貓年」
+    zodiac_zh, zodiac_vi = get_vietnamese_zodiac_name(chart.lunar_year_branch)
+    st.markdown(
+        f"**🐾 生肖年份（越南）**：{zodiac_zh}年（{zodiac_vi}）"
+        + ("　← 越南曆法以**貓**代替中國的「兔」🐱" if chart.lunar_year_branch == 3 else "")
+    )
+
+    # 越南命宮大限詮釋
+    ming_gong_palace = next(
+        (p for p in chart.palaces if p.branch == chart.ming_gong_branch), None
+    )
+    if ming_gong_palace:
+        da_xian_key = f"{ming_gong_palace.name}大限"
+        da_xian_tip = VIETNAMESE_DA_XIAN_TIPS.get(da_xian_key)
+        if da_xian_tip:
+            st.markdown(f"**🔮 大限提示**：{da_xian_tip}")
+
+    # 越南婚姻合婚提示（基於年支）
+    st.markdown("---")
+    st.markdown(f"##### 💕 越南傳統合婚參考（{zodiac_zh}年生人）")
+
+    compat_rows = []
+    branch1 = chart.lunar_year_branch
+    for branch2 in range(12):
+        if branch2 == branch1:
+            continue
+        key = (min(branch1, branch2), max(branch1, branch2))
+        info = VIETNAMESE_MARRIAGE_COMPAT.get(key)
+        if info:
+            zh2, vi2 = VIETNAMESE_ZODIAC_NAMES[branch2]
+            level_color = {
+                "大吉": VI_ACCENT_COLOR,
+                "吉": "#4CAF50",
+                "不利": "#888",
+            }.get(info["level"], "#aaa")
+            compat_rows.append(
+                f'<span style="color:{level_color};font-weight:bold">{info["level"]}</span> '
+                f'{zh2}（{vi2}） — {info["note"]}'
             )
+
+    if compat_rows:
+        st.markdown(
+            "<br>".join(f"• {r}" for r in compat_rows),
+            unsafe_allow_html=True,
+        )
+    else:
+        st.write("（無特殊合婚記錄，請查看夫妻宮星曜）")
