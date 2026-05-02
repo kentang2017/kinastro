@@ -1327,9 +1327,11 @@ def calculate_otonan(
     today_pos   = today_delta % PAWUKON_CYCLE
 
     # 計算下次 Otonan 的天數差
+    # (birth_pos - today_pos) % PAWUKON_CYCLE 給出今日之後最近的相同位置；
+    # 若結果為 0 則今日恰好也是相同 Pawukon 位置，下次在 210 天後。
     diff = (birth_pos - today_pos) % PAWUKON_CYCLE
     if diff == 0:
-        diff = PAWUKON_CYCLE  # 今天恰好是 Otonan，下次是 210 天後
+        diff = PAWUKON_CYCLE
 
     next_otonan_dates: List[date] = []
     for i in range(3):
@@ -1512,8 +1514,8 @@ def calculate_compatibility(
     elif sapta_diff <= 3:
         score += 5
 
-    # Wuku 特殊搭配獎勵
-    if {r1.wuku.name, r2.wuku.name} <= UTTAMA_WUKU or w1 == w2:
+    # Wuku 特殊搭配獎勵（使用整數索引與 UTTAMA_WUKU 比較）
+    if {w1, w2} <= UTTAMA_WUKU or w1 == w2:
         score += 8
 
     score = max(0, min(100, score))

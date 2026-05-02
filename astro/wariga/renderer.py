@@ -1332,8 +1332,10 @@ def _render_otonan_tab(result: WarigaResult, st):
         try:
             otonan = cached_calculate_otonan(int(b_year), int(b_month), int(b_day))
             _display_otonan_result(otonan, st)
+        except ValueError as e:
+            st.error(f"日期無效，請確認年月日是否正確（例如 2 月不超過 29 日）：{e}")
         except Exception as e:
-            st.error(f"計算失敗：{e}")
+            st.error(f"計算 Otonan 失敗（{type(e).__name__}）：{e}")
     else:
         st.info("請輸入出生日期後點擊計算。")
 
@@ -1460,7 +1462,7 @@ def _render_dewasa_chooser_tab(st):
             else:
                 st.warning("在指定範圍內未找到合適吉日，請嘗試擴大搜尋範圍或更換活動類型。")
         except Exception as e:
-            st.error(f"搜尋失敗：{e}")
+            st.error(f"擇日搜尋失敗（{type(e).__name__}）：可能為日期範圍無效或超出支援範圍（2020-2050）。詳細：{e}")
     else:
         st.info("選擇日期範圍與活動類型，點擊「搜尋最佳吉日」即可。")
         if "wedding" in ACTIVITY_RULES:
@@ -1507,7 +1509,7 @@ def _render_compatibility_tab(st):
             )
             _display_compatibility_result(compat, st)
         except Exception as e:
-            st.error(f"計算失敗：{e}")
+            st.error(f"緣分計算失敗（{type(e).__name__}）：請確認兩人日期均有效（例如 2 月不超過 29 日）。詳細：{e}")
     else:
         st.info("輸入兩人出生日期後點擊「計算緣分」。")
 
