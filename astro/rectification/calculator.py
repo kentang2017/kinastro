@@ -39,6 +39,9 @@ from .constants import (
     RECT_BLUE,
     RECT_TEAL,
     RECT_ORANGE,
+    _ASIN_CLAMP,
+    SECONDARY_PROGRESSION_MAX_ORB,
+    ZR_LOOSING_THRESHOLD_YEARS,
 )
 
 # ============================================================
@@ -462,10 +465,8 @@ def _placidus_arc(
         dec_sig_r = math.radians(sig_dec)
         dec_prom_r = math.radians(prom_dec)
 
-        val_sig = math.tan(dec_sig_r) * math.tan(lat_r)
-        val_prom = math.tan(dec_prom_r) * math.tan(lat_r)
-        val_sig = max(-0.9999, min(0.9999, val_sig))
-        val_prom = max(-0.9999, min(0.9999, val_prom))
+        val_sig = _clamp_asin(math.tan(dec_sig_r) * math.tan(lat_r))
+        val_prom = _clamp_asin(math.tan(dec_prom_r) * math.tan(lat_r))
 
         oa_sig = _normalize(sig_ra - math.degrees(math.asin(val_sig)))
         oa_prom = _normalize(prom_ra - math.degrees(math.asin(val_prom)))
@@ -475,6 +476,15 @@ def _placidus_arc(
         return abs(arc)
     except (ValueError, ZeroDivisionError):
         return None
+
+
+def _clamp_asin(value: float) -> float:
+    """Clamp a value to the arcsine domain [-_ASIN_CLAMP, _ASIN_CLAMP].
+
+    Prevents ValueError when floating-point errors push the argument
+    just outside [-1, 1].
+    """
+    return max(-_ASIN_CLAMP, min(_ASIN_CLAMP, value))
 
 
 def _score_solar_arc(
@@ -628,9 +638,9 @@ def _score_secondary_progressions(
             if short_pp == tgt_name.split()[0]:
                 continue
             asp, asp_orb = _aspect_check(pp_lon, tgt_lon, orb=1.0)
-            if asp and asp_orb <= 0.8:
+            if asp and asp_orb <= SECONDARY_PROGRESSION_MAX_ORB:
                 bonus = _score_bonus(pp_name, tgt_name)
-                precision_factor = max(0.1, 1.0 - asp_orb / 0.8)
+                precision_factor = max(0.1, 1.0 - asp_orb / SECONDARY_PROGRESSION_MAX_ORB)
                 raw_score = weight * bonus * precision_factor
                 pp_cn = PLANET_CHINESE.get(short_pp, short_pp)
                 tgt_cn = PLANET_CHINESE.get(tgt_name.split()[0], tgt_name.split()[0])
@@ -761,8 +771,8 @@ def _score_zodiacal_releasing(
             dist_to_end = abs(event_jd - end_jd) / 365.25
             min_dist = min(dist_to_start, dist_to_end)
 
-            # "Loosing of the Bond" = within 1 year of boundary
-            is_loosing = min_dist <= 1.0
+            # "Loosing of the Bond" = within ZR_LOOSING_THRESHOLD_YEARS of boundary
+            is_loosing = min_dist <= ZR_LOOSING_THRESHOLD_YEARS
             strength = (1.5 if is_loosing else 0.8)
 
             sign_cn = _SIGN_CHINESE.get(sign, sign)

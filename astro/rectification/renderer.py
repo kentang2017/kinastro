@@ -386,6 +386,23 @@ def _render_event_input_tab() -> List[LifeEvent]:
     return parsed_events
 
 
+def _truncate(text: str, max_len: int = 28) -> str:
+    """Truncate text with ellipsis if it exceeds max_len."""
+    return text[:max_len] + "…" if len(text) > max_len else text
+
+
+def _tech_short_label(info: Dict[str, str]) -> str:
+    """Return a short display label for a technique info dict."""
+    if _is_zh():
+        return auto_cn(info["zh_name"].split()[0])
+    # English: extract first phrase before first colon or em-dash
+    en = info.get("en_desc", "")
+    for sep in (":", "—", " -"):
+        if sep in en:
+            return _truncate(en.split(sep)[0].strip())
+    return _truncate(en)
+
+
 def _render_technique_selector() -> List[str]:
     """Render technique toggle checkboxes and return selected technique keys."""
     if _is_zh():
@@ -398,8 +415,7 @@ def _render_technique_selector() -> List[str]:
     items = list(TECHNIQUE_INFO.items())
     for i, (key, info) in enumerate(items):
         with cols[i % 3]:
-            label = auto_cn(info["zh_name"]) if _is_zh() else info["en_desc"][:30] + "…"
-            label_short = auto_cn(info["zh_name"].split()[0]) if _is_zh() else info["en_desc"][:25]
+            label_short = _tech_short_label(info)
             weight = info["weight_label"]
             enabled = st.checkbox(
                 f"{label_short} ({weight})",
@@ -735,16 +751,17 @@ def _render_rectified_chart_tab(
             st.markdown("#### 🌟 Planet Positions")
 
         rows = []
+        from .constants import PLANET_CHINESE as _PC
         for pname, plon in chosen.planet_positions.items():
             sign = _sign_name(plon)
             deg = int(plon % 30)
             mins = int((plon % 30 - deg) * 60)
             short = pname.split()[0]
+            glyph = pname.split()[-1] if len(pname.split()) > 1 else ""
             if is_zh:
-                from .constants import PLANET_CHINESE
-                cn = PLANET_CHINESE.get(short, short)
+                cn_name = _PC.get(short, short)
                 rows.append({
-                    auto_cn("行星"): f"{pname.split()[-1] if len(pname.split()) > 1 else pname} {auto_cn(cn)}",
+                    auto_cn("行星"): f"{glyph} {auto_cn(cn_name)}".strip(),
                     auto_cn("位置"): auto_cn(f"{_SIGN_CHINESE.get(sign, sign)} {deg}°{mins:02d}'"),
                 })
             else:
@@ -803,10 +820,12 @@ def _render_rectified_chart_tab(
         for tkey, tscore in sorted(chosen.technique_scores.items(),
                                     key=lambda x: -x[1]):
             if tscore > 0:
-                info = TECHNIQUE_INFO.get(tkey, TECHNIQUE_INFO.get("transit", {}))
-                label = info.get("zh_name", tkey).split()[0] if _is_zh() else tkey
-                if is_zh:
-                    label = auto_cn(label)
+                info = TECHNIQUE_INFO.get(tkey)
+                if info:
+                    raw_label = info["zh_name"].split()[0] if is_zh else tkey
+                else:
+                    raw_label = _TECH_LABELS_ZH.get(tkey, tkey) if is_zh else _TECH_LABELS_EN.get(tkey, tkey)
+                label = auto_cn(raw_label) if is_zh else raw_label
                 tech_labels.append(label)
                 tech_scores.append(tscore)
                 tech_colors.append(_TECH_COLORS.get(tkey, RECT_GOLD))

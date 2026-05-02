@@ -346,7 +346,18 @@ PLANET_CHINESE: Dict[str, str] = {
 }
 
 # Outer planets for transit matching (high impact)
-OUTER_PLANETS_SWE: Dict[str, int] = {}  # populated lazily to avoid import at module load
+# Note: populated in calculator.py using swisseph IDs to avoid import at module load
+
+# Precision threshold for arcsine clamp (avoids domain errors near ±1).
+# Exported for use in calculator.py; the underscore prefix is a package-internal
+# convention (not strict private) since it has no useful meaning to end users.
+_ASIN_CLAMP: float = 0.9999
+
+# Max orb (in degrees) for Secondary Progression hits
+SECONDARY_PROGRESSION_MAX_ORB: float = 0.8
+
+# "Loosing of the Bond" window: event within this many years of a ZR boundary
+ZR_LOOSING_THRESHOLD_YEARS: float = 1.0
 
 # Score threshold for "confident" candidate (percentage)
 CONFIDENCE_HIGH: float = 70.0
