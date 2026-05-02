@@ -5,15 +5,15 @@
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.6.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-41-FFD700?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-43-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**四十一體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・萬化仙禽・六壬祿命・太乙命法・奇門祿命・鐵板神數・鬼谷分定經・韓國・土亭數・高棉・Reamker 占星・西洋・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・宿曜道・泰國・緬甸・巴厘 Wariga・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯**
-*41-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Tie Ban Shen Shu, Ghost Valley Fen Ding Jing, Korean Tojeong, Khmer Reamker, Western, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Sukkayodo, Thai, Myanmar, Balinese Wariga, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian*
+**四十三體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・萬化仙禽・六壬祿命・太乙命法・奇門祿命・鐵板神數・鬼谷分定經・韓國・土亭數・高棉・Reamker 占星・西洋・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・波利尼西亞／夏威夷**
+*43-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Tie Ban Shen Shu, Ghost Valley Fen Ding Jing, Korean Tojeong, Khmer Reamker, Western, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Sukkayodo, Thai, Myanmar, Balinese Wariga, Javanese Weton, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, Polynesian / Hawaiian Star Lore*
 
 </div>
 
@@ -38,7 +38,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **四十一體系合一** | 在同一個介面中切換四十一種占星體系，無需來回切換工具 | Switch between 41 astrology systems in one unified interface |
+| 🔮 **四十三體系合一** | 在同一個介面中切換四十三種占星體系，無需來回切換工具 | Switch between 43 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
@@ -98,15 +98,17 @@
 | 32 | 🌟 九星氣學 Nine Star Ki | 洛書 Lo Shu | 本命星・月命星・日命星・五行・洛書九宮・相性分析 |
 | 33 | 🔮 土亭數 Tojeong Shu | 農曆 Lunar | 先天數後天數・格局代碼・129 格局斷語・三元 |
 | 34 | 🇰🇭 高棉占星 Khmer Astrology | 數理 Numerology | Reamker 史詩・32 格預言・八大命主・羅摩之箭・bè 祭壇儀式 |
+| 35 | 🏺 爪哇 Weton / Primbon | 爪哇曆 Javanese | Saptawara×Pancawara・Neptu 值・合婚計算・35 天 Weton 週期・Primbon 本命詳解 |
+| 36 | 🌺 波利尼西亞／夏威夷 Polynesian / Hawaiian | 恆星 Sidereal | 星辰知識・32 方位羅盤・Hōkūleʻa 守護宮位・導航星術 |
 | | **☪ 中東 Middle East** | | |
-| 35 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
-| 36 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
-| 37 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
+| 37 | ☪ 阿拉伯 Arabic | 回歸 Tropical | 阿拉伯點・Picatrix 星體魔法・太陽知識大全・MS164 手稿 |
+| 38 | 🕌 也門 Yemeni | 恆星 Sidereal | 28 月宿護符魔法・Anwāʼ 天氣預兆・Firdaria 週期 |
+| 39 | 🏛️ 薩珊波斯 Sassanian Persian | 恆星 Sidereal | 菱形 12 宮星盤・Firdar 生命週期・Hyleg/Alcocoden・皇家恆星・Profections・Almuten・阿拉伯點 |
 | | **🏺 古代文明 Ancient** | | |
-| 38 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
-| 39 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
-| 40 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
-| 41 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| 40 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 41 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
+| 42 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 43 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
 
 ---
 
@@ -920,6 +922,44 @@
 - **業力化解 Upay / Karma Remedies**：為每個星曜宮位組合提供獨特的補救方法（漂流河中・埋地・施捨等）— Unique remedies for each planet-house combination (river offerings, burial, charity, etc.)
 - **35 年生命週期 / 35-Year Life Cycle**：以 35 年為一大周期分析命運走向 — 35-year cycle for life trajectory analysis
 - **手紋配合 / Palmistry Integration**：結合手相解讀強化命盤判斷 — Palmistry integrated with chart reading
+
+</details>
+
+<details>
+<summary><strong>🏺 爪哇 Weton / Primbon（Javanese Weton）</strong></summary>
+
+源自爪哇島的傳統曆法與命理系統，以 Saptawara（七曜週）× Pancawara（五曜週）組合推算個人命運。
+
+*Rooted in the traditional Javanese calendar and fortune-telling system, combining the 7-day Saptawara with the 5-day Pancawara cycle to deduce personal destiny.*
+
+- **Saptawara × Pancawara**：七曜 (Minggu–Sabtu) × 五曜 (Legi–Kliwon) = 35 天一輪的 Weton 組合 — 7-day × 5-day = 35-day Weton cycle
+- **Neptu 值 / Neptu Score**：每個 Saptawara 與 Pancawara 日名有對應 Neptu 數值，用於合婚與擇日 — Numeric scores assigned to each day name for marriage compatibility and date selection
+- **合婚計算 / Marriage Compatibility**：兩人 Neptu 總和對應九種婚姻運勢判斷 — Combined Neptu sum maps to nine marriage fortune categories
+- **35 天 Weton 週期 / 35-Day Cycle**：追蹤出生 Weton 在 35 天循環中的位置 — Tracks birth Weton position within the 35-day repeating cycle
+- **Primbon 本命詳解 / Primbon Profile**：依 Weton 查詢傳統 Betaljemur Adammakna 命書解讀 — Traditional Betaljemur Adammakna manuscript readings by Weton
+
+> 📖 算法依循《Primbon Betaljemur Adammakna》古法，僅供文化學習與參考。
+>
+> *Calculations follow the classical Primbon Betaljemur Adammakna, for cultural learning and reference only.*
+
+</details>
+
+<details>
+<summary><strong>🌺 波利尼西亞／夏威夷星辰知識（Polynesian / Hawaiian Star Lore）</strong></summary>
+
+源自太平洋波利尼西亞文化的傳統星辰導航知識，以出生時星辰的升落與中天位置推算守護宮位。
+
+*Rooted in the traditional Polynesian navigation star knowledge of the Pacific, using the rising, setting, and culmination of stars at birth to determine the guardian house.*
+
+- **夏威夷恆星 / Hawaiian Stars**：採用傳統夏威夷星名（如 Hōkūleʻa、Hokupa'a）與方位對應 — Traditional Hawaiian star names (e.g. Hōkūleʻa, Hokupa'a) mapped to directions
+- **升落中天狀態 / Star Status**：計算出生時各恆星的升起（Rising）、落下（Setting）、中天（Culminating）狀態 — Computes rising, setting, and culminating status of each star at birth
+- **32 方位羅盤 / 32-House Compass**：波利尼西亞傳統將天際分為 32 個方位宮位 — Traditional Polynesian sky divided into 32 compass houses
+- **守護宮位 / Guardian House**：依出生時 Hōkūleʻa 所在位置推算個人守護宮 — Personal guardian house determined by Hōkūleʻa's position at birth
+- **季節對應 / Season Mapping**：星辰知識與夏威夷傳統季節（Māhoe Mua/Hope）對應 — Stars mapped to traditional Hawaiian seasons
+
+> 📖 此工具為文化、歷史與天文學習用途，呈現波利尼西亞傳統航海星辰知識。
+>
+> *This tool is for cultural, historical, and astronomical learning purposes, presenting traditional Polynesian navigational star knowledge.*
 
 </details>
 

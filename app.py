@@ -6,11 +6,11 @@ Multi-System Astrology Chart Application
 萬化仙禽、鐵板神數、鬼谷分定經、大六壬、奇門祿命、太乙命法、
 西洋占星、Sabian 符號、希臘（Hellenistic）、Astrocartography、天王星漢堡學派、凱爾特樹木曆、
 印度占星（Vedic）、Jaimini、納迪（Nadi）、KP 克里希納穆提、紅皮書（Lal Kitab）、
-宿曜道、泰國占星、緬甸（Mahabote）、巴厘 Wariga、蒙古祖爾海（Zurkhai）、
-藏傳時輪金剛、九星氣學、土亭數、高棉占星、
+宿曜道、泰國占星、緬甸（Mahabote）、巴厘 Wariga、爪哇 Weton、蒙古祖爾海（Zurkhai）、
+藏傳時輪金剛、九星氣學、土亭數、高棉占星、波利尼西亞／夏威夷、
 卡巴拉、猶太 Mazzalot、薩珊波斯、阿拉伯占星、也門占星、
 瑪雅、阿茲特克、古埃及十度區間（Decans）、巴比倫占星
-共四十一種體系，使用 pyswisseph 進行天文計算。
+共四十三種體系，使用 pyswisseph 進行天文計算。
 """
 
 import os
@@ -215,17 +215,17 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">四十一體系占星排盤平台</span>
+          <span class="hp-title-sub">四十三體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
           紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十一種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十三種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">41</div>
+            <div class="hp-stat-num">43</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -252,7 +252,7 @@ def render_homepage():
          ["大六壬", "太乙神數", "奇門遁甲"],
          "#C9A84C", "rgba(201,168,76,0.12)", "rgba(201,168,76,0.28)"),
         ("🏮", "中式占星", "Chinese Systems",
-         ["七政四餘", "紫微斗數", "萬花仙琴", "鐵板神數", "達摩占星", "十二次分野", "太玄數占星", "鬼谷分定經"],
+         ["七政四餘", "紫微斗數", "萬化仙禽", "鐵板神數", "達摩一掌經", "十二星次", "太玄數占星", "鬼谷分定經"],
          "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
         ("🏛️", "西洋占星", "Western Astrology",
          ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "凱爾特樹"],
@@ -261,7 +261,7 @@ def render_homepage():
          ["Jyotish", "納迪占星", "Jaimini", "KP 占星", "紅皮書 Lal Kitab"],
          "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
         ("🌏", "亞洲體系", "Asian Systems",
-         ["宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "祖爾海", "藏曆", "九星氣學"],
+         ["宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "波利尼西亞", "祖爾海", "藏曆", "九星氣學"],
          "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
         ("🕌", "中東體系", "Middle Eastern",
          ["卡巴拉", "猶太星宿", "薩珊波斯", "阿拉伯占星", "葉門占星"],
@@ -292,8 +292,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "四十一體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十一種占星體系"),
+        ("🔮", "四十三體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十三種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
