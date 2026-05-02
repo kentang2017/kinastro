@@ -16,6 +16,7 @@
 """
 
 import math
+from datetime import date, timedelta
 
 try:
     import svgwrite
@@ -23,8 +24,13 @@ try:
 except ImportError:
     HAS_SVGWRITE = False
 
-from .calculator import WarigaResult
-from .constants import WUKU_TABLE, WUKU_ATTRIBUTES
+from .calculator import (
+    WarigaResult, AlaAyuningDetail, OtonanResult, CompatibilityResult,
+    cached_calculate_otonan, cached_find_dewasa_ayu, cached_calculate_compatibility,
+)
+from .constants import (
+    WUKU_TABLE, WUKU_ATTRIBUTES, WUKU_DETAILS, ACTIVITY_RULES,
+)
 
 
 # ============================================================
@@ -1062,19 +1068,18 @@ def _render_svg_fallback(result: WarigaResult, width=600, height=800) -> str:
 
 
 # ============================================================
-# Streamlit 渲染主入口 — 支援古風/現代雙模式切換
+# Streamlit 渲染主入口 — Tab 分頁模式（升級版）
 # ============================================================
 
 def render_streamlit(result: WarigaResult):
     """
-    使用 Streamlit 元件渲染 Wariga 結果（雙模式）
+    使用 Streamlit 元件渲染 Wariga 結果（四分頁升級版）
 
-    提供：
-    1. 古典 Lontar 圖形模式（Palalintangan 風格）
-    2. 現代清晰表格模式
-
-    參數：
-        result (WarigaResult): Wariga 計算結果
+    分頁：
+    1. 🏝️ 主排盤  — 增強版 Ala Ayuning Dewasa（5 因素）
+    2. 🎂 Otonan   — 命主生日計算與性格報告
+    3. 📅 擇日器   — Dewasa Ayu 活動擇日工具
+    4. 💑 緣分配對 — Wuku 兩人緣分分析
 
     古法依據：Lontar Wariga / Dasar Wariga / Palalintangan
     """
@@ -1083,27 +1088,77 @@ def render_streamlit(result: WarigaResult):
     except ImportError:
         return
 
-    st.subheader("🏝️ 巴厘傳統 Wariga 排盤")
-    st.caption("嚴格依照 Lontar Wariga Dewasa、Wariga Gemet 與 Palalintangan 古典規則")
+    st.subheader("🏝️ 巴厘傳統 WARIGA 排盤")
+    st.caption("嚴格依照 Lontar Wariga Dewasa、Wariga Gemet 與 Palalintangan 古典規則 · 升級版 v2")
 
-    # 模式切換按鈕
-    col_mode1, col_mode2, col_spacer = st.columns([1, 1, 4])
-    with col_mode1:
-        classic_btn = st.button(
-            "📜 古典 Lontar 模式",
-            key="wariga_classic_mode",
-            help="仿古棕櫚葉手稿風格，Palalintangan 方格矩陣視覺",
-            width="stretch",
-        )
-    with col_mode2:
-        modern_btn = st.button(
-            "📊 現代表格模式",
-            key="wariga_modern_mode",
-            help="清晰現代表格佈局，快速查閱",
-            width="stretch",
-        )
+    tab_main, tab_otonan, tab_dewasa, tab_compat = st.tabs([
+        "🏛️ 主排盤",
+        "🎂 Otonan 命主",
+        "📅 擇日器",
+        "💑 緣分配對",
+    ])
 
-    # 初始化模式狀態
+    with tab_main:
+        _render_main_tab(result, st)
+
+    with tab_otonan:
+        _render_otonan_tab(result, st)
+
+    with tab_dewasa:
+        _render_dewasa_chooser_tab(st)
+
+    with tab_compat:
+        _render_compatibility_tab(st)
+
+
+# ============================================================
+# Tab 1：主排盤（增強版）
+# ============================================================
+
+def _render_main_tab(result: WarigaResult, st):
+    """主排盤 Tab — 含增強版 Ala Ayuning Dewasa"""
+    r = result
+    aad = r.ala_ayuning_detail
+    d   = r.dewasa
+    s   = r.sasih
+    moon_emoji = _moon_phase_emoji(r.penanggal.moon_phase_deg)
+    penanggal_label = "Penanggal（月盈）" if r.penanggal.is_penanggal else "Panglong（月虧）"
+
+    # ── 增強版 Ala Ayuning Dewasa ─────────────────────────
+    if aad:
+        _render_ala_ayuning_enhanced(aad, st)
+    else:
+        # 回退舊版
+        if d.is_auspicious:
+            st.success(f"✅ 吉日 (Dewasa Ayu) — Neptu 總和 = {d.neptu_sum}")
+        else:
+            st.warning(f"⚠️ 需謹慎 (Dewasa Ala) — Neptu 總和 = {d.neptu_sum}")
+
+    st.markdown("---")
+
+    # ── 頂部摘要 ──────────────────────────────────────────
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write(f"**Pawukon 日序：** {r.day_in_pawukon} / 210")
+        st.write(f"**Wuku：** {r.wuku.name}（Neptu={r.wuku.neptu}）")
+    with col2:
+        st.write(f"**Sasih：** {s.sasih_name}（第 {s.sasih_index+1} 月）")
+        st.write(f"**季節：** {s.season_cn} / {s.ayana.split('（')[0]}")
+    with col3:
+        st.write(f"**{moon_emoji} 月相日：** {r.penanggal.day_number} — {r.penanggal.name}")
+        if r.penanggal.special:
+            st.success(f"✨ {r.penanggal.special}")
+
+    st.markdown("---")
+
+    # ── 模式切換（古典 Lontar / 現代表格）─────────────────
+    col_m1, col_m2, col_sp = st.columns([1, 1, 4])
+    with col_m1:
+        classic_btn = st.button("📜 古典 Lontar 模式", key="wg_classic",
+                                help="仿古棕櫚葉手稿", width="stretch")
+    with col_m2:
+        modern_btn  = st.button("📊 現代表格模式",   key="wg_modern",
+                                help="清晰現代表格",  width="stretch")
     if "wariga_display_mode" not in st.session_state:
         st.session_state["wariga_display_mode"] = "classic"
     if classic_btn:
@@ -1112,20 +1167,397 @@ def render_streamlit(result: WarigaResult):
         st.session_state["wariga_display_mode"] = "modern"
 
     mode = st.session_state.get("wariga_display_mode", "classic")
-
     if mode == "classic":
         html = render_palalintangan_html(result)
-        st.components.v1.html(html, height=1100, scrolling=True)
+        st.components.v1.html(html, height=1150, scrolling=True)
     else:
-        # 現代模式：使用 Streamlit 原生元件 + HTML
         _render_modern_streamlit(result, st)
 
+    # ── Wuku 詳細資料卡 ───────────────────────────────────
+    st.markdown("---")
+    _render_wuku_detail_section(r, st)
+
+
+def _render_ala_ayuning_enhanced(aad: AlaAyuningDetail, st):
+    """渲染增強版 Ala Ayuning Dewasa（5 因素 Uttama/Madya/Ala）"""
+    # 主等級橫幅
+    level_emoji = {"Uttama": "✨", "Madya": "🌿", "Ala": "⚠️"}.get(aad.level, "⚪")
+    if aad.level == "Uttama":
+        st.success(
+            f"{level_emoji} **{aad.level_cn}（{aad.level}）** — "
+            f"{aad.explanation}"
+        )
+    elif aad.level == "Ala" and "大凶" in aad.level_cn:
+        st.error(
+            f"🚫 **{aad.level_cn}（{aad.level}）** — "
+            f"{aad.explanation}"
+        )
+    elif aad.level == "Ala":
+        st.warning(
+            f"{level_emoji} **{aad.level_cn}（{aad.level}）** — "
+            f"{aad.explanation}"
+        )
+    else:
+        st.info(
+            f"{level_emoji} **{aad.level_cn}（{aad.level}）** — "
+            f"{aad.explanation}"
+        )
+
+    if aad.special_holy_day:
+        st.markdown(f"🎊 **特殊聖日：{aad.special_holy_day}**")
+
+    # 5 因素展開面板
+    with st.expander("📖 五因素詳細分析（Lontar Wariga Dewasa 古典規則）", expanded=False):
+        if aad.uttama_factors:
+            st.markdown("**✨ 大吉因素（Uttama）：**")
+            for f in aad.uttama_factors:
+                st.markdown(f"- {f}")
+        if aad.madya_factors:
+            st.markdown("**⚪ 輔助因素（Madya）：**")
+            for f in aad.madya_factors:
+                st.markdown(f"- {f}")
+        if aad.ala_factors:
+            st.markdown("**⚠️ 凶險因素（Ala）：**")
+            for f in aad.ala_factors:
+                st.markdown(f"- {f}")
+
+    # 活動建議面板
+    with st.expander("🎯 各類活動吉凶建議（依活動類型）", expanded=False):
+        st.caption("依 Lontar Wariga Dewasa — 宜忌章節，結合當日五因素")
+        if aad.activity_advice:
+            cols = st.columns(2)
+            for idx, (act_key, advice) in enumerate(aad.activity_advice.items()):
+                with cols[idx % 2]:
+                    icon = advice.get("icon", "")
+                    name = advice.get("name_cn", act_key)
+                    level_str = advice.get("level", "⚪")
+                    notes = advice.get("notes", [])
+                    st.markdown(f"**{icon} {name}**")
+                    st.markdown(f"{level_str}")
+                    if notes:
+                        for n in notes[:2]:
+                            if n:
+                                st.caption(n)
+
+
+def _render_wuku_detail_section(r: WarigaResult, st):
+    """Wuku 詳細資料卡（可切換查看所有 30 Wuku）"""
+    st.markdown("#### 🌿 Wuku 性格與宜忌詳解")
+    st.caption("依 Lontar Palalintangan — 各 Wuku 性格、守護神、宜忌完整資料")
+
+    col_cur, col_sel = st.columns([1, 2])
+    with col_cur:
+        st.markdown(f"**當前 Wuku：{r.wuku.name}**（W{r.wuku.index+1:02d}）")
+    with col_sel:
+        wuku_names = [f"W{i+1:02d} {name}" for i, (name, _) in enumerate(WUKU_TABLE)]
+        sel_idx = st.selectbox(
+            "選擇 Wuku 查看詳細資料",
+            range(len(wuku_names)),
+            index=r.wuku.index,
+            format_func=lambda i: wuku_names[i],
+            key="wuku_detail_sel",
+        )
+
+    if sel_idx is not None and sel_idx < len(WUKU_DETAILS):
+        det = WUKU_DETAILS[sel_idx]
+        wuku_name = WUKU_TABLE[sel_idx][0]
+        wuku_col  = WUKU_ATTRIBUTES[sel_idx][2] if sel_idx < len(WUKU_ATTRIBUTES) else "#CCAA66"
+        quality   = WUKU_ATTRIBUTES[sel_idx][4] if sel_idx < len(WUKU_ATTRIBUTES) else "中"
+        is_current = (sel_idx == r.wuku.index)
+        current_badge = " 🔴 **（當前日期）**" if is_current else ""
+
+        # Card HTML
+        card_html = f"""
+<div style="background:{_LONTAR_BG};border:2px solid {_LONTAR_BORDER};border-radius:8px;
+     padding:16px;font-family:Georgia,serif;max-width:680px;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <div style="width:14px;height:40px;background:{wuku_col};border-radius:3px;flex-shrink:0;"></div>
+    <div>
+      <span style="font-size:1.2em;font-weight:bold;color:{_LONTAR_HEADER};">
+        W{sel_idx+1:02d} {wuku_name}{current_badge}
+      </span><br>
+      <span style="font-size:0.8em;color:{_LONTAR_SUBTLE};">
+        {det.get('deity_cn','')}&nbsp;·&nbsp;{det.get('deity','')}
+        &nbsp;·&nbsp; 總體：{quality}
+      </span>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85em;">
+    <div><b style="color:{_LONTAR_ACCENT};">🔮 象徵：</b>{det.get('animal','')} &amp; {det.get('plant','')}</div>
+    <div><b style="color:{_LONTAR_ACCENT};">✨ 吉日：</b>週內第 {det.get('lucky_day_in_wuku','?')} 天</div>
+    <div style="grid-column:1/-1;"><b style="color:{_LONTAR_ACCENT};">👤 性格特質：</b>{_escape_html(det.get('personality',''))}</div>
+    <div><b style="color:{_LONTAR_ACCENT};">💼 適合職業：</b>{_escape_html(det.get('career',''))}</div>
+    <div><b style="color:{_LONTAR_ACCENT};">❤️ 婚配相宜：</b>{_escape_html(det.get('marriage',''))}</div>
+    <div><b style="color:{_LONTAR_ACCENT};">🏥 健康注意：</b>{_escape_html(det.get('health',''))}</div>
+    <div><b style="color:{_LONTAR_ACCENT};">🙏 宜：</b>{_escape_html(det.get('auspicious_act',''))}</div>
+    <div style="grid-column:1/-1;background:rgba(139,26,26,0.06);padding:5px;border-radius:4px;">
+      <b style="color:{_LONTAR_ALA};">🚫 禁忌（Tabu）：</b>{_escape_html(det.get('tabu',''))}
+    </div>
+  </div>
+</div>
+"""
+        st.components.v1.html(card_html, height=270, scrolling=False)
+
+
+# ============================================================
+# Tab 2：Otonan（命主生日）
+# ============================================================
+
+def _render_otonan_tab(result: WarigaResult, st):
+    """Otonan Tab — 命主 210 天生日計算與性格報告"""
+    st.markdown("#### 🎂 Otonan — 命主 Pawukon 生日計算器")
+    st.caption("Otonan 為巴厘傳統每 210 天循環一次的個人聖日，依 Lontar Tattwa Krama")
+
+    st.markdown("""
+> **何謂 Otonan？**  
+> 巴厘人認為每隔 210 天（Pawukon 一個完整週期），當出生時相同的 Wuku 與 Wewaran 組合再次出現，
+> 即為個人最神聖的靈性生日，宜舉辦儀式感謝神明護佑。
+""")
+
+    with st.form("otonan_form"):
+        st.markdown("**輸入出生日期：**")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            b_year  = st.number_input("年份", min_value=1900, max_value=2100,
+                                       value=result.year, step=1, key="ot_year")
+        with col2:
+            b_month = st.number_input("月份", min_value=1, max_value=12,
+                                       value=result.month, step=1, key="ot_month")
+        with col3:
+            b_day   = st.number_input("日期", min_value=1, max_value=31,
+                                       value=result.day, step=1, key="ot_day")
+        submitted = st.form_submit_button("🔮 計算我的 Otonan", type="primary")
+
+    if submitted:
+        try:
+            otonan = cached_calculate_otonan(int(b_year), int(b_month), int(b_day))
+            _display_otonan_result(otonan, st)
+        except ValueError as e:
+            st.error(f"日期無效，請確認年月日是否正確（例如 2 月不超過 29 日）：{e}")
+        except Exception as e:
+            st.error(f"計算 Otonan 失敗（{type(e).__name__}）：{e}")
+    else:
+        st.info("請輸入出生日期後點擊計算。")
+
+
+def _display_otonan_result(otonan: OtonanResult, st):
+    """顯示 Otonan 計算結果"""
+    profile = otonan.wuku_profile
+
+    # 基本資訊
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"**出生 Wuku：** {otonan.birth_wuku}（W{otonan.birth_wuku_index+1:02d}）")
+        st.markdown(f"**Pawukon 位置：** 第 {otonan.birth_day_in_pawukon} 天 / 210")
+    with col2:
+        st.markdown(f"**出生 Panca Wara：** {otonan.birth_panca_wara}")
+        st.markdown(f"**出生 Sapta Wara：** {otonan.birth_sapta_wara}")
+
+    # 性格報告
+    if profile:
+        with st.expander(f"🌿 {otonan.birth_wuku} Wuku 完整性格報告", expanded=True):
+            wc = WUKU_ATTRIBUTES[otonan.birth_wuku_index][2] if otonan.birth_wuku_index < len(WUKU_ATTRIBUTES) else "#CCAA66"
+            st.markdown(f"""
+**🔮 守護神：** {profile.get('deity_cn','')} — {profile.get('deity','')}  
+**🦁 象徵：** {profile.get('animal','')} &nbsp; | &nbsp; {profile.get('plant','')}  
+**👤 性格特質：** {profile.get('personality','')}  
+**💼 適合職業：** {profile.get('career','')}  
+**❤️ 婚配相宜：** {profile.get('marriage','')}  
+**🏥 健康注意：** {profile.get('health','')}  
+**🙏 宜事：** {profile.get('auspicious_act','')}  
+**🚫 禁忌（Tabu）：** {profile.get('tabu','')}  
+""")
+
+    # 下次 Otonan 日期
+    st.markdown("#### 📅 接下來 3 次 Otonan 日期")
+    for i, d in enumerate(otonan.next_otonan_dates):
+        label = "（最近一次）" if i == 0 else f"（第 {i+1} 次）"
+        day_name = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"][d.weekday() % 7]
+        days_until = (d - date.today()).days
+        if days_until == 0:
+            badge = "🎉 今天！"
+        elif days_until > 0:
+            badge = f"還有 {days_until} 天"
+        else:
+            badge = f"{abs(days_until)} 天前"
+        st.markdown(f"**{i+1}.** {d.strftime('%Y 年 %m 月 %d 日')} {day_name} {label} — {badge}")
+
+    # 儀式建議
+    if otonan.ritual_note:
+        with st.expander("🙏 Otonan 儀式建議", expanded=False):
+            st.info(otonan.ritual_note)
+
+
+# ============================================================
+# Tab 3：擇日器（Dewasa Ayu Chooser）
+# ============================================================
+
+def _render_dewasa_chooser_tab(st):
+    """擇日器 Tab — 在指定日期範圍內搜尋最佳吉日"""
+    st.markdown("#### 📅 Dewasa Ayu 擇日器")
+    st.caption("依 Lontar Wariga Dewasa — 在指定日期範圍內搜尋最佳吉日（最多 5 天）")
+
+    with st.form("dewasa_chooser_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**搜尋起始日期：**")
+            today = date.today()
+            sc1, sc2, sc3 = st.columns(3)
+            with sc1:
+                sy = st.number_input("年", min_value=2020, max_value=2050, value=today.year, key="dc_sy")
+            with sc2:
+                sm = st.number_input("月", min_value=1, max_value=12, value=today.month, key="dc_sm")
+            with sc3:
+                sd = st.number_input("日", min_value=1, max_value=31, value=today.day, key="dc_sd")
+        with col2:
+            st.markdown("**搜尋結束日期：**")
+            end3 = today + timedelta(days=90)
+            ec1, ec2, ec3 = st.columns(3)
+            with ec1:
+                ey = st.number_input("年", min_value=2020, max_value=2050, value=end3.year, key="dc_ey")
+            with ec2:
+                em = st.number_input("月", min_value=1, max_value=12, value=end3.month, key="dc_em")
+            with ec3:
+                ed = st.number_input("日", min_value=1, max_value=31, value=end3.day, key="dc_ed")
+
+        act_options = {
+            "（不指定）":    None,
+            "💍 婚禮/訂婚": "wedding",
+            "🕯️ 火葬典禮":  "ngaben",
+            "✨ 鋸牙禮":    "metatah",
+            "🏠 房屋祝福":  "house_blessing",
+            "💼 開業/商業": "business",
+            "🌾 農耕/播種": "farming",
+            "✈️ 出行/旅行": "travel",
+            "🧘 靈性修行":  "spiritual",
+        }
+        act_label = st.selectbox("活動類型（可選）", list(act_options.keys()), key="dc_act")
+        submitted = st.form_submit_button("🔍 搜尋最佳吉日", type="primary")
+
+    if submitted:
+        try:
+            start = date(int(sy), int(sm), int(sd))
+            end   = date(int(ey), int(em), int(ed))
+            act_key = act_options[act_label]
+            with st.spinner("正在掃描日期範圍..."):
+                results = cached_find_dewasa_ayu(
+                    start.year, start.month, start.day,
+                    end.year, end.month, end.day,
+                    activity_type=act_key, max_results=5,
+                )
+            if results:
+                st.success(f"找到 {len(results)} 個最佳吉日：")
+                for i, day_info in enumerate(results):
+                    d = day_info["date"]
+                    day_name = ["週日","週一","週二","週三","週四","週五","週六"][d.weekday() % 7]
+                    reasons_str = "、".join(day_info["reasons"][:3]) if day_info["reasons"] else ""
+                    wuku_detail_idx = day_info.get("wuku_index", -1)
+                    wuku_quality = WUKU_ATTRIBUTES[wuku_detail_idx][4] if 0 <= wuku_detail_idx < len(WUKU_ATTRIBUTES) else ""
+                    st.markdown(
+                        f"**#{i+1}** &nbsp; {d.strftime('%Y年%m月%d日')} {day_name} &nbsp;·&nbsp; "
+                        f"Wuku **{day_info['wuku']}**（{wuku_quality}）&nbsp;·&nbsp; "
+                        f"{day_info['sapta_wara']} **{day_info['panca_wara']}** &nbsp;·&nbsp; "
+                        f"評分：**{day_info['score']}** &nbsp; 📝 {reasons_str}"
+                    )
+            else:
+                st.warning("在指定範圍內未找到合適吉日，請嘗試擴大搜尋範圍或更換活動類型。")
+        except Exception as e:
+            st.error(f"擇日搜尋失敗（{type(e).__name__}）：可能為日期範圍無效或超出支援範圍（2020-2050）。詳細：{e}")
+    else:
+        st.info("選擇日期範圍與活動類型，點擊「搜尋最佳吉日」即可。")
+        if "wedding" in ACTIVITY_RULES:
+            r = ACTIVITY_RULES["wedding"]
+            st.caption(f"💡 婚禮擇日提示：{r['notes']}")
+
+
+# ============================================================
+# Tab 4：緣分配對（Compatibility）
+# ============================================================
+
+def _render_compatibility_tab(st):
+    """緣分配對 Tab — Wuku 兩人緣分分析"""
+    st.markdown("#### 💑 Wuku 緣分配對計算器")
+    st.caption("依 Lontar Wariga — Pawatekan 相合理論，結合 Ingkel、Watek、Wewaran Neptu")
+
+    with st.form("compat_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**甲方出生日期：**")
+            cc1, cc2, cc3 = st.columns(3)
+            with cc1:
+                y1 = st.number_input("年", 1900, 2100, 1990, key="cp_y1")
+            with cc2:
+                m1 = st.number_input("月", 1, 12, 1, key="cp_m1")
+            with cc3:
+                d1 = st.number_input("日", 1, 31, 1, key="cp_d1")
+        with col2:
+            st.markdown("**乙方出生日期：**")
+            ec1, ec2, ec3 = st.columns(3)
+            with ec1:
+                y2 = st.number_input("年", 1900, 2100, 1992, key="cp_y2")
+            with ec2:
+                m2 = st.number_input("月", 1, 12, 6, key="cp_m2")
+            with ec3:
+                d2 = st.number_input("日", 1, 31, 15, key="cp_d2")
+        submitted = st.form_submit_button("💖 計算緣分", type="primary")
+
+    if submitted:
+        try:
+            compat = cached_calculate_compatibility(
+                int(y1), int(m1), int(d1),
+                int(y2), int(m2), int(d2),
+            )
+            _display_compatibility_result(compat, st)
+        except Exception as e:
+            st.error(f"緣分計算失敗（{type(e).__name__}）：請確認兩人日期均有效（例如 2 月不超過 29 日）。詳細：{e}")
+    else:
+        st.info("輸入兩人出生日期後點擊「計算緣分」。")
+
+
+def _display_compatibility_result(compat: CompatibilityResult, st):
+    """顯示緣分計算結果"""
+    score = compat.score
+
+    # 分數視覺化
+    col_score, col_info = st.columns([1, 2])
+    with col_score:
+        # 圓形分數指示
+        color = "#1B5E20" if score >= 82 else "#F57F17" if score >= 68 else "#E65100" if score >= 52 else "#B71C1C"
+        score_html = f"""
+<div style="text-align:center;padding:20px;background:{_LONTAR_BG};
+     border:2px solid {color};border-radius:50%;width:110px;height:110px;
+     display:flex;flex-direction:column;align-items:center;justify-content:center;
+     margin:auto;font-family:Georgia,serif;">
+  <div style="font-size:2em;font-weight:bold;color:{color};">{score}</div>
+  <div style="font-size:0.7em;color:{_LONTAR_SUBTLE};">/ 100</div>
+</div>
+"""
+        st.components.v1.html(score_html, height=140)
+        st.markdown(f"<div style='text-align:center;font-weight:bold;color:{color};'>{compat.level}</div>",
+                    unsafe_allow_html=True)
+    with col_info:
+        st.markdown(f"""
+**甲方：** Wuku **{compat.wuku1}** · {compat.panca1} · {compat.sapta1} · Ingkel {compat.ingkel1}  
+**乙方：** Wuku **{compat.wuku2}** · {compat.panca2} · {compat.sapta2} · Ingkel {compat.ingkel2}  
+        """)
+        if score >= 82:
+            st.success(compat.description)
+        elif score >= 52:
+            st.info(compat.description)
+        else:
+            st.warning(compat.description)
+
+    with st.expander("🙏 緣分建議與儀式指引", expanded=False):
+        st.info(compat.suggestions)
+
+
+# ============================================================
+# 舊版 _render_modern_streamlit（保留相容性）
+# ============================================================
 
 def _render_modern_streamlit(result: WarigaResult, st):
     """
     現代表格模式 — 使用 Streamlit 原生元件渲染
-
-    保留原有結構並加入新的 Dauh 和 Penanggal 資訊。
     古法依據：Lontar Wariga / Dasar Wariga
     """
     r = result
@@ -1159,8 +1591,8 @@ def _render_modern_streamlit(result: WarigaResult, st):
         r.dasa_wara,
     ]
     header = "| Wara 類型 | 名稱 | Neptu |"
-    sep = "|:----:|:----:|:-----:|"
-    rows = [header, sep]
+    sep    = "|:----:|:----:|:-----:|"
+    rows   = [header, sep]
     for w in wara_list:
         rows.append(f"| {w.wara_type} | **{w.name}** | {w.neptu} |")
     st.markdown("\n".join(rows))
