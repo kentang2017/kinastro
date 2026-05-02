@@ -7,7 +7,7 @@ Streamlit page with:
   2. 護符製作 (Talisman Making)   — recommendations per activated star
   3. 擇日器  (Electional Finder) — scan for future Moon–star windows
   4. 今日魔法 (Today's Magic)     — quick query for current sky activations
-  5. 星典覽覽 (Star Compendium)   — full browse of all 15 Behenian stars
+  5. 星典瀏覽 (Star Compendium)   — full browse of all 15 Behenian stars
 
 Visual style: dark celestial gold palette inspired by medieval manuscript
 illuminations (consistent with the Arabic / Picatrix mansion module palette).
@@ -700,7 +700,7 @@ def render_streamlit(
         auto_cn("🔮 護符製作"),
         auto_cn("📅 擇日器"),
         auto_cn("🌟 今日魔法"),
-        auto_cn("📚 星典覽覽"),
+        auto_cn("📚 星典瀏覽"),
     ])
 
     with tab_activations:
