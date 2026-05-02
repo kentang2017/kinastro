@@ -49,7 +49,7 @@ from astro.western.harmonic import render_harmonic_chart
 from astro.western.draconic import render_draconic_chart
 from astro.western.western_synastry import compute_synastry
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
-from astro.lal_kitab import compute_lal_kitab_chart, render_lal_kitab_chart
+from astro.lal_kitab import compute_lal_kitab_chart, render_lal_kitab_chart, render_lal_kitab_1952_page
 from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha
 from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
 from astro.vedic.ashtakavarga import compute_ashtakavarga
@@ -3124,7 +3124,7 @@ elif _selected_system == "tab_lal_kitab":
             with st.spinner(t("spinner_lal_kitab")):
                 _lk_chart = compute_lal_kitab_chart(**_p)
             _lk_lang = st.session_state.get("lang", "zh")
-            render_lal_kitab_chart(
+            render_lal_kitab_1952_page(
                 _lk_chart,
                 lang=_lk_lang,
                 after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", _lk_chart, btn_key="lal_kitab"),
