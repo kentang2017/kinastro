@@ -127,6 +127,7 @@ from astro.arabic.picatrix_mansions import (
 )
 from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
+from astro.picatrix_behenian import render_streamlit as render_picatrix_behenian
 from astro.chinstar.chinstar import WanHuaXianQin
 from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
 from astro.sanshi.liuren import compute_liuren_chart, render_liuren_chart, compute_lunming, render_lunming_report
@@ -1090,7 +1091,7 @@ with st.sidebar:
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer"]),
-        ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni"]),
+        ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
     ]
 
@@ -1147,6 +1148,7 @@ with st.sidebar:
         "tab_tojeong": t("tab_tojeong"),
         "tab_khmer": t("tab_khmer"),
         "tab_taixuan": t("tab_taixuan"),
+        "tab_picatrix_behenian": t("tab_picatrix_behenian"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1193,6 +1195,7 @@ with st.sidebar:
         "tab_tojeong": t("sys_hint_tojeong"),
         "tab_khmer": t("sys_hint_khmer"),
         "tab_taixuan": t("sys_hint_taixuan"),
+        "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -3483,6 +3486,33 @@ elif _selected_system == "tab_yemeni":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_yemeni"))
+
+# --- Picatrix 占星魔法 + Behenian 固定星 ---
+elif _selected_system == "tab_picatrix_behenian":
+    _p = st.session_state.get("_calc_params", {})
+    if _is_calculated and _p:
+        try:
+            from astro.western.western import compute_western_chart as _cwc
+            with st.spinner(t("spinner_picatrix_behenian")):
+                _pb_chart = _cwc(**_p)
+            render_picatrix_behenian(
+                chart=_pb_chart,
+                year=_p["year"], month=_p["month"], day=_p["day"],
+                hour=_p["hour"], minute=_p["minute"],
+                timezone_offset=_p["timezone"],
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_picatrix_behenian"))
+        # Show compendium even without a chart
+        try:
+            from astro.picatrix_behenian.renderer import _render_compendium_tab
+            _render_compendium_tab()
+        except Exception:
+            pass
 
 # --- 瑪雅占星 ---
 elif _selected_system == "tab_maya":
