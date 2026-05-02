@@ -1919,12 +1919,37 @@ if _selected_system == "tab_chinese":
 
 # --- 紫微斗數 ---
 elif _selected_system == "tab_ziwei":
+    # 越南 Tử Vi 模式切換
+    _ziwei_col1, _ziwei_col2 = st.columns([3, 1])
+    with _ziwei_col2:
+        _vietnam_mode = st.toggle(
+            "🇻🇳 越南 Tử Vi 模式",
+            value=st.session_state.get("_ziwei_vietnam_mode", False),
+            help="啟用越南 Tử Vi Đẩu Số 模式：以貓代兔、融入越南佛教與農耕文化詮釋",
+            key="_ziwei_vietnam_toggle",
+        )
+        st.session_state["_ziwei_vietnam_mode"] = _vietnam_mode
+    with _ziwei_col1:
+        if _vietnam_mode:
+            st.markdown(
+                '<span style="background:#DA251D;color:#FFCD00;'
+                'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
+                '🇻🇳 越南 Tử Vi Đẩu Số 模式已啟用</span>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<span style="background:#1a1a2e;color:#c8a96e;'
+                'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
+                '🌟 中國紫微斗數模式</span>',
+                unsafe_allow_html=True,
+            )
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
             _gender = st.session_state.get("_calc_gender", "男")
             with st.spinner(t("spinner_ziwei")):
-                zw_chart = compute_ziwei_chart(**_p, gender=_gender)
+                zw_chart = compute_ziwei_chart(**_p, gender=_gender, vietnam_mode=_vietnam_mode)
             render_ziwei_chart(zw_chart, after_chart_hook=lambda: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
