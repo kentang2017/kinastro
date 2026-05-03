@@ -2977,8 +2977,8 @@ elif _selected_system == "tab_tieban":
         st.divider()
         st.subheader("🔢 扣入法查詢")
         _kunji_num = st.number_input(
-            "輸入條文編號（1001–12000）",
-            min_value=1001, max_value=12000, value=1001, step=1,
+            "輸入條文編號（1001–13000）",
+            min_value=1001, max_value=13000, value=1001, step=1,
             key="kunji_num_input",
         )
         if st.button("解碼天干序列", key="kunji_decode_btn"):
