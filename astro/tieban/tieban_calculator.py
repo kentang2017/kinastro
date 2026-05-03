@@ -1707,26 +1707,22 @@ class TieBanShenShu:
                 'number': verse_data.get('number', f'{i*500+1:04d}')
             }
         
-        # Step 12: 坤集扣入法天干序列
+        # Step 12: 坤集扣入法天干序列 & 完整 12000 條文資料庫查詢
+        kunji_tiangan: List[str] = []
+        tiaowen_data: Optional[Dict[str, Any]] = None
         try:
             tieban_int = int(tieban_number)
-            kunji_tiangan = kou_ru_fa(tieban_int) if 1001 <= tieban_int <= 13000 else []
+            if 1001 <= tieban_int <= 13000:
+                kunji_tiangan = kou_ru_fa(tieban_int)
+                tiaowen_data = self.tiaowen_db.get(tieban_int)
         except (ValueError, TypeError):
-            kunji_tiangan = []
+            pass
         
         # Step 13: 九十六刻表與六親刻分圖查詢
         hour_branch = birth_data.hour_gz.branch
         ke_label = KeFenEngine.ke_to_label(final_ke)
         bake_fuqin_info = KeFenEngine.lookup_bake_96ke(hour_branch, "父母兄弟", final_ke)
         six_qin_qizi_info = KeFenEngine.lookup_six_qin(hour_branch, "妻子", final_fen)
-        
-        # Step 14: 查詢完整 12000 條文資料庫
-        tiaowen_data: Optional[Dict[str, Any]] = None
-        try:
-            tieban_int = int(tieban_number)
-            tiaowen_data = self.tiaowen_db.get(tieban_int)
-        except (ValueError, TypeError):
-            pass
         
         # 組裝結果
         result = TieBanResult(
