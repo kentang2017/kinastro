@@ -201,6 +201,9 @@ class TieBanResult:
     # 完整 12000 條文資料庫查詢結果
     tiaowen_data: Optional[Dict[str, Any]] = None
     
+    # 坤集條文編號（1001–13000，由 tieban_number 映射而來）
+    tiaowen_number: int = 0
+    
     # 原始數據
     raw_data: Dict[str, Any] = field(default_factory=dict)
 
@@ -1708,13 +1711,16 @@ class TieBanShenShu:
             }
         
         # Step 12: 坤集扣入法天干序列 & 完整 12000 條文資料庫查詢
+        # 將 tieban_number 映射至坤集範圍 1001–13000，確保永遠能查到條文
         kunji_tiangan: List[str] = []
         tiaowen_data: Optional[Dict[str, Any]] = None
+        tiaowen_number: int = 0
         try:
             tieban_int = int(tieban_number)
-            if 1001 <= tieban_int <= 13000:
-                kunji_tiangan = kou_ru_fa(tieban_int)
-                tiaowen_data = self.tiaowen_db.get(tieban_int)
+            # 無論原始號碼為何，均對映至坤集有效範圍 1001–13000
+            tiaowen_number = ((tieban_int - 1) % 12000) + 1001
+            kunji_tiangan = kou_ru_fa(tiaowen_number)
+            tiaowen_data = self.tiaowen_db.get(tiaowen_number)
         except (ValueError, TypeError):
             pass
         
@@ -1747,6 +1753,7 @@ class TieBanShenShu:
             bake_fuqin_info=bake_fuqin_info,
             six_qin_qizi_info=six_qin_qizi_info,
             tiaowen_data=tiaowen_data,
+            tiaowen_number=tiaowen_number,
             raw_data={
                 'ming_shen': ming_shen,
                 'candidates': candidates[:10],  # 僅保留前 10 個候選
