@@ -2863,7 +2863,7 @@ elif _selected_system == "tab_tieban":
                 # 坤集扣入法天干序列 + 條文編號
                 if tb_result.kunji_tiangan:
                     _tg_str = "　".join(tb_result.kunji_tiangan)
-                    _tiaowen_num_label = auto_cn(f"坤集編號 {tb_result.tiaowen_number}")
+                    _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
                     _ke_lbl = tb_result.ke_label or str(tb_result.ke)
                     st.markdown(
                         f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
