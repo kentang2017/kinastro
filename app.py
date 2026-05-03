@@ -2855,16 +2855,79 @@ elif _selected_system == "tab_tieban":
       </div>
     </div>""", unsafe_allow_html=True)
 
-                # ③ 字：主條文
+                # ③ 字：坤集條文（tiaowen_full_12000.json 主條文）
                 st.divider()
-                _verse_title = t("tieban_main_verse") if hasattr(t, "tieban_main_verse") else "條文"
-                st.subheader("📜 " + _verse_title)
-                st.info(tb_result.verse)
+                _tb_kunji_title = auto_cn("🔑 坤集條文")
+                st.subheader(_tb_kunji_title)
+
+                # 坤集扣入法天干序列 + 條文編號
+                if tb_result.kunji_tiangan:
+                    _tg_str = "　".join(tb_result.kunji_tiangan)
+                    _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
+                    _ke_lbl = tb_result.ke_label or str(tb_result.ke)
+                    st.markdown(
+                        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
+                        f'<span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
+                        f'#{_tiaowen_num_label}</span>'
+                        f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
+                        f'{auto_cn("扣入天干")}：{_tg_str}</span>'
+                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                        f'{auto_cn("刻")}：{_ke_lbl}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                # 坤集主條文（tiaowen_full_12000.json）
+                _tw = tb_result.tiaowen_data
+                if _tw and _tw.get("text"):
+                    st.markdown(
+                        f'<div style="background:rgba(255,107,53,0.08);border-left:4px solid #FF6B35;'
+                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                        f'color:#f0d9c8;line-height:1.9;letter-spacing:0.5px;">'
+                        f'{_tw["text"]}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    if _tw.get("note") and _tw["note"].strip() not in ("", "0 0"):
+                        st.caption(auto_cn(f"備注：{_tw['note']}"))
+                else:
+                    # 如坤集無此條，退而顯示 verses.json 條文
+                    st.info(tb_result.verse)
+
+                # 九十六刻表 & 六親刻分圖查詢結果
+                _bake = tb_result.bake_fuqin_info
+                _six = tb_result.six_qin_qizi_info
+                if _bake or _six:
+                    st.divider()
+                    st.markdown(f"**{auto_cn('⏰ 刻分六親')}**")
+                    _kf_cards = ""
+                    if _bake:
+                        _kf_cards += (
+                            f'<div style="border-left:3px solid rgba(255,217,61,0.5);'
+                            f'padding:8px 12px;margin-bottom:8px;'
+                            f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                            f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
+                            f'{auto_cn("父母兄弟（九十六刻）")}</div>'
+                            f'<div style="font-size:13px;color:#FFD93D;">{_bake}</div></div>'
+                        )
+                    if _six:
+                        _kf_cards += (
+                            f'<div style="border-left:3px solid rgba(107,203,119,0.5);'
+                            f'padding:8px 12px;margin-bottom:8px;'
+                            f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                            f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
+                            f'{auto_cn("妻子（六親刻分）")}</div>'
+                            f'<div style="font-size:13px;color:#6BCB77;">{_six}</div></div>'
+                        )
+                    st.markdown(f'<div style="width:100%;">{_kf_cards}</div>', unsafe_allow_html=True)
 
                 # 十二宮條文詳情
-                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else "十二宮條文") + "**")
+                st.divider()
+                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文")) + "**")
 
-                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else "查看十二宮詳細條文"
+                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
                 with st.expander(expander_label, expanded=False):
                     palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
                                    "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
@@ -2884,7 +2947,7 @@ elif _selected_system == "tab_tieban":
                     _palace_cards = ""
                     for palace_name in palace_order:
                         palace_info = tb_result.palace_verses.get(palace_name, {})
-                        verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else "暫無條文")
+                        verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else auto_cn("暫無條文"))
                         category = palace_info.get("category", "")
                         branch = palace_info.get("branch", "")
                         display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
