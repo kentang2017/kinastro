@@ -687,8 +687,8 @@ def _display_transit_hits(hits: List[TransitHit], is_zh: bool) -> None:
             )
         else:
             headline = (
-                f"Transit {_sym(hit.transit_key)}{PLANET_NAMES_EN.get(hit.transit_key, hit.transit_key)} "
-                f"= {PLANET_NAMES_EN.get(ka, ka)}/{PLANET_NAMES_EN.get(kb, kb)} "
+                f"Transit {_sym(hit.transit_key)}{_pname(hit.transit_key)} "
+                f"= {_pname(ka)}/{_pname(kb)} "
                 f"orb {hit.orb:.2f}°"
             )
         st.markdown(f'<div class="{box_class}"><b>{headline}</b></div>', unsafe_allow_html=True)

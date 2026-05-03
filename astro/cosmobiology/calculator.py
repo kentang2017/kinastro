@@ -473,9 +473,12 @@ def compute_synastry_midpoints(
     """
     c1_map: Dict[str, float] = {p.key: p.longitude for p in chart1.points}
     c2_map: Dict[str, float] = {p.key: p.longitude for p in chart2.points}
+    # Build a combined map for activation lookups.  When both charts share the
+    # same planet key the chart2 position is used (dict merge semantics).
+    # The outer loop always uses chart1 positions for the first half of the
+    # midpoint, and chart2 positions for the second half, so both persons'
+    # planets activate the cross-midpoints.
     all_map: Dict[str, float] = {**c1_map, **c2_map}
-    # When both charts have the same key, prefer chart2 for activation check
-    # (both persons' planets activate the composite midpoints)
 
     cross: List[SynastryMidpoint] = []
 
@@ -550,7 +553,10 @@ def compute_transit_hits(
         natal: The natal ComsobioChart.
         transit_year/month/day/hour/minute: Date and time of the transit event.
         transit_tz: UTC offset for the transit moment.
-        transit_lat/lon: Location for computing transit Asc/MC (use natal if 0).
+        transit_lat/lon: Location for computing transit Asc/MC.
+            If not provided (0.0), the equator/prime meridian is used,
+            which means the transit Asc/MC will not be meaningful.
+            Pass the natal or event location for accurate Asc/MC transits.
         orb: Maximum orb in degrees.
 
     Returns:
