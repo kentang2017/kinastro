@@ -97,6 +97,7 @@ from astro.western.advanced_bodies import (
     calculate_parans, calculate_heliacal, get_asteroid_aspects,
 )
 from astro.western.uranian import compute_uranian_chart, render_uranian_chart
+from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
 from astro.western.predictive_ui import render_predictive_suite
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
 from astro.natal_summary import generate_natal_summary
@@ -1091,7 +1092,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_celtic_tree", "tab_rectification"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1140,6 +1141,7 @@ with st.sidebar:
         "tab_damo": t("tab_damo"),
         "tab_acg": t("tab_acg"),
         "tab_uranian": t("tab_uranian"),
+        "tab_cosmobiology": t("tab_cosmobiology"),
         "tab_liuren": t("tab_liuren"),
         "tab_fendjing": t("tab_fendjing"),
         "tab_taiyi": t("tab_taiyi"),
@@ -1189,6 +1191,7 @@ with st.sidebar:
         "tab_damo": t("sys_hint_damo"),
         "tab_acg": t("sys_hint_acg"),
         "tab_uranian": t("sys_hint_uranian"),
+        "tab_cosmobiology": t("sys_hint_cosmobiology"),
         "tab_liuren": t("sys_hint_liuren"),
         "tab_fendjing": t("sys_hint_fendjing"),
         "tab_taiyi": t("sys_hint_taiyi"),
@@ -4845,6 +4848,20 @@ elif _selected_system == "tab_uranian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_uranian"))
+elif _selected_system == "tab_cosmobiology":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_cosmobiology")):
+                _cosmo_result = compute_cosmobiology_chart(**_p)
+            render_cosmobiology(_cosmo_result)
+            _render_ai_button("tab_cosmobiology", _cosmo_result, btn_key="cosmobiology")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_cosmobiology"))
 elif _selected_system == "tab_wariga":
     if _is_calculated:
         try:

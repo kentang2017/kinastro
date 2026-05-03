@@ -2158,6 +2158,41 @@ transmitted by **Chen Xiyi**.
             "Enter birth data and click Calculate."
         ),
     },
+    "tab_cosmobiology": {
+        "zh": "🔬 宇宙生物學",
+        "en": "🔬 Cosmobiology (Ebertin)",
+    },
+    "sys_hint_cosmobiology": {
+        "zh": "Ebertin 中點樹占星：COSI 原著行星組合詮釋 · 90° 轉盤",
+        "en": "Ebertin midpoint astrology: COSI planetary combinations · 90° Dial",
+    },
+    "spinner_cosmobiology": {
+        "zh": "正在計算 Ebertin 宇宙生物學命盤…",
+        "en": "Computing Ebertin Cosmobiology chart…",
+    },
+    "desc_cosmobiology": {
+        "zh": (
+            "**宇宙生物學（Cosmobiology）** — Reinhold Ebertin 創立。\n\n"
+            "• 嚴格依照《行星影響力的組合》（COSI，1972年英文版）原著。\n"
+            "• 中點樹：M(A/B) = (A+B)/2，容許度最大 1.5°（COSI 第9頁）。\n"
+            "• 90° 轉盤：所有強相位等同於合相。\n"
+            "• 完整 COSI 行星組合資料庫：原則、正面表現、負面表現。\n"
+            "• 支援本命分析、合盤及過境事件比對。\n\n"
+            "本模組 100% 依照 Ebertin 原著，不添加任何後世詮釋。\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "**Cosmobiology** — Founded by Reinhold Ebertin.\n\n"
+            "• Strictly follows *The Combination of Stellar Influences* (COSI, 1972 English ed.).\n"
+            "• Midpoint Tree: M(A/B) = (A+B)/2, max orb 1.5° (COSI p. 9).\n"
+            "• 90° Dial: all hard aspects treated as conjunctions.\n"
+            "• Full COSI planetary combination database: principle, positive, negative.\n"
+            "• Natal analysis, synastry, and transit/event comparison.\n\n"
+            "This module is 100% faithful to Ebertin's original works. "
+            "No modern interpretations have been added.\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
     "acg_title": {
         "zh": "🌍 Astrocartography 搬遷線地圖",
         "en": "🌍 Astrocartography Relocation Map",
