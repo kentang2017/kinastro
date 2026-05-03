@@ -93,7 +93,8 @@ def render_tieban_chart_svg(result: TieBanResult,
     outer_y = cy - square_size // 2   # 168
 
     # 底部資訊卡起始 Y（確保在宮位下方，不重疊）
-    info_y = outer_y + square_size + palace_gap + palace_h + 16   # ≈ 510
+    # 底宮下緣 = outer_y + square_size + 8 (pad) + palace_h; 再加 34px 留白
+    info_y = outer_y + square_size + 8 + palace_h + 34   # ≈ 520
 
     # 菱形半對角線（內層裝飾菱形）
     diamond_half = 78
@@ -336,7 +337,7 @@ def _calculate_palace_positions(ming_palace_branch: str,
 
     # 上方 3 宮（從右到左）
     for i in range(3):
-        x = outer_x + square_size - palace_width - (i * gap) + gap // 2 - palace_width // 6
+        x = outer_x + (2 - i) * gap + gap // 2 - palace_width // 2
         y = outer_y - palace_height - pad
         positions.append({'x': x, 'y': y})
 
@@ -355,7 +356,7 @@ def _calculate_palace_positions(ming_palace_branch: str,
     # 右方 3 宮（從下到上）
     for i in range(3):
         x = outer_x + square_size + pad
-        y = outer_y + square_size - palace_height - (i * gap) + gap // 2 - palace_height // 6
+        y = outer_y + (2 - i) * gap + gap // 2 - palace_height // 2
         positions.append({'x': x, 'y': y})
 
     # 根據命宮地支旋轉位置列表
