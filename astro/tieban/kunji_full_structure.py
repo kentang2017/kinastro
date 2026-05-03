@@ -41,13 +41,13 @@ KUNJI_TIANGAN_CODE_REVERSE: Dict[int, str] = {v: k for k, v in KUNJI_TIANGAN_COD
 def kou_ru_fa(input_number: int) -> List[str]:
     """
     扣入法核心演算法（萬千百十 → 天干序列）
-    鐵版神數正統心法：將條文編號（1001~12000）扣入坤集密碼表
+    鐵版神數正統心法：將條文編號（1001~13000）扣入坤集密碼表
     
     範例：
     1001 → [甲, 丙, 戊, 乙] → 對應特定條文或六親資訊
     """
-    if not (1001 <= input_number <= 12000):
-        raise ValueError("鐵板神數條文編號範圍：1001~12000")
+    if not (1001 <= input_number <= 13000):
+        raise ValueError("鐵板神數條文編號範圍：1001~13000")
 
     # 取出萬、千、百、十、個位（五位數）
     s = f"{input_number:05d}"
@@ -114,9 +114,9 @@ TIAOWEN_DATABASE: Dict[int, Dict] = {}
 
 # ====================== 自動生成完整 12000 條骨架 ======================
 def initialize_full_tiaowen_db() -> None:
-    """自動生成 1001~12000 的完整骨架（空白待補充）"""
+    """自動生成 1001~13000 的完整骨架（空白待補充）"""
     global TIAOWEN_DATABASE
-    for num in range(1001, 12001):
+    for num in range(1001, 13001):
         if num not in TIAOWEN_DATABASE:
             TIAOWEN_DATABASE[num] = {
                 "text": "",

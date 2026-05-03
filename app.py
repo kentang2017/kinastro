@@ -2751,211 +2751,269 @@ elif _selected_system == "tab_kp":
 
 # --- 鐵板神數 (Tie Ban Shen Shu) ---
 elif _selected_system == "tab_tieban":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_tieban") if hasattr(t, "spinner_tieban") else "計算鐵板神數..."):
-                # 鐵板神數需要父母信息，此處為簡化示例
-                from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
-                from astro.tieban.tieban_calculator import Ganzhi
-                
-                # 計算干支
-                tbss = TieBanShenShu()
-                ganzhi = tbss.calculate_ganzhi(
-                    datetime(
-                        _p["year"], _p["month"], _p["day"],
-                        _p["hour"], _p["minute"]
+    _tb_tab_main, _tb_tab_tiaowen, _tb_tab_kunji = st.tabs([
+        auto_cn("🔮 命盤"), auto_cn("📚 完整條文庫"), auto_cn("🔑 坤集扣入法"),
+    ])
+    with _tb_tab_main:
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_tieban") if hasattr(t, "spinner_tieban") else "計算鐵板神數..."):
+                    # 鐵板神數需要父母信息，此處為簡化示例
+                    from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
+                    from astro.tieban.tieban_calculator import Ganzhi
+                    
+                    # 計算干支
+                    tbss = TieBanShenShu()
+                    ganzhi = tbss.calculate_ganzhi(
+                        datetime(
+                            _p["year"], _p["month"], _p["day"],
+                            _p["hour"], _p["minute"]
+                        )
                     )
-                )
+                    
+                    # 創建出生資料（完整版需用戶輸入父母信息）
+                    birth_data = TieBanBirthData(
+                        birth_dt=datetime(_p["year"], _p["month"], _p["day"], _p["hour"], _p["minute"]),
+                        year_gz=ganzhi['year'],
+                        month_gz=ganzhi['month'],
+                        day_gz=ganzhi['day'],
+                        hour_gz=ganzhi['hour'],
+                        gender=st.session_state.get("_calc_gender", "男"),
+                    )
+                    
+                    # 計算
+                    tb_result = tbss.calculate(birth_data)
                 
-                # 創建出生資料（完整版需用戶輸入父母信息）
-                birth_data = TieBanBirthData(
-                    birth_dt=datetime(_p["year"], _p["month"], _p["day"], _p["hour"], _p["minute"]),
-                    year_gz=ganzhi['year'],
-                    month_gz=ganzhi['month'],
-                    day_gz=ganzhi['day'],
-                    hour_gz=ganzhi['hour'],
-                    gender=st.session_state.get("_calc_gender", "男"),
-                )
-                
-                # 計算
-                tb_result = tbss.calculate(birth_data)
-            
-            # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
-            # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
-            svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
-            st.components.v1.html(svg_chart, height=620, scrolling=False)
+                # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
+                # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
+                svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
+                st.components.v1.html(svg_chart, height=620, scrolling=False)
 
-            # ② 核心數字卡片（HTML，手機單列）
-            _tb_lang = get_lang()
-            _tb_num_label   = "神數號碼"   if _tb_lang != "en" else "Divine Number"
-            _tb_ke_label    = "刻"         if _tb_lang != "en" else "Ke"
-            _tb_fen_label   = "分"         if _tb_lang != "en" else "Fen"
-            _tb_helo_label  = "河洛數"     if _tb_lang != "en" else "He Luo"
-            _tb_ming_label  = "命宮"       if _tb_lang != "en" else "Life Palace"
-            _tb_shen_label  = "身宮"       if _tb_lang != "en" else "Body Palace"
-            _tb_wx_label    = "五行局"     if _tb_lang != "en" else "Element Cycle"
-            _tb_code_label  = "密碼"       if _tb_lang != "en" else "Secret Code"
-            st.markdown(f"""
-<div style="
-    display:flex;flex-wrap:wrap;gap:8px;
-    margin:0 0 16px 0;
-">
-  <div style="flex:1 1 140px;min-width:140px;
-      background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.4);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_num_label}</div>
-    <div style="font-size:26px;font-weight:700;color:#FF6B35;letter-spacing:3px;">{tb_result.tieban_number}</div>
-  </div>
-  <div style="flex:1 1 80px;min-width:80px;
-      background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ke_label}</div>
-    <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.ke}</div>
-  </div>
-  <div style="flex:1 1 80px;min-width:80px;
-      background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_fen_label}</div>
-    <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.fen}</div>
-  </div>
-  <div style="flex:1 1 80px;min-width:80px;
-      background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_helo_label}</div>
-    <div style="font-size:22px;font-weight:700;color:#6BCB77;">{tb_result.he_luo_number}</div>
-  </div>
-  <div style="flex:1 1 100px;min-width:100px;
-      background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ming_label}</div>
-    <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.ming_palace}</div>
-  </div>
-  <div style="flex:1 1 100px;min-width:100px;
-      background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_shen_label}</div>
-    <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.shen_palace}</div>
-  </div>
-  <div style="flex:1 1 100px;min-width:100px;
-      background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_wx_label}</div>
-    <div style="font-size:15px;font-weight:700;color:#C9A84C;">{tb_result.wuxing_ju}</div>
-  </div>
-  <div style="flex:1 1 100px;min-width:100px;
-      background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.25);
-      border-radius:12px;padding:12px 14px;text-align:center;">
-    <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_code_label}</div>
-    <div style="font-size:15px;font-weight:700;color:#E94560;">{tb_result.secret_code}</div>
-  </div>
-</div>""", unsafe_allow_html=True)
+                # ② 核心數字卡片（HTML，手機單列）
+                _tb_lang = get_lang()
+                _tb_num_label   = "神數號碼"   if _tb_lang != "en" else "Divine Number"
+                _tb_ke_label    = "刻"         if _tb_lang != "en" else "Ke"
+                _tb_fen_label   = "分"         if _tb_lang != "en" else "Fen"
+                _tb_helo_label  = "河洛數"     if _tb_lang != "en" else "He Luo"
+                _tb_ming_label  = "命宮"       if _tb_lang != "en" else "Life Palace"
+                _tb_shen_label  = "身宮"       if _tb_lang != "en" else "Body Palace"
+                _tb_wx_label    = "五行局"     if _tb_lang != "en" else "Element Cycle"
+                _tb_code_label  = "密碼"       if _tb_lang != "en" else "Secret Code"
+                st.markdown(f"""
+    <div style="
+        display:flex;flex-wrap:wrap;gap:8px;
+        margin:0 0 16px 0;
+    ">
+      <div style="flex:1 1 140px;min-width:140px;
+          background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.4);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_num_label}</div>
+        <div style="font-size:26px;font-weight:700;color:#FF6B35;letter-spacing:3px;">{tb_result.tieban_number}</div>
+      </div>
+      <div style="flex:1 1 80px;min-width:80px;
+          background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ke_label}</div>
+        <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.ke}</div>
+      </div>
+      <div style="flex:1 1 80px;min-width:80px;
+          background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_fen_label}</div>
+        <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.fen}</div>
+      </div>
+      <div style="flex:1 1 80px;min-width:80px;
+          background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_helo_label}</div>
+        <div style="font-size:22px;font-weight:700;color:#6BCB77;">{tb_result.he_luo_number}</div>
+      </div>
+      <div style="flex:1 1 100px;min-width:100px;
+          background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ming_label}</div>
+        <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.ming_palace}</div>
+      </div>
+      <div style="flex:1 1 100px;min-width:100px;
+          background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_shen_label}</div>
+        <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.shen_palace}</div>
+      </div>
+      <div style="flex:1 1 100px;min-width:100px;
+          background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_wx_label}</div>
+        <div style="font-size:15px;font-weight:700;color:#C9A84C;">{tb_result.wuxing_ju}</div>
+      </div>
+      <div style="flex:1 1 100px;min-width:100px;
+          background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.25);
+          border-radius:12px;padding:12px 14px;text-align:center;">
+        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_code_label}</div>
+        <div style="font-size:15px;font-weight:700;color:#E94560;">{tb_result.secret_code}</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
-            # ③ 字：主條文
-            st.divider()
-            _verse_title = t("tieban_main_verse") if hasattr(t, "tieban_main_verse") else "條文"
-            st.subheader("📜 " + _verse_title)
-            st.info(tb_result.verse)
+                # ③ 字：主條文
+                st.divider()
+                _verse_title = t("tieban_main_verse") if hasattr(t, "tieban_main_verse") else "條文"
+                st.subheader("📜 " + _verse_title)
+                st.info(tb_result.verse)
 
-            # 十二宮條文詳情
-            st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else "十二宮條文") + "**")
+                # 十二宮條文詳情
+                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else "十二宮條文") + "**")
 
-            expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else "查看十二宮詳細條文"
-            with st.expander(expander_label, expanded=False):
-                palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
-                               "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
-                palace_names_en = {
-                    "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
-                    "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
-                    "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
-                    "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
-                }
-                category_trans = {
-                    "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
-                    "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
-                    "事業": "Career", "健康": "Health", "災厄": "Disaster",
-                    "遷移": "Travel",
-                }
-                # 手機友好：以 HTML 卡片列表代替三列
-                _palace_cards = ""
-                for palace_name in palace_order:
-                    palace_info = tb_result.palace_verses.get(palace_name, {})
-                    verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else "暫無條文")
-                    category = palace_info.get("category", "")
-                    branch = palace_info.get("branch", "")
-                    display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
-                    display_category = category_trans.get(category, category) if get_lang() == "en" else category
-                    cat_badge = (
-                        f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
-                        f'【{display_category}】</span>'
-                    ) if display_category else ""
-                    _palace_cards += f"""
-<div style="border-left:3px solid rgba(255,107,53,0.5);
-     padding:10px 12px;margin-bottom:10px;
-     background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">
-  <div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">
-    {display_name}
-    <span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({branch})</span>
-    {cat_badge}
-  </div>
-  <div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{verse}</div>
-</div>"""
-                st.markdown(f'<div style="width:100%;">{_palace_cards}</div>', unsafe_allow_html=True)
+                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else "查看十二宮詳細條文"
+                with st.expander(expander_label, expanded=False):
+                    palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
+                                   "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
+                    palace_names_en = {
+                        "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
+                        "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
+                        "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
+                        "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
+                    }
+                    category_trans = {
+                        "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
+                        "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
+                        "事業": "Career", "健康": "Health", "災厄": "Disaster",
+                        "遷移": "Travel",
+                    }
+                    # 手機友好：以 HTML 卡片列表代替三列
+                    _palace_cards = ""
+                    for palace_name in palace_order:
+                        palace_info = tb_result.palace_verses.get(palace_name, {})
+                        verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else "暫無條文")
+                        category = palace_info.get("category", "")
+                        branch = palace_info.get("branch", "")
+                        display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
+                        display_category = category_trans.get(category, category) if get_lang() == "en" else category
+                        cat_badge = (
+                            f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
+                            f'【{display_category}】</span>'
+                        ) if display_category else ""
+                        _palace_cards += f"""
+    <div style="border-left:3px solid rgba(255,107,53,0.5);
+         padding:10px 12px;margin-bottom:10px;
+         background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">
+      <div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">
+        {display_name}
+        <span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({branch})</span>
+        {cat_badge}
+      </div>
+      <div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{verse}</div>
+    </div>"""
+                    st.markdown(f'<div style="width:100%;">{_palace_cards}</div>', unsafe_allow_html=True)
 
-            # AI 分析按鈕
-            _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
+                # AI 分析按鈕
+                _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
 
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            import traceback
-            st.code(traceback.format_exc())
-    else:
-        st.markdown("""
-<div style="
-    background:linear-gradient(135deg,#1a0828 0%,#0f1e35 100%);
-    border:1px solid rgba(255,107,53,0.35);
-    border-radius:16px;
-    padding:28px 24px 24px 24px;
-    margin-bottom:20px;
-    text-align:center;
-">
-  <div style="font-size:52px;margin-bottom:12px;">🔮</div>
-  <div style="font-size:22px;font-weight:700;color:#FF6B35;letter-spacing:2px;margin-bottom:6px;">
-    鐵板神數
-  </div>
-  <div style="font-size:12px;color:#9090b0;margin-bottom:14px;letter-spacing:1px;">
-    Tie Ban Shen Shu &middot; Iron Plate Divine Numbers
-  </div>
-  <div style="font-size:13px;color:#8888aa;line-height:1.8;max-width:380px;margin:0 auto 18px auto;">
-    源自宋代邵雍《皇極經世》，清代發展為精密考刻分系統<br>
-    每時分 8 刻、每刻 15 分（共 120 分）<br>
-    號稱「鐵口直斷」，中國傳統術數中最精密的查表法系統
-  </div>
-  <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
-    <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
-         border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
-      📅 輸入出生年月日時
-    </div>
-    <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
-         border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
-      ⚡ 一鍵推算神數
-    </div>
-    <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
-         border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
-      📜 查閱十二宮條文
-    </div>
-  </div>
-  <div style="
-    display:inline-block;
-    background:rgba(205,46,58,0.15);
-    border:1px solid rgba(205,46,58,0.4);
-    border-radius:8px;
-    padding:8px 20px;
-    font-size:13px;
-    color:#f87171;
-  ">👈 請在左側填寫出生年月日時，即可起盤</div>
-</div>""", unsafe_allow_html=True)
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                import traceback
+                st.code(traceback.format_exc())
+        else:
+            st.markdown("""
+    <div style="
+        background:linear-gradient(135deg,#1a0828 0%,#0f1e35 100%);
+        border:1px solid rgba(255,107,53,0.35);
+        border-radius:16px;
+        padding:28px 24px 24px 24px;
+        margin-bottom:20px;
+        text-align:center;
+    ">
+      <div style="font-size:52px;margin-bottom:12px;">🔮</div>
+      <div style="font-size:22px;font-weight:700;color:#FF6B35;letter-spacing:2px;margin-bottom:6px;">
+        鐵板神數
+      </div>
+      <div style="font-size:12px;color:#9090b0;margin-bottom:14px;letter-spacing:1px;">
+        Tie Ban Shen Shu &middot; Iron Plate Divine Numbers
+      </div>
+      <div style="font-size:13px;color:#8888aa;line-height:1.8;max-width:380px;margin:0 auto 18px auto;">
+        源自宋代邵雍《皇極經世》，清代發展為精密考刻分系統<br>
+        每時分 8 刻、每刻 15 分（共 120 分）<br>
+        號稱「鐵口直斷」，中國傳統術數中最精密的查表法系統
+      </div>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+        <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+             border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+          📅 輸入出生年月日時
+        </div>
+        <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+             border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+          ⚡ 一鍵推算神數
+        </div>
+        <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+             border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+          📜 查閱十二宮條文
+        </div>
+      </div>
+      <div style="
+        display:inline-block;
+        background:rgba(205,46,58,0.15);
+        border:1px solid rgba(205,46,58,0.4);
+        border-radius:8px;
+        padding:8px 20px;
+        font-size:13px;
+        color:#f87171;
+      ">👈 請在左側填寫出生年月日時，即可起盤</div>
+    </div>""", unsafe_allow_html=True)
 
+    with _tb_tab_tiaowen:
+        from astro.tieban.tieban_browser import render_tiaowen_full_browser_inline
+        render_tiaowen_full_browser_inline()
+
+    with _tb_tab_kunji:
+        from astro.tieban.kunji_full_structure import (
+            KUNJI_TIANGAN_CODE, BAKE_96_KE, SIX_QIN_KE_FEN,
+            kou_ru_fa, advanced_kou_ru_fa,
+        )
+        st.subheader("🔑 坤集密碼表")
+        st.caption("天干扣入法核心：各天干對應數字，用於萬千百十條文編號解碼")
+        _code_rows = [{"天干": k, "密碼數": v} for k, v in KUNJI_TIANGAN_CODE.items()]
+        st.dataframe(_code_rows, width="stretch", hide_index=True)
+
+        st.divider()
+        st.subheader("🔢 扣入法查詢")
+        _kunji_num = st.number_input(
+            "輸入條文編號（1001–13000）",
+            min_value=1001, max_value=13000, value=1001, step=1,
+            key="kunji_num_input",
+        )
+        if st.button("解碼天干序列", key="kunji_decode_btn"):
+            _seq = kou_ru_fa(int(_kunji_num))
+            st.success(f"條文 {int(_kunji_num)} → 扣入天干序列：{'  '.join(_seq)}")
+            _adv = advanced_kou_ru_fa(int(_kunji_num))
+            st.info(f"基礎天干：{'  '.join(_adv['base_tiangan'])}")
+
+        st.divider()
+        st.subheader("⏰ 九十六刻天干數表")
+        st.caption("各時辰（父母兄弟 / 妻子）刻分對應坤集天干")
+        _ke_hour = st.selectbox(
+            "選擇時辰",
+            options=list(BAKE_96_KE.keys()),
+            key="kunji_ke_hour",
+        )
+        _ke_data = BAKE_96_KE.get(_ke_hour, {})
+        for _rel, _kes in _ke_data.items():
+            st.markdown(f"**{_rel}**")
+            _ke_rows = [{"刻/分": k, "天干結果": v} for k, v in _kes.items()]
+            st.dataframe(_ke_rows, width="stretch", hide_index=True)
+
+        st.divider()
+        st.subheader("👨\u200d👩\u200d👧 六親刻分圖")
+        st.caption("各時辰六親（父母兄弟 / 妻子）刻分對應")
+        _qin_hour = st.selectbox(
+            "選擇時辰",
+            options=list(SIX_QIN_KE_FEN.keys()),
+            key="kunji_qin_hour",
+        )
+        _qin_data = SIX_QIN_KE_FEN.get(_qin_hour, {})
+        for _rel, _fens in _qin_data.items():
+            st.markdown(f"**{_rel}**")
+            _qin_rows = [{"刻/分": k, "六親結果": v} for k, v in _fens.items()]
+            st.dataframe(_qin_rows, width="stretch", hide_index=True)
 # --- 太玄數占星 ---
 elif _selected_system == "tab_taixuan":
     # 子頁籤：本命排盤 / 即時問卜
