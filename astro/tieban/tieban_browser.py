@@ -270,6 +270,87 @@ def render_tiaowen_full_browser():
     st.metric("資料庫總條文數", db.total)
 
 
+def render_tiaowen_full_browser_inline():
+    """
+    渲染完整 12000 條文資料庫瀏覽工具（不使用巢狀 tabs）
+
+    與 render_tiaowen_full_browser 功能相同，但以 st.radio 替換
+    st.tabs，避免 Streamlit 不允許 tab 內嵌 tab 的限制。
+    在 app.py 鐵板神數子頁籤中呼叫此函式。
+    """
+    st.caption("搜索和瀏覽完整 tiaowen_full_12000 資料庫，附坤集扣入法天干序列")
+
+    db = TiaowenDatabase()
+
+    sub_mode = st.radio(
+        "瀏覽模式",
+        ["🔍 搜索", "📋 範圍瀏覽"],
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+
+    if sub_mode == "🔍 搜索":
+        col_num, col_kw = st.columns(2)
+        with col_num:
+            search_num = st.number_input(
+                "按編號查詢（1001–13000）",
+                min_value=1001, max_value=13000, value=1001,
+                step=1,
+                key="tiaowen_inline_num",
+            )
+            if st.button("查詢編號", key="tiaowen_inline_btn_num"):
+                entry = db.get(int(search_num))
+                if entry:
+                    st.success(f"**條文 {int(search_num)}**：{entry['text']}")
+                    st.caption(f"扣入天干：{'  '.join(entry.get('tiangan', []))}")
+                    if entry.get('is_blank'):
+                        st.warning("此條文為空白條文（尚未收錄原文）")
+                else:
+                    st.error(f"未找到條文 {int(search_num)}")
+
+        with col_kw:
+            search_kw = st.text_input(
+                "全文搜索關鍵字",
+                placeholder="例：殘花、鼓盆、入泮",
+                key="tiaowen_inline_kw",
+            )
+            if search_kw:
+                results = db.search(search_kw)
+                st.info(f"找到 {len(results)} 條包含「{search_kw}」的條文")
+                for item in results[:50]:
+                    with st.expander(f"條文 {item['number']}：{item['text'][:30]}…", expanded=False):
+                        st.markdown(f"**全文**：{item['text']}")
+                        st.caption(f"扣入天干：{'  '.join(item.get('tiangan', []))}")
+                if len(results) > 50:
+                    st.caption(f"（只顯示前 50 條，共 {len(results)} 條）")
+
+    else:  # 範圍瀏覽
+        col_s, col_e = st.columns(2)
+        with col_s:
+            range_start = st.number_input(
+                "起始編號", min_value=1001, max_value=13000, value=1001, step=1,
+                key="tiaowen_inline_rs",
+            )
+        with col_e:
+            range_end = st.number_input(
+                "結束編號", min_value=1001, max_value=13000, value=1050, step=1,
+                key="tiaowen_inline_re",
+            )
+
+        include_blank = st.checkbox("包含空白條文", value=False, key="tiaowen_inline_blank")
+
+        if st.button("瀏覽範圍", key="tiaowen_inline_btn_range"):
+            entries = db.get_range(int(range_start), int(range_end), include_blank=include_blank)
+            st.info(f"共 {len(entries)} 條")
+            for item in entries:
+                blank_marker = " *(空白)*" if item.get('is_blank') else ""
+                st.markdown(f"**{item['number']}**{blank_marker}：{item['text']}")
+                st.caption(f"扣入天干：{'  '.join(item.get('tiangan', []))}")
+                st.divider()
+
+    st.metric("資料庫總條文數", db.total)
+
+
 def render_verse_comparison():
     """
     渲染條文對比工具
