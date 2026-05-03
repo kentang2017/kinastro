@@ -29,6 +29,16 @@ from datetime import datetime
 import json
 import os
 
+# 從坤集結構模組匯入核心資料與扣入法工具
+from astro.tieban.kunji_full_structure import (
+    KUNJI_TIANGAN_CODE,
+    KUNJI_TIANGAN_CODE_REVERSE,
+    kou_ru_fa,
+    advanced_kou_ru_fa,
+    BAKE_96_KE,
+    SIX_QIN_KE_FEN,
+)
+
 # ============================================================================
 # 基礎常數 (Basic Constants) - 原文第 1-2 頁
 # ============================================================================
@@ -175,6 +185,21 @@ class TieBanResult:
     
     # 密碼表映射
     secret_code: str = ""
+    
+    # 坤集扣入法天干序列（由 tieban_number 計算）
+    kunji_tiangan: List[str] = field(default_factory=list)
+    
+    # 刻名稱（初刻／正一刻…）
+    ke_label: str = ""
+    
+    # 九十六刻表查詢結果（父母兄弟欄）
+    bake_fuqin_info: str = ""
+    
+    # 六親刻分圖查詢結果（妻子欄）
+    six_qin_qizi_info: str = ""
+    
+    # 完整 12000 條文資料庫查詢結果
+    tiaowen_data: Optional[Dict[str, Any]] = None
     
     # 原始數據
     raw_data: Dict[str, Any] = field(default_factory=dict)
@@ -612,11 +637,73 @@ class KeFenEngine:
             fen = (fen + mother_gz.stem_index) % 15
         
         return ke, fen
-
-
-# ============================================================================
-# 秘鈔密碼表 (Secret Code Table) - 最珍貴部分
-# ============================================================================
+    
+    # 刻序號（0-7）→ 刻名稱映射
+    _KE_LABELS = ["初刻", "正一刻", "正二刻", "正三刻", "正四刻", "正五刻", "正六刻", "正七刻"]
+    
+    @staticmethod
+    def ke_to_label(ke: int) -> str:
+        """
+        將刻序號（0-7）轉換為刻名稱
+        
+        鐵板神數每時辰分 8 刻：初刻、正一刻、…、正七刻
+        （書中「96 刻表」以 5 刻為一組，此處取前 5 刻覆蓋常見標籤）
+        """
+        labels = KeFenEngine._KE_LABELS
+        return labels[ke % len(labels)]
+    
+    @staticmethod
+    def lookup_bake_96ke(hour_branch: str, category: str, ke: int) -> str:
+        """
+        查詢九十六刻天干數表（BAKE_96_KE）
+        
+        Parameters
+        ----------
+        hour_branch : str
+            時辰地支，如「子」→ 查「子時」
+        category : str
+            六親分類，如「父母兄弟」或「妻子」
+        ke : int
+            刻序號 (0-7)
+        
+        Returns
+        -------
+        str
+            對應的卦爻或六親說明；找不到時返回空字符串
+        """
+        hour_key = f"{hour_branch}時"
+        ke_label = KeFenEngine.ke_to_label(ke)
+        ke_entry = BAKE_96_KE.get(hour_key, {}).get(category, {})
+        return ke_entry.get(ke_label, "")
+    
+    @staticmethod
+    def lookup_six_qin(hour_branch: str, category: str, fen: int) -> str:
+        """
+        查詢六親刻分圖（SIX_QIN_KE_FEN）
+        
+        Parameters
+        ----------
+        hour_branch : str
+            時辰地支，如「子」
+        category : str
+            六親分類，如「妻子」
+        fen : int
+            分序號 (0-14)，轉換為「一分」–「十五分」查詢
+        
+        Returns
+        -------
+        str
+            對應的六親說明；找不到時返回空字符串
+        """
+        FEN_LABELS = [
+            "一分", "二分", "三分", "四分", "五分",
+            "六分", "七分", "八分", "九分", "十分",
+            "十一分", "十二分", "十三分", "十四分", "十五分",
+        ]
+        hour_key = f"{hour_branch}時"
+        fen_label = FEN_LABELS[fen % len(FEN_LABELS)]
+        fen_entry = SIX_QIN_KE_FEN.get(hour_key, {}).get(category, {})
+        return fen_entry.get(fen_label, "")
 
 class SecretCodeTable:
     """
@@ -1280,6 +1367,153 @@ class VerseDatabase:
 
 
 # ============================================================================
+# 鐵板神數 12000 條文資料庫 (Tiaowen Full Database - Lazy Loading)
+# ============================================================================
+
+class TiaowenDatabase:
+    """
+    鐵板神數完整 12000 條文資料庫（延遲載入）
+    
+    資料來源：tiaowen_full_12000.json
+    條文編號範圍：1001–13000（含完整 12000 條）
+    
+    特點：
+    - 延遲載入（Lazy Loading）：首次查詢時才載入 JSON，不影響啟動速度
+    - 整合坤集扣入法：查詢時自動附帶天干序列
+    - 支援全文搜索與關鍵字篩選
+    
+    使用範例：
+        db = TiaowenDatabase()
+        info = db.get(1001)        # -> {'text': '...', 'note': '...', 'is_blank': False, 'tiangan': [...]}
+        results = db.search('殘花')  # -> [{number: 1001, ...}, ...]
+    """
+    
+    _DATA_FILENAME = "tiaowen_full_12000.json"
+    
+    def __init__(self):
+        self._data: Optional[Dict[int, Dict]] = None  # 延遲載入
+    
+    def _ensure_loaded(self) -> None:
+        """確保資料已載入（延遲載入實作）"""
+        if self._data is not None:
+            return
+        self._data = {}
+        try:
+            data_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "data", self._DATA_FILENAME
+            )
+            if os.path.exists(data_path):
+                with open(data_path, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                for k, v in raw.items():
+                    num = int(k)
+                    self._data[num] = v if isinstance(v, dict) else {"text": v, "note": "", "is_blank": False}
+        except Exception:
+            pass  # 靜默失敗，返回空資料庫
+    
+    @property
+    def total(self) -> int:
+        """條文總數"""
+        self._ensure_loaded()
+        return len(self._data)
+    
+    def get(self, number: int) -> Optional[Dict[str, Any]]:
+        """
+        查詢單一條文
+        
+        Parameters
+        ----------
+        number : int
+            條文編號（1001–13000）
+        
+        Returns
+        -------
+        Optional[Dict]
+            包含 text（條文）、note、is_blank、tiangan（坤集天干序列）的字典；
+            找不到時返回 None。
+        """
+        self._ensure_loaded()
+        entry = self._data.get(number)
+        if entry is None:
+            return None
+        result = dict(entry)
+        # 附帶坤集扣入法天干序列
+        try:
+            result["tiangan"] = kou_ru_fa(number)
+        except ValueError:
+            result["tiangan"] = []
+        return result
+    
+    def search(self, keyword: str, include_blank: bool = False) -> List[Dict[str, Any]]:
+        """
+        全文搜索條文
+        
+        Parameters
+        ----------
+        keyword : str
+            搜索關鍵字（在條文內容中搜索）
+        include_blank : bool
+            是否包含空白條文（預設 False）
+        
+        Returns
+        -------
+        List[Dict]
+            匹配的條文列表，每條含 number 欄位
+        """
+        self._ensure_loaded()
+        results = []
+        for num, entry in self._data.items():
+            if not include_blank and entry.get("is_blank", True):
+                continue
+            text = entry.get("text", "")
+            if keyword in text:
+                item = dict(entry)
+                item["number"] = num
+                try:
+                    item["tiangan"] = kou_ru_fa(num)
+                except ValueError:
+                    item["tiangan"] = []
+                results.append(item)
+        return results
+    
+    def get_range(self, start: int, end: int, include_blank: bool = False) -> List[Dict[str, Any]]:
+        """
+        取得指定範圍的條文
+        
+        Parameters
+        ----------
+        start : int
+            起始編號（含）
+        end : int
+            結束編號（含）
+        include_blank : bool
+            是否包含空白條文
+        
+        Returns
+        -------
+        List[Dict]
+            該範圍內的條文列表
+        """
+        self._ensure_loaded()
+        results = []
+        for num in range(start, end + 1):
+            entry = self._data.get(num)
+            if entry is None:
+                continue
+            if not include_blank and entry.get("is_blank", True):
+                continue
+            item = dict(entry)
+            item["number"] = num
+            try:
+                item["tiangan"] = kou_ru_fa(num)
+            except ValueError:
+                item["tiangan"] = []
+            results.append(item)
+        return results
+
+
+# ============================================================================
 # 鐵板神數主計算類 (Main Calculator)
 # ============================================================================
 
@@ -1303,6 +1537,8 @@ class TieBanShenShu:
         self.ke_fen_engine = KeFenEngine()
         self.secret_code_table = SecretCodeTable()
         self.verse_db = VerseDatabase()
+        # 完整 12000 條文資料庫（延遲載入）
+        self.tiaowen_db = TiaowenDatabase()
     
     def get_verse_database_info(self) -> Dict[str, Any]:
         """獲取條文資料庫信息"""
@@ -1471,6 +1707,27 @@ class TieBanShenShu:
                 'number': verse_data.get('number', f'{i*500+1:04d}')
             }
         
+        # Step 12: 坤集扣入法天干序列
+        try:
+            tieban_int = int(tieban_number)
+            kunji_tiangan = kou_ru_fa(tieban_int) if 1001 <= tieban_int <= 13000 else []
+        except (ValueError, TypeError):
+            kunji_tiangan = []
+        
+        # Step 13: 九十六刻表與六親刻分圖查詢
+        hour_branch = birth_data.hour_gz.branch
+        ke_label = KeFenEngine.ke_to_label(final_ke)
+        bake_fuqin_info = KeFenEngine.lookup_bake_96ke(hour_branch, "父母兄弟", final_ke)
+        six_qin_qizi_info = KeFenEngine.lookup_six_qin(hour_branch, "妻子", final_fen)
+        
+        # Step 14: 查詢完整 12000 條文資料庫
+        tiaowen_data: Optional[Dict[str, Any]] = None
+        try:
+            tieban_int = int(tieban_number)
+            tiaowen_data = self.tiaowen_db.get(tieban_int)
+        except (ValueError, TypeError):
+            pass
+        
         # 組裝結果
         result = TieBanResult(
             birth_data=birth_data,
@@ -1489,6 +1746,11 @@ class TieBanShenShu:
             secret_code=self.secret_code_table.lookup(
                 f"{birth_data.day_gz.stem}{birth_data.day_gz.branch}"
             ),
+            kunji_tiangan=kunji_tiangan,
+            ke_label=ke_label,
+            bake_fuqin_info=bake_fuqin_info,
+            six_qin_qizi_info=six_qin_qizi_info,
+            tiaowen_data=tiaowen_data,
             raw_data={
                 'ming_shen': ming_shen,
                 'candidates': candidates[:10],  # 僅保留前 10 個候選
@@ -1623,6 +1885,164 @@ class TieBanShenShu:
             隨機條文
         """
         return self.verse_db.get_random_verse(category)
+    
+    # ── 坤集扣入法 ──────────────────────────────────────────────────────────
+    
+    def kou_ru_fa(self, number: int) -> List[str]:
+        """
+        基礎扣入法（坤集密碼表）
+        
+        Parameters
+        ----------
+        number : int
+            條文編號（1001–13000）
+        
+        Returns
+        -------
+        List[str]
+            天干序列，例如 ['癸', '甲', '癸', '癸', '甲']
+        """
+        return kou_ru_fa(number)
+    
+    def advanced_kou_ru_fa(self, number: int, method: str = "加減密數") -> Dict[str, Any]:
+        """
+        進階扣入法（加減密數 / 金水算盤數）
+        
+        Parameters
+        ----------
+        number : int
+            條文編號（1001–13000）
+        method : str
+            "加減密數" 或 "金水算盤數"
+        
+        Returns
+        -------
+        Dict
+            包含 input、base_tiangan、method、advanced_tiangan、note 的字典
+        """
+        return advanced_kou_ru_fa(number, method)
+    
+    # ── 完整 12000 條文資料庫 ──────────────────────────────────────────────
+    
+    def get_tiaowen(self, number: int) -> Optional[Dict[str, Any]]:
+        """
+        查詢完整 12000 條文資料庫中的單一條文
+        
+        Parameters
+        ----------
+        number : int
+            條文編號（1001–13000）
+        
+        Returns
+        -------
+        Optional[Dict]
+            包含 text（條文）、note、is_blank、tiangan（天干序列）的字典；
+            找不到時返回 None。
+        
+        範例
+        ----
+        >>> tbss = TieBanShenShu()
+        >>> info = tbss.get_tiaowen(1001)
+        >>> info['text']
+        '一樹殘花,有枝復茂'
+        >>> info['tiangan']
+        ['癸', '甲', '癸', '癸', '甲']
+        """
+        return self.tiaowen_db.get(number)
+    
+    def search_tiaowen(self, keyword: str, include_blank: bool = False) -> List[Dict[str, Any]]:
+        """
+        全文搜索完整 12000 條文資料庫
+        
+        Parameters
+        ----------
+        keyword : str
+            搜索關鍵字
+        include_blank : bool
+            是否包含空白條文（預設 False）
+        
+        Returns
+        -------
+        List[Dict]
+            匹配條文列表，每條含 number 欄位
+        """
+        return self.tiaowen_db.search(keyword, include_blank=include_blank)
+    
+    def get_tiaowen_range(self, start: int, end: int, include_blank: bool = False) -> List[Dict[str, Any]]:
+        """
+        取得指定範圍的完整條文
+        
+        Parameters
+        ----------
+        start : int
+            起始編號（含）
+        end : int
+            結束編號（含）
+        include_blank : bool
+            是否包含空白條文
+        
+        Returns
+        -------
+        List[Dict]
+            該範圍內的條文列表
+        """
+        return self.tiaowen_db.get_range(start, end, include_blank=include_blank)
+    
+    # ── 九十六刻表 / 六親刻分圖 ──────────────────────────────────────────
+    
+    def lookup_bake_96ke(self, hour_branch: str, category: str, ke: int) -> str:
+        """
+        查詢九十六刻天干數表（BAKE_96_KE）
+        
+        Parameters
+        ----------
+        hour_branch : str
+            時辰地支（子、丑、寅…）
+        category : str
+            六親分類，如「父母兄弟」或「妻子」
+        ke : int
+            刻序號 (0-7)
+        
+        Returns
+        -------
+        str
+            對應的卦爻或六親說明
+        """
+        return KeFenEngine.lookup_bake_96ke(hour_branch, category, ke)
+    
+    def lookup_six_qin(self, hour_branch: str, category: str, fen: int) -> str:
+        """
+        查詢六親刻分圖（SIX_QIN_KE_FEN）
+        
+        Parameters
+        ----------
+        hour_branch : str
+            時辰地支（子、丑、寅…）
+        category : str
+            六親分類，如「妻子」
+        fen : int
+            分序號 (0-14)
+        
+        Returns
+        -------
+        str
+            對應的六親說明
+        """
+        return KeFenEngine.lookup_six_qin(hour_branch, category, fen)
+    
+    def get_tiaowen_database_info(self) -> Dict[str, Any]:
+        """
+        獲取完整 12000 條文資料庫統計信息
+        
+        Returns
+        -------
+        Dict
+            total（條文總數）及資料庫路徑
+        """
+        return {
+            "total": self.tiaowen_db.total,
+            "data_file": TiaowenDatabase._DATA_FILENAME,
+        }
 
 
 # ============================================================================
