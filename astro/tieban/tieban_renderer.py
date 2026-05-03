@@ -87,14 +87,14 @@ def render_tieban_chart_svg(result: TieBanResult,
     square_size = 254         # 外框正方形邊長
     palace_w = 80             # 宮位卡片寬
     palace_h = 56             # 宮位卡片高
-    palace_gap = 10           # 宮位卡片與正方形邊框的間距
+    palace_gap = 8            # 宮位卡片與正方形邊框的間距（與 _calculate_palace_positions 中的 pad 保持一致）
 
     outer_x = cx - square_size // 2   # 133
     outer_y = cy - square_size // 2   # 168
 
     # 底部資訊卡起始 Y（確保在宮位下方，不重疊）
-    # 底宮下緣 = outer_y + square_size + 8 (pad) + palace_h; 再加 34px 留白
-    info_y = outer_y + square_size + 8 + palace_h + 34   # ≈ 520
+    # 底宮下緣 = outer_y + square_size + palace_gap + palace_h; 再加 34px 留白
+    info_y = outer_y + square_size + palace_gap + palace_h + 34   # ≈ 520
 
     # 菱形半對角線（內層裝飾菱形）
     diamond_half = 78
