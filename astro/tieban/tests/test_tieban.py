@@ -171,10 +171,10 @@ def test_verse_database():
     assert len(categories) > 0
     print(f"  分類數：{len(categories)}")
     
-    # 測試搜索
-    results = db.search_by_tag('父母雙全')
+    # 測試搜索（使用確實存在於 verses.json 的標籤）
+    results = db.search_by_tag('孝服')
     assert len(results) > 0
-    print(f"  '父母雙全' 標籤條文數：{len(results)}")
+    print(f"  '孝服' 標籤條文數：{len(results)}")
     
     print("✅ 條文資料庫測試通過")
 
@@ -264,6 +264,80 @@ def test_report_generation():
     print("✅ 報告生成測試通過")
 
 
+def test_kunji_and_tiaowen():
+    """測試坤集扣入法與完整條文資料庫"""
+    print("測試坤集扣入法與完整條文資料庫...")
+    
+    from astro.tieban import kou_ru_fa, advanced_kou_ru_fa, TiaowenDatabase
+    
+    # 基礎扣入法
+    seq = kou_ru_fa(1001)
+    assert isinstance(seq, list)
+    assert len(seq) == 5
+    print(f"  kou_ru_fa(1001): {seq}")
+    
+    # 進階扣入法
+    adv = advanced_kou_ru_fa(1001, "加減密數")
+    assert isinstance(adv, dict)
+    assert "advanced_tiangan" in adv
+    assert adv["advanced_tiangan"] is not None
+    print(f"  advanced_kou_ru_fa(1001): {adv['advanced_tiangan']}")
+    
+    # 完整條文資料庫（延遲載入）
+    db = TiaowenDatabase()
+    assert db.total == 12000
+    
+    # 查詢已知條文 1001
+    entry = db.get(1001)
+    assert entry is not None
+    assert entry["text"] == "一樹殘花,有枝復茂"
+    assert "tiangan" in entry
+    print(f"  get(1001): {entry['text']}")
+    
+    # 全文搜索
+    results = db.search("殘花")
+    assert len(results) > 0
+    print(f"  search('殘花'): {len(results)} 條")
+    
+    # 範圍瀏覽
+    entries = db.get_range(1001, 1010)
+    assert len(entries) > 0
+    print(f"  get_range(1001, 1010): {len(entries)} 條（非空白）")
+    
+    # TieBanShenShu 整合
+    tbss = TieBanShenShu()
+    info = tbss.get_tiaowen(1001)
+    assert info is not None
+    assert info["text"] == "一樹殘花,有枝復茂"
+    
+    # 九十六刻查詢
+    bake = tbss.lookup_bake_96ke("子", "父母兄弟", 0)
+    assert bake == "交初坤得"
+    print(f"  lookup_bake_96ke(子,父母兄弟,0): {bake}")
+    
+    six = tbss.lookup_six_qin("子", "妻子", 0)
+    assert six == "強夫"
+    print(f"  lookup_six_qin(子,妻子,0): {six}")
+    
+    # calculate() 新欄位
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1990, 5, 15, 14, 30),
+        year_gz=Ganzhi('庚', '午'),
+        month_gz=Ganzhi('辛', '巳'),
+        day_gz=Ganzhi('戊', '辰'),
+        hour_gz=Ganzhi('己', '未'),
+        gender="男",
+    )
+    result = tbss.calculate(birth_data)
+    assert isinstance(result.kunji_tiangan, list)
+    assert isinstance(result.ke_label, str)
+    assert result.ke_label != ""
+    print(f"  calculate().ke_label: {result.ke_label}")
+    print(f"  calculate().kunji_tiangan: {result.kunji_tiangan}")
+    
+    print("✅ 坤集扣入法與完整條文資料庫測試通過")
+
+
 def run_all_tests():
     """運行所有測試"""
     print("=" * 60)
@@ -283,6 +357,7 @@ def run_all_tests():
         test_secret_code_table,
         test_full_calculation,
         test_report_generation,
+        test_kunji_and_tiaowen,
     ]
     
     passed = 0

@@ -19,6 +19,7 @@
 
 from typing import Dict, List, Tuple, Optional
 import json
+import os
 
 # ====================== 1. 坤集核心密碼表 ======================
 KUNJI_TIANGAN_CODE: Dict[str, int] = {
@@ -63,9 +64,8 @@ def kou_ru_fa(input_number: int) -> List[str]:
     return tiangan_seq[::-1]            # 回復正確順序
 
 
-def decode_tiaowen_number(number: int) -> str:
-    """預留：未來可擴充完整 12000 條文查詢"""
-    # 這裡可後續載入完整 JSON 資料庫
+def decode_tiaowen_number_stub(number: int) -> str:
+    """預留：未來可擴充完整 12000 條文查詢（已由後方完整版取代）"""
     return f"條文 {number} （坤集密碼對應：{kou_ru_fa(number)}）"
 
 # ====================== 3. 進階扣入法：加減密數 / 金水算盤數 ======================
@@ -109,6 +109,9 @@ def advanced_kou_ru_fa(input_number: int, method: str = "加減密數") -> Dict:
 # 目前只包含書中明確出現的樣本條文，其餘為 placeholder
 # 建議後續建立 tiaowen_full_12000.json 外部檔案載入完整資料
 
+# 條文資料庫（全域字典，由 load_tiaowen_from_json 或 initialize_full_tiaowen_db 填充）
+TIAOWEN_DATABASE: Dict[int, Dict] = {}
+
 # ====================== 自動生成完整 12000 條骨架 ======================
 def initialize_full_tiaowen_db() -> None:
     """自動生成 1001~12000 的完整骨架（空白待補充）"""
@@ -123,11 +126,15 @@ def initialize_full_tiaowen_db() -> None:
     print(f"✅ 已初始化完整 12000 條文骨架（目前有 {len(TIAOWEN_DATABASE)} 筆）")
 
 
-def load_tiaowen_from_json(json_path: str = "tiaowen_full_12000.json") -> None:
-    """從外部 JSON 載入完整條文資料（推薦方式）"""
+def load_tiaowen_from_json(json_path: Optional[str] = None) -> None:
+    """從外部 JSON 載入完整條文資料（推薦方式）
+    
+    如未指定路徑，自動查找同目錄下 data/tiaowen_full_12000.json。
+    """
     global TIAOWEN_DATABASE
+    if json_path is None:
+        json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "tiaowen_full_12000.json")
     try:
-        import json
         from pathlib import Path
         path = Path(json_path)
         if path.exists():
@@ -139,11 +146,10 @@ def load_tiaowen_from_json(json_path: str = "tiaowen_full_12000.json") -> None:
                     TIAOWEN_DATABASE[num] = {"text": content, "note": "", "is_blank": False}
                 else:
                     TIAOWEN_DATABASE[num] = content
-            print(f"✅ 已從 {json_path} 載入 {len(data)} 條完整條文")
         else:
-            print(f"⚠️  未找到 {json_path}，使用骨架模式")
-    except Exception as e:
-        print(f"載入 JSON 失敗：{e}")
+            pass  # 靜默失敗，使用空骨架
+    except Exception:
+        pass  # 載入失敗時保持現狀
 
 
 def get_tiaowen(number: int) -> Optional[Dict]:
@@ -163,8 +169,6 @@ def decode_tiaowen_number(number: int) -> str:
     
     return f"條文 {number} → {text}\n扣入天干：{seq}"
 
-# ====================== 3. 九十六刻天干數表（八刻天干數） ======================
-# 書中詳細列出各時辰的初刻、正一刻～正四刻等（部分 OCR 已整理）
 # ====================== 3. 九十六刻天干數表（完整版） ======================
 BAKE_96_KE: Dict[str, Dict[str, Dict[str, str]]] = {
     "子時": {

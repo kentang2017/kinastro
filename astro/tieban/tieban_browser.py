@@ -3,7 +3,7 @@ astro/tieban/tieban_browser.py — 鐵板神數條文瀏覽工具
 
 Tie Ban Shen Shu Verse Browser Tool
 
-提供條文搜索、分類瀏覽、標籤篩選等功能
+提供條文搜索、分類瀏覽、標籤篩選等功能，並整合完整 12000 條文資料庫。
 
 使用方式：
     from astro.tieban.tieban_browser import render_verse_browser
@@ -12,12 +12,12 @@ Tie Ban Shen Shu Verse Browser Tool
 
 from typing import Dict, List, Optional
 import streamlit as st
-from astro.tieban.tieban_calculator import VerseDatabase
+from astro.tieban.tieban_calculator import VerseDatabase, TiaowenDatabase
 
 
 def render_verse_browser():
     """
-    渲染條文瀏覽工具
+    渲染條文瀏覽工具（verses.json，6208 條，含分類標籤）
     
     在 Streamlit 中顯示條文搜索、分類瀏覽、標籤篩選界面
     """
@@ -65,7 +65,7 @@ def render_verse_browser():
                 all_tags.extend(verse_data['tags'])
         
         # 統計標籤頻率
-        tag_counts = {}
+        tag_counts: Dict[str, int] = {}
         for tag in all_tags:
             tag_counts[tag] = tag_counts.get(tag, 0) + 1
         
@@ -181,7 +181,7 @@ def render_verse_browser():
     
     # 分類統計
     st.markdown("##### 分類統計")
-    category_counts = {}
+    category_counts: Dict[str, int] = {}
     for verse_data in db.verses.values():
         cat = verse_data.get('category', '未知')
         category_counts[cat] = category_counts.get(cat, 0) + 1
@@ -190,7 +190,7 @@ def render_verse_browser():
         {"分類": cat, "條文數": count}
         for cat, count in sorted(category_counts.items(), key=lambda x: x[1], reverse=True)
     ]
-    st.dataframe(category_df_data, use_container_width=True, hide_index=True)
+    st.dataframe(category_df_data, width="stretch", hide_index=True)
     
     # 標籤雲可視化
     st.markdown("##### 標籤雲")
@@ -201,6 +201,73 @@ def render_verse_browser():
             tags_html += f'<span style="display: inline-block; margin: 5px; padding: 3px 8px; background: #16213e; border-radius: 15px; font-size: {font_size}px;">{tag} ({count})</span>'
         tags_html += '</div>'
         st.markdown(tags_html, unsafe_allow_html=True)
+
+
+def render_tiaowen_full_browser():
+    """
+    渲染完整 12000 條文資料庫瀏覽工具
+    
+    整合坤集扣入法，支援編號搜索、全文搜索與範圍瀏覽。
+    """
+    st.header("📚 鐵板神數完整條文（12000 條）")
+    st.caption("搜索和瀏覽完整 tiaowen_full_12000 資料庫，附坤集扣入法天干序列")
+    
+    db = TiaowenDatabase()
+    
+    tab_search, tab_range = st.tabs(["🔍 搜索", "📋 範圍瀏覽"])
+    
+    with tab_search:
+        col_num, col_kw = st.columns(2)
+        with col_num:
+            search_num = st.number_input(
+                "按編號查詢（1001–13000）",
+                min_value=1001, max_value=13000, value=1001,
+                step=1,
+            )
+            if st.button("查詢編號"):
+                entry = db.get(int(search_num))
+                if entry:
+                    st.success(f"**條文 {int(search_num)}**：{entry['text']}")
+                    st.caption(f"扣入天干：{'  '.join(entry.get('tiangan', []))}")
+                    if entry.get('is_blank'):
+                        st.warning("此條文為空白條文（尚未收錄原文）")
+                else:
+                    st.error(f"未找到條文 {int(search_num)}")
+        
+        with col_kw:
+            search_kw = st.text_input(
+                "全文搜索關鍵字",
+                placeholder="例：殘花、鼓盆、入泮",
+            )
+            if search_kw:
+                results = db.search(search_kw)
+                st.info(f"找到 {len(results)} 條包含「{search_kw}」的條文")
+                for item in results[:50]:  # 最多顯示 50 條
+                    with st.expander(f"條文 {item['number']}：{item['text'][:30]}…", expanded=False):
+                        st.markdown(f"**全文**：{item['text']}")
+                        st.caption(f"扣入天干：{'  '.join(item.get('tiangan', []))}")
+                if len(results) > 50:
+                    st.caption(f"（只顯示前 50 條，共 {len(results)} 條）")
+    
+    with tab_range:
+        col_s, col_e = st.columns(2)
+        with col_s:
+            range_start = st.number_input("起始編號", min_value=1001, max_value=13000, value=1001, step=1)
+        with col_e:
+            range_end = st.number_input("結束編號", min_value=1001, max_value=13000, value=1050, step=1)
+        
+        include_blank = st.checkbox("包含空白條文", value=False)
+        
+        if st.button("瀏覽範圍"):
+            entries = db.get_range(int(range_start), int(range_end), include_blank=include_blank)
+            st.info(f"共 {len(entries)} 條")
+            for item in entries:
+                blank_marker = " *(空白)*" if item.get('is_blank') else ""
+                st.markdown(f"**{item['number']}**{blank_marker}：{item['text']}")
+                st.caption(f"扣入天干：{'  '.join(item.get('tiangan', []))}")
+                st.divider()
+    
+    st.metric("資料庫總條文數", db.total)
 
 
 def render_verse_comparison():
@@ -313,12 +380,11 @@ def render_verse_statistics():
     # 分類分布
     st.subheader("📊 分類分布")
     
-    category_counts = {}
+    category_counts: Dict[str, int] = {}
     for verse_data in db.verses.values():
         cat = verse_data.get('category', '未知')
         category_counts[cat] = category_counts.get(cat, 0) + 1
     
-    # 柱狀圖
     import pandas as pd
     
     category_df = pd.DataFrame([
@@ -331,7 +397,7 @@ def render_verse_statistics():
     # 標籤頻率
     st.subheader("🏷️ 標籤頻率 Top 20")
     
-    tag_counts = {}
+    tag_counts: Dict[str, int] = {}
     for tag in all_tags:
         tag_counts[tag] = tag_counts.get(tag, 0) + 1
     
@@ -343,20 +409,6 @@ def render_verse_statistics():
     ])
     
     st.bar_chart(tag_df.set_index("標籤"))
-    
-    # 條文長度分布
-    st.subheader("📏 條文長度分布")
-    
-    verse_lengths = [
-        len(verse_data.get('verse', ''))
-        for verse_data in db.verses.values()
-    ]
-    
-    length_df = pd.DataFrame({
-        "長度": verse_lengths
-    })
-    
-    st.histogram(length_df, bins=20)
     
     # 詳細數據表
     st.divider()
@@ -372,7 +424,7 @@ def render_verse_statistics():
                 "字數": len(verse_data.get('verse', '')),
             })
         
-        st.dataframe(all_data, use_container_width=True)
+        st.dataframe(all_data, width="stretch")
 
 
 def main():
@@ -390,11 +442,13 @@ def main():
     # 導航
     page = st.selectbox(
         "選擇頁面",
-        ["條文瀏覽", "條文對比", "統計分析"],
+        ["條文瀏覽", "完整 12000 條文", "條文對比", "統計分析"],
     )
     
     if page == "條文瀏覽":
         render_verse_browser()
+    elif page == "完整 12000 條文":
+        render_tiaowen_full_browser()
     elif page == "條文對比":
         render_verse_comparison()
     elif page == "統計分析":
@@ -403,3 +457,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
