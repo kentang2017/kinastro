@@ -2,15 +2,15 @@
 堅占星 (Kin Astro) - 多體系占星排盤系統
 Multi-System Astrology Chart Application
 
-支援七政四餘（中國）、紫微斗數、策天飛星、十二星次、達摩一掌經、太玄數占星、
-萬化仙禽、鐵板神數、鬼谷分定經、大六壬、奇門祿命、太乙命法、
+支援七政四餘（中國）、紫微斗數、策天飛星、十二星次、達摩一掌經、太玄數占星、五運六氣、
+萬化仙禽、鐵板神數、邵子神數、鬼谷分定經、大六壬、奇門祿命、太乙命法、
 西洋占星、Sabian 符號、希臘（Hellenistic）、Astrocartography、天王星漢堡學派、凱爾特樹木曆、
 印度占星（Vedic）、Jaimini、納迪（Nadi）、KP 克里希納穆提、紅皮書（Lal Kitab）、
 宿曜道、泰國占星、緬甸（Mahabote）、巴厘 Wariga、爪哇 Weton、蒙古祖爾海（Zurkhai）、
 藏傳時輪金剛、九星氣學、土亭數、高棉占星、波利尼西亞／夏威夷、
-卡巴拉、猶太 Mazzalot、薩珊波斯、阿拉伯占星、也門占星、
+卡巴拉、猶太 Mazzalot、薩珊波斯、阿拉伯占星、也門占星、Picatrix 占星魔法、
 瑪雅、阿茲特克、古埃及十度區間（Decans）、巴比倫占星
-共四十三種體系，使用 pyswisseph 進行天文計算。
+共四十八種體系，使用 pyswisseph 進行天文計算。
 """
 
 import os
@@ -3086,8 +3086,8 @@ elif _selected_system == "tab_tieban":
 
 # --- 邵子神數 ---
 elif _selected_system == "tab_shaozi":
-    _sz_tab_main, _sz_tab_tiaowen = st.tabs([
-        auto_cn("🔯 命盤"), auto_cn("📚 條文庫"),
+    _sz_tab_main, _sz_tab_64key, _sz_tab_tiaowen = st.tabs([
+        auto_cn("🔯 命盤"), auto_cn("🗝️ 64鑰匙"), auto_cn("📚 條文庫"),
     ])
     with _sz_tab_main:
         if _is_calculated:
@@ -3119,6 +3119,44 @@ elif _selected_system == "tab_shaozi":
                     },
                     btn_key="shaozi",
                 )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                import traceback
+                st.code(traceback.format_exc())
+        else:
+            from astro.shaozi.renderer import render_shaozi_placeholder
+            render_shaozi_placeholder()
+
+    with _sz_tab_64key:
+        if _is_calculated:
+            try:
+                from astro.shaozi import ShaoziShenShu as _SzMain, ShaoziBirthData
+                from astro.shaozi.shaozi_full_structure import ShaoziShenShu as _SzFull
+                from astro.shaozi.renderer import render_shaozi_64key_section
+
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_shaozi")):
+                    # 取得四柱干支（復用主盤計算結果或重新推算）
+                    _sz_main_engine = _SzMain()
+                    _sz_birth = ShaoziBirthData(
+                        birth_dt=datetime(
+                            _p["year"], _p["month"], _p["day"],
+                            _p["hour"], _p.get("minute", 0),
+                        ),
+                        gender=st.session_state.get("_calc_gender", "男"),
+                    )
+                    _sz_base = _sz_main_engine.calculate(_sz_birth)
+
+                    # 使用 shaozi_full_structure 進行64鑰匙起盤
+                    _sz_full_engine = _SzFull()
+                    _sz_full_result = _sz_full_engine.cast_plate(
+                        year_gz=_sz_base.year_gz,
+                        month_gz=_sz_base.month_gz,
+                        day_gz=_sz_base.day_gz,
+                        hour_gz=_sz_base.hour_gz,
+                    )
+
+                render_shaozi_64key_section(_sz_full_result)
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 import traceback
