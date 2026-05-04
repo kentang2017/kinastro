@@ -218,13 +218,13 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">四十六體系占星排盤平台</span>
+          <span class="hp-title-sub">四十八體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
           紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十六種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十八種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
@@ -295,8 +295,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "四十六體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十六種占星體系"),
+        ("🔮", "四十八體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十八種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
