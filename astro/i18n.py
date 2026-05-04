@@ -3281,6 +3281,24 @@ Enter your birth information to look up your tree month and its poetic attribute
         "en": "🎴 Divination",
     },
 
+    # ── 五運六氣 ────────────────────────────────────────────────
+    "tab_wuyunliuqi": {
+        "zh": "☯ 五運六氣",
+        "en": "☯ Wu Yun Liu Qi",
+    },
+    "sys_hint_wuyunliuqi": {
+        "zh": "《黃帝內經》運氣七篇，五運六氣大運主客推演",
+        "en": "Yellow Emperor's Classic: Five Movements & Six Qi traditional system",
+    },
+    "desc_wuyunliuqi": {
+        "zh": "☯ **五運六氣** — 源自《黃帝內經·素問》運氣七篇，涵蓋大運、主運、客運、司天之氣、在泉之氣、主氣、客氣、客主加臨、運氣同化（天符歲會）、勝復鬱發等完整古典推演體系。支援每分鐘精細計算，可生成任意時段運氣變化曲線。",
+        "en": "☯ **Wu Yun Liu Qi** — From the Yellow Emperor's Classic (Huangdi Neijing, Seven Chapters on Qi Movement). Covers Annual Movement, Host/Guest Movements, Heavenly Domination Qi, Earth's Spring Qi, Host/Guest Qi, Guest-Host Interaction, Assimilation (Tianfu, Suihui), and Victory-Revenge patterns. Supports minute-level precision calculation.",
+    },
+    "spinner_wuyunliuqi": {
+        "zh": "計算五運六氣……",
+        "en": "Calculating Wu Yun Liu Qi…",
+    },
+
     # ── Picatrix + Behenian 固定星 ──────────────────────────────
     "tab_picatrix_behenian": {
         "zh": "✦ Picatrix 占星魔法",
