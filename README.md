@@ -38,7 +38,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **四十六體系合一** | 在同一個介面中切換四十六種占星體系，無需來回切換工具 | Switch between 46 astrology systems in one unified interface |
+| 🔮 **四十八體系合一** | 在同一個介面中切換四十八種占星體系，無需來回切換工具 | Switch between 46 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
