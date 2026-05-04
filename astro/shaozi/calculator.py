@@ -173,23 +173,22 @@ def _year_ganzhi(year: int) -> str:
 def _month_ganzhi(year: int, month: int) -> str:
     """
     計算月柱干支（簡化版，以節氣月份為準）
-    月支：寅(1月) 卯(2月) … 丑(12月)  index = (month + 1) % 12
+    月支：寅(2月) 卯(3月) … 丑(1月)  index = month % 12
     月干：由年干推算，甲己年從丙寅起
     """
     year_stem_idx = (year - 1984) % 10
     # 月干循環：甲己年→丙寅起 (stem_base=2)；每年差2
-    # stem_base = ((year_stem_idx % 5) * 2 + 2) % 10
     stem_base = ((year_stem_idx % 5) * 2 + 2) % 10
-    # 月支：正月 = 寅(index 2)，二月 = 卯(index 3)…
-    month_branch_idx = (month + 1) % 12   # 正月(1) → 2(寅), 二月(2) → 3(卯)
-    month_stem_idx = (stem_base + month - 1) % 10
+    # 月支：二月(2) → 寅(2), 三月(3) → 卯(3), …, 八月(8) → 申(8), …, 一月(1) → 丑(1)
+    month_branch_idx = month % 12
+    month_stem_idx = (stem_base + month - 2) % 10
     return HEAVENLY_STEMS[month_stem_idx] + EARTHLY_BRANCHES[month_branch_idx]
 
 
 def _day_ganzhi(year: int, month: int, day: int) -> str:
     """
     計算日柱干支（Julian Day Number 法）
-    參考點：2000-01-01 (JD=2451545) = 甲午日
+    參考點：2000-01-01 (JD=2451545) = 戊午日
     """
     if month <= 2:
         year -= 1
@@ -197,9 +196,9 @@ def _day_ganzhi(year: int, month: int, day: int) -> str:
     a = year // 100
     b = 2 - a + a // 4
     jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + b - 1524
-    # 2451545 = 2000-01-01 = 甲午：stem 甲(0), branch 午(6)
+    # 2451545 = 2000-01-01 = 戊午：stem 戊(4), branch 午(6)
     ref_jd = 2451545
-    ref_stem = 0    # 甲
+    ref_stem = 4    # 戊
     ref_branch = 6  # 午
     delta = jd - ref_jd
     stem_idx = (ref_stem + delta) % 10
