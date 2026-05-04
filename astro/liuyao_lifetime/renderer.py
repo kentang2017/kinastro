@@ -168,7 +168,7 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
               <h3 style='margin:0;color:{wx_color}'>{symbol} {layout.gua_name} 卦</h3>
               <p style='margin:4px 0;color:#b0b0cc'>之卦：{layout.biangua_name}　 動爻：第 {layout.dong_yao} 爻</p>
               <p style='margin:4px 0;color:#b0b0cc'>{_wx_badge(layout.palace_wx)} 宮　運勢：<b style='color:#e0e0ff'>{luck}</b></p>
-              <hr style='margin:8px 0;border-color:#4a4a8a'>
+              <hr style='margin:8px 0;border-top:1px solid #4a4a8a'>
               <p style='font-size:0.9em;color:#e0e0ff'>{layout.guaci}</p>
             </div>
             """,
@@ -410,7 +410,7 @@ def _render_compatibility(result: LifetimeResult) -> None:
                   <p style='color:#e0e0ff'>乙方：<b>{compat['person2_gua']} 卦</b> 
                      ({_wx_badge(compat['person2_wx'])})</p>
                   <p style='color:#e0e0ff'>五行關係：<b>{compat['compat_type']}</b></p>
-                  <hr style='border-color:#4a4a8a'>
+                  <hr style='border-top:1px solid #4a4a8a'>
                   <p style='color:#c0c0dd'>{compat['desc']}</p>
                   <p style='color:#e0e0ff'><b>{auto_cn('建議')}：</b>{compat['advice']}</p>
                 </div>
