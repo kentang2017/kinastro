@@ -44,6 +44,22 @@ _YAO_LINE_YIN = "━━━━━━    ━━━━━━"
 _YAO_LINE_YANG_DONG = "━━━━━━━━━━━━━━━━  ○"
 _YAO_LINE_YIN_DONG = "━━━━━━    ━━━━━━  ×"
 
+# 爻象緊湊符號（用於排盤板）
+_YAO_COMPACT_YANG = "▅▅▅▅▅"
+_YAO_COMPACT_YIN  = "▅▅ ▅▅"
+
+# 六神縮寫
+_LIUSHEN_ABBR: Dict[str, str] = {
+    "青龍": "龍", "朱雀": "雀", "勾陳": "陳",
+    "騰蛇": "蛇", "白虎": "虎", "玄武": "武",
+}
+
+# 六親縮寫
+_LIUQIN_ABBR: Dict[str, str] = {
+    "官鬼": "官", "父母": "父", "兄弟": "兄",
+    "妻財": "妻", "子孫": "子",
+}
+
 
 def _yao_line(code: str) -> str:
     """根據爻碼回傳爻象線條字符串。"""
@@ -127,31 +143,94 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
     col_board, col_info = st.columns([1, 2])
 
     with col_board:
+        # 伏神爻位 (0-5) → 伏神描述
+        fuyao_map: Dict[int, str] = {}
+        if isinstance(layout.fuyao, dict):
+            fp = layout.fuyao.get("伏神爻位")
+            lq_abbr_fu = _LIUQIN_ABBR.get(layout.fuyao.get("伏神六親", ""), "")
+            fu_tail = layout.fuyao.get("伏神天干地支五行", "")
+            if fp is not None and fu_tail:
+                fuyao_map[fp] = lq_abbr_fu + fu_tail
+
+        # 身爻對應的 position (1-6)
+        shen_pos = 0
+        if layout.shen_str:
+            for y in layout.yao_list:
+                if layout.shen_str and y.najia in layout.shen_str:
+                    shen_pos = y.position
+                    break
+
         # 卦象顯示（從上爻到初爻）
         lines_html = []
-        _SYM_SPAN = "style='display:inline-block;width:1.4em;text-align:center'"
+        header = (
+            "<div style='display:flex;align-items:center;color:#aaa;"
+            "font-size:0.78em;line-height:1.8em;border-bottom:1px solid #4a4a8a;"
+            "margin-bottom:4px;padding-bottom:2px'>"
+            "<span style='display:inline-block;min-width:2em'>神</span>"
+            "<span style='display:inline-block;min-width:7em'>伏神</span>"
+            "<span style='display:inline-block;min-width:1.5em'>宿</span>"
+            "<span style='display:inline-block;min-width:9em'>六親納甲五行</span>"
+            "<span style='display:inline-block;min-width:4.5em'>長生</span>"
+            "<span>爻象</span>"
+            "</div>"
+        )
+        lines_html.append(header)
+
         for yao in reversed(layout.yao_list):
-            line = _yao_line_base(yao.code)
-            color = "#FFD700" if yao.is_dong else "#e0e0ff"
-            sy_text = yao.shiying or ""
-            dong_symbol = _yao_dong_symbol(yao.code)
-            dong_sym_span = f"<span {_SYM_SPAN}>{dong_symbol}</span>"
-            dong_indicator = (
-                f"<span {_SYM_SPAN} style='color:#FF6B6B'>🔴</span>"
-                if yao.is_dong else
-                f"<span {_SYM_SPAN}></span>"
+            i0 = yao.position - 1  # 0-based index
+
+            # 六神縮寫
+            ls_abbr = _LIUSHEN_ABBR.get(yao.liushen, yao.liushen[:1] if yao.liushen else "　")
+
+            # 伏神
+            fu_text = fuyao_map.get(i0, "")
+            fu_span = (
+                f"<span style='display:inline-block;min-width:7em;color:#b0c4de'>{fu_text}</span>"
             )
+
+            # 二十八宿
+            xiu_span = (
+                f"<span style='display:inline-block;min-width:1.5em;color:#ffd700'>{yao.xiu}</span>"
+            )
+
+            # 六親縮寫 + 納甲 + 五行
+            lq_abbr = _LIUQIN_ABBR.get(yao.liuqin, yao.liuqin)
+            lq_color = _liuqin_color(yao.liuqin)
+            info_span = (
+                f"<span style='display:inline-block;min-width:9em'>"
+                f"<span style='color:{lq_color}'>{lq_abbr}</span>"
+                f"<span style='color:#e0e0ff'>{yao.najia}{yao.wuxing}</span>"
+                f"</span>"
+            )
+
+            # 長生狀態
+            cs = yao.changsheng or ""
+            cs_span = (
+                f"<span style='display:inline-block;min-width:4.5em;color:#90ee90'>{cs}</span>"
+            )
+
+            # 爻象 + 世應 + 身 + 動
+            line_sym = _YAO_COMPACT_YANG if yao.code in ("9", "7") else _YAO_COMPACT_YIN
+            color = "#FFD700" if yao.is_dong else "#e0e0ff"
+            sy_text = yao.shiying or "　"
+            dong_sym = "○" if yao.code == "9" else ("×" if yao.code == "6" else "")
+            shen_mark = "身" if yao.position == shen_pos else ""
+
+            yao_span = (
+                f"<span style='color:#aaa'>{sy_text}</span>"
+                f"<span style='color:{color}'>{line_sym}</span>"
+                f"<span style='color:#ff9f43;margin-left:2px'>{shen_mark}</span>"
+                f"<span style='color:#ff6b6b;margin-left:2px'>{dong_sym}</span>"
+            )
+
             lines_html.append(
-                f"<div style='display:flex;align-items:center;color:{color};line-height:2.2em'>"
-                f"<b style='display:inline-block;min-width:2.6em'>{yao.yao_name}</b>"
-                f"<span style='display:inline-block;width:16ch;letter-spacing:0'>{line}</span>"
-                f"{dong_sym_span}"
-                f"{dong_indicator}"
-                f"<small style='color:#aaa;margin-left:4px'>{sy_text}</small>"
+                f"<div style='display:flex;align-items:center;line-height:2.0em'>"
+                f"<span style='display:inline-block;min-width:2em;color:#90caf9'>{ls_abbr}</span>"
+                f"{fu_span}{xiu_span}{info_span}{cs_span}{yao_span}"
                 f"</div>"
             )
         st.markdown(
-            "<div style='font-family:monospace;font-size:0.9em;line-height:2.2em;"
+            "<div style='font-family:monospace;font-size:0.85em;line-height:2.0em;"
             "background:#1a1a2e;color:#e0e0ff;padding:16px;border-radius:10px;"
             "border:1px solid #4a4a8a'>"
             + "".join(lines_html)
@@ -201,6 +280,7 @@ def _render_najia_table(layout: HexagramLayout) -> None:
             auto_cn("納甲"): yao.najia,
             auto_cn("五行"): yao.wuxing,
             auto_cn("二十八宿"): yao.xiu,
+            auto_cn("長生"): yao.changsheng,
             auto_cn("世應"): yao.shiying,
             auto_cn("動"): dong,
         })
