@@ -8,10 +8,10 @@
 
 核心功能：
 1. 完整起數秘訣實作（天干起數、地支起數、配卦、河洛配數、天數成卦、地數成卦、八卦加則）
-2. 64個鑰匙表格進階整合（坤集最核心實戰工具）
-3. 進階起盤函式（結合基礎計算 + 64鑰匙細調 + 時辰/運限查詢）
+2. 64個鑰匙表格進階整合（全64數詳細版）
+3. 進階起盤函式（結合基礎計算 + 64鑰匙細調 + 時辰/運限/命格指標）
 4. 條文資料庫載入
-5. 與鐵板神數一致的設計風格與 API
+5. 豐富的輔助查詢功能
 
 使用方式：
     from shaozi_full_structure import ShaoziShenShu
@@ -20,7 +20,7 @@
     result = shaozi.cast_plate(
         year_gz="甲子", month_gz="丙寅",
         day_gz="戊辰", hour_gz="庚午",
-        ke="初刻"          # 可選：指定刻數進行細調
+        ke="初刻"
     )
 """
 
@@ -28,23 +28,27 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any
 import json
 
-# ====================== 1. 匯入64鑰匙表格 ======================
+# ====================== 1. 匯入64鑰匙表格（詳細版） ======================
 try:
-    from .data.shaozi_64_keys import (
+    from .shaozi_64_keys import (
         SHAOZI_64_KEYS,
         get_key_info,
         get_special_notes,
-        get_key_name
+        get_key_name,
+        get_detailed_key
     )
+    from .shaozi_yuanhui import YuanHuiYunShi
 except ImportError:
-    from astro.shaozi.data.shaozi_64_keys import (
+    from shaozi_64_keys import (
         SHAOZI_64_KEYS,
         get_key_info,
         get_special_notes,
-        get_key_name
+        get_key_name,
+        get_detailed_key
     )
+    from shaozi_yuanhui import YuanHuiYunShi
 
-# ====================== 2. 起數秘訣表（完整版） ======================
+# ====================== 2. 起數秘訣表 ======================
 
 TIANGAN_QISHU: Dict[str, int] = {
     "戊": 1, "乙": 2, "癸": 2, "庚": 3, "辛": 4,
@@ -119,16 +123,16 @@ def ba_gua_jia_ze(base: int) -> int:
 
 class ShaoziShenShu:
     """
-    邵子神數完整起盤系統（進階版）
+    邵子神數完整起盤系統（進階詳細版）
 
     整合：
     - 起數秘訣完整計算
-    - 64個鑰匙表格進階查詢（時辰、運限、流年、特殊事項）
+    - 64個鑰匙表格進階查詢（全64數詳細版）
     - 條文資料庫
     """
 
-    def __init__(self, data_dir: Optional[str] = None):
-        self.data_dir = Path(data_dir) if data_dir else Path(__file__).parent / "data"
+    def __init__(self, data_dir: str = "data"):
+        self.data_dir = Path(data_dir)
         self.tiaowen_db: Dict[str, str] = {}
         self.load_tiaowen()
 
@@ -210,25 +214,51 @@ class ShaoziShenShu:
             }
         }
 
-        # 6. 64鑰匙進階細調（實戰核心）
+        # 6. 64鑰匙進階細調（詳細版）
         if use_key and base_number in SHAOZI_64_KEYS:
             key_data = SHAOZI_64_KEYS[base_number]
 
             result["key"] = {
                 "number": base_number,
                 "名稱": key_data.get("名稱", ""),
+                "說明": key_data.get("說明", ""),
                 "特殊事項": key_data.get("特殊", []),
                 "時辰資訊": get_key_info(base_number, ke=ke, category="時辰"),
                 "運限資訊": get_key_info(base_number, ke=ke, category="運限"),
             }
 
-            # 額外提供常用特殊事項快速判斷
+            # 命格指標（如果存在）
+            if "命格指標" in key_data:
+                result["key"]["命格指標"] = key_data["命格指標"]
+
+            # 常用特殊事項快速判斷
             special = key_data.get("特殊", [])
             result["key"]["has_克妻"] = "克妻" in special
             result["key"]["has_過房"] = "過房" in special
             result["key"]["has_填房"] = "填房" in special
             result["key"]["has_貴子"] = "貴子" in special
             result["key"]["has_孤"] = "孤" in special
+            result["key"]["has_泰"] = "泰" in special
+            result["key"]["has_否"] = "否" in special
+
+        # 7. 元會運世整合（大時代背景）
+        try:
+            # 簡單年份轉換（假設現代出生年，實際專案應使用完整干支年轉換表）
+            year_num = int(year_gz[2:])
+            if year_num > 50:
+                birth_year = 1900 + year_num
+            else:
+                birth_year = 2000 + year_num
+
+            yhy = YuanHuiYunShi(birth_year)
+            result["yuanhui"] = {
+                "birth_year": birth_year,
+                "cycles": yhy.get_cycle_info(),
+                "life_stage": yhy.get_life_stage(),
+                "era_stage": yhy.get_era_description()
+            }
+        except Exception as e:
+            result["yuanhui"] = {"error": str(e)}
 
         return result
 
@@ -241,18 +271,43 @@ class ShaoziShenShu:
         return {
             "number": number,
             "名稱": key_data.get("名稱", ""),
+            "說明": key_data.get("說明", ""),
             "特殊事項": key_data.get("特殊", []),
             "時辰資訊": get_key_info(number, ke=ke, category="時辰"),
             "運限資訊": get_key_info(number, ke=ke, category="運限"),
+            "命格指標": key_data.get("命格指標", {}),
             "完整資料": key_data
         }
+
+    def get_key_summary(self, number: int, ke: str = "初刻") -> str:
+        """取得某數字的簡潔文字摘要（適合顯示用）"""
+        if number not in SHAOZI_64_KEYS:
+            return f"第{number}數 資料尚未結構化"
+
+        key_data = SHAOZI_64_KEYS[number]
+        name = key_data.get("名稱", "")
+        desc = key_data.get("說明", "")
+        special = key_data.get("特殊", [])
+
+        summary = f"【{name}】\n"
+        if desc:
+            summary += f"{desc}\n"
+        if special:
+            summary += f"特殊事項：{', '.join(special)}\n"
+
+        # 時辰資訊
+        time_info = get_key_info(number, ke=ke, category="時辰")
+        if isinstance(time_info, dict) and time_info:
+            summary += f"[{ke}] {time_info}\n"
+
+        return summary.strip()
 
 
 # ====================== 5. 獨立測試 ======================
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("邵子神數 進階起盤系統測試（含64鑰匙細調）")
+    print("邵子神數 進階起盤系統測試（詳細版64鑰匙）")
     print("=" * 60)
 
     shaozi = ShaoziShenShu()
@@ -273,9 +328,18 @@ if __name__ == "__main__":
     if "key" in result:
         print(f"\n【64鑰匙細調】")
         print(f"鑰匙名稱: {result['key']['名稱']}")
+        print(f"說明: {result['key']['說明']}")
         print(f"特殊事項: {result['key']['特殊事項']}")
         print(f"時辰資訊: {result['key']['時辰資訊']}")
-        print(f"是否有克妻: {result['key']['has_克妻']}")
         print(f"是否有貴子: {result['key']['has_貴子']}")
+        print(f"是否有填房: {result['key']['has_填房']}")
+
+    if "yuanhui" in result and "error" not in result["yuanhui"]:
+        print(f"\n【元會運世 大時代背景】")
+        y = result["yuanhui"]
+        print(f"出生年: {y['birth_year']}")
+        print(f"元會運世: 第{y['cycles']['元']}元 第{y['cycles']['會']}會 第{y['cycles']['運']}運 第{y['cycles']['世']}世")
+        print(f"人生階段: {y['life_stage']}")
+        print(f"時代階段: {y['era_stage']}")
 
     print("\n測試完成！")
