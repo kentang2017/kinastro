@@ -80,6 +80,8 @@ from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.jawa_weton.calculator import WetonCalculator, compute_weton
 from astro.jawa_weton.renderer import render_streamlit as render_jawa_weton_chart
+from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
+from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
 from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
 from astro.polynesian_hawaiian.renderer import render_streamlit as render_polynesian_chart_ui
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
@@ -1091,7 +1093,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
@@ -1154,6 +1156,7 @@ with st.sidebar:
         "tab_tojeong": t("tab_tojeong"),
         "tab_khmer": t("tab_khmer"),
         "tab_taixuan": t("tab_taixuan"),
+        "tab_wuyunliuqi": t("tab_wuyunliuqi"),
         "tab_picatrix_behenian": t("tab_picatrix_behenian"),
         "tab_rectification": t("tab_rectification"),
     }
@@ -1204,6 +1207,7 @@ with st.sidebar:
         "tab_tojeong": t("sys_hint_tojeong"),
         "tab_khmer": t("sys_hint_khmer"),
         "tab_taixuan": t("sys_hint_taixuan"),
+        "tab_wuyunliuqi": t("sys_hint_wuyunliuqi"),
         "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
         "tab_rectification": t("sys_hint_rectification"),
     }
@@ -3131,6 +3135,35 @@ elif _selected_system == "tab_taixuan":
                 btn_key="taixuan_qigua",
             )
         )
+
+# --- 五運六氣 ---
+elif _selected_system == "tab_wuyunliuqi":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_wuyunliuqi")):
+                _wylq_result = compute_wuyunliuqi(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p.get("minute", 0),
+                )
+            render_wuyunliuqi_chart(_wylq_result)
+            _render_ai_button("tab_wuyunliuqi", {
+                "ganzhi": _wylq_result.ganzhi,
+                "dayun": _wylq_result.dayun.taishao,
+                "sitian": _wylq_result.sitian,
+                "zaiquan": _wylq_result.zaiquan,
+                "tonghua": _wylq_result.tonghua.categories,
+            }, btn_key="wuyunliuqi")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            import traceback
+            st.code(traceback.format_exc())
+    else:
+        render_wuyunliuqi_intro()
+        st.markdown(t("desc_wuyunliuqi"))
 
 # --- History of Astrology ---
 elif _selected_system == "tab_history":
