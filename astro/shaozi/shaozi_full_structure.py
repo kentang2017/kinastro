@@ -243,13 +243,7 @@ class ShaoziShenShu:
 
         # 7. 元會運世整合（大時代背景）
         try:
-            # 簡單年份轉換（假設現代出生年，實際專案應使用完整干支年轉換表）
-            year_num = int(year_gz[2:])
-            if year_num > 50:
-                birth_year = 1900 + year_num
-            else:
-                birth_year = 2000 + year_num
-
+            birth_year = self._ganzhi_to_approx_year(year_gz)
             yhy = YuanHuiYunShi(birth_year)
             result["yuanhui"] = {
                 "birth_year": birth_year,
@@ -261,6 +255,37 @@ class ShaoziShenShu:
             result["yuanhui"] = {"error": str(e)}
 
         return result
+
+    def _ganzhi_to_approx_year(self, ganzhi: str) -> int:
+        """
+        將干支轉換為近似西元年（用於元會運世計算）
+
+        由於元會運世每30年一世變化緩慢，我們只需要落在正確的「世」區間即可。
+        此方法提供穩定且合理的年份對應。
+        """
+        if len(ganzhi) != 2:
+            return 1990  # default modern year
+
+        tian_gan = ganzhi[0]
+        di_zhi = ganzhi[1]
+
+        # 地支對應的基準年（每12年循環，選擇現代有代表性的年份）
+        dizhi_base = {
+            "子": 1984, "丑": 1985, "寅": 1986, "卯": 1987,
+            "辰": 1988, "巳": 1989, "午": 1990, "未": 1991,
+            "申": 1992, "酉": 1993, "戌": 1994, "亥": 1995,
+        }
+
+        base_year = dizhi_base.get(di_zhi, 1990)
+
+        # 天干微調（讓同一年干支的人落在相近的世）
+        gan_offset = {
+            "甲": 0, "乙": 1, "丙": 2, "丁": 3, "戊": 4,
+            "己": 5, "庚": 6, "辛": 7, "壬": 8, "癸": 9,
+        }
+
+        offset = gan_offset.get(tian_gan, 0)
+        return base_year + offset
 
     def get_key_detail(self, number: int, ke: str = "初刻") -> Dict[str, Any]:
         """取得某數字的完整64鑰匙詳細資訊"""
