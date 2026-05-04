@@ -14,9 +14,9 @@
 5. 豐富的輔助查詢功能
 
 使用方式：
-    from shaozi_full_structure import ShaoziShenShu
+    from astro.shaozi import ShaoziFullShenShu
 
-    shaozi = ShaoziShenShu()
+    shaozi = ShaoziFullShenShu()
     result = shaozi.cast_plate(
         year_gz="甲子", month_gz="丙寅",
         day_gz="戊辰", hour_gz="庚午",
@@ -121,7 +121,7 @@ def ba_gua_jia_ze(base: int) -> int:
 
 # ====================== 4. 完整邵子神數類別 ======================
 
-class ShaoziShenShu:
+class ShaoziFullShenShu:
     """
     邵子神數完整起盤系統（進階詳細版）
 
@@ -131,8 +131,8 @@ class ShaoziShenShu:
     - 條文資料庫
     """
 
-    def __init__(self, data_dir: str = "data"):
-        self.data_dir = Path(data_dir)
+    def __init__(self, data_dir: Optional[Path] = None):
+        self.data_dir = data_dir or (Path(__file__).parent / "data")
         self.tiaowen_db: Dict[str, str] = {}
         self.load_tiaowen()
 
@@ -335,7 +335,7 @@ if __name__ == "__main__":
     print("邵子神數 進階起盤系統測試（詳細版64鑰匙）")
     print("=" * 60)
 
-    shaozi = ShaoziShenShu()
+    shaozi = ShaoziFullShenShu()
 
     result = shaozi.cast_plate(
         year_gz="甲子",
