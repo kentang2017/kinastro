@@ -143,10 +143,10 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
         st.markdown(
             f"""
             <div style='padding:12px;background:#f8f9fa;border-radius:10px;
-                        border-left:4px solid {wx_color}'>
+                        border-left:4px solid {wx_color};color:#333'>
               <h3 style='margin:0;color:{wx_color}'>{symbol} {layout.gua_name} 卦</h3>
               <p style='margin:4px 0;color:#555'>之卦：{layout.biangua_name}　 動爻：第 {layout.dong_yao} 爻</p>
-              <p style='margin:4px 0'>{_wx_badge(layout.palace_wx)} 宮　運勢：<b>{luck}</b></p>
+              <p style='margin:4px 0;color:#555'>{_wx_badge(layout.palace_wx)} 宮　運勢：<b style='color:#333'>{luck}</b></p>
               <hr style='margin:8px 0'>
               <p style='font-size:0.9em;color:#333'>{layout.guaci}</p>
             </div>
@@ -257,8 +257,8 @@ def _render_lifetime_interpretation(result: LifetimeResult) -> None:
             st.markdown(
                 f"""
                 <div style='padding:12px;background:#f8f9fa;border-radius:8px;
-                            margin-bottom:12px;border-left:3px solid {wx_c}'>
-                  <p style='margin:0;font-weight:bold'>{icon} {label}</p>
+                            margin-bottom:12px;border-left:3px solid {wx_c};color:#333'>
+                  <p style='margin:0;font-weight:bold;color:#222'>{icon} {label}</p>
                   <p style='margin:4px 0;font-size:0.9em;color:#444'>{text}</p>
                 </div>
                 """,
@@ -283,7 +283,7 @@ def _render_lifetime_interpretation(result: LifetimeResult) -> None:
             f"""
             <div style='padding:12px;background:#fff3cd;border-radius:8px;
                         border-left:4px solid #ffc107'>
-              <p style='margin:0;font-style:italic'>{dong_text}</p>
+              <p style='margin:0;font-style:italic;color:#5a4000'>{dong_text}</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -382,16 +382,16 @@ def _render_compatibility(result: LifetimeResult) -> None:
             st.markdown(
                 f"""
                 <div style='padding:16px;background:#f8f9fa;border-radius:12px;
-                            border:2px solid {c_color}'>
+                            border:2px solid {c_color};color:#333'>
                   <h3 style='color:{c_color}'>{compat['level']} 相性結果</h3>
-                  <p>甲方：<b>{compat['person1_gua']} 卦</b> 
+                  <p style='color:#333'>甲方：<b>{compat['person1_gua']} 卦</b> 
                      ({_wx_badge(compat['person1_wx'])})</p>
-                  <p>乙方：<b>{compat['person2_gua']} 卦</b> 
+                  <p style='color:#333'>乙方：<b>{compat['person2_gua']} 卦</b> 
                      ({_wx_badge(compat['person2_wx'])})</p>
-                  <p>五行關係：<b>{compat['compat_type']}</b></p>
+                  <p style='color:#333'>五行關係：<b>{compat['compat_type']}</b></p>
                   <hr>
-                  <p>{compat['desc']}</p>
-                  <p><b>{auto_cn('建議')}：</b>{compat['advice']}</p>
+                  <p style='color:#444'>{compat['desc']}</p>
+                  <p style='color:#333'><b>{auto_cn('建議')}：</b>{compat['advice']}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -435,11 +435,11 @@ def _render_life_periods(result: LifetimeResult) -> None:
         st.markdown(
             f"""
             <div style='padding:12px;background:{bg};border-radius:8px;
-                        margin-bottom:10px;border-left:{border}'>
-              <p style='margin:0'><b>第{pos}爻 {info['period']}</b>{dong_badge}</p>
+                        margin-bottom:10px;border-left:{border};color:#333'>
+              <p style='margin:0;color:#222'><b>第{pos}爻 {info['period']}</b>{dong_badge}</p>
               <p style='margin:4px 0;color:#555'>{info['theme']}</p>
               <p style='margin:4px 0;color:#777;font-size:0.85em'>{info['desc']}</p>
-              <p style='margin:0;font-size:0.85em'>
+              <p style='margin:0;font-size:0.85em;color:#444'>
                 納甲：<b>{najia}</b> 五行：<b style='color:{wx_c}'>{wx}</b>
                 六親：<b>{lq}</b>
               </p>
@@ -542,7 +542,7 @@ def render_streamlit(result: LifetimeResult) -> None:
     # 頁頭基本信息
     st.markdown(
         f"""
-        <div style='padding:10px 16px;background:#eef2ff;border-radius:8px;margin-bottom:8px'>
+        <div style='padding:10px 16px;background:#eef2ff;border-radius:8px;margin-bottom:8px;color:#333'>
           <b>{auto_cn('出生時間')}：</b>
           {result.year}/{result.month:02d}/{result.day:02d}
           {result.hour:02d}:00　
