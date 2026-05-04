@@ -3369,6 +3369,22 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "校正計算中，請稍候……",
         "en": "Running rectification, please wait…",
     },
+    "tab_liuyao_lifetime": {
+        "zh": "🔯 六爻終身卦",
+        "en": "🔯 Lifetime Liu Yao",
+    },
+    "desc_liuyao_lifetime": {
+        "zh": "🔯 **六爻終身卦** — 以出生年月日時的農曆干支數字演算，得出固定終身本命卦象。納甲排盤，六親六神，大限流年，合婚分析，與隨機占卜截然不同的本命終身推命系統。",
+        "en": "🔯 **Lifetime Liu Yao** — A fixed lifetime hexagram derived from birth date/time via lunar Ganzhi numbers. Full Najia layout, Six Relatives, Six Spirits, life periods, and compatibility analysis. Distinct from random divination.",
+    },
+    "spinner_liuyao_lifetime": {
+        "zh": "計算六爻終身卦…",
+        "en": "Computing Lifetime Liu Yao hexagram…",
+    },
+    "sys_hint_liuyao_lifetime": {
+        "zh": "以農曆干支起卦，納甲排盤，終身本命推命系統",
+        "en": "Lunar Ganzhi hexagram, Najia layout, lifetime destiny system",
+    },
 }
 
 def get_ui_lang() -> str:

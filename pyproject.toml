@@ -19,6 +19,8 @@ dependencies = [
     "kinqimen>=0.0.6.6",
     "kintaiyi @ git+https://github.com/kentang2017/kintaiyi.git",
     "sxtwl>=2.0.6",
+    "ichingshifa>=3.1.9",
+    "numpy>=1.24.0",
 ]
 
 [project.urls]

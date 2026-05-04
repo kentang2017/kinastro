@@ -80,6 +80,8 @@ from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.jawa_weton.calculator import WetonCalculator, compute_weton
 from astro.jawa_weton.renderer import render_streamlit as render_jawa_weton_chart
+from astro.liuyao_lifetime.calculator import compute_lifetime_hexagram
+from astro.liuyao_lifetime.renderer import render_streamlit as render_liuyao_lifetime_chart
 from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
 from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
 from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
@@ -1092,7 +1094,7 @@ with st.sidebar:
 
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
-        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
+        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming", "tab_liuyao_lifetime"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
@@ -1160,6 +1162,7 @@ with st.sidebar:
         "tab_wuyunliuqi": t("tab_wuyunliuqi"),
         "tab_picatrix_behenian": t("tab_picatrix_behenian"),
         "tab_rectification": t("tab_rectification"),
+        "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1212,6 +1215,7 @@ with st.sidebar:
         "tab_wuyunliuqi": t("sys_hint_wuyunliuqi"),
         "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
         "tab_rectification": t("sys_hint_rectification"),
+        "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -5177,6 +5181,29 @@ elif _selected_system == "tab_rectification":
         default_lon=_p.get("longitude", 114.1694),
         default_tz=_p.get("timezone", 8.0),
     )
+
+# --- 六爻終身卦 Lifetime Liu Yao Hexagram ---
+elif _selected_system == "tab_liuyao_lifetime":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_liuyao_lifetime")):
+                _liuyao_result = compute_lifetime_hexagram(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p["minute"],
+                    location_name=_p.get("location_name", ""),
+                )
+            render_liuyao_lifetime_chart(_liuyao_result)
+            _render_ai_button("tab_liuyao_lifetime", _liuyao_result, btn_key="liuyao_lifetime")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_liuyao_lifetime"))
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom
