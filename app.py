@@ -1093,7 +1093,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
@@ -1153,6 +1153,7 @@ with st.sidebar:
         "tab_persian": t("tab_persian"),
         "tab_kp": t("tab_kp"),
         "tab_tieban": t("tab_tieban"),
+        "tab_shaozi": t("tab_shaozi"),
         "tab_tojeong": t("tab_tojeong"),
         "tab_khmer": t("tab_khmer"),
         "tab_taixuan": t("tab_taixuan"),
@@ -1204,6 +1205,7 @@ with st.sidebar:
         "tab_persian": t("sys_hint_persian"),
         "tab_kp": t("sys_hint_kp"),
         "tab_tieban": t("sys_hint_tieban"),
+        "tab_shaozi": t("sys_hint_shaozi"),
         "tab_tojeong": t("sys_hint_tojeong"),
         "tab_khmer": t("sys_hint_khmer"),
         "tab_taixuan": t("sys_hint_taixuan"),
@@ -3081,6 +3083,54 @@ elif _selected_system == "tab_tieban":
             st.markdown(f"**{_rel}**")
             _qin_rows = [{"刻/分": k, "六親結果": v} for k, v in _fens.items()]
             st.dataframe(_qin_rows, width="stretch", hide_index=True)
+
+# --- 邵子神數 ---
+elif _selected_system == "tab_shaozi":
+    _sz_tab_main, _sz_tab_tiaowen = st.tabs([
+        auto_cn("🔯 命盤"), auto_cn("📚 條文庫"),
+    ])
+    with _sz_tab_main:
+        if _is_calculated:
+            try:
+                from astro.shaozi import ShaoziShenShu, ShaoziBirthData
+                from astro.shaozi.renderer import render_shaozi_result
+
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_shaozi")):
+                    _sz_engine = ShaoziShenShu()
+                    _sz_birth = ShaoziBirthData(
+                        birth_dt=datetime(
+                            _p["year"], _p["month"], _p["day"],
+                            _p["hour"], _p.get("minute", 0),
+                        ),
+                        gender=st.session_state.get("_calc_gender", "男"),
+                    )
+                    _sz_result = _sz_engine.calculate(_sz_birth)
+
+                render_shaozi_result(_sz_result)
+                _render_ai_button(
+                    "tab_shaozi",
+                    {
+                        "tiaowen_id": _sz_result.tiaowen_id,
+                        "gua": _sz_result.gua_name,
+                        "tiaowen": _sz_result.tiaowen_text,
+                        "year_gz": _sz_result.year_gz,
+                        "day_gz": _sz_result.day_gz,
+                    },
+                    btn_key="shaozi",
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                import traceback
+                st.code(traceback.format_exc())
+        else:
+            from astro.shaozi.renderer import render_shaozi_placeholder
+            render_shaozi_placeholder()
+
+    with _sz_tab_tiaowen:
+        from astro.shaozi.renderer import render_shaozi_tiaowen_browser
+        render_shaozi_tiaowen_browser()
+
 # --- 太玄數占星 ---
 elif _selected_system == "tab_taixuan":
     # 子頁籤：本命排盤 / 即時問卜
