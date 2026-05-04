@@ -57,6 +57,22 @@ def _yao_line(code: str) -> str:
         return _YAO_LINE_YIN
 
 
+def _yao_line_base(code: str) -> str:
+    """回傳固定長度的爻象線條（不含動爻符號，供視覺排版使用）。"""
+    if code in ("9", "7"):
+        return _YAO_LINE_YANG
+    return _YAO_LINE_YIN
+
+
+def _yao_dong_symbol(code: str) -> str:
+    """回傳動爻符號：老陽為 ○，老陰為 ×，靜爻為空。"""
+    if code == "9":
+        return "○"
+    if code == "6":
+        return "×"
+    return ""
+
+
 def _wx_badge(wx: str) -> str:
     """五行帶顏色標籤 HTML。"""
     color = WUXING_COLORS.get(wx, "#888")
@@ -120,13 +136,23 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
         )
         lines_html = []
         for yao in reversed(layout.yao_list):
-            line = _yao_line(yao.code)
+            line = _yao_line_base(yao.code)
             color = "#FFD700" if yao.is_dong else "#e0e0ff"
-            sy = f" <small style='color:#aaa'>{yao.shiying}</small>" if yao.shiying else ""
-            dong_mark = " 🔴" if yao.is_dong else ""
+            sy_text = yao.shiying or ""
+            dong_symbol = _yao_dong_symbol(yao.code)
+            dong_indicator = f"<span style='color:#FF6B6B;margin-left:4px'>🔴</span>" if yao.is_dong else "<span style='display:inline-block;width:1.4em'></span>"
+            dong_sym_span = (
+                f"<span style='display:inline-block;width:1.2em;text-align:center'>{dong_symbol}</span>"
+                if dong_symbol else
+                "<span style='display:inline-block;width:1.2em'></span>"
+            )
             lines_html.append(
-                f"<div style='color:{color}'>"
-                f"<b>{yao.yao_name}</b> {line}{dong_mark}{sy}"
+                f"<div style='display:flex;align-items:center;color:{color};line-height:2.2em'>"
+                f"<b style='display:inline-block;min-width:2.6em'>{yao.yao_name}</b>"
+                f"<span style='display:inline-block;width:16ch;letter-spacing:0'>{line}</span>"
+                f"{dong_sym_span}"
+                f"{dong_indicator}"
+                f"<small style='color:#aaa;margin-left:4px'>{sy_text}</small>"
                 f"</div>"
             )
         st.markdown(
