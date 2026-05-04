@@ -128,12 +128,6 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
 
     with col_board:
         # 卦象顯示（從上爻到初爻）
-        st.markdown(
-            f"<div style='font-family:monospace;font-size:1.1em;line-height:2.2em;"
-            f"background:#1a1a2e;color:#e0e0ff;padding:16px;border-radius:10px;"
-            f"border:1px solid #4a4a8a;min-width:220px'>",
-            unsafe_allow_html=True,
-        )
         lines_html = []
         _SYM_SPAN = "style='display:inline-block;width:1.4em;text-align:center'"
         for yao in reversed(layout.yao_list):
@@ -169,13 +163,13 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
         wx_color = WUXING_COLORS.get(layout.palace_wx, "#888")
         st.markdown(
             f"""
-            <div style='padding:12px;background:#f8f9fa;border-radius:10px;
-                        border-left:4px solid {wx_color};color:#333'>
+            <div style='padding:12px;background:#1e2140;border-radius:10px;
+                        border-left:4px solid {wx_color};color:#e0e0ff'>
               <h3 style='margin:0;color:{wx_color}'>{symbol} {layout.gua_name} 卦</h3>
-              <p style='margin:4px 0;color:#555'>之卦：{layout.biangua_name}　 動爻：第 {layout.dong_yao} 爻</p>
-              <p style='margin:4px 0;color:#555'>{_wx_badge(layout.palace_wx)} 宮　運勢：<b style='color:#333'>{luck}</b></p>
-              <hr style='margin:8px 0'>
-              <p style='font-size:0.9em;color:#333'>{layout.guaci}</p>
+              <p style='margin:4px 0;color:#b0b0cc'>之卦：{layout.biangua_name}　 動爻：第 {layout.dong_yao} 爻</p>
+              <p style='margin:4px 0;color:#b0b0cc'>{_wx_badge(layout.palace_wx)} 宮　運勢：<b style='color:#e0e0ff'>{luck}</b></p>
+              <hr style='margin:8px 0;border-top:1px solid #4a4a8a'>
+              <p style='font-size:0.9em;color:#e0e0ff'>{layout.guaci}</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -283,10 +277,10 @@ def _render_lifetime_interpretation(result: LifetimeResult) -> None:
         with cols[idx % 2]:
             st.markdown(
                 f"""
-                <div style='padding:12px;background:#f8f9fa;border-radius:8px;
-                            margin-bottom:12px;border-left:3px solid {wx_c};color:#333'>
-                  <p style='margin:0;font-weight:bold;color:#222'>{icon} {label}</p>
-                  <p style='margin:4px 0;font-size:0.9em;color:#444'>{text}</p>
+                <div style='padding:12px;background:#1e2140;border-radius:8px;
+                            margin-bottom:12px;border-left:3px solid {wx_c};color:#e0e0ff'>
+                  <p style='margin:0;font-weight:bold;color:#f0f0ff'>{icon} {label}</p>
+                  <p style='margin:4px 0;font-size:0.9em;color:#c0c0dd'>{text}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -308,9 +302,9 @@ def _render_lifetime_interpretation(result: LifetimeResult) -> None:
         st.markdown(f"#### 📜 {auto_cn('動爻爻辭')}")
         st.markdown(
             f"""
-            <div style='padding:12px;background:#fff3cd;border-radius:8px;
+            <div style='padding:12px;background:#2a2010;border-radius:8px;
                         border-left:4px solid #ffc107'>
-              <p style='margin:0;font-style:italic;color:#5a4000'>{dong_text}</p>
+              <p style='margin:0;font-style:italic;color:#ffe08a'>{dong_text}</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -408,17 +402,17 @@ def _render_compatibility(result: LifetimeResult) -> None:
             c_color = compat["color"]
             st.markdown(
                 f"""
-                <div style='padding:16px;background:#f8f9fa;border-radius:12px;
-                            border:2px solid {c_color};color:#333'>
+                <div style='padding:16px;background:#1e2140;border-radius:12px;
+                            border:2px solid {c_color};color:#e0e0ff'>
                   <h3 style='color:{c_color}'>{compat['level']} 相性結果</h3>
-                  <p style='color:#333'>甲方：<b>{compat['person1_gua']} 卦</b> 
+                  <p style='color:#e0e0ff'>甲方：<b>{compat['person1_gua']} 卦</b> 
                      ({_wx_badge(compat['person1_wx'])})</p>
-                  <p style='color:#333'>乙方：<b>{compat['person2_gua']} 卦</b> 
+                  <p style='color:#e0e0ff'>乙方：<b>{compat['person2_gua']} 卦</b> 
                      ({_wx_badge(compat['person2_wx'])})</p>
-                  <p style='color:#333'>五行關係：<b>{compat['compat_type']}</b></p>
-                  <hr>
-                  <p style='color:#444'>{compat['desc']}</p>
-                  <p style='color:#333'><b>{auto_cn('建議')}：</b>{compat['advice']}</p>
+                  <p style='color:#e0e0ff'>五行關係：<b>{compat['compat_type']}</b></p>
+                  <hr style='border-top:1px solid #4a4a8a'>
+                  <p style='color:#c0c0dd'>{compat['desc']}</p>
+                  <p style='color:#e0e0ff'><b>{auto_cn('建議')}：</b>{compat['advice']}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -456,17 +450,17 @@ def _render_life_periods(result: LifetimeResult) -> None:
         wx_c = WUXING_COLORS.get(wx, "#888")
 
         border = "3px solid #FFD700" if is_dong else f"1px solid {wx_c}"
-        bg = "#fffbea" if is_dong else "#f8f9fa"
+        bg = "#2a2515" if is_dong else "#1e2140"
         dong_badge = " 🔴 **本命動爻**" if is_dong else ""
 
         st.markdown(
             f"""
             <div style='padding:12px;background:{bg};border-radius:8px;
-                        margin-bottom:10px;border-left:{border};color:#333'>
-              <p style='margin:0;color:#222'><b>第{pos}爻 {info['period']}</b>{dong_badge}</p>
-              <p style='margin:4px 0;color:#555'>{info['theme']}</p>
-              <p style='margin:4px 0;color:#777;font-size:0.85em'>{info['desc']}</p>
-              <p style='margin:0;font-size:0.85em;color:#444'>
+                        margin-bottom:10px;border-left:{border};color:#e0e0ff'>
+              <p style='margin:0;color:#f0f0ff'><b>第{pos}爻 {info['period']}</b>{dong_badge}</p>
+              <p style='margin:4px 0;color:#b0b0cc'>{info['theme']}</p>
+              <p style='margin:4px 0;color:#888;font-size:0.85em'>{info['desc']}</p>
+              <p style='margin:0;font-size:0.85em;color:#c0c0dd'>
                 納甲：<b>{najia}</b> 五行：<b style='color:{wx_c}'>{wx}</b>
                 六親：<b>{lq}</b>
               </p>
@@ -569,7 +563,7 @@ def render_streamlit(result: LifetimeResult) -> None:
     # 頁頭基本信息
     st.markdown(
         f"""
-        <div style='padding:10px 16px;background:#eef2ff;border-radius:8px;margin-bottom:8px;color:#333'>
+        <div style='padding:10px 16px;background:#1e2140;border-radius:8px;margin-bottom:8px;color:#e0e0ff'>
           <b>{auto_cn('出生時間')}：</b>
           {result.year}/{result.month:02d}/{result.day:02d}
           {result.hour:02d}:00　
