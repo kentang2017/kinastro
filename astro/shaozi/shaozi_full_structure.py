@@ -30,14 +30,14 @@ import json
 
 # ====================== 1. 匯入64鑰匙表格 ======================
 try:
-    from .shaozi_64_keys import (
+    from .data.shaozi_64_keys import (
         SHAOZI_64_KEYS,
         get_key_info,
         get_special_notes,
         get_key_name
     )
 except ImportError:
-    from shaozi_64_keys import (
+    from astro.shaozi.data.shaozi_64_keys import (
         SHAOZI_64_KEYS,
         get_key_info,
         get_special_notes,
@@ -127,8 +127,8 @@ class ShaoziShenShu:
     - 條文資料庫
     """
 
-    def __init__(self, data_dir: str = "data"):
-        self.data_dir = Path(data_dir)
+    def __init__(self, data_dir: Optional[str] = None):
+        self.data_dir = Path(data_dir) if data_dir else Path(__file__).parent / "data"
         self.tiaowen_db: Dict[str, str] = {}
         self.load_tiaowen()
 
@@ -279,4 +279,3 @@ if __name__ == "__main__":
         print(f"是否有貴子: {result['key']['has_貴子']}")
 
     print("\n測試完成！")
-```
