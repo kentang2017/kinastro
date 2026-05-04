@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+import pandas as pd
 import streamlit as st
 
 from astro.i18n import auto_cn, t
@@ -183,7 +184,6 @@ def _render_najia_table(layout: HexagramLayout) -> None:
             auto_cn("動"): dong,
         })
 
-    import pandas as pd
     df = pd.DataFrame(rows)
     st.dataframe(df, width="stretch")
 
@@ -478,7 +478,6 @@ def _render_whatif(result: LifetimeResult) -> None:
         except Exception:
             pass
 
-    import pandas as pd
     df = pd.DataFrame(rows)
     st.dataframe(df, width="stretch")
     st.caption(auto_cn("✅ 標示為您的實際出生時辰計算結果。"))
