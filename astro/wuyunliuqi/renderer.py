@@ -24,6 +24,7 @@ from .calculator import (
 from .constants import (
     QI_ATTRIBUTES, YUN_ATTRIBUTES, HEALTH_ADVICE,
     TONG_HUA_DESC, YUFA, WUXING,
+    ZHUYUN_BOUNDARIES_DAYS, ZHUQI_BOUNDARIES_DAYS,
 )
 
 
@@ -98,6 +99,9 @@ def _qi_badge(qi_name: str, extra_style: str = "") -> str:
 # 圓形盤式 SVG 渲染 (Circular Disc SVG)
 # ============================================================
 
+# 儒略年長（365.25天）用於圓盤角度計算
+_JULIAN_YEAR_DAYS = ZHUQI_BOUNDARIES_DAYS[-1]  # 365.25
+
 # 六氣配色（仿參考圖）
 _QI_DISC_COLOR = {
     "厥陰風木": "#66BB6A",
@@ -151,7 +155,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
 
     def d2deg(days: float) -> float:
         """距大寒天數 → SVG 角度（0°=右，順時針）"""
-        return (START_DEG + days / 365.25 * 360.0) % 360.0
+        return (START_DEG + days / _JULIAN_YEAR_DAYS * 360.0) % 360.0
 
     def polar(ang_deg: float, r: float):
         a = math.radians(ang_deg)
@@ -264,7 +268,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
     yr_start = date(result.year, 1, 20)
 
     # 主運邊界（5 條實線，含起始 0 天）
-    for days in [0.0, 73.05, 146.10, 219.15, 292.20]:
+    for days in ZHUYUN_BOUNDARIES_DAYS[:-1]:  # 排除終值 365.25
         ang = d2deg(days)
         x1, y1 = polar(ang, R_CTR)
         x2, y2 = polar(ang, R_QI2_O)
@@ -282,7 +286,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         )
 
     # 主氣邊界（5 條虛線，不含起始大寒）
-    for days in [60.875, 121.75, 182.625, 243.5, 304.375]:
+    for days in ZHUQI_BOUNDARIES_DAYS[1:-1]:  # 排除首值 0 和終值 365.25
         ang = d2deg(days)
         x1, y1 = polar(ang, R_YUN_O)
         x2, y2 = polar(ang, R_QI2_O)
@@ -321,16 +325,16 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
     )
 
     # ── 司天 / 在泉 小標籤 ────────────────────────────────────
-    # 三之氣（初 121.75 天 → 終 182.625 天）中點 ≈ 152.2 天 = 司天
-    st_ang = d2deg((121.75 + 182.625) / 2.0)
+    # 三之氣（ZHUQI[2]→ZHUQI[3]）中點 = 司天
+    st_ang = d2deg((ZHUQI_BOUNDARIES_DAYS[2] + ZHUQI_BOUNDARIES_DAYS[3]) / 2.0)
     sx, sy = polar(st_ang, R_QI2_O + 20)
     out.append(
         f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" '
         f'dominant-baseline="central" font-size="8" fill="#C62828" '
         f'font-weight="bold">司天</text>'
     )
-    # 終之氣（304.375 → 365.25）中點 ≈ 334.8 天 = 在泉
-    zq_ang = d2deg((304.375 + 365.25) / 2.0)
+    # 終之氣（ZHUQI[5]→ZHUQI[6]）中點 = 在泉
+    zq_ang = d2deg((ZHUQI_BOUNDARIES_DAYS[5] + ZHUQI_BOUNDARIES_DAYS[6]) / 2.0)
     zx, zy = polar(zq_ang, R_QI2_O + 20)
     out.append(
         f'<text x="{zx:.1f}" y="{zy:.1f}" text-anchor="middle" '
@@ -382,9 +386,9 @@ def _render_disc(result: WuYunLiuQiResult) -> None:
             st.metric("當前主氣", pos.current_zhuqi.qi_name)
         with c4:
             st.metric("當前客氣", pos.current_keqi.qi_name)
+        calc_dt = datetime(pos.year, pos.month, pos.day, pos.hour, pos.minute)
         st.caption(
-            f"計算時刻：{pos.year:04d}-{pos.month:02d}-{pos.day:02d} "
-            f"{pos.hour:02d}:{pos.minute:02d}　"
+            f"計算時刻：{calc_dt.strftime('%Y-%m-%d %H:%M')}　"
             f"主運進度：{pos.zhuyun_progress_pct:.1f}%　"
             f"主氣進度：{pos.zhuqi_progress_pct:.1f}%"
         )
