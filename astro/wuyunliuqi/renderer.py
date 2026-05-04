@@ -95,8 +95,342 @@ def _qi_badge(qi_name: str, extra_style: str = "") -> str:
 
 
 # ============================================================
+# 圓形盤式 SVG 渲染 (Circular Disc SVG)
+# ============================================================
+
+# 六氣配色（仿參考圖）
+_QI_DISC_COLOR = {
+    "厥陰風木": "#66BB6A",
+    "少陰君火": "#EF9A9A",
+    "少陽相火": "#EF5350",
+    "太陰濕土": "#E8C840",
+    "陽明燥金": "#B0BEC5",
+    "太陽寒水": "#78909C",
+}
+
+# 五行配色（仿參考圖主運環）
+_WX_DISC_COLOR = {
+    "木": "#81C784",
+    "火": "#E57373",
+    "土": "#FFD54F",
+    "金": "#CFD8DC",
+    "水": "#90A4AE",
+}
+
+
+def _build_disc_svg(result: WuYunLiuQiResult) -> str:
+    """
+    生成五運六氣圓形盤式 SVG 圖。
+
+    佈局（由內到外）：
+      • 中心圓：大運干音（太羽、少宮…）+ 中運標籤 + 干支年
+      • 主運環（5 格，每格 72°）：顯示主運 + 客運太少名稱
+      • 主氣環（6 格，每格 60°）：顯示主氣六名（厥陰風木…）
+      • 客氣環（6 格，與主氣同時間跨度）：顯示客氣六名
+      • 邊界刻度 & 日期標籤
+      • 當前位置藍色圓點標記
+
+    方位慣例：大寒（1/20）在圓盤頂部（12 點鐘方向），順時針行進。
+    """
+    import math
+    from datetime import date, timedelta
+
+    W = 540               # SVG 視窗尺寸（px）
+    cx = cy = W // 2      # 圓心
+
+    # 各環半徑
+    R_CTR = 56            # 中心圓
+    R_YUN_O = 112         # 主運環外緣
+    R_QI1_O = 178         # 主氣環外緣
+    R_QI2_O = 236         # 客氣環外緣
+    R_LBL1 = R_QI2_O + 14  # 主運邊界日期標籤半徑
+    R_LBL2 = R_QI2_O + 28  # 主氣邊界日期標籤半徑
+
+    # 大寒在頂部（SVG 270°），順時針 = 角度增加
+    START_DEG = 270.0
+
+    def d2deg(days: float) -> float:
+        """距大寒天數 → SVG 角度（0°=右，順時針）"""
+        return (START_DEG + days / 365.25 * 360.0) % 360.0
+
+    def polar(ang_deg: float, r: float):
+        a = math.radians(ang_deg)
+        return cx + r * math.cos(a), cy + r * math.sin(a)
+
+    def arc_path(ri: float, ro: float, a0: float, a1: float) -> str:
+        """環形扇形 SVG path（ri 內半徑，ro 外半徑，a0/a1 起止 SVG 角度）"""
+        span = (a1 - a0) % 360.0
+        if span < 0.01:
+            span = 360.0
+        large = 1 if span > 180 else 0
+        a_end = a0 + span
+        ox1, oy1 = polar(a0, ro)
+        ox2, oy2 = polar(a_end, ro)
+        ix1, iy1 = polar(a0, ri)
+        ix2, iy2 = polar(a_end, ri)
+        return (
+            f"M{ox1:.2f},{oy1:.2f}"
+            f" A{ro},{ro} 0 {large},1 {ox2:.2f},{oy2:.2f}"
+            f" L{ix2:.2f},{iy2:.2f}"
+            f" A{ri},{ri} 0 {large},0 {ix1:.2f},{iy1:.2f}Z"
+        )
+
+    def seg(ri, ro, a0, a1, fill, stroke="white", sw=1.5) -> str:
+        return (f'<path d="{arc_path(ri, ro, a0, a1)}" '
+                f'fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>')
+
+    def mid_ang(a0: float, a1: float) -> float:
+        span = (a1 - a0) % 360.0
+        if span < 0.01:
+            span = 360.0
+        return (a0 + span / 2.0) % 360.0
+
+    def rtxt(text: str, ang: float, r_mid: float,
+             fs: int = 11, color: str = "#111", bold: bool = False) -> str:
+        """
+        沿半徑放置中文文字（由外緣朝圓心閱讀）。
+
+        使用 SVG group 旋轉：將文字預先置於頂部（0,-r_mid），
+        再旋轉 (ang - 270)° 到目標扇形中線。
+        writing-mode=vertical-rl 使字元垂直堆疊。
+        """
+        rot = (ang - 270.0) % 360.0
+        fw = "bold" if bold else "normal"
+        return (
+            f'<g transform="translate({cx},{cy}) rotate({rot:.1f})">'
+            f'<text x="0" y="{-r_mid:.1f}" '
+            f'writing-mode="vertical-rl" text-anchor="middle" '
+            f'dominant-baseline="central" '
+            f'font-size="{fs}" fill="{color}" font-weight="{fw}">'
+            f'{text}</text></g>'
+        )
+
+    pos = result.current_position
+
+    # 當前日距大寒天數
+    cur_day: Optional[float] = None
+    if pos:
+        step0 = result.zhuyun_steps[pos.current_zhuyun_index]
+        cur_day = step0.start_day + pos.days_in_zhuyun
+
+    out: list = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {W} {W}" '
+        f'style="width:100%;max-width:560px;display:block;margin:auto;">',
+        f'<rect width="{W}" height="{W}" fill="white"/>',
+    ]
+
+    # ── 主運環（5 格）─────────────────────────────────────────
+    for i, step in enumerate(result.zhuyun_steps):
+        a0 = d2deg(step.start_day)
+        a1 = d2deg(step.end_day)
+        base = _WX_DISC_COLOR.get(step.wuxing, "#aaa")
+        is_cur = pos is not None and pos.current_zhuyun_index == i
+        fill = base if is_cur else base + "99"
+        out.append(seg(R_CTR, R_YUN_O, a0, a1, fill))
+        ma = mid_ang(a0, a1)
+        r_m = (R_CTR + R_YUN_O) / 2
+        # 主運太少名
+        out.append(rtxt(step.taishao, ma, r_m, 11, "#222", is_cur))
+        # 客運太少名（稍偏內側）
+        if i < len(result.keyun_steps):
+            out.append(rtxt(result.keyun_steps[i].taishao, ma, r_m - 22, 9, "#555"))
+
+    # ── 主氣環（6 格）─────────────────────────────────────────
+    for i, step in enumerate(result.zhuqi_steps):
+        a0 = d2deg(step.start_day)
+        a1 = d2deg(step.end_day)
+        base = _QI_DISC_COLOR.get(step.qi_name, "#ccc")
+        is_cur = pos is not None and pos.current_zhuqi_index == i
+        fill = base if is_cur else base + "88"
+        out.append(seg(R_YUN_O, R_QI1_O, a0, a1, fill))
+        ma = mid_ang(a0, a1)
+        r_m = (R_YUN_O + R_QI1_O) / 2
+        out.append(rtxt(step.qi_name, ma, r_m, 10, "#222", is_cur))
+
+    # ── 客氣環（6 格，與主氣同時間段）─────────────────────────
+    for i, step in enumerate(result.keqi_steps):
+        a0 = d2deg(result.zhuqi_steps[i].start_day)
+        a1 = d2deg(result.zhuqi_steps[i].end_day)
+        base = _QI_DISC_COLOR.get(step.qi_name, "#ccc")
+        is_cur = pos is not None and pos.current_keqi_index == i
+        fill = base if is_cur else base + "88"
+        out.append(seg(R_QI1_O, R_QI2_O, a0, a1, fill))
+        ma = mid_ang(a0, a1)
+        r_m = (R_QI1_O + R_QI2_O) / 2
+        out.append(rtxt(step.qi_name, ma, r_m, 10, "#222", is_cur))
+
+    # ── 邊界刻度與日期標籤 ────────────────────────────────────
+    yr_start = date(result.year, 1, 20)
+
+    # 主運邊界（5 條實線，含起始 0 天）
+    for days in [0.0, 73.05, 146.10, 219.15, 292.20]:
+        ang = d2deg(days)
+        x1, y1 = polar(ang, R_CTR)
+        x2, y2 = polar(ang, R_QI2_O)
+        out.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+            f'x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="white" stroke-width="2"/>'
+        )
+        bd = yr_start + timedelta(days=int(days))
+        lx, ly = polar(ang, R_LBL1)
+        out.append(
+            f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-size="9" fill="#333">'
+            f'{bd.strftime("%m/%d")}</text>'
+        )
+
+    # 主氣邊界（5 條虛線，不含起始大寒）
+    for days in [60.875, 121.75, 182.625, 243.5, 304.375]:
+        ang = d2deg(days)
+        x1, y1 = polar(ang, R_YUN_O)
+        x2, y2 = polar(ang, R_QI2_O)
+        out.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
+            f'x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="white" stroke-width="1.5" stroke-dasharray="4,2"/>'
+        )
+        bd = yr_start + timedelta(days=int(days))
+        lx, ly = polar(ang, R_LBL2)
+        out.append(
+            f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
+            f'dominant-baseline="central" font-size="9" fill="#555">'
+            f'{bd.strftime("%m/%d")}</text>'
+        )
+
+    # ── 中心圓（大運）────────────────────────────────────────
+    wx_clr = _WX_DISC_COLOR.get(result.dayun.wuxing, "#90A4AE")
+    out.append(
+        f'<circle cx="{cx}" cy="{cy}" r="{R_CTR}" '
+        f'fill="#D8E0E8" stroke="{wx_clr}" stroke-width="3"/>'
+    )
+    out.append(
+        f'<text x="{cx}" y="{cy - 12}" text-anchor="middle" '
+        f'dominant-baseline="central" font-size="20" font-weight="bold" '
+        f'fill="#1a1a2e">{_escape(result.dayun.taishao)}</text>'
+    )
+    out.append(
+        f'<text x="{cx}" y="{cy + 10}" text-anchor="middle" '
+        f'dominant-baseline="central" font-size="12" fill="#555">中運</text>'
+    )
+    out.append(
+        f'<text x="{cx}" y="{cy + 28}" text-anchor="middle" '
+        f'dominant-baseline="central" font-size="10" fill="#888">'
+        f'{_escape(result.ganzhi)}年</text>'
+    )
+
+    # ── 司天 / 在泉 小標籤 ────────────────────────────────────
+    # 三之氣（初 121.75 天 → 終 182.625 天）中點 ≈ 152.2 天 = 司天
+    st_ang = d2deg((121.75 + 182.625) / 2.0)
+    sx, sy = polar(st_ang, R_QI2_O + 20)
+    out.append(
+        f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" '
+        f'dominant-baseline="central" font-size="8" fill="#C62828" '
+        f'font-weight="bold">司天</text>'
+    )
+    # 終之氣（304.375 → 365.25）中點 ≈ 334.8 天 = 在泉
+    zq_ang = d2deg((304.375 + 365.25) / 2.0)
+    zx, zy = polar(zq_ang, R_QI2_O + 20)
+    out.append(
+        f'<text x="{zx:.1f}" y="{zy:.1f}" text-anchor="middle" '
+        f'dominant-baseline="central" font-size="8" fill="#1565C0" '
+        f'font-weight="bold">在泉</text>'
+    )
+
+    # ── 當前位置標記（藍色圓點）────────────────────────────────
+    if cur_day is not None:
+        cur_ang = d2deg(cur_day)
+        # 虛線從圓心穿越各環
+        lx0, ly0 = polar(cur_ang, R_CTR)
+        lx1, ly1 = polar(cur_ang, R_QI2_O)
+        out.append(
+            f'<line x1="{lx0:.1f}" y1="{ly0:.1f}" '
+            f'x2="{lx1:.1f}" y2="{ly1:.1f}" '
+            f'stroke="#1565C0" stroke-width="1.5" '
+            f'stroke-dasharray="4,3" opacity="0.65"/>'
+        )
+        # 圓點標記於主運環外緣
+        mx, my = polar(cur_ang, R_YUN_O)
+        out.append(
+            f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="7" '
+            f'fill="#1565C0" stroke="white" stroke-width="2"/>'
+        )
+
+    out.append('</svg>')
+    return ''.join(out)
+
+
+def _render_disc(result: WuYunLiuQiResult) -> None:
+    """
+    總圖頁籤：圓形盤式五運六氣圖
+
+    顯示同心環狀圓盤：
+      中心 → 主運環 → 主氣環 → 客氣環 → 日期標籤
+    藍色圓點標記當前時刻所處位置（每分鐘精確計算）。
+    """
+    pos = result.current_position
+
+    # 當前時刻資訊欄
+    if pos:
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("大運", result.dayun.taishao)
+        with c2:
+            st.metric("當前主運", pos.current_zhuyun.taishao)
+        with c3:
+            st.metric("當前主氣", pos.current_zhuqi.qi_name)
+        with c4:
+            st.metric("當前客氣", pos.current_keqi.qi_name)
+        st.caption(
+            f"計算時刻：{pos.year:04d}-{pos.month:02d}-{pos.day:02d} "
+            f"{pos.hour:02d}:{pos.minute:02d}　"
+            f"主運進度：{pos.zhuyun_progress_pct:.1f}%　"
+            f"主氣進度：{pos.zhuqi_progress_pct:.1f}%"
+        )
+
+    # 渲染 SVG 圓盤
+    svg_html = _build_disc_svg(result)
+    st.markdown(
+        f'<div style="display:flex;justify-content:center;padding:12px 0;">'
+        f'{svg_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+    # 圖例
+    st.markdown(
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;'
+        'margin-top:6px;font-size:0.82em;">',
+        unsafe_allow_html=True,
+    )
+    legend_items = [
+        ("厥陰風木", "#66BB6A"),
+        ("少陰君火", "#EF9A9A"),
+        ("少陽相火", "#EF5350"),
+        ("太陰濕土", "#E8C840"),
+        ("陽明燥金", "#B0BEC5"),
+        ("太陽寒水", "#78909C"),
+    ]
+    badges = "".join(
+        f'<span style="background:{c};color:#111;border-radius:4px;'
+        f'padding:2px 8px;">{n}</span>'
+        for n, c in legend_items
+    )
+    st.markdown(
+        f'<div style="display:flex;flex-wrap:wrap;gap:6px;'
+        f'justify-content:center;margin-top:4px;">{badges}</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "內環：主運（五步）＋ 客運　中環：主氣（六步）　外環：客氣（六步）　"
+        "●藍點：當前時刻位置（每分鐘精確計算）"
+    )
+
+
+# ============================================================
 # 主入口點
 # ============================================================
+
 
 def render_streamlit(result: WuYunLiuQiResult) -> None:
     """
@@ -109,7 +443,8 @@ def render_streamlit(result: WuYunLiuQiResult) -> None:
     _render_header(result)
 
     # ── 頁籤 ──────────────────────────────────────────────────
-    tab_overview, tab_wuyun, tab_liuqi, tab_jialin, tab_tonghua, tab_curve = st.tabs([
+    tab_disc, tab_overview, tab_wuyun, tab_liuqi, tab_jialin, tab_tonghua, tab_curve = st.tabs([
+        "🌐 總圖",
         "📋 年度概覽",
         "🌀 五運詳解",
         "🌊 六氣詳解",
@@ -117,6 +452,9 @@ def render_streamlit(result: WuYunLiuQiResult) -> None:
         "🔮 運氣同化",
         "📈 運氣曲線",
     ])
+
+    with tab_disc:
+        _render_disc(result)
 
     with tab_overview:
         _render_overview(result)
