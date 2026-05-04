@@ -3107,6 +3107,30 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "精密考刻分系統，需父母六親信息佐證",
         "en": "Precise Ke Fen system requiring parents and relatives information",
     },
+    "tab_shaozi": {
+        "zh": "🔯 邵子神數",
+        "en": "🔯 Shao Zi Shen Shu",
+    },
+    "shaozi_title": {
+        "zh": "邵子神數",
+        "en": "Shao Zi Shen Shu",
+    },
+    "shaozi_subtitle": {
+        "zh": "邵康節神數 · 洛陽派 · 洛書九宮起集",
+        "en": "Shaozi Divine Numbers · Luoyang School · Lo Shu Palace System",
+    },
+    "desc_shaozi": {
+        "zh": "🔯 **邵子神數** — 源自北宋邵雍（邵康節）易學，與鐵板神數同根。以洛書九宮配天干起集號（1–9），後天八卦配卦取月日時位（1–8），組成四位數條文號查詢命運詩讖。",
+        "en": "🔯 **Shao Zi Shen Shu** — From Shao Yong (Song Dynasty), same root as Tie Ban Shen Shu. Uses Lo Shu Nine Palaces to assign year stem collection (1–9), and Post-Heaven Bagua to derive month/day/hour digits (1–8), forming a 4-digit verse number.",
+    },
+    "spinner_shaozi": {
+        "zh": "計算邵子神數...",
+        "en": "Calculating Shao Zi Shen Shu...",
+    },
+    "sys_hint_shaozi": {
+        "zh": "邵康節洛陽派，洛書九宮配天干，四位數條文系統",
+        "en": "Luoyang school, Lo Shu Nine Palaces, 4-digit verse system",
+    },
     "tieban_ming_palace": {
         "zh": "命宮",
         "en": "Life Palace",
