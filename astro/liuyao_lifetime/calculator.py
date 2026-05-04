@@ -457,6 +457,7 @@ def _decode_single_gua(gua_code: str, day_gz: str) -> Dict[str, Any]:
                     "伏神所在爻": lq[fu_num],
                     "伏神六親": fu_name,
                     "伏神爻": fuyao1,
+                    "伏神天干地支五行": fu_t[fu_num] + fu_d[fu_num] + fu_w[fu_num],
                     "伏神爻位": fu_num,  # 0-5，對應初爻到上爻
                 }
             except (ValueError, IndexError):

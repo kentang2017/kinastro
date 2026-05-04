@@ -147,17 +147,16 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
         fuyao_map: Dict[int, str] = {}
         if isinstance(layout.fuyao, dict):
             fp = layout.fuyao.get("伏神爻位")
-            fd = layout.fuyao.get("伏神爻", "")
-            lq_abbr = _LIUQIN_ABBR.get(layout.fuyao.get("伏神六親", ""), "")
-            if fp is not None and fd:
-                # fd = "六親+天干+地支+五行"，轉成縮寫格式
-                fuyao_map[fp] = lq_abbr + fd[len(layout.fuyao.get("伏神六親", "")):]
+            lq_abbr_fu = _LIUQIN_ABBR.get(layout.fuyao.get("伏神六親", ""), "")
+            fu_tail = layout.fuyao.get("伏神天干地支五行", "")
+            if fp is not None and fu_tail:
+                fuyao_map[fp] = lq_abbr_fu + fu_tail
 
         # 身爻對應的 position (1-6)
         shen_pos = 0
         if layout.shen_str:
             for y in layout.yao_list:
-                if y.najia in layout.shen_str and layout.shen_str:
+                if layout.shen_str and y.najia in layout.shen_str:
                     shen_pos = y.position
                     break
 
