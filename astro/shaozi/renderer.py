@@ -319,22 +319,22 @@ def render_shaozi_64key_section(full_result: dict) -> None:
 
     if is_en:
         calc_rows = [
-            {"Item": "Stem Sum (天干總數)",   "Value": tg_total},
-            {"Item": "Branch Sum (地支總數)", "Value": dz_total},
-            {"Item": "He-Luo Number (河洛數)", "Value": heluo},
-            {"Item": "Heaven Gua (天數成卦)", "Value": tian_gua},
-            {"Item": "Earth Gua (地數成卦)",  "Value": di_gua_val},
-            {"Item": "Base Number (基礎數)",   "Value": base_number},
+            {"Item": "Stem Sum (天干總數)",   "Value": str(tg_total)},
+            {"Item": "Branch Sum (地支總數)", "Value": str(dz_total)},
+            {"Item": "He-Luo Number (河洛數)", "Value": str(heluo)},
+            {"Item": "Heaven Gua (天數成卦)", "Value": str(tian_gua)},
+            {"Item": "Earth Gua (地數成卦)",  "Value": str(di_gua_val)},
+            {"Item": "Base Number (基礎數)",   "Value": str(base_number)},
             {"Item": "Gua (卦象)",             "Value": gua},
         ]
     else:
         calc_rows = [
-            {auto_cn("項目"): auto_cn("天干總數"),  auto_cn("數值"): tg_total},
-            {auto_cn("項目"): auto_cn("地支總數"),  auto_cn("數值"): dz_total},
-            {auto_cn("項目"): auto_cn("河洛數"),    auto_cn("數值"): heluo},
-            {auto_cn("項目"): auto_cn("天數成卦"),  auto_cn("數值"): tian_gua},
-            {auto_cn("項目"): auto_cn("地數成卦"),  auto_cn("數值"): di_gua_val},
-            {auto_cn("項目"): auto_cn("基礎數"),    auto_cn("數值"): base_number},
+            {auto_cn("項目"): auto_cn("天干總數"),  auto_cn("數值"): str(tg_total)},
+            {auto_cn("項目"): auto_cn("地支總數"),  auto_cn("數值"): str(dz_total)},
+            {auto_cn("項目"): auto_cn("河洛數"),    auto_cn("數值"): str(heluo)},
+            {auto_cn("項目"): auto_cn("天數成卦"),  auto_cn("數值"): str(tian_gua)},
+            {auto_cn("項目"): auto_cn("地數成卦"),  auto_cn("數值"): str(di_gua_val)},
+            {auto_cn("項目"): auto_cn("基礎數"),    auto_cn("數值"): str(base_number)},
             {auto_cn("項目"): auto_cn("卦象"),      auto_cn("數值"): auto_cn(gua)},
         ]
     st.dataframe(calc_rows, width="stretch", hide_index=True)
