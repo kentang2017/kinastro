@@ -3086,7 +3086,7 @@ elif _selected_system == "tab_tieban":
 
 # --- 邵子神數 ---
 elif _selected_system == "tab_shaozi":
-    _sz_tab_main, _sz_tab_64key, _sz_tab_tiaowen = st.tabs([
+    _sz_tab_main, _sz_tab_64keys, _sz_tab_tiaowen = st.tabs([
         auto_cn("🔯 命盤"), auto_cn("🗝️ 64鑰匙"), auto_cn("📚 條文庫"),
     ])
     with _sz_tab_main:
@@ -3127,7 +3127,7 @@ elif _selected_system == "tab_shaozi":
             from astro.shaozi.renderer import render_shaozi_placeholder
             render_shaozi_placeholder()
 
-    with _sz_tab_64key:
+    with _sz_tab_64keys:
         if _is_calculated:
             try:
                 from astro.shaozi import ShaoziShenShu as _SzMain, ShaoziBirthData
