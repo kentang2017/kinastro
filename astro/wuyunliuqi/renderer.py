@@ -179,7 +179,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
             f" A{ri},{ri} 0 {large},0 {ix1:.2f},{iy1:.2f}Z"
         )
 
-    def seg(ri, ro, a0, a1, fill, stroke="white", sw=1.5) -> str:
+    def seg(ri, ro, a0, a1, fill, stroke="#ffffff55", sw=1.5) -> str:
         return (f'<path d="{arc_path(ri, ro, a0, a1)}" '
                 f'fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>')
 
@@ -190,7 +190,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         return (a0 + span / 2.0) % 360.0
 
     def rtxt(text: str, ang: float, r_mid: float,
-             fs: int = 11, color: str = "#111", bold: bool = False) -> str:
+             fs: int = 11, color: str = "#E8DCC8", bold: bool = False) -> str:
         """
         沿半徑放置中文文字（由外緣朝圓心閱讀）。
 
@@ -221,7 +221,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="0 0 {W} {W}" '
         f'style="width:100%;max-width:560px;display:block;margin:auto;">',
-        f'<rect width="{W}" height="{W}" fill="white"/>',
+        f'<rect width="{W}" height="{W}" fill="transparent"/>',
     ]
 
     # ── 主運環（5 格）─────────────────────────────────────────
@@ -235,10 +235,10 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         ma = mid_ang(a0, a1)
         r_m = (R_CTR + R_YUN_O) / 2
         # 主運太少名
-        out.append(rtxt(step.taishao, ma, r_m, 11, "#222", is_cur))
+        out.append(rtxt(step.taishao, ma, r_m, 11, "#F0E6C8", is_cur))
         # 客運太少名（稍偏內側）
         if i < len(result.keyun_steps):
-            out.append(rtxt(result.keyun_steps[i].taishao, ma, r_m - 22, 9, "#555"))
+            out.append(rtxt(result.keyun_steps[i].taishao, ma, r_m - 22, 9, "#8FAABB"))
 
     # ── 主氣環（6 格）─────────────────────────────────────────
     for i, step in enumerate(result.zhuqi_steps):
@@ -250,7 +250,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         out.append(seg(R_YUN_O, R_QI1_O, a0, a1, fill))
         ma = mid_ang(a0, a1)
         r_m = (R_YUN_O + R_QI1_O) / 2
-        out.append(rtxt(step.qi_name, ma, r_m, 10, "#222", is_cur))
+        out.append(rtxt(step.qi_name, ma, r_m, 10, "#F0E6C8", is_cur))
 
     # ── 客氣環（6 格，與主氣同時間段）─────────────────────────
     for i, step in enumerate(result.keqi_steps):
@@ -262,7 +262,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         out.append(seg(R_QI1_O, R_QI2_O, a0, a1, fill))
         ma = mid_ang(a0, a1)
         r_m = (R_QI1_O + R_QI2_O) / 2
-        out.append(rtxt(step.qi_name, ma, r_m, 10, "#222", is_cur))
+        out.append(rtxt(step.qi_name, ma, r_m, 10, "#F0E6C8", is_cur))
 
     # ── 邊界刻度與日期標籤 ────────────────────────────────────
     yr_start = date(result.year, 1, 20)
@@ -275,13 +275,13 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         out.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
             f'x2="{x2:.1f}" y2="{y2:.1f}" '
-            f'stroke="white" stroke-width="2"/>'
+            f'stroke="#ffffff66" stroke-width="2"/>'
         )
         bd = yr_start + timedelta(days=int(days))
         lx, ly = polar(ang, R_LBL1)
         out.append(
             f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
-            f'dominant-baseline="central" font-size="9" fill="#333">'
+            f'dominant-baseline="central" font-size="9" fill="#B0C4D4">'
             f'{bd.strftime("%m/%d")}</text>'
         )
 
@@ -293,13 +293,13 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         out.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" '
             f'x2="{x2:.1f}" y2="{y2:.1f}" '
-            f'stroke="white" stroke-width="1.5" stroke-dasharray="4,2"/>'
+            f'stroke="#ffffff44" stroke-width="1.5" stroke-dasharray="4,2"/>'
         )
         bd = yr_start + timedelta(days=int(days))
         lx, ly = polar(ang, R_LBL2)
         out.append(
             f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
-            f'dominant-baseline="central" font-size="9" fill="#555">'
+            f'dominant-baseline="central" font-size="9" fill="#8FAABB">'
             f'{bd.strftime("%m/%d")}</text>'
         )
 
@@ -307,20 +307,20 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
     wx_clr = _WX_DISC_COLOR.get(result.dayun.wuxing, "#90A4AE")
     out.append(
         f'<circle cx="{cx}" cy="{cy}" r="{R_CTR}" '
-        f'fill="#D8E0E8" stroke="{wx_clr}" stroke-width="3"/>'
+        f'fill="#0D1E36" stroke="{wx_clr}" stroke-width="3"/>'
     )
     out.append(
         f'<text x="{cx}" y="{cy - 12}" text-anchor="middle" '
         f'dominant-baseline="central" font-size="20" font-weight="bold" '
-        f'fill="#1a1a2e">{_escape(result.dayun.taishao)}</text>'
+        f'fill="#F5D06A">{_escape(result.dayun.taishao)}</text>'
     )
     out.append(
         f'<text x="{cx}" y="{cy + 10}" text-anchor="middle" '
-        f'dominant-baseline="central" font-size="12" fill="#555">中運</text>'
+        f'dominant-baseline="central" font-size="12" fill="#8FAABB">中運</text>'
     )
     out.append(
         f'<text x="{cx}" y="{cy + 28}" text-anchor="middle" '
-        f'dominant-baseline="central" font-size="10" fill="#888">'
+        f'dominant-baseline="central" font-size="10" fill="#7A8BA0">'
         f'{_escape(result.ganzhi)}年</text>'
     )
 
@@ -330,7 +330,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
     sx, sy = polar(st_ang, R_QI2_O + 20)
     out.append(
         f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" '
-        f'dominant-baseline="central" font-size="8" fill="#C62828" '
+        f'dominant-baseline="central" font-size="8" fill="#EF5350" '
         f'font-weight="bold">司天</text>'
     )
     # 終之氣（ZHUQI[5]→ZHUQI[6]）中點 = 在泉
@@ -338,7 +338,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
     zx, zy = polar(zq_ang, R_QI2_O + 20)
     out.append(
         f'<text x="{zx:.1f}" y="{zy:.1f}" text-anchor="middle" '
-        f'dominant-baseline="central" font-size="8" fill="#1565C0" '
+        f'dominant-baseline="central" font-size="8" fill="#64B5F6" '
         f'font-weight="bold">在泉</text>'
     )
 
@@ -358,7 +358,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         mx, my = polar(cur_ang, R_YUN_O)
         out.append(
             f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="7" '
-            f'fill="#1565C0" stroke="white" stroke-width="2"/>'
+            f'fill="#4A9EE0" stroke="#0A1628" stroke-width="2"/>'
         )
 
     out.append('</svg>')
@@ -416,7 +416,7 @@ def _render_disc(result: WuYunLiuQiResult) -> None:
         ("太陽寒水", "#78909C"),
     ]
     badges = "".join(
-        f'<span style="background:{c};color:#111;border-radius:4px;'
+        f'<span style="background:{c};color:#E8E0D0;border-radius:4px;'
         f'padding:2px 8px;">{n}</span>'
         for n, c in legend_items
     )
