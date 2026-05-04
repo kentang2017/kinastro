@@ -14,6 +14,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+import pandas as pd
 import streamlit as st
 
 from .calculator import (
@@ -330,7 +331,6 @@ def _render_wuyun(result: WuYunLiuQiResult) -> None:
             "當前": "◀ 當前" if is_cur else "",
         })
 
-    import pandas as pd
     df_zhuyun = pd.DataFrame(rows)
     st.dataframe(df_zhuyun, width="stretch")
 
@@ -388,7 +388,6 @@ def _render_liuqi(result: WuYunLiuQiResult) -> None:
 
     # 主氣六步
     st.subheader("主氣六步（年年固定，厥陰→少陰→少陽→太陰→陽明→太陽）")
-    import pandas as pd
     rows_zhu = []
     for i, step in enumerate(result.zhuqi_steps):
         is_cur = pos and pos.current_zhuqi_index == i
@@ -438,7 +437,6 @@ def _render_jialin(result: WuYunLiuQiResult) -> None:
         "｜不和：客克主（較差）｜逆：主克客（最差）"
     )
 
-    import pandas as pd
     rows = []
     for i, jl in enumerate(result.jialin_steps):
         is_cur = pos and pos.current_zhuqi_index == i
@@ -578,7 +576,6 @@ def _render_curve_ui(result: WuYunLiuQiResult) -> None:
             st.error("無法生成曲線，請檢查時間範圍。")
             return
 
-        import pandas as pd
         df = pd.DataFrame(series)
         df["時間"] = df["datetime"].dt.strftime("%Y-%m-%d %H:%M")
 
