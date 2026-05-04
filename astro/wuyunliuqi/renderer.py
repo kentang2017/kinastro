@@ -121,6 +121,9 @@ _WX_DISC_COLOR = {
     "水": "#90A4AE",
 }
 
+_DISC_STROKE     = "#ffffff55"  # 環間分隔線（半透明白，適配深色底）
+_DISC_TEXT_MAIN  = "#E8DCC8"    # 圓盤主文字（米白，深色底用）
+
 
 def _build_disc_svg(result: WuYunLiuQiResult) -> str:
     """
@@ -179,7 +182,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
             f" A{ri},{ri} 0 {large},0 {ix1:.2f},{iy1:.2f}Z"
         )
 
-    def seg(ri, ro, a0, a1, fill, stroke="#ffffff55", sw=1.5) -> str:
+    def seg(ri, ro, a0, a1, fill, stroke=_DISC_STROKE, sw=1.5) -> str:
         return (f'<path d="{arc_path(ri, ro, a0, a1)}" '
                 f'fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>')
 
@@ -190,7 +193,7 @@ def _build_disc_svg(result: WuYunLiuQiResult) -> str:
         return (a0 + span / 2.0) % 360.0
 
     def rtxt(text: str, ang: float, r_mid: float,
-             fs: int = 11, color: str = "#E8DCC8", bold: bool = False) -> str:
+             fs: int = 11, color: str = _DISC_TEXT_MAIN, bold: bool = False) -> str:
         """
         沿半徑放置中文文字（由外緣朝圓心閱讀）。
 
