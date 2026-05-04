@@ -3131,7 +3131,7 @@ elif _selected_system == "tab_shaozi":
         if _is_calculated:
             try:
                 from astro.shaozi import ShaoziShenShu as _SzMain, ShaoziBirthData
-                from astro.shaozi.shaozi_full_structure import ShaoziShenShu as _SzFull
+                from astro.shaozi.shaozi_full_structure import ShaoziFullShenShu as _SzFull
                 from astro.shaozi.renderer import render_shaozi_64key_section
 
                 _p = st.session_state["_calc_params"]
