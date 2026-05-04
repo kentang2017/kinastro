@@ -135,16 +135,17 @@ def _render_hexagram_board(layout: HexagramLayout, title: str = "") -> None:
             unsafe_allow_html=True,
         )
         lines_html = []
+        _SYM_SPAN = "style='display:inline-block;width:1.4em;text-align:center'"
         for yao in reversed(layout.yao_list):
             line = _yao_line_base(yao.code)
             color = "#FFD700" if yao.is_dong else "#e0e0ff"
             sy_text = yao.shiying or ""
             dong_symbol = _yao_dong_symbol(yao.code)
-            dong_indicator = f"<span style='color:#FF6B6B;margin-left:4px'>🔴</span>" if yao.is_dong else "<span style='display:inline-block;width:1.4em'></span>"
-            dong_sym_span = (
-                f"<span style='display:inline-block;width:1.2em;text-align:center'>{dong_symbol}</span>"
-                if dong_symbol else
-                "<span style='display:inline-block;width:1.2em'></span>"
+            dong_sym_span = f"<span {_SYM_SPAN}>{dong_symbol}</span>"
+            dong_indicator = (
+                f"<span {_SYM_SPAN} style='color:#FF6B6B'>🔴</span>"
+                if yao.is_dong else
+                f"<span {_SYM_SPAN}></span>"
             )
             lines_html.append(
                 f"<div style='display:flex;align-items:center;color:{color};line-height:2.2em'>"
