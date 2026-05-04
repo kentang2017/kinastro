@@ -225,10 +225,10 @@ def _render_ganzhi_table(result: "ShaoziResult", is_en: bool) -> None:
 
 def render_shaozi_tiaowen_browser() -> None:
     """邵子神數完整條文庫瀏覽"""
-    from astro.shaozi.calculator import ShaozTiaowenDatabase
+    from astro.shaozi.calculator import ShaoziTiaowenDatabase
     from astro.shaozi.constants import COLLECTIONS
 
-    db = ShaozTiaowenDatabase.get_instance()
+    db = ShaoziTiaowenDatabase.get_instance()
     c = _COLORS
 
     st.markdown(f"**{auto_cn('📚 邵子神數條文庫')}**")

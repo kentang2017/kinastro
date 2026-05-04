@@ -107,16 +107,16 @@ class ShaoziResult:
 # 條文資料庫（延遲載入單例）
 # ============================================================================
 
-class ShaozTiaowenDatabase:
+class ShaoziTiaowenDatabase:
     """邵子神數條文資料庫（延遲載入，CSV 格式）"""
 
-    _instance: Optional["ShaozTiaowenDatabase"] = None
+    _instance: Optional["ShaoziTiaowenDatabase"] = None
     _data: Dict[str, Dict] = {}
 
     @classmethod
-    def get_instance(cls) -> "ShaozTiaowenDatabase":
+    def get_instance(cls) -> "ShaoziTiaowenDatabase":
         if cls._instance is None:
-            cls._instance = ShaozTiaowenDatabase()
+            cls._instance = ShaoziTiaowenDatabase()
         return cls._instance
 
     def __init__(self) -> None:
@@ -253,7 +253,7 @@ class ShaoziShenShu:
     """
 
     def __init__(self) -> None:
-        self._db = ShaozTiaowenDatabase.get_instance()
+        self._db = ShaoziTiaowenDatabase.get_instance()
 
     # ── 起數函式 ─────────────────────────────────────────────────────────────
 

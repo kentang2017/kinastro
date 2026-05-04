@@ -28,7 +28,7 @@ from astro.shaozi.calculator import (
     ShaoziShenShu,
     ShaoziBirthData,
     ShaoziResult,
-    ShaozTiaowenDatabase,
+    ShaoziTiaowenDatabase,
     calculate_ganzhi_from_datetime,
 )
 from astro.shaozi.constants import (
@@ -49,7 +49,7 @@ __all__ = [
     "ShaoziShenShu",
     "ShaoziBirthData",
     "ShaoziResult",
-    "ShaozTiaowenDatabase",
+    "ShaoziTiaowenDatabase",
     "calculate_ganzhi_from_datetime",
     "HEAVENLY_STEMS",
     "EARTHLY_BRANCHES",
