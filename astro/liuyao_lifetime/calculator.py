@@ -289,6 +289,46 @@ def _chin_iter(start: str) -> itertools.cycle:
     return itertools.cycle(_new_list(_CHIN_LIST, start))
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 十二長生查找表
+# ──────────────────────────────────────────────────────────────────────────────
+
+_CS_STARTS: Dict[str, str] = {
+    "甲": "亥", "乙": "亥",
+    "丙": "寅", "丁": "寅",
+    "戊": "寅", "己": "寅",
+    "庚": "巳", "辛": "巳",
+    "壬": "申", "癸": "申",
+}
+
+_YANG_CS_STATES: List[str] = ["長生", "沐浴", "冠帶", "臨官", "帝旺", "衰", "病", "死", "墓", "絕", "胎", "養"]
+_YIN_CS_STATES: List[str]  = ["死",   "病",   "衰",   "帝旺", "臨官", "冠帶", "沐浴", "長生", "養", "胎", "絕", "墓"]
+
+_YIN_STEMS: set = {"乙", "丁", "己", "辛", "癸"}
+
+
+def _get_changsheng(tiangan: str, dizhi: str) -> str:
+    """計算天干在某地支的十二長生狀態。
+
+    參數：
+        tiangan (str): 天干，如「辛」。
+        dizhi   (str): 地支，如「卯」。
+
+    回傳：
+        str: 長生狀態，如「帝旺」；若無法計算則回傳空字串。
+    """
+    start = _CS_STARTS.get(tiangan)
+    if start is None or dizhi not in _DIZHI:
+        return ""
+    states = _YIN_CS_STATES if tiangan in _YIN_STEMS else _YANG_CS_STATES
+    rotated = _new_list(_DIZHI, start)
+    try:
+        pos = rotated.index(dizhi)
+    except ValueError:
+        return ""
+    return states[pos] if pos < len(states) else ""
+
+
 def _get_shiying(gua_code: str) -> List[str]:
     """取得本卦世應爻位置列表。
 
@@ -412,12 +452,12 @@ def _decode_single_gua(gua_code: str, day_gz: str) -> Dict[str, Any]:
             fu_w = fu_gua.get("五行", [])
             try:
                 fu_num = fu_lq.index(fu_name)
-                fuyao_in_main = [str(q == fu_name) for q in lq].index("True")
                 fuyao1 = fu_lq[fu_num] + fu_t[fu_num] + fu_d[fu_num] + fu_w[fu_num]
                 fu_yao = {
-                    "伏神所在爻": lq[fuyao_in_main],
+                    "伏神所在爻": lq[fu_num],
                     "伏神六親": fu_name,
                     "伏神爻": fuyao1,
+                    "伏神爻位": fu_num,  # 0-5，對應初爻到上爻
                 }
             except (ValueError, IndexError):
                 fu_yao = ""
@@ -492,6 +532,7 @@ class YaoInfo:
     liushen: str         # 六神
     najia: str           # 納甲（天干+地支）
     xiu: str             # 二十八宿
+    changsheng: str      # 十二長生狀態（帝旺/病/墓…）
     shiying: str         # 世/應/""
     is_dong: bool        # 是否為動爻
     symbol: str          # 爻象符號
@@ -514,6 +555,8 @@ class HexagramLayout:
     guaci: str              # 卦辭
     tuanci: str             # 彖辭
     dong_yao_text: str      # 動爻爻辭
+    shen_str: str = ""      # 身爻干支描述
+    fuyao: Any = None       # 伏神資料（dict 或 None）
     biangua_layout: Optional["HexagramLayout"] = None  # 之卦排盤
 
 
@@ -788,16 +831,19 @@ class LifetimeHexagramCalculator:
             code_ch = gua_code[i]
             is_dong = (pos == dong_yao)
             yao_text = descr.get(pos, "")
+            tg = t_all[i] if i < len(t_all) else ""
+            dz = d_all[i] if i < len(d_all) else ""
             yao_list.append(YaoInfo(
                 position=pos,
                 code=code_ch,
-                tiangan=t_all[i] if i < len(t_all) else "",
-                dizhi=d_all[i] if i < len(d_all) else "",
+                tiangan=tg,
+                dizhi=dz,
                 wuxing=w_all[i] if i < len(w_all) else "",
                 liuqin=lq_all[i] if i < len(lq_all) else "",
                 liushen=ls_all[i] if i < len(ls_all) else "",
                 najia=nj_all[i] if i < len(nj_all) else "",
                 xiu=xiu_all[i] if i < len(xiu_all) else "",
+                changsheng=_get_changsheng(tg, dz),
                 shiying=sy_all[i] if i < len(sy_all) else "",
                 is_dong=is_dong,
                 symbol=YAO_SYMBOLS.get(code_ch, "—"),
@@ -827,6 +873,7 @@ class LifetimeHexagramCalculator:
                 liushen="",
                 najia=bian_nj[i] if i < len(bian_nj) else "",
                 xiu="",
+                changsheng="",
                 shiying="",
                 is_dong=(pos == dong_yao),
                 symbol=YAO_SYMBOLS.get(code_ch, "—"),
@@ -862,6 +909,8 @@ class LifetimeHexagramCalculator:
             guaci=guaci,
             tuanci=tuanci,
             dong_yao_text=dong_text,
+            shen_str=decoded.get("身爻", ""),
+            fuyao=decoded.get("伏神") or None,
             biangua_layout=biangua_layout,
         )
 
