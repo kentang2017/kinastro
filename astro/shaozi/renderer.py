@@ -286,6 +286,163 @@ def render_shaozi_tiaowen_browser() -> None:
 
 
 # ============================================================================
+# 64鑰匙進階細調（shaozi_full_structure 整合）
+# ============================================================================
+
+def render_shaozi_64key_section(full_result: dict) -> None:
+    """
+    渲染邵子神數 64鑰匙進階細調結果。
+
+    Parameters
+    ----------
+    full_result : dict
+        由 astro.shaozi.shaozi_full_structure.ShaoziShenShu.cast_plate() 回傳的字典，
+        包含 base_number、calculation、key 等欄位。
+    """
+    c = _COLORS
+    lang = get_lang()
+    is_en = (lang == "en")
+
+    base_number = full_result.get("base_number", "—")
+    gua = full_result.get("gua", "")
+    calc = full_result.get("calculation", {})
+    key_info = full_result.get("key")
+
+    # ── 計算過程摘要 ──────────────────────────────────────────────────────────
+    st.markdown(f"**{auto_cn('🧮 64鑰匙起數過程')}**" if not is_en else "**🧮 64-Key Calculation**")
+
+    tg_total   = calc.get("天干總數", "—")
+    dz_total   = calc.get("地支總數", "—")
+    heluo      = calc.get("河洛數", "—")
+    tian_gua   = calc.get("天數成卦", "—")
+    di_gua_val = calc.get("地數成卦", "—")
+
+    if is_en:
+        calc_rows = [
+            {"Item": "Stem Sum (天干總數)",   "Value": tg_total},
+            {"Item": "Branch Sum (地支總數)", "Value": dz_total},
+            {"Item": "He-Luo Number (河洛數)", "Value": heluo},
+            {"Item": "Heaven Gua (天數成卦)", "Value": tian_gua},
+            {"Item": "Earth Gua (地數成卦)",  "Value": di_gua_val},
+            {"Item": "Base Number (基礎數)",   "Value": base_number},
+            {"Item": "Gua (卦象)",             "Value": gua},
+        ]
+    else:
+        calc_rows = [
+            {auto_cn("項目"): auto_cn("天干總數"),  auto_cn("數值"): tg_total},
+            {auto_cn("項目"): auto_cn("地支總數"),  auto_cn("數值"): dz_total},
+            {auto_cn("項目"): auto_cn("河洛數"),    auto_cn("數值"): heluo},
+            {auto_cn("項目"): auto_cn("天數成卦"),  auto_cn("數值"): tian_gua},
+            {auto_cn("項目"): auto_cn("地數成卦"),  auto_cn("數值"): di_gua_val},
+            {auto_cn("項目"): auto_cn("基礎數"),    auto_cn("數值"): base_number},
+            {auto_cn("項目"): auto_cn("卦象"),      auto_cn("數值"): auto_cn(gua)},
+        ]
+    st.dataframe(calc_rows, width="stretch", hide_index=True)
+
+    # ── 64鑰匙詳細資訊 ────────────────────────────────────────────────────────
+    if not key_info:
+        st.info(auto_cn(f"第 {base_number} 數暫無64鑰匙資料") if not is_en else f"No 64-Key data for number {base_number}")
+        return
+
+    key_name   = key_info.get("名稱", "")
+    specials   = key_info.get("特殊事項", [])
+    shichen_info = key_info.get("時辰資訊", "—")
+    yunxian_info = key_info.get("運限資訊", "—")
+
+    st.markdown(
+        f"""
+<div style="
+    background:{c['bg_card']};
+    border:1px solid {c['bg_card_border']};
+    border-radius:14px;
+    padding:16px 20px 14px 20px;
+    margin:12px 0;
+">
+  <div style="font-size:11px;color:{c['text_dim']};margin-bottom:6px;">
+    {'64-Key Number' if is_en else auto_cn('64鑰匙')} · {'No.' if is_en else '第'} {base_number} {'Key' if is_en else '數'}
+  </div>
+  <div style="font-size:17px;font-weight:700;color:{c['accent_light']};margin-bottom:10px;">
+    {auto_cn(key_name)}
+  </div>
+  {'<div style="font-size:12px;color:' + c['text_dim'] + ';margin-bottom:6px;">' + ('Special Notes' if is_en else auto_cn('特殊事項')) + '</div>' if specials else ''}
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+    {''.join(
+        f'<span style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.35);'
+        f'border-radius:6px;padding:3px 10px;font-size:12px;color:{c["gold"]};">'
+        f'{auto_cn(s)}</span>'
+        for s in specials
+    )}
+  </div>
+</div>""",
+        unsafe_allow_html=True,
+    )
+
+    # ── 快速特殊事項指標 ──────────────────────────────────────────────────────
+    flag_keys = [
+        ("克妻", "Ke Qi"),
+        ("過房", "Guo Fang"),
+        ("填房", "Tian Fang"),
+        ("貴子", "Gui Zi"),
+        ("孤",   "Gu"),
+    ]
+    # build flag display
+    flag_html_parts = []
+    for (cn_label, en_label) in flag_keys:
+        val = key_info.get(f"has_{cn_label}", False)
+        if val:
+            flag_html_parts.append(
+                f'<span style="background:rgba(91,212,160,0.12);border:1px solid rgba(91,212,160,0.35);'
+                f'border-radius:6px;padding:3px 10px;font-size:12px;color:{c["green"]};">✓ '
+                f'{en_label if is_en else auto_cn(cn_label)}</span>'
+            )
+        else:
+            flag_html_parts.append(
+                f'<span style="background:rgba(144,144,176,0.08);border:1px solid rgba(144,144,176,0.2);'
+                f'border-radius:6px;padding:3px 10px;font-size:12px;color:{c["text_dim"]};">✗ '
+                f'{en_label if is_en else auto_cn(cn_label)}</span>'
+            )
+
+    if flag_html_parts:
+        indicator_title = "Key Indicators" if is_en else auto_cn("命格指標")
+        st.markdown(f"**{indicator_title}**")
+        st.markdown(
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">'
+            + "".join(flag_html_parts)
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+
+    # ── 時辰與運限資訊 ────────────────────────────────────────────────────────
+    if shichen_info and shichen_info not in ("—", "無資料", "查無此類別"):
+        shichen_title = "Hour Info" if is_en else auto_cn("時辰資訊")
+        st.markdown(f"**{shichen_title}**")
+        if isinstance(shichen_info, dict):
+            shichen_rows = [{auto_cn("項目"): auto_cn(k), auto_cn("內容"): auto_cn(str(v))} for k, v in shichen_info.items()]
+            st.dataframe(shichen_rows, width="stretch", hide_index=True)
+        else:
+            st.markdown(
+                f'<div style="background:rgba(124,92,191,0.06);border-left:3px solid {c["accent"]}; '
+                f'border-radius:0 8px 8px 0;padding:8px 14px;font-size:13px;color:{c["text_verse"]};">'
+                f'{auto_cn(str(shichen_info))}</div>',
+                unsafe_allow_html=True,
+            )
+
+    if yunxian_info and yunxian_info not in ("—", "無資料", "查無此類別"):
+        yunxian_title = "Yun Xian (Major/Annual Cycles)" if is_en else auto_cn("運限資訊")
+        st.markdown(f"**{yunxian_title}**")
+        if isinstance(yunxian_info, dict):
+            yunxian_rows = [{auto_cn("干支"): auto_cn(k), auto_cn("運勢"): auto_cn(str(v))} for k, v in yunxian_info.items()]
+            st.dataframe(yunxian_rows, width="stretch", hide_index=True)
+        else:
+            st.markdown(
+                f'<div style="background:rgba(201,168,76,0.06);border-left:3px solid {c["gold"]}; '
+                f'border-radius:0 8px 8px 0;padding:8px 14px;font-size:13px;color:{c["text_verse"]};">'
+                f'{auto_cn(str(yunxian_info))}</div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ============================================================================
 # 不需起盤時的說明佔位卡
 # ============================================================================
 
