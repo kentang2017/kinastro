@@ -228,7 +228,7 @@ def render_homepage():
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">46</div>
+            <div class="hp-stat-num">48</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
