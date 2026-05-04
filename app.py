@@ -220,17 +220,17 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">四十八體系占星排盤平台</span>
+          <span class="hp-title-sub">四十九體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
           紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十八種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十九種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">48</div>
+            <div class="hp-stat-num">49</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -257,7 +257,7 @@ def render_homepage():
          ["大六壬", "太乙神數", "奇門遁甲"],
          "#C9A84C", "rgba(201,168,76,0.12)", "rgba(201,168,76,0.28)"),
         ("🏮", "中式占星", "Chinese Systems",
-         ["七政四餘", "紫微斗數", "萬化仙禽", "鐵板神數", "達摩一掌經", "十二星次", "太玄數占星", "鬼谷分定經"],
+         ["七政四餘", "紫微斗數", "萬化仙禽", "鐵板神數", "達摩一掌經", "十二星次", "太玄數占星", "鬼谷分定經", "六爻終身卦"],
          "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
         ("🏛️", "西洋占星", "Western Astrology",
          ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "凱爾特樹", "宇宙生物學", "出生時間校正"],
@@ -1094,8 +1094,8 @@ with st.sidebar:
 
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
-        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming", "tab_liuyao_lifetime"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi"]),
+        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
