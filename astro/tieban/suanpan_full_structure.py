@@ -450,6 +450,41 @@ class SuanpanTiaowenDatabase:
         idx = calc.total_number % len(keys)
         return dict(gender_data[keys[idx]])
 
+    def get_suiyun_by_result(self, calc: SuanpanResult) -> Optional[Dict[str, Any]]:
+        """
+        根據 SuanpanResult 查詢歲運條文（含模數回退）
+
+        優先以 tiaowen_key 精確查詢歲運條文；若找不到，則以
+        total_number 取模確保一定能返回一條歲運條文。
+
+        Parameters
+        ----------
+        calc : SuanpanResult
+            算盤打數計算結果
+
+        Returns
+        -------
+        Optional[Dict]
+            歲運條文；本部無歲運資料時返回 None
+        """
+        self._ensure_loaded()
+        dept = calc.department
+        if not dept:
+            return None
+
+        # 優先精確查詢
+        entry = self.get(dept, "歲運", calc.tiaowen_key)
+        if entry:
+            return entry
+
+        # 找不到時：在本部歲運中按序號取模，確保能拿到一條條文
+        suiyun_data = self._data.get(dept, {}).get("歲運", {})
+        if not suiyun_data:
+            return None
+        keys = sorted(suiyun_data.keys())
+        idx = calc.total_number % len(keys)
+        return dict(suiyun_data[keys[idx]])
+
     def get_all(
         self,
         department: str,
