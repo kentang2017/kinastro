@@ -21,6 +21,7 @@ from datetime import datetime, date
 from typing import Dict, List, Optional
 
 import streamlit as st
+import swisseph as swe
 
 from .calculator import (
     MedicalChart,
@@ -780,7 +781,7 @@ def _render_tab_electional(chart: MedicalChart, lang: str) -> None:
                            today_dt.hour, today_dt.minute, chart.timezone)
     today_phase_angle = _moon_phase_angle(today_jd)
     today_phase_key = _moon_phase_name(today_phase_angle)
-    today_moon_lon = __import__("swisseph", fromlist=["calc_ut"]).calc_ut(today_jd, 1)[0][0]
+    today_moon_lon = swe.calc_ut(today_jd, swe.MOON)[0][0]
     today_moon_sign = _sign_from_lon(today_moon_lon)
     today_hour_planet, _ = _get_planetary_hour(today_dt, chart.timezone)
 

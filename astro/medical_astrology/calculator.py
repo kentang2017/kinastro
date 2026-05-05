@@ -24,6 +24,7 @@ from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import swisseph as swe
+import streamlit as st
 
 from .constants import (
     ZODIAC_BODY_PARTS,
@@ -704,8 +705,6 @@ def compute_electional_windows(
 # ============================================================
 # Main Computation Entry Point
 # ============================================================
-
-import streamlit as st
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
