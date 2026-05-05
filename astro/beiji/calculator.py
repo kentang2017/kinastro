@@ -382,10 +382,11 @@ class BeijiShenshu:
 
     def calculate_first_wife(self, inp: BeijiInput) -> QueryResult:
         """
-        坎宮表一：論元配妻之姓氏。
+        兌宮表六：論元配妻之姓氏。
 
         行：出生年地支
         列：由月、日、刻計算
+        （原坎宮表一資料庫缺失，改用兌宮表六婚姻條文）
         """
         _, year_branch = get_year_ganzhi(inp.year)
         col_idx = self._get_col_index(inp)
@@ -398,8 +399,8 @@ class BeijiShenshu:
         return self._build_query_result(
             query_type="first_wife_surname",
             query_label="元配妻之姓氏",
-            palace=6,
-            table=1,
+            palace=2,
+            table=6,
             row_col=row_col,
             surname=surname,
             extra={"year_branch": year_branch, "surname": surname},
@@ -407,10 +408,11 @@ class BeijiShenshu:
 
     def calculate_remarriage(self, inp: BeijiInput) -> QueryResult:
         """
-        坎宮表二：論再婚後妻姓氏。
+        離宮表八：論再婚後妻姓氏。
 
         行：出生年地支
         列：由月、日、刻計算
+        （原坎宮表二資料庫缺失，改用離宮表八婚姻條文）
         """
         _, year_branch = get_year_ganzhi(inp.year)
         col_idx = self._get_col_index(inp)
@@ -423,8 +425,8 @@ class BeijiShenshu:
         return self._build_query_result(
             query_type="remarriage_wife_surname",
             query_label="再婚後妻姓氏",
-            palace=6,
-            table=2,
+            palace=3,
+            table=8,
             row_col=row_col,
             surname=surname,
             extra={"year_branch": year_branch, "surname": surname},
@@ -529,7 +531,11 @@ class BeijiShenshu:
 
     def calculate_children(self, inp: BeijiInput) -> QueryResult:
         """
-        坤宮表一：論子息。
+        乾宮表五：論子息。
+
+        行：出生年地支
+        列：由月、日、刻計算
+        （原坤宮表一資料庫缺失，改用乾宮表五子息條文）
         """
         _, year_branch = get_year_ganzhi(inp.year)
         col_idx = self._get_col_index(inp)
@@ -540,15 +546,19 @@ class BeijiShenshu:
         return self._build_query_result(
             query_type="children",
             query_label="子息",
-            palace=8,
-            table=1,
+            palace=1,
+            table=5,
             row_col=row_col,
             extra={"year_branch": year_branch, "col_index": col_idx + 1},
         )
 
     def calculate_health(self, inp: BeijiInput) -> QueryResult:
         """
-        坎宮表三：論健康疾病。
+        震宮表三：論健康疾病。
+
+        行：出生年地支
+        列：由月、日、刻計算
+        （原坎宮表三資料庫缺失，改用震宮表三凶災條文）
         """
         _, year_branch = get_year_ganzhi(inp.year)
         col_idx = self._get_col_index(inp)
@@ -559,7 +569,7 @@ class BeijiShenshu:
         return self._build_query_result(
             query_type="health",
             query_label="健康疾病",
-            palace=6,
+            palace=4,
             table=3,
             row_col=row_col,
             extra={"year_branch": year_branch, "col_index": col_idx + 1},
