@@ -3405,6 +3405,26 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看醫學占星分析。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Medical Astrology analysis.",
     },
+    "tab_shanghan_qianfa": {
+        "zh": "🌿 傷寒鈐法",
+        "en": "🌿 Shanghan Qianfa",
+    },
+    "desc_shanghan_qianfa": {
+        "zh": "🌿 **傷寒鈐法** — 以張仲景《傷寒論》六經辨證為核心，結合干支鈐法推算，依出生年支與發病日支推定六經歸屬，推薦對應經方，計算傳經預後。源自普濟方（曹樂齋）及薛氏醫案傳統。",
+        "en": "🌿 **Shanghan Qianfa** — Classical Chinese medical divination based on Zhang Zhongjing's Shang Han Lun (傷寒論). Uses stem-branch (干支) Qianfa computation to identify the Six-Channel (六經) pattern from birth year branch and onset day branch, recommending classical formulas (經方) and computing transmission prognosis. Sources: Puji Fang (普濟方) and Xue's Medical Cases (薛氏醫案).",
+    },
+    "spinner_shanghan_qianfa": {
+        "zh": "計算傷寒鈐法…",
+        "en": "Computing Shanghan Qianfa…",
+    },
+    "sys_hint_shanghan_qianfa": {
+        "zh": "傷寒論六經辨證，干支鈐法推算，經方推薦",
+        "en": "Shanghan Lun Six-Channel, stem-branch Qianfa, classical formulas",
+    },
+    "info_shanghan_qianfa_prompt": {
+        "zh": "👈 請在左側輸入出生及發病日期，點擊「開始排盤」進行傷寒鈐法推算。",
+        "en": "👈 Enter birth date and onset date on the left, then click 'Calculate Chart'.",
+    },
 }
 
 def get_ui_lang() -> str:
