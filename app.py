@@ -82,6 +82,8 @@ from astro.jawa_weton.calculator import WetonCalculator, compute_weton
 from astro.jawa_weton.renderer import render_streamlit as render_jawa_weton_chart
 from astro.liuyao_lifetime.calculator import compute_lifetime_hexagram
 from astro.liuyao_lifetime.renderer import render_streamlit as render_liuyao_lifetime_chart
+from astro.medical_astrology.calculator import compute_medical_chart
+from astro.medical_astrology.renderer import render_streamlit as render_medical_astrology_chart
 from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
 from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
 from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
@@ -1100,7 +1102,7 @@ with st.sidebar:
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
-        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
+        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian", "tab_medical_astrology"]),
     ]
 
     _CATEGORY_ICONS = {
@@ -1163,6 +1165,7 @@ with st.sidebar:
         "tab_picatrix_behenian": t("tab_picatrix_behenian"),
         "tab_rectification": t("tab_rectification"),
         "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
+        "tab_medical_astrology": t("tab_medical_astrology"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1216,6 +1219,7 @@ with st.sidebar:
         "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
         "tab_rectification": t("sys_hint_rectification"),
         "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
+        "tab_medical_astrology": t("sys_hint_medical_astrology"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -5298,6 +5302,22 @@ elif _selected_system == "tab_liuyao_lifetime":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_liuyao_lifetime"))
+
+# --- 醫學占星 Medical Astrology (Iatromathematics) ---
+elif _selected_system == "tab_medical_astrology":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_medical_astrology")):
+                _medical_result = compute_medical_chart(**_p)
+            render_medical_astrology_chart(_medical_result)
+            _render_ai_button("tab_medical_astrology", _medical_result, btn_key="medical_astrology")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_medical_astrology_prompt"))
+        st.markdown(t("desc_medical_astrology"))
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom
