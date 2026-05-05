@@ -65,6 +65,7 @@ from astro.tieban.suanpan_full_structure import (
     get_nayin_element,
     BASE_NUMBER as SUANPAN_BASE_NUMBER,
     SUIJUN_ADD,
+    NAYIN_ADD,
     NAYIN_TO_ELEMENT,
 )
 
@@ -94,5 +95,6 @@ __all__ = [
     "get_nayin_element",
     "SUANPAN_BASE_NUMBER",
     "SUIJUN_ADD",
+    "NAYIN_ADD",
     "NAYIN_TO_ELEMENT",
 ]

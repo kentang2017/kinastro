@@ -68,14 +68,16 @@ SUIJUN_ADD: Dict[str, int] = {
     "土": 50,
 }
 
-# 納音配數（用於算盤定部）
-NAYIN_ELEMENT_ADD: Dict[str, int] = {
+# 納音配數（1水 2火 3木 4金 5土，供算盤打數定部用）
+NAYIN_ADD: Dict[str, int] = {
     "水": 1,
     "火": 2,
     "木": 3,
     "金": 4,
     "土": 5,
 }
+# 向後相容別名
+NAYIN_ELEMENT_ADD = NAYIN_ADD
 
 # 天干數值（用於算盤打數）
 STEM_VALUES: Dict[str, int] = {
@@ -344,17 +346,30 @@ class SuanpanTiaowenDatabase:
         if self._data is not None:
             return
         self._data = {dept: {"男命": {}, "女命": {}, "歲運": {}} for dept in ("水", "火", "木", "金", "土")}
-        try:
-            data_path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "data", self._DATA_FILENAME,
+        data_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data", self._DATA_FILENAME,
+        )
+        if not os.path.exists(data_path):
+            import warnings
+            warnings.warn(
+                f"SuanpanTiaowenDatabase: 找不到資料檔案 {data_path}，"
+                "將使用空資料庫。請確認 suanpan_tiaowen_full.json 已放置於 data/ 目錄。",
+                UserWarning,
+                stacklevel=3,
             )
-            if os.path.exists(data_path):
-                with open(data_path, "r", encoding="utf-8") as f:
-                    raw = json.load(f)
-                self._data = raw
-        except Exception:
-            pass  # 靜默失敗，保持空資料庫
+            return
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            self._data = raw
+        except Exception as exc:
+            import warnings
+            warnings.warn(
+                f"SuanpanTiaowenDatabase: 載入 {data_path} 失敗（{exc}），使用空資料庫。",
+                UserWarning,
+                stacklevel=3,
+            )
 
     @property
     def total(self) -> int:
@@ -514,7 +529,7 @@ def export_suanpan_data() -> Dict[str, Any]:
     return {
         "base_number": BASE_NUMBER,
         "suijun_add": SUIJUN_ADD,
-        "nayin_element_add": NAYIN_ELEMENT_ADD,
+        "nayin_add": NAYIN_ADD,
         "stem_values": STEM_VALUES,
         "branch_values": BRANCH_VALUES,
         "version": "2.0",

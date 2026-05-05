@@ -265,7 +265,7 @@ def example_suanpan_basic():
         year_gz=Ganzhi("壬", "戌"),
         month_gz=Ganzhi("甲", "子"),
         day_gz=Ganzhi("戊", "午"),
-        hour_gz=Ganzhi("戊", "午"),
+        hour_gz=Ganzhi("庚", "午"),
         gender="男",
     )
 
@@ -349,11 +349,11 @@ def example_suanpan_dayun():
     print()
     print(f"{'大運':<6} {'起運年齡':<10} {'算盤總數':<12} {'條文'}")
     print("-" * 60)
-    for d in dayun_list:
+    for step_idx, d in enumerate(dayun_list, start=1):
         tiaowen_text = ""
         if d.tiaowen:
             tiaowen_text = d.tiaowen.get("text", "")[:20]
-        print(f"第{d.dayun_number // 10 + 1 if d.dayun_number else '?'}步  "
+        print(f"第{step_idx}步  "
               f"{d.dayun_number or '?'} 歲      "
               f"{d.total_number:<12} {tiaowen_text}")
     print()
