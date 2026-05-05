@@ -13,6 +13,7 @@ Tie Ban Shen Shu Verse Browser Tool
 from typing import Dict, List, Optional
 import streamlit as st
 from astro.tieban.tieban_calculator import VerseDatabase, TiaowenDatabase
+from astro.tieban.suanpan_full_structure import SuanpanTiaowenDatabase
 
 
 def render_verse_browser():
@@ -349,6 +350,135 @@ def render_tiaowen_full_browser_inline():
                 st.divider()
 
     st.metric("資料庫總條文數", db.total)
+
+
+def render_suanpan_tiaowen_browser_inline():
+    """
+    渲染算盤打數五部條文資料庫瀏覽工具（不使用巢狀 tabs）
+
+    讓使用者依五部（水/火/木/金/土）× 性別（男命/女命/歲運）瀏覽或
+    搜索 suanpan_tiaowen_full.json 中的條文。
+    在 app.py 鐵板神數條文庫頁籤中呼叫此函式。
+    """
+    st.caption("瀏覽算盤打數五部條文資料庫（曹展碩實務版，suanpan_tiaowen_full.json）")
+
+    db = SuanpanTiaowenDatabase()
+
+    DEPARTMENTS = ["水", "火", "木", "金", "土"]
+    GENDER_TYPES = ["男命", "女命", "歲運"]
+
+    col_dept, col_gender = st.columns(2)
+    with col_dept:
+        sel_dept = st.selectbox(
+            "五行部",
+            options=DEPARTMENTS,
+            key="sp_browser_dept",
+        )
+    with col_gender:
+        sel_gender = st.selectbox(
+            "性別類型",
+            options=GENDER_TYPES,
+            key="sp_browser_gender",
+        )
+
+    sub_mode = st.radio(
+        "瀏覽模式",
+        ["🔍 按編號查詢", "🔤 全文搜索", "📋 瀏覽全部"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="sp_browser_mode",
+    )
+
+    if sub_mode == "🔍 按編號查詢":
+        search_num = st.text_input(
+            "條文編號（如 2241）",
+            placeholder="輸入數字編號",
+            key="sp_browser_num",
+        )
+        if st.button("查詢", key="sp_browser_btn_num"):
+            if search_num.strip():
+                entry = db.get(sel_dept, sel_gender, search_num.strip())
+                if entry:
+                    st.success(
+                        f"**{sel_dept}部 {sel_gender} {search_num.strip()}**："
+                        f"{entry.get('text', '（條文待補充）')}"
+                    )
+                    raw = entry.get("raw_key", "")
+                    if raw:
+                        st.caption(f"原始鍵：{raw}")
+                else:
+                    st.warning(f"在 {sel_dept}部 {sel_gender} 中找不到編號 {search_num.strip()}")
+
+    elif sub_mode == "🔤 全文搜索":
+        search_kw = st.text_input(
+            "搜索關鍵字",
+            placeholder="例：舟、波、洞庭",
+            key="sp_browser_kw",
+        )
+        if search_kw.strip():
+            all_entries = db.get_all(sel_dept, sel_gender)
+            results = [
+                (num, entry)
+                for num, entry in all_entries.items()
+                if search_kw.strip() in entry.get("text", "")
+            ]
+            st.info(f"在 {sel_dept}部 {sel_gender} 中找到 {len(results)} 條包含「{search_kw.strip()}」的條文")
+            for num, entry in results[:50]:
+                with st.expander(f"條文 {num}：{entry.get('text', '')[:30]}…", expanded=False):
+                    st.markdown(f"**全文**：{entry.get('text', '')}")
+                    raw = entry.get("raw_key", "")
+                    if raw:
+                        st.caption(f"原始鍵：{raw}")
+            if len(results) > 50:
+                st.caption(f"（只顯示前 50 條，共 {len(results)} 條）")
+
+    else:  # 瀏覽全部
+        all_entries = db.get_all(sel_dept, sel_gender)
+        st.info(f"{sel_dept}部 {sel_gender}：共 {len(all_entries)} 條條文")
+        if all_entries:
+            page_size = 30
+            sorted_keys = sorted(all_entries.keys())
+            total_pages = max(1, (len(sorted_keys) - 1) // page_size + 1)
+            page = st.selectbox(
+                "頁碼",
+                options=list(range(1, total_pages + 1)),
+                index=0,
+                key="sp_browser_page",
+            )
+            start_idx = (page - 1) * page_size
+            page_keys = sorted_keys[start_idx:start_idx + page_size]
+            _cards = ""
+            for num in page_keys:
+                entry = all_entries[num]
+                text = entry.get("text", "")
+                raw = entry.get("raw_key", "")
+                raw_badge = (
+                    f'<span style="font-size:10px;color:#9090b0;margin-left:6px;">({raw})</span>'
+                    if raw else ""
+                )
+                _cards += (
+                    f'<div style="border-left:3px solid rgba(107,203,119,0.5);'
+                    f'padding:8px 12px;margin-bottom:8px;'
+                    f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                    f'<div style="font-size:12px;font-weight:700;color:#6BCB77;margin-bottom:2px;">'
+                    f'{num}{raw_badge}</div>'
+                    f'<div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{text}</div>'
+                    f'</div>'
+                )
+            st.markdown(f'<div style="width:100%;">{_cards}</div>', unsafe_allow_html=True)
+
+    # 統計資訊
+    st.divider()
+    stats = db.stats()
+    dept_stats = stats.get(sel_dept, {})
+    total_dept = sum(dept_stats.values())
+    st.caption(
+        f"{sel_dept}部總計：{total_dept} 條"
+        f"（男命 {dept_stats.get('男命', 0)} ／ "
+        f"女命 {dept_stats.get('女命', 0)} ／ "
+        f"歲運 {dept_stats.get('歲運', 0)}）"
+        f"　　資料庫合計：{db.total} 條"
+    )
 
 
 def render_verse_comparison():
