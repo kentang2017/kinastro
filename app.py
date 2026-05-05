@@ -2964,6 +2964,23 @@ elif _selected_system == "tab_tieban":
                 else:
                     st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
 
+                # 歲運條文（流年歲運）
+                _sp_suiyun = _sp_db.get(_sp_calc.department, "歲運", _sp_calc.tiaowen_key) if _sp_calc.department else None
+                if _sp_suiyun and _sp_suiyun.get("text"):
+                    st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
+                    _sp_sy_raw = _sp_suiyun.get("raw_key", "")
+                    _sp_sy_raw_badge = (
+                        f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
+                        f'（{_sp_sy_raw}）</span>'
+                    ) if _sp_sy_raw else ""
+                    st.markdown(
+                        f'<div style="background:rgba(201,168,76,0.06);border-left:4px solid #C9A84C;'
+                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                        f'color:#f0e8c0;line-height:1.9;letter-spacing:0.5px;">'
+                        f'{_sp_suiyun["text"]}{_sp_sy_raw_badge}</div>',
+                        unsafe_allow_html=True,
+                    )
+
                 # 計算步驟展開
                 with st.expander(auto_cn("查看算盤打數計算步驟"), expanded=False):
                     for _step in _sp_calc.calculation_steps:
