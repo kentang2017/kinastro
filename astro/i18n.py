@@ -3385,6 +3385,26 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "以農曆干支起卦，納甲排盤，終身本命推命系統",
         "en": "Lunar Ganzhi hexagram, Najia layout, lifetime destiny system",
     },
+    "tab_medical_astrology": {
+        "zh": "⚕️ 醫學占星",
+        "en": "⚕️ Medical Astrology",
+    },
+    "desc_medical_astrology": {
+        "zh": "⚕️ **醫學占星（Iatromathematics）** — 希臘・阿拉伯・中世紀歐洲古典醫學占星體系。黃道人體質分析、四液質、埃及三十六旬星身體對照、療癒擇時、疾病危機日計算。源自托勒密《四書》、蓋倫、阿維森納及卡爾佩伯傳統。",
+        "en": "⚕️ **Medical Astrology (Iatromathematics)** — Classical Greek, Arabic & Medieval European medical astrology. Zodiac Man temperament analysis, four humors, Egyptian 36-decan body mapping, electional timing, and critical day calculation. Sources: Ptolemy Tetrabiblos, Galen, Avicenna, Culpeper.",
+    },
+    "spinner_medical_astrology": {
+        "zh": "計算醫學占星排盤…",
+        "en": "Computing Medical Astrology chart…",
+    },
+    "sys_hint_medical_astrology": {
+        "zh": "希臘阿拉伯中世紀醫學占星，黃道人體質，療癒擇時",
+        "en": "Classical Iatromathematics, Zodiac Man, humoral temperament, electional timing",
+    },
+    "info_medical_astrology_prompt": {
+        "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看醫學占星分析。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Medical Astrology analysis.",
+    },
 }
 
 def get_ui_lang() -> str:
