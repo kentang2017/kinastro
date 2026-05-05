@@ -5,15 +5,15 @@
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.6.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-49-FFD700?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-51-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**四十九體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・五運六氣・萬化仙禽・六壬祿命・太乙命法・奇門祿命・六爻終身卦・鐵板神數・邵子神數・鬼谷分定經・韓國・土亭數・高棉・Reamker 占星・西洋・宇宙生物學・出生時間校正・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・Picatrix 占星魔法・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・波利尼西亞／夏威夷**
-*49-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, Wu Yun Liu Qi, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Lifetime Liu Yao, Tie Ban Shen Shu, Shao Zi Shen Shu, Ghost Valley Fen Ding Jing, Korean Tojeong, Khmer Reamker, Western, Cosmobiology (Ebertin), Rectification, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Sukkayodo, Thai, Myanmar, Balinese Wariga, Javanese Weton, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Picatrix Star Magic, Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, Polynesian / Hawaiian Star Lore*
+**五十一體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・五運六氣・萬化仙禽・六壬祿命・太乙命法・奇門祿命・六爻終身卦・鐵板神數・邵子神數・鬼谷分定經・韓國・土亭數・高棉・Reamker 占星・西洋・宇宙生物學・出生時間校正・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・Picatrix 占星魔法・也門・瑪雅・阿茲特克・古埃及十度區間・巴比倫・薩珊波斯・波利尼西亞／夏威夷・醫學占星・傷寒鈐法**
+*51-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, Wu Yun Liu Qi, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Lifetime Liu Yao, Tie Ban Shen Shu, Shao Zi Shen Shu, Ghost Valley Fen Ding Jing, Korean Tojeong, Khmer Reamker, Western, Cosmobiology (Ebertin), Rectification, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Sukkayodo, Thai, Myanmar, Balinese Wariga, Javanese Weton, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻārif), Picatrix Star Magic, Yemeni Rasulid, Maya, Aztec, Egyptian Decans, Babylonian, Sassanian Persian, Polynesian / Hawaiian Star Lore, Medical Astrology (Iatromathematics), Shanghan Qianfa*
 
 </div>
 
@@ -38,7 +38,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **四十九體系合一** | 在同一個介面中切換四十九種占星體系，無需來回切換工具 | Switch between 49 astrology systems in one unified interface |
+| 🔮 **五十一體系合一** | 在同一個介面中切換五十一種占星體系，無需來回切換工具 | Switch between 51 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
@@ -115,6 +115,8 @@
 | 47 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
 | 48 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
 | 49 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| 50 | ⚕️ 醫學占星 Medical Astrology | 回歸 Tropical | 黃道人體質分析・四液質・埃及三十六旬星身體對照・療癒擇時・疾病危機日計算 |
+| 51 | 🌿 傷寒鈐法 Shanghan Qianfa | 農曆 Lunar | 六經辨證・干支鈐法推算・六經歸屬・經方推薦・傳經預後 |
 
 ---
 
