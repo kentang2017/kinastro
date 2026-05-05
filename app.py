@@ -1104,7 +1104,8 @@ with st.sidebar:
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
-        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian", "tab_medical_astrology", "tab_shanghan_qianfa"]),
+        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
+        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
     ]
 
     _CATEGORY_ICONS = {
@@ -1115,6 +1116,7 @@ with st.sidebar:
         "cat_asian": "🌏",
         "cat_middle_east": "🕌",
         "cat_ancient": "🏺",
+        "cat_yi_zhan": "⚕️",
     }
 
     _SYSTEM_LABELS = {
