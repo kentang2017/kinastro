@@ -446,7 +446,7 @@ def render_suanpan_tiaowen_browser_inline():
                 key="sp_browser_page",
             )
             start_idx = (page - 1) * page_size
-            page_keys = sorted_keys[start_idx: start_idx + page_size]
+            page_keys = sorted_keys[start_idx:start_idx + page_size]
             _cards = ""
             for num in page_keys:
                 entry = all_entries[num]
