@@ -4,34 +4,40 @@
 基於《鐵板神數清刻足本》（心一堂術數珍本古籍叢刊·星命類·神數類，2013）
 底本為虛白廬藏清中葉「貞元書屋」刻本，含秘鈔密碼表
 
-核心特點：
-- 時分八刻，每刻十五分（120 分/時，融入西洋分鐘制）
-- 考刻分：結合父母八字、六親信息精確定位刻分
-- 八卦加則例：天干配卦、地支配卦、河洛配數
-- 紫微斗數安星、十二宮、太歲祿神、大限小限
-- 秘鈔密碼表：卦象、流度、納甲卦爻快速查表
-- 坤集扣入法（kou_ru_fa）：萬千百十 → 天干序列
-- 完整 12000 條文資料庫（TiaowenDatabase，延遲載入）
-- 九十六刻天干數表（BAKE_96_KE）與六親刻分圖（SIX_QIN_KE_FEN）
+支援兩種計算版本：
+1. 扣入法（kunji）  — 江靜川版：坤集密碼表 + 扣入法
+2. 算盤打數（suanpan）— 曹展碩實務版：金鎖銀匙歌 + 五部條文
 
-使用方式：
+統一介面（推薦）：
+    from astro.tieban import TieBanDiviner, TieBanBirthData
+
+    # 算盤數模式
+    diviner = TieBanDiviner(method="suanpan")
+    result  = diviner.calculate(birth_data)   # -> SuanpanResult
+    dayun   = diviner.get_dayun(birth_data)   # -> List[SuanpanResult]
+
+    # 扣入法模式
+    diviner = TieBanDiviner(method="kunji")
+    result  = diviner.calculate(birth_data)   # -> TieBanResult
+    tiaowen = diviner.get_tiaowen(tiaowen_number=1001)
+
+    # 隨時切換
+    suanpan_diviner = diviner.switch_method("suanpan")
+
+個別引擎（進階）：
     from astro.tieban import TieBanShenShu, TieBanBirthData
 
     tbss = TieBanShenShu()
-
-    # 基本推算
     result = tbss.calculate(birth_data)
-
-    # 查詢完整 12000 條文
-    info = tbss.get_tiaowen(1001)   # -> {'text': '一樹殘花,有枝復茂', ...}
-
-    # 坤集扣入法
-    seq = tbss.kou_ru_fa(1001)      # -> ['癸', '甲', '癸', '癸', '甲']
-
-    # 九十六刻查詢
-    bake = tbss.lookup_bake_96ke('子', '父母兄弟', 0)  # -> '交初坤得'
+    info   = tbss.get_tiaowen(1001)
+    seq    = tbss.kou_ru_fa(1001)
+    bake   = tbss.lookup_bake_96ke('子', '父母兄弟', 0)
 """
 
+# ── 統一介面 ─────────────────────────────────────────────────────────────────
+from astro.tieban.tieban_diviner import TieBanDiviner, DivinerMethod
+
+# ── 扣入法（kunji）引擎 ───────────────────────────────────────────────────────
 from astro.tieban.tieban_calculator import (
     TieBanShenShu,
     TieBanBirthData,
@@ -47,7 +53,26 @@ from astro.tieban.kunji_full_structure import (
     KUNJI_TIANGAN_CODE,
 )
 
+# ── 算盤打數（suanpan）引擎 ───────────────────────────────────────────────────
+from astro.tieban.suanpan_full_structure import (
+    SuanpanTiaowenDatabase,
+    SuanpanResult,
+    SuanpanDepartment,
+    SuanpanGender,
+    suanpan_calculate,
+    get_dayun as suanpan_get_dayun,
+    get_nayin,
+    get_nayin_element,
+    BASE_NUMBER as SUANPAN_BASE_NUMBER,
+    SUIJUN_ADD,
+    NAYIN_TO_ELEMENT,
+)
+
 __all__ = [
+    # 統一介面
+    "TieBanDiviner",
+    "DivinerMethod",
+    # 扣入法引擎
     "TieBanShenShu",
     "TieBanBirthData",
     "TieBanResult",
@@ -58,4 +83,16 @@ __all__ = [
     "BAKE_96_KE",
     "SIX_QIN_KE_FEN",
     "KUNJI_TIANGAN_CODE",
+    # 算盤打數引擎
+    "SuanpanTiaowenDatabase",
+    "SuanpanResult",
+    "SuanpanDepartment",
+    "SuanpanGender",
+    "suanpan_calculate",
+    "suanpan_get_dayun",
+    "get_nayin",
+    "get_nayin_element",
+    "SUANPAN_BASE_NUMBER",
+    "SUIJUN_ADD",
+    "NAYIN_TO_ELEMENT",
 ]
