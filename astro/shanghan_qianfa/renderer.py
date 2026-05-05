@@ -12,6 +12,7 @@ Renders a 5-tab interface:
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from .calculator import ShanghanResult
@@ -306,7 +307,6 @@ def _tab_prognosis(result: ShanghanResult) -> None:
         "Based on Shanghan Lun Article 7 six-channel transmission. Day 1 = onset date.",
     ))
 
-    import pandas as pd
     rows = []
     for td in result.transmission_days:
         rows.append({

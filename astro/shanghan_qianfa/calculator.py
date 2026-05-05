@@ -208,10 +208,10 @@ def compute_shanghan_qianfa(
     result.onset_month_gz = o_month_gz
     result.onset_day_gz = o_day_gz
     result.onset_date = date(oy, om, od)
-    result.onset_day_dz = o_dz[-1]  # last character = branch of onset day
 
-    # Extract just the dizhi character from the day gz string
-    day_dz_char = o_day_gz[-1]  # 地支 is always the second character
+    # Extract the dizhi character from the day gz string (second character)
+    day_dz_char = o_day_gz[-1]
+    result.onset_day_dz = day_dz_char
 
     steps.append(f"發病日期：{oy}-{om:02d}-{od:02d} → 日干支：{o_day_gz}，日支：{day_dz_char}")
 
@@ -252,6 +252,6 @@ def compute_shanghan_qianfa(
     result.transmission_days = _build_transmission_days(channel, result.onset_date)
 
     # ── Wu Yun context ────────────────────────────
-    result.wuyun_context = _build_wuyun_context(b_tg, b_dz, o_tg, o_dz[-1])
+    result.wuyun_context = _build_wuyun_context(b_tg, b_dz, o_tg, o_dz)
 
     return result
