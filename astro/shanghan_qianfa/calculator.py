@@ -115,17 +115,16 @@ def _get_ganzhi(year: int, month: int, day: int) -> tuple[str, str, str, str, st
 
 def _build_transmission_days(channel: str, onset: date) -> list[dict]:
     """Build the 12-day transmission schedule starting from onset date."""
+    from datetime import timedelta
     result = []
     channel_order = ["太陽", "陽明", "少陽", "太陰", "少陰", "厥陰"]
     start_idx = channel_order.index(channel) if channel in channel_order else 0
 
     for prog in PROGNOSIS_DAYS:
         day_num = prog["day"]
-        # Compute which channel this day belongs to (rotating from onset channel)
         cycled_idx = (start_idx + day_num - 1) % 6
         effective_channel = channel_order[cycled_idx]
-        delta = date.toordinal(onset) + day_num - 1
-        actual_date = date.fromordinal(delta)
+        actual_date = onset + timedelta(days=day_num - 1)
         result.append({
             "day": day_num,
             "date": actual_date.strftime("%Y-%m-%d"),
@@ -210,24 +209,24 @@ def compute_shanghan_qianfa(
     result.onset_date = date(oy, om, od)
 
     # Extract the dizhi character from the day gz string (second character)
-    day_dz_char = o_day_gz[-1]
-    result.onset_day_dz = day_dz_char
+    o_day_dz = o_day_gz[-1]
+    result.onset_day_dz = o_day_dz
 
-    steps.append(f"發病日期：{oy}-{om:02d}-{od:02d} → 日干支：{o_day_gz}，日支：{day_dz_char}")
+    steps.append(f"發病日期：{oy}-{om:02d}-{od:02d} → 日干支：{o_day_gz}，日支：{o_day_dz}")
 
     # ── Channel determination ──────────────────────
     if method_version == "v2":
-        channel = DIZHI_CHANNEL_MAP_V2.get(day_dz_char, "太陽")
-        steps.append(f"薛氏醫案法（v2）：直接以發病日支「{day_dz_char}」定六經 → {channel}")
+        channel = DIZHI_CHANNEL_MAP_V2.get(o_day_dz, "太陽")
+        steps.append(f"薛氏醫案法（v2）：直接以發病日支「{o_day_dz}」定六經 → {channel}")
     else:
         # v1: double-branch method
         year_dz_char = b_year_gz[-1]
-        channel = QIANFA_DOUBLE_MAP_V1.get((year_dz_char, day_dz_char))
+        channel = QIANFA_DOUBLE_MAP_V1.get((year_dz_char, o_day_dz))
         if channel is None:
             # Fallback to simple map
-            channel = DIZHI_CHANNEL_MAP_V1.get(day_dz_char, "太陽")
+            channel = DIZHI_CHANNEL_MAP_V1.get(o_day_dz, "太陽")
         steps.append(
-            f"普濟方法（v1）：出生年支「{year_dz_char}」＋發病日支「{day_dz_char}」"
+            f"普濟方法（v1）：出生年支「{year_dz_char}」＋發病日支「{o_day_dz}」"
             f" → 鈐法合算 → {channel}"
         )
 

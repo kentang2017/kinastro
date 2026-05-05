@@ -263,7 +263,7 @@ def _tab_formulas(result: ShanghanResult) -> None:
             st.markdown(f"""
 <div class="sq-formula-secondary">
   <h5>◈ {formula}</h5>
-  {'<p>' + desc + '</p>' if desc else ''}
+  <p>{desc}</p>
 </div>
 """, unsafe_allow_html=True)
 

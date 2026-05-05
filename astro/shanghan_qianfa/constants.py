@@ -199,8 +199,10 @@ def _build_qianfa_v1() -> None:
     規則：陽年支（子寅辰午申戌）配三陽經；陰年支（丑卯巳未酉亥）配三陰經。
     日支在各層中的位置（% 3）決定具體哪條經絡。
     """
-    yang_dz = ["子", "寅", "辰", "午", "申", "戌"]
-    yin_dz  = ["丑", "卯", "巳", "未", "酉", "亥"]
+    yang_dz = {"子", "寅", "辰", "午", "申", "戌"}
+    yin_dz  = {"丑", "卯", "巳", "未", "酉", "亥"}
+    yang_list = ["子", "寅", "辰", "午", "申", "戌"]
+    yin_list  = ["丑", "卯", "巳", "未", "酉", "亥"]
     yang_channels = ["太陽", "陽明", "少陽"]
     yin_channels  = ["太陰", "少陰", "厥陰"]
 
@@ -208,13 +210,13 @@ def _build_qianfa_v1() -> None:
         for o_dz in DIZHI:
             if y_dz in yang_dz:
                 # Yang birth year → yang channel via day branch index
-                idx = (yang_dz.index(o_dz) if o_dz in yang_dz
-                       else yin_dz.index(o_dz)) % 3
+                idx = (yang_list.index(o_dz) if o_dz in yang_dz
+                       else yin_list.index(o_dz)) % 3
                 channel = yang_channels[idx]
             else:
                 # Yin birth year → yin channel via day branch index
-                idx = (yin_dz.index(o_dz) if o_dz in yin_dz
-                       else yang_dz.index(o_dz)) % 3
+                idx = (yin_list.index(o_dz) if o_dz in yin_dz
+                       else yang_list.index(o_dz)) % 3
                 channel = yin_channels[idx]
             QIANFA_DOUBLE_MAP_V1[(y_dz, o_dz)] = channel
 
