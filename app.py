@@ -224,17 +224,17 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">四十九體系占星排盤平台</span>
+          <span class="hp-title-sub">五十一體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
-          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球四十九種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星到傷寒鈐法——<br/>
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十一種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">49</div>
+            <div class="hp-stat-num">51</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -276,7 +276,7 @@ def render_homepage():
          ["卡巴拉", "猶太星宿", "薩珊波斯", "阿拉伯占星", "葉門占星", "Picatrix 占星魔法"],
          "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
         ("🏺", "古代文明", "Ancient Civilizations",
-         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星"],
+         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星", "醫學占星", "傷寒鈐法"],
          "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
     ]
 
@@ -301,8 +301,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "四十九體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十九種占星體系"),
+        ("🔮", "五十一體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球五十一種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
