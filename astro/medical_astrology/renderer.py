@@ -102,191 +102,213 @@ _CSS = """
 # Stylized ASCII-art-inspired SVG showing sign locations on body
 # ============================================================
 
-# Body zone center positions (cx, cy) for the human figure (100×220 viewBox)
-_ZODIAC_MAN_POSITIONS: Dict[str, tuple] = {
-    "head":     (50, 18),
-    "neck":     (50, 35),
-    "arms":     (50, 60),  # shown with arm label
-    "chest":    (50, 62),
-    "heart":    (50, 72),
-    "abdomen":  (50, 90),
-    "kidneys":  (50, 105),
-    "genitals": (50, 120),
-    "hips":     (50, 135),
-    "knees":    (50, 158),
-    "ankles":   (50, 175),
-    "feet":     (50, 192),
-}
-
-# Sign → zone used in the SVG
-_SIGN_ZONE: Dict[str, str] = {
-    "Aries": "head",
-    "Taurus": "neck",
-    "Gemini": "arms",
-    "Cancer": "chest",
-    "Leo": "heart",
-    "Virgo": "abdomen",
-    "Libra": "kidneys",
-    "Scorpio": "genitals",
-    "Sagittarius": "hips",
-    "Capricorn": "knees",
-    "Aquarius": "ankles",
-    "Pisces": "feet",
-}
-
 
 def _build_zodiac_man_svg(
     highlighted_zones: Optional[List[str]] = None,
     risk_colors: Optional[Dict[str, str]] = None,
 ) -> str:
-    """Build a stylized Zodiac Man SVG.
+    """Build a classical Zodiac Man (Homo Signorum) SVG.
+
+    Layout inspired by medieval manuscripts: human figure in center with
+    zodiac signs arranged around it (Aries at top, Pisces at bottom,
+    five signs each on left and right), connected by lines to body zones.
 
     Args:
         highlighted_zones: list of zone names to highlight
-        risk_colors: zone → CSS color string for risk visualization
+        risk_colors: zone -> CSS color string for risk visualization
 
     Returns:
-        SVG string suitable for st.markdown() with unsafe_allow_html=True
+        HTML div containing an inline SVG suitable for st.markdown()
+        with unsafe_allow_html=True
     """
     highlighted_zones = highlighted_zones or []
     risk_colors = risk_colors or {}
 
-    # Sign glyphs and abbreviations
-    sign_info = {
-        "Aries":       ("♈", "Aries", "白羊"),
-        "Taurus":      ("♉", "Taurus", "金牛"),
-        "Gemini":      ("♊", "Gemini", "雙子"),
-        "Cancer":      ("♋", "Cancer", "巨蟹"),
-        "Leo":         ("♌", "Leo", "獅子"),
-        "Virgo":       ("♍", "Virgo", "處女"),
-        "Libra":       ("♎", "Libra", "天秤"),
-        "Scorpio":     ("♏", "Scorpio", "天蠍"),
-        "Sagittarius": ("♐", "Sagittarius", "射手"),
-        "Capricorn":   ("♑", "Capricorn", "摩羯"),
-        "Aquarius":    ("♒", "Aquarius", "水瓶"),
-        "Pisces":      ("♓", "Pisces", "雙魚"),
+    # ViewBox: 300 wide x 430 tall
+    # Figure centre x=150, figure spans x=108..192
+    W, H = 300, 430
+
+    # Body zone highlight rectangles in figure coordinates
+    # Each zone: (x, y, w, h) within the figure
+    zone_rects = {
+        "head":     (127, 22, 46, 40),
+        "neck":     (135, 62, 30, 18),
+        "arms":     (75,  80, 150, 55),
+        "chest":    (118, 80, 64, 40),
+        "heart":    (120, 118, 60, 30),
+        "abdomen":  (118, 148, 64, 35),
+        "kidneys":  (120, 178, 60, 28),
+        "genitals": (125, 205, 50, 28),
+        "hips":     (116, 230, 68, 30),
+        "knees":    (120, 295, 60, 30),
+        "ankles":   (122, 345, 56, 25),
+        "feet":     (114, 368, 72, 28),
     }
 
-    # Build zone highlight polygons mapping to body regions
-    # Human figure approximate polygons in 100×220 viewBox
-    zone_shapes = {
-        "head":     "M35,5 L65,5 L70,30 L30,30 Z",
-        "neck":     "M40,30 L60,30 L62,42 L38,42 Z",
-        "arms":     "M18,45 L82,45 L82,78 L18,78 Z",
-        "chest":    "M30,42 L70,42 L72,82 L28,82 Z",
-        "heart":    "M32,62 L68,62 L70,82 L30,82 Z",
-        "abdomen":  "M28,82 L72,82 L70,108 L30,108 Z",
-        "kidneys":  "M28,95 L72,95 L72,118 L28,118 Z",
-        "genitals": "M32,108 L68,108 L68,128 L32,128 Z",
-        "hips":     "M28,125 L72,125 L70,148 L30,148 Z",
-        "knees":    "M30,148 L70,148 L70,168 L30,168 Z",
-        "ankles":   "M32,168 L68,168 L68,182 L32,182 Z",
-        "feet":     "M28,182 L72,182 L75,208 L25,208 Z",
-    }
-
-    def _zone_fill(zone: str) -> str:
+    def _zone_color(zone: str) -> str:
         if zone in risk_colors:
             return risk_colors[zone]
         if zone in highlighted_zones:
             return "#C5A03F"
-        return "#1a2a4a"
+        return "none"
 
-    def _zone_opacity(zone: str) -> str:
-        if zone in risk_colors or zone in highlighted_zones:
-            return "0.6"
-        return "0.35"
+    zone_svg = ""
+    for zone, (rx, ry, rw, rh) in zone_rects.items():
+        c = _zone_color(zone)
+        if c != "none":
+            zone_svg += (
+                f'<rect x="{rx}" y="{ry}" width="{rw}" height="{rh}" rx="4"'
+                f' fill="{c}" opacity="0.45" stroke="{c}" stroke-width="1"/>\n'
+            )
 
-    shapes_svg = ""
-    for zone, path in zone_shapes.items():
-        fill = _zone_fill(zone)
-        opacity = _zone_opacity(zone)
-        shapes_svg += f'<path d="{path}" fill="{fill}" opacity="{opacity}" stroke="#C5A03F" stroke-width="0.5"/>\n'
+    # ── Human silhouette ──────────────────────────────────────────────────
+    # Drawn as a series of SVG paths; no XML comments to avoid parser issues
+    gold = "#C5A03F"
+    fig_fill = "#1c2b45"
 
-    # Sign labels on left (even) and right (odd) sides
+    figure_svg = (
+        # Head
+        f'<ellipse cx="150" cy="42" rx="23" ry="24"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1.5"/>'
+        # Face details
+        f'<circle cx="143" cy="40" r="2.5" fill="{gold}" opacity="0.6"/>'
+        f'<circle cx="157" cy="40" r="2.5" fill="{gold}" opacity="0.6"/>'
+        f'<path d="M145,50 Q150,54 155,50" fill="none" stroke="{gold}" stroke-width="1" opacity="0.6"/>'
+        # Neck
+        f'<rect x="142" y="65" width="16" height="18" rx="4"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1"/>'
+        # Torso
+        f'<path d="M120,83 Q114,115 114,148 Q113,175 115,200 Q118,220 125,232'
+        f' Q137,242 150,242 Q163,242 175,232 Q182,220 185,200'
+        f' Q187,175 186,148 Q186,115 180,83 Z"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1.5"/>'
+        # Left arm
+        f'<path d="M120,88 Q96,98 80,118 Q70,132 72,148 Q79,145 84,134 Q94,116 122,103 Z"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1"/>'
+        # Right arm
+        f'<path d="M180,88 Q204,98 220,118 Q230,132 228,148 Q221,145 216,134 Q206,116 178,103 Z"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1"/>'
+        # Left hand
+        f'<ellipse cx="70" cy="150" rx="10" ry="7"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="0.8"/>'
+        # Right hand
+        f'<ellipse cx="230" cy="150" rx="10" ry="7"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="0.8"/>'
+        # Left leg
+        f'<path d="M128,242 Q122,278 124,315 Q125,345 126,370 Q128,385 132,396 L144,396'
+        f' Q140,382 139,368 Q138,340 136,315 Q135,278 138,242 Z"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1"/>'
+        # Right leg
+        f'<path d="M172,242 Q178,278 176,315 Q175,345 174,370 Q172,385 168,396 L156,396'
+        f' Q160,382 161,368 Q162,340 164,315 Q165,278 162,242 Z"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="1"/>'
+        # Left foot
+        f'<ellipse cx="132" cy="398" rx="15" ry="7"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="0.8"/>'
+        # Right foot
+        f'<ellipse cx="168" cy="398" rx="15" ry="7"'
+        f' fill="{fig_fill}" stroke="{gold}" stroke-width="0.8"/>'
+    )
+
+    # ── Sign label positions and connecting line anchors ──────────────────
+    # Layout mirrors the reference: Aries top-center, Pisces bottom-center,
+    # left column (5): Gemini, Leo, Libra, Sagittarius, Aquarius
+    # right column (5): Taurus, Cancer, Virgo, Scorpio, Capricorn
+    #
+    # Each entry: (sign, glyph, cn_name, body_part_cn, body_part_en,
+    #              label_x, label_y, anchor, line_x1, line_y1, line_x2, line_y2)
+
+    sign_rows = [
+        # Aries — top center
+        ("Aries",       "♈", "白羊", "頭面", "Head & Face",
+         150,  8, "middle", 150, 18, 150, 32),
+        # Taurus — right, neck
+        ("Taurus",      "♉", "金牛", "頸喉", "Neck & Throat",
+         278, 72, "end",    237, 72, 166, 72),
+        # Gemini — left, arms/shoulders
+        ("Gemini",      "♊", "雙子", "臂膊", "Arms & Shoulders",
+         22, 110, "start",  63, 110,  98, 110),
+        # Cancer — right, chest/stomach/lungs
+        ("Cancer",      "♋", "巨蟹", "胸肺", "Chest & Lungs",
+         278, 128, "end",   237, 128, 184, 120),
+        # Leo — left, heart/back
+        ("Leo",         "♌", "獅子", "心背", "Heart & Back",
+         22, 148, "start",  63, 148,  118, 138),
+        # Virgo — right, abdomen/belly
+        ("Virgo",       "♍", "處女", "腹腸", "Abdomen & Bowels",
+         278, 168, "end",   237, 168, 184, 162),
+        # Libra — left, kidneys/loins
+        ("Libra",       "♎", "天秤", "腎腰", "Kidneys & Loins",
+         22, 192, "start",  63, 192,  118, 190),
+        # Scorpio — right, genitals/bladder
+        ("Scorpio",     "♏", "天蠍", "生殖", "Genitals & Bladder",
+         278, 218, "end",   237, 218, 177, 218),
+        # Sagittarius — left, thighs/hips
+        ("Sagittarius", "♐", "射手", "髖腿", "Hips & Thighs",
+         22, 248, "start",  63, 248,  118, 248),
+        # Capricorn — right, knees
+        ("Capricorn",   "♑", "摩羯", "膝蓋", "Knees",
+         278, 308, "end",   237, 308, 182, 310),
+        # Aquarius — left, legs/ankles
+        ("Aquarius",    "♒", "水瓶", "小腿", "Legs & Ankles",
+         22, 358, "start",  63, 358,  122, 358),
+        # Pisces — bottom center
+        ("Pisces",      "♓", "雙魚", "足部", "Feet",
+         150, 422, "middle", 150, 412, 150, 396),
+    ]
+
     labels_svg = ""
-    sign_list = list(sign_info.items())
-    for i, (sign, (glyph, en, cn)) in enumerate(sign_list):
-        zone = _SIGN_ZONE[sign]
-        cx, cy = _ZODIAC_MAN_POSITIONS[zone]
-        # Alternate left/right for readability
-        if i % 2 == 0:
-            lx, ly = cx - 38, cy
-            anchor = "end"
-            line_x1, line_x2 = cx - 28, cx - 5
-        else:
-            lx, ly = cx + 38, cy
-            anchor = "start"
-            line_x1, line_x2 = cx + 5, cx + 28
-
+    for row in sign_rows:
+        (sign, glyph, cn_name, body_cn, body_en,
+         lx, ly, anchor, lx1, ly1, lx2, ly2) = row
         color = ZODIAC_BODY_PARTS[sign]["color"]
-        line_y = cy
-
         labels_svg += (
-            f'<line x1="{line_x1}" y1="{line_y}" x2="{line_x2}" y2="{line_y}" '
-            f'stroke="{color}" stroke-width="0.6" opacity="0.7"/>\n'
-            f'<text x="{lx}" y="{ly - 4}" text-anchor="{anchor}" '
-            f'font-size="3.5" fill="{color}" font-family="serif" font-weight="bold">'
-            f'{glyph} {cn}</text>\n'
-            f'<text x="{lx}" y="{ly + 3}" text-anchor="{anchor}" '
-            f'font-size="2.8" fill="#d4b896" font-family="sans-serif">'
-            f'{en}</text>\n'
+            f'<line x1="{lx1}" y1="{ly1}" x2="{lx2}" y2="{ly2}"'
+            f' stroke="{color}" stroke-width="1" opacity="0.75" stroke-dasharray="3,2"/>\n'
+            f'<text x="{lx}" y="{ly}" text-anchor="{anchor}"'
+            f' font-size="9" fill="{color}" font-family="serif" font-weight="bold">'
+            f'{glyph} {cn_name}</text>\n'
+            f'<text x="{lx}" y="{ly + 11}" text-anchor="{anchor}"'
+            f' font-size="7.5" fill="#d4c08a" font-family="sans-serif">'
+            f'{body_cn} {body_en}</text>\n'
         )
 
-    # Body outline (simplified human silhouette)
-    body_outline = """
-    <!-- Head -->
-    <ellipse cx="50" cy="17" rx="13" ry="14" fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.8"/>
-    <!-- Neck -->
-    <rect x="43" y="30" width="14" height="12" rx="3" fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.6"/>
-    <!-- Torso -->
-    <path d="M28,42 Q25,60 25,80 Q24,100 26,115 Q28,128 32,135 Q38,140 50,140 Q62,140 68,135 Q72,128 74,115 Q76,100 75,80 Q75,60 72,42 Z"
-          fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.8"/>
-    <!-- Left arm -->
-    <path d="M28,45 Q15,55 12,75 Q10,88 14,92 Q18,88 20,78 Q23,62 30,52 Z"
-          fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.6"/>
-    <!-- Right arm -->
-    <path d="M72,45 Q85,55 88,75 Q90,88 86,92 Q82,88 80,78 Q77,62 70,52 Z"
-          fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.6"/>
-    <!-- Left hand -->
-    <ellipse cx="13" cy="94" rx="5" ry="4" fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.5"/>
-    <!-- Right hand -->
-    <ellipse cx="87" cy="94" rx="5" ry="4" fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.5"/>
-    <!-- Left leg -->
-    <path d="M32,135 Q28,155 30,175 Q31,190 32,205" stroke="#C5A03F" stroke-width="7" stroke-linecap="round" fill="none"/>
-    <!-- Right leg -->
-    <path d="M68,135 Q72,155 70,175 Q69,190 68,205" stroke="#C5A03F" stroke-width="7" stroke-linecap="round" fill="none"/>
-    <!-- Left leg fill -->
-    <path d="M28,135 Q24,158 25,180 Q26,195 28,210 L36,210 Q35,195 34,180 Q33,158 36,135 Z"
-          fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.6"/>
-    <!-- Right leg fill -->
-    <path d="M72,135 Q76,158 75,180 Q74,195 72,210 L64,210 Q65,195 66,180 Q67,158 64,135 Z"
-          fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.6"/>
-    <!-- Left foot -->
-    <ellipse cx="30" cy="210" rx="7" ry="4" fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.5"/>
-    <!-- Right foot -->
-    <ellipse cx="70" cy="210" rx="7" ry="4" fill="#1a2a4a" stroke="#C5A03F" stroke-width="0.5"/>
-    """
+    # ── Decorative border ─────────────────────────────────────────────────
+    border_svg = (
+        f'<rect x="2" y="2" width="{W-4}" height="{H-4}" rx="6"'
+        f' fill="none" stroke="{gold}" stroke-width="1.2" opacity="0.4"/>'
+        f'<rect x="5" y="5" width="{W-10}" height="{H-10}" rx="4"'
+        f' fill="none" stroke="{gold}" stroke-width="0.5" opacity="0.2"/>'
+    )
 
-    svg = f"""<svg viewBox="-15 0 130 220" xmlns="http://www.w3.org/2000/svg"
-         width="400" height="660"
-         style="background: linear-gradient(180deg,#0d0d1a 0%,#1a0a00 100%); border-radius:12px;">
-    <defs>
-        <radialGradient id="bgGlow" cx="50%" cy="30%" r="40%">
-            <stop offset="0%" stop-color="#C5A03F" stop-opacity="0.08"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
-        </radialGradient>
-    </defs>
-    <rect width="130" height="220" x="-15" fill="url(#bgGlow)"/>
-    <!-- Decorative title -->
-    <text x="50" y="218" text-anchor="middle" font-size="4" fill="#C5A03F88" font-family="serif">
-        Homo Signorum · 黃道人
-    </text>
-    {shapes_svg}
-    {body_outline}
-    {labels_svg}
-</svg>"""
+    # ── Title ────────────────────────────────────────────────────────────
+    title_svg = (
+        f'<text x="{W//2}" y="14" text-anchor="middle"'
+        f' font-size="10" fill="{gold}" font-family="serif" font-weight="bold">'
+        f'黃道人 Homo Signorum</text>'
+    )
 
-    return svg
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}"'
+        f' width="{W}" height="{H}"'
+        f' style="background:linear-gradient(180deg,#0d1220 0%,#1a1000 100%);'
+        f'border-radius:10px;display:block;max-width:100%;">'
+        f'<defs>'
+        f'<radialGradient id="zmGlow" cx="50%" cy="40%" r="45%">'
+        f'<stop offset="0%" stop-color="#C5A03F" stop-opacity="0.07"/>'
+        f'<stop offset="100%" stop-color="#000000" stop-opacity="0"/>'
+        f'</radialGradient>'
+        f'</defs>'
+        f'<rect width="{W}" height="{H}" fill="url(#zmGlow)"/>'
+        f'{border_svg}'
+        f'{title_svg}'
+        f'{zone_svg}'
+        f'{figure_svg}'
+        f'{labels_svg}'
+        f'</svg>'
+    )
+
+    return f'<div style="display:flex;justify-content:center;margin:8px 0">{svg}</div>'
 
 
 # ============================================================
