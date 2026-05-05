@@ -249,6 +249,191 @@ def example_svg_rendering():
     print()
 
 
+def example_suanpan_basic():
+    """算盤打數基本使用示例（曹展碩實務版）"""
+    print("=" * 70)
+    print("鐵板算盤數基本使用示例（曹展碩實務版）")
+    print("=" * 70)
+    print()
+
+    from astro.tieban import TieBanDiviner
+
+    diviner = TieBanDiviner(method="suanpan")
+
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1982, 12, 15, 10, 30),
+        year_gz=Ganzhi("壬", "戌"),
+        month_gz=Ganzhi("甲", "子"),
+        day_gz=Ganzhi("戊", "午"),
+        hour_gz=Ganzhi("庚", "午"),
+        gender="男",
+    )
+
+    result = diviner.calculate(birth_data)
+
+    print(f"八字：{birth_data.year_gz} {birth_data.month_gz} {birth_data.day_gz} {birth_data.hour_gz}")
+    print(f"性別：{birth_data.gender}")
+    print()
+    print(f"納音：{result.nayin}　→　五行部：{result.department}")
+    print()
+    print("【算盤打數計算步驟】")
+    for step in result.calculation_steps:
+        print(f"  {step}")
+    print()
+    print(f"條文鍵：{result.tiaowen_key}")
+    if result.tiaowen:
+        print(f"條文：{result.tiaowen.get('text', '')}")
+        raw_key = result.tiaowen.get("raw_key", "")
+        if raw_key:
+            print(f"原始鍵：{raw_key}")
+    else:
+        print("（條文暫無資料）")
+    print()
+
+
+def example_suanpan_female():
+    """算盤打數女命示例"""
+    print("=" * 70)
+    print("鐵板算盤數女命示例")
+    print("=" * 70)
+    print()
+
+    from astro.tieban import TieBanDiviner
+
+    diviner = TieBanDiviner(method="suanpan")
+
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1995, 3, 8, 8, 0),
+        year_gz=Ganzhi("乙", "亥"),
+        month_gz=Ganzhi("丁", "卯"),
+        day_gz=Ganzhi("甲", "申"),
+        hour_gz=Ganzhi("甲", "辰"),
+        gender="女",
+    )
+
+    result = diviner.calculate(birth_data)
+
+    print(f"八字：{birth_data.year_gz} {birth_data.month_gz} {birth_data.day_gz} {birth_data.hour_gz}")
+    print(f"性別：{birth_data.gender}")
+    print(f"納音：{result.nayin}　五行部：{result.department}")
+    print(f"算盤總數：{result.total_number}　條文鍵：{result.tiaowen_key}")
+    if result.tiaowen:
+        print(f"條文：{result.tiaowen.get('text', '')}")
+    print()
+
+
+def example_suanpan_dayun():
+    """算盤打數大運推算示例"""
+    print("=" * 70)
+    print("鐵板算盤數大運推算示例")
+    print("=" * 70)
+    print()
+
+    from astro.tieban import TieBanDiviner
+
+    diviner = TieBanDiviner(method="suanpan")
+
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1990, 5, 15, 14, 30),
+        year_gz=Ganzhi("庚", "午"),
+        month_gz=Ganzhi("辛", "巳"),
+        day_gz=Ganzhi("戊", "辰"),
+        hour_gz=Ganzhi("己", "未"),
+        gender="男",
+    )
+
+    dayun_list = diviner.get_dayun(birth_data, start_age=5, steps=8)
+
+    print(f"八字：{birth_data.year_gz} {birth_data.month_gz} {birth_data.day_gz} {birth_data.hour_gz}")
+    print(f"納音：{dayun_list[0].nayin}　五行部：{dayun_list[0].department}")
+    print()
+    print(f"{'大運':<6} {'起運年齡':<10} {'算盤總數':<12} {'條文'}")
+    print("-" * 60)
+    for step_idx, d in enumerate(dayun_list, start=1):
+        tiaowen_text = ""
+        if d.tiaowen:
+            tiaowen_text = d.tiaowen.get("text", "")[:20]
+        print(f"第{step_idx}步  "
+              f"{d.dayun_number or '?'} 歲      "
+              f"{d.total_number:<12} {tiaowen_text}")
+    print()
+
+
+def example_suanpan_method_switch():
+    """兩種鐵板神數版本切換示例"""
+    print("=" * 70)
+    print("鐵板神數兩版本切換示例（扣入法 ↔ 算盤數）")
+    print("=" * 70)
+    print()
+
+    from astro.tieban import TieBanDiviner
+
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1990, 5, 15, 14, 30),
+        year_gz=Ganzhi("庚", "午"),
+        month_gz=Ganzhi("辛", "巳"),
+        day_gz=Ganzhi("戊", "辰"),
+        hour_gz=Ganzhi("己", "未"),
+        gender="男",
+    )
+
+    # 扣入法
+    kunji_diviner = TieBanDiviner(method="kunji")
+    kunji_result = kunji_diviner.calculate(birth_data)
+    print("【扣入法（kunji）版本】")
+    print(f"  神數號碼：{kunji_result.tieban_number}")
+    print(f"  條文：{kunji_result.verse[:40]}...")
+    print()
+
+    # 算盤數
+    suanpan_diviner = kunji_diviner.switch_method("suanpan")
+    suanpan_result = suanpan_diviner.calculate(birth_data)
+    print("【算盤打數（suanpan）版本】")
+    print(f"  納音：{suanpan_result.nayin}  五行部：{suanpan_result.department}")
+    print(f"  算盤總數：{suanpan_result.total_number}")
+    if suanpan_result.tiaowen:
+        print(f"  條文：{suanpan_result.tiaowen.get('text', '')}")
+    print()
+
+    # 完整報告
+    print("【算盤數完整報告】")
+    print(suanpan_diviner.get_full_report(birth_data))
+
+
+def example_suanpan_tiaowen_query():
+    """算盤打數五部條文查詢示例"""
+    print("=" * 70)
+    print("鐵板算盤數五部條文查詢示例")
+    print("=" * 70)
+    print()
+
+    from astro.tieban import SuanpanTiaowenDatabase, TieBanDiviner
+
+    db = SuanpanTiaowenDatabase()
+
+    # 統計各部條文
+    stats = db.stats()
+    print("【各部條文統計】")
+    for dept, gender_stats in stats.items():
+        total = sum(gender_stats.values())
+        print(f"  {dept}部：{total} 條（" + "　".join(f"{k}:{v}" for k, v in gender_stats.items()) + "）")
+    print()
+
+    # 查詢特定條文
+    print("【水部男命條文範例】")
+    all_shui_nan = db.get_all("水", "男命")
+    for key, entry in list(all_shui_nan.items())[:5]:
+        print(f"  {key}：{entry.get('text', '')} （{entry.get('raw_key', '')}）")
+    print()
+
+    # 使用 TieBanDiviner 查詢
+    diviner = TieBanDiviner(method="suanpan")
+    tiaowen = diviner.get_tiaowen("水", gender_type="男命", number="2241")
+    if tiaowen:
+        print(f"【直接查詢 水部/男命/2241】：{tiaowen.get('text', '')}")
+    print()
+
+
 def main():
     """運行所有示例"""
     print()
@@ -256,16 +441,21 @@ def main():
     print("║" + " " * 20 + "鐵板神數模組使用示例" + " " * 24 + "║")
     print("╚" + "═" * 69 + "╝")
     print()
-    
+
     examples = [
-        ("基本使用", example_basic_usage),
-        ("完整報告", example_full_report),
+        ("基本使用（扣入法）", example_basic_usage),
+        ("完整報告（扣入法）", example_full_report),
         ("條文搜索", example_verse_search),
         ("時辰對比", example_different_birth_times),
         ("分類統計", example_verse_categories),
         ("SVG 渲染", example_svg_rendering),
+        ("算盤數基本使用", example_suanpan_basic),
+        ("算盤數女命", example_suanpan_female),
+        ("算盤數大運", example_suanpan_dayun),
+        ("兩版本切換", example_suanpan_method_switch),
+        ("算盤數條文查詢", example_suanpan_tiaowen_query),
     ]
-    
+
     for name, func in examples:
         try:
             func()
@@ -274,7 +464,7 @@ def main():
             import traceback
             traceback.print_exc()
             print()
-    
+
     print("=" * 70)
     print("所有示例運行完成")
     print("=" * 70)
