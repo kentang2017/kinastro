@@ -3426,6 +3426,26 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生及發病日期，點擊「開始排盤」進行傷寒鈐法推算。",
         "en": "👈 Enter birth date and onset date on the left, then click 'Calculate Chart'.",
     },
+    "tab_beiji": {
+        "zh": "⭐ 北極神數",
+        "en": "⭐ Beiji Shenshu",
+    },
+    "desc_beiji": {
+        "zh": "⭐ **北極神數** — 宋代邵康節（邵雍）五大神數之一，以北斗七星（破軍星）為核心，結合奇門九星、六十四卦、二十八宿。特色「簡單、神奇、快而準」，僅需出生年月日時刻即可起盤，擅長區分相同八字不同命運，可論父母、婚姻、子息、財官、學業、牢獄、陰陽宅風水等。",
+        "en": "⭐ **Beiji Shenshu (North Star Divine Numbers)** — One of the Five Divine Numbers Systems of Shao Kangjie (Shao Yong), Song Dynasty. Centered on the North Star (Breaking Army Star), integrating Qimen Nine Stars, 64 Hexagrams, and 28 Lunar Mansions. Known for being simple, accurate and fast — only birth year/month/day/hour/ke needed. Excellent at distinguishing people with identical Ba Zi but different fates.",
+    },
+    "spinner_beiji": {
+        "zh": "計算北極神數…",
+        "en": "Computing Beiji Shenshu…",
+    },
+    "sys_hint_beiji": {
+        "zh": "邵康節五大神數，北斗七星，六十四卦，快準起盤",
+        "en": "Shao Kangjie's divine numbers, North Star, 64 hexagrams, fast and accurate",
+    },
+    "info_beiji_prompt": {
+        "zh": "👈 請在左側輸入出生年月日時，點擊「開始排盤」進行北極神數推算。",
+        "en": "👈 Enter birth date and time on the left, then click 'Calculate Chart' for Beiji Shenshu.",
+    },
 }
 
 def get_ui_lang() -> str:
