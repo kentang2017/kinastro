@@ -2965,7 +2965,7 @@ elif _selected_system == "tab_tieban":
                     st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
 
                 # 歲運條文（流年歲運）
-                _sp_suiyun = _sp_db.get(_sp_calc.department, "歲運", _sp_calc.tiaowen_key) if _sp_calc.department else None
+                _sp_suiyun = _sp_db.get(_sp_calc.department or "", "歲運", _sp_calc.tiaowen_key)
                 if _sp_suiyun and _sp_suiyun.get("text"):
                     st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
                     _sp_sy_raw = _sp_suiyun.get("raw_key", "")
