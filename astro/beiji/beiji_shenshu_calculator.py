@@ -34,7 +34,7 @@ def print_result_summary(result) -> None:
     print(f"{'='*60}")
     print(f"  出生年：{result.year_stem}{result.year_branch}年（{result.year_shengxiao}）")
     print(f"  時辰：{result.hour_branch}時  刻：{result.ke_label}")
-    print(f"  性別：{result.birth_input.gender}")
+    print(f"  性別：{result.birth_input.gender}")  # noqa: S106 gender is a calculation parameter (男/女), not a credential
     print(f"{'='*60}")
 
     for qr in result.queries:
@@ -79,8 +79,12 @@ def main() -> None:
                 minute = int(input("出生分（0-59，可輸入 0）：") or "0")
                 gender = input("性別（男/女，預設男）：").strip() or "男"
 
-                ke_str = input(f"刻（1-8，預設自動計算）：").strip()
-                ke = int(ke_str) if ke_str.isdigit() and 1 <= int(ke_str) <= 8 else compute_ke(hour, minute)
+                ke_str = input("刻（1-8，預設自動計算）：").strip()
+                if ke_str.isdigit():
+                    ke_val = int(ke_str)
+                    ke = ke_val if 1 <= ke_val <= 8 else compute_ke(hour, minute)
+                else:
+                    ke = compute_ke(hour, minute)
 
                 inp = BeijiInput(
                     year=year, month=month, day=day,

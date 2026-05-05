@@ -302,10 +302,11 @@ def render_streamlit(
 
     with tab_chart:
         # 刻的輸入（精細化）
+        # options=range(1,9) 確保 ke 值始終在 1-8 合法範圍內
         ke = st.select_slider(
             auto_cn("出生刻（每時辰8刻，每刻15分鐘）"),
             options=list(range(1, 9)),
-            value=compute_ke(hour, minute),
+            value=max(1, min(8, compute_ke(hour, minute))),
             format_func=lambda x: KE_LABELS[x - 1],
             key="beiji_ke_slider",
         )

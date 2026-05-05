@@ -139,11 +139,19 @@ def compute_ke(hour: int, minute: int) -> int:
     根據出生時分計算刻（1-8）。
 
     每個時辰 = 2小時 = 120分鐘，分為 8 刻（每刻15分鐘）。
-    在時辰起點計算分鐘偏移後取 ceil(minute/15) + 1。
+    時辰起點為奇數小時（子時23:00, 丑時01:00, 寅時03:00...）。
+    計算方式：
+      - 奇數小時（1,3,5...21）或23時：時辰第一個小時 → offset = minute
+      - 偶數小時（0,2,4...22）：時辰第二個小時 → offset = 60 + minute
+    刻 = offset // 15 + 1（1-8，已截斷至合法範圍）。
     """
-    # 時辰起點分鐘（例如子時=0分，丑時=120分...）
-    hour_start_minute = (hour % 2) * 60 + minute
-    ke = min(8, max(1, hour_start_minute // 15 + 1))
+    # 23時 或 奇數小時 → 時辰第一個小時
+    if hour == 23 or hour % 2 == 1:
+        offset = minute
+    else:
+        # 偶數小時 → 時辰第二個小時（距時辰起點已過60分鐘）
+        offset = 60 + minute
+    ke = min(8, max(1, offset // 15 + 1))
     return ke
 
 
@@ -253,6 +261,10 @@ class BeijiShenshu:
         北極神數以「拾位數」確定列，計算方式：
           - 基本值：(月 + 日 + 時辰地支索引 + 刻) % 8
           - 得 0-7，對應列 1-8
+
+        注意：此處為簡化計算公式。原教程以「千未數（拾位）」
+        為主要定列依據，精確公式因宮位不同而略有差異，
+        需對照原典各宮表格的橫縱軸說明進行精確推算。
         """
         hour_branch = get_hour_branch(birth_input.hour)
         hour_idx = DIZHI_INDEX[hour_branch]
@@ -562,7 +574,7 @@ class BeijiShenshu:
         """
         year_stem, year_branch = get_year_ganzhi(inp.year)
         hour_branch = get_hour_branch(inp.hour)
-        ke = inp.ke if inp.ke else compute_ke(inp.hour, inp.minute)
+        ke = inp.ke if inp.ke and inp.ke > 0 else compute_ke(inp.hour, inp.minute)
         ke_label = KE_LABELS[min(ke - 1, 7)]
 
         queries: list[QueryResult] = []
@@ -649,6 +661,6 @@ def compute_beiji(
         hour=hour,
         minute=minute,
         gender=gender,
-        ke=ke if ke else compute_ke(hour, minute),
+        ke=ke if ke and ke > 0 else compute_ke(hour, minute),
     )
     return get_calculator().calculate_all(inp)
