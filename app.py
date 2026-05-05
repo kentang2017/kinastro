@@ -10,7 +10,7 @@ Multi-System Astrology Chart Application
 藏傳時輪金剛、九星氣學、土亭數、高棉占星、波利尼西亞／夏威夷、
 卡巴拉、猶太 Mazzalot、薩珊波斯、阿拉伯占星、也門占星、Picatrix 占星魔法、
 瑪雅、阿茲特克、古埃及十度區間（Decans）、巴比倫占星
-共四十八種體系，使用 pyswisseph 進行天文計算。
+共四十九種體系，使用 pyswisseph 進行天文計算。
 """
 
 import os
@@ -297,8 +297,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "四十八體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十八種占星體系"),
+        ("🔮", "四十九體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球四十九種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
@@ -2965,7 +2965,7 @@ elif _selected_system == "tab_tieban":
                     st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
 
                 # 歲運條文（流年歲運）
-                _sp_suiyun = _sp_db.get(_sp_calc.department or "", "歲運", _sp_calc.tiaowen_key)
+                _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
                 if _sp_suiyun and _sp_suiyun.get("text"):
                     st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
                     _sp_sy_raw = _sp_suiyun.get("raw_key", "")
