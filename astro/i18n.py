@@ -3447,6 +3447,36 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生年月日時，點擊「開始排盤」進行北極神數推算。",
         "en": "👈 Enter birth date and time on the left, then click 'Calculate Chart' for Beiji Shenshu.",
     },
+    "tab_nanji": {
+        "zh": "☰ 南極神數",
+        "en": "☰ Nanji Shenshu",
+    },
+    "desc_nanji": {
+        "zh": (
+            "☰ **南極神數（Nanji Shenshu）** — 中國五大神數之一《家傳秘法手稿》完整 Python 實現。"
+            "以四柱八字為基礎，結合二十八星宿、建除十二辰與十八幅星圖秘訣，"
+            "透過 246 條高質量手稿條文進行推演解讀。"
+            "手稿核心精神：「圖為體，條文為用」「圖不破則數難起」。"
+        ),
+        "en": (
+            "☰ **Nanji Shenshu** — One of China's Five Great Divine Numbers. "
+            "Based on the Four Pillars (Bazi), integrating 28 Lunar Mansions (Xiu), "
+            "Jianchu 12 Spirits, and 18 Star Chart secrets, with 246 high-quality manuscript verses. "
+            "Core principle: 'The chart is the body, the verse is the function.'"
+        ),
+    },
+    "spinner_nanji": {
+        "zh": "推演南極神數命盤…",
+        "en": "Computing Nanji Shenshu chart…",
+    },
+    "sys_hint_nanji": {
+        "zh": "南極神數，四柱八字，二十八宿，建除十二辰，246條手稿條文",
+        "en": "Nanji Shenshu, Four Pillars, 28 Lunar Mansions, Jianchu, 246 manuscript verses",
+    },
+    "info_nanji_prompt": {
+        "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行南極神數推演。",
+        "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Nanji Shenshu.",
+    },
     "tab_bazi": {
         "zh": "🀄 子平八字",
         "en": "🀄 Ziping Bazi",
