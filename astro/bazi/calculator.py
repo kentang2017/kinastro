@@ -248,6 +248,7 @@ def _jiazi_prev(gz: str, steps: int = 1) -> str:
     return _JIAZI_SEQ[(idx - steps) % 60]
 
 
+@lru_cache(maxsize=128)
 def _get_shishen(day_stem: str, target_stem: str) -> str:
     """計算天干間的十神關係（以日主為基準）。
 
@@ -274,6 +275,7 @@ def _get_shishen(day_stem: str, target_stem: str) -> str:
     return ""
 
 
+@lru_cache(maxsize=128)
 def _get_changsheng(stem: str, branch: str) -> str:
     """計算天干在某地支的十二長生狀態。
 
@@ -470,6 +472,51 @@ def _analyze_day_master_strength(
 # 典籍：《子平真詮》卷一「論格局」
 # ──────────────────────────────────────────────────────────────────────────────
 
+# 月令本氣十神 → 正格名稱及說明（模組常數，避免每次調用重建字典）
+_SHISHEN_TO_PATTERN: Dict[str, Tuple[str, str, str]] = {
+    "食神": ("食神格",
+             "食神生財，格局清純，主聰明、有才華、食祿豐厚。",
+             "Output (Shishen) pattern: Creative intelligence, talent, abundant food and salary."),
+    "傷官": ("傷官格",
+             "傷官格局，才藝超群，聰明絕頂，然性情激烈，宜見印制傷。",
+             "Hurting Official pattern: Brilliant talent but impulsive nature; beneficial to see Seal to control."),
+    "偏財": ("偏財格",
+             "偏財格，主廣結善緣、善於經營、財運寬厚，然財易散。",
+             "Indirect Wealth pattern: Broad connections, business acumen, generous nature."),
+    "正財": ("正財格",
+             "正財格，主勤勞踏實，財運平穩，持家有方，婚姻美滿。",
+             "Direct Wealth pattern: Diligent and steady, stable finances, harmonious family."),
+    "七殺": ("七殺格",
+             "七殺格（偏官格），權威刑戮之氣，宜食神制殺，或印化殺為貴。",
+             "Seven Killings pattern: Authority and power; Shishen or Seal needed to control or transform."),
+    "正官": ("正官格",
+             "正官格，主貴氣正直，官祿亨通，名望顯赫，宜財印輔助。",
+             "Direct Official pattern: Upright nobility, prosperous official career, fine reputation."),
+    "偏印": ("偏印格",
+             "偏印格（梟神奪食），多才多藝，然性孤僻，食神受制則困厄。",
+             "Indirect Seal (Owl) pattern: Versatile talents but lonely disposition; watch for Output suppression."),
+    "正印": ("正印格",
+             "正印格，品德高尚，學識淵博，多得長輩庇蔭，官印相輝。",
+             "Direct Seal pattern: Virtuous character, broad learning, protected by elders."),
+}
+
+# 從格（Following Patterns）干支 → 從格名
+_CONG_PATTERNS: Dict[str, str] = {
+    "正財": "從財格", "偏財": "從財格",
+    "七殺": "從殺格", "正官": "從官格",
+    "食神": "從食格", "傷官": "從食格",
+}
+
+# 五行一氣（專旺格）名稱及說明
+_ZHUAN_WANG_PATTERN: Dict[str, Tuple[str, str, str]] = {
+    "木": ("曲直格", "曲直仁壽格，全局木氣旺盛，宜水木流行。", "Qüzhi (Wood) pattern: Prosperous Wood throughout, favorable Water and Wood flow."),
+    "火": ("炎上格", "炎上格，全局火氣旺盛，威顯名揚，宜木火流行。", "Yanshang (Fire) pattern: Blazing Fire throughout, prestige and fame."),
+    "土": ("稼穡格", "稼穡格，全局土氣旺盛，富厚實在，宜火土流行。", "Jiase (Earth) pattern: Rich Earth throughout, stable wealth."),
+    "金": ("從革格", "從革格，全局金氣旺盛，剛烈堅毅，宜土金流行。", "Conge (Metal) pattern: Powerful Metal throughout, resolute character."),
+    "水": ("潤下格", "潤下格，全局水氣旺盛，聰明機智，宜金水流行。", "Runxia (Water) pattern: Flowing Water throughout, clever and resourceful."),
+}
+
+
 def _determine_pattern(
     day_stem: str,
     month_branch: str,
@@ -513,35 +560,9 @@ def _determine_pattern(
             desc_en = "Month branch shares Day master element — strong constitution."
         return pattern, "正格", desc_zh, desc_en
 
-    # 十神格局
-    shishen_to_pattern: Dict[str, Tuple[str, str, str]] = {
-        "食神": ("食神格",
-                 "食神生財，格局清純，主聰明、有才華、食祿豐厚。",
-                 "Output (Shishen) pattern: Creative intelligence, talent, abundant food and salary."),
-        "傷官": ("傷官格",
-                 "傷官格局，才藝超群，聰明絕頂，然性情激烈，宜見印制傷。",
-                 "Hurting Official pattern: Brilliant talent but impulsive nature; beneficial to see Seal to control."),
-        "偏財": ("偏財格",
-                 "偏財格，主廣結善緣、善於經營、財運寬厚，然財易散。",
-                 "Indirect Wealth pattern: Broad connections, business acumen, generous nature."),
-        "正財": ("正財格",
-                 "正財格，主勤勞踏實，財運平穩，持家有方，婚姻美滿。",
-                 "Direct Wealth pattern: Diligent and steady, stable finances, harmonious family."),
-        "七殺": ("七殺格",
-                 "七殺格（偏官格），權威刑戮之氣，宜食神制殺，或印化殺為貴。",
-                 "Seven Killings pattern: Authority and power; Shishen or Seal needed to control or transform."),
-        "正官": ("正官格",
-                 "正官格，主貴氣正直，官祿亨通，名望顯赫，宜財印輔助。",
-                 "Direct Official pattern: Upright nobility, prosperous official career, fine reputation."),
-        "偏印": ("偏印格",
-                 "偏印格（梟神奪食），多才多藝，然性孤僻，食神受制則困厄。",
-                 "Indirect Seal (Owl) pattern: Versatile talents but lonely disposition; watch for Output suppression."),
-        "正印": ("正印格",
-                 "正印格，品德高尚，學識淵博，多得長輩庇蔭，官印相輝。",
-                 "Direct Seal pattern: Virtuous character, broad learning, protected by elders."),
-    }
-    if shishen in shishen_to_pattern:
-        name, zh, en = shishen_to_pattern[shishen]
+    # 十神格局（使用模組級常數字典）
+    if shishen in _SHISHEN_TO_PATTERN:
+        name, zh, en = _SHISHEN_TO_PATTERN[shishen]
         return name, "正格", zh, en
 
     # 從格判斷（日主極弱，全局幾無比劫印）
@@ -562,29 +583,16 @@ def _determine_pattern(
         if not dominant_ss_stems:
             return "普通格", "正格", "格局普通，依身強身弱取用。", "Ordinary pattern; use god based on strength."
         dominant_ss = _get_shishen(day_stem, dominant_ss_stems[0])
-        cong_patterns = {
-            "正財": "從財格", "偏財": "從財格",
-            "七殺": "從殺格", "正官": "從官格",
-            "食神": "從食格", "傷官": "從食格",
-        }
-        if dominant_ss in cong_patterns:
-            name = cong_patterns[dominant_ss]
+        if dominant_ss in _CONG_PATTERNS:
+            name = _CONG_PATTERNS[dominant_ss]
             desc_zh = f"從格：日主極弱，從{dominant_ss}之勢，以{dominant_wx}為用，忌比劫印綬。"
             desc_en = f"Following pattern: Day master is extremely weak, following {dominant_ss}({dominant_wx}) force."
             return name, "從格", desc_zh, desc_en
 
     # 五行一氣格（專旺格）
-    if strength_score >= 14:
-        zm_pattern = {
-            "木": ("曲直格", "曲直仁壽格，全局木氣旺盛，宜水木流行。", "Qüzhi (Wood) pattern: Prosperous Wood throughout, favorable Water and Wood flow."),
-            "火": ("炎上格", "炎上格，全局火氣旺盛，威顯名揚，宜木火流行。", "Yanshang (Fire) pattern: Blazing Fire throughout, prestige and fame."),
-            "土": ("稼穡格", "稼穡格，全局土氣旺盛，富厚實在，宜火土流行。", "Jiase (Earth) pattern: Rich Earth throughout, stable wealth."),
-            "金": ("從革格", "從革格，全局金氣旺盛，剛烈堅毅，宜土金流行。", "Conge (Metal) pattern: Powerful Metal throughout, resolute character."),
-            "水": ("潤下格", "潤下格，全局水氣旺盛，聰明機智，宜金水流行。", "Runxia (Water) pattern: Flowing Water throughout, clever and resourceful."),
-        }
-        if dm_wx in zm_pattern:
-            name, zh, en = zm_pattern[dm_wx]
-            return name, "專旺格", zh, en
+    if strength_score >= 14 and dm_wx in _ZHUAN_WANG_PATTERN:
+        name, zh, en = _ZHUAN_WANG_PATTERN[dm_wx]
+        return name, "專旺格", zh, en
 
     return "普通格", "正格", "格局普通，依身強身弱取用。", "Ordinary pattern; use god based on strength."
 
@@ -708,6 +716,7 @@ def _tiaohoushen(day_stem: str, month_branch: str) -> str:
 # 典籍：《三命通會》卷三「論大運」
 # ──────────────────────────────────────────────────────────────────────────────
 
+@lru_cache(maxsize=256)
 def _find_nearest_jie(
     birth_year: int, birth_month: int, birth_day: int,
     forward: bool,
@@ -794,8 +803,6 @@ def _compute_dayun(
         age_e = start_age + (i + 1) * 10
 
         # 起運年份
-        dy_start_year = reference_date.year + int(age_s - (reference_date.year - birth_year))
-        dy_birth_date = date(birth_year, birth_month, birth_day)
         dy_year = birth_year + int(age_s)
         dy_month = birth_month
         dy_day = birth_day
@@ -1193,22 +1200,27 @@ Within the five elements' generation and restraint, all of fate is contained."
 # 流年干支
 # ──────────────────────────────────────────────────────────────────────────────
 
+@lru_cache(maxsize=256)
 def _get_liunian_gz(year: int) -> str:
     """取某公曆年的流年干支（以立春為界）。
 
-    使用 sxtwl 找到實際立春日期（可能為2月3、4或5日），
-    以立春為歲首取年干支。
+    使用 sxtwl 找到實際立春日期（通常為2月3–5日），
+    以立春為歲首取年干支。若在預期範圍內未找到立春，
+    退而搜尋整個2月，最終以2月4日作為保底。
     """
-    # 搜尋2月3日至2月6日中的立春（sxtwl index 3 = 立春）
-    for d in range(2, 8):
+    # 立春通常落在 2月3–5日，擴大搜尋至 2月1–8日保險
+    # _DEFAULT_LICHUN_DAY=4: 立春最常見於2月4日，用作搜尋失敗時的保底值
+    _DEFAULT_LICHUN_DAY = 4
+    found_day = _DEFAULT_LICHUN_DAY
+    for d in range(1, 9):
         try:
             cdate = fromSolar(year, 2, d)
             if cdate.hasJieQi() and cdate.getJieQi() == 3:  # 3 = 立春
+                found_day = d
                 break
         except Exception:
             continue
-    # 取立春當日的年干支
-    ref_date = fromSolar(year, 2, d)
+    ref_date = fromSolar(year, 2, found_day)
     tg_raw = ref_date.getYearGZ(False)
     return TIANGAN[tg_raw.tg] + DIZHI[tg_raw.dz]
 
