@@ -236,17 +236,17 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">五十五體系占星排盤平台</span>
+          <span class="hp-title-sub">五十六體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
-          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星到傷寒鈐法、<strong style="color:#A78BFA;">傳統卜卦占星</strong>——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十五種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星、<strong style="color:#A78BFA;">拜占庭占星</strong>到傷寒鈐法、<strong style="color:#A78BFA;">傳統卜卦占星</strong>——<br/>
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十六種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">55</div>
+            <div class="hp-stat-num">56</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -291,7 +291,7 @@ def render_homepage():
          ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星"],
          "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
         ("⚕️", "醫占", "Medical Astrology",
-         ["醫學占星", "傷寒鈐法"],
+         ["拜占庭占星", "醫學占星", "傷寒鈐法"],
          "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
         ("📜", "傳統卜卦占星", "Traditional Horary",
          ["西洋卜卦", "吠陀問卜"],
@@ -319,8 +319,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "五十五體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球五十五種占星體系"),
+        ("🔮", "五十六體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球五十六種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
