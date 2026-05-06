@@ -110,6 +110,7 @@ from astro.western.advanced_bodies import (
 from astro.western.uranian import compute_uranian_chart, render_uranian_chart
 from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
 from astro.harmonic import compute_multi_harmonic, render_harmonic
+from astro.primary_directions import compute_primary_directions, render_primary_directions
 from astro.esoteric import compute_esoteric_chart
 from astro.esoteric.renderer import render_streamlit as render_esoteric_chart
 from astro.western.predictive_ui import render_predictive_suite
@@ -1123,7 +1124,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_bazi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1202,6 +1203,7 @@ with st.sidebar:
         "tab_horary": t("tab_horary"),
         "tab_electional": t("tab_electional"),
         "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
+        "tab_primary_directions": t("tab_primary_directions"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1263,6 +1265,7 @@ with st.sidebar:
         "tab_horary": t("sys_hint_horary"),
         "tab_electional": t("sys_hint_electional"),
         "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
+        "tab_primary_directions": t("sys_hint_primary_directions"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -5263,6 +5266,20 @@ elif _selected_system == "tab_harmonic":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_harmonic"))
+elif _selected_system == "tab_primary_directions":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_primary_directions")):
+                _pd_result = compute_primary_directions(**_p)
+            render_primary_directions(_pd_result)
+            _render_ai_button("tab_primary_directions", _pd_result, btn_key="primary_directions")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_primary_directions_prompt"))
+        st.markdown(t("desc_primary_directions"))
 elif _selected_system == "tab_wariga":
     if _is_calculated:
         try:

@@ -3643,6 +3643,53 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh_cn": "👈 请在左侧输入出生年月日时及地点，点击「开始排盘」进行和谐占星分析。",
         "en": "👈 Enter birth date, time and location on the left, then click 'Calculate Chart' for Harmonic Astrology analysis.",
     },
+    "tab_primary_directions": {
+        "zh": "⚷ 古典主限推運",
+        "zh_cn": "⚷ 古典主限推运",
+        "en": "⚷ Primary Directions",
+    },
+    "sys_hint_primary_directions": {
+        "zh": "Placidus 半弧世間主限 · Ptolemy 黃道主限 · 奈包德時間鍵 · 古典時機推算",
+        "zh_cn": "Placidus 半弧世间主限 · Ptolemy 黄道主限 · 奈包德时间键 · 古典时机推算",
+        "en": "Placidus Mundo Semi-Arc · Ptolemy Zodiacal · Naibod Key · Classical timing technique",
+    },
+    "spinner_primary_directions": {
+        "zh": "正在計算古典主限推運…",
+        "zh_cn": "正在计算古典主限推运…",
+        "en": "Computing Classical Primary Directions…",
+    },
+    "desc_primary_directions": {
+        "zh": (
+            "⚷ **古典主限推運（Primary Directions）** — 西方古典占星最核心的時機推算體系。\n\n"
+            "• 起源於 Claudius Ptolemy《占星四書》（約 150 CE），後由 Regiomontanus（1490）與 Placidus de Titis（1657）加以精算。\n"
+            "• **世間主限（Mundo / Placidus 半弧法）**：最精準的傳統方法，依行星在晝弧中的比例位置計算推運弧。\n"
+            "• **黃道主限（Zodiacal / Ptolemy 斜升法）**：以斜升度差計算推運弧，歷史最悠久的方法。\n"
+            "• 支援五大相位：合相、六分、四分、三分、對分，以及赤緯平行。\n"
+            "• 支援順向主限（Direct）與逆向主限（Converse）。\n"
+            "• 時間鍵：奈包德鍵（0.9856°/年，最傳統）、托勒密鍵（1°/年）、太陽弧鍵。\n"
+            "• 古典手稿風格 SVG 時間軸視覺化（仿文藝復興占星書籍設計）。\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "⚷ **Classical Primary Directions** — The most fundamental timing technique of Western classical astrology.\n\n"
+            "• Originates with Claudius Ptolemy's *Tetrabiblos* (c. 150 CE); refined by Regiomontanus (1490) "
+            "and Placidus de Titis (*Primum Mobile*, 1657).\n"
+            "• **Mundo Directions (Placidus Semi-Arc)**: Most precise traditional method, using the "
+            "proportional position within the Placidus diurnal semi-arc.\n"
+            "• **Zodiacal Directions (Ptolemy Oblique Ascension)**: Uses oblique ascension differences; "
+            "the oldest method.\n"
+            "• Supports five major aspects: conjunction, sextile, square, trine, opposition, plus parallels.\n"
+            "• Both Direct and Converse directions supported.\n"
+            "• Time keys: Naibod (0.9856°/yr — most traditional), Ptolemy (1°/yr), Solar Arc.\n"
+            "• Classical manuscript-style SVG timeline (Renaissance astronomical book aesthetic).\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
+    "info_primary_directions_prompt": {
+        "zh": "👈 請在左側輸入出生年月日時及地點，點擊「開始排盤」進行古典主限推運分析。",
+        "zh_cn": "👈 请在左侧输入出生年月日时及地点，点击「开始排盘」进行古典主限推运分析。",
+        "en": "👈 Enter birth date, time and location on the left, then click 'Calculate Chart' for Primary Directions analysis.",
+    },
 }
 
 def get_ui_lang() -> str:
