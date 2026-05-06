@@ -3543,6 +3543,59 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請輸入出生資料後點擊「開始排盤」，進行靈性占星七道光線分析。",
         "en": "👈 Enter birth data and click 'Calculate Chart' to begin the Seven Rays Esoteric Astrology analysis.",
     },
+    "tab_electional": {
+        "zh": "⏳ 擇日占星（Electional / Muhurta）",
+        "en": "⏳ Electional Astrology / Muhurta",
+    },
+    "desc_electional": {
+        "zh": (
+            "⏳ **擇日占星（Electional Astrology & Vedic Muhurta）** — "
+            "融合西方傳統擇日與印度吠陀擇時兩大古典體系。\n\n"
+            "**西方傳統擇日（William Lilly / Guido Bonatti）：**\n"
+            "• 行星時（Planetary Hours）— Chaldean 順序，Lilly CA p. 483\n"
+            "• 月亮狀態：虛空月（Void of Course）、焦途（Via Combusta）、入相相位\n"
+            "• 本質尊貴：入廟、入旺、失陷、落陷\n"
+            "• 九種常見活動類型擇日規則：婚姻、開業、簽約、搬家、旅行、手術等\n"
+            "• 支援「驗證特定時間」與「搜尋最佳時段」兩種模式\n\n"
+            "**吠陀擇時（Muhurta Chintamani / Kalaprakashika / BPHS）：**\n"
+            "• 五曆（Panchanga）：Tithi、Vara、Nakshatra、Yoga、Karana\n"
+            "• Gandanta 點判斷（水象/火象星座交界）\n"
+            "• Vishti Karana（毘濕提/凶刃）偵測\n"
+            "• 婚姻擇日：木星/金星可見性、那舍特拉吉凶\n"
+            "• 命宮（Lagna）吉凶判斷\n\n"
+            "請輸入時間地點後點擊「開始排盤」，或使用搜尋模式尋找最佳吉時。"
+        ),
+        "en": (
+            "⏳ **Electional Astrology & Vedic Muhurta** — "
+            "Combines the Western Classical Electional tradition with the Vedic Muhurta system.\n\n"
+            "**Western Electional (William Lilly / Guido Bonatti):**\n"
+            "• Planetary Hours (Chaldean order, Lilly CA p. 483)\n"
+            "• Moon state: Void of Course, Via Combusta, applying aspects, phase\n"
+            "• Essential dignities: domicile, exaltation, detriment, fall, peregrine\n"
+            "• Rules for 9 common activity types: marriage, business, contracts, relocation, "
+            "travel, surgery, property, litigation, meetings\n"
+            "• Two modes: validate a specific time or search for best windows\n\n"
+            "**Vedic Muhurta (Muhurta Chintamani / Kalaprakashika / BPHS):**\n"
+            "• Panchanga (5 limbs): Tithi, Vara, Nakshatra, Yoga, Karana\n"
+            "• Gandanta detection (water/fire sign junctions)\n"
+            "• Vishti Karana (Bhadra) detection\n"
+            "• Vivaha Muhurta: Jupiter/Venus visibility, Nakshatra quality\n"
+            "• Lagna (sidereal ascendant) auspiciousness\n\n"
+            "Enter date/time/location and click Calculate, or use Search mode to find optimal windows."
+        ),
+    },
+    "spinner_electional": {
+        "zh": "計算擇日占星…",
+        "en": "Computing Electional / Muhurta chart…",
+    },
+    "sys_hint_electional": {
+        "zh": "西方擇日Lilly/Bonatti、行星時、吠陀五曆、婚姻擇日、Panchanga",
+        "en": "Western Electional Lilly/Bonatti, Planetary Hours, Vedic Panchanga, Muhurta, Vivaha",
+    },
+    "info_electional_prompt": {
+        "zh": "👈 請在左側輸入時間與地點，點擊「開始排盤」後選擇活動類型進行擇日分析，或使用搜尋模式找出最佳吉時。",
+        "en": "👈 Enter date, time and location on the left, click 'Calculate Chart', then select an activity type for electional analysis or use Search mode to find optimal windows.",
+    },
 }
 
 def get_ui_lang() -> str:
