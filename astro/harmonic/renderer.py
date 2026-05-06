@@ -548,10 +548,16 @@ def _render_single_harmonic(chart: HarmonicChart) -> None:
 
             meaning = conj.meaning_zh if lang == "zh" else conj.meaning_en
 
+            orb_label = auto_cn(f"容許度 {orb_deg}°{orb_min}′", f"orb {orb_deg}°{orb_min}′")
+            if tight_label:
+                orb_display = f"{tight_label} {orb_label}"
+            else:
+                orb_display = orb_label
+
             st.markdown(
                 f'<div class="{css_class}">'
                 f'<b>{pa_sym} {pa_name} ☌ {pb_sym} {pb_name}</b> '
-                f'<span class="{orb_class}">{tight_label}容許度 {orb_deg}°{orb_min}′</span>'
+                f'<span class="{orb_class}">{orb_display}</span>'
                 f'<br/><small>{meaning}</small>'
                 f'</div>',
                 unsafe_allow_html=True,

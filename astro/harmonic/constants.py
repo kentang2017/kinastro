@@ -317,7 +317,7 @@ HARMONIC_CONJUNCTION_MEANINGS: Dict[frozenset, Dict[str, str]] = {
         "en": "Sun–Mars: Powerful drive to act, willpower, pioneering energy, competitive talent.",
     },
     frozenset({"SU", "JU"}): {
-        "zh": "太陽與木星：幸運擴展、慷慨慷慨、哲學智慧、領導才能。",
+        "zh": "太陽與木星：幸運擴展、慷慨大方、哲學智慧、領導才能。",
         "en": "Sun–Jupiter: Lucky expansion, generosity, philosophical wisdom, leadership talent.",
     },
     frozenset({"SU", "SA"}): {
