@@ -43,6 +43,7 @@ from astro.sanshi.liuren import compute_liuren_chart
 from astro.sanshi.taiyi import compute_taiyi_chart
 from astro.bazi import compute_bazi
 from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
+from astro.esoteric import compute_esoteric_chart
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -745,6 +746,33 @@ async def horary_chart(params: HoraryParams) -> ChartResponse:
         return ChartResponse(system=f"horary_{params.tradition}", data=_chart_to_dict(chart))
     except Exception as exc:
         logger.exception("Horary chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/esoteric", response_model=ChartResponse, tags=["Systems"])
+async def esoteric_chart(params: BirthParams) -> ChartResponse:
+    """Compute an Esoteric Astrology chart using Alice Bailey's Seven Rays system.
+
+    Performs:
+    - Seven Rays analysis (Rays 1–7 with full Bailey data)
+    - Esoteric Rulers for all 12 signs (exoteric, esoteric, hierarchical)
+    - Soul Ray indicator (via esoteric rulers, ASC, Sun sign, transpersonal planets)
+    - Personality Ray indicator (via exoteric rulers, Moon, personal planets)
+    - Ray distribution tally across all chart factors
+    - Ray interaction analysis (Soul–Personality ray relationship)
+
+    Note: Soul Ray and Personality Ray values are indicative tendency indicators,
+    not mechanically deterministic. Alice Bailey emphasises that spiritual
+    discernment is required for final Ray determination.
+
+    Ref: Bailey, *Esoteric Astrology* (Lucis Publishing, 1951), pp. 3–65.
+    """
+    try:
+        kw = _base_kwargs(params)
+        chart = compute_esoteric_chart(**kw)
+        return ChartResponse(system="esoteric", data=_chart_to_dict(chart))
+    except Exception as exc:
+        logger.exception("Esoteric Astrology chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
