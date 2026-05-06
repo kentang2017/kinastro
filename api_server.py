@@ -45,6 +45,7 @@ from astro.bazi import compute_bazi
 from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
 from astro.esoteric import compute_esoteric_chart
 from astro.harmonic import compute_multi_harmonic
+from astro.primary_directions import compute_primary_directions
 from astro.electional.calculator import (
     compute_western_electional,
     compute_vedic_muhurta,
@@ -924,6 +925,126 @@ async def harmonic_chart(params: HarmonicParams) -> ChartResponse:
     except Exception as exc:
         logger.exception("Harmonic Astrology chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+class PrimaryDirectionsParams(BirthParams):
+    """Parameters for Classical Primary Directions."""
+
+    method: str = Field(
+        default="mundo",
+        description=(
+            "Direction method: 'mundo' (Placidus Semi-Arc, default) or "
+            "'zodiacal' (Ptolemy Oblique Ascension)."
+        ),
+    )
+    time_key: str = Field(
+        default="naibod",
+        description=(
+            "Time conversion key: 'naibod' (0.98563°/yr, default), "
+            "'ptolemy' (1°/yr), or 'solar_arc'."
+        ),
+    )
+    max_age: float = Field(
+        default=90.0,
+        description="Maximum age in years to compute directions for.",
+    )
+    significators: list[str] = Field(
+        default_factory=lambda: ["AS", "MC", "SU", "MO"],
+        description="Points to direct (e.g. AS, MC, SU, MO, VE, MA).",
+    )
+    promittors: list[str] = Field(
+        default_factory=lambda: ["SU", "MO", "ME", "VE", "MA", "JU", "SA", "AS", "MC"],
+        description="Natal points to be aspected.",
+    )
+    include_aspects: list[str] = Field(
+        default_factory=lambda: ["CNJ", "OPP", "SQR", "TRI", "SXT"],
+        description="Aspect keys: CNJ OPP SQR TRI SXT PAR CPAR.",
+    )
+    include_converse: bool = Field(
+        default=True,
+        description="If true, also compute converse (backward) directions.",
+    )
+
+
+@app.post("/api/primary_directions", response_model=ChartResponse, tags=["Systems"])
+async def primary_directions_chart(params: PrimaryDirectionsParams) -> ChartResponse:
+    """Compute Classical Primary Directions following Ptolemy and Placidus.
+
+    Implements two canonical methods:
+
+    - **Mundo / Placidus Semi-Arc** (method="mundo", default):
+      Uses the Placidus proportional pole method for each significator.
+      Ref: Placidus de Titis, *Primum Mobile* (1657).
+
+    - **Zodiacal / Ptolemy OA** (method="zodiacal"):
+      Uses Oblique Ascension differences in the horizon system.
+      Ref: Ptolemy, *Tetrabiblos* (c. 150 CE), Book III.
+
+    Time keys:
+      - naibod    — 1 yr = 0.98563° (Naibod 1560, most traditional)
+      - ptolemy   — 1 yr = 1.00000°
+      - solar_arc — 1 yr = Sun's actual daily motion at birth
+
+    Returns directions sorted by age (years from birth).
+    """
+    try:
+        kw = _base_kwargs(params)
+        result = compute_primary_directions(
+            method=params.method,
+            time_key=params.time_key,
+            max_age=params.max_age,
+            significators=params.significators,
+            promittors=params.promittors,
+            include_aspects=params.include_aspects,
+            include_converse=params.include_converse,
+            **kw,
+        )
+        data: dict = {
+            "method": result.method,
+            "time_key": result.time_key,
+            "max_age": result.max_age,
+            "ramc": round(result.ramc, 4),
+            "obliquity": round(result.obliquity, 6),
+            "natal_points": [
+                {
+                    "key": p.key,
+                    "name_en": p.name_en,
+                    "name_zh": p.name_zh,
+                    "symbol": p.symbol,
+                    "longitude": round(p.longitude, 4),
+                    "sign": p.sign,
+                    "sign_degree": round(p.sign_degree, 4),
+                    "ra": round(p.ra, 4),
+                    "dec": round(p.dec, 4),
+                    "oa": round(p.oa, 4),
+                    "sa_diurnal": round(p.sa_diurnal, 4),
+                    "above_horizon": p.above_horizon,
+                    "retrograde": p.retrograde,
+                }
+                for p in result.natal_points
+            ],
+            "directions": [
+                {
+                    "significator": d.significator_key,
+                    "promittor": d.promittor_key,
+                    "aspect": d.aspect_key,
+                    "converse": d.converse,
+                    "arc": round(d.arc, 4),
+                    "years": round(d.years, 3),
+                    "event_date": d.event_date.isoformat(),
+                    "label_en": d.direction_label_en,
+                    "label_zh": d.direction_label_zh,
+                    "nature_zh": d.nature_zh,
+                    "nature_en": d.nature_en,
+                }
+                for d in result.directions
+            ],
+        }
+        return ChartResponse(system="primary_directions", data=data)
+    except Exception as exc:
+        logger.exception("Primary Directions computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 
 # Map of system name → (cached_fn, extra_params_builder)
 _SYSTEMS_BASIC: list[tuple[str, Any]] = [
