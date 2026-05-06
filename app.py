@@ -84,6 +84,8 @@ from astro.liuyao_lifetime.calculator import compute_lifetime_hexagram
 from astro.liuyao_lifetime.renderer import render_streamlit as render_liuyao_lifetime_chart
 from astro.medical_astrology.calculator import compute_medical_chart
 from astro.medical_astrology.renderer import render_streamlit as render_medical_astrology_chart
+from astro.byzantine_astrology.calculator import compute_byzantine_chart
+from astro.byzantine_astrology.renderer import render_streamlit as render_byzantine_astrology_chart
 from astro.shanghan_qianfa.calculator import compute_shanghan_qianfa
 from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_qianfa_chart
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
@@ -1130,7 +1132,7 @@ with st.sidebar:
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
-        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
+        ("cat_yi_zhan", ["tab_byzantine_astrology", "tab_medical_astrology", "tab_shanghan_qianfa"]),
         ("cat_horary", ["tab_horary", "tab_electional"]),
     ]
 
@@ -1198,6 +1200,7 @@ with st.sidebar:
         "tab_rectification": t("tab_rectification"),
         "tab_esoteric": t("tab_esoteric"),
         "tab_medical_astrology": t("tab_medical_astrology"),
+        "tab_byzantine_astrology": t("tab_byzantine_astrology"),
         "tab_shanghan_qianfa": t("tab_shanghan_qianfa"),
         "tab_beiji": t("tab_beiji"),
         "tab_nanji": t("tab_nanji"),
@@ -1261,6 +1264,7 @@ with st.sidebar:
         "tab_rectification": t("sys_hint_rectification"),
         "tab_esoteric": t("sys_hint_esoteric"),
         "tab_medical_astrology": t("sys_hint_medical_astrology"),
+        "tab_byzantine_astrology": t("sys_hint_byzantine_astrology"),
         "tab_shanghan_qianfa": t("sys_hint_shanghan_qianfa"),
         "tab_beiji": t("sys_hint_beiji"),
         "tab_nanji": t("sys_hint_nanji"),
@@ -5379,6 +5383,29 @@ elif _selected_system == "tab_liuyao_lifetime":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_liuyao_lifetime"))
+
+# --- 拜占庭占星 Byzantine Astrology ---
+elif _selected_system == "tab_byzantine_astrology":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            render_byzantine_astrology_chart(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p.get("minute", 0),
+                timezone=_p.get("timezone", 0.0),
+                latitude=_p.get("latitude", 41.016),
+                longitude=_p.get("longitude", 28.977),
+                location_name=_p.get("location_name", ""),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_byzantine_astrology_prompt"))
+        st.markdown(t("desc_byzantine_astrology"))
 
 # --- 醫學占星 Medical Astrology (Iatromathematics) ---
 elif _selected_system == "tab_medical_astrology":
