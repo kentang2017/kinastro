@@ -54,6 +54,7 @@ def _build_nanji_svg(njs: NanJiShenShu, width: int = 860, height: int = 420) -> 
     """
     生成南極神數四柱命盤 SVG（仿古宣紙水墨風格）。
     布局：四柱並列（由右至左：年 月 日 時），右側大運序列。
+    SVG 使用 viewBox 實現響應式縮放（不設固定像素寬高）。
     """
     pillars = [
         ("年", njs.year_pillar[:1], njs.year_pillar[1:] if len(njs.year_pillar) > 1 else "?"),
@@ -69,9 +70,11 @@ def _build_nanji_svg(njs: NanJiShenShu, width: int = 860, height: int = 420) -> 
 
     col_w = 120
     col_start = 60
+    # 使用 viewBox，不設固定 width/height，由 CSS 控制縮放
     svg_parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'preserveAspectRatio="xMidYMid meet" '
+        f'style="width:100%;height:auto;display:block;">',
         # 背景
         f'<rect width="{width}" height="{height}" fill="{SVG_PAPER_BG}" rx="8"/>',
         f'<rect x="4" y="4" width="{width-8}" height="{height-8}" '
@@ -225,35 +228,29 @@ def render_streamlit(
     南極神數 Streamlit 主渲染函式
 
     Args:
-        year: 出生年（農曆年，立春換年）
-        month: 出生月（節氣月，1=寅月…12=丑月）
-        day: 出生日
-        hour: 出生時辰索引（0=子時, 1=丑時…11=亥時）或整數小時（0-23）
-        minute: 出生分鐘（暫不影響主計算）
+        year: 出生年（公曆）
+        month: 出生月（公曆，1-12）
+        day: 出生日（公曆）
+        hour: 出生小時（0-23）
+        minute: 出生分鐘（不影響四柱計算）
         gender: 性別（男/女）
-        after_lichun: 是否立春後出生（True=用本年干支）
-        day_gan: 日干（需萬年曆查詢，如「辛」）；空白則顯示為「待查」
-        day_zhi: 日支（如「酉」）
+        after_lichun: 保留參數（由 sxtwl 自動判斷節氣）
+        day_gan: 保留參數（sxtwl 已自動計算，無需手動傳入）
+        day_zhi: 保留參數（同上）
         query_code: 欲查詢的密碼（建除+宿名，如「建張」）
         query_section: 欲查詢的宮部（留空則用年柱地支宮部）
     """
-    # 時辰轉換：若 hour 為整數小時（0-23），轉為時支索引
-    _zhi_from_hour = [
-        '子', '丑', '丑', '寅', '寅', '卯', '卯', '辰', '辰', '巳', '巳', '午',
-        '午', '未', '未', '申', '申', '酉', '酉', '戌', '戌', '亥', '亥', '子',
-    ]
-    hour_zhi = _zhi_from_hour[hour % 24]
-
-    # 建立命盤物件
-    njs = NanJiShenShu(
-        lunar_year=year,
-        solar_month=month,
+    # 建立命盤物件（使用 sxtwl 精確計算四柱）
+    njs = NanJiShenShu.from_solar_datetime(
+        year=year,
+        month=month,
         day=day,
-        hour_zhi=hour_zhi,
+        hour=hour,
+        minute=minute,
         gender=gender,
-        after_lichun=after_lichun,
     )
-    if day_gan:
+    # 保留對舊式手動日柱輸入的向下相容
+    if day_gan and not njs.day_pillar:
         njs.set_day_pillar(day_gan, day_zhi if day_zhi else None)
         njs.set_hour_pillar()
 
@@ -268,7 +265,11 @@ def render_streamlit(
     # ── 四柱 SVG 命盤
     st.markdown("---")
     svg_html = _build_nanji_svg(njs)
-    components.html(f"<div style='text-align:center'>{svg_html}</div>", height=440)
+    components.html(
+        f"<div style='width:100%;overflow-x:auto;text-align:center'>{svg_html}</div>",
+        height=440,
+        scrolling=False,
+    )
 
     # ── 四柱文字摘要
     st.markdown(f"**{auto_cn('四柱八字')}：** `{njs.get_four_pillars_str()}`")
@@ -282,8 +283,28 @@ def render_streamlit(
 
     st.markdown("---")
 
-    # ── 條文查詢面板
-    st.subheader(auto_cn("🔮 條文查詢"))
+    # ── 本宮部條文（命主宮部，起盤即顯示）
+    palace_entries = njs.lookup_all_tiaowen_for_palace()
+    st.subheader(
+        auto_cn(f"📜 {njs.palace_section}條文（共 {len(palace_entries)} 條）")
+    )
+    st.caption(auto_cn("以下為本命宮部全部條文，需配合原書十八星圖定位密碼後查閱相應條文"))
+    for entry in palace_entries:
+        st.markdown(
+            f"<div style='background:#fffbf0;border-left:3px solid {SVG_SEAL_RED};"
+            f"padding:10px 14px;border-radius:4px;margin-bottom:8px;'>"
+            f"<b style='color:{SVG_SEAL_RED}'>【{entry.section} · {entry.code}】</b><br/>"
+            f"<span style='font-family:Noto Serif SC,serif;font-size:15px;'>"
+            f"{entry.verse}</span><br/>"
+            f"<small style='color:{SVG_SUBTITLE_COLOR};'>{entry.comment}</small>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+
+    # ── 按密碼精確查詢面板
+    st.subheader(auto_cn("🔮 精確查詢條文"))
     st.caption(auto_cn("依手稿：以宮部（年支部）+ 密碼（建除+宿）查條文"))
 
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -336,10 +357,6 @@ def render_streamlit(
             )
 
     st.markdown("---")
-
-    # ── 本宮部所有條文摘要
-    with st.expander(auto_cn(f"📜 {njs.palace_section} 全部條文（{len(njs.lookup_all_tiaowen_for_palace())} 條）")):
-        _render_tiaowen_browser_simple(njs)
 
     # ── 條文資料庫完整瀏覽
     with st.expander(auto_cn("📚 條文資料庫（全部 246 條）")):

@@ -21,8 +21,15 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+try:
+    from sxtwl import fromSolar as _sxtwl_fromSolar
+    _HAS_SXTWL = True
+except ImportError:  # pragma: no cover
+    _HAS_SXTWL = False
 
 from .constants import (
     TIANGAN, DIZHI, YINYANG_GAN, YINYANG_ZHI,
@@ -427,6 +434,125 @@ class NanJiShenShu:
 
         # ── 條文資料庫（共享單例）
         self._db: TiaowenDatabase = TiaowenDatabase.get_instance()
+
+    # ── 從公曆日期建立命盤（推薦）
+    @classmethod
+    def from_solar_datetime(
+        cls,
+        year: int,
+        month: int,
+        day: int,
+        hour: int,
+        minute: int = 0,
+        gender: str = '男',
+    ) -> "NanJiShenShu":
+        """
+        從公曆日期時間建立命盤，使用 sxtwl 精確計算四柱。
+
+        月柱以節氣為界（非農曆月份），日柱精確到日，
+        時柱依五鼠遁日起時法。23時後視為翌日子時。
+
+        Args:
+            year:   公曆年
+            month:  公曆月（1-12）
+            day:    公曆日
+            hour:   時（0-23）
+            minute: 分（0-59，不影響柱）
+            gender: 性別（男/女）
+        """
+        if _HAS_SXTWL:
+            calc_year, calc_month, calc_day, calc_hour = year, month, day, hour
+            if hour == 23:
+                dt = date(year, month, day) + timedelta(days=1)
+                calc_year, calc_month, calc_day = dt.year, dt.month, dt.day
+                calc_hour = 0
+
+            cdate = _sxtwl_fromSolar(calc_year, calc_month, calc_day)
+
+            ygz = cdate.getYearGZ(False)
+            mgz = cdate.getMonthGZ()
+            dgz = cdate.getDayGZ()
+
+            y_stem = TIANGAN[ygz.tg]
+            y_branch = DIZHI[ygz.dz]
+            m_stem = TIANGAN[mgz.tg]
+            m_branch = DIZHI[mgz.dz]
+            d_stem = TIANGAN[dgz.tg]
+            d_branch = DIZHI[dgz.dz]
+
+            # 時支：子時 0, 丑時 1, …（23時已轉為 calc_hour=0 子時）
+            h_branch_idx = (calc_hour + 1) // 2 % 12
+            h_branch = DIZHI[h_branch_idx]
+            start_gan = WUSHU_DUN[d_stem]
+            h_stem_idx = (TIANGAN.index(start_gan) + h_branch_idx) % 10
+            h_stem = TIANGAN[h_stem_idx]
+        else:
+            # sxtwl 不可用時退回簡化計算
+            y_tg_idx = (year - 1984) % 10
+            y_dz_idx = (year - 1984) % 12
+            y_stem = TIANGAN[y_tg_idx]
+            y_branch = DIZHI[y_dz_idx]
+            start_m_gan = WUHU_DUN.get(y_stem, '丙')
+            m_stem_idx = (TIANGAN.index(start_m_gan) + month - 1) % 10
+            m_stem = TIANGAN[m_stem_idx]
+            m_branch = SOLAR_MONTH_ZHI.get(month, '寅')
+            d_stem, d_branch = '?', '?'
+            hour_zhi = [
+                '子', '丑', '丑', '寅', '寅', '卯', '卯', '辰', '辰',
+                '巳', '巳', '午', '午', '未', '未', '申', '申', '酉',
+                '酉', '戌', '戌', '亥', '亥', '子',
+            ][hour % 24]
+            h_branch = hour_zhi
+            h_stem = '?'
+
+        # 找到六十甲子中與 y_stem+y_branch 對應的代入年份，使構造函數得到正確年柱
+        y_tg_idx = TIANGAN.index(y_stem)
+        y_dz_idx = DIZHI.index(y_branch)
+        jiazi_idx = next(
+            i for i in range(60) if i % 10 == y_tg_idx and i % 12 == y_dz_idx
+        )
+        effective_year = 1984 + jiazi_idx
+
+        # 找到月柱所對應的節氣月序（1-12 = 寅月至丑月）以建構物件
+        m_dz_idx = DIZHI.index(m_branch)
+        solar_month_for_ctor = {v: k for k, v in SOLAR_MONTH_ZHI.items()}.get(
+            m_branch, 1
+        )
+
+        obj = cls(
+            lunar_year=effective_year,
+            solar_month=solar_month_for_ctor,
+            day=day,
+            hour_zhi=h_branch,
+            gender=gender,
+            after_lichun=True,
+        )
+
+        # 覆蓋構造函數計算結果，以 sxtwl 精確值為準
+        obj.year_pillar = y_stem + y_branch
+        obj.year_gan = y_stem
+        obj.year_zhi = y_branch
+        obj.year_yinyang = YINYANG_GAN[y_stem]
+
+        obj.month_pillar = m_stem + m_branch
+        obj.month_gan = m_stem
+        obj.month_zhi = m_branch
+
+        if d_stem != '?':
+            obj.day_gan = d_stem
+            obj.day_zhi = d_branch
+            obj.day_pillar = d_stem + d_branch
+
+        if h_stem != '?':
+            obj.hour_zhi = h_branch
+            obj.hour_pillar = h_stem + h_branch
+
+        # 以正確月柱和年干陰陽重新計算大運
+        obj.da_yun = calculate_da_yun(
+            obj.month_pillar, gender, obj.year_yinyang
+        )
+
+        return obj
 
     # ── 日柱設定
     def set_day_pillar(self, day_gan: str, day_zhi: Optional[str] = None) -> None:
