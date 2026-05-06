@@ -713,7 +713,7 @@ def _render_tab_natal(chart: ByzantineChart) -> None:
             f'<div style="color:#999;font-size:0.85em">'
             f'{sect} | '
             f'{auto_cn("中天", en_text="MC")}: '
-            f'{BYZANTINE_SIGN_NAMES[ZODIAC_SIGN_ORDER[int(chart.midheaven//30)%12]]["glyph"]} '
+            f'{BYZANTINE_SIGN_NAMES[ZODIAC_SIGN_ORDER[int(chart.midheaven // 30) % 12]]["glyph"]} '
             f'{chart.midheaven:.1f}°'
             f'</div>'
             f'</div>',
@@ -1198,6 +1198,7 @@ def render_streamlit(
             latitude=latitude,
             longitude=longitude,
             location_name=location_name or "Constantinople",
+            # Show profection for age 30 by default (a common classical reference age)
             current_year=year + 30,
         )
 
