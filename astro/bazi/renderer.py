@@ -21,7 +21,7 @@ import streamlit.components.v1 as components
 
 from astro.i18n import auto_cn, t
 
-from .calculator import BaziChart, DayunStep, compute_bazi
+from .calculator import BaziChart, DayunStep, compute_bazi, _get_kongwang
 from .constants import (
     SHISHEN_COLORS,
     SVG_BORDER_COLOR,
@@ -568,7 +568,6 @@ def render_bazi_chart_svg(chart: BaziChart, width: int = 900, height: int = 780)
 
 def _get_kongwang_for_chart(chart: BaziChart) -> tuple:
     """取命盤日柱空亡。"""
-    from .calculator import _get_kongwang
     return _get_kongwang(chart.day_pillar.ganzhi)
 
 
