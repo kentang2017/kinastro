@@ -890,19 +890,7 @@ def render_streamlit(
     """
     st.markdown(_HORARY_CSS, unsafe_allow_html=True)
 
-    # ── Header ──────────────────────────────────────────────────────
     lang = get_lang()
-    title_en = "📜 Traditional Horary Astrology"
-    title_cn = "📜 傳統卜卦占星"
-    subtitle_en = "William Lilly · Guido Bonatti · Prasna Marga"
-    subtitle_cn = "威廉·利利 · 圭多·波拿提 · 《Prasna Marga》"
-    st.markdown(
-        f'<div class="horary-header">'
-        f'<h2>{auto_cn(title_cn, title_en)}</h2>'
-        f'<p>{auto_cn(subtitle_cn, subtitle_en)}</p>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
 
     # ── Tradition selector ──────────────────────────────────────────
     west_tab, vedic_tab = st.tabs([

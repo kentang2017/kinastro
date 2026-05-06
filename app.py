@@ -1017,7 +1017,17 @@ with st.sidebar:
     st.header(t("sidebar_header"))
 
     # 日期時間輸入 — calendar date picker + time picker
-    st.subheader(t("date_time"))
+    _dt_col, _now_col = st.columns([3, 1])
+    _dt_col.subheader(t("date_time"))
+    if _now_col.button(
+        auto_cn("現時", "Now"),
+        key="now_btn",
+        use_container_width=True,
+        help=auto_cn("填入現在的日期和時間", "Fill in the current date and time"),
+    ):
+        _now = datetime.now()
+        st.session_state["birth_date_input"] = _now.date()
+        st.session_state["birth_time_input"] = _now.time().replace(second=0, microsecond=0)
     birth_date = st.date_input(
         t("birth_date"),
         value=date(1990, 1, 1),
