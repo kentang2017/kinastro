@@ -1386,8 +1386,10 @@ with st.sidebar:
                 t("adv_group_chiron_pholus"): "chiron_pholus",
                 t("adv_group_lilith"):        "lilith",
                 t("adv_group_main_belt"):     "main_belt",
+                t("adv_group_romance"):       "romance",
                 t("adv_group_centaurs"):      "centaurs",
                 t("adv_group_tnos"):          "tnos",
+                t("adv_group_dwarf_planets"): "dwarf_planets",
             }
             _selected_groups = st.multiselect(
                 t("adv_asteroids_groups"),
