@@ -3446,6 +3446,26 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生年月日時，點擊「開始排盤」進行北極神數推算。",
         "en": "👈 Enter birth date and time on the left, then click 'Calculate Chart' for Beiji Shenshu.",
     },
+    "tab_bazi": {
+        "zh": "🀄 子平八字",
+        "en": "🀄 Ziping Bazi",
+    },
+    "desc_bazi": {
+        "zh": "🀄 **子平八字（Ziping Bazi）** — 傳統子平正宗推命體系，源自徐子平《淵海子平》、沈孝瞻《子平真詮》、萬民英《三命通會》及《滴天髓》。以年月日時四柱干支為基礎，嚴格依古法判斷格局、取用神、排大運，並提供傳統水墨命盤 SVG 視覺化。",
+        "en": "🀄 **Ziping Bazi** — Traditional Ziping destiny analysis. Sources: Yuanhai Ziping (淵海子平), Ziping Zhenquan (子平真詮), Sanming Tonghui (三命通會), Ditianshui (滴天髓). Full Four Pillars, Ten Gods, Day Master strength, classic Pattern determination, Use God selection, Great Fortune Cycles, and traditional ink-style chart SVG.",
+    },
+    "spinner_bazi": {
+        "zh": "計算子平八字命盤…",
+        "en": "Computing Ziping Bazi chart…",
+    },
+    "sys_hint_bazi": {
+        "zh": "傳統子平正宗，四柱格局用神，大運流年，水墨命盤",
+        "en": "Classical Ziping Bazi, Four Pillars, Pattern, Use God, Fortune Cycles, ink-style chart",
+    },
+    "info_bazi_prompt": {
+        "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行子平八字推算。",
+        "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Ziping Bazi.",
+    },
 }
 
 def get_ui_lang() -> str:

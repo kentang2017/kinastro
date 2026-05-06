@@ -41,6 +41,7 @@ from astro.western.hellenistic import compute_hellenistic_chart
 from astro.damo import compute_damo_chart
 from astro.sanshi.liuren import compute_liuren_chart
 from astro.sanshi.taiyi import compute_taiyi_chart
+from astro.bazi import compute_bazi
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -408,6 +409,19 @@ def _cached_taiyi(key: str, year: int, month: int, day: int, hour: int,
     return _chart_to_dict(chart)
 
 
+@lru_cache(maxsize=256)
+def _cached_bazi(key: str, year: int, month: int, day: int, hour: int,
+                 minute: int, timezone: float, latitude: float,
+                 longitude: float, location_name: str,
+                 gender: str) -> dict:
+    chart = compute_bazi(
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        timezone=timezone, latitude=latitude, longitude=longitude,
+        location_name=location_name, gender=gender,
+    )
+    return _chart_to_dict(chart)
+
+
 # Hellenistic depends on a WesternChart object, so handle specially.
 def _compute_hellenistic(params: BirthParams,
                          current_year: Optional[int]) -> dict:
@@ -641,6 +655,31 @@ async def taiyi_chart(params: TaiyiParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.post("/api/bazi", response_model=ChartResponse, tags=["Systems"])
+async def bazi_chart(params: ChineseParams) -> ChartResponse:
+    """Compute a traditional Ziping Bazi (子平八字) chart.
+
+    Strictly follows classical Ziping method (子平正宗) as described in:
+    - 淵海子平 (Yuanhai Ziping)
+    - 子平真詮 (Ziping Zhenquan)
+    - 三命通會 (Sanming Tonghui)
+    - 滴天髓 (Ditianshui)
+
+    Returns the full BaziChart including four pillars, ten gods, day master
+    strength, pattern (格局), use god (用神), great fortune cycles (大運),
+    current year fortune (流年), and shen sha (神煞).
+    """
+    try:
+        key = _cache_key(params, gender=params.gender)
+        kwargs = _base_kwargs(params)
+        kwargs["gender"] = params.gender
+        data = _cached_bazi(key, **kwargs)
+        return ChartResponse(system="bazi", data=data)
+    except Exception as exc:
+        logger.exception("Ziping Bazi chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 # =========================================================================
 #  Aggregate endpoint — compute ALL systems in one call
 # =========================================================================
@@ -765,5 +804,6 @@ async def list_systems() -> dict[str, list[str]]:
             "damo",
             "liuren",
             "taiyi",
+            "bazi",
         ]
     }

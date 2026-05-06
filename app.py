@@ -163,6 +163,7 @@ from astro.chinese.taixuan.taixuan_renderer import (
     render_qigua_ui,
 )
 from astro.rectification.renderer import render_streamlit as render_rectification_page
+from astro.bazi import compute_bazi as compute_bazi_chart, render_streamlit as render_bazi_chart
 
 
 # ============================================================
@@ -1100,7 +1101,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_bazi"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
@@ -1173,6 +1174,7 @@ with st.sidebar:
         "tab_medical_astrology": t("tab_medical_astrology"),
         "tab_shanghan_qianfa": t("tab_shanghan_qianfa"),
         "tab_beiji": t("tab_beiji"),
+        "tab_bazi": t("tab_bazi"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1229,6 +1231,7 @@ with st.sidebar:
         "tab_medical_astrology": t("sys_hint_medical_astrology"),
         "tab_shanghan_qianfa": t("sys_hint_shanghan_qianfa"),
         "tab_beiji": t("sys_hint_beiji"),
+        "tab_bazi": t("sys_hint_bazi"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -5363,6 +5366,33 @@ elif _selected_system == "tab_beiji":
     else:
         st.info(t("info_beiji_prompt"))
         st.markdown(t("desc_beiji"))
+
+# --- 子平八字 Ziping Bazi ---
+elif _selected_system == "tab_bazi":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_bazi")):
+                _bazi_result = compute_bazi_chart(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p["minute"],
+                    gender=st.session_state.get("_calc_gender", "男"),
+                    timezone=_p.get("timezone", 8.0),
+                    latitude=_p.get("latitude", 25.033),
+                    longitude=_p.get("longitude", 121.565),
+                    location_name=_p.get("location_name", ""),
+                )
+            render_bazi_chart(_bazi_result)
+            _render_ai_button("tab_bazi", _bazi_result, btn_key="bazi")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_bazi_prompt"))
+        st.markdown(t("desc_bazi"))
 
 # ============================================================
 # Global Fixed AI Chat Panel — always visible at page bottom
