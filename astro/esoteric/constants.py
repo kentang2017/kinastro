@@ -290,7 +290,7 @@ SIGN_RULERS: Dict[str, SignRulers] = {
     "Capricorn": SignRulers(
         sign="Capricorn", exoteric="Saturn", esoteric="Saturn", hierarchical="Venus",
         rays_transmitted=[1, 3, 7],
-        quality_zh="啟引、高峰體驗、靈性進化頂點",
+        quality_zh="啟蒙、高峰體驗、靈性進化頂點",
         quality_en="Initiation, peak experience, apex of spiritual evolution",
     ),
     "Aquarius": SignRulers(

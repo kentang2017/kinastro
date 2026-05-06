@@ -501,3 +501,6 @@ class TestHelperFunctions:
         assert top[0][0] == 1
         assert top[0][1] == pytest.approx(5.0)
         assert top[1][0] == 2
+        # Verify ray 3 is excluded
+        top_ray_numbers = [r for r, _ in top]
+        assert 3 not in top_ray_numbers
