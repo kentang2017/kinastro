@@ -41,6 +41,7 @@ from astro.western.hellenistic import compute_hellenistic_chart
 from astro.damo import compute_damo_chart
 from astro.sanshi.liuren import compute_liuren_chart
 from astro.sanshi.taiyi import compute_taiyi_chart
+from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -641,6 +642,71 @@ async def taiyi_chart(params: TaiyiParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+class HoraryParams(BirthParams):
+    """Parameters for Traditional Horary Astrology chart."""
+
+    question_text: str = Field(
+        default="",
+        description="The horary question being asked",
+    )
+    question_type: str = Field(
+        default="general",
+        description=(
+            "Question type: 'marriage', 'career', 'wealth', 'lost_item', "
+            "'illness', 'travel', 'missing_person', 'property', 'general'"
+        ),
+    )
+    tradition: str = Field(
+        default="western",
+        description="Tradition: 'western' (Lilly/Bonatti) or 'vedic' (Prashna Marga)",
+    )
+    prashna_number: Optional[int] = Field(
+        default=None,
+        ge=1, le=108,
+        description="Optional 1-108 querent number for Vedic Prashna tradition",
+    )
+
+
+@app.post("/api/horary", response_model=ChartResponse, tags=["Systems"])
+async def horary_chart(params: HoraryParams) -> ChartResponse:
+    """Compute a Traditional Horary chart.
+
+    Supports both Western (Lilly/Bonatti) and Vedic (Prashna Marga) traditions.
+    The ``tradition`` field selects the system; ``question_type`` and
+    ``question_text`` are used for the judgment.
+
+    Western tradition applies strict Lilly/Bonatti rules including:
+    - Essential and Accidental Dignities
+    - Applying/separating aspects, Reception
+    - Void of Course Moon (with Lilly's exception signs)
+    - Translation and Collection of Light
+    - Strictures Against Judgment
+
+    Vedic Prashna follows Prasna Marga with Arudha Lagna computation.
+    """
+    try:
+        kw = _base_kwargs(params)
+        if params.tradition == "vedic":
+            chart = compute_vedic_prashna(
+                question_text=params.question_text,
+                question_type=params.question_type,
+                prashna_number=params.prashna_number,
+                **kw,
+            )
+        else:
+            chart = compute_western_horary(
+                question_text=params.question_text,
+                question_type=params.question_type,
+                **kw,
+            )
+        return ChartResponse(system=f"horary_{params.tradition}", data=_chart_to_dict(chart))
+    except Exception as exc:
+        logger.exception("Horary chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+
+
 # =========================================================================
 #  Aggregate endpoint — compute ALL systems in one call
 # =========================================================================
@@ -765,5 +831,7 @@ async def list_systems() -> dict[str, list[str]]:
             "damo",
             "liuren",
             "taiyi",
+            "horary_western",
+            "horary_vedic",
         ]
     }
