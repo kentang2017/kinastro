@@ -473,6 +473,88 @@ elif "lang" not in st.session_state:
     st.session_state["lang"] = "zh"
 
 
+# ── Restore birth data + system from URL query params (share feature) ─────────
+def _load_from_query_params() -> bool:
+    """Attempt to restore chart state from ``st.query_params``.
+
+    Expected params: ``sys``, ``y``, ``mo``, ``d``, ``h``, ``mi``,
+    ``tz``, ``lat``, ``lon``.
+
+    Returns *True* if params were loaded, *False* otherwise.
+    """
+    qp = st.query_params
+    if "sys" not in qp:
+        return False
+    try:
+        sys_key = qp.get("sys", "")
+        y   = int(qp.get("y",   1990))
+        mo  = int(qp.get("mo",  1))
+        d   = int(qp.get("d",   1))
+        h   = int(qp.get("h",   12))
+        mi  = int(qp.get("mi",  0))
+        tz  = float(qp.get("tz",  8.0))
+        lat = float(qp.get("lat", 22.3193))
+        lon = float(qp.get("lon", 114.1694))
+    except (ValueError, TypeError):
+        return False
+
+    # Only restore once per session to avoid overwriting user edits
+    if st.session_state.get("_qp_loaded"):
+        return True
+
+    st.session_state["_system_select"] = sys_key
+    st.session_state["birth_date_input"] = date(
+        max(1, min(y, date.today().year)), max(1, min(mo, 12)), max(1, min(d, 31))
+    )
+    st.session_state["birth_time_input"] = time(
+        max(0, min(h, 23)), max(0, min(mi, 59))
+    )
+    st.session_state["_custom_lat"] = lat
+    st.session_state["_custom_lon"] = lon
+    st.session_state["_custom_tz"]  = tz
+    # Confirm so chart is rendered immediately
+    st.session_state["_birth_confirmed"] = True
+    st.session_state["_confirmed_params"] = dict(
+        year=y, month=mo, day=d, hour=h, minute=mi,
+        timezone=tz, latitude=lat, longitude=lon, location_name="",
+    )
+    st.session_state["_confirmed_gender"] = "male"
+    st.session_state["_qp_loaded"] = True
+    return True
+
+
+_qp_restored = _load_from_query_params()
+
+
+def _build_share_url(system_key: str, params: dict, base_url: str = "") -> str:
+    """Build a shareable URL string from chart params.
+
+    Parameters
+    ----------
+    system_key : str
+        The selected system tab key.
+    params : dict
+        The ``_calc_params`` dict (year, month, day, hour, minute,
+        timezone, latitude, longitude).
+    base_url : str
+        Base URL prefix (unused when running in Streamlit Cloud — the
+        current page URL is used instead).
+    """
+    from urllib.parse import urlencode
+    qd = {
+        "sys": system_key,
+        "y":   params.get("year", 1990),
+        "mo":  params.get("month", 1),
+        "d":   params.get("day", 1),
+        "h":   params.get("hour", 12),
+        "mi":  params.get("minute", 0),
+        "tz":  params.get("timezone", 8.0),
+        "lat": params.get("latitude", 22.3193),
+        "lon": params.get("longitude", 114.1694),
+    }
+    return "?" + urlencode(qd)
+
+
 def t(key: str) -> str:
     """Return the translated string for *key* in the current UI language.
 
@@ -1030,7 +1112,7 @@ CITY_REGIONS = {
 with st.sidebar:
     st.header(t("sidebar_header"))
 
-    # 日期時間輸入 — calendar date picker + time picker
+    # ── "Now" button outside the form so it can trigger a rerun ──
     _dt_col, _now_col = st.columns([3, 1])
     _dt_col.subheader(t("date_time"))
     if _now_col.button(
@@ -1042,76 +1124,131 @@ with st.sidebar:
         _now = datetime.now()
         st.session_state["birth_date_input"] = _now.date()
         st.session_state["birth_time_input"] = _now.time().replace(second=0, microsecond=0)
-    birth_date = st.date_input(
-        t("birth_date"),
-        value=date(1990, 1, 1),
-        min_value=date(1, 1, 1),
-        max_value=date(date.today().year, 12, 31),
-        key="birth_date_input",
-    )
-    birth_time = st.time_input(
-        t("birth_time"),
-        value=time(12, 0),
-        key="birth_time_input",
-    )
+        st.rerun()
 
-    # 地點輸入 — cascading Region → City selector
-    st.subheader(t("birth_location"))
-    _is_en = st.session_state.get("lang") == "en"
-    _region_keys = list(CITY_REGIONS.keys())
-    _region_format = lambda r: t(r)
-    _selected_region = st.selectbox(
-        t("region_label"),
-        options=_region_keys,
-        index=0,  # default: 港澳
-        format_func=_region_format,
-        key="region_sel",
-    )
-    _cities_in_region = CITY_REGIONS[_selected_region]
-    _city_format = (
-        (lambda c: CITY_NAMES_EN.get(c, c))
-        if _is_en
-        else (lambda c: c)
-    )
-    city = st.selectbox(
-        t("city_preset"),
-        options=_cities_in_region,
-        format_func=_city_format,
-        key="city_sel",
-    )
+    # ── Birth data form — all inputs wrapped so only submit triggers rerun ──
+    with st.form("birth_data_form", border=False):
+        birth_date = st.date_input(
+            t("birth_date"),
+            value=st.session_state.get("birth_date_input", date(1990, 1, 1)),
+            min_value=date(1, 1, 1),
+            max_value=date(date.today().year, 12, 31),
+            key="birth_date_input",
+        )
+        birth_time = st.time_input(
+            t("birth_time"),
+            value=st.session_state.get("birth_time_input", time(12, 0)),
+            key="birth_time_input",
+        )
 
-    if city != "自訂":
-        preset_lat, preset_lon, preset_tz = CITY_PRESETS[city]
-        input_lat = preset_lat
-        input_lon = preset_lon
-        input_tz = preset_tz
-        location_name = CITY_NAMES_EN[city] if _is_en else city
-    else:
-        input_lat = st.number_input(
-            t("latitude"), value=22.3193, format="%.4f",
-            min_value=-90.0, max_value=90.0,
+        # 地點輸入 — cascading Region → City selector
+        st.subheader(t("birth_location"))
+        _is_en = st.session_state.get("lang") == "en"
+        _region_keys = list(CITY_REGIONS.keys())
+        _selected_region = st.selectbox(
+            t("region_label"),
+            options=_region_keys,
+            index=0,  # default: 港澳
+            format_func=lambda r: t(r),
+            key="region_sel",
         )
-        input_lon = st.number_input(
-            t("longitude"), value=114.1694, format="%.4f",
-            min_value=-180.0, max_value=180.0,
+        _cities_in_region = CITY_REGIONS[_selected_region]
+        _city_format = (
+            (lambda c: CITY_NAMES_EN.get(c, c))
+            if _is_en
+            else (lambda c: c)
         )
+        city = st.selectbox(
+            t("city_preset"),
+            options=_cities_in_region,
+            format_func=_city_format,
+            key="city_sel",
+        )
+
+        # Always show lat/lon/tz so values are visible inside the form.
+        # When a preset city is selected the fields are pre-populated and
+        # disabled; for 自訂 (custom) they are editable.
+        _is_custom = city == "自訂"
+        if not _is_custom:
+            _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
+        else:
+            _preset_lat = st.session_state.get("_custom_lat", 22.3193)
+            _preset_lon = st.session_state.get("_custom_lon", 114.1694)
+            _preset_tz  = st.session_state.get("_custom_tz",  8.0)
+
+        _coord_col1, _coord_col2 = st.columns(2)
+        with _coord_col1:
+            input_lat = st.number_input(
+                t("latitude"),
+                value=float(_preset_lat),
+                format="%.4f",
+                min_value=-90.0,
+                max_value=90.0,
+                disabled=not _is_custom,
+                key="_lat_input",
+            )
+        with _coord_col2:
+            input_lon = st.number_input(
+                t("longitude"),
+                value=float(_preset_lon),
+                format="%.4f",
+                min_value=-180.0,
+                max_value=180.0,
+                disabled=not _is_custom,
+                key="_lon_input",
+            )
         input_tz = st.number_input(
-            t("timezone"), value=8.0, format="%.1f",
-            min_value=-12.0, max_value=14.0, step=0.5,
+            t("timezone"),
+            value=float(_preset_tz),
+            format="%.1f",
+            min_value=-12.0,
+            max_value=14.0,
+            step=0.5,
+            disabled=not _is_custom,
+            key="_tz_input",
         )
-        location_name = t("custom_location")
+        if _is_custom:
+            if not (-90.0 <= input_lat <= 90.0) or not (-180.0 <= input_lon <= 180.0):
+                st.warning(t("form_validation_location"))
 
-    # 性別（用於七政四餘宮位方向）
-    st.subheader(t("gender_header"))
-    _male_label = t("male")
-    _female_label = t("female")
-    gender_choice = st.radio(
-        t("gender_label"),
-        options=[_male_label, _female_label],
-        index=0,
-        horizontal=True,
-    )
-    gender = "male" if gender_choice == _male_label else "female"
+        if _is_custom:
+            location_name = t("custom_location")
+        else:
+            location_name = CITY_NAMES_EN.get(city, city) if _is_en else city
+
+        # 性別（用於七政四餘宮位方向）
+        st.subheader(t("gender_header"))
+        _male_label = t("male")
+        _female_label = t("female")
+        gender_choice = st.radio(
+            t("gender_label"),
+            options=[_male_label, _female_label],
+            index=0,
+            horizontal=True,
+        )
+        gender = "male" if gender_choice == _male_label else "female"
+
+        # Submit button — chart computation triggered only on click
+        _form_submitted = st.form_submit_button(
+            t("generate_chart_btn"),
+            use_container_width=True,
+            type="primary",
+        )
+        if _form_submitted:
+            # Persist custom coords for next session
+            if _is_custom:
+                st.session_state["_custom_lat"] = input_lat
+                st.session_state["_custom_lon"] = input_lon
+                st.session_state["_custom_tz"]  = input_tz
+            # Mark that the user has confirmed the birth data
+            st.session_state["_birth_confirmed"] = True
+            st.session_state["_confirmed_params"] = dict(
+                year=birth_date.year, month=birth_date.month, day=birth_date.day,
+                hour=birth_time.hour, minute=birth_time.minute,
+                timezone=input_tz, latitude=input_lat, longitude=input_lon,
+                location_name=location_name,
+            )
+            st.session_state["_confirmed_gender"] = gender
 
     # ── Astrology system selector (categorised accordion with search) ──
     st.divider()
@@ -1876,12 +2013,26 @@ if "_system_select" not in st.session_state:
 # 主區域 — 根據側邊欄選擇顯示對應占星體系
 # ============================================================
 
-_params = dict(
-    year=birth_date.year, month=birth_date.month, day=birth_date.day,
-    hour=birth_time.hour, minute=birth_time.minute,
-    timezone=input_tz, latitude=input_lat, longitude=input_lon,
-    location_name=location_name,
-)
+# Use confirmed params (submitted via form) when available, else fall back to
+# current widget values so the chart still renders on first load.
+_confirmed = st.session_state.get("_confirmed_params")
+if _confirmed:
+    _params = _confirmed
+    gender = st.session_state.get("_confirmed_gender", gender)
+    # Re-extract local convenience variables from confirmed params
+    birth_date = date(_params["year"], _params["month"], _params["day"])
+    birth_time = time(_params["hour"], _params["minute"])
+    input_tz  = _params["timezone"]
+    input_lat = _params["latitude"]
+    input_lon = _params["longitude"]
+    location_name = _params.get("location_name", location_name)
+else:
+    _params = dict(
+        year=birth_date.year, month=birth_date.month, day=birth_date.day,
+        hour=birth_time.hour, minute=birth_time.minute,
+        timezone=input_tz, latitude=input_lat, longitude=input_lon,
+        location_name=location_name,
+    )
 # Store params in session_state for lazy per-tab computation
 st.session_state["_calc_params"] = _params
 st.session_state["_calc_gender"] = gender
@@ -1889,1889 +2040,2014 @@ st.session_state["_calculated"] = True
 
 _is_calculated = True
 
-# --- 七政四餘（中國） ---
-if _selected_system == "tab_chinese":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _g = st.session_state["_calc_gender"]
-            with st.spinner(t("spinner_chinese")):
-                chart = compute_chart(**_p, gender=_g)
+# Show "loaded from share link" notice once
+if _qp_restored and not st.session_state.get("_qp_notice_shown"):
+    st.success(t("share_chart_loaded"))
+    st.session_state["_qp_notice_shown"] = True
 
-            # 子 tabs for the Chinese chart
-            _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect = st.tabs([
-                t("ch_subtab_natal"),
-                t("ch_subtab_shensha"),
-                t("ch_subtab_dasha"),
-                t("ch_subtab_transit"),
-                t("ch_subtab_zhangguo"),
-                t("ch_subtab_electional"),
-            ])
 
-            with _ch_tab_natal:
-                # 計算流時盤 for overlay
-                _transit_now = compute_transit_now(timezone=input_tz)
+# ── Main navigation tabs ─────────────────────────────────────────────────
+# Six primary tabs organise all system content, transit tools, AI analysis,
+# cross-system comparison, electional tools, and relocation maps.
+_ka_main_tabs = st.tabs([
+    t("main_tab_natal"),
+    t("main_tab_transit"),
+    t("main_tab_ai"),
+    t("main_tab_compare"),
+    t("main_tab_electional"),
+    t("main_tab_relocation"),
+])
+_natal_tab, _transit_tab, _ai_tab, _compare_tab, _elect_tab, _relo_tab = _ka_main_tabs
 
-                # 選擇是否顯示流時對盤
-                _show_transit_overlay = st.checkbox(
-                    t("show_transit_overlay"), value=False,
-                )
-                _transit_for_ring = _transit_now if _show_transit_overlay else None
+# ── Share-chart button (shown in main area when a system is active) ───────
+with _natal_tab:
+    _share_col1, _share_col2 = st.columns([4, 1])
+    with _share_col2:
+        _share_qs = _build_share_url(_selected_system, _params)
+        _copy_js = f"""
+<button onclick="navigator.clipboard.writeText(window.location.origin
+  + window.location.pathname + '{_share_qs}')
+  .then(()=>this.textContent='✅ Copied!')
+  .catch(()=>this.textContent='⚠️ Failed');"
+  style="background:rgba(167,139,250,0.18);border:1px solid rgba(167,139,250,0.35);
+         color:#e0e0ff;border-radius:8px;padding:6px 14px;cursor:pointer;
+         font-size:0.82rem;white-space:nowrap;">
+  {t('share_chart_btn')}
+</button>"""
+        st.markdown(_copy_js, unsafe_allow_html=True)
 
-                # Full chart: circle + info panel side by side
-                render_full_chart(chart, transit=_transit_for_ring)
-                _render_ai_button("tab_chinese", chart, btn_key="chinese")
-                st.divider()
-                render_chart_info(chart)
-                st.divider()
-                render_bazi(chart)
-                st.divider()
-                render_planet_table(chart)
-                st.divider()
-                render_house_table(chart)
-                st.divider()
-                render_aspect_summary(chart)
-                st.divider()
-                render_ming_gong_interpretations(chart)
+with _natal_tab:
+    # --- 七政四餘（中國） ---
+    if _selected_system == "tab_chinese":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _g = st.session_state["_calc_gender"]
+                with st.spinner(t("spinner_chinese")):
+                    chart = compute_chart(**_p, gender=_g)
 
-            with _ch_tab_shensha:
-                _shensha = compute_shensha(
-                    year=chart.year,
-                    solar_month=chart.solar_month,
-                    julian_day=chart.julian_day,
-                    hour_branch=chart.hour_branch,
-                    timezone=chart.timezone,
-                    ming_gong_branch=chart.ming_gong_branch,
-                )
-                render_shensha(chart, _shensha)
+                # 子 tabs for the Chinese chart
+                _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect = st.tabs([
+                    t("ch_subtab_natal"),
+                    t("ch_subtab_shensha"),
+                    t("ch_subtab_dasha"),
+                    t("ch_subtab_transit"),
+                    t("ch_subtab_zhangguo"),
+                    t("ch_subtab_electional"),
+                ])
 
-            with _ch_tab_dasha:
-                from datetime import datetime as _dt
-                _current_year = _dt.now().year
-                _dasha = compute_dasha(
-                    birth_year=chart.year,
-                    ming_gong_branch=chart.ming_gong_branch,
-                    gender=_g,
-                    houses=chart.houses,
-                    current_year=_current_year,
-                )
-                render_dasha(chart, _dasha)
-                # Dasha interpretation
-                if _dasha.current_period_idx >= 0:
-                    _cur_period = _dasha.periods[_dasha.current_period_idx]
-                    _reading = get_qizheng_dasha_reading(_cur_period.lord, get_lang())
-                    if _reading:
-                        st.divider()
-                        st.subheader(t("dasha_reading_header"))
-                        st.info(f"**{_cur_period.lord}** — {_reading}")
+                with _ch_tab_natal:
+                    # 計算流時盤 for overlay
+                    _transit_now = compute_transit_now(timezone=input_tz)
 
-            with _ch_tab_transit:
-                st.subheader(t("transit_header"))
-                _t_col1, _t_col2, _t_col3 = st.columns(3)
-                with _t_col1:
-                    _t_date = st.date_input(
-                        t("transit_date"),
-                        value=datetime.now().date(),
-                        key="transit_date_input",
+                    # 選擇是否顯示流時對盤
+                    _show_transit_overlay = st.checkbox(
+                        t("show_transit_overlay"), value=False,
                     )
-                with _t_col2:
-                    _t_time = st.time_input(
-                        t("transit_time"),
-                        value=datetime.now().time(),
-                        key="transit_time_input",
+                    _transit_for_ring = _transit_now if _show_transit_overlay else None
+
+                    # Full chart: circle + info panel side by side
+                    render_full_chart(chart, transit=_transit_for_ring)
+                    _render_ai_button("tab_chinese", chart, btn_key="chinese")
+                    st.divider()
+                    render_chart_info(chart)
+                    st.divider()
+                    render_bazi(chart)
+                    st.divider()
+                    render_planet_table(chart)
+                    st.divider()
+                    render_house_table(chart)
+                    st.divider()
+                    render_aspect_summary(chart)
+                    st.divider()
+                    render_ming_gong_interpretations(chart)
+
+                with _ch_tab_shensha:
+                    _shensha = compute_shensha(
+                        year=chart.year,
+                        solar_month=chart.solar_month,
+                        julian_day=chart.julian_day,
+                        hour_branch=chart.hour_branch,
+                        timezone=chart.timezone,
+                        ming_gong_branch=chart.ming_gong_branch,
                     )
-                with _t_col3:
-                    _t_tz = st.number_input(
-                        t("transit_tz"),
-                        value=input_tz,
-                        format="%.1f",
-                        min_value=-12.0, max_value=14.0, step=0.5,
-                        key="transit_tz_input",
+                    render_shensha(chart, _shensha)
+
+                with _ch_tab_dasha:
+                    from datetime import datetime as _dt
+                    _current_year = _dt.now().year
+                    _dasha = compute_dasha(
+                        birth_year=chart.year,
+                        ming_gong_branch=chart.ming_gong_branch,
+                        gender=_g,
+                        houses=chart.houses,
+                        current_year=_current_year,
                     )
+                    render_dasha(chart, _dasha)
+                    # Dasha interpretation
+                    if _dasha.current_period_idx >= 0:
+                        _cur_period = _dasha.periods[_dasha.current_period_idx]
+                        _reading = get_qizheng_dasha_reading(_cur_period.lord, get_lang())
+                        if _reading:
+                            st.divider()
+                            st.subheader(t("dasha_reading_header"))
+                            st.info(f"**{_cur_period.lord}** — {_reading}")
 
-                _transit_custom = compute_transit(
-                    year=_t_date.year, month=_t_date.month, day=_t_date.day,
-                    hour=_t_time.hour, minute=_t_time.minute,
-                    timezone=_t_tz,
-                )
-                render_transit_comparison(chart, _transit_custom)
+                with _ch_tab_transit:
+                    st.subheader(t("transit_header"))
+                    _t_col1, _t_col2, _t_col3 = st.columns(3)
+                    with _t_col1:
+                        _t_date = st.date_input(
+                            t("transit_date"),
+                            value=datetime.now().date(),
+                            key="transit_date_input",
+                        )
+                    with _t_col2:
+                        _t_time = st.time_input(
+                            t("transit_time"),
+                            value=datetime.now().time(),
+                            key="transit_time_input",
+                        )
+                    with _t_col3:
+                        _t_tz = st.number_input(
+                            t("transit_tz"),
+                            value=input_tz,
+                            format="%.1f",
+                            min_value=-12.0, max_value=14.0, step=0.5,
+                            key="transit_tz_input",
+                        )
 
-            with _ch_tab_zhangguo:
-                _zhangguo = compute_zhangguo(
-                    planets=chart.planets,
-                    houses=chart.houses,
-                    gender=_g,
-                )
-                render_zhangguo(chart, _zhangguo)
+                    _transit_custom = compute_transit(
+                        year=_t_date.year, month=_t_date.month, day=_t_date.day,
+                        hour=_t_time.hour, minute=_t_time.minute,
+                        timezone=_t_tz,
+                    )
+                    render_transit_comparison(chart, _transit_custom)
 
-            with _ch_tab_elect:
-                render_electional_tool(timezone=input_tz)
+                with _ch_tab_zhangguo:
+                    _zhangguo = compute_zhangguo(
+                        planets=chart.planets,
+                        houses=chart.houses,
+                        gender=_g,
+                    )
+                    render_zhangguo(chart, _zhangguo)
 
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_chinese"))
+                with _ch_tab_elect:
+                    render_electional_tool(timezone=input_tz)
 
-# --- 紫微斗數 ---
-elif _selected_system == "tab_ziwei":
-    # 越南 Tử Vi 模式切換
-    _ziwei_col1, _ziwei_col2 = st.columns([3, 1])
-    with _ziwei_col2:
-        _vietnam_mode = st.toggle(
-            "🇻🇳 越南 Tử Vi 模式",
-            value=st.session_state.get("_ziwei_vietnam_mode", False),
-            help="啟用越南 Tử Vi Đẩu Số 模式：以貓代兔、融入越南佛教與農耕文化詮釋",
-            key="_ziwei_vietnam_toggle",
-        )
-        st.session_state["_ziwei_vietnam_mode"] = _vietnam_mode
-    with _ziwei_col1:
-        if _vietnam_mode:
-            st.markdown(
-                '<span style="background:#DA251D;color:#FFCD00;'
-                'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
-                '🇻🇳 越南 Tử Vi Đẩu Số 模式已啟用</span>',
-                unsafe_allow_html=True,
-            )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
         else:
-            st.markdown(
-                '<span style="background:#1a1a2e;color:#c8a96e;'
-                'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
-                '🌟 中國紫微斗數模式</span>',
-                unsafe_allow_html=True,
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_chinese"))
+
+    # --- 紫微斗數 ---
+    elif _selected_system == "tab_ziwei":
+        # 越南 Tử Vi 模式切換
+        _ziwei_col1, _ziwei_col2 = st.columns([3, 1])
+        with _ziwei_col2:
+            _vietnam_mode = st.toggle(
+                "🇻🇳 越南 Tử Vi 模式",
+                value=st.session_state.get("_ziwei_vietnam_mode", False),
+                help="啟用越南 Tử Vi Đẩu Số 模式：以貓代兔、融入越南佛教與農耕文化詮釋",
+                key="_ziwei_vietnam_toggle",
             )
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _gender = st.session_state.get("_calc_gender", "男")
-            with st.spinner(t("spinner_ziwei")):
-                zw_chart = compute_ziwei_chart(**_p, gender=_gender, vietnam_mode=_vietnam_mode)
-            render_ziwei_chart(zw_chart, after_chart_hook=lambda: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_ziwei"))
-
-# --- 策天十八飛星 ---
-elif _selected_system == "tab_cetian_ziwei":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _gender = st.session_state.get("_calc_gender", "男")
-            with st.spinner(t("spinner_cetian_ziwei")):
-                ct_chart = compute_cetian_ziwei_chart(**_p, gender=_gender)
-            render_cetian_ziwei_chart(ct_chart, after_chart_hook=lambda: _render_ai_button("tab_cetian_ziwei", ct_chart, btn_key="cetian_ziwei"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_cetian_ziwei"))
-
-# --- 西洋占星 ---
-elif _selected_system == "tab_western":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            sidereal_mode = st.checkbox(
-                t("sidereal_label"),
-                value=False,
-                help=t("sidereal_help"),
-            )
-            with st.spinner(t("spinner_western")):
-                w_params = dict(**_p, sidereal=sidereal_mode)
-                w_chart = compute_western_chart(**w_params)
-
-            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
-                t("western_subtab_natal"),
-                t("western_subtab_transit"),
-                t("western_subtab_return"),
-                t("western_subtab_synastry"),
-                t("western_subtab_dignity"),
-                t("western_subtab_harmonic"),
-                t("western_subtab_draconic"),
-                t("western_subtab_asteroids"),
-                t("western_subtab_fixed_stars"),
-                t("western_subtab_parans"),
-                t("western_subtab_heliacal"),
-                t("western_subtab_predictive"),
-            ])
-
-            with _w_tab_natal:
-                _w_gender = st.session_state.get("_calc_gender")
-                # Pre-compute natal summary so it can be included in AI analysis
-                _summary = generate_natal_summary(
-                    w_chart.planets, w_chart.houses,
-                    getattr(w_chart, 'asc_sign', ''),
-                    lang=get_lang(),
+            st.session_state["_ziwei_vietnam_mode"] = _vietnam_mode
+        with _ziwei_col1:
+            if _vietnam_mode:
+                st.markdown(
+                    '<span style="background:#DA251D;color:#FFCD00;'
+                    'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
+                    '🇻🇳 越南 Tử Vi Đẩu Số 模式已啟用</span>',
+                    unsafe_allow_html=True,
                 )
-                render_western_chart(
-                    w_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_western", w_chart,
-                        btn_key="western", page_content=_summary,
-                    ),
-                    gender=_w_gender,
+            else:
+                st.markdown(
+                    '<span style="background:#1a1a2e;color:#c8a96e;'
+                    'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
+                    '🌟 中國紫微斗數模式</span>',
+                    unsafe_allow_html=True,
                 )
-                # Natal summary
-                with st.expander(t("natal_summary_header"), expanded=True):
-                    st.markdown(_summary)
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _gender = st.session_state.get("_calc_gender", "男")
+                with st.spinner(t("spinner_ziwei")):
+                    zw_chart = compute_ziwei_chart(**_p, gender=_gender, vietnam_mode=_vietnam_mode)
+                render_ziwei_chart(zw_chart, after_chart_hook=lambda: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_ziwei"))
 
-            with _w_tab_transit:
-                st.subheader(t("western_subtab_transit"))
-                _wt_col1, _wt_col2 = st.columns(2)
-                with _wt_col1:
-                    _wt_date = st.date_input(t("transit_target_date"),
-                                             value=datetime.now().date(),
-                                             key="wt_date")
-                with _wt_col2:
-                    _wt_time = st.time_input("Time", value=datetime.now().time(),
-                                             key="wt_time")
-                w_transits = compute_western_transits(
-                    w_chart, _wt_date.year, _wt_date.month, _wt_date.day,
-                    _wt_time.hour, _wt_time.minute, input_tz,
+    # --- 策天十八飛星 ---
+    elif _selected_system == "tab_cetian_ziwei":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _gender = st.session_state.get("_calc_gender", "男")
+                with st.spinner(t("spinner_cetian_ziwei")):
+                    ct_chart = compute_cetian_ziwei_chart(**_p, gender=_gender)
+                render_cetian_ziwei_chart(ct_chart, after_chart_hook=lambda: _render_ai_button("tab_cetian_ziwei", ct_chart, btn_key="cetian_ziwei"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_cetian_ziwei"))
+
+    # --- 西洋占星 ---
+    elif _selected_system == "tab_western":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                sidereal_mode = st.checkbox(
+                    t("sidereal_label"),
+                    value=False,
+                    help=t("sidereal_help"),
                 )
-                if w_transits.aspects_to_natal:
-                    st.dataframe([{"Transit": a.transit_planet, "Natal": a.natal_planet,
-                                   "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
-                                   "Applying": "→" if a.is_applying else "←"}
-                                  for a in w_transits.aspects_to_natal[:20]],
-                                 width="stretch")
-                    # Transit readings
-                    st.subheader(t("transit_readings_header"))
-                    _lang = get_lang()
-                    for _ta in w_transits.aspects_to_natal[:5]:
-                        _reading = _ta.interpretation_cn if _lang in ("zh", "zh_cn") else _ta.interpretation_en
-                        _reading = auto_cn(_reading) if _reading else _reading
-                        st.info(f"**{_ta.transit_planet} {_ta.aspect_symbol} {_ta.natal_planet}** (orb {_ta.orb}°)\n\n{_reading}")
-                else:
-                    st.info("No transit aspects found.")
+                with st.spinner(t("spinner_western")):
+                    w_params = dict(**_p, sidereal=sidereal_mode)
+                    w_chart = compute_western_chart(**w_params)
 
-            with _w_tab_return:
-                st.subheader(t("western_subtab_return"))
-                _return_year = st.number_input(t("return_year_label"),
-                                               value=datetime.now().year,
-                                               min_value=1900, max_value=2100,
-                                               key="return_year")
-                sun_planet = next((p for p in w_chart.planets if p.name.startswith("Sun")), None)
-                if sun_planet:
-                    sr = compute_solar_return(
-                        sun_planet.longitude, _return_year,
-                        input_lat, input_lon, input_tz, location_name,
+                _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
+                    t("western_subtab_natal"),
+                    t("western_subtab_transit"),
+                    t("western_subtab_return"),
+                    t("western_subtab_synastry"),
+                    t("western_subtab_dignity"),
+                    t("western_subtab_harmonic"),
+                    t("western_subtab_draconic"),
+                    t("western_subtab_asteroids"),
+                    t("western_subtab_fixed_stars"),
+                    t("western_subtab_parans"),
+                    t("western_subtab_heliacal"),
+                    t("western_subtab_predictive"),
+                ])
+
+                with _w_tab_natal:
+                    _w_gender = st.session_state.get("_calc_gender")
+                    # Pre-compute natal summary so it can be included in AI analysis
+                    _summary = generate_natal_summary(
+                        w_chart.planets, w_chart.houses,
+                        getattr(w_chart, 'asc_sign', ''),
+                        lang=get_lang(),
                     )
-                    st.success(f"Solar Return: **{sr.return_date}**")
-                    render_western_chart(sr.return_chart)
-                else:
-                    st.warning("Sun position not found in natal chart.")
-
-            with _w_tab_synastry:
-                st.subheader(t("synastry_header"))
-                st.markdown(t("synastry_person_b"))
-                _s_col1, _s_col2, _s_col3 = st.columns(3)
-                with _s_col1:
-                    _s_date = st.date_input("Date B", value=date(1990, 6, 15), key="syn_date")
-                with _s_col2:
-                    _s_time = st.time_input("Time B", value=time(12, 0), key="syn_time")
-                with _s_col3:
-                    _s_tz = st.number_input("TZ B", value=input_tz, key="syn_tz",
-                                            min_value=-12.0, max_value=14.0, step=0.5)
-                if st.button("Calculate Synastry / 計算合盤", key="syn_btn"):
-                    w_b = compute_western_chart(
-                        year=_s_date.year, month=_s_date.month, day=_s_date.day,
-                        hour=_s_time.hour, minute=_s_time.minute,
-                        timezone=_s_tz, latitude=input_lat, longitude=input_lon,
-                        location_name=location_name,
+                    render_western_chart(
+                        w_chart,
+                        after_chart_hook=lambda: _render_ai_button(
+                            "tab_western", w_chart,
+                            btn_key="western", page_content=_summary,
+                        ),
+                        gender=_w_gender,
                     )
-                    syn = compute_synastry(w_chart, w_b, "Person A", "Person B")
-                    st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
-                    st.info(auto_cn(syn.summary_cn) if get_lang() in ("zh", "zh_cn") else syn.summary_en)
-                    if syn.element_compatibility:
-                        st.write(f"🔮 {syn.element_compatibility}")
-                    if syn.inter_aspects:
-                        st.dataframe([{"A": a.planet_a, "B": a.planet_b,
+                    # Natal summary
+                    with st.expander(t("natal_summary_header"), expanded=True):
+                        st.markdown(_summary)
+
+                with _w_tab_transit:
+                    st.subheader(t("western_subtab_transit"))
+                    _wt_col1, _wt_col2 = st.columns(2)
+                    with _wt_col1:
+                        _wt_date = st.date_input(t("transit_target_date"),
+                                                 value=datetime.now().date(),
+                                                 key="wt_date")
+                    with _wt_col2:
+                        _wt_time = st.time_input("Time", value=datetime.now().time(),
+                                                 key="wt_time")
+                    w_transits = compute_western_transits(
+                        w_chart, _wt_date.year, _wt_date.month, _wt_date.day,
+                        _wt_time.hour, _wt_time.minute, input_tz,
+                    )
+                    if w_transits.aspects_to_natal:
+                        st.dataframe([{"Transit": a.transit_planet, "Natal": a.natal_planet,
                                        "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
-                                       "Score": f"{a.harmony_score:+.3f}"}
-                                      for a in syn.inter_aspects[:20]],
+                                       "Applying": "→" if a.is_applying else "←"}
+                                      for a in w_transits.aspects_to_natal[:20]],
                                      width="stretch")
-                        # Synastry readings (top 5)
-                        st.subheader(t("synastry_readings_header"))
+                        # Transit readings
+                        st.subheader(t("transit_readings_header"))
                         _lang = get_lang()
-                        for _sa in syn.inter_aspects[:5]:
-                            _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
+                        for _ta in w_transits.aspects_to_natal[:5]:
+                            _reading = _ta.interpretation_cn if _lang in ("zh", "zh_cn") else _ta.interpretation_en
                             _reading = auto_cn(_reading) if _reading else _reading
-                            st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
+                            st.info(f"**{_ta.transit_planet} {_ta.aspect_symbol} {_ta.natal_planet}** (orb {_ta.orb}°)\n\n{_reading}")
+                    else:
+                        st.info("No transit aspects found.")
 
-            with _w_tab_dignity:
-                st.subheader(t("western_subtab_dignity"))
-                _calc = PtolemyDignityCalculator()
-                _PLANET_MAP = {"Sun": PtolPlanet.SUN, "Moon": PtolPlanet.MOON, "Mercury": PtolPlanet.MERCURY,
-                               "Venus": PtolPlanet.VENUS, "Mars": PtolPlanet.MARS, "Jupiter": PtolPlanet.JUPITER, "Saturn": PtolPlanet.SATURN}
-                _dignity_rows = []
-                for p in w_chart.planets:
-                    _pname = p.name.split("(")[0].strip().split()[0]
-                    _ptol = _PLANET_MAP.get(_pname)
-                    if _ptol:
-                        _sign = getattr(p, 'sign', '') or ''
-                        _sign_key = _sign.split()[0] if _sign else ''
-                        _degree = getattr(p, 'sign_degree', p.longitude % 30)
-                        _digs = _calc.get_dignities(_ptol, _sign_key, _degree, is_day_chart=True)
-                        _score = _calc.calculate_total_score(_digs)
-                        _dignity_rows.append({
-                            "Planet": f"{_pname} ({_ptol.value})",
-                            "Sign": f"{_sign_key} ({SIGN_NAMES.get(_sign_key, '')})",
-                            "Degree": f"{_degree:.2f}°",
-                            "Dignities": dignity_to_chinese(_digs),
-                            "Score": _score,
-                        })
-                if _dignity_rows:
-                    st.dataframe(_dignity_rows, width="stretch")
-                else:
-                    st.info("No traditional planet dignity data available.")
-
-            with _w_tab_harmonic:
-                render_harmonic_chart(w_chart, lang=get_lang())
-
-            with _w_tab_draconic:
-                render_draconic_chart(w_chart, lang=get_lang())
-
-            # ── Asteroids & Centaurs tab ──────────────────────────
-            with _w_tab_asteroids:
-                st.markdown(t("asteroids_header"))
-                _use_adv_ast = st.session_state.get("_adv_asteroids", True)
-                if _use_adv_ast:
-                    _helio = st.session_state.get("_adv_helio", False)
-                    _grp_keys = st.session_state.get("_adv_ast_group_keys") or list(ASTEROID_GROUPS.keys())[:3]
-                    with st.spinner("Calculating asteroid positions…"):
-
-                        @st.cache_data(show_spinner=False)
-                        def _cached_asteroids(jd, helio, groups_tuple):
-                            return compute_asteroids(jd, heliocentric=helio,
-                                                     include_groups=list(groups_tuple))
-
-                        _asts = _cached_asteroids(
-                            w_chart.julian_day, _helio, tuple(_grp_keys),
+                with _w_tab_return:
+                    st.subheader(t("western_subtab_return"))
+                    _return_year = st.number_input(t("return_year_label"),
+                                                   value=datetime.now().year,
+                                                   min_value=1900, max_value=2100,
+                                                   key="return_year")
+                    sun_planet = next((p for p in w_chart.planets if p.name.startswith("Sun")), None)
+                    if sun_planet:
+                        sr = compute_solar_return(
+                            sun_planet.longitude, _return_year,
+                            input_lat, input_lon, input_tz, location_name,
                         )
-                    if _asts:
-                        _ast_rows = []
-                        for _a in _asts:
-                            _ast_rows.append({
-                                t("adv_col_body"):    f"{_a.symbol} {_a.name} ({_a.name_cn})",
-                                t("adv_col_sign"):    _a.sign,
-                                t("adv_col_degree"):  f"{_a.sign_degree:.2f}°",
-                                t("adv_col_lat"):     f"{_a.latitude:.2f}°",
-                                t("adv_col_speed"):   f"{_a.speed:+.4f}°/d",
-                                t("adv_col_retro"):   "℞" if _a.retrograde else "",
-                                t("adv_col_meaning"): auto_cn(_a.meaning_cn),
+                        st.success(f"Solar Return: **{sr.return_date}**")
+                        render_western_chart(sr.return_chart)
+                    else:
+                        st.warning("Sun position not found in natal chart.")
+
+                with _w_tab_synastry:
+                    st.subheader(t("synastry_header"))
+                    st.markdown(t("synastry_person_b"))
+                    _s_col1, _s_col2, _s_col3 = st.columns(3)
+                    with _s_col1:
+                        _s_date = st.date_input("Date B", value=date(1990, 6, 15), key="syn_date")
+                    with _s_col2:
+                        _s_time = st.time_input("Time B", value=time(12, 0), key="syn_time")
+                    with _s_col3:
+                        _s_tz = st.number_input("TZ B", value=input_tz, key="syn_tz",
+                                                min_value=-12.0, max_value=14.0, step=0.5)
+                    if st.button("Calculate Synastry / 計算合盤", key="syn_btn"):
+                        w_b = compute_western_chart(
+                            year=_s_date.year, month=_s_date.month, day=_s_date.day,
+                            hour=_s_time.hour, minute=_s_time.minute,
+                            timezone=_s_tz, latitude=input_lat, longitude=input_lon,
+                            location_name=location_name,
+                        )
+                        syn = compute_synastry(w_chart, w_b, "Person A", "Person B")
+                        st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
+                        st.info(auto_cn(syn.summary_cn) if get_lang() in ("zh", "zh_cn") else syn.summary_en)
+                        if syn.element_compatibility:
+                            st.write(f"🔮 {syn.element_compatibility}")
+                        if syn.inter_aspects:
+                            st.dataframe([{"A": a.planet_a, "B": a.planet_b,
+                                           "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
+                                           "Score": f"{a.harmony_score:+.3f}"}
+                                          for a in syn.inter_aspects[:20]],
+                                         width="stretch")
+                            # Synastry readings (top 5)
+                            st.subheader(t("synastry_readings_header"))
+                            _lang = get_lang()
+                            for _sa in syn.inter_aspects[:5]:
+                                _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
+                                _reading = auto_cn(_reading) if _reading else _reading
+                                st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
+
+                with _w_tab_dignity:
+                    st.subheader(t("western_subtab_dignity"))
+                    _calc = PtolemyDignityCalculator()
+                    _PLANET_MAP = {"Sun": PtolPlanet.SUN, "Moon": PtolPlanet.MOON, "Mercury": PtolPlanet.MERCURY,
+                                   "Venus": PtolPlanet.VENUS, "Mars": PtolPlanet.MARS, "Jupiter": PtolPlanet.JUPITER, "Saturn": PtolPlanet.SATURN}
+                    _dignity_rows = []
+                    for p in w_chart.planets:
+                        _pname = p.name.split("(")[0].strip().split()[0]
+                        _ptol = _PLANET_MAP.get(_pname)
+                        if _ptol:
+                            _sign = getattr(p, 'sign', '') or ''
+                            _sign_key = _sign.split()[0] if _sign else ''
+                            _degree = getattr(p, 'sign_degree', p.longitude % 30)
+                            _digs = _calc.get_dignities(_ptol, _sign_key, _degree, is_day_chart=True)
+                            _score = _calc.calculate_total_score(_digs)
+                            _dignity_rows.append({
+                                "Planet": f"{_pname} ({_ptol.value})",
+                                "Sign": f"{_sign_key} ({SIGN_NAMES.get(_sign_key, '')})",
+                                "Degree": f"{_degree:.2f}°",
+                                "Dignities": dignity_to_chinese(_digs),
+                                "Score": _score,
                             })
-                        st.dataframe(_ast_rows, width="stretch")
-
-                        # Aspects with traditional planets
-                        if st.session_state.get("_adv_ast_aspects", True):
-                            _p_lons = {p.name: p.longitude for p in w_chart.planets}
-                            _ast_aspects = get_asteroid_aspects(_asts, _p_lons)
-                            if _ast_aspects:
-                                st.markdown("##### Asteroid Aspects / 小行星相位")
-                                st.dataframe([{
-                                    t("adv_col_body"):   _aa.asteroid_name,
-                                    "Aspect":            f"{_aa.aspect_symbol} {_aa.aspect_name}",
-                                    "Planet":            _aa.planet_name,
-                                    t("adv_col_orb"):    f"{_aa.orb:.2f}°",
-                                } for _aa in _ast_aspects[:30]], width="stretch")
+                    if _dignity_rows:
+                        st.dataframe(_dignity_rows, width="stretch")
                     else:
-                        st.info(t("adv_no_results"))
-                else:
-                    st.info("Enable 'Include Asteroids & Centaurs' in the sidebar.")
+                        st.info("No traditional planet dignity data available.")
 
-            # ── Fixed Stars tab ───────────────────────────────────
-            with _w_tab_stars:
-                st.markdown(t("fixed_star_conjunctions_header"))
-                _use_adv_stars = st.session_state.get("_adv_fixed_stars", False)
-                if _use_adv_stars:
-                    _star_limit = st.session_state.get("_adv_stars_count", 30)
-                    if _star_limit == STAR_CATALOG_ALL:
-                        _star_limit = None  # all
+                with _w_tab_harmonic:
+                    render_harmonic_chart(w_chart, lang=get_lang())
 
-                    with st.spinner("Computing fixed star positions…"):
+                with _w_tab_draconic:
+                    render_draconic_chart(w_chart, lang=get_lang())
 
-                        @st.cache_data(show_spinner=False)
-                        def _cached_stars(jd, lim):
-                            return compute_fixed_star_positions(jd, limit=lim)
+                # ── Asteroids & Centaurs tab ──────────────────────────
+                with _w_tab_asteroids:
+                    st.markdown(t("asteroids_header"))
+                    _use_adv_ast = st.session_state.get("_adv_asteroids", True)
+                    if _use_adv_ast:
+                        _helio = st.session_state.get("_adv_helio", False)
+                        _grp_keys = st.session_state.get("_adv_ast_group_keys") or list(ASTEROID_GROUPS.keys())[:3]
+                        with st.spinner("Calculating asteroid positions…"):
 
-                        _stars = _cached_stars(w_chart.julian_day, _star_limit)
-
-                    _p_lons = {p.name: p.longitude for p in w_chart.planets}
-                    _conjs = find_conjunctions(_stars, _p_lons)
-
-                    st.markdown(f"**{len(_stars)}** stars computed · **{len(_conjs)}** conjunctions (orb ≤ 1.5°)")
-
-                    if _conjs:
-                        st.dataframe([{
-                            t("adv_col_body"):         f"⭐ {c.star_name} ({c.star_cn})",
-                            "Planet":                  c.planet_name,
-                            t("adv_col_orb"):          f"{c.orb:.2f}°",
-                            t("adv_col_nature"):       c.nature,
-                            t("adv_col_meaning"):      auto_cn(c.meaning_cn),
-                        } for c in _conjs], width="stretch")
-
-                    with st.expander("All Stars / 全部恆星", expanded=False):
-                        st.dataframe([{
-                            t("adv_col_body"):          f"{s.name}",
-                            t("adv_col_cn_name"):       s.cn_name,
-                            t("adv_col_constellation"): s.constellation,
-                            t("adv_col_sign"):          s.sign,
-                            t("adv_col_degree"):        f"{s.sign_degree:.2f}°",
-                            t("adv_col_lat"):           f"{s.latitude:.2f}°",
-                            t("adv_col_magnitude"):     s.magnitude,
-                            t("adv_col_nature"):        s.nature,
-                            t("adv_col_meaning"):       auto_cn(s.meaning_cn),
-                        } for s in _stars], width="stretch")
-                else:
-                    st.info("Enable 'Include Fixed Stars' in the sidebar.")
-
-            # ── Parans tab ────────────────────────────────────────
-            with _w_tab_parans:
-                st.markdown("#### 🔱 " + t("western_subtab_parans"))
-                st.caption(t("adv_parans_tooltip"))
-                _use_parans = st.session_state.get("_adv_parans", False)
-                if _use_parans:
-                    _star_limit_p = st.session_state.get("_adv_stars_count", 30)
-                    if _star_limit_p == STAR_CATALOG_ALL:
-                        _star_limit_p = None
-
-                    with st.spinner("Calculating parans…"):
-
-                        @st.cache_data(show_spinner=False)
-                        def _cached_parans(jd, lat, lon, lim):
-                            _s = compute_fixed_star_positions(jd, limit=lim)
-                            return calculate_parans(jd, lat, lon, _s)
-
-                        _parans = _cached_parans(
-                            w_chart.julian_day,
-                            getattr(w_chart, "latitude", 0.0),
-                            getattr(w_chart, "longitude", 0.0),
-                            _star_limit_p,
-                        )
-
-                    if _parans:
-                        st.dataframe([{
-                            "Star / 恆星":           f"⭐ {p.star_name} ({p.star_cn})",
-                            t("adv_col_star_event"): p.star_event_cn,
-                            "Planet / 行星":         p.planet_name,
-                            t("adv_col_planet_event"): p.planet_event_cn,
-                            t("adv_col_orb"):        f"{p.orb:.2f}°",
-                            t("adv_col_nature"):     p.star_nature,
-                            t("adv_col_meaning"):    auto_cn(p.star_meaning_cn),
-                        } for p in _parans[:50]], width="stretch")
-                    else:
-                        st.info(t("adv_no_results"))
-                else:
-                    st.info("Enable 'Show Parans' in the sidebar.")
-
-            # ── Heliacal tab ──────────────────────────────────────
-            with _w_tab_heliacal:
-                st.markdown("#### 🌅 " + t("western_subtab_heliacal"))
-                st.caption(t("adv_heliacal_tooltip"))
-                _use_heliacal = st.session_state.get("_adv_heliacal", False)
-                if _use_heliacal:
-                    _star_limit_h = st.session_state.get("_adv_stars_count", 30)
-                    _heliacal_star_cap = 30  # heliacal_ut is computationally expensive
-                    if _star_limit_h == STAR_CATALOG_ALL or _star_limit_h > _heliacal_star_cap:
-                        _star_limit_h = _heliacal_star_cap
-                        st.caption(
-                            "ℹ️ Heliacal star search capped at 30 stars for performance. "
-                            "/ 偕日升沒恆星計算限於30顆以確保效能。"
-                        )
-
-                    with st.spinner("Calculating heliacal phenomena…"):
-                        try:
                             @st.cache_data(show_spinner=False)
-                            def _cached_heliacal(jd, lat, lon, alt, lim):
-                                _s = compute_fixed_star_positions(jd, limit=lim)
-                                return calculate_heliacal(jd, lat, lon, alt, _s)
+                            def _cached_asteroids(jd, helio, groups_tuple):
+                                return compute_asteroids(jd, heliocentric=helio,
+                                                         include_groups=list(groups_tuple))
 
-                            _hels = _cached_heliacal(
+                            _asts = _cached_asteroids(
+                                w_chart.julian_day, _helio, tuple(_grp_keys),
+                            )
+                        if _asts:
+                            _ast_rows = []
+                            for _a in _asts:
+                                _ast_rows.append({
+                                    t("adv_col_body"):    f"{_a.symbol} {_a.name} ({_a.name_cn})",
+                                    t("adv_col_sign"):    _a.sign,
+                                    t("adv_col_degree"):  f"{_a.sign_degree:.2f}°",
+                                    t("adv_col_lat"):     f"{_a.latitude:.2f}°",
+                                    t("adv_col_speed"):   f"{_a.speed:+.4f}°/d",
+                                    t("adv_col_retro"):   "℞" if _a.retrograde else "",
+                                    t("adv_col_meaning"): auto_cn(_a.meaning_cn),
+                                })
+                            st.dataframe(_ast_rows, width="stretch")
+
+                            # Aspects with traditional planets
+                            if st.session_state.get("_adv_ast_aspects", True):
+                                _p_lons = {p.name: p.longitude for p in w_chart.planets}
+                                _ast_aspects = get_asteroid_aspects(_asts, _p_lons)
+                                if _ast_aspects:
+                                    st.markdown("##### Asteroid Aspects / 小行星相位")
+                                    st.dataframe([{
+                                        t("adv_col_body"):   _aa.asteroid_name,
+                                        "Aspect":            f"{_aa.aspect_symbol} {_aa.aspect_name}",
+                                        "Planet":            _aa.planet_name,
+                                        t("adv_col_orb"):    f"{_aa.orb:.2f}°",
+                                    } for _aa in _ast_aspects[:30]], width="stretch")
+                        else:
+                            st.info(t("adv_no_results"))
+                    else:
+                        st.info("Enable 'Include Asteroids & Centaurs' in the sidebar.")
+
+                # ── Fixed Stars tab ───────────────────────────────────
+                with _w_tab_stars:
+                    st.markdown(t("fixed_star_conjunctions_header"))
+                    _use_adv_stars = st.session_state.get("_adv_fixed_stars", False)
+                    if _use_adv_stars:
+                        _star_limit = st.session_state.get("_adv_stars_count", 30)
+                        if _star_limit == STAR_CATALOG_ALL:
+                            _star_limit = None  # all
+
+                        with st.spinner("Computing fixed star positions…"):
+
+                            @st.cache_data(show_spinner=False)
+                            def _cached_stars(jd, lim):
+                                return compute_fixed_star_positions(jd, limit=lim)
+
+                            _stars = _cached_stars(w_chart.julian_day, _star_limit)
+
+                        _p_lons = {p.name: p.longitude for p in w_chart.planets}
+                        _conjs = find_conjunctions(_stars, _p_lons)
+
+                        st.markdown(f"**{len(_stars)}** stars computed · **{len(_conjs)}** conjunctions (orb ≤ 1.5°)")
+
+                        if _conjs:
+                            st.dataframe([{
+                                t("adv_col_body"):         f"⭐ {c.star_name} ({c.star_cn})",
+                                "Planet":                  c.planet_name,
+                                t("adv_col_orb"):          f"{c.orb:.2f}°",
+                                t("adv_col_nature"):       c.nature,
+                                t("adv_col_meaning"):      auto_cn(c.meaning_cn),
+                            } for c in _conjs], width="stretch")
+
+                        with st.expander("All Stars / 全部恆星", expanded=False):
+                            st.dataframe([{
+                                t("adv_col_body"):          f"{s.name}",
+                                t("adv_col_cn_name"):       s.cn_name,
+                                t("adv_col_constellation"): s.constellation,
+                                t("adv_col_sign"):          s.sign,
+                                t("adv_col_degree"):        f"{s.sign_degree:.2f}°",
+                                t("adv_col_lat"):           f"{s.latitude:.2f}°",
+                                t("adv_col_magnitude"):     s.magnitude,
+                                t("adv_col_nature"):        s.nature,
+                                t("adv_col_meaning"):       auto_cn(s.meaning_cn),
+                            } for s in _stars], width="stretch")
+                    else:
+                        st.info("Enable 'Include Fixed Stars' in the sidebar.")
+
+                # ── Parans tab ────────────────────────────────────────
+                with _w_tab_parans:
+                    st.markdown("#### 🔱 " + t("western_subtab_parans"))
+                    st.caption(t("adv_parans_tooltip"))
+                    _use_parans = st.session_state.get("_adv_parans", False)
+                    if _use_parans:
+                        _star_limit_p = st.session_state.get("_adv_stars_count", 30)
+                        if _star_limit_p == STAR_CATALOG_ALL:
+                            _star_limit_p = None
+
+                        with st.spinner("Calculating parans…"):
+
+                            @st.cache_data(show_spinner=False)
+                            def _cached_parans(jd, lat, lon, lim):
+                                _s = compute_fixed_star_positions(jd, limit=lim)
+                                return calculate_parans(jd, lat, lon, _s)
+
+                            _parans = _cached_parans(
                                 w_chart.julian_day,
                                 getattr(w_chart, "latitude", 0.0),
                                 getattr(w_chart, "longitude", 0.0),
-                                0.0,
-                                _star_limit_h,
+                                _star_limit_p,
                             )
-                        except Exception as _he:
-                            _hels = []
-                            st.warning(t("adv_heliacal_unavail"))
-                            st.caption(str(_he))
 
-                    if _hels:
-                        st.dataframe([{
-                            t("adv_col_body"):       f"{'⭐' if h.is_star else '🪐'} {h.body_name} ({h.body_cn})",
-                            t("adv_col_event_type"): auto_cn(h.event_name_cn),
-                            t("adv_col_event_date"): h.event_date,
-                        } for h in _hels[:50]], width="stretch")
+                        if _parans:
+                            st.dataframe([{
+                                "Star / 恆星":           f"⭐ {p.star_name} ({p.star_cn})",
+                                t("adv_col_star_event"): p.star_event_cn,
+                                "Planet / 行星":         p.planet_name,
+                                t("adv_col_planet_event"): p.planet_event_cn,
+                                t("adv_col_orb"):        f"{p.orb:.2f}°",
+                                t("adv_col_nature"):     p.star_nature,
+                                t("adv_col_meaning"):    auto_cn(p.star_meaning_cn),
+                            } for p in _parans[:50]], width="stretch")
+                        else:
+                            st.info(t("adv_no_results"))
                     else:
-                        st.info(t("adv_no_results"))
-                else:
-                    st.info("Enable 'Show Heliacal Phenomena' in the sidebar.")
+                        st.info("Enable 'Show Parans' in the sidebar.")
 
-            # ── Predictive Suite tab ──────────────────────────────────
-            with _w_tab_predictive:
-                try:
-                    def _w_predictive_ai_callback(prompt_text: str):
-                        """將預測技術 AI 提示傳給現有 AI 分析框架"""
-                        _render_ai_button(
-                            "tab_western", w_chart,
-                            btn_key="western_predictive",
-                            page_content=prompt_text,
-                        )
-                    render_predictive_suite(
-                        w_chart,
-                        lang=get_lang(),
-                        ai_callback=_w_predictive_ai_callback,
-                    )
-                except Exception as _pred_e:
-                    st.error(f"預測技術計算錯誤 / Predictive error: {_pred_e}")
-                    st.exception(_pred_e)
+                # ── Heliacal tab ──────────────────────────────────────
+                with _w_tab_heliacal:
+                    st.markdown("#### 🌅 " + t("western_subtab_heliacal"))
+                    st.caption(t("adv_heliacal_tooltip"))
+                    _use_heliacal = st.session_state.get("_adv_heliacal", False)
+                    if _use_heliacal:
+                        _star_limit_h = st.session_state.get("_adv_stars_count", 30)
+                        _heliacal_star_cap = 30  # heliacal_ut is computationally expensive
+                        if _star_limit_h == STAR_CATALOG_ALL or _star_limit_h > _heliacal_star_cap:
+                            _star_limit_h = _heliacal_star_cap
+                            st.caption(
+                                "ℹ️ Heliacal star search capped at 30 stars for performance. "
+                                "/ 偕日升沒恆星計算限於30顆以確保效能。"
+                            )
 
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_western"))
+                        with st.spinner("Calculating heliacal phenomena…"):
+                            try:
+                                @st.cache_data(show_spinner=False)
+                                def _cached_heliacal(jd, lat, lon, alt, lim):
+                                    _s = compute_fixed_star_positions(jd, limit=lim)
+                                    return calculate_heliacal(jd, lat, lon, alt, _s)
 
-# --- 薩比恩符號 ---
-elif _selected_system == "tab_sabian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            sidereal_mode = st.checkbox(
-                t("sidereal_label"),
-                value=False,
-                help=t("sidereal_help"),
-            )
-            with st.spinner(t("spinner_western")):
-                w_params = dict(**_p, sidereal=sidereal_mode)
-                w_chart = compute_western_chart(**w_params)
-            
-            st.header(t("sabian_system_label"))
-            st.caption(t("sabian_symbols_help"))
-            
-            try:
-                from astro.sabian import get_sabian_for_planet, render_sabian_svg, load_sabian_symbols
-                
-                # Major planets list
-                _sabian_planets = ["Sun", "Moon", "Mercury", "Venus", "Mars",
-                                   "Jupiter", "Saturn", "Ascendant", "Midheaven"]
-                
-                # Pass full chart data including ascendant and midheaven
-                _chart_data = {
-                    "planets": w_chart.planets,
-                    "ascendant": w_chart.ascendant,
-                    "midheaven": w_chart.midheaven,
-                }
-                
-                # Pre-fetch all Sabian data
-                _sabian_lang = st.session_state.get("lang", "zh")
-                _sabian_data_list = []
-                for _pname in _sabian_planets:
+                                _hels = _cached_heliacal(
+                                    w_chart.julian_day,
+                                    getattr(w_chart, "latitude", 0.0),
+                                    getattr(w_chart, "longitude", 0.0),
+                                    0.0,
+                                    _star_limit_h,
+                                )
+                            except Exception as _he:
+                                _hels = []
+                                st.warning(t("adv_heliacal_unavail"))
+                                st.caption(str(_he))
+
+                        if _hels:
+                            st.dataframe([{
+                                t("adv_col_body"):       f"{'⭐' if h.is_star else '🪐'} {h.body_name} ({h.body_cn})",
+                                t("adv_col_event_type"): auto_cn(h.event_name_cn),
+                                t("adv_col_event_date"): h.event_date,
+                            } for h in _hels[:50]], width="stretch")
+                        else:
+                            st.info(t("adv_no_results"))
+                    else:
+                        st.info("Enable 'Show Heliacal Phenomena' in the sidebar.")
+
+                # ── Predictive Suite tab ──────────────────────────────────
+                with _w_tab_predictive:
                     try:
-                        _sabian = get_sabian_for_planet(_chart_data, _pname)
-                        if _sabian:
-                            _sabian_data_list.append((_pname, _sabian))
-                    except Exception:
-                        pass
+                        def _w_predictive_ai_callback(prompt_text: str):
+                            """將預測技術 AI 提示傳給現有 AI 分析框架"""
+                            _render_ai_button(
+                                "tab_western", w_chart,
+                                btn_key="western_predictive",
+                                page_content=prompt_text,
+                            )
+                        render_predictive_suite(
+                            w_chart,
+                            lang=get_lang(),
+                            ai_callback=_w_predictive_ai_callback,
+                        )
+                    except Exception as _pred_e:
+                        st.error(f"預測技術計算錯誤 / Predictive error: {_pred_e}")
+                        st.exception(_pred_e)
 
-                # Build a horizontal-scroll card strip at the top
-                _planet_glyphs = {
-                    "Sun": "☉", "Moon": "☽", "Mercury": "☿", "Venus": "♀",
-                    "Mars": "♂", "Jupiter": "♃", "Saturn": "♄",
-                    "Ascendant": "AC", "Midheaven": "MC",
-                }
-                _cards_html = ""
-                for _pname, _sabian in _sabian_data_list:
-                    _svg = render_sabian_svg(
-                        _sabian['planet_longitude'],
-                        size=220,
-                        language=_sabian_lang,
-                    )
-                    _glyph = _planet_glyphs.get(_pname, _pname[:2])
-                    _cards_html += f"""
-                    <div style="
-                        display:inline-block;
-                        vertical-align:top;
-                        width:220px;
-                        margin-right:12px;
-                        flex-shrink:0;
-                    ">
-                        <div style="text-align:center;font-size:11px;font-weight:600;
-                                    margin-bottom:4px;opacity:0.7;">{_glyph} {_pname}</div>
-                        {_svg}
-                    </div>"""
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_western"))
 
-                _scroll_component = f"""
-                <div style="
-                    overflow-x: auto;
-                    -webkit-overflow-scrolling: touch;
-                    white-space: nowrap;
-                    padding: 8px 4px 12px 4px;
-                    scroll-snap-type: x mandatory;
-                ">
-                    {_cards_html}
-                </div>
-                <p style="text-align:center;font-size:10px;opacity:0.5;margin-top:2px;">
-                    {t('sabian_scroll_hint')}
-                </p>
-                """
-                st.components.v1.html(_scroll_component, height=360, scrolling=False)
+    # --- 薩比恩符號 ---
+    elif _selected_system == "tab_sabian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                sidereal_mode = st.checkbox(
+                    t("sidereal_label"),
+                    value=False,
+                    help=t("sidereal_help"),
+                )
+                with st.spinner(t("spinner_western")):
+                    w_params = dict(**_p, sidereal=sidereal_mode)
+                    w_chart = compute_western_chart(**w_params)
+                
+                st.header(t("sabian_system_label"))
+                st.caption(t("sabian_symbols_help"))
+                
+                try:
+                    from astro.sabian import get_sabian_for_planet, render_sabian_svg, load_sabian_symbols
+                    
+                    # Major planets list
+                    _sabian_planets = ["Sun", "Moon", "Mercury", "Venus", "Mars",
+                                       "Jupiter", "Saturn", "Ascendant", "Midheaven"]
+                    
+                    # Pass full chart data including ascendant and midheaven
+                    _chart_data = {
+                        "planets": w_chart.planets,
+                        "ascendant": w_chart.ascendant,
+                        "midheaven": w_chart.midheaven,
+                    }
+                    
+                    # Pre-fetch all Sabian data
+                    _sabian_lang = st.session_state.get("lang", "zh")
+                    _sabian_data_list = []
+                    for _pname in _sabian_planets:
+                        try:
+                            _sabian = get_sabian_for_planet(_chart_data, _pname)
+                            if _sabian:
+                                _sabian_data_list.append((_pname, _sabian))
+                        except Exception:
+                            pass
 
-                st.divider()
-
-                # Detail section: use tabs for each planet (compact vertical space)
-                _tab_labels = [f"{_planet_glyphs.get(n, '')} {n}" for n, _ in _sabian_data_list]
-                _tabs = st.tabs(_tab_labels)
-                for _tab, (_pname, _sabian) in zip(_tabs, _sabian_data_list):
-                    with _tab:
+                    # Build a horizontal-scroll card strip at the top
+                    _planet_glyphs = {
+                        "Sun": "☉", "Moon": "☽", "Mercury": "☿", "Venus": "♀",
+                        "Mars": "♂", "Jupiter": "♃", "Saturn": "♄",
+                        "Ascendant": "AC", "Midheaven": "MC",
+                    }
+                    _cards_html = ""
+                    for _pname, _sabian in _sabian_data_list:
                         _svg = render_sabian_svg(
                             _sabian['planet_longitude'],
-                            size=300,
+                            size=220,
                             language=_sabian_lang,
                         )
-                        st.components.v1.html(
-                            f'<div style="width:100%;max-width:320px;margin:0 auto">{_svg}</div>',
-                            height=380,
-                            scrolling=False,
-                        )
-                        st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
-                        st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
-                        st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
-                        st.markdown(f"*{t('sabian_interpretation_label')}:* {_sabian['interpretation']}")
-                
-                # Optional: Show all 360 symbols in an expander
-                with st.expander(t("sabian_show_all")):
-                    st.caption("360 Sabian Symbols (Marc Edmund Jones, 1953)")
-                    _all_symbols = load_sabian_symbols()
-                    for _sym in _all_symbols[:360]:
-                        st.markdown(f"**{_sym['degree']}° {_sym['sign']}:** {_sym['symbol']}")
-                        
-            except ImportError as _ie:
-                st.error("Sabian Symbols module not available.")
-                st.exception(_ie)
-            except Exception as _se:
-                st.error(f"Error loading Sabian Symbols: {_se}")
-                st.exception(_se)
-                
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_sabian") if hasattr(t, "desc_sabian") else "🔮 薩比恩符號：Marc Edmund Jones (1953) 原著的 360 個象徵圖像，每個黃道度數對應一個獨特的心理原型。")
+                        _glyph = _planet_glyphs.get(_pname, _pname[:2])
+                        _cards_html += f"""
+                        <div style="
+                            display:inline-block;
+                            vertical-align:top;
+                            width:220px;
+                            margin-right:12px;
+                            flex-shrink:0;
+                        ">
+                            <div style="text-align:center;font-size:11px;font-weight:600;
+                                        margin-bottom:4px;opacity:0.7;">{_glyph} {_pname}</div>
+                            {_svg}
+                        </div>"""
 
-# --- 波斯薩珊占星 ---
-elif _selected_system == "tab_persian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_persian")):
-                from astro.persian import compute_sassanian_chart
-                
-                p_chart = compute_sassanian_chart(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    latitude=_p.get("lat", 0.0), longitude=_p.get("lon", 0.0),
-                    timezone=_p.get("tz", 0.0),
-                    language=get_lang()
-                )
-            
-            # 波斯傳統占星 - 直接顯示星盤圖案（緊湊佈局）
-            
-            # 薩珊傳統星盤圖（方形格式，純 SVG）
-            try:
-                from astro.persian.sassanian_chart_renderer import generate_sassanian_svg
-                
-                chart_data = {
-                    "year": _p["year"], "month": _p["month"], "day": _p["day"],
-                    "hour": _p["hour"], "minute": _p["minute"],
-                    "longitude": _p.get("lon", 0.0),
-                    "latitude": _p.get("lat", 0.0),
-                    "timezone": _p.get("tz", 0.0),
-                }
-                
-                # 生成 SVG 並直接顯示（響應式設計，PC/手機皆 100% 顯示）
-                svg_content = generate_sassanian_svg(
-                    chart_data=chart_data,
-                    width=500,
-                    height=650,
-                    show_pahlavi=False,
-                    show_royal_stars=True,
-                    show_firdar=True,
-                )
-                
-                # 使用 st.components.v1.html 顯示 SVG（響應式高度）
-                # viewBox 500x650，使用 width: 100% 確保 PC/手機皆完整顯示
-                st.components.v1.html(
-                    f'''<div style="width: 100%; max-width: 600px; margin: 0 auto;">
-                        {svg_content}
-                    </div>''',
-                    height=720,
-                    scrolling=False
-                )
-                
-            except Exception as e:
-                st.error(f"星盤渲染失敗：{str(e)}")
-            
-            # Basic chart info（緊貼星盤下方）
-            col1, col2 = st.columns(2)
-            with col1:
-                st.info(f"**{t('persian_current_firdar')}:** {p_chart.current_firdar.lord} ({p_chart.current_firdar.lord_cn})" if p_chart.current_firdar else "當前 Firdar: N/A")
-            with col2:
-                st.info(f"**{t('persian_current_sub')}:** {p_chart.current_sub_period.lord} ({p_chart.current_sub_period.lord_cn})" if p_chart.current_sub_period else "當前子週期：N/A")
-            
-            # Main tabs for Persian astrology
-            _p_tab_intro, _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
-                t("western_subtab_natal"),
-                t("persian_firdar_title"),
-                t("persian_hyleg_title"),
-                t("persian_profections_title"),
-                t("persian_almuten_title"),
-                t("persian_royal_stars_title"),
-                t("persian_lots_title"),
-            ])
-            
-            with _p_tab_intro:
-                st.header(t("tab_persian"))
-                st.caption(t("desc_persian"))
-                
-                # Planet positions table
-                st.subheader("行星位置")
-                planet_data = []
-                for planet in p_chart.planets:
-                    planet_data.append({
-                        "行星": f"{planet.name} ({planet.name_cn})",
-                        "經度": f"{planet.longitude:.2f}°",
-                        "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
-                        "宮位": f"第{planet.house}宮",
-                        "尊嚴": planet.essential_dignity,
-                        "逆行": "✓" if planet.retrograde else "",
-                    })
-                st.dataframe(planet_data, use_container_width=True)
-                
-                # AI Analysis button
-                _render_ai_button("tab_persian", p_chart, btn_key="persian")
-            
-            with _p_tab_firdar:
-                st.header(t("persian_firdar_title"))
-                st.caption(t("persian_firdar_help"))
-                
-                # Timeline visualization
-                st.subheader("Firdar 生命週期時間軸")
-                
-                for i, firdar_period in enumerate(p_chart.firdar):
-                    is_current = (p_chart.current_firdar and firdar_period.lord == p_chart.current_firdar.lord)
-                    expander_label = f"**{i+1}. {firdar_period.lord} ({firdar_period.lord_cn})** — {firdar_period.start_date} 至 {firdar_period.end_date} ({firdar_period.duration_years:.1f}年)"
-                    if is_current:
-                        expander_label = f"🔮 {expander_label} **(當前)**"
-                    
-                    with st.expander(expander_label, expanded=is_current):
-                        # Sub-periods table
-                        sub_data = []
-                        for sp in firdar_period.sub_periods:
-                            is_current_sub = (p_chart.current_sub_period and sp.lord == p_chart.current_sub_period.lord and sp.start_date == p_chart.current_sub_period.start_date)
-                            sub_data.append({
-                                "子週期": f"{'🔮 ' if is_current_sub else ''}{sp.lord} ({sp.lord_cn})",
-                                "起始": sp.start_date,
-                                "結束": sp.end_date,
-                                "年數": f"{sp.duration_years:.2f}",
-                            })
-                        st.dataframe(sub_data, use_container_width=True)
-            
-            with _p_tab_hyleg:
-                st.header(t("persian_hyleg_title"))
-                st.caption(t("persian_hyleg_help"))
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader(t("persian_hyleg_label"))
-                    if p_chart.hyleg:
-                        st.info(f"**類型:** {p_chart.hyleg.hyleg_type} ({p_chart.hyleg.hyleg_name_cn})\\n\\n"
-                               f"**位置:** {p_chart.hyleg.sign} {p_chart.hyleg.degree:.1f}°\\n\\n"
-                               f"**宮位:** 第{p_chart.hyleg.house}宮\\n\\n"
-                               f"**原因:** {p_chart.hyleg.reason}")
-                    else:
-                        st.warning("無法計算 Hyleg")
-                
-                with col2:
-                    st.subheader(t("persian_alcocoden_label"))
-                    if p_chart.alcocoden:
-                        st.info(f"**守護星:** {p_chart.alcocoden.alcocoden_lord} ({p_chart.alcocoden.alcocoden_lord_cn})\\n\\n"
-                               f"**{t('persian_planetary_years')}:** {p_chart.alcocoden.planetary_years}年\\n\\n"
-                               f"**{t('persian_modified_years')}:** {p_chart.alcocoden.modified_years:.1f}年\\n\\n"
-                               f"**{t('persian_aspects')}:** {', '.join(p_chart.alcocoden.aspects) if p_chart.alcocoden.aspects else '無'}\\n\\n"
-                               f"**說明:** {p_chart.alcocoden.reason}")
-                    else:
-                        st.warning("無法計算 Alcocoden")
-            
-            with _p_tab_profections:
-                st.header(t("persian_profections_title"))
-                st.caption("波斯式年度主限：每年移動 30°，從上升點開始連續計算。")
-                
-                # Show first 30 years
-                prof_data = []
-                for prof in p_chart.profections[:30]:
-                    prof_data.append({
-                        "年齡": prof.age,
-                        "主限星座": f"{prof.profection_sign_cn} {prof.profection_degree:.1f}°",
-                        "年度守護星": f"{prof.lord_of_year} ({prof.lord_of_year_cn})",
-                        "起始": prof.start_date,
-                        "結束": prof.end_date,
-                    })
-                st.dataframe(prof_data, use_container_width=True)
-            
-            with _p_tab_almuten:
-                st.header(t("persian_almuten_title"))
-                st.caption("Almuten Figuris 是根據薩珊尊嚴規則計算的最強行星，代表命主星。")
-                
-                if p_chart.almuten_figuris:
-                    st.info(f"**最強行星:** {p_chart.almuten_figuris.planet} ({p_chart.almuten_figuris.planet_cn})\\n\\n"
-                           f"**{t('persian_dignity_score')}:** {p_chart.almuten_figuris.total_score}\\n\\n"
-                           f"**說明:** {p_chart.almuten_figuris.reason}")
-                    
-                    # Dignity breakdown
-                    if p_chart.almuten_figuris.dignity_scores:
-                        st.subheader("尊嚴分數細項")
-                        score_data = []
-                        for key, score in p_chart.almuten_figuris.dignity_scores.items():
-                            score_data.append({"關鍵點": key, "分數": score})
-                        st.dataframe(score_data, use_container_width=True)
-                else:
-                    st.warning("無法計算 Almuten Figuris")
-            
-            with _p_tab_stars:
-                st.header(t("persian_royal_stars_title"))
-                st.caption("四顆皇家恆星是波斯傳統的重要恆星，與行星合相時具有特殊意義。")
-                
-                prominent_stars = [rs for rs in p_chart.royal_stars if rs.is_prominent]
-                
-                if prominent_stars:
-                    st.success(f"找到 {len(prominent_stars)} 顆顯著的皇家恆星：")
-                    for rs in prominent_stars:
-                        st.info(f"**{rs.star_name} ({rs.star_name_cn})**\\n\\n"
-                               f"**合相行星:** {rs.conjunction_planet} ({rs.conjunction_planet_cn})\\n\\n"
-                               f"**容許度:** {rs.orb}°\\n\\n"
-                               f"**意義:** {rs.meaning_cn}")
-                else:
-                    st.info(t("persian_no_prominent_stars"))
-                
-                # Show all royal stars
-                st.subheader("所有皇家恆星")
-                star_data = []
-                for rs in p_chart.royal_stars:
-                    star_data.append({
-                        "恆星": f"{rs.star_name} ({rs.star_name_cn})",
-                        "經度": f"{rs.star_longitude:.1f}°",
-                        "合相": f"{rs.conjunction_planet} ({rs.conjunction_planet_cn})" if rs.conjunction_planet else "無",
-                        "容許度": f"{rs.orb}°" if rs.orb > 0 else "—",
-                        "顯著": "✓" if rs.is_prominent else "",
-                    })
-                st.dataframe(star_data, use_container_width=True)
-            
-            with _p_tab_lots:
-                st.header(t("persian_lots_title"))
-                st.caption("波斯敏感點（Lots）是根據上升點、太陽、月亮計算的敏感點位。")
-                
-                lots_data = []
-                for lot in p_chart.persian_lots:
-                    lots_data.append({
-                        "名稱": f"{lot.name_en}\\n({lot.name_cn})",
-                        "阿拉伯名": lot.name_arabic,
-                        "經度": f"{lot.longitude:.2f}°",
-                        "星座": f"{lot.sign_cn} {lot.degree:.1f}°",
-                        "宮位": f"第{lot.house}宮",
-                    })
-                st.dataframe(lots_data, use_container_width=True)
-                
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_persian"))
+                    _scroll_component = f"""
+                    <div style="
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                        white-space: nowrap;
+                        padding: 8px 4px 12px 4px;
+                        scroll-snap-type: x mandatory;
+                    ">
+                        {_cards_html}
+                    </div>
+                    <p style="text-align:center;font-size:10px;opacity:0.5;margin-top:2px;">
+                        {t('sabian_scroll_hint')}
+                    </p>
+                    """
+                    st.components.v1.html(_scroll_component, height=360, scrolling=False)
 
-# --- 薩珊波斯 進階版 Advanced Sassanian Persian Astrology ---
-elif _selected_system == "tab_persian_deep":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_persian_deep")):
-                render_deep_sassanian_chart(
-                    year=_p["year"],
-                    month=_p["month"],
-                    day=_p["day"],
-                    hour=_p["hour"],
-                    minute=_p.get("minute", 0),
-                    timezone=_p.get("tz", 0.0),
-                    latitude=_p.get("lat", 0.0),
-                    longitude=_p.get("lon", 0.0),
-                    location_name=_p.get("location_name", ""),
-                )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_persian_deep_prompt"))
-        st.markdown(t("desc_persian_deep"))
-
-# --- KP Astrology (Krishnamurti Paddhati) ---
-elif _selected_system == "tab_kp":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_kp") if hasattr(t, "spinner_kp") else "計算 KP 星盤..."):
-                from astro.kp import compute_kp_chart, render_kp_chart
-                
-                kp_chart = compute_kp_chart(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    latitude=_p.get("lat", 0.0), longitude=_p.get("lon", 0.0),
-                    timezone=_p.get("tz", 0.0),
-                    language=get_lang()
-                )
-            
-            # KP Astrology main layout
-            st.header(t("kp_title"))
-            st.caption(t("kp_subtitle"))
-            
-            # KP vs Vedic note
-            st.info(t("kp_placidus_note"))
-            
-            # Render KP chart (tables + SVG chart)
-            render_kp_chart(kp_chart, language=get_lang())
-            
-            # AI Analysis button
-            _render_ai_button("tab_kp", kp_chart, btn_key="kp")
-            
-        except ImportError as _ie:
-            st.error("KP Astrology module not available.")
-            st.exception(_ie)
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            import traceback
-            st.code(traceback.format_exc())
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_kp") if hasattr(t, "desc_kp") else "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti 創立的精確預測系統，使用宿度主星 (Sub Lord) 和時辰主星 (Ruling Planets) 判斷事件發生時機。")
-
-# --- 鐵板神數 (Tie Ban Shen Shu) ---
-elif _selected_system == "tab_tieban":
-    _tb_tab_main, _tb_tab_tiaowen, _tb_tab_kunji = st.tabs([
-        auto_cn("🔮 命盤"), auto_cn("📚 完整條文庫"), auto_cn("🔑 坤集扣入法"),
-    ])
-    with _tb_tab_main:
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_tieban") if hasattr(t, "spinner_tieban") else "計算鐵板神數..."):
-                    # 鐵板神數需要父母信息，此處為簡化示例
-                    from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
-                    from astro.tieban.tieban_calculator import Ganzhi
-                    
-                    # 計算干支
-                    tbss = TieBanShenShu()
-                    ganzhi = tbss.calculate_ganzhi(
-                        datetime(
-                            _p["year"], _p["month"], _p["day"],
-                            _p["hour"], _p["minute"]
-                        )
-                    )
-                    
-                    # 創建出生資料（完整版需用戶輸入父母信息）
-                    birth_data = TieBanBirthData(
-                        birth_dt=datetime(_p["year"], _p["month"], _p["day"], _p["hour"], _p["minute"]),
-                        year_gz=ganzhi['year'],
-                        month_gz=ganzhi['month'],
-                        day_gz=ganzhi['day'],
-                        hour_gz=ganzhi['hour'],
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-                    
-                    # 計算
-                    tb_result = tbss.calculate(birth_data)
-                
-                # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
-                # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
-                svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
-                st.components.v1.html(svg_chart, height=760, scrolling=False)
-
-                # ② 核心數字卡片（HTML，手機單列）
-                _tb_lang = get_lang()
-                _tb_num_label   = "神數號碼"   if _tb_lang != "en" else "Divine Number"
-                _tb_ke_label    = "刻"         if _tb_lang != "en" else "Ke"
-                _tb_fen_label   = "分"         if _tb_lang != "en" else "Fen"
-                _tb_helo_label  = "河洛數"     if _tb_lang != "en" else "He Luo"
-                _tb_ming_label  = "命宮"       if _tb_lang != "en" else "Life Palace"
-                _tb_shen_label  = "身宮"       if _tb_lang != "en" else "Body Palace"
-                _tb_wx_label    = "五行局"     if _tb_lang != "en" else "Element Cycle"
-                _tb_code_label  = "密碼"       if _tb_lang != "en" else "Secret Code"
-                st.markdown(f"""
-    <div style="
-        display:flex;flex-wrap:wrap;gap:8px;
-        margin:0 0 16px 0;
-    ">
-      <div style="flex:1 1 140px;min-width:140px;
-          background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.4);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_num_label}</div>
-        <div style="font-size:26px;font-weight:700;color:#FF6B35;letter-spacing:3px;">{tb_result.tieban_number}</div>
-      </div>
-      <div style="flex:1 1 80px;min-width:80px;
-          background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ke_label}</div>
-        <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.ke}</div>
-      </div>
-      <div style="flex:1 1 80px;min-width:80px;
-          background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_fen_label}</div>
-        <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.fen}</div>
-      </div>
-      <div style="flex:1 1 80px;min-width:80px;
-          background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_helo_label}</div>
-        <div style="font-size:22px;font-weight:700;color:#6BCB77;">{tb_result.he_luo_number}</div>
-      </div>
-      <div style="flex:1 1 100px;min-width:100px;
-          background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ming_label}</div>
-        <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.ming_palace}</div>
-      </div>
-      <div style="flex:1 1 100px;min-width:100px;
-          background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_shen_label}</div>
-        <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.shen_palace}</div>
-      </div>
-      <div style="flex:1 1 100px;min-width:100px;
-          background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_wx_label}</div>
-        <div style="font-size:15px;font-weight:700;color:#C9A84C;">{tb_result.wuxing_ju}</div>
-      </div>
-      <div style="flex:1 1 100px;min-width:100px;
-          background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.25);
-          border-radius:12px;padding:12px 14px;text-align:center;">
-        <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_code_label}</div>
-        <div style="font-size:15px;font-weight:700;color:#E94560;">{tb_result.secret_code}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
-
-                # ③ 字：坤集條文（tiaowen_full_12000.json 主條文）
-                st.divider()
-                _tb_kunji_title = auto_cn("🔑 坤集條文")
-                st.subheader(_tb_kunji_title)
-
-                # 坤集扣入法天干序列 + 條文編號
-                if tb_result.kunji_tiangan:
-                    _tg_str = "　".join(tb_result.kunji_tiangan)
-                    _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
-                    _ke_lbl = tb_result.ke_label or str(tb_result.ke)
-                    st.markdown(
-                        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
-                        f'<span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
-                        f'#{_tiaowen_num_label}</span>'
-                        f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
-                        f'{auto_cn("扣入天干")}：{_tg_str}</span>'
-                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                        f'{auto_cn("刻")}：{_ke_lbl}</span>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-
-                # 坤集主條文（tiaowen_full_12000.json）
-                _tw = tb_result.tiaowen_data
-                if _tw and _tw.get("text"):
-                    st.markdown(
-                        f'<div style="background:rgba(255,107,53,0.08);border-left:4px solid #FF6B35;'
-                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
-                        f'color:#f0d9c8;line-height:1.9;letter-spacing:0.5px;">'
-                        f'{_tw["text"]}</div>',
-                        unsafe_allow_html=True,
-                    )
-                    if _tw.get("note") and _tw["note"].strip() not in ("", "0 0"):
-                        st.caption(auto_cn(f"備注：{_tw['note']}"))
-                else:
-                    # 如坤集無此條，退而顯示 verses.json 條文
-                    st.info(tb_result.verse)
-
-                # 算盤打數條文（suanpan_tiaowen_full.json）
-                st.divider()
-                st.subheader(auto_cn("🧮 算盤打數條文"))
-                st.caption(auto_cn("曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文"))
-                from astro.tieban.suanpan_full_structure import (
-                    suanpan_calculate,
-                    SuanpanTiaowenDatabase,
-                )
-                _sp_calc = suanpan_calculate(
-                    year_gz=str(ganzhi["year"]),
-                    month_gz=str(ganzhi["month"]),
-                    day_gz=str(ganzhi["day"]),
-                    hour_gz=str(ganzhi["hour"]),
-                    gender=st.session_state.get("_calc_gender", "男"),
-                )
-                _sp_db = SuanpanTiaowenDatabase()
-                _sp_tiaowen = _sp_db.get_by_result(_sp_calc)
-
-                # 基本定部資訊卡
-                _sp_nayin_label = auto_cn("納音")
-                _sp_dept_label  = auto_cn("五行部")
-                _sp_num_label   = auto_cn("算盤總數")
-                _sp_key_label   = auto_cn("條文鍵")
-                st.markdown(
-                    f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">'
-                    f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
-                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                    f'{_sp_nayin_label}：{_sp_calc.nayin or "未知"}</span>'
-                    f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
-                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                    f'{_sp_dept_label}：{_sp_calc.department or "未知"}部</span>'
-                    f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
-                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
-                    f'{_sp_num_label}：{_sp_calc.total_number}</span>'
-                    f'<span style="background:rgba(255,107,53,0.10);border:1px solid rgba(255,107,53,0.3);'
-                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
-                    f'{_sp_key_label}：{_sp_calc.tiaowen_key}</span>'
-                    f'</div>',
-                    unsafe_allow_html=True,
-                )
-
-                # 算盤打數條文內文
-                if _sp_tiaowen and _sp_tiaowen.get("text"):
-                    _sp_raw = _sp_tiaowen.get("raw_key", "")
-                    _sp_raw_badge = (
-                        f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
-                        f'（{_sp_raw}）</span>'
-                    ) if _sp_raw else ""
-                    st.markdown(
-                        f'<div style="background:rgba(107,203,119,0.06);border-left:4px solid #6BCB77;'
-                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
-                        f'color:#d4f0d8;line-height:1.9;letter-spacing:0.5px;">'
-                        f'{_sp_tiaowen["text"]}{_sp_raw_badge}</div>',
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
-
-                # 歲運條文（流年歲運）
-                _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
-                if _sp_suiyun and _sp_suiyun.get("text"):
-                    st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
-                    _sp_sy_raw = _sp_suiyun.get("raw_key", "")
-                    _sp_sy_raw_badge = (
-                        f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
-                        f'（{_sp_sy_raw}）</span>'
-                    ) if _sp_sy_raw else ""
-                    st.markdown(
-                        f'<div style="background:rgba(201,168,76,0.06);border-left:4px solid #C9A84C;'
-                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
-                        f'color:#f0e8c0;line-height:1.9;letter-spacing:0.5px;">'
-                        f'{_sp_suiyun["text"]}{_sp_sy_raw_badge}</div>',
-                        unsafe_allow_html=True,
-                    )
-
-                # 計算步驟展開
-                with st.expander(auto_cn("查看算盤打數計算步驟"), expanded=False):
-                    for _step in _sp_calc.calculation_steps:
-                        st.markdown(f"- {_step}")
-
-                # 九十六刻表 & 六親刻分圖查詢結果
-                _bake = tb_result.bake_fuqin_info
-                _six = tb_result.six_qin_qizi_info
-                if _bake or _six:
                     st.divider()
-                    st.markdown(f"**{auto_cn('⏰ 刻分六親')}**")
-                    _kf_cards = ""
-                    if _bake:
-                        _kf_cards += (
-                            f'<div style="border-left:3px solid rgba(255,217,61,0.5);'
-                            f'padding:8px 12px;margin-bottom:8px;'
-                            f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
-                            f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
-                            f'{auto_cn("父母兄弟（九十六刻）")}</div>'
-                            f'<div style="font-size:13px;color:#FFD93D;">{_bake}</div></div>'
-                        )
-                    if _six:
-                        _kf_cards += (
-                            f'<div style="border-left:3px solid rgba(107,203,119,0.5);'
-                            f'padding:8px 12px;margin-bottom:8px;'
-                            f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
-                            f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
-                            f'{auto_cn("妻子（六親刻分）")}</div>'
-                            f'<div style="font-size:13px;color:#6BCB77;">{_six}</div></div>'
-                        )
-                    st.markdown(f'<div style="width:100%;">{_kf_cards}</div>', unsafe_allow_html=True)
 
-                # 十二宮條文詳情
-                st.divider()
-                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文")) + "**")
+                    # Detail section: use tabs for each planet (compact vertical space)
+                    _tab_labels = [f"{_planet_glyphs.get(n, '')} {n}" for n, _ in _sabian_data_list]
+                    _tabs = st.tabs(_tab_labels)
+                    for _tab, (_pname, _sabian) in zip(_tabs, _sabian_data_list):
+                        with _tab:
+                            _svg = render_sabian_svg(
+                                _sabian['planet_longitude'],
+                                size=300,
+                                language=_sabian_lang,
+                            )
+                            st.components.v1.html(
+                                f'<div style="width:100%;max-width:320px;margin:0 auto">{_svg}</div>',
+                                height=380,
+                                scrolling=False,
+                            )
+                            st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
+                            st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
+                            st.markdown(f"*{t('sabian_negative_label')}:* {_sabian['negative']}")
+                            st.markdown(f"*{t('sabian_interpretation_label')}:* {_sabian['interpretation']}")
+                    
+                    # Optional: Show all 360 symbols in an expander
+                    with st.expander(t("sabian_show_all")):
+                        st.caption("360 Sabian Symbols (Marc Edmund Jones, 1953)")
+                        _all_symbols = load_sabian_symbols()
+                        for _sym in _all_symbols[:360]:
+                            st.markdown(f"**{_sym['degree']}° {_sym['sign']}:** {_sym['symbol']}")
+                            
+                except ImportError as _ie:
+                    st.error("Sabian Symbols module not available.")
+                    st.exception(_ie)
+                except Exception as _se:
+                    st.error(f"Error loading Sabian Symbols: {_se}")
+                    st.exception(_se)
+                    
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_sabian") if hasattr(t, "desc_sabian") else "🔮 薩比恩符號：Marc Edmund Jones (1953) 原著的 360 個象徵圖像，每個黃道度數對應一個獨特的心理原型。")
 
-                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
-                with st.expander(expander_label, expanded=False):
-                    palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
-                                   "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
-                    palace_names_en = {
-                        "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
-                        "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
-                        "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
-                        "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
+    # --- 波斯薩珊占星 ---
+    elif _selected_system == "tab_persian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_persian")):
+                    from astro.persian import compute_sassanian_chart
+                    
+                    p_chart = compute_sassanian_chart(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        latitude=_p.get("lat", 0.0), longitude=_p.get("lon", 0.0),
+                        timezone=_p.get("tz", 0.0),
+                        language=get_lang()
+                    )
+                
+                # 波斯傳統占星 - 直接顯示星盤圖案（緊湊佈局）
+                
+                # 薩珊傳統星盤圖（方形格式，純 SVG）
+                try:
+                    from astro.persian.sassanian_chart_renderer import generate_sassanian_svg
+                    
+                    chart_data = {
+                        "year": _p["year"], "month": _p["month"], "day": _p["day"],
+                        "hour": _p["hour"], "minute": _p["minute"],
+                        "longitude": _p.get("lon", 0.0),
+                        "latitude": _p.get("lat", 0.0),
+                        "timezone": _p.get("tz", 0.0),
                     }
-                    category_trans = {
-                        "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
-                        "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
-                        "事業": "Career", "健康": "Health", "災厄": "Disaster",
-                        "遷移": "Travel",
-                    }
-                    # 手機友好：以 HTML 卡片列表代替三列
-                    _palace_cards = ""
-                    for palace_name in palace_order:
-                        palace_info = tb_result.palace_verses.get(palace_name, {})
-                        verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else auto_cn("暫無條文"))
-                        category = palace_info.get("category", "")
-                        branch = palace_info.get("branch", "")
-                        display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
-                        display_category = category_trans.get(category, category) if get_lang() == "en" else category
-                        cat_badge = (
-                            f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
-                            f'【{display_category}】</span>'
-                        ) if display_category else ""
-                        _palace_cards += f"""
-    <div style="border-left:3px solid rgba(255,107,53,0.5);
-         padding:10px 12px;margin-bottom:10px;
-         background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">
-      <div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">
-        {display_name}
-        <span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({branch})</span>
-        {cat_badge}
-      </div>
-      <div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{verse}</div>
-    </div>"""
-                    st.markdown(f'<div style="width:100%;">{_palace_cards}</div>', unsafe_allow_html=True)
-
-                # AI 分析按鈕
-                _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
-
+                    
+                    # 生成 SVG 並直接顯示（響應式設計，PC/手機皆 100% 顯示）
+                    svg_content = generate_sassanian_svg(
+                        chart_data=chart_data,
+                        width=500,
+                        height=650,
+                        show_pahlavi=False,
+                        show_royal_stars=True,
+                        show_firdar=True,
+                    )
+                    
+                    # 使用 st.components.v1.html 顯示 SVG（響應式高度）
+                    # viewBox 500x650，使用 width: 100% 確保 PC/手機皆完整顯示
+                    st.components.v1.html(
+                        f'''<div style="width: 100%; max-width: 600px; margin: 0 auto;">
+                            {svg_content}
+                        </div>''',
+                        height=720,
+                        scrolling=False
+                    )
+                    
+                except Exception as e:
+                    st.error(f"星盤渲染失敗：{str(e)}")
+                
+                # Basic chart info（緊貼星盤下方）
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.info(f"**{t('persian_current_firdar')}:** {p_chart.current_firdar.lord} ({p_chart.current_firdar.lord_cn})" if p_chart.current_firdar else "當前 Firdar: N/A")
+                with col2:
+                    st.info(f"**{t('persian_current_sub')}:** {p_chart.current_sub_period.lord} ({p_chart.current_sub_period.lord_cn})" if p_chart.current_sub_period else "當前子週期：N/A")
+                
+                # Main tabs for Persian astrology
+                _p_tab_intro, _p_tab_firdar, _p_tab_hyleg, _p_tab_profections, _p_tab_almuten, _p_tab_stars, _p_tab_lots = st.tabs([
+                    t("western_subtab_natal"),
+                    t("persian_firdar_title"),
+                    t("persian_hyleg_title"),
+                    t("persian_profections_title"),
+                    t("persian_almuten_title"),
+                    t("persian_royal_stars_title"),
+                    t("persian_lots_title"),
+                ])
+                
+                with _p_tab_intro:
+                    st.header(t("tab_persian"))
+                    st.caption(t("desc_persian"))
+                    
+                    # Planet positions table
+                    st.subheader("行星位置")
+                    planet_data = []
+                    for planet in p_chart.planets:
+                        planet_data.append({
+                            "行星": f"{planet.name} ({planet.name_cn})",
+                            "經度": f"{planet.longitude:.2f}°",
+                            "星座": f"{planet.sign_cn} {planet.sign_degree:.1f}°",
+                            "宮位": f"第{planet.house}宮",
+                            "尊嚴": planet.essential_dignity,
+                            "逆行": "✓" if planet.retrograde else "",
+                        })
+                    st.dataframe(planet_data, use_container_width=True)
+                    
+                    # AI Analysis button
+                    _render_ai_button("tab_persian", p_chart, btn_key="persian")
+                
+                with _p_tab_firdar:
+                    st.header(t("persian_firdar_title"))
+                    st.caption(t("persian_firdar_help"))
+                    
+                    # Timeline visualization
+                    st.subheader("Firdar 生命週期時間軸")
+                    
+                    for i, firdar_period in enumerate(p_chart.firdar):
+                        is_current = (p_chart.current_firdar and firdar_period.lord == p_chart.current_firdar.lord)
+                        expander_label = f"**{i+1}. {firdar_period.lord} ({firdar_period.lord_cn})** — {firdar_period.start_date} 至 {firdar_period.end_date} ({firdar_period.duration_years:.1f}年)"
+                        if is_current:
+                            expander_label = f"🔮 {expander_label} **(當前)**"
+                        
+                        with st.expander(expander_label, expanded=is_current):
+                            # Sub-periods table
+                            sub_data = []
+                            for sp in firdar_period.sub_periods:
+                                is_current_sub = (p_chart.current_sub_period and sp.lord == p_chart.current_sub_period.lord and sp.start_date == p_chart.current_sub_period.start_date)
+                                sub_data.append({
+                                    "子週期": f"{'🔮 ' if is_current_sub else ''}{sp.lord} ({sp.lord_cn})",
+                                    "起始": sp.start_date,
+                                    "結束": sp.end_date,
+                                    "年數": f"{sp.duration_years:.2f}",
+                                })
+                            st.dataframe(sub_data, use_container_width=True)
+                
+                with _p_tab_hyleg:
+                    st.header(t("persian_hyleg_title"))
+                    st.caption(t("persian_hyleg_help"))
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.subheader(t("persian_hyleg_label"))
+                        if p_chart.hyleg:
+                            st.info(f"**類型:** {p_chart.hyleg.hyleg_type} ({p_chart.hyleg.hyleg_name_cn})\\n\\n"
+                                   f"**位置:** {p_chart.hyleg.sign} {p_chart.hyleg.degree:.1f}°\\n\\n"
+                                   f"**宮位:** 第{p_chart.hyleg.house}宮\\n\\n"
+                                   f"**原因:** {p_chart.hyleg.reason}")
+                        else:
+                            st.warning("無法計算 Hyleg")
+                    
+                    with col2:
+                        st.subheader(t("persian_alcocoden_label"))
+                        if p_chart.alcocoden:
+                            st.info(f"**守護星:** {p_chart.alcocoden.alcocoden_lord} ({p_chart.alcocoden.alcocoden_lord_cn})\\n\\n"
+                                   f"**{t('persian_planetary_years')}:** {p_chart.alcocoden.planetary_years}年\\n\\n"
+                                   f"**{t('persian_modified_years')}:** {p_chart.alcocoden.modified_years:.1f}年\\n\\n"
+                                   f"**{t('persian_aspects')}:** {', '.join(p_chart.alcocoden.aspects) if p_chart.alcocoden.aspects else '無'}\\n\\n"
+                                   f"**說明:** {p_chart.alcocoden.reason}")
+                        else:
+                            st.warning("無法計算 Alcocoden")
+                
+                with _p_tab_profections:
+                    st.header(t("persian_profections_title"))
+                    st.caption("波斯式年度主限：每年移動 30°，從上升點開始連續計算。")
+                    
+                    # Show first 30 years
+                    prof_data = []
+                    for prof in p_chart.profections[:30]:
+                        prof_data.append({
+                            "年齡": prof.age,
+                            "主限星座": f"{prof.profection_sign_cn} {prof.profection_degree:.1f}°",
+                            "年度守護星": f"{prof.lord_of_year} ({prof.lord_of_year_cn})",
+                            "起始": prof.start_date,
+                            "結束": prof.end_date,
+                        })
+                    st.dataframe(prof_data, use_container_width=True)
+                
+                with _p_tab_almuten:
+                    st.header(t("persian_almuten_title"))
+                    st.caption("Almuten Figuris 是根據薩珊尊嚴規則計算的最強行星，代表命主星。")
+                    
+                    if p_chart.almuten_figuris:
+                        st.info(f"**最強行星:** {p_chart.almuten_figuris.planet} ({p_chart.almuten_figuris.planet_cn})\\n\\n"
+                               f"**{t('persian_dignity_score')}:** {p_chart.almuten_figuris.total_score}\\n\\n"
+                               f"**說明:** {p_chart.almuten_figuris.reason}")
+                        
+                        # Dignity breakdown
+                        if p_chart.almuten_figuris.dignity_scores:
+                            st.subheader("尊嚴分數細項")
+                            score_data = []
+                            for key, score in p_chart.almuten_figuris.dignity_scores.items():
+                                score_data.append({"關鍵點": key, "分數": score})
+                            st.dataframe(score_data, use_container_width=True)
+                    else:
+                        st.warning("無法計算 Almuten Figuris")
+                
+                with _p_tab_stars:
+                    st.header(t("persian_royal_stars_title"))
+                    st.caption("四顆皇家恆星是波斯傳統的重要恆星，與行星合相時具有特殊意義。")
+                    
+                    prominent_stars = [rs for rs in p_chart.royal_stars if rs.is_prominent]
+                    
+                    if prominent_stars:
+                        st.success(f"找到 {len(prominent_stars)} 顆顯著的皇家恆星：")
+                        for rs in prominent_stars:
+                            st.info(f"**{rs.star_name} ({rs.star_name_cn})**\\n\\n"
+                                   f"**合相行星:** {rs.conjunction_planet} ({rs.conjunction_planet_cn})\\n\\n"
+                                   f"**容許度:** {rs.orb}°\\n\\n"
+                                   f"**意義:** {rs.meaning_cn}")
+                    else:
+                        st.info(t("persian_no_prominent_stars"))
+                    
+                    # Show all royal stars
+                    st.subheader("所有皇家恆星")
+                    star_data = []
+                    for rs in p_chart.royal_stars:
+                        star_data.append({
+                            "恆星": f"{rs.star_name} ({rs.star_name_cn})",
+                            "經度": f"{rs.star_longitude:.1f}°",
+                            "合相": f"{rs.conjunction_planet} ({rs.conjunction_planet_cn})" if rs.conjunction_planet else "無",
+                            "容許度": f"{rs.orb}°" if rs.orb > 0 else "—",
+                            "顯著": "✓" if rs.is_prominent else "",
+                        })
+                    st.dataframe(star_data, use_container_width=True)
+                
+                with _p_tab_lots:
+                    st.header(t("persian_lots_title"))
+                    st.caption("波斯敏感點（Lots）是根據上升點、太陽、月亮計算的敏感點位。")
+                    
+                    lots_data = []
+                    for lot in p_chart.persian_lots:
+                        lots_data.append({
+                            "名稱": f"{lot.name_en}\\n({lot.name_cn})",
+                            "阿拉伯名": lot.name_arabic,
+                            "經度": f"{lot.longitude:.2f}°",
+                            "星座": f"{lot.sign_cn} {lot.degree:.1f}°",
+                            "宮位": f"第{lot.house}宮",
+                        })
+                    st.dataframe(lots_data, use_container_width=True)
+                    
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
-                import traceback
-                st.code(traceback.format_exc())
+                st.exception(_e)
         else:
-            st.markdown("""
-    <div style="
-        background:linear-gradient(135deg,#1a0828 0%,#0f1e35 100%);
-        border:1px solid rgba(255,107,53,0.35);
-        border-radius:16px;
-        padding:28px 24px 24px 24px;
-        margin-bottom:20px;
-        text-align:center;
-    ">
-      <div style="font-size:52px;margin-bottom:12px;">🔮</div>
-      <div style="font-size:22px;font-weight:700;color:#FF6B35;letter-spacing:2px;margin-bottom:6px;">
-        鐵板神數
-      </div>
-      <div style="font-size:12px;color:#9090b0;margin-bottom:14px;letter-spacing:1px;">
-        Tie Ban Shen Shu &middot; Iron Plate Divine Numbers
-      </div>
-      <div style="font-size:13px;color:#8888aa;line-height:1.8;max-width:380px;margin:0 auto 18px auto;">
-        源自宋代邵雍《皇極經世》，清代發展為精密考刻分系統<br>
-        每時分 8 刻、每刻 15 分（共 120 分）<br>
-        號稱「鐵口直斷」，中國傳統術數中最精密的查表法系統
-      </div>
-      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
-        <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
-             border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
-          📅 輸入出生年月日時
-        </div>
-        <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
-             border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
-          ⚡ 一鍵推算神數
-        </div>
-        <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
-             border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
-          📜 查閱十二宮條文
-        </div>
-      </div>
-      <div style="
-        display:inline-block;
-        background:rgba(205,46,58,0.15);
-        border:1px solid rgba(205,46,58,0.4);
-        border-radius:8px;
-        padding:8px 20px;
-        font-size:13px;
-        color:#f87171;
-      ">👈 請在左側填寫出生年月日時，即可起盤</div>
-    </div>""", unsafe_allow_html=True)
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_persian"))
 
-    with _tb_tab_tiaowen:
-        from astro.tieban.tieban_browser import (
-            render_tiaowen_full_browser_inline,
-            render_suanpan_tiaowen_browser_inline,
-        )
-        _tiaowen_db_choice = st.radio(
-            auto_cn("條文庫"),
-            [auto_cn("📚 坤集扣入法（12000 條）"), auto_cn("🧮 算盤打數五部條文")],
-            horizontal=True,
-            label_visibility="collapsed",
-            key="tb_tiaowen_db_choice",
-        )
-        st.divider()
-        if _tiaowen_db_choice == auto_cn("📚 坤集扣入法（12000 條）"):
-            render_tiaowen_full_browser_inline()
-        else:
-            render_suanpan_tiaowen_browser_inline()
-
-    with _tb_tab_kunji:
-        from astro.tieban.kunji_full_structure import (
-            KUNJI_TIANGAN_CODE, BAKE_96_KE, SIX_QIN_KE_FEN,
-            kou_ru_fa, advanced_kou_ru_fa,
-        )
-        st.subheader("🔑 坤集密碼表")
-        st.caption("天干扣入法核心：各天干對應數字，用於萬千百十條文編號解碼")
-        _code_rows = [{"天干": k, "密碼數": v} for k, v in KUNJI_TIANGAN_CODE.items()]
-        st.dataframe(_code_rows, width="stretch", hide_index=True)
-
-        st.divider()
-        st.subheader("🔢 扣入法查詢")
-        _kunji_num = st.number_input(
-            "輸入條文編號（1001–13000）",
-            min_value=1001, max_value=13000, value=1001, step=1,
-            key="kunji_num_input",
-        )
-        if st.button("解碼天干序列", key="kunji_decode_btn"):
-            _seq = kou_ru_fa(int(_kunji_num))
-            st.success(f"條文 {int(_kunji_num)} → 扣入天干序列：{'  '.join(_seq)}")
-            _adv = advanced_kou_ru_fa(int(_kunji_num))
-            st.info(f"基礎天干：{'  '.join(_adv['base_tiangan'])}")
-
-        st.divider()
-        st.subheader("⏰ 九十六刻天干數表")
-        st.caption("各時辰（父母兄弟 / 妻子）刻分對應坤集天干")
-        _ke_hour = st.selectbox(
-            "選擇時辰",
-            options=list(BAKE_96_KE.keys()),
-            key="kunji_ke_hour",
-        )
-        _ke_data = BAKE_96_KE.get(_ke_hour, {})
-        for _rel, _kes in _ke_data.items():
-            st.markdown(f"**{_rel}**")
-            _ke_rows = [{"刻/分": k, "天干結果": v} for k, v in _kes.items()]
-            st.dataframe(_ke_rows, width="stretch", hide_index=True)
-
-        st.divider()
-        st.subheader("👨\u200d👩\u200d👧 六親刻分圖")
-        st.caption("各時辰六親（父母兄弟 / 妻子）刻分對應")
-        _qin_hour = st.selectbox(
-            "選擇時辰",
-            options=list(SIX_QIN_KE_FEN.keys()),
-            key="kunji_qin_hour",
-        )
-        _qin_data = SIX_QIN_KE_FEN.get(_qin_hour, {})
-        for _rel, _fens in _qin_data.items():
-            st.markdown(f"**{_rel}**")
-            _qin_rows = [{"刻/分": k, "六親結果": v} for k, v in _fens.items()]
-            st.dataframe(_qin_rows, width="stretch", hide_index=True)
-
-# --- 邵子神數 ---
-elif _selected_system == "tab_shaozi":
-    _sz_tab_main, _sz_tab_64keys, _sz_tab_tiaowen = st.tabs([
-        auto_cn("🔯 命盤"), auto_cn("🗝️ 64鑰匙"), auto_cn("📚 條文庫"),
-    ])
-    with _sz_tab_main:
-        if _is_calculated:
-            try:
-                from astro.shaozi import ShaoziShenShu, ShaoziBirthData
-                from astro.shaozi.renderer import render_shaozi_result
-
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_shaozi")):
-                    _sz_engine = ShaoziShenShu()
-                    _sz_birth = ShaoziBirthData(
-                        birth_dt=datetime(
-                            _p["year"], _p["month"], _p["day"],
-                            _p["hour"], _p.get("minute", 0),
-                        ),
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-                    _sz_result = _sz_engine.calculate(_sz_birth)
-
-                render_shaozi_result(_sz_result)
-                _render_ai_button(
-                    "tab_shaozi",
-                    {
-                        "tiaowen_id": _sz_result.tiaowen_id,
-                        "gua": _sz_result.gua_name,
-                        "tiaowen": _sz_result.tiaowen_text,
-                        "year_gz": _sz_result.year_gz,
-                        "day_gz": _sz_result.day_gz,
-                    },
-                    btn_key="shaozi",
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                import traceback
-                st.code(traceback.format_exc())
-        else:
-            from astro.shaozi.renderer import render_shaozi_placeholder
-            render_shaozi_placeholder()
-
-    with _sz_tab_64keys:
-        if _is_calculated:
-            try:
-                from astro.shaozi import ShaoziShenShu as _SzMain, ShaoziBirthData
-                from astro.shaozi.shaozi_full_structure import ShaoziFullShenShu as _SzFull
-                from astro.shaozi.renderer import render_shaozi_64key_section
-
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_shaozi")):
-                    # 取得四柱干支（復用主盤計算結果或重新推算）
-                    _sz_main_engine = _SzMain()
-                    _sz_birth = ShaoziBirthData(
-                        birth_dt=datetime(
-                            _p["year"], _p["month"], _p["day"],
-                            _p["hour"], _p.get("minute", 0),
-                        ),
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-                    _sz_base = _sz_main_engine.calculate(_sz_birth)
-
-                    # 使用 shaozi_full_structure 進行64鑰匙起盤
-                    _sz_full_engine = _SzFull()
-                    _sz_full_result = _sz_full_engine.cast_plate(
-                        year_gz=_sz_base.year_gz,
-                        month_gz=_sz_base.month_gz,
-                        day_gz=_sz_base.day_gz,
-                        hour_gz=_sz_base.hour_gz,
-                    )
-
-                render_shaozi_64key_section(_sz_full_result)
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                import traceback
-                st.code(traceback.format_exc())
-        else:
-            from astro.shaozi.renderer import render_shaozi_placeholder
-            render_shaozi_placeholder()
-
-    with _sz_tab_tiaowen:
-        from astro.shaozi.renderer import render_shaozi_tiaowen_browser
-        render_shaozi_tiaowen_browser()
-
-# --- 太玄數占星 ---
-elif _selected_system == "tab_taixuan":
-    # 子頁籤：本命排盤 / 即時問卜
-    _tx_natal_label = t("taixuan_natal_tab")
-    _tx_qigua_label = t("taixuan_qigua_tab")
-    _tx_tab_natal, _tx_tab_qigua = st.tabs([_tx_natal_label, _tx_qigua_label])
-
-    with _tx_tab_natal:
+    # --- 薩珊波斯 進階版 Advanced Sassanian Persian Astrology ---
+    elif _selected_system == "tab_persian_deep":
         if _is_calculated:
             try:
                 _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_taixuan")):
-                    _tx_calc = TaiXuanCalculator(
+                with st.spinner(t("spinner_persian_deep")):
+                    render_deep_sassanian_chart(
                         year=_p["year"],
                         month=_p["month"],
                         day=_p["day"],
                         hour=_p["hour"],
-                        mode="natal",
+                        minute=_p.get("minute", 0),
+                        timezone=_p.get("tz", 0.0),
+                        latitude=_p.get("lat", 0.0),
+                        longitude=_p.get("lon", 0.0),
+                        location_name=_p.get("location_name", ""),
                     )
-                    _tx_result = _tx_calc.calculate()
-                render_taixuan_chart(
-                    _tx_result,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_taixuan",
-                        {
-                            "shou_name": _tx_result.shou.name,
-                            "gua_title": _tx_result.shou.gua_title,
-                            "gua_text": _tx_result.shou.gua_text,
-                            "zhan_name": _tx_result.shou.zhan_name,
-                            "zhan_text": _tx_result.shou.zhan_text,
-                            "year_gz": _tx_result.year_gz,
-                            "day_gz": _tx_result.day_gz,
-                            "sishi": _tx_result.sishi,
-                            "mansion": _tx_result.shou.mansion,
-                            "planet": _tx_result.shou.planet,
-                        },
-                        btn_key="taixuan_natal",
-                    ),
-                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_persian_deep_prompt"))
+            st.markdown(t("desc_persian_deep"))
+
+    # --- KP Astrology (Krishnamurti Paddhati) ---
+    elif _selected_system == "tab_kp":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_kp") if hasattr(t, "spinner_kp") else "計算 KP 星盤..."):
+                    from astro.kp import compute_kp_chart, render_kp_chart
+                    
+                    kp_chart = compute_kp_chart(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        latitude=_p.get("lat", 0.0), longitude=_p.get("lon", 0.0),
+                        timezone=_p.get("tz", 0.0),
+                        language=get_lang()
+                    )
+                
+                # KP Astrology main layout
+                st.header(t("kp_title"))
+                st.caption(t("kp_subtitle"))
+                
+                # KP vs Vedic note
+                st.info(t("kp_placidus_note"))
+                
+                # Render KP chart (tables + SVG chart)
+                render_kp_chart(kp_chart, language=get_lang())
+                
+                # AI Analysis button
+                _render_ai_button("tab_kp", kp_chart, btn_key="kp")
+                
+            except ImportError as _ie:
+                st.error("KP Astrology module not available.")
+                st.exception(_ie)
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 import traceback
                 st.code(traceback.format_exc())
         else:
-            render_taixuan_intro()
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_kp") if hasattr(t, "desc_kp") else "🔮 **KP Astrology (Krishnamurti Paddhati)** — 印度現代占星大師 K.S. Krishnamurti 創立的精確預測系統，使用宿度主星 (Sub Lord) 和時辰主星 (Ruling Planets) 判斷事件發生時機。")
 
-    with _tx_tab_qigua:
-        render_qigua_ui(
-            after_chart_hook=lambda: _render_ai_button(
-                "tab_taixuan",
-                {"mode": "qigua"},
-                btn_key="taixuan_qigua",
-            )
-        )
+    # --- 鐵板神數 (Tie Ban Shen Shu) ---
+    elif _selected_system == "tab_tieban":
+        _tb_tab_main, _tb_tab_tiaowen, _tb_tab_kunji = st.tabs([
+            auto_cn("🔮 命盤"), auto_cn("📚 完整條文庫"), auto_cn("🔑 坤集扣入法"),
+        ])
+        with _tb_tab_main:
+            if _is_calculated:
+                try:
+                    _p = st.session_state["_calc_params"]
+                    with st.spinner(t("spinner_tieban") if hasattr(t, "spinner_tieban") else "計算鐵板神數..."):
+                        # 鐵板神數需要父母信息，此處為簡化示例
+                        from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
+                        from astro.tieban.tieban_calculator import Ganzhi
+                        
+                        # 計算干支
+                        tbss = TieBanShenShu()
+                        ganzhi = tbss.calculate_ganzhi(
+                            datetime(
+                                _p["year"], _p["month"], _p["day"],
+                                _p["hour"], _p["minute"]
+                            )
+                        )
+                        
+                        # 創建出生資料（完整版需用戶輸入父母信息）
+                        birth_data = TieBanBirthData(
+                            birth_dt=datetime(_p["year"], _p["month"], _p["day"], _p["hour"], _p["minute"]),
+                            year_gz=ganzhi['year'],
+                            month_gz=ganzhi['month'],
+                            day_gz=ganzhi['day'],
+                            hour_gz=ganzhi['hour'],
+                            gender=st.session_state.get("_calc_gender", "男"),
+                        )
+                        
+                        # 計算
+                        tb_result = tbss.calculate(birth_data)
+                    
+                    # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
+                    # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
+                    svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
+                    st.components.v1.html(svg_chart, height=760, scrolling=False)
 
-# --- 五運六氣 ---
-elif _selected_system == "tab_wuyunliuqi":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_wuyunliuqi")):
-                _wylq_result = compute_wuyunliuqi(
-                    year=_p["year"],
-                    month=_p["month"],
-                    day=_p["day"],
-                    hour=_p["hour"],
-                    minute=_p.get("minute", 0),
-                )
-            render_wuyunliuqi_chart(_wylq_result)
-            _render_ai_button("tab_wuyunliuqi", {
-                "ganzhi": _wylq_result.ganzhi,
-                "dayun": _wylq_result.dayun.taishao,
-                "sitian": _wylq_result.sitian,
-                "zaiquan": _wylq_result.zaiquan,
-                "tonghua": _wylq_result.tonghua.categories,
-            }, btn_key="wuyunliuqi")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            import traceback
-            st.code(traceback.format_exc())
-    else:
-        render_wuyunliuqi_intro()
-        st.markdown(t("desc_wuyunliuqi"))
+                    # ② 核心數字卡片（HTML，手機單列）
+                    _tb_lang = get_lang()
+                    _tb_num_label   = "神數號碼"   if _tb_lang != "en" else "Divine Number"
+                    _tb_ke_label    = "刻"         if _tb_lang != "en" else "Ke"
+                    _tb_fen_label   = "分"         if _tb_lang != "en" else "Fen"
+                    _tb_helo_label  = "河洛數"     if _tb_lang != "en" else "He Luo"
+                    _tb_ming_label  = "命宮"       if _tb_lang != "en" else "Life Palace"
+                    _tb_shen_label  = "身宮"       if _tb_lang != "en" else "Body Palace"
+                    _tb_wx_label    = "五行局"     if _tb_lang != "en" else "Element Cycle"
+                    _tb_code_label  = "密碼"       if _tb_lang != "en" else "Secret Code"
+                    st.markdown(f"""
+        <div style="
+            display:flex;flex-wrap:wrap;gap:8px;
+            margin:0 0 16px 0;
+        ">
+          <div style="flex:1 1 140px;min-width:140px;
+              background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.4);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_num_label}</div>
+            <div style="font-size:26px;font-weight:700;color:#FF6B35;letter-spacing:3px;">{tb_result.tieban_number}</div>
+          </div>
+          <div style="flex:1 1 80px;min-width:80px;
+              background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ke_label}</div>
+            <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.ke}</div>
+          </div>
+          <div style="flex:1 1 80px;min-width:80px;
+              background:rgba(255,217,61,0.08);border:1px solid rgba(255,217,61,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_fen_label}</div>
+            <div style="font-size:22px;font-weight:700;color:#FFD93D;">{tb_result.fen}</div>
+          </div>
+          <div style="flex:1 1 80px;min-width:80px;
+              background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_helo_label}</div>
+            <div style="font-size:22px;font-weight:700;color:#6BCB77;">{tb_result.he_luo_number}</div>
+          </div>
+          <div style="flex:1 1 100px;min-width:100px;
+              background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_ming_label}</div>
+            <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.ming_palace}</div>
+          </div>
+          <div style="flex:1 1 100px;min-width:100px;
+              background:rgba(107,203,119,0.08);border:1px solid rgba(107,203,119,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_shen_label}</div>
+            <div style="font-size:18px;font-weight:700;color:#6BCB77;">{tb_result.shen_palace}</div>
+          </div>
+          <div style="flex:1 1 100px;min-width:100px;
+              background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_wx_label}</div>
+            <div style="font-size:15px;font-weight:700;color:#C9A84C;">{tb_result.wuxing_ju}</div>
+          </div>
+          <div style="flex:1 1 100px;min-width:100px;
+              background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.25);
+              border-radius:12px;padding:12px 14px;text-align:center;">
+            <div style="font-size:11px;color:#9090b0;margin-bottom:4px;">{_tb_code_label}</div>
+            <div style="font-size:15px;font-weight:700;color:#E94560;">{tb_result.secret_code}</div>
+          </div>
+        </div>""", unsafe_allow_html=True)
 
-# --- History of Astrology ---
-elif _selected_system == "tab_history":
-    st.header("📜 " + t("tab_history"))
-    st.caption("占星術是人類最古老的知識體系之一，跨越五千年文明，連結天上與地下。" if _cur_lang in ("zh", "zh_cn") else "Astrology is one of humanity's oldest knowledge systems, spanning five millennia of civilization.")
-    
-    st.divider()
-    
-    # Load and render markdown file
-    try:
-        with open("docs/astrology_history.md", "r", encoding="utf-8") as f:
-            history_md = f.read()
-        st.markdown(history_md)
-    except FileNotFoundError:
-        st.error("占星歷史文件尚未建立 / Astrology history file not found: `docs/astrology_history.md`")
-        st.info("請先建立文件 / Please create the document first.")
-    
-    _render_ai_button("tab_history", {"system": "astrology_history"}, btn_key="history")
-
-# --- 印度占星 ---
-elif _selected_system == "tab_indian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_indian")):
-                v_chart = compute_vedic_chart(**_p)
-
-            _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs, _v_tab_varga = st.tabs([
-                t("vedic_subtab_rashi"),
-                t("vedic_subtab_dasha"),
-                t("vedic_subtab_ashtaka"),
-                t("vedic_subtab_yogas"),
-                t("vedic_subtab_bphs"),
-                t("vedic_subtab_varga"),
-            ])
-
-            with _v_tab_rashi:
-                render_vedic_chart(v_chart, after_chart_hook=lambda: _render_ai_button("tab_indian", v_chart, btn_key="vedic"))
-
-            with _v_tab_dasha:
-                st.subheader(t("vedic_subtab_dasha"))
-                moon_p = next((p for p in v_chart.planets if "Chandra" in p.name or "Moon" in p.name), None)
-                if moon_p:
-                    vim = compute_vimshottari(moon_p.longitude, v_chart.julian_day)
-                    st.info(f"Moon Nakshatra: **{vim.moon_nakshatra}** | Lord: **{vim.moon_nakshatra_lord}** | Balance: {vim.balance_years:.2f} yrs")
-                    for md in vim.mahadasha_periods:
-                        _dasha_reading = get_dasha_reading(md.lord, get_lang())
-                        with st.expander(f"**{md.lord}** ({md.lord_cn}) — {md.start_date} to {md.end_date} ({md.years:.1f} yrs)"):
-                            if _dasha_reading:
-                                st.markdown(f"📖 {_dasha_reading}")
-                            if md.sub_periods:
-                                st.dataframe([{"Lord": s.lord, "CN": s.lord_cn,
-                                              "Start": s.start_date, "End": s.end_date,
-                                              "Years": f"{s.years:.2f}"}
-                                             for s in md.sub_periods],
-                                             width="stretch")
+                    # ③ 字：坤集條文（tiaowen_full_12000.json 主條文）
                     st.divider()
-                    st.markdown("##### Yogini Dasha (36-year cycle)")
-                    yog = compute_yogini(moon_p.longitude, v_chart.julian_day)
-                    st.dataframe([{"Yogini": p.lord, "CN": p.lord_cn,
-                                  "Start": p.start_date, "End": p.end_date,
-                                  "Years": f"{p.years:.2f}"}
-                                 for p in yog.periods], width="stretch")
-                    # Yogini reading for current period
-                    if yog.periods:
-                        _yog_reading = get_yogini_reading(yog.periods[0].lord, get_lang())
-                        if _yog_reading:
-                            st.info(f"📖 Current: {_yog_reading}")
-                else:
-                    st.warning("Moon position not found.")
-                _render_ai_button("tab_indian", v_chart, btn_key="vedic_dasha")
+                    _tb_kunji_title = auto_cn("🔑 坤集條文")
+                    st.subheader(_tb_kunji_title)
 
-            with _v_tab_ashtaka:
-                st.subheader(t("vedic_subtab_ashtaka"))
-                p_lons = {}
-                for p in v_chart.planets:
-                    key = p.name.split("(")[0].strip().split()[0]
-                    _MAP = {"Surya": "Sun", "Chandra": "Moon", "Mangal": "Mars",
-                            "Budha": "Mercury", "Guru": "Jupiter", "Shukra": "Venus", "Shani": "Saturn"}
-                    canonical = _MAP.get(key, key)
-                    p_lons[canonical] = p.longitude
-                asc_lon = getattr(v_chart, 'ascendant', 0.0) if hasattr(v_chart, 'ascendant') else 0.0
-                if len(p_lons) >= 7:
-                    av = compute_ashtakavarga(p_lons, asc_lon)
-                    st.info(f"Sarvashtakavarga Total: **{av.sarva_total}**")
-                    import pandas as pd
-                    signs = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir",
-                             "Lib", "Sco", "Sag", "Cap", "Aqu", "Pis"]
-                    rows = []
-                    for bav in av.bav:
-                        row = {"Planet": f"{bav.planet} ({bav.planet_cn})"}
-                        for i, s in enumerate(signs):
-                            row[s] = bav.bindus[i]
-                        row["Total"] = bav.total
-                        rows.append(row)
-                    sarva_row = {"Planet": "SARVA"}
-                    for i, s in enumerate(signs):
-                        sarva_row[s] = av.sarva[i]
-                    sarva_row["Total"] = av.sarva_total
-                    rows.append(sarva_row)
-                    st.dataframe(pd.DataFrame(rows), width="stretch")
-                else:
-                    st.warning("Insufficient planet data for Ashtakavarga.")
-                _render_ai_button("tab_indian", v_chart, btn_key="vedic_ashtaka")
+                    # 坤集扣入法天干序列 + 條文編號
+                    if tb_result.kunji_tiangan:
+                        _tg_str = "　".join(tb_result.kunji_tiangan)
+                        _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
+                        _ke_lbl = tb_result.ke_label or str(tb_result.ke)
+                        st.markdown(
+                            f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
+                            f'<span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);'
+                            f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
+                            f'#{_tiaowen_num_label}</span>'
+                            f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
+                            f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
+                            f'{auto_cn("扣入天干")}：{_tg_str}</span>'
+                            f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
+                            f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                            f'{auto_cn("刻")}：{_ke_lbl}</span>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
 
-            with _v_tab_yogas:
-                st.subheader(t("vedic_subtab_yogas"))
-                p_lons_y = {}
-                for p in v_chart.planets:
-                    key = p.name.split("(")[0].strip().split()[0]
-                    _MAP2 = {"Surya": "Sun", "Chandra": "Moon", "Mangal": "Mars",
-                             "Budha": "Mercury", "Guru": "Jupiter", "Shukra": "Venus",
-                             "Shani": "Saturn", "Rahu": "Rahu", "Ketu": "Ketu"}
-                    canonical = _MAP2.get(key, key)
-                    p_lons_y[canonical] = p.longitude
-                asc_lon_y = getattr(v_chart, 'ascendant', 0.0) if hasattr(v_chart, 'ascendant') else 0.0
-                yogas = compute_yogas(p_lons_y, asc_lon_y)
-                for yg in yogas:
-                    icon = "✅" if yg.is_present else "⬜"
-                    with st.expander(f"{icon} {yg.name} ({auto_cn(yg.name_cn)}) — {yg.strength}"):
-                        _yg_text = yg.description_cn if get_lang() in ("zh", "zh_cn") else yg.description
-                        st.write(auto_cn(_yg_text))
-                _render_ai_button("tab_indian", v_chart, btn_key="vedic_yogas")
+                    # 坤集主條文（tiaowen_full_12000.json）
+                    _tw = tb_result.tiaowen_data
+                    if _tw and _tw.get("text"):
+                        st.markdown(
+                            f'<div style="background:rgba(255,107,53,0.08);border-left:4px solid #FF6B35;'
+                            f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                            f'color:#f0d9c8;line-height:1.9;letter-spacing:0.5px;">'
+                            f'{_tw["text"]}</div>',
+                            unsafe_allow_html=True,
+                        )
+                        if _tw.get("note") and _tw["note"].strip() not in ("", "0 0"):
+                            st.caption(auto_cn(f"備注：{_tw['note']}"))
+                    else:
+                        # 如坤集無此條，退而顯示 verses.json 條文
+                        st.info(tb_result.verse)
 
-            with _v_tab_bphs:
-                st.subheader("📜 " + t("vedic_subtab_bphs"))
-                bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
-                _render_bphs_result(bphs_result)
-                _render_ai_button("tab_indian", v_chart, btn_key="vedic_bphs")
-
-            with _v_tab_varga:
-                st.subheader("📊 " + t("vedic_subtab_varga"))
-                st.caption(t("bphs_caption_varga_tab"))
-                _varga_tab_labels = [f"{k} {VARGA_INFO[k]['zh']}" for k in VARGA_KEYS]
-                _varga_tabs = st.tabs(_varga_tab_labels)
-                for _vi, _vk in enumerate(VARGA_KEYS):
-                    with _varga_tabs[_vi]:
-                        _vc = compute_varga_chart(_vk, v_chart.planets, v_chart.ascendant)
-                        render_single_varga(_vc)
-                _render_ai_button("tab_indian", v_chart, btn_key="vedic_varga")
-
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_indian"))
-
-# --- 宿曜道 ---
-elif _selected_system == "tab_lal_kitab":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_lal_kitab")):
-                _lk_chart = compute_lal_kitab_chart(**_p)
-            _lk_lang = st.session_state.get("lang", "zh")
-            render_lal_kitab_1952_page(
-                _lk_chart,
-                lang=_lk_lang,
-                after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", _lk_chart, btn_key="lal_kitab"),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_lal_kitab"))
-
-# --- 宿曜道 ---
-elif _selected_system == "tab_sukkayodo":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_indian")):
-                _v_chart_sukka = compute_vedic_chart(**_p)
-            render_sukkayodo_chart(_v_chart_sukka, after_chart_hook=lambda: _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo"))
-            st.subheader(t("sukkayodo_subheader"))
-            st.info(t("sukkayodo_info"))
-            st.markdown(t("desc_sukkayodo"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_sukkayodo"))
-
-# --- 泰國占星 ---
-elif _selected_system == "tab_thai":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_thai")):
-                t_chart = compute_thai_chart(**_p)
-            thai_tab_chart, thai_tab_nine, thai_tab_brahma = st.tabs(
-                [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
-            )
-            with thai_tab_chart:
-                render_thai_chart(t_chart, after_chart_hook=lambda: _render_ai_button("tab_thai", t_chart, btn_key="thai"))
-            with thai_tab_nine:
-                nine_grid_result = calculate_thai_nine_grid(
-                    birth_date.day, birth_date.month, birth_date.year
-                )
-                render_nine_grid(nine_grid_result)
-                st.markdown("---")
-                divination_result = calculate_nine_palace_divination(t_chart)
-                render_nine_palace_divination(divination_result)
-            with thai_tab_brahma:
-                from datetime import date as _date_cls
-                _bj_bd = _date_cls(birth_date.year, birth_date.month, birth_date.day)
-                _bj_weekday = _bj_bd.weekday()  # 0=Mon … 6=Sun
-                _bj_age = None
-                _bj_gender = None
-                _bj_age_col, _bj_gender_col = st.columns(2)
-                with _bj_age_col:
-                    _bj_age = st.number_input(
-                        "年齡 (Age)", min_value=1, max_value=120,
-                        value=max(1, _date_cls.today().year - birth_date.year),
-                        key="brahma_jati_age",
+                    # 算盤打數條文（suanpan_tiaowen_full.json）
+                    st.divider()
+                    st.subheader(auto_cn("🧮 算盤打數條文"))
+                    st.caption(auto_cn("曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文"))
+                    from astro.tieban.suanpan_full_structure import (
+                        suanpan_calculate,
+                        SuanpanTiaowenDatabase,
                     )
-                with _bj_gender_col:
-                    _bj_gender = st.selectbox(
-                        "性別 (Gender)",
-                        options=["male", "female"],
-                        format_func=lambda x: "男 Male" if x == "male" else "女 Female",
-                        key="brahma_jati_gender",
+                    _sp_calc = suanpan_calculate(
+                        year_gz=str(ganzhi["year"]),
+                        month_gz=str(ganzhi["month"]),
+                        day_gz=str(ganzhi["day"]),
+                        hour_gz=str(ganzhi["hour"]),
+                        gender=st.session_state.get("_calc_gender", "男"),
                     )
-                _bj_reading = compute_brahma_jati(
-                    ce_year=birth_date.year,
-                    month=birth_date.month,
-                    weekday=_bj_weekday,
-                    age=_bj_age,
-                    gender=_bj_gender,
-                )
-                render_brahma_jati(_bj_reading)
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_thai"))
-        render_brahma_jati_browse()
+                    _sp_db = SuanpanTiaowenDatabase()
+                    _sp_tiaowen = _sp_db.get_by_result(_sp_calc)
 
-# --- 卡巴拉占星 ---
-elif _selected_system == "tab_kabbalistic":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_kabbalistic")):
-                k_chart = compute_kabbalistic_chart(**_p)
-            render_kabbalistic_chart(k_chart, after_chart_hook=lambda: _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_kabbalistic"))
-
-# --- 猶太 Mazzalot 占星 ---
-elif _selected_system == "tab_mazzalot":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_mazzalot")):
-                _mz_chart = compute_mazzalot_chart(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    timezone=_p["timezone"],
-                    lat=_p["latitude"], lon=_p["longitude"],
-                )
-            _mz_tab_star, _mz_tab_natal, _mz_tab_omens = st.tabs([
-                t("mazzalot_subtab_star"),
-                t("mazzalot_subtab_natal"),
-                t("mazzalot_subtab_omens"),
-            ])
-            with _mz_tab_star:
-                _mz_svg = build_mazzalot_star_of_david_svg(
-                    _mz_chart,
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    tz=input_tz,
-                    location=location_name,
-                )
-                st.markdown(_mz_svg, unsafe_allow_html=True)
-                st.caption(
-                    '<p style="text-align:center; color:#888; font-size:11px;">'
-                    'Star of David Wheel (Magen David) — Sidereal zodiac · '
-                    '12 Mazzalot · Sefer Yetzirah letters · Twelve Tribes'
-                    '</p>',
-                    unsafe_allow_html=True,
-                )
-                _render_ai_button("tab_mazzalot", _mz_chart, btn_key="mazzalot")
-            with _mz_tab_natal:
-                render_mazzalot_chart(_mz_chart)
-            with _mz_tab_omens:
-                st.subheader("📜 " + t("mazzalot_omens_title"))
-                for _omen in _mz_chart.omens:
-                    _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
-                    _en_part = f"  \n_{_omen.text_en}_" if _omen.text_en else ""
+                    # 基本定部資訊卡
+                    _sp_nayin_label = auto_cn("納音")
+                    _sp_dept_label  = auto_cn("五行部")
+                    _sp_num_label   = auto_cn("算盤總數")
+                    _sp_key_label   = auto_cn("條文鍵")
                     st.markdown(
-                        f"{_omen_icon} **{_omen.planet}** — "
-                        f"*{_omen.condition.upper()}*: {_omen.text}{_en_part}"
+                        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">'
+                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                        f'{_sp_nayin_label}：{_sp_calc.nayin or "未知"}</span>'
+                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                        f'{_sp_dept_label}：{_sp_calc.department or "未知"}部</span>'
+                        f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
+                        f'{_sp_num_label}：{_sp_calc.total_number}</span>'
+                        f'<span style="background:rgba(255,107,53,0.10);border:1px solid rgba(255,107,53,0.3);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
+                        f'{_sp_key_label}：{_sp_calc.tiaowen_key}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True,
                     )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_mazzalot"))
 
-# --- 阿拉伯占星 ---
-elif _selected_system == "tab_arabic":
-    if _is_calculated:
+                    # 算盤打數條文內文
+                    if _sp_tiaowen and _sp_tiaowen.get("text"):
+                        _sp_raw = _sp_tiaowen.get("raw_key", "")
+                        _sp_raw_badge = (
+                            f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
+                            f'（{_sp_raw}）</span>'
+                        ) if _sp_raw else ""
+                        st.markdown(
+                            f'<div style="background:rgba(107,203,119,0.06);border-left:4px solid #6BCB77;'
+                            f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                            f'color:#d4f0d8;line-height:1.9;letter-spacing:0.5px;">'
+                            f'{_sp_tiaowen["text"]}{_sp_raw_badge}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
+
+                    # 歲運條文（流年歲運）
+                    _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
+                    if _sp_suiyun and _sp_suiyun.get("text"):
+                        st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
+                        _sp_sy_raw = _sp_suiyun.get("raw_key", "")
+                        _sp_sy_raw_badge = (
+                            f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
+                            f'（{_sp_sy_raw}）</span>'
+                        ) if _sp_sy_raw else ""
+                        st.markdown(
+                            f'<div style="background:rgba(201,168,76,0.06);border-left:4px solid #C9A84C;'
+                            f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                            f'color:#f0e8c0;line-height:1.9;letter-spacing:0.5px;">'
+                            f'{_sp_suiyun["text"]}{_sp_sy_raw_badge}</div>',
+                            unsafe_allow_html=True,
+                        )
+
+                    # 計算步驟展開
+                    with st.expander(auto_cn("查看算盤打數計算步驟"), expanded=False):
+                        for _step in _sp_calc.calculation_steps:
+                            st.markdown(f"- {_step}")
+
+                    # 九十六刻表 & 六親刻分圖查詢結果
+                    _bake = tb_result.bake_fuqin_info
+                    _six = tb_result.six_qin_qizi_info
+                    if _bake or _six:
+                        st.divider()
+                        st.markdown(f"**{auto_cn('⏰ 刻分六親')}**")
+                        _kf_cards = ""
+                        if _bake:
+                            _kf_cards += (
+                                f'<div style="border-left:3px solid rgba(255,217,61,0.5);'
+                                f'padding:8px 12px;margin-bottom:8px;'
+                                f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                                f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
+                                f'{auto_cn("父母兄弟（九十六刻）")}</div>'
+                                f'<div style="font-size:13px;color:#FFD93D;">{_bake}</div></div>'
+                            )
+                        if _six:
+                            _kf_cards += (
+                                f'<div style="border-left:3px solid rgba(107,203,119,0.5);'
+                                f'padding:8px 12px;margin-bottom:8px;'
+                                f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                                f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
+                                f'{auto_cn("妻子（六親刻分）")}</div>'
+                                f'<div style="font-size:13px;color:#6BCB77;">{_six}</div></div>'
+                            )
+                        st.markdown(f'<div style="width:100%;">{_kf_cards}</div>', unsafe_allow_html=True)
+
+                    # 十二宮條文詳情
+                    st.divider()
+                    st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文")) + "**")
+
+                    expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
+                    with st.expander(expander_label, expanded=False):
+                        palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
+                                       "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
+                        palace_names_en = {
+                            "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
+                            "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
+                            "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
+                            "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
+                        }
+                        category_trans = {
+                            "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
+                            "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
+                            "事業": "Career", "健康": "Health", "災厄": "Disaster",
+                            "遷移": "Travel",
+                        }
+                        # 手機友好：以 HTML 卡片列表代替三列
+                        _palace_cards = ""
+                        for palace_name in palace_order:
+                            palace_info = tb_result.palace_verses.get(palace_name, {})
+                            verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else auto_cn("暫無條文"))
+                            category = palace_info.get("category", "")
+                            branch = palace_info.get("branch", "")
+                            display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
+                            display_category = category_trans.get(category, category) if get_lang() == "en" else category
+                            cat_badge = (
+                                f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
+                                f'【{display_category}】</span>'
+                            ) if display_category else ""
+                            _palace_cards += f"""
+        <div style="border-left:3px solid rgba(255,107,53,0.5);
+             padding:10px 12px;margin-bottom:10px;
+             background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">
+          <div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">
+            {display_name}
+            <span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({branch})</span>
+            {cat_badge}
+          </div>
+          <div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{verse}</div>
+        </div>"""
+                        st.markdown(f'<div style="width:100%;">{_palace_cards}</div>', unsafe_allow_html=True)
+
+                    # AI 分析按鈕
+                    _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
+
+                except Exception as _e:
+                    st.error(f"{t('error_tab_compute')}：{_e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+            else:
+                st.markdown("""
+        <div style="
+            background:linear-gradient(135deg,#1a0828 0%,#0f1e35 100%);
+            border:1px solid rgba(255,107,53,0.35);
+            border-radius:16px;
+            padding:28px 24px 24px 24px;
+            margin-bottom:20px;
+            text-align:center;
+        ">
+          <div style="font-size:52px;margin-bottom:12px;">🔮</div>
+          <div style="font-size:22px;font-weight:700;color:#FF6B35;letter-spacing:2px;margin-bottom:6px;">
+            鐵板神數
+          </div>
+          <div style="font-size:12px;color:#9090b0;margin-bottom:14px;letter-spacing:1px;">
+            Tie Ban Shen Shu &middot; Iron Plate Divine Numbers
+          </div>
+          <div style="font-size:13px;color:#8888aa;line-height:1.8;max-width:380px;margin:0 auto 18px auto;">
+            源自宋代邵雍《皇極經世》，清代發展為精密考刻分系統<br>
+            每時分 8 刻、每刻 15 分（共 120 分）<br>
+            號稱「鐵口直斷」，中國傳統術數中最精密的查表法系統
+          </div>
+          <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+            <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+                 border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+              📅 輸入出生年月日時
+            </div>
+            <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+                 border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+              ⚡ 一鍵推算神數
+            </div>
+            <div style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);
+                 border-radius:8px;padding:7px 13px;font-size:12px;color:#FF9966;">
+              📜 查閱十二宮條文
+            </div>
+          </div>
+          <div style="
+            display:inline-block;
+            background:rgba(205,46,58,0.15);
+            border:1px solid rgba(205,46,58,0.4);
+            border-radius:8px;
+            padding:8px 20px;
+            font-size:13px;
+            color:#f87171;
+          ">👈 請在左側填寫出生年月日時，即可起盤</div>
+        </div>""", unsafe_allow_html=True)
+
+        with _tb_tab_tiaowen:
+            from astro.tieban.tieban_browser import (
+                render_tiaowen_full_browser_inline,
+                render_suanpan_tiaowen_browser_inline,
+            )
+            _tiaowen_db_choice = st.radio(
+                auto_cn("條文庫"),
+                [auto_cn("📚 坤集扣入法（12000 條）"), auto_cn("🧮 算盤打數五部條文")],
+                horizontal=True,
+                label_visibility="collapsed",
+                key="tb_tiaowen_db_choice",
+            )
+            st.divider()
+            if _tiaowen_db_choice == auto_cn("📚 坤集扣入法（12000 條）"):
+                render_tiaowen_full_browser_inline()
+            else:
+                render_suanpan_tiaowen_browser_inline()
+
+        with _tb_tab_kunji:
+            from astro.tieban.kunji_full_structure import (
+                KUNJI_TIANGAN_CODE, BAKE_96_KE, SIX_QIN_KE_FEN,
+                kou_ru_fa, advanced_kou_ru_fa,
+            )
+            st.subheader("🔑 坤集密碼表")
+            st.caption("天干扣入法核心：各天干對應數字，用於萬千百十條文編號解碼")
+            _code_rows = [{"天干": k, "密碼數": v} for k, v in KUNJI_TIANGAN_CODE.items()]
+            st.dataframe(_code_rows, width="stretch", hide_index=True)
+
+            st.divider()
+            st.subheader("🔢 扣入法查詢")
+            _kunji_num = st.number_input(
+                "輸入條文編號（1001–13000）",
+                min_value=1001, max_value=13000, value=1001, step=1,
+                key="kunji_num_input",
+            )
+            if st.button("解碼天干序列", key="kunji_decode_btn"):
+                _seq = kou_ru_fa(int(_kunji_num))
+                st.success(f"條文 {int(_kunji_num)} → 扣入天干序列：{'  '.join(_seq)}")
+                _adv = advanced_kou_ru_fa(int(_kunji_num))
+                st.info(f"基礎天干：{'  '.join(_adv['base_tiangan'])}")
+
+            st.divider()
+            st.subheader("⏰ 九十六刻天干數表")
+            st.caption("各時辰（父母兄弟 / 妻子）刻分對應坤集天干")
+            _ke_hour = st.selectbox(
+                "選擇時辰",
+                options=list(BAKE_96_KE.keys()),
+                key="kunji_ke_hour",
+            )
+            _ke_data = BAKE_96_KE.get(_ke_hour, {})
+            for _rel, _kes in _ke_data.items():
+                st.markdown(f"**{_rel}**")
+                _ke_rows = [{"刻/分": k, "天干結果": v} for k, v in _kes.items()]
+                st.dataframe(_ke_rows, width="stretch", hide_index=True)
+
+            st.divider()
+            st.subheader("👨\u200d👩\u200d👧 六親刻分圖")
+            st.caption("各時辰六親（父母兄弟 / 妻子）刻分對應")
+            _qin_hour = st.selectbox(
+                "選擇時辰",
+                options=list(SIX_QIN_KE_FEN.keys()),
+                key="kunji_qin_hour",
+            )
+            _qin_data = SIX_QIN_KE_FEN.get(_qin_hour, {})
+            for _rel, _fens in _qin_data.items():
+                st.markdown(f"**{_rel}**")
+                _qin_rows = [{"刻/分": k, "六親結果": v} for k, v in _fens.items()]
+                st.dataframe(_qin_rows, width="stretch", hide_index=True)
+
+    # --- 邵子神數 ---
+    elif _selected_system == "tab_shaozi":
+        _sz_tab_main, _sz_tab_64keys, _sz_tab_tiaowen = st.tabs([
+            auto_cn("🔯 命盤"), auto_cn("🗝️ 64鑰匙"), auto_cn("📚 條文庫"),
+        ])
+        with _sz_tab_main:
+            if _is_calculated:
+                try:
+                    from astro.shaozi import ShaoziShenShu, ShaoziBirthData
+                    from astro.shaozi.renderer import render_shaozi_result
+
+                    _p = st.session_state["_calc_params"]
+                    with st.spinner(t("spinner_shaozi")):
+                        _sz_engine = ShaoziShenShu()
+                        _sz_birth = ShaoziBirthData(
+                            birth_dt=datetime(
+                                _p["year"], _p["month"], _p["day"],
+                                _p["hour"], _p.get("minute", 0),
+                            ),
+                            gender=st.session_state.get("_calc_gender", "男"),
+                        )
+                        _sz_result = _sz_engine.calculate(_sz_birth)
+
+                    render_shaozi_result(_sz_result)
+                    _render_ai_button(
+                        "tab_shaozi",
+                        {
+                            "tiaowen_id": _sz_result.tiaowen_id,
+                            "gua": _sz_result.gua_name,
+                            "tiaowen": _sz_result.tiaowen_text,
+                            "year_gz": _sz_result.year_gz,
+                            "day_gz": _sz_result.day_gz,
+                        },
+                        btn_key="shaozi",
+                    )
+                except Exception as _e:
+                    st.error(f"{t('error_tab_compute')}：{_e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+            else:
+                from astro.shaozi.renderer import render_shaozi_placeholder
+                render_shaozi_placeholder()
+
+        with _sz_tab_64keys:
+            if _is_calculated:
+                try:
+                    from astro.shaozi import ShaoziShenShu as _SzMain, ShaoziBirthData
+                    from astro.shaozi.shaozi_full_structure import ShaoziFullShenShu as _SzFull
+                    from astro.shaozi.renderer import render_shaozi_64key_section
+
+                    _p = st.session_state["_calc_params"]
+                    with st.spinner(t("spinner_shaozi")):
+                        # 取得四柱干支（復用主盤計算結果或重新推算）
+                        _sz_main_engine = _SzMain()
+                        _sz_birth = ShaoziBirthData(
+                            birth_dt=datetime(
+                                _p["year"], _p["month"], _p["day"],
+                                _p["hour"], _p.get("minute", 0),
+                            ),
+                            gender=st.session_state.get("_calc_gender", "男"),
+                        )
+                        _sz_base = _sz_main_engine.calculate(_sz_birth)
+
+                        # 使用 shaozi_full_structure 進行64鑰匙起盤
+                        _sz_full_engine = _SzFull()
+                        _sz_full_result = _sz_full_engine.cast_plate(
+                            year_gz=_sz_base.year_gz,
+                            month_gz=_sz_base.month_gz,
+                            day_gz=_sz_base.day_gz,
+                            hour_gz=_sz_base.hour_gz,
+                        )
+
+                    render_shaozi_64key_section(_sz_full_result)
+                except Exception as _e:
+                    st.error(f"{t('error_tab_compute')}：{_e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+            else:
+                from astro.shaozi.renderer import render_shaozi_placeholder
+                render_shaozi_placeholder()
+
+        with _sz_tab_tiaowen:
+            from astro.shaozi.renderer import render_shaozi_tiaowen_browser
+            render_shaozi_tiaowen_browser()
+
+    # --- 太玄數占星 ---
+    elif _selected_system == "tab_taixuan":
+        # 子頁籤：本命排盤 / 即時問卜
+        _tx_natal_label = t("taixuan_natal_tab")
+        _tx_qigua_label = t("taixuan_qigua_tab")
+        _tx_tab_natal, _tx_tab_qigua = st.tabs([_tx_natal_label, _tx_qigua_label])
+
+        with _tx_tab_natal:
+            if _is_calculated:
+                try:
+                    _p = st.session_state["_calc_params"]
+                    with st.spinner(t("spinner_taixuan")):
+                        _tx_calc = TaiXuanCalculator(
+                            year=_p["year"],
+                            month=_p["month"],
+                            day=_p["day"],
+                            hour=_p["hour"],
+                            mode="natal",
+                        )
+                        _tx_result = _tx_calc.calculate()
+                    render_taixuan_chart(
+                        _tx_result,
+                        after_chart_hook=lambda: _render_ai_button(
+                            "tab_taixuan",
+                            {
+                                "shou_name": _tx_result.shou.name,
+                                "gua_title": _tx_result.shou.gua_title,
+                                "gua_text": _tx_result.shou.gua_text,
+                                "zhan_name": _tx_result.shou.zhan_name,
+                                "zhan_text": _tx_result.shou.zhan_text,
+                                "year_gz": _tx_result.year_gz,
+                                "day_gz": _tx_result.day_gz,
+                                "sishi": _tx_result.sishi,
+                                "mansion": _tx_result.shou.mansion,
+                                "planet": _tx_result.shou.planet,
+                            },
+                            btn_key="taixuan_natal",
+                        ),
+                    )
+                except Exception as _e:
+                    st.error(f"{t('error_tab_compute')}：{_e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+            else:
+                render_taixuan_intro()
+
+        with _tx_tab_qigua:
+            render_qigua_ui(
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_taixuan",
+                    {"mode": "qigua"},
+                    btn_key="taixuan_qigua",
+                )
+            )
+
+    # --- 五運六氣 ---
+    elif _selected_system == "tab_wuyunliuqi":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_wuyunliuqi")):
+                    _wylq_result = compute_wuyunliuqi(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p.get("minute", 0),
+                    )
+                render_wuyunliuqi_chart(_wylq_result)
+                _render_ai_button("tab_wuyunliuqi", {
+                    "ganzhi": _wylq_result.ganzhi,
+                    "dayun": _wylq_result.dayun.taishao,
+                    "sitian": _wylq_result.sitian,
+                    "zaiquan": _wylq_result.zaiquan,
+                    "tonghua": _wylq_result.tonghua.categories,
+                }, btn_key="wuyunliuqi")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                import traceback
+                st.code(traceback.format_exc())
+        else:
+            render_wuyunliuqi_intro()
+            st.markdown(t("desc_wuyunliuqi"))
+
+    # --- History of Astrology ---
+    elif _selected_system == "tab_history":
+        st.header("📜 " + t("tab_history"))
+        st.caption("占星術是人類最古老的知識體系之一，跨越五千年文明，連結天上與地下。" if _cur_lang in ("zh", "zh_cn") else "Astrology is one of humanity's oldest knowledge systems, spanning five millennia of civilization.")
+        
+        st.divider()
+        
+        # Load and render markdown file
         try:
-            _p = st.session_state["_calc_params"]
+            with open("docs/astrology_history.md", "r", encoding="utf-8") as f:
+                history_md = f.read()
+            st.markdown(history_md)
+        except FileNotFoundError:
+            st.error("占星歷史文件尚未建立 / Astrology history file not found: `docs/astrology_history.md`")
+            st.info("請先建立文件 / Please create the document first.")
+        
+        _render_ai_button("tab_history", {"system": "astrology_history"}, btn_key="history")
+
+    # --- 印度占星 ---
+    elif _selected_system == "tab_indian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_indian")):
+                    v_chart = compute_vedic_chart(**_p)
+
+                _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs, _v_tab_varga = st.tabs([
+                    t("vedic_subtab_rashi"),
+                    t("vedic_subtab_dasha"),
+                    t("vedic_subtab_ashtaka"),
+                    t("vedic_subtab_yogas"),
+                    t("vedic_subtab_bphs"),
+                    t("vedic_subtab_varga"),
+                ])
+
+                with _v_tab_rashi:
+                    render_vedic_chart(v_chart, after_chart_hook=lambda: _render_ai_button("tab_indian", v_chart, btn_key="vedic"))
+
+                with _v_tab_dasha:
+                    st.subheader(t("vedic_subtab_dasha"))
+                    moon_p = next((p for p in v_chart.planets if "Chandra" in p.name or "Moon" in p.name), None)
+                    if moon_p:
+                        vim = compute_vimshottari(moon_p.longitude, v_chart.julian_day)
+                        st.info(f"Moon Nakshatra: **{vim.moon_nakshatra}** | Lord: **{vim.moon_nakshatra_lord}** | Balance: {vim.balance_years:.2f} yrs")
+                        for md in vim.mahadasha_periods:
+                            _dasha_reading = get_dasha_reading(md.lord, get_lang())
+                            with st.expander(f"**{md.lord}** ({md.lord_cn}) — {md.start_date} to {md.end_date} ({md.years:.1f} yrs)"):
+                                if _dasha_reading:
+                                    st.markdown(f"📖 {_dasha_reading}")
+                                if md.sub_periods:
+                                    st.dataframe([{"Lord": s.lord, "CN": s.lord_cn,
+                                                  "Start": s.start_date, "End": s.end_date,
+                                                  "Years": f"{s.years:.2f}"}
+                                                 for s in md.sub_periods],
+                                                 width="stretch")
+                        st.divider()
+                        st.markdown("##### Yogini Dasha (36-year cycle)")
+                        yog = compute_yogini(moon_p.longitude, v_chart.julian_day)
+                        st.dataframe([{"Yogini": p.lord, "CN": p.lord_cn,
+                                      "Start": p.start_date, "End": p.end_date,
+                                      "Years": f"{p.years:.2f}"}
+                                     for p in yog.periods], width="stretch")
+                        # Yogini reading for current period
+                        if yog.periods:
+                            _yog_reading = get_yogini_reading(yog.periods[0].lord, get_lang())
+                            if _yog_reading:
+                                st.info(f"📖 Current: {_yog_reading}")
+                    else:
+                        st.warning("Moon position not found.")
+                    _render_ai_button("tab_indian", v_chart, btn_key="vedic_dasha")
+
+                with _v_tab_ashtaka:
+                    st.subheader(t("vedic_subtab_ashtaka"))
+                    p_lons = {}
+                    for p in v_chart.planets:
+                        key = p.name.split("(")[0].strip().split()[0]
+                        _MAP = {"Surya": "Sun", "Chandra": "Moon", "Mangal": "Mars",
+                                "Budha": "Mercury", "Guru": "Jupiter", "Shukra": "Venus", "Shani": "Saturn"}
+                        canonical = _MAP.get(key, key)
+                        p_lons[canonical] = p.longitude
+                    asc_lon = getattr(v_chart, 'ascendant', 0.0) if hasattr(v_chart, 'ascendant') else 0.0
+                    if len(p_lons) >= 7:
+                        av = compute_ashtakavarga(p_lons, asc_lon)
+                        st.info(f"Sarvashtakavarga Total: **{av.sarva_total}**")
+                        import pandas as pd
+                        signs = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir",
+                                 "Lib", "Sco", "Sag", "Cap", "Aqu", "Pis"]
+                        rows = []
+                        for bav in av.bav:
+                            row = {"Planet": f"{bav.planet} ({bav.planet_cn})"}
+                            for i, s in enumerate(signs):
+                                row[s] = bav.bindus[i]
+                            row["Total"] = bav.total
+                            rows.append(row)
+                        sarva_row = {"Planet": "SARVA"}
+                        for i, s in enumerate(signs):
+                            sarva_row[s] = av.sarva[i]
+                        sarva_row["Total"] = av.sarva_total
+                        rows.append(sarva_row)
+                        st.dataframe(pd.DataFrame(rows), width="stretch")
+                    else:
+                        st.warning("Insufficient planet data for Ashtakavarga.")
+                    _render_ai_button("tab_indian", v_chart, btn_key="vedic_ashtaka")
+
+                with _v_tab_yogas:
+                    st.subheader(t("vedic_subtab_yogas"))
+                    p_lons_y = {}
+                    for p in v_chart.planets:
+                        key = p.name.split("(")[0].strip().split()[0]
+                        _MAP2 = {"Surya": "Sun", "Chandra": "Moon", "Mangal": "Mars",
+                                 "Budha": "Mercury", "Guru": "Jupiter", "Shukra": "Venus",
+                                 "Shani": "Saturn", "Rahu": "Rahu", "Ketu": "Ketu"}
+                        canonical = _MAP2.get(key, key)
+                        p_lons_y[canonical] = p.longitude
+                    asc_lon_y = getattr(v_chart, 'ascendant', 0.0) if hasattr(v_chart, 'ascendant') else 0.0
+                    yogas = compute_yogas(p_lons_y, asc_lon_y)
+                    for yg in yogas:
+                        icon = "✅" if yg.is_present else "⬜"
+                        with st.expander(f"{icon} {yg.name} ({auto_cn(yg.name_cn)}) — {yg.strength}"):
+                            _yg_text = yg.description_cn if get_lang() in ("zh", "zh_cn") else yg.description
+                            st.write(auto_cn(_yg_text))
+                    _render_ai_button("tab_indian", v_chart, btn_key="vedic_yogas")
+
+                with _v_tab_bphs:
+                    st.subheader("📜 " + t("vedic_subtab_bphs"))
+                    bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
+                    _render_bphs_result(bphs_result)
+                    _render_ai_button("tab_indian", v_chart, btn_key="vedic_bphs")
+
+                with _v_tab_varga:
+                    st.subheader("📊 " + t("vedic_subtab_varga"))
+                    st.caption(t("bphs_caption_varga_tab"))
+                    _varga_tab_labels = [f"{k} {VARGA_INFO[k]['zh']}" for k in VARGA_KEYS]
+                    _varga_tabs = st.tabs(_varga_tab_labels)
+                    for _vi, _vk in enumerate(VARGA_KEYS):
+                        with _varga_tabs[_vi]:
+                            _vc = compute_varga_chart(_vk, v_chart.planets, v_chart.ascendant)
+                            render_single_varga(_vc)
+                    _render_ai_button("tab_indian", v_chart, btn_key="vedic_varga")
+
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_indian"))
+
+    # --- 宿曜道 ---
+    elif _selected_system == "tab_lal_kitab":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_lal_kitab")):
+                    _lk_chart = compute_lal_kitab_chart(**_p)
+                _lk_lang = st.session_state.get("lang", "zh")
+                render_lal_kitab_1952_page(
+                    _lk_chart,
+                    lang=_lk_lang,
+                    after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", _lk_chart, btn_key="lal_kitab"),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_lal_kitab"))
+
+    # --- 宿曜道 ---
+    elif _selected_system == "tab_sukkayodo":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_indian")):
+                    _v_chart_sukka = compute_vedic_chart(**_p)
+                render_sukkayodo_chart(_v_chart_sukka, after_chart_hook=lambda: _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo"))
+                st.subheader(t("sukkayodo_subheader"))
+                st.info(t("sukkayodo_info"))
+                st.markdown(t("desc_sukkayodo"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_sukkayodo"))
+
+    # --- 泰國占星 ---
+    elif _selected_system == "tab_thai":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_thai")):
+                    t_chart = compute_thai_chart(**_p)
+                thai_tab_chart, thai_tab_nine, thai_tab_brahma = st.tabs(
+                    [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
+                )
+                with thai_tab_chart:
+                    render_thai_chart(t_chart, after_chart_hook=lambda: _render_ai_button("tab_thai", t_chart, btn_key="thai"))
+                with thai_tab_nine:
+                    nine_grid_result = calculate_thai_nine_grid(
+                        birth_date.day, birth_date.month, birth_date.year
+                    )
+                    render_nine_grid(nine_grid_result)
+                    st.markdown("---")
+                    divination_result = calculate_nine_palace_divination(t_chart)
+                    render_nine_palace_divination(divination_result)
+                with thai_tab_brahma:
+                    from datetime import date as _date_cls
+                    _bj_bd = _date_cls(birth_date.year, birth_date.month, birth_date.day)
+                    _bj_weekday = _bj_bd.weekday()  # 0=Mon … 6=Sun
+                    _bj_age = None
+                    _bj_gender = None
+                    _bj_age_col, _bj_gender_col = st.columns(2)
+                    with _bj_age_col:
+                        _bj_age = st.number_input(
+                            "年齡 (Age)", min_value=1, max_value=120,
+                            value=max(1, _date_cls.today().year - birth_date.year),
+                            key="brahma_jati_age",
+                        )
+                    with _bj_gender_col:
+                        _bj_gender = st.selectbox(
+                            "性別 (Gender)",
+                            options=["male", "female"],
+                            format_func=lambda x: "男 Male" if x == "male" else "女 Female",
+                            key="brahma_jati_gender",
+                        )
+                    _bj_reading = compute_brahma_jati(
+                        ce_year=birth_date.year,
+                        month=birth_date.month,
+                        weekday=_bj_weekday,
+                        age=_bj_age,
+                        gender=_bj_gender,
+                    )
+                    render_brahma_jati(_bj_reading)
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_thai"))
+            render_brahma_jati_browse()
+
+    # --- 卡巴拉占星 ---
+    elif _selected_system == "tab_kabbalistic":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_kabbalistic")):
+                    k_chart = compute_kabbalistic_chart(**_p)
+                render_kabbalistic_chart(k_chart, after_chart_hook=lambda: _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_kabbalistic"))
+
+    # --- 猶太 Mazzalot 占星 ---
+    elif _selected_system == "tab_mazzalot":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_mazzalot")):
+                    _mz_chart = compute_mazzalot_chart(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        timezone=_p["timezone"],
+                        lat=_p["latitude"], lon=_p["longitude"],
+                    )
+                _mz_tab_star, _mz_tab_natal, _mz_tab_omens = st.tabs([
+                    t("mazzalot_subtab_star"),
+                    t("mazzalot_subtab_natal"),
+                    t("mazzalot_subtab_omens"),
+                ])
+                with _mz_tab_star:
+                    _mz_svg = build_mazzalot_star_of_david_svg(
+                        _mz_chart,
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        tz=input_tz,
+                        location=location_name,
+                    )
+                    st.markdown(_mz_svg, unsafe_allow_html=True)
+                    st.caption(
+                        '<p style="text-align:center; color:#888; font-size:11px;">'
+                        'Star of David Wheel (Magen David) — Sidereal zodiac · '
+                        '12 Mazzalot · Sefer Yetzirah letters · Twelve Tribes'
+                        '</p>',
+                        unsafe_allow_html=True,
+                    )
+                    _render_ai_button("tab_mazzalot", _mz_chart, btn_key="mazzalot")
+                with _mz_tab_natal:
+                    render_mazzalot_chart(_mz_chart)
+                with _mz_tab_omens:
+                    st.subheader("📜 " + t("mazzalot_omens_title"))
+                    for _omen in _mz_chart.omens:
+                        _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
+                        _en_part = f"  \n_{_omen.text_en}_" if _omen.text_en else ""
+                        st.markdown(
+                            f"{_omen_icon} **{_omen.planet}** — "
+                            f"*{_omen.condition.upper()}*: {_omen.text}{_en_part}"
+                        )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_mazzalot"))
+
+    # --- 阿拉伯占星 ---
+    elif _selected_system == "tab_arabic":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
+                    t("arabic_subtab_chart"),
+                    t("arabic_subtab_picatrix"),
+                    t("arabic_subtab_shams"),
+                    t("arabic_subtab_reference"),
+                    t("arabic_subtab_ms164"),
+                ])
+
+                with arabic_subtab_chart:
+                    with st.spinner(t("spinner_arabic")):
+                        a_chart = compute_arabic_chart(**_p)
+                    render_arabic_chart(a_chart, after_chart_hook=lambda: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
+
+                # --- Picatrix 星體魔法 ---
+                with arabic_subtab_picatrix:
+                    st.subheader(t("picatrix_subheader"))
+                    st.caption(t("picatrix_source"))
+
+                    _birth_moon_lon: float | None = compute_moon_longitude(
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        timezone=input_tz,
+                    )
+
+                    ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
+                        t("picatrix_subtab_browse"),
+                        t("picatrix_subtab_mansion"),
+                        t("picatrix_subtab_hours"),
+                        t("picatrix_subtab_talisman"),
+                    ])
+
+                    with ptab_browse:
+                        render_picatrix_browse()
+
+                    with ptab_mansions:
+                        st.info(t("picatrix_moon_lon_info").format(lon=_birth_moon_lon))
+                        render_mansion_lookup(moon_lon=_birth_moon_lon)
+
+                    with ptab_hours:
+                        render_planetary_hours_tool(
+                            year=birth_date.year,
+                            month=birth_date.month,
+                            day=birth_date.day,
+                            timezone=input_tz,
+                            latitude=input_lat,
+                            longitude=input_lon,
+                        )
+
+                    with ptab_talisman:
+                        render_talisman_generator()
+
+                # --- 太陽知識大全 (Shams al-Maʻārif) ---
+                with arabic_subtab_shams:
+                    st.subheader(t("shams_subheader"))
+                    st.caption(t("shams_source"))
+
+                    # Compute Arabic chart if not already done
+                    try:
+                        _a_chart_for_shams = a_chart
+                    except NameError:
+                        with st.spinner(t("spinner_arabic")):
+                            _a_chart_for_shams = compute_arabic_chart(**_p)
+                    _shams_planets = {
+                        p.name.split("(")[0].strip().split()[-1]: p.longitude
+                        for p in _a_chart_for_shams.planets
+                    }
+                    _shams_sun_idx: int | None = None
+                    for p in _a_chart_for_shams.planets:
+                        if "Sun" in p.name:
+                            _shams_sun_idx = int(p.longitude / 30.0)
+                            break
+                    render_shams_chart(chart_planets=_shams_planets,
+                                       birth_sign_idx=_shams_sun_idx)
+
+                with arabic_subtab_ref:
+                    st.subheader(t("arabic_subtab_reference"))
+                    _render_reference_library()
+
+                with arabic_subtab_ms164:
+                    render_ms164_browse()
+
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
             arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
                 t("arabic_subtab_chart"),
                 t("arabic_subtab_picatrix"),
@@ -3781,23 +4057,12 @@ elif _selected_system == "tab_arabic":
             ])
 
             with arabic_subtab_chart:
-                with st.spinner(t("spinner_arabic")):
-                    a_chart = compute_arabic_chart(**_p)
-                render_arabic_chart(a_chart, after_chart_hook=lambda: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
+                st.info(t("info_calc_prompt"))
+                st.markdown(t("desc_arabic"))
 
-            # --- Picatrix 星體魔法 ---
             with arabic_subtab_picatrix:
                 st.subheader(t("picatrix_subheader"))
                 st.caption(t("picatrix_source"))
-
-                _birth_moon_lon: float | None = compute_moon_longitude(
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    timezone=input_tz,
-                )
 
                 ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
                     t("picatrix_subtab_browse"),
@@ -3810,14 +4075,10 @@ elif _selected_system == "tab_arabic":
                     render_picatrix_browse()
 
                 with ptab_mansions:
-                    st.info(t("picatrix_moon_lon_info").format(lon=_birth_moon_lon))
-                    render_mansion_lookup(moon_lon=_birth_moon_lon)
+                    render_mansion_lookup(moon_lon=None)
 
                 with ptab_hours:
                     render_planetary_hours_tool(
-                        year=birth_date.year,
-                        month=birth_date.month,
-                        day=birth_date.day,
                         timezone=input_tz,
                         latitude=input_lat,
                         longitude=input_lon,
@@ -3826,28 +4087,11 @@ elif _selected_system == "tab_arabic":
                 with ptab_talisman:
                     render_talisman_generator()
 
-            # --- 太陽知識大全 (Shams al-Maʻārif) ---
             with arabic_subtab_shams:
                 st.subheader(t("shams_subheader"))
                 st.caption(t("shams_source"))
-
-                # Compute Arabic chart if not already done
-                try:
-                    _a_chart_for_shams = a_chart
-                except NameError:
-                    with st.spinner(t("spinner_arabic")):
-                        _a_chart_for_shams = compute_arabic_chart(**_p)
-                _shams_planets = {
-                    p.name.split("(")[0].strip().split()[-1]: p.longitude
-                    for p in _a_chart_for_shams.planets
-                }
-                _shams_sun_idx: int | None = None
-                for p in _a_chart_for_shams.planets:
-                    if "Sun" in p.name:
-                        _shams_sun_idx = int(p.longitude / 30.0)
-                        break
-                render_shams_chart(chart_planets=_shams_planets,
-                                   birth_sign_idx=_shams_sun_idx)
+                st.markdown(t("desc_shams"))
+                render_shams_browse()
 
             with arabic_subtab_ref:
                 st.subheader(t("arabic_subtab_reference"))
@@ -3856,1824 +4100,1857 @@ elif _selected_system == "tab_arabic":
             with arabic_subtab_ms164:
                 render_ms164_browse()
 
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
-            t("arabic_subtab_chart"),
-            t("arabic_subtab_picatrix"),
-            t("arabic_subtab_shams"),
-            t("arabic_subtab_reference"),
-            t("arabic_subtab_ms164"),
-        ])
-
-        with arabic_subtab_chart:
-            st.info(t("info_calc_prompt"))
-            st.markdown(t("desc_arabic"))
-
-        with arabic_subtab_picatrix:
-            st.subheader(t("picatrix_subheader"))
-            st.caption(t("picatrix_source"))
-
-            ptab_browse, ptab_mansions, ptab_hours, ptab_talisman = st.tabs([
-                t("picatrix_subtab_browse"),
-                t("picatrix_subtab_mansion"),
-                t("picatrix_subtab_hours"),
-                t("picatrix_subtab_talisman"),
-            ])
-
-            with ptab_browse:
-                render_picatrix_browse()
-
-            with ptab_mansions:
-                render_mansion_lookup(moon_lon=None)
-
-            with ptab_hours:
-                render_planetary_hours_tool(
-                    timezone=input_tz,
-                    latitude=input_lat,
-                    longitude=input_lon,
-                )
-
-            with ptab_talisman:
-                render_talisman_generator()
-
-        with arabic_subtab_shams:
-            st.subheader(t("shams_subheader"))
-            st.caption(t("shams_source"))
-            st.markdown(t("desc_shams"))
-            render_shams_browse()
-
-        with arabic_subtab_ref:
-            st.subheader(t("arabic_subtab_reference"))
-            _render_reference_library()
-
-        with arabic_subtab_ms164:
-            render_ms164_browse()
-
-# --- 也門占星 (Yemeni) ---
-elif _selected_system == "tab_yemeni":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_yemeni")):
-                _yemeni_chart = compute_yemeni_chart(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    timezone=_p["timezone"],
-                    latitude=_p["latitude"], longitude=_p["longitude"],
-                    location_name=location_name,
-                )
-            _y_tab_mandala, _y_tab_natal, _y_tab_omens = st.tabs([
-                t("yemeni_subtab_mandala"),
-                t("yemeni_subtab_natal"),
-                t("yemeni_subtab_omens"),
-            ])
-            with _y_tab_mandala:
-                _yemeni_svg = build_yemeni_manzil_mandala_svg(
-                    _yemeni_chart,
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    tz=input_tz,
-                    location=location_name,
-                )
-                st.markdown(_yemeni_svg, unsafe_allow_html=True)
-                st.caption(
-                    '<p style="text-align:center; color:#888; font-size:11px;">'
-                    'Yemeni Manzil Mandala — 28-mansion disc · '
-                    'Rasulid manuscript style · Sidereal zodiac'
-                    '</p>',
-                    unsafe_allow_html=True,
-                )
-                _render_ai_button("tab_yemeni", _yemeni_chart, btn_key="yemeni")
-            with _y_tab_natal:
-                render_yemeni_chart(_yemeni_chart)
-            with _y_tab_omens:
-                st.subheader("📜 al-Ashraf " + t("yemeni_subtab_omens"))
-                for _omen in _yemeni_chart.omens:
-                    _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
-                    st.markdown(
-                        f"{_omen_icon} **{_omen.planet}** ({_omen.planet_cn}) — "
-                        f"*{_omen.condition.upper()}*: {_omen.text} / {_omen.text_en}"
+    # --- 也門占星 (Yemeni) ---
+    elif _selected_system == "tab_yemeni":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_yemeni")):
+                    _yemeni_chart = compute_yemeni_chart(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        timezone=_p["timezone"],
+                        latitude=_p["latitude"], longitude=_p["longitude"],
+                        location_name=location_name,
                     )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_yemeni"))
-
-# --- Picatrix 占星魔法 + Behenian 固定星 ---
-elif _selected_system == "tab_picatrix_behenian":
-    _p = st.session_state.get("_calc_params", {})
-    if _is_calculated and _p:
-        try:
-            from astro.western.western import compute_western_chart as _cwc
-            with st.spinner(t("spinner_picatrix_behenian")):
-                _pb_chart = _cwc(**_p)
-            render_picatrix_behenian(
-                chart=_pb_chart,
-                year=_p["year"], month=_p["month"], day=_p["day"],
-                hour=_p["hour"], minute=_p["minute"],
-                timezone_offset=_p["timezone"],
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_picatrix_behenian"))
-        # Show compendium even without a chart
-        try:
-            from astro.picatrix_behenian.renderer import _render_compendium_tab
-            _render_compendium_tab()
-        except Exception:
-            pass
-
-# --- 瑪雅占星 ---
-elif _selected_system == "tab_maya":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_maya")):
-                m_chart = compute_maya_chart(**_p)
-            render_maya_chart(m_chart, after_chart_hook=lambda: _render_ai_button("tab_maya", m_chart, btn_key="maya"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_maya"))
-
-# --- 阿茲特克占星 ---
-elif _selected_system == "tab_aztec":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_aztec")):
-                az_chart = compute_aztec_chart(**_p)
-            render_aztec_chart(az_chart, after_chart_hook=lambda: _render_ai_button("tab_aztec", az_chart, btn_key="aztec"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_aztec"))
-
-# --- 緬甸占星 (Mahabote) ---
-elif _selected_system == "tab_mahabote":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_mahabote")):
-                mb_chart = compute_mahabote_chart(**_p)
-            render_mahabote_chart(mb_chart, after_chart_hook=lambda: _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_mahabote"))
-
-# --- 古埃及十度區間 (Decans) ---
-elif _selected_system == "tab_decans":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_decans")):
-                dc_chart = compute_decan_chart(**_p)
-            render_decan_chart(dc_chart)
-            _render_ai_button("tab_decans", dc_chart, btn_key="decans")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_decans_prompt"))
-        render_decan_browse()
-
-# --- 納迪占星 (Nadi Jyotish) ---
-elif _selected_system == "tab_nadi":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_nadi")):
-                nadi_chart = compute_nadi_chart(**_p)
-            render_nadi_chart(nadi_chart, after_chart_hook=lambda: _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_nadi"))
-
-# --- Jaimini 占星 (Jaimini Astrology) ---
-elif _selected_system == "tab_jaimini":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_jaimini")):
-                jm_chart = compute_jaimini_chart(**_p)
-
-            _jm_tab_chart, _jm_tab_dasha = st.tabs([
-                t("jaimini_subtab_chart"),
-                t("jaimini_subtab_dasha"),
-            ])
-
-            with _jm_tab_chart:
-                render_jaimini_chart(jm_chart, after_chart_hook=lambda: _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini"))
-
-            with _jm_tab_dasha:
-                render_jaimini_dasha(jm_chart)
-                _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini_dasha")
-
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_jaimini"))
-
-# --- 蒙古祖爾海 (Zurkhai) ---
-elif _selected_system == "tab_zurkhai":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_zurkhai")):
-                zk_chart = compute_zurkhai_chart(**_p)
-            render_zurkhai_chart(zk_chart, after_chart_hook=lambda: _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai"))
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_zurkhai"))
-
-# --- 藏傳時輪金剛占星 (Tibetan Kalachakra) ---
-elif _selected_system == "tab_tibetan":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _g = st.session_state["_calc_gender"]
-            with st.spinner(t("spinner_tibetan")):
-                _tib_chart = compute_tibetan_chart(**_p, gender=_g)
-            _t_tab_mandala, _t_tab_natal, _t_tab_mewa, _t_tab_forces, _t_tab_planets = st.tabs([
-                t("tibetan_subtab_mandala"),
-                t("tibetan_subtab_natal"),
-                t("tibetan_subtab_mewa"),
-                t("tibetan_subtab_forces"),
-                t("tibetan_subtab_planets"),
-            ])
-            with _t_tab_mandala:
-                _tib_svg = build_kalachakra_mandala_svg(
-                    _tib_chart,
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    tz=input_tz,
-                    location=location_name,
-                )
-                st.markdown(_tib_svg, unsafe_allow_html=True)
-                st.caption(
-                    '<p style="text-align:center;color:#888;font-size:11px;">'
-                    'Kalachakra Mandala · 時輪金剛曼荼羅 · '
-                    'Outer: 12 Animals · Middle: 8 Parkha · Inner: 9 Mewa'
-                    '</p>',
-                    unsafe_allow_html=True,
-                )
-                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mandala")
-            with _t_tab_natal:
-                render_tibetan_chart(_tib_chart, after_chart_hook=lambda: _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_natal"))
-            with _t_tab_mewa:
-                from astro.tibetan import _render_mewa_parkha
-                _render_mewa_parkha(_tib_chart)
-                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mewa")
-            with _t_tab_forces:
-                from astro.tibetan import _render_five_forces
-                _render_five_forces(_tib_chart)
-                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_forces")
-            with _t_tab_planets:
-                from astro.tibetan import _render_planets
-                _render_planets(_tib_chart)
-                _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_planets")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_tibetan"))
-
-# --- 日本九星氣學 (Japanese Nine Star Ki) ---
-elif _selected_system == "tab_nine_star_ki":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_nine_star_ki")):
-                _nsk_chart = compute_nine_star_ki_chart(**_p)
-            render_nine_star_ki_chart(
-                _nsk_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_nine_star_ki", _nsk_chart, btn_key="nine_star_ki"
-                ),
-                lang=get_lang(),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_nine_star_ki"))
-
-# --- 凱爾特樹木曆法 (Celtic Tree Calendar — Robert Graves 1948) ---
-elif _selected_system == "tab_celtic_tree":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_celtic_tree")):
-                _celtic_chart = compute_celtic_tree_chart(**_p)
-            render_celtic_tree_chart(
-                _celtic_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_celtic_tree", _celtic_chart, btn_key="celtic_tree"
-                ),
-                lang=get_lang(),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_celtic_tree"))
-
-# --- 希臘占星 (Hellenistic) ---
-elif _selected_system == "tab_hellenistic":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            # Hellenistic needs a western chart first
-            with st.spinner(t("spinner_western")):
-                _hellen_w = compute_western_chart(**_p)
-            with st.spinner(t("spinner_hellenistic")):
-                _hellen_chart = compute_hellenistic_chart(
-                    _hellen_w,
-                    birth_year=birth_date.year,
-                    current_year=datetime.now().year,
-                )
-                _hellen_ext = compute_hellenistic_extended(_hellen_w, _hellen_chart)
-            _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots, _h_tab_ext_lots, _h_tab_synkrasis, _h_tab_centiloquy = st.tabs([
-                t("hellen_subtab_chart"),
-                t("hellen_subtab_natal"),
-                t("hellen_subtab_profections"),
-                t("hellen_subtab_zr"),
-                t("hellen_subtab_lots"),
-                "📜 Extended Lots / 擴充 Lots",
-                "⚗️ Valens Synkrasis / 行星組合",
-                t("hellen_subtab_centiloquy"),
-            ])
-            with _h_tab_chart:
-                _greek_svg = build_greek_horoscope_svg(
-                    _hellen_chart,
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    tz=input_tz,
-                    location=location_name,
-                )
-                st.markdown(_greek_svg, unsafe_allow_html=True)
-                st.caption(
-                    '<p style="text-align:center; color:#888; font-size:11px;">'
-                    'Greek Horoscope (θέμα) — Square chart form after L 497 · '
-                    'Whole-sign houses · ASC at left, MC at top'
-                    '</p>',
-                    unsafe_allow_html=True,
-                )
-                _render_ai_button("tab_hellenistic", _hellen_chart, btn_key="hellenistic")
-            with _h_tab_natal:
-                render_hellenistic_chart(_hellen_chart)
-            with _h_tab_prof:
-                if _hellen_chart.profection:
-                    pf = _hellen_chart.profection
-                    st.subheader(t("hellen_profections_header"))
-                    st.metric("Age", pf.current_age)
-                    st.metric("Profected Sign", f"{pf.profected_sign} ({auto_cn(pf.profected_sign_cn)})")
-                    st.metric("Time Lord", f"{pf.time_lord} ({auto_cn(pf.time_lord_cn)})")
-                    st.info(f"House from Ascendant: {pf.house_from_asc}")
-            with _h_tab_zr:
-                if _hellen_chart.zodiacal_releasing:
-                    st.subheader(t("hellen_zr_header"))
-                    st.dataframe([{"Sign": p.sign, "CN": auto_cn(p.sign_cn),
-                                   "Ruler": p.ruler, "Years": p.years,
-                                   "Start": p.start_date, "End": p.end_date}
-                                  for p in _hellen_chart.zodiacal_releasing],
-                                 width="stretch")
-            with _h_tab_lots:
-                if _hellen_chart.lots:
-                    st.subheader(t("hellen_lots_header"))
-                    st.dataframe([{"Name": f"{l.name} ({auto_cn(l.name_cn)})",
-                                   "Sign": l.sign, "Degree": f"{l.sign_degree:.2f}°",
-                                   "House": l.house, "Formula": l.formula_en,
-                                   "Meaning": auto_cn(l.meaning_cn)}
-                                  for l in _hellen_chart.lots],
-                                 width="stretch")
-
-            with _h_tab_ext_lots:
-                if _hellen_ext.extended_lots:
-                    render_extended_lots(_hellen_ext.extended_lots)
-            with _h_tab_synkrasis:
-                if _hellen_ext.synkrasis:
-                    render_valens_combinations(_hellen_ext.synkrasis)
-
-            with _h_tab_centiloquy:
-                st.subheader(t("centiloquy_header"))
-                from astro.classic.ptolemy_centiloquy import get_random_aphorism, search_aphorism, get_all_aphorisms, format_aphorism
-                # Daily aphorism
-                st.info(format_aphorism(get_random_aphorism()))
-                # Search
-                _cent_query = st.text_input(t("centiloquy_search_label"), key="centiloquy_search")
-                if _cent_query:
-                    _results = search_aphorism(_cent_query)
-                    if _results:
-                        for _r in _results:
-                            st.markdown(format_aphorism(_r))
-                    else:
-                        st.warning(t("centiloquy_no_match"))
-                else:
-                    for _a in get_all_aphorisms():
-                        with st.expander(t("centiloquy_aphorism_num").format(n=_a['id'])):
-                            st.markdown(_a["text"])
-
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_hellenistic"))
-
-# --- 古巴比倫占星 (Babylonian) ---
-elif _selected_system == "tab_babylonian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_babylonian")):
-                _bab_chart = compute_babylonian_chart(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    timezone=_p["timezone"],
-                    lat=_p["latitude"], lon=_p["longitude"],
-                )
-            _bab_tab_chart, _bab_tab_natal, _bab_tab_omens = st.tabs([
-                t("babylonian_subtab_chart"),
-                t("babylonian_subtab_natal"),
-                t("babylonian_subtab_omens"),
-            ])
-            with _bab_tab_chart:
-                _bab_svg = build_babylonian_planisphere_svg(
-                    _bab_chart,
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    tz=input_tz,
-                    location=location_name,
-                )
-                st.markdown(_bab_svg, unsafe_allow_html=True)
-                st.caption(
-                    '<p style="text-align:center; color:#888; font-size:11px;">'
-                    'Babylonian Planisphere (K.8538 style) — 8-sector clay disc · '
-                    'Sidereal zodiac · MUL.APIN sign names'
-                    '</p>',
-                    unsafe_allow_html=True,
-                )
-                _render_ai_button("tab_babylonian", _bab_chart, btn_key="babylonian")
-            with _bab_tab_natal:
-                render_babylonian_chart(_bab_chart)
-            with _bab_tab_omens:
-                st.subheader("📜 Enūma Anu Enlil " + t("babylonian_subtab_omens"))
-                for _omen in _bab_chart.omens:
-                    _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
-                    st.markdown(
-                        f"{_omen_icon} **{_omen.planet}** ({_omen.god_name}) — "
-                        f"*{_omen.condition.upper()}*: {_omen.text}"
+                _y_tab_mandala, _y_tab_natal, _y_tab_omens = st.tabs([
+                    t("yemeni_subtab_mandala"),
+                    t("yemeni_subtab_natal"),
+                    t("yemeni_subtab_omens"),
+                ])
+                with _y_tab_mandala:
+                    _yemeni_svg = build_yemeni_manzil_mandala_svg(
+                        _yemeni_chart,
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        tz=input_tz,
+                        location=location_name,
                     )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_babylonian"))
-
-# --- 蘇美/美索不達米亞占星 (Sumerian / Mesopotamian Astrology) ---
-elif _selected_system == "tab_sumerian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            render_sumerian_chart(
-                year=_p["year"],
-                month=_p["month"],
-                day=_p["day"],
-                hour=_p["hour"],
-                minute=_p.get("minute", 0),
-                timezone=_p.get("timezone", 0.0),
-                latitude=_p.get("latitude", 32.542),
-                longitude=_p.get("longitude", 44.421),
-                location_name=_p.get("location_name", ""),
-            )
-            _sumerian_chart = compute_sumerian_chart(
-                year=_p["year"], month=_p["month"], day=_p["day"],
-                hour=_p["hour"], minute=_p.get("minute", 0),
-                timezone=_p.get("timezone", 0.0),
-                lat=_p.get("latitude", 32.542),
-                lon=_p.get("longitude", 44.421),
-                location_name=_p.get("location_name", ""),
-            )
-            _render_ai_button("tab_sumerian", _sumerian_chart, btn_key="sumerian")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_sumerian_prompt"))
-        st.markdown(t("desc_sumerian"))
-
-# --- 達摩一掌經 (Damo One Palm Scripture) ---
-elif _selected_system == "tab_damo":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _damo_params = dict(_p)
-            _damo_params["gender"] = gender
-            with st.spinner(t("spinner_damo")):
-                _damo_chart = compute_damo_chart(**_damo_params)
-            render_damo_chart(
-                _damo_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_damo", _damo_chart, btn_key="damo"
-                ),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_damo"))
-
-# --- 十二星次 (Twelve Ci) ---
-elif _selected_system == "tab_twelve_ci":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_twelve_ci")):
-                _ci_chart = compute_twelve_ci_chart(**_p)
-
-            _ci_tab_wheel, _ci_tab_detail = st.tabs([
-                t("twelve_ci_subtab_chart"),
-                t("twelve_ci_subtab_detail"),
-            ])
-
-            with _ci_tab_wheel:
-                _ci_svg = build_twelve_ci_svg(
-                    _ci_chart,
-                    year=birth_date.year,
-                    month=birth_date.month,
-                    day=birth_date.day,
-                    hour=birth_time.hour,
-                    minute=birth_time.minute,
-                    tz=input_tz,
-                    location=location_name,
-                )
-                st.markdown(_ci_svg, unsafe_allow_html=True)
-                _render_ai_button("tab_twelve_ci", _ci_chart, btn_key="twelve_ci")
-
-            with _ci_tab_detail:
-                render_twelve_ci_chart(
-                    _ci_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_twelve_ci", _ci_chart, btn_key="twelve_ci_detail"
-                    ),
-                )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_twelve_ci"))
-
-# --- 萬化仙禽 (WanHua XianQin) ---
-elif _selected_system == "tab_chinstar":
-
-    # ── Lunar date conversion (hidden) ──────────────────────────
-    _chinstar_year = birth_date.year
-    _chinstar_month = birth_date.month
-    _chinstar_day = birth_date.day
-    _chinstar_hour = birth_time.hour
-    _auto_ok = False
-
-    if _is_calculated:
-        try:
-            import swisseph as _swe_cs
-            from astro.ziwei import _solar_to_lunar as _cs_solar_to_lunar
-            _p = st.session_state["_calc_params"]
-            _cs_jd = _swe_cs.julday(
-                _p["year"], _p["month"], _p["day"],
-                _p["hour"] + _p["minute"] / 60.0 - _p["timezone"],
-            )
-            _cs_ly, _cs_lm, _cs_ld, _cs_leap = _cs_solar_to_lunar(_cs_jd)
-            _chinstar_year = _cs_ly
-            _chinstar_month = _cs_lm
-            _chinstar_day = _cs_ld
-            _chinstar_hour = _p["hour"]
-            _auto_ok = True
-        except Exception:
-            pass
-
-    _cs_gender = "M" if gender == "male" else "F"
-
-    if _auto_ok:
-        try:
-            with st.spinner(t("spinner_chinstar")):
-                _cs_tool = WanHuaXianQin()
-                _cs_chart = _cs_tool.build_chart(
-                    year=int(_chinstar_year),
-                    month=int(_chinstar_month),
-                    day=int(_chinstar_day),
-                    hour=int(_chinstar_hour),
-                    gender=_cs_gender,
-                )
-
-            _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian = st.tabs([
-                t("chinstar_subtab_chart"),
-                t("chinstar_subtab_xiangtai"),
-                t("chinstar_subtab_gui_jian"),
-            ])
-
-            with _cs_tab_chart:
-                from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
-
-                bi = _cs_chart["basic_info"]
-                p = _cs_chart["palaces"]
-                s = _cs_chart["stars"]
-                pat = _cs_chart["pattern"]
-
-                # ── 宮位→禽 映射 ──────────────────────────────
-                _cs_palace_bird = {
-                    "命宮":   s["ming_xing"],
-                    "財帛宮": s["derived"].get("財帛星", ""),
-                    "兄弟宮": s["derived"].get("兄弟星", ""),
-                    "田宅宮": s["derived"].get("田宅星", ""),
-                    "子女宮": s["derived"].get("子息星", ""),
-                    "奴僕宮": s["derived"].get("奴僕星", ""),
-                    "夫妻宮": s["derived"].get("妻妾星", ""),
-                    "疾厄宮": s["derived"].get("疾厄星", ""),
-                    "遷移宮": s["derived"].get("遷移星", ""),
-                    "官祿宮": s["derived"].get("官祿星", ""),
-                    "福德宮": s["derived"].get("福德星", ""),
-                    "相貌宮": s["derived"].get("相貌星", ""),
-                }
-                # 地支→宮名（反查）
-                _cs_branch_to_palace = {v: k for k, v in p["twelve"].items()}
-
-                # 特殊宮位地支（命/身/胎）
-                _cs_ming_br = p["ming_gong"]["branch"]
-                _cs_shen_br = p["shen_gong"]["branch"]
-                _cs_tai_br  = p["tai_gong"]["branch"]
-
-                # 五行色彩 (dark theme)
-                _cs_elem_bg = {
-                    "木": "rgba(56,142,60,0.15)", "火": "rgba(198,40,40,0.15)",
-                    "土": "rgba(245,127,23,0.15)", "金": "rgba(158,158,158,0.15)", "水": "rgba(21,101,192,0.15)",
-                }
-                _cs_elem_bd = {
-                    "木": "rgba(56,142,60,0.4)", "火": "rgba(198,40,40,0.4)",
-                    "土": "rgba(245,127,23,0.4)", "金": "rgba(158,158,158,0.4)", "水": "rgba(21,101,192,0.4)",
-                }
-
-                def _cs_cell(branch_char: str) -> str:
-                    palace = _cs_branch_to_palace.get(branch_char, "")
-                    bird   = _cs_palace_bird.get(palace, "")
-                    elem   = _cs_qin_elem.get(bird, "")
-                    bg     = _cs_elem_bg.get(elem, "rgba(30,27,75,0.4)")
-                    bd     = _cs_elem_bd.get(elem, "rgba(167,139,250,0.3)")
-                    badge  = ""
-                    if branch_char == _cs_ming_br:
-                        badge = '<span style="color:#ef4444;font-size:10px;">★命</span> '
-                        bd    = "rgba(239,68,68,0.5)"
-                        bg    = "rgba(239,68,68,0.1)"
-                    elif branch_char == _cs_shen_br:
-                        badge = '<span style="color:#a78bfa;font-size:10px;">☆身</span> '
-                        bd    = "rgba(167,139,250,0.5)"
-                        bg    = "rgba(167,139,250,0.1)"
-                    elif branch_char == _cs_tai_br:
-                        badge = '<span style="color:#facc15;font-size:10px;">◎胎</span> '
-                        bd    = "rgba(250,204,21,0.5)"
-                        bg    = "rgba(250,204,21,0.1)"
-                    return (
-                        f'<td style="width:25%;min-width:70px;height:88px;text-align:center;'
-                        f'vertical-align:middle;border:2px solid {bd};'
-                        f'background:{bg};padding:4px 2px;border-radius:8px;">'
-                        f'<div style="font-size:11px;color:#b0b0d0;font-weight:bold;">'
-                        f'{badge}{branch_char}宮</div>'
-                        f'<div style="font-size:11px;color:#e0e0ff;margin-top:2px;">{palace}</div>'
-                        f'<div style="font-size:14px;color:#a78bfa;font-weight:bold;'
-                        f'margin-top:3px;">{bird}</div>'
-                        f'</td>'
+                    st.markdown(_yemeni_svg, unsafe_allow_html=True)
+                    st.caption(
+                        '<p style="text-align:center; color:#888; font-size:11px;">'
+                        'Yemeni Manzil Mandala — 28-mansion disc · '
+                        'Rasulid manuscript style · Sidereal zodiac'
+                        '</p>',
+                        unsafe_allow_html=True,
                     )
-
-                # 中央格（基本資料 + 三主星 + 格局）
-                _cs_center_td = (
-                    '<td colspan="2" rowspan="2" style="text-align:center;'
-                    'vertical-align:middle;border:2px solid rgba(167,139,250,0.3);'
-                    'background:rgba(30,27,75,0.6);padding:10px 8px;border-radius:8px;'
-                    'line-height:1.6;">'
-                    '<div style="font-size:15px;font-weight:bold;color:#a78bfa;'
-                    'letter-spacing:2px;">萬化仙禽</div>'
-                    f'<div style="font-size:11px;color:#e0e0ff;margin-top:6px;">'
-                    f'{bi["year"]}年{bi["month"]}月{bi["day"]}日 {bi["hour"]}時</div>'
-                    f'<div style="font-size:11px;color:#e0e0ff;">{bi["gender"]}命 {bi["day_night"]}</div>'
-                    f'<div style="font-size:11px;color:#e0e0ff;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
-                    '<hr style="margin:6px 0;border-color:rgba(167,139,250,0.2);">'
-                    f'<div style="font-size:11px;color:#e0e0ff;"><b>胎星</b>：{s["tai_xing"]}</div>'
-                    f'<div style="font-size:11px;color:#e0e0ff;"><b>命星</b>：{s["ming_xing"]}</div>'
-                    f'<div style="font-size:11px;color:#e0e0ff;"><b>身星</b>：{s["shen_xing"]}</div>'
-                    '<hr style="margin:6px 0;border-color:rgba(167,139,250,0.2);">'
-                    f'<div style="font-size:11px;color:#e0e0ff;">'
-                    f'<b>格局</b>：{pat["grade"]}</div>'
-                    '</td>'
-                )
-
-                # 大六壬式四列排盤
-                # Row 0: 巳(5)  午(6)  未(7)  申(8)
-                # Row 1: 辰(4)  [CENTER]       酉(9)
-                # Row 2: 卯(3)  [CENTER]       戌(10)
-                # Row 3: 寅(2)  丑(1)  子(0)  亥(11)
-                _cs_br = _cs_branches
-                _cs_grid = (
-                    '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
-                    '<table style="border-collapse:separate;border-spacing:4px;'
-                    'margin:10px auto;width:100%;table-layout:fixed;font-family:\'Noto Sans TC\',serif;">'
-                    "<tr>"
-                    + _cs_cell(_cs_br[5])  + _cs_cell(_cs_br[6])
-                    + _cs_cell(_cs_br[7])  + _cs_cell(_cs_br[8])
-                    + "</tr><tr>"
-                    + _cs_cell(_cs_br[4])  + _cs_center_td + _cs_cell(_cs_br[9])
-                    + "</tr><tr>"
-                    + _cs_cell(_cs_br[3])  + _cs_cell(_cs_br[10])
-                    + "</tr><tr>"
-                    + _cs_cell(_cs_br[2])  + _cs_cell(_cs_br[1])
-                    + _cs_cell(_cs_br[0])  + _cs_cell(_cs_br[11])
-                    + "</tr></table></div>"
-                )
-                st.markdown(_cs_grid, unsafe_allow_html=True)
-                _render_ai_button("tab_chinstar", _cs_chart, btn_key="chinstar")
-                st.divider()
-
-                # ── 吞啗分析 ──────────────────────────────
-                st.markdown(t("chinstar_swallow_analysis_header"))
-                _sw = _cs_chart["swallow_analysis"]
-                if _sw:
-                    _sw_rows = [{"對照": k, "判斷": v} for k, v in _sw.items()]
-                    st.dataframe(_sw_rows, width='stretch', hide_index=True)
-                else:
-                    st.info(t("chinstar_no_swallow"))
-                st.divider()
-
-                # ── 情性賦 ──────────────────────────────
-                st.markdown(t("chinstar_personality_header"))
-                for _label, text in _cs_chart["personality"].items():
-                    st.info(text)
-                st.divider()
-
-                # ── 格局 ──────────────────────────────
-                st.markdown(t("chinstar_pattern_header").format(grade=pat["grade"]))
-                st.write(pat["reason"])
-
-                # ── 完整文字輸出（可複製） ──────────────────────
-                with st.expander(t("chinstar_full_text_expander")):
-                    st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
-
-            with _cs_tab_xiangtai:
-                from astro.chinstar.chinstar import lookup_xiangtai, _get_xiangtai_fu
-
-                st.markdown(t("chinstar_xiangtai_title"))
-
-                # 查找匹配的相胎賦
-                _xt_match = lookup_xiangtai(s["ming_xing"], s["tai_xing"])
-                if _xt_match:
-                    st.markdown(t("chinstar_xiangtai_match").format(
-                        zhu=s["ming_xing"], tai=s["tai_xing"],
-                    ))
-                    _xt_cols = st.columns(2)
-                    with _xt_cols[0]:
-                        st.metric(t("chinstar_xiangtai_xingpin"), _xt_match["xing_pin"])
-                    with _xt_cols[1]:
-                        st.metric(t("chinstar_xiangtai_xiji"), _xt_match["xi_ji"])
-                    st.info(f'**{t("chinstar_xiangtai_desc")}**：{_xt_match["desc"]}')
-                    st.success(f'**{t("chinstar_xiangtai_poem")}**：\n\n{_xt_match["poem"]}')
-                else:
-                    st.warning(t("chinstar_xiangtai_no_match"))
-
-                st.divider()
-
-                # 顯示相胎賦全覽
-                with st.expander(t("chinstar_xiangtai_ref")):
-                    _xt_all = _get_xiangtai_fu()
-                    _xt_rows = []
-                    for _xt_e in _xt_all:
-                        _xt_rows.append({
-                            "主星": _xt_e["zhu"],
-                            "胎星": _xt_e["tai"],
-                            "形品": _xt_e["xing_pin"],
-                            "喜忌": _xt_e["xi_ji"],
-                            "論斷": _xt_e["desc"][:50] + "…" if len(_xt_e["desc"]) > 50 else _xt_e["desc"],
-                        })
-                    st.dataframe(_xt_rows, width='stretch', hide_index=True)
-
-            with _cs_tab_gui_jian:
-                from astro.chinstar.chinstar import (
-                    lookup_gui_ge, lookup_jian_ge,
-                    lookup_fulu_patterns, lookup_pinjian_patterns,
-                )
-
-                # 取主要禽星（胎星、命星）
-                _gj_stars = [s["tai_xing"], s["ming_xing"]]
-                if s["shen_xing"] not in _gj_stars:
-                    _gj_stars.append(s["shen_xing"])
-
-                # ── 福祿上格 ──
-                st.markdown(t("chinstar_fulu_title"))
-                _fulu_found = False
-                for _gj_star in _gj_stars:
-                    _fl = lookup_fulu_patterns(_gj_star)
-                    if _fl:
-                        _fulu_found = True
-                        for _fl_e in _fl:
-                            st.success(f'**{_fl_e["name"]}**（{_fl_e["stars"]}）— {_fl_e["condition"]}')
-                if not _fulu_found:
-                    st.info("—")
-                st.divider()
-
-                # ── 貧賤下命 ──
-                st.markdown(t("chinstar_pinjian_title"))
-                _pj_found = False
-                for _gj_star in _gj_stars:
-                    _pj = lookup_pinjian_patterns(_gj_star)
-                    if _pj:
-                        _pj_found = True
-                        for _pj_e in _pj:
-                            st.error(f'**{_pj_e["name"]}**（{_pj_e["stars"]}）— {_pj_e["condition"]}')
-                if not _pj_found:
-                    st.info("—")
-                st.divider()
-
-                # ── 各星貴格 / 賤格 ──
-                for _gj_star in _gj_stars:
-                    st.markdown(t("chinstar_gui_for_star").format(star=_gj_star))
-                    _gui = lookup_gui_ge(_gj_star)
-                    if _gui:
-                        _gui_rows = [{"格局": g["name"], "干支": g["ganzhi"]} for g in _gui]
-                        st.dataframe(_gui_rows, width='stretch', hide_index=True)
-                    else:
-                        st.info(t("chinstar_no_gui"))
-
-                    st.markdown(t("chinstar_jian_for_star").format(star=_gj_star))
-                    _jian = lookup_jian_ge(_gj_star)
-                    if _jian:
-                        _jian_rows = [{"格局": j["name"], "干支": j["ganzhi"]} for j in _jian]
-                        st.dataframe(_jian_rows, width='stretch', hide_index=True)
-                    else:
-                        st.info(t("chinstar_no_jian"))
-                    st.divider()
-
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        # Manual input fallback or not calculated
-        st.markdown(t("desc_chinstar"))
-        if not _is_calculated:
-            st.info(t("info_calc_prompt"))
-        else:
-            st.subheader(t("chinstar_lunar_input_header"))
-            _cs_col1, _cs_col2, _cs_col3 = st.columns(3)
-            with _cs_col1:
-                _chinstar_year = st.number_input(
-                    t("chinstar_lunar_year"), value=int(_chinstar_year),
-                    min_value=1, max_value=2200, key="cs_year",
-                )
-            with _cs_col2:
-                _chinstar_month = st.number_input(
-                    t("chinstar_lunar_month"), value=int(_chinstar_month),
-                    min_value=1, max_value=12, key="cs_month",
-                )
-            with _cs_col3:
-                _chinstar_day = st.number_input(
-                    t("chinstar_lunar_day"), value=int(_chinstar_day),
-                    min_value=1, max_value=30, key="cs_day",
-                )
-            if st.button(t("calculate_btn"), key="chinstar_calc_btn"):
-                try:
-                    with st.spinner(t("spinner_chinstar")):
-                        _cs_tool = WanHuaXianQin()
-                        _cs_chart = _cs_tool.build_chart(
-                            year=int(_chinstar_year),
-                            month=int(_chinstar_month),
-                            day=int(_chinstar_day),
-                            hour=int(_chinstar_hour),
-                            gender=_cs_gender,
-                        )
-
-                    _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian = st.tabs([
-                        t("chinstar_subtab_chart"),
-                        t("chinstar_subtab_xiangtai"),
-                        t("chinstar_subtab_gui_jian"),
-                    ])
-
-                    with _cs_tab_chart:
-                        from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
-                        st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
-                except Exception as _e:
-                    st.error(f"{t('error_tab_compute')}：{_e}")
-                    st.exception(_e)
-
-# --- 大六壬 (Da Liu Ren) ---
-elif _selected_system == "tab_liuren":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_liuren")):
-                _liuren_chart = compute_liuren_chart(**_p)
-            # 從生年推算本命地支（年支）
-            import sxtwl as _sxtwl_lr
-            _lr_day = _sxtwl_lr.fromSolar(_p["year"], _p["month"], _p["day"])
-            _lr_year_gz = _lr_day.getYearGZ()
-            _lr_benming = list("子丑寅卯辰巳午未申酉戌亥")[_lr_year_gz.dz]
-            render_liuren_chart(
-                _liuren_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_liuren", _liuren_chart, btn_key="liuren"
-                ),
-                benming_zhi=_lr_benming,
-            )
-            # ── 論命分析 ──
-            st.divider()
-            # 本命與流年均取自排盤年份的年支
-            _lunming_report = compute_lunming(
-                _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
-            )
-            render_lunming_report(_lunming_report)
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_liuren"))
-
-# --- 鬼谷分定經 (Ghost Valley Fen Ding Jing) ---
-elif _selected_system == "tab_fendjing":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_fendjing") if hasattr(t, "spinner_fendjing") else "計算鬼谷分定經..."):
-                from astro.fendjing import compute_fendjing_chart, render_fendjing_chart
-                _fendjing_chart = compute_fendjing_chart(**_p)
-            render_fendjing_chart(
-                _fendjing_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_fendjing", _fendjing_chart, btn_key="fendjing"
-                ),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_fendjing") if hasattr(t, "desc_fendjing") else "🔮 **鬼谷分定經** — 相傳為戰國時期鬼谷子所創，又名兩頭鉗，以出生年時天干排盤，配合十二宮與星曜，推斷一生命運的古典命理系統。")
-
-# --- 土亭數 (Tojeong Shu) ---
-elif _selected_system == "tab_tojeong":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _g = st.session_state["_calc_gender"]
-            _tojeong_gender = "male" if _g in ("male", "男", "M") else "female"
-            # compute_tojeong_chart only accepts: year, month, day, hour, gender, solar_term
-            _tojeong_params = {k: v for k, v in _p.items() if k in ("year", "month", "day", "hour")}
-            with st.spinner(t("spinner_tojeong") if hasattr(t, "spinner_tojeong") else "計算土亭數..."):
-                from astro.tojeong import compute_tojeong_chart, render_tojeong_chart
-                _tojeong_chart = compute_tojeong_chart(**_tojeong_params, gender=_tojeong_gender)
-            render_tojeong_chart(
-                _tojeong_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_tojeong", _tojeong_chart, btn_key="tojeong"
-                ),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.markdown("""
-<div style="
-    background:linear-gradient(135deg,#0f1e35 0%,#1a0d28 100%);
-    border:1px solid rgba(201,168,76,0.35);
-    border-radius:16px;
-    padding:28px 24px 24px 24px;
-    margin-bottom:20px;
-    text-align:center;
-">
-  <div role="img" aria-label="韓國國旗" style="font-size:52px;margin-bottom:10px;">🇰🇷</div>
-  <div style="font-size:22px;font-weight:700;color:#C9A84C;letter-spacing:2px;margin-bottom:8px;">
-    土亭數命盤
-  </div>
-  <div style="font-size:13px;color:#8888aa;line-height:1.7;max-width:380px;margin:0 auto 18px auto;">
-    朝鮮時代土亭李先生所創的占數系統<br>
-    以先天數、後天數計算格局代碼<br>
-    查 129 格局斷語推斷吉凶
-  </div>
-  <div style="
-    display:inline-block;
-    background:rgba(205,46,58,0.15);
-    border:1px solid rgba(205,46,58,0.4);
-    border-radius:8px;
-    padding:8px 20px;
-    font-size:13px;
-    color:#f87171;
-  ">👈 請在左側填寫出生年月日時，即可起盤</div>
-</div>""", unsafe_allow_html=True)
-
-# --- 高棉占星 (Khmer Astrology / Reamker) ---
-elif _selected_system == "tab_khmer":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _g = st.session_state["_calc_gender"]
-            _khmer_gender = "male" if _g in ("male", "男", "M") else "female"
-            _age = _p.get("age", 2026 - _p.get("year", 1995))
-            with st.spinner(t("spinner_khmer") if hasattr(t, "spinner_khmer") else "計算高棉占星盤..."):
-                from astro.khmer import ReamkerAstrology, render_khmer_chart
-                astro = ReamkerAstrology()
-                _khmer_chart = astro.full_reading(
-                    birth_year=_p.get("year", 1995),
-                    gender=_khmer_gender,
-                    current_age=_age,
-                    language=st.session_state.get("lang", "zh")
-                )
-            # Render chart via components.v1.html for full CSS/flexbox support
-            _khmer_lang = st.session_state.get("lang", "zh")
-            _khmer_html = render_khmer_chart(_khmer_chart, language=_khmer_lang)
-            st.components.v1.html(
-                f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
-                height=1050,
-                scrolling=False,
-            )
-            # AI interpretation button
-            _render_ai_button("tab_khmer", _khmer_chart, btn_key="khmer")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_khmer") if hasattr(t, "desc_khmer") else "🇰🇭 **高棉占星** — 基於 François Bizot 2013 年論文與 Prochom Horasastra，重建吳哥時期失傳的 Reamker 占星系統。")
-
-# --- 太乙命法 (Taiyi Life Method) ---
-elif _selected_system == "tab_taiyi":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            _g = st.session_state["_calc_gender"]
-            _taiyi_gender = "male" if _g in ("male", "男", "M") else "female"
-            with st.spinner(t("spinner_taiyi")):
-                _taiyi_chart = compute_taiyi_chart(**_p, gender=_taiyi_gender)
-            render_taiyi_chart(
-                _taiyi_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_taiyi", _taiyi_chart, btn_key="taiyi"
-                ),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_taiyi"))
-
-# --- 奇門祿命 (Qi Men Destiny Analysis) ---
-elif _selected_system == "tab_qimen_luming":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_qimen_luming")):
-                _qm_luming = compute_qimen_luming(**_p)
-            render_qimen_luming(
-                _qm_luming,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_qimen_luming", _qm_luming, btn_key="qimen_luming"
-                ),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_qimen_luming"))
-elif _selected_system == "tab_acg":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_acg")):
-                _acg_result = compute_astrocartography(**_p)
-
-            st.markdown(f"### {t('acg_title')}")
-
-            _acg_tab_map, _acg_tab_table, _acg_tab_transit = st.tabs([
-                t("acg_subtab_map"),
-                t("acg_subtab_table"),
-                t("acg_subtab_transit"),
-            ])
-
-            # ── Sub-tab 1: 互動地圖 Interactive Map ──
-            with _acg_tab_map:
-                import plotly.graph_objects as go
-
-                # Planet & line type filters
-                _acg_col1, _acg_col2 = st.columns(2)
-                with _acg_col1:
-                    _acg_planets = st.multiselect(
-                        t("acg_planet_filter"),
-                        options=list(ACG_PLANETS.keys()),
-                        default=["Sun", "Moon", "Venus", "Mars", "Jupiter"],
-                        key="acg_planet_sel",
-                    )
-                with _acg_col2:
-                    _acg_lines = st.multiselect(
-                        t("acg_line_filter"),
-                        options=["AC", "MC", "IC", "DC"],
-                        default=["AC", "MC", "IC", "DC"],
-                        key="acg_line_sel",
-                    )
-
-                # Build Plotly map
-                _acg_fig = go.Figure()
-
-                # Line dash patterns for each line type
-                _acg_dashes = {"AC": "solid", "MC": "dash", "IC": "dot", "DC": "dashdot"}
-
-                for _planet in _acg_planets:
-                    _planet_data = _acg_result.lines.get(_planet, {})
-                    _glyph = PLANET_GLYPHS.get(_planet, "")
-                    _p_color = ACG_PLANET_COLORS.get(_planet, "#888")
-
-                    for _lt in _acg_lines:
-                        _pts = _planet_data.get(_lt, [])
-                        if not _pts:
-                            continue
-
-                        _lons = [p[0] for p in _pts]
-                        _lats = [p[1] for p in _pts]
-
-                        # Get meaning for hover
-                        _meaning = _acg_result.meanings.get(_planet, {}).get(_lt, "")
-
-                        _acg_fig.add_trace(go.Scattergeo(
-                            lon=_lons,
-                            lat=_lats,
-                            mode="lines",
-                            line=dict(
-                                color=_p_color,
-                                width=2,
-                                dash=_acg_dashes.get(_lt, "solid"),
-                            ),
-                            name=f"{_planet} {_glyph} {_lt}",
-                            hovertemplate=(
-                                f"<b>{_planet} {_glyph} {_lt}</b><br>"
-                                f"經度: %{{lon:.1f}}°<br>"
-                                f"緯度: %{{lat:.1f}}°<br>"
-                                f"<i>{_meaning[:40]}</i>"
-                                "<extra></extra>"
-                            ),
-                        ))
-
-                # Add Paran points as markers
-                if _acg_result.parans:
-                    _paran_lons = [p.longitude for p in _acg_result.parans[:50]]
-                    _paran_lats = [p.latitude for p in _acg_result.parans[:50]]
-                    _paran_texts = [
-                        f"{p.planet1} {p.line_type1} × {p.planet2} {p.line_type2}"
-                        for p in _acg_result.parans[:50]
-                    ]
-
-                    _acg_fig.add_trace(go.Scattergeo(
-                        lon=_paran_lons,
-                        lat=_paran_lats,
-                        mode="markers",
-                        marker=dict(
-                            size=8,
-                            color="#FFD700",
-                            symbol="star",
-                            line=dict(width=1, color="#333"),
-                        ),
-                        text=_paran_texts,
-                        name="Paran ✦",
-                        hovertemplate=(
-                            "<b>Paran 交叉點</b><br>"
-                            "%{text}<br>"
-                            "經度: %{lon:.1f}°, 緯度: %{lat:.1f}°"
-                            "<extra></extra>"
-                        ),
-                    ))
-
-                # Add birth location marker
-                _acg_fig.add_trace(go.Scattergeo(
-                    lon=[_p["longitude"]],
-                    lat=[_p["latitude"]],
-                    mode="markers+text",
-                    marker=dict(size=12, color="#e74c3c", symbol="diamond"),
-                    text=[_p.get("location_name", "Birth")],
-                    textposition="top center",
-                    name="出生地 Birth",
-                    hovertemplate=(
-                        "<b>出生地</b><br>"
-                        f"{_p.get('location_name', '')}<br>"
-                        f"經度: {_p['longitude']:.2f}°, 緯度: {_p['latitude']:.2f}°"
-                        "<extra></extra>"
-                    ),
-                ))
-
-                _acg_fig.update_geos(
-                    showcountries=True,
-                    countrycolor="rgba(100,100,100,0.3)",
-                    showcoastlines=True,
-                    coastlinecolor="rgba(150,150,150,0.4)",
-                    showland=True,
-                    landcolor="rgba(30,30,50,0.8)",
-                    showocean=True,
-                    oceancolor="rgba(20,20,40,0.9)",
-                    showlakes=False,
-                    projection_type="natural earth",
-                    bgcolor="rgba(0,0,0,0)",
-                )
-
-                _acg_fig.update_layout(
-                    height=550,
-                    margin=dict(l=0, r=0, t=30, b=0),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    legend=dict(
-                        orientation="h",
-                        yanchor="bottom",
-                        y=-0.15,
-                        xanchor="center",
-                        x=0.5,
-                        font=dict(size=10),
-                    ),
-                    geo=dict(bgcolor="rgba(0,0,0,0)"),
-                )
-
-                st.plotly_chart(_acg_fig, width="stretch")
-
-                # Legend
-                _legend_cols = st.columns(4)
-                _legend_items = [
-                    ("acg_line_ac", ACG_LINE_COLORS["AC"], "solid"),
-                    ("acg_line_mc", ACG_LINE_COLORS["MC"], "dashed"),
-                    ("acg_line_ic", ACG_LINE_COLORS["IC"], "dotted"),
-                    ("acg_line_dc", ACG_LINE_COLORS["DC"], "dashdot"),
-                ]
-                for _col, (_key, _color, _style) in zip(_legend_cols, _legend_items):
-                    with _col:
+                    _render_ai_button("tab_yemeni", _yemeni_chart, btn_key="yemeni")
+                with _y_tab_natal:
+                    render_yemeni_chart(_yemeni_chart)
+                with _y_tab_omens:
+                    st.subheader("📜 al-Ashraf " + t("yemeni_subtab_omens"))
+                    for _omen in _yemeni_chart.omens:
+                        _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
                         st.markdown(
-                            f'<div style="display:flex;align-items:center;gap:6px;">'
-                            f'<div style="width:24px;height:3px;background:{_color};'
-                            f'border-style:{_style};"></div>'
-                            f'<span style="font-size:12px;">{t(_key)}</span></div>',
-                            unsafe_allow_html=True,
+                            f"{_omen_icon} **{_omen.planet}** ({_omen.planet_cn}) — "
+                            f"*{_omen.condition.upper()}*: {_omen.text} / {_omen.text_en}"
                         )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_yemeni"))
 
-                # Paran section
-                if _acg_result.parans:
-                    with st.expander(t("acg_paran_header"), expanded=False):
-                        import pandas as pd
-                        _paran_rows = []
-                        for _pr in _acg_result.parans[:30]:
-                            _paran_rows.append({
-                                "行星1": f"{_pr.planet1} {PLANET_GLYPHS.get(_pr.planet1, '')}",
-                                "線型1": _pr.line_type1,
-                                "行星2": f"{_pr.planet2} {PLANET_GLYPHS.get(_pr.planet2, '')}",
-                                "線型2": _pr.line_type2,
-                                "緯度": f"{_pr.latitude:.1f}°",
-                                "經度": f"{_pr.longitude:.1f}°",
-                            })
-                        if _paran_rows:
-                            st.dataframe(pd.DataFrame(_paran_rows), hide_index=True, width="stretch")
-
-                # AI button
-                _render_ai_button("tab_acg", _acg_result, btn_key="acg_map",
-                                  page_content=format_acg_for_prompt(_acg_result))
-
-            # ── Sub-tab 2: 行星線資料表 Planet Line Data Table ──
-            with _acg_tab_table:
-                import pandas as pd
-                st.subheader(t("acg_subtab_table"))
-
-                _table_rows = []
-                for _planet_name, _line_dict in _acg_result.lines.items():
-                    _glyph = PLANET_GLYPHS.get(_planet_name, "")
-                    for _lt in ("AC", "MC", "IC", "DC"):
-                        _pts = _line_dict.get(_lt, [])
-                        _meaning = _acg_result.meanings.get(_planet_name, {}).get(_lt, "")
-                        if _pts:
-                            _mid = len(_pts) // 2
-                            _table_rows.append({
-                                "行星 Planet": f"{_planet_name} {_glyph}",
-                                "線型 Type": _lt,
-                                "黃經 Lon": f"{_acg_result.planet_longitudes.get(_planet_name, 0):.2f}°",
-                                "代表經度 Geo Lon": f"{_pts[_mid][0]:.1f}°",
-                                "點數 Points": len(_pts),
-                                "解釋 Meaning": _meaning,
-                            })
-                if _table_rows:
-                    st.dataframe(pd.DataFrame(_table_rows), hide_index=True, width="stretch")
-
-                _render_ai_button("tab_acg", _acg_result, btn_key="acg_table",
-                                  page_content=format_acg_for_prompt(_acg_result))
-
-            # ── Sub-tab 3: 流年搬遷線 Transit ACG ──
-            with _acg_tab_transit:
-                st.subheader(t("acg_subtab_transit"))
-
-                _tr_col1, _tr_col2 = st.columns(2)
-                with _tr_col1:
-                    _tr_date = st.date_input(
-                        t("acg_transit_date"),
-                        value=datetime.now().date(),
-                        key="acg_tr_date",
-                    )
-                with _tr_col2:
-                    _tr_time = st.time_input(
-                        t("acg_transit_time"),
-                        value=time(12, 0),
-                        key="acg_tr_time",
-                    )
-
-                # Year slider for quick navigation
-                _tr_year_slider = st.slider(
-                    "Year / 年份",
-                    min_value=1950,
-                    max_value=2050,
-                    value=_tr_date.year,
-                    key="acg_tr_year_slider",
-                )
-
-                # Compute transit ACG
-                with st.spinner(t("spinner_acg")):
-                    _tr_acg = compute_astrocartography_transit(
-                        natal_year=_p["year"], natal_month=_p["month"],
-                        natal_day=_p["day"], natal_hour=_p["hour"],
-                        natal_minute=_p["minute"], natal_timezone=_p["timezone"],
-                        transit_year=_tr_year_slider,
-                        transit_month=_tr_date.month,
-                        transit_day=_tr_date.day,
-                        transit_hour=_tr_time.hour,
-                        transit_minute=_tr_time.minute,
-                        transit_timezone=_p["timezone"],
-                    )
-
-                # Transit map
-                import plotly.graph_objects as go
-                _tr_fig = go.Figure()
-
-                _tr_planets_sel = st.multiselect(
-                    t("acg_planet_filter"),
-                    options=list(ACG_PLANETS.keys()),
-                    default=["Sun", "Moon", "Jupiter", "Saturn"],
-                    key="acg_tr_planet_sel",
-                )
-                _tr_dashes = {"AC": "solid", "MC": "dash", "IC": "dot", "DC": "dashdot"}
-
-                for _planet in _tr_planets_sel:
-                    _planet_data = _tr_acg.lines.get(_planet, {})
-                    _glyph = PLANET_GLYPHS.get(_planet, "")
-                    _p_color = ACG_PLANET_COLORS.get(_planet, "#888")
-
-                    for _lt in ("AC", "MC", "IC", "DC"):
-                        _pts = _planet_data.get(_lt, [])
-                        if not _pts:
-                            continue
-                        _lons = [p[0] for p in _pts]
-                        _lats = [p[1] for p in _pts]
-
-                        _tr_fig.add_trace(go.Scattergeo(
-                            lon=_lons,
-                            lat=_lats,
-                            mode="lines",
-                            line=dict(color=_p_color, width=2,
-                                      dash=_tr_dashes.get(_lt, "solid")),
-                            name=f"{_planet} {_glyph} {_lt} (Transit)",
-                        ))
-
-                _tr_fig.update_geos(
-                    showcountries=True,
-                    countrycolor="rgba(100,100,100,0.3)",
-                    showcoastlines=True,
-                    coastlinecolor="rgba(150,150,150,0.4)",
-                    showland=True,
-                    landcolor="rgba(30,30,50,0.8)",
-                    showocean=True,
-                    oceancolor="rgba(20,20,40,0.9)",
-                    projection_type="natural earth",
-                    bgcolor="rgba(0,0,0,0)",
-                )
-                _tr_fig.update_layout(
-                    height=500,
-                    margin=dict(l=0, r=0, t=30, b=0),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.15,
-                                xanchor="center", x=0.5, font=dict(size=10)),
-                    geo=dict(bgcolor="rgba(0,0,0,0)"),
-                )
-
-                st.plotly_chart(_tr_fig, width="stretch")
-
-                _render_ai_button("tab_acg", _tr_acg, btn_key="acg_transit",
-                                  page_content=format_acg_for_prompt(_tr_acg))
-
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_acg"))
-
-# --- 天王星派占星 (Uranian / Hamburg School) ---
-elif _selected_system == "tab_uranian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_uranian")):
-                _uranian_result = compute_uranian_chart(**_p)
-            render_uranian_chart(_uranian_result)
-            _render_ai_button("tab_uranian", _uranian_result, btn_key="uranian")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_uranian"))
-elif _selected_system == "tab_cosmobiology":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_cosmobiology")):
-                _cosmo_result = compute_cosmobiology_chart(**_p)
-            render_cosmobiology(_cosmo_result)
-            _render_ai_button("tab_cosmobiology", _cosmo_result, btn_key="cosmobiology")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_cosmobiology"))
-elif _selected_system == "tab_harmonic":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_harmonic")):
-                _harmonic_result = compute_multi_harmonic(**_p)
-            render_harmonic(_harmonic_result)
-            _render_ai_button("tab_harmonic", _harmonic_result, btn_key="harmonic")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_harmonic"))
-elif _selected_system == "tab_primary_directions":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_primary_directions")):
-                _pd_result = compute_primary_directions(**_p)
-            render_primary_directions(_pd_result)
-            _render_ai_button("tab_primary_directions", _pd_result, btn_key="primary_directions")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_primary_directions_prompt"))
-        st.markdown(t("desc_primary_directions"))
-elif _selected_system == "tab_wariga":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_wariga")):
-                _wariga_result = compute_wariga(
+    # --- Picatrix 占星魔法 + Behenian 固定星 ---
+    elif _selected_system == "tab_picatrix_behenian":
+        _p = st.session_state.get("_calc_params", {})
+        if _is_calculated and _p:
+            try:
+                from astro.western.western import compute_western_chart as _cwc
+                with st.spinner(t("spinner_picatrix_behenian")):
+                    _pb_chart = _cwc(**_p)
+                render_picatrix_behenian(
+                    chart=_pb_chart,
                     year=_p["year"], month=_p["month"], day=_p["day"],
                     hour=_p["hour"], minute=_p["minute"],
-                    lat=_p["latitude"], lon=_p["longitude"],
+                    timezone_offset=_p["timezone"],
                 )
-            render_wariga_chart(_wariga_result)
-            _render_ai_button("tab_wariga", _wariga_result, btn_key="wariga")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_wariga"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_picatrix_behenian"))
+            # Show compendium even without a chart
+            try:
+                from astro.picatrix_behenian.renderer import _render_compendium_tab
+                _render_compendium_tab()
+            except Exception:
+                pass
 
-elif _selected_system == "tab_jawa_weton":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_jawa_weton")):
-                _jawa_result = compute_weton(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    location_name=_p.get("location_name", ""),
-                    timezone=_p.get("timezone", 7.0),
+    # --- 瑪雅占星 ---
+    elif _selected_system == "tab_maya":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_maya")):
+                    m_chart = compute_maya_chart(**_p)
+                render_maya_chart(m_chart, after_chart_hook=lambda: _render_ai_button("tab_maya", m_chart, btn_key="maya"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_maya"))
+
+    # --- 阿茲特克占星 ---
+    elif _selected_system == "tab_aztec":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_aztec")):
+                    az_chart = compute_aztec_chart(**_p)
+                render_aztec_chart(az_chart, after_chart_hook=lambda: _render_ai_button("tab_aztec", az_chart, btn_key="aztec"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_aztec"))
+
+    # --- 緬甸占星 (Mahabote) ---
+    elif _selected_system == "tab_mahabote":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_mahabote")):
+                    mb_chart = compute_mahabote_chart(**_p)
+                render_mahabote_chart(mb_chart, after_chart_hook=lambda: _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_mahabote"))
+
+    # --- 古埃及十度區間 (Decans) ---
+    elif _selected_system == "tab_decans":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_decans")):
+                    dc_chart = compute_decan_chart(**_p)
+                render_decan_chart(dc_chart)
+                _render_ai_button("tab_decans", dc_chart, btn_key="decans")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_decans_prompt"))
+            render_decan_browse()
+
+    # --- 納迪占星 (Nadi Jyotish) ---
+    elif _selected_system == "tab_nadi":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_nadi")):
+                    nadi_chart = compute_nadi_chart(**_p)
+                render_nadi_chart(nadi_chart, after_chart_hook=lambda: _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_nadi"))
+
+    # --- Jaimini 占星 (Jaimini Astrology) ---
+    elif _selected_system == "tab_jaimini":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_jaimini")):
+                    jm_chart = compute_jaimini_chart(**_p)
+
+                _jm_tab_chart, _jm_tab_dasha = st.tabs([
+                    t("jaimini_subtab_chart"),
+                    t("jaimini_subtab_dasha"),
+                ])
+
+                with _jm_tab_chart:
+                    render_jaimini_chart(jm_chart, after_chart_hook=lambda: _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini"))
+
+                with _jm_tab_dasha:
+                    render_jaimini_dasha(jm_chart)
+                    _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini_dasha")
+
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_jaimini"))
+
+    # --- 蒙古祖爾海 (Zurkhai) ---
+    elif _selected_system == "tab_zurkhai":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_zurkhai")):
+                    zk_chart = compute_zurkhai_chart(**_p)
+                render_zurkhai_chart(zk_chart, after_chart_hook=lambda: _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_zurkhai"))
+
+    # --- 藏傳時輪金剛占星 (Tibetan Kalachakra) ---
+    elif _selected_system == "tab_tibetan":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _g = st.session_state["_calc_gender"]
+                with st.spinner(t("spinner_tibetan")):
+                    _tib_chart = compute_tibetan_chart(**_p, gender=_g)
+                _t_tab_mandala, _t_tab_natal, _t_tab_mewa, _t_tab_forces, _t_tab_planets = st.tabs([
+                    t("tibetan_subtab_mandala"),
+                    t("tibetan_subtab_natal"),
+                    t("tibetan_subtab_mewa"),
+                    t("tibetan_subtab_forces"),
+                    t("tibetan_subtab_planets"),
+                ])
+                with _t_tab_mandala:
+                    _tib_svg = build_kalachakra_mandala_svg(
+                        _tib_chart,
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        tz=input_tz,
+                        location=location_name,
+                    )
+                    st.markdown(_tib_svg, unsafe_allow_html=True)
+                    st.caption(
+                        '<p style="text-align:center;color:#888;font-size:11px;">'
+                        'Kalachakra Mandala · 時輪金剛曼荼羅 · '
+                        'Outer: 12 Animals · Middle: 8 Parkha · Inner: 9 Mewa'
+                        '</p>',
+                        unsafe_allow_html=True,
+                    )
+                    _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mandala")
+                with _t_tab_natal:
+                    render_tibetan_chart(_tib_chart, after_chart_hook=lambda: _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_natal"))
+                with _t_tab_mewa:
+                    from astro.tibetan import _render_mewa_parkha
+                    _render_mewa_parkha(_tib_chart)
+                    _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mewa")
+                with _t_tab_forces:
+                    from astro.tibetan import _render_five_forces
+                    _render_five_forces(_tib_chart)
+                    _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_forces")
+                with _t_tab_planets:
+                    from astro.tibetan import _render_planets
+                    _render_planets(_tib_chart)
+                    _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_planets")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_tibetan"))
+
+    # --- 日本九星氣學 (Japanese Nine Star Ki) ---
+    elif _selected_system == "tab_nine_star_ki":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_nine_star_ki")):
+                    _nsk_chart = compute_nine_star_ki_chart(**_p)
+                render_nine_star_ki_chart(
+                    _nsk_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_nine_star_ki", _nsk_chart, btn_key="nine_star_ki"
+                    ),
+                    lang=get_lang(),
                 )
-            render_jawa_weton_chart(_jawa_result)
-            _render_ai_button("tab_jawa_weton", _jawa_result, btn_key="jawa_weton")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_jawa_weton"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_nine_star_ki"))
 
-elif _selected_system == "tab_polynesian":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_polynesian")):
-                _poly_result = compute_polynesian_chart(
-                    year=_p["year"], month=_p["month"], day=_p["day"],
-                    hour=_p["hour"], minute=_p["minute"],
-                    lat=_p.get("latitude", 21.3),
-                    lon=_p.get("longitude", -157.8),
-                    timezone_offset=_p.get("timezone", 0.0),
-                    location_name=_p.get("location_name", ""),
+    # --- 凱爾特樹木曆法 (Celtic Tree Calendar — Robert Graves 1948) ---
+    elif _selected_system == "tab_celtic_tree":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_celtic_tree")):
+                    _celtic_chart = compute_celtic_tree_chart(**_p)
+                render_celtic_tree_chart(
+                    _celtic_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_celtic_tree", _celtic_chart, btn_key="celtic_tree"
+                    ),
+                    lang=get_lang(),
                 )
-            render_polynesian_chart_ui(_poly_result)
-            _render_ai_button("tab_polynesian", _poly_result, btn_key="polynesian")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_polynesian"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_celtic_tree"))
 
-# --- 出生時間校正 Birth Chart Rectification ---
-elif _selected_system == "tab_rectification":
-    _p = st.session_state.get("_calc_params", {})
-    render_rectification_page(
-        default_date=(
-            date(_p["year"], _p["month"], _p["day"])
-            if _p else None
-        ),
-        default_lat=_p.get("latitude", 22.3193),
-        default_lon=_p.get("longitude", 114.1694),
-        default_tz=_p.get("timezone", 8.0),
-    )
+    # --- 希臘占星 (Hellenistic) ---
+    elif _selected_system == "tab_hellenistic":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                # Hellenistic needs a western chart first
+                with st.spinner(t("spinner_western")):
+                    _hellen_w = compute_western_chart(**_p)
+                with st.spinner(t("spinner_hellenistic")):
+                    _hellen_chart = compute_hellenistic_chart(
+                        _hellen_w,
+                        birth_year=birth_date.year,
+                        current_year=datetime.now().year,
+                    )
+                    _hellen_ext = compute_hellenistic_extended(_hellen_w, _hellen_chart)
+                _h_tab_chart, _h_tab_natal, _h_tab_prof, _h_tab_zr, _h_tab_lots, _h_tab_ext_lots, _h_tab_synkrasis, _h_tab_centiloquy = st.tabs([
+                    t("hellen_subtab_chart"),
+                    t("hellen_subtab_natal"),
+                    t("hellen_subtab_profections"),
+                    t("hellen_subtab_zr"),
+                    t("hellen_subtab_lots"),
+                    "📜 Extended Lots / 擴充 Lots",
+                    "⚗️ Valens Synkrasis / 行星組合",
+                    t("hellen_subtab_centiloquy"),
+                ])
+                with _h_tab_chart:
+                    _greek_svg = build_greek_horoscope_svg(
+                        _hellen_chart,
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        tz=input_tz,
+                        location=location_name,
+                    )
+                    st.markdown(_greek_svg, unsafe_allow_html=True)
+                    st.caption(
+                        '<p style="text-align:center; color:#888; font-size:11px;">'
+                        'Greek Horoscope (θέμα) — Square chart form after L 497 · '
+                        'Whole-sign houses · ASC at left, MC at top'
+                        '</p>',
+                        unsafe_allow_html=True,
+                    )
+                    _render_ai_button("tab_hellenistic", _hellen_chart, btn_key="hellenistic")
+                with _h_tab_natal:
+                    render_hellenistic_chart(_hellen_chart)
+                with _h_tab_prof:
+                    if _hellen_chart.profection:
+                        pf = _hellen_chart.profection
+                        st.subheader(t("hellen_profections_header"))
+                        st.metric("Age", pf.current_age)
+                        st.metric("Profected Sign", f"{pf.profected_sign} ({auto_cn(pf.profected_sign_cn)})")
+                        st.metric("Time Lord", f"{pf.time_lord} ({auto_cn(pf.time_lord_cn)})")
+                        st.info(f"House from Ascendant: {pf.house_from_asc}")
+                with _h_tab_zr:
+                    if _hellen_chart.zodiacal_releasing:
+                        st.subheader(t("hellen_zr_header"))
+                        st.dataframe([{"Sign": p.sign, "CN": auto_cn(p.sign_cn),
+                                       "Ruler": p.ruler, "Years": p.years,
+                                       "Start": p.start_date, "End": p.end_date}
+                                      for p in _hellen_chart.zodiacal_releasing],
+                                     width="stretch")
+                with _h_tab_lots:
+                    if _hellen_chart.lots:
+                        st.subheader(t("hellen_lots_header"))
+                        st.dataframe([{"Name": f"{l.name} ({auto_cn(l.name_cn)})",
+                                       "Sign": l.sign, "Degree": f"{l.sign_degree:.2f}°",
+                                       "House": l.house, "Formula": l.formula_en,
+                                       "Meaning": auto_cn(l.meaning_cn)}
+                                      for l in _hellen_chart.lots],
+                                     width="stretch")
 
-# --- 赫密士出生前世盤 Trutine of Hermes / Prenatal Epoch ---
-elif _selected_system == "tab_trutine_of_hermes":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            render_trutine_chart(
-                year=_p["year"],
-                month=_p["month"],
-                day=_p["day"],
-                hour=_p["hour"],
-                minute=_p.get("minute", 0),
-                timezone=_p.get("timezone", 0.0),
-                latitude=_p.get("latitude", 25.033),
-                longitude=_p.get("longitude", 121.565),
-                location_name=_p.get("location_name", ""),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_trutine_of_hermes_prompt"))
-        st.markdown(t("desc_trutine_of_hermes"))
+                with _h_tab_ext_lots:
+                    if _hellen_ext.extended_lots:
+                        render_extended_lots(_hellen_ext.extended_lots)
+                with _h_tab_synkrasis:
+                    if _hellen_ext.synkrasis:
+                        render_valens_combinations(_hellen_ext.synkrasis)
 
-# --- 六爻終身卦 Lifetime Liu Yao Hexagram ---
-elif _selected_system == "tab_liuyao_lifetime":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_liuyao_lifetime")):
-                _liuyao_result = compute_lifetime_hexagram(
-                    year=_p["year"],
-                    month=_p["month"],
-                    day=_p["day"],
-                    hour=_p["hour"],
-                    minute=_p["minute"],
-                    location_name=_p.get("location_name", ""),
-                )
-            render_liuyao_lifetime_chart(_liuyao_result)
-            _render_ai_button("tab_liuyao_lifetime", _liuyao_result, btn_key="liuyao_lifetime")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_calc_prompt"))
-        st.markdown(t("desc_liuyao_lifetime"))
+                with _h_tab_centiloquy:
+                    st.subheader(t("centiloquy_header"))
+                    from astro.classic.ptolemy_centiloquy import get_random_aphorism, search_aphorism, get_all_aphorisms, format_aphorism
+                    # Daily aphorism
+                    st.info(format_aphorism(get_random_aphorism()))
+                    # Search
+                    _cent_query = st.text_input(t("centiloquy_search_label"), key="centiloquy_search")
+                    if _cent_query:
+                        _results = search_aphorism(_cent_query)
+                        if _results:
+                            for _r in _results:
+                                st.markdown(format_aphorism(_r))
+                        else:
+                            st.warning(t("centiloquy_no_match"))
+                    else:
+                        for _a in get_all_aphorisms():
+                            with st.expander(t("centiloquy_aphorism_num").format(n=_a['id'])):
+                                st.markdown(_a["text"])
 
-# --- 拜占庭占星 Byzantine Astrology ---
-elif _selected_system == "tab_byzantine_astrology":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            render_byzantine_astrology_chart(
-                year=_p["year"],
-                month=_p["month"],
-                day=_p["day"],
-                hour=_p["hour"],
-                minute=_p.get("minute", 0),
-                timezone=_p.get("timezone", 0.0),
-                latitude=_p.get("latitude", 41.016),
-                longitude=_p.get("longitude", 28.977),
-                location_name=_p.get("location_name", ""),
-            )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_byzantine_astrology_prompt"))
-        st.markdown(t("desc_byzantine_astrology"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_hellenistic"))
 
-# --- 醫學占星 Medical Astrology (Iatromathematics) ---
-elif _selected_system == "tab_medical_astrology":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_medical_astrology")):
-                _medical_result = compute_medical_chart(**_p)
-            render_medical_astrology_chart(_medical_result)
-            _render_ai_button("tab_medical_astrology", _medical_result, btn_key="medical_astrology")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_medical_astrology_prompt"))
-        st.markdown(t("desc_medical_astrology"))
+    # --- 古巴比倫占星 (Babylonian) ---
+    elif _selected_system == "tab_babylonian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_babylonian")):
+                    _bab_chart = compute_babylonian_chart(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        timezone=_p["timezone"],
+                        lat=_p["latitude"], lon=_p["longitude"],
+                    )
+                _bab_tab_chart, _bab_tab_natal, _bab_tab_omens = st.tabs([
+                    t("babylonian_subtab_chart"),
+                    t("babylonian_subtab_natal"),
+                    t("babylonian_subtab_omens"),
+                ])
+                with _bab_tab_chart:
+                    _bab_svg = build_babylonian_planisphere_svg(
+                        _bab_chart,
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        tz=input_tz,
+                        location=location_name,
+                    )
+                    st.markdown(_bab_svg, unsafe_allow_html=True)
+                    st.caption(
+                        '<p style="text-align:center; color:#888; font-size:11px;">'
+                        'Babylonian Planisphere (K.8538 style) — 8-sector clay disc · '
+                        'Sidereal zodiac · MUL.APIN sign names'
+                        '</p>',
+                        unsafe_allow_html=True,
+                    )
+                    _render_ai_button("tab_babylonian", _bab_chart, btn_key="babylonian")
+                with _bab_tab_natal:
+                    render_babylonian_chart(_bab_chart)
+                with _bab_tab_omens:
+                    st.subheader("📜 Enūma Anu Enlil " + t("babylonian_subtab_omens"))
+                    for _omen in _bab_chart.omens:
+                        _omen_icon = "🌟" if _omen.condition == "strong" else "⚠️"
+                        st.markdown(
+                            f"{_omen_icon} **{_omen.planet}** ({_omen.god_name}) — "
+                            f"*{_omen.condition.upper()}*: {_omen.text}"
+                        )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_babylonian"))
 
-elif _selected_system == "tab_shanghan_qianfa":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_shanghan_qianfa")):
-                _shanghan_result = compute_shanghan_qianfa(**_p)
-            render_shanghan_qianfa_chart(_shanghan_result)
-            _render_ai_button("tab_shanghan_qianfa", _shanghan_result, btn_key="shanghan_qianfa")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_shanghan_qianfa_prompt"))
-        st.markdown(t("desc_shanghan_qianfa"))
-
-# --- 北極神數 (Beiji Shenshu) ---
-elif _selected_system == "tab_beiji":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_beiji")):
-                render_beiji_chart(
-                    year=_p["year"],
-                    month=_p["month"],
-                    day=_p["day"],
-                    hour=_p["hour"],
-                    minute=_p["minute"],
-                    gender=st.session_state.get("_calc_gender", "男"),
-                )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_beiji_prompt"))
-        st.markdown(t("desc_beiji"))
-
-# --- 南極神數 Nanji Shenshu ---
-elif _selected_system == "tab_nanji":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_nanji")):
-                render_nanji_chart(
+    # --- 蘇美/美索不達米亞占星 (Sumerian / Mesopotamian Astrology) ---
+    elif _selected_system == "tab_sumerian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                render_sumerian_chart(
                     year=_p["year"],
                     month=_p["month"],
                     day=_p["day"],
                     hour=_p["hour"],
                     minute=_p.get("minute", 0),
-                    gender=st.session_state.get("_calc_gender", "男"),
-                )
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_nanji_prompt"))
-        st.markdown(t("desc_nanji"))
-
-# --- 子平八字 Ziping Bazi ---
-elif _selected_system == "tab_bazi":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_bazi")):
-                _bazi_result = compute_bazi_chart(
-                    year=_p["year"],
-                    month=_p["month"],
-                    day=_p["day"],
-                    hour=_p["hour"],
-                    minute=_p["minute"],
-                    gender=st.session_state.get("_calc_gender", "男"),
-                    timezone=_p.get("timezone", 8.0),
-                    latitude=_p.get("latitude", 25.033),
-                    longitude=_p.get("longitude", 121.565),
+                    timezone=_p.get("timezone", 0.0),
+                    latitude=_p.get("latitude", 32.542),
+                    longitude=_p.get("longitude", 44.421),
                     location_name=_p.get("location_name", ""),
                 )
-            render_bazi_chart(_bazi_result)
-            _render_ai_button("tab_bazi", _bazi_result, btn_key="bazi")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_bazi_prompt"))
-        st.markdown(t("desc_bazi"))
+                _sumerian_chart = compute_sumerian_chart(
+                    year=_p["year"], month=_p["month"], day=_p["day"],
+                    hour=_p["hour"], minute=_p.get("minute", 0),
+                    timezone=_p.get("timezone", 0.0),
+                    lat=_p.get("latitude", 32.542),
+                    lon=_p.get("longitude", 44.421),
+                    location_name=_p.get("location_name", ""),
+                )
+                _render_ai_button("tab_sumerian", _sumerian_chart, btn_key="sumerian")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_sumerian_prompt"))
+            st.markdown(t("desc_sumerian"))
 
-# ============================================================
-# --- 傳統卜卦占星 Traditional Horary Astrology ---
-elif _selected_system == "tab_horary":
-    _p = st.session_state.get("_calc_params", {})
-    try:
-        render_horary_chart(
-            year=_p.get("year", 2024),
-            month=_p.get("month", 1),
-            day=_p.get("day", 1),
-            hour=_p.get("hour", 12),
-            minute=_p.get("minute", 0),
-            timezone=_p.get("tz", 0.0),
-            latitude=_p.get("lat", 25.033),
-            longitude=_p.get("lon", 121.565),
-            location_name=_p.get("location_name", ""),
+    # --- 達摩一掌經 (Damo One Palm Scripture) ---
+    elif _selected_system == "tab_damo":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _damo_params = dict(_p)
+                _damo_params["gender"] = gender
+                with st.spinner(t("spinner_damo")):
+                    _damo_chart = compute_damo_chart(**_damo_params)
+                render_damo_chart(
+                    _damo_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_damo", _damo_chart, btn_key="damo"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_damo"))
+
+    # --- 十二星次 (Twelve Ci) ---
+    elif _selected_system == "tab_twelve_ci":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_twelve_ci")):
+                    _ci_chart = compute_twelve_ci_chart(**_p)
+
+                _ci_tab_wheel, _ci_tab_detail = st.tabs([
+                    t("twelve_ci_subtab_chart"),
+                    t("twelve_ci_subtab_detail"),
+                ])
+
+                with _ci_tab_wheel:
+                    _ci_svg = build_twelve_ci_svg(
+                        _ci_chart,
+                        year=birth_date.year,
+                        month=birth_date.month,
+                        day=birth_date.day,
+                        hour=birth_time.hour,
+                        minute=birth_time.minute,
+                        tz=input_tz,
+                        location=location_name,
+                    )
+                    st.markdown(_ci_svg, unsafe_allow_html=True)
+                    _render_ai_button("tab_twelve_ci", _ci_chart, btn_key="twelve_ci")
+
+                with _ci_tab_detail:
+                    render_twelve_ci_chart(
+                        _ci_chart,
+                        after_chart_hook=lambda: _render_ai_button(
+                            "tab_twelve_ci", _ci_chart, btn_key="twelve_ci_detail"
+                        ),
+                    )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_twelve_ci"))
+
+    # --- 萬化仙禽 (WanHua XianQin) ---
+    elif _selected_system == "tab_chinstar":
+
+        # ── Lunar date conversion (hidden) ──────────────────────────
+        _chinstar_year = birth_date.year
+        _chinstar_month = birth_date.month
+        _chinstar_day = birth_date.day
+        _chinstar_hour = birth_time.hour
+        _auto_ok = False
+
+        if _is_calculated:
+            try:
+                import swisseph as _swe_cs
+                from astro.ziwei import _solar_to_lunar as _cs_solar_to_lunar
+                _p = st.session_state["_calc_params"]
+                _cs_jd = _swe_cs.julday(
+                    _p["year"], _p["month"], _p["day"],
+                    _p["hour"] + _p["minute"] / 60.0 - _p["timezone"],
+                )
+                _cs_ly, _cs_lm, _cs_ld, _cs_leap = _cs_solar_to_lunar(_cs_jd)
+                _chinstar_year = _cs_ly
+                _chinstar_month = _cs_lm
+                _chinstar_day = _cs_ld
+                _chinstar_hour = _p["hour"]
+                _auto_ok = True
+            except Exception:
+                pass
+
+        _cs_gender = "M" if gender == "male" else "F"
+
+        if _auto_ok:
+            try:
+                with st.spinner(t("spinner_chinstar")):
+                    _cs_tool = WanHuaXianQin()
+                    _cs_chart = _cs_tool.build_chart(
+                        year=int(_chinstar_year),
+                        month=int(_chinstar_month),
+                        day=int(_chinstar_day),
+                        hour=int(_chinstar_hour),
+                        gender=_cs_gender,
+                    )
+
+                _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian = st.tabs([
+                    t("chinstar_subtab_chart"),
+                    t("chinstar_subtab_xiangtai"),
+                    t("chinstar_subtab_gui_jian"),
+                ])
+
+                with _cs_tab_chart:
+                    from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
+
+                    bi = _cs_chart["basic_info"]
+                    p = _cs_chart["palaces"]
+                    s = _cs_chart["stars"]
+                    pat = _cs_chart["pattern"]
+
+                    # ── 宮位→禽 映射 ──────────────────────────────
+                    _cs_palace_bird = {
+                        "命宮":   s["ming_xing"],
+                        "財帛宮": s["derived"].get("財帛星", ""),
+                        "兄弟宮": s["derived"].get("兄弟星", ""),
+                        "田宅宮": s["derived"].get("田宅星", ""),
+                        "子女宮": s["derived"].get("子息星", ""),
+                        "奴僕宮": s["derived"].get("奴僕星", ""),
+                        "夫妻宮": s["derived"].get("妻妾星", ""),
+                        "疾厄宮": s["derived"].get("疾厄星", ""),
+                        "遷移宮": s["derived"].get("遷移星", ""),
+                        "官祿宮": s["derived"].get("官祿星", ""),
+                        "福德宮": s["derived"].get("福德星", ""),
+                        "相貌宮": s["derived"].get("相貌星", ""),
+                    }
+                    # 地支→宮名（反查）
+                    _cs_branch_to_palace = {v: k for k, v in p["twelve"].items()}
+
+                    # 特殊宮位地支（命/身/胎）
+                    _cs_ming_br = p["ming_gong"]["branch"]
+                    _cs_shen_br = p["shen_gong"]["branch"]
+                    _cs_tai_br  = p["tai_gong"]["branch"]
+
+                    # 五行色彩 (dark theme)
+                    _cs_elem_bg = {
+                        "木": "rgba(56,142,60,0.15)", "火": "rgba(198,40,40,0.15)",
+                        "土": "rgba(245,127,23,0.15)", "金": "rgba(158,158,158,0.15)", "水": "rgba(21,101,192,0.15)",
+                    }
+                    _cs_elem_bd = {
+                        "木": "rgba(56,142,60,0.4)", "火": "rgba(198,40,40,0.4)",
+                        "土": "rgba(245,127,23,0.4)", "金": "rgba(158,158,158,0.4)", "水": "rgba(21,101,192,0.4)",
+                    }
+
+                    def _cs_cell(branch_char: str) -> str:
+                        palace = _cs_branch_to_palace.get(branch_char, "")
+                        bird   = _cs_palace_bird.get(palace, "")
+                        elem   = _cs_qin_elem.get(bird, "")
+                        bg     = _cs_elem_bg.get(elem, "rgba(30,27,75,0.4)")
+                        bd     = _cs_elem_bd.get(elem, "rgba(167,139,250,0.3)")
+                        badge  = ""
+                        if branch_char == _cs_ming_br:
+                            badge = '<span style="color:#ef4444;font-size:10px;">★命</span> '
+                            bd    = "rgba(239,68,68,0.5)"
+                            bg    = "rgba(239,68,68,0.1)"
+                        elif branch_char == _cs_shen_br:
+                            badge = '<span style="color:#a78bfa;font-size:10px;">☆身</span> '
+                            bd    = "rgba(167,139,250,0.5)"
+                            bg    = "rgba(167,139,250,0.1)"
+                        elif branch_char == _cs_tai_br:
+                            badge = '<span style="color:#facc15;font-size:10px;">◎胎</span> '
+                            bd    = "rgba(250,204,21,0.5)"
+                            bg    = "rgba(250,204,21,0.1)"
+                        return (
+                            f'<td style="width:25%;min-width:70px;height:88px;text-align:center;'
+                            f'vertical-align:middle;border:2px solid {bd};'
+                            f'background:{bg};padding:4px 2px;border-radius:8px;">'
+                            f'<div style="font-size:11px;color:#b0b0d0;font-weight:bold;">'
+                            f'{badge}{branch_char}宮</div>'
+                            f'<div style="font-size:11px;color:#e0e0ff;margin-top:2px;">{palace}</div>'
+                            f'<div style="font-size:14px;color:#a78bfa;font-weight:bold;'
+                            f'margin-top:3px;">{bird}</div>'
+                            f'</td>'
+                        )
+
+                    # 中央格（基本資料 + 三主星 + 格局）
+                    _cs_center_td = (
+                        '<td colspan="2" rowspan="2" style="text-align:center;'
+                        'vertical-align:middle;border:2px solid rgba(167,139,250,0.3);'
+                        'background:rgba(30,27,75,0.6);padding:10px 8px;border-radius:8px;'
+                        'line-height:1.6;">'
+                        '<div style="font-size:15px;font-weight:bold;color:#a78bfa;'
+                        'letter-spacing:2px;">萬化仙禽</div>'
+                        f'<div style="font-size:11px;color:#e0e0ff;margin-top:6px;">'
+                        f'{bi["year"]}年{bi["month"]}月{bi["day"]}日 {bi["hour"]}時</div>'
+                        f'<div style="font-size:11px;color:#e0e0ff;">{bi["gender"]}命 {bi["day_night"]}</div>'
+                        f'<div style="font-size:11px;color:#e0e0ff;">{bi["season"]}季 · {bi["san_yuan"]}</div>'
+                        '<hr style="margin:6px 0;border-color:rgba(167,139,250,0.2);">'
+                        f'<div style="font-size:11px;color:#e0e0ff;"><b>胎星</b>：{s["tai_xing"]}</div>'
+                        f'<div style="font-size:11px;color:#e0e0ff;"><b>命星</b>：{s["ming_xing"]}</div>'
+                        f'<div style="font-size:11px;color:#e0e0ff;"><b>身星</b>：{s["shen_xing"]}</div>'
+                        '<hr style="margin:6px 0;border-color:rgba(167,139,250,0.2);">'
+                        f'<div style="font-size:11px;color:#e0e0ff;">'
+                        f'<b>格局</b>：{pat["grade"]}</div>'
+                        '</td>'
+                    )
+
+                    # 大六壬式四列排盤
+                    # Row 0: 巳(5)  午(6)  未(7)  申(8)
+                    # Row 1: 辰(4)  [CENTER]       酉(9)
+                    # Row 2: 卯(3)  [CENTER]       戌(10)
+                    # Row 3: 寅(2)  丑(1)  子(0)  亥(11)
+                    _cs_br = _cs_branches
+                    _cs_grid = (
+                        '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
+                        '<table style="border-collapse:separate;border-spacing:4px;'
+                        'margin:10px auto;width:100%;table-layout:fixed;font-family:\'Noto Sans TC\',serif;">'
+                        "<tr>"
+                        + _cs_cell(_cs_br[5])  + _cs_cell(_cs_br[6])
+                        + _cs_cell(_cs_br[7])  + _cs_cell(_cs_br[8])
+                        + "</tr><tr>"
+                        + _cs_cell(_cs_br[4])  + _cs_center_td + _cs_cell(_cs_br[9])
+                        + "</tr><tr>"
+                        + _cs_cell(_cs_br[3])  + _cs_cell(_cs_br[10])
+                        + "</tr><tr>"
+                        + _cs_cell(_cs_br[2])  + _cs_cell(_cs_br[1])
+                        + _cs_cell(_cs_br[0])  + _cs_cell(_cs_br[11])
+                        + "</tr></table></div>"
+                    )
+                    st.markdown(_cs_grid, unsafe_allow_html=True)
+                    _render_ai_button("tab_chinstar", _cs_chart, btn_key="chinstar")
+                    st.divider()
+
+                    # ── 吞啗分析 ──────────────────────────────
+                    st.markdown(t("chinstar_swallow_analysis_header"))
+                    _sw = _cs_chart["swallow_analysis"]
+                    if _sw:
+                        _sw_rows = [{"對照": k, "判斷": v} for k, v in _sw.items()]
+                        st.dataframe(_sw_rows, width='stretch', hide_index=True)
+                    else:
+                        st.info(t("chinstar_no_swallow"))
+                    st.divider()
+
+                    # ── 情性賦 ──────────────────────────────
+                    st.markdown(t("chinstar_personality_header"))
+                    for _label, text in _cs_chart["personality"].items():
+                        st.info(text)
+                    st.divider()
+
+                    # ── 格局 ──────────────────────────────
+                    st.markdown(t("chinstar_pattern_header").format(grade=pat["grade"]))
+                    st.write(pat["reason"])
+
+                    # ── 完整文字輸出（可複製） ──────────────────────
+                    with st.expander(t("chinstar_full_text_expander")):
+                        st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+
+                with _cs_tab_xiangtai:
+                    from astro.chinstar.chinstar import lookup_xiangtai, _get_xiangtai_fu
+
+                    st.markdown(t("chinstar_xiangtai_title"))
+
+                    # 查找匹配的相胎賦
+                    _xt_match = lookup_xiangtai(s["ming_xing"], s["tai_xing"])
+                    if _xt_match:
+                        st.markdown(t("chinstar_xiangtai_match").format(
+                            zhu=s["ming_xing"], tai=s["tai_xing"],
+                        ))
+                        _xt_cols = st.columns(2)
+                        with _xt_cols[0]:
+                            st.metric(t("chinstar_xiangtai_xingpin"), _xt_match["xing_pin"])
+                        with _xt_cols[1]:
+                            st.metric(t("chinstar_xiangtai_xiji"), _xt_match["xi_ji"])
+                        st.info(f'**{t("chinstar_xiangtai_desc")}**：{_xt_match["desc"]}')
+                        st.success(f'**{t("chinstar_xiangtai_poem")}**：\n\n{_xt_match["poem"]}')
+                    else:
+                        st.warning(t("chinstar_xiangtai_no_match"))
+
+                    st.divider()
+
+                    # 顯示相胎賦全覽
+                    with st.expander(t("chinstar_xiangtai_ref")):
+                        _xt_all = _get_xiangtai_fu()
+                        _xt_rows = []
+                        for _xt_e in _xt_all:
+                            _xt_rows.append({
+                                "主星": _xt_e["zhu"],
+                                "胎星": _xt_e["tai"],
+                                "形品": _xt_e["xing_pin"],
+                                "喜忌": _xt_e["xi_ji"],
+                                "論斷": _xt_e["desc"][:50] + "…" if len(_xt_e["desc"]) > 50 else _xt_e["desc"],
+                            })
+                        st.dataframe(_xt_rows, width='stretch', hide_index=True)
+
+                with _cs_tab_gui_jian:
+                    from astro.chinstar.chinstar import (
+                        lookup_gui_ge, lookup_jian_ge,
+                        lookup_fulu_patterns, lookup_pinjian_patterns,
+                    )
+
+                    # 取主要禽星（胎星、命星）
+                    _gj_stars = [s["tai_xing"], s["ming_xing"]]
+                    if s["shen_xing"] not in _gj_stars:
+                        _gj_stars.append(s["shen_xing"])
+
+                    # ── 福祿上格 ──
+                    st.markdown(t("chinstar_fulu_title"))
+                    _fulu_found = False
+                    for _gj_star in _gj_stars:
+                        _fl = lookup_fulu_patterns(_gj_star)
+                        if _fl:
+                            _fulu_found = True
+                            for _fl_e in _fl:
+                                st.success(f'**{_fl_e["name"]}**（{_fl_e["stars"]}）— {_fl_e["condition"]}')
+                    if not _fulu_found:
+                        st.info("—")
+                    st.divider()
+
+                    # ── 貧賤下命 ──
+                    st.markdown(t("chinstar_pinjian_title"))
+                    _pj_found = False
+                    for _gj_star in _gj_stars:
+                        _pj = lookup_pinjian_patterns(_gj_star)
+                        if _pj:
+                            _pj_found = True
+                            for _pj_e in _pj:
+                                st.error(f'**{_pj_e["name"]}**（{_pj_e["stars"]}）— {_pj_e["condition"]}')
+                    if not _pj_found:
+                        st.info("—")
+                    st.divider()
+
+                    # ── 各星貴格 / 賤格 ──
+                    for _gj_star in _gj_stars:
+                        st.markdown(t("chinstar_gui_for_star").format(star=_gj_star))
+                        _gui = lookup_gui_ge(_gj_star)
+                        if _gui:
+                            _gui_rows = [{"格局": g["name"], "干支": g["ganzhi"]} for g in _gui]
+                            st.dataframe(_gui_rows, width='stretch', hide_index=True)
+                        else:
+                            st.info(t("chinstar_no_gui"))
+
+                        st.markdown(t("chinstar_jian_for_star").format(star=_gj_star))
+                        _jian = lookup_jian_ge(_gj_star)
+                        if _jian:
+                            _jian_rows = [{"格局": j["name"], "干支": j["ganzhi"]} for j in _jian]
+                            st.dataframe(_jian_rows, width='stretch', hide_index=True)
+                        else:
+                            st.info(t("chinstar_no_jian"))
+                        st.divider()
+
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            # Manual input fallback or not calculated
+            st.markdown(t("desc_chinstar"))
+            if not _is_calculated:
+                st.info(t("info_calc_prompt"))
+            else:
+                st.subheader(t("chinstar_lunar_input_header"))
+                _cs_col1, _cs_col2, _cs_col3 = st.columns(3)
+                with _cs_col1:
+                    _chinstar_year = st.number_input(
+                        t("chinstar_lunar_year"), value=int(_chinstar_year),
+                        min_value=1, max_value=2200, key="cs_year",
+                    )
+                with _cs_col2:
+                    _chinstar_month = st.number_input(
+                        t("chinstar_lunar_month"), value=int(_chinstar_month),
+                        min_value=1, max_value=12, key="cs_month",
+                    )
+                with _cs_col3:
+                    _chinstar_day = st.number_input(
+                        t("chinstar_lunar_day"), value=int(_chinstar_day),
+                        min_value=1, max_value=30, key="cs_day",
+                    )
+                if st.button(t("calculate_btn"), key="chinstar_calc_btn"):
+                    try:
+                        with st.spinner(t("spinner_chinstar")):
+                            _cs_tool = WanHuaXianQin()
+                            _cs_chart = _cs_tool.build_chart(
+                                year=int(_chinstar_year),
+                                month=int(_chinstar_month),
+                                day=int(_chinstar_day),
+                                hour=int(_chinstar_hour),
+                                gender=_cs_gender,
+                            )
+
+                        _cs_tab_chart, _cs_tab_xiangtai, _cs_tab_gui_jian = st.tabs([
+                            t("chinstar_subtab_chart"),
+                            t("chinstar_subtab_xiangtai"),
+                            t("chinstar_subtab_gui_jian"),
+                        ])
+
+                        with _cs_tab_chart:
+                            from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
+                            st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+                    except Exception as _e:
+                        st.error(f"{t('error_tab_compute')}：{_e}")
+                        st.exception(_e)
+
+    # --- 大六壬 (Da Liu Ren) ---
+    elif _selected_system == "tab_liuren":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_liuren")):
+                    _liuren_chart = compute_liuren_chart(**_p)
+                # 從生年推算本命地支（年支）
+                import sxtwl as _sxtwl_lr
+                _lr_day = _sxtwl_lr.fromSolar(_p["year"], _p["month"], _p["day"])
+                _lr_year_gz = _lr_day.getYearGZ()
+                _lr_benming = list("子丑寅卯辰巳午未申酉戌亥")[_lr_year_gz.dz]
+                render_liuren_chart(
+                    _liuren_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_liuren", _liuren_chart, btn_key="liuren"
+                    ),
+                    benming_zhi=_lr_benming,
+                )
+                # ── 論命分析 ──
+                st.divider()
+                # 本命與流年均取自排盤年份的年支
+                _lunming_report = compute_lunming(
+                    _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
+                )
+                render_lunming_report(_lunming_report)
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_liuren"))
+
+    # --- 鬼谷分定經 (Ghost Valley Fen Ding Jing) ---
+    elif _selected_system == "tab_fendjing":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_fendjing") if hasattr(t, "spinner_fendjing") else "計算鬼谷分定經..."):
+                    from astro.fendjing import compute_fendjing_chart, render_fendjing_chart
+                    _fendjing_chart = compute_fendjing_chart(**_p)
+                render_fendjing_chart(
+                    _fendjing_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_fendjing", _fendjing_chart, btn_key="fendjing"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_fendjing") if hasattr(t, "desc_fendjing") else "🔮 **鬼谷分定經** — 相傳為戰國時期鬼谷子所創，又名兩頭鉗，以出生年時天干排盤，配合十二宮與星曜，推斷一生命運的古典命理系統。")
+
+    # --- 土亭數 (Tojeong Shu) ---
+    elif _selected_system == "tab_tojeong":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _g = st.session_state["_calc_gender"]
+                _tojeong_gender = "male" if _g in ("male", "男", "M") else "female"
+                # compute_tojeong_chart only accepts: year, month, day, hour, gender, solar_term
+                _tojeong_params = {k: v for k, v in _p.items() if k in ("year", "month", "day", "hour")}
+                with st.spinner(t("spinner_tojeong") if hasattr(t, "spinner_tojeong") else "計算土亭數..."):
+                    from astro.tojeong import compute_tojeong_chart, render_tojeong_chart
+                    _tojeong_chart = compute_tojeong_chart(**_tojeong_params, gender=_tojeong_gender)
+                render_tojeong_chart(
+                    _tojeong_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_tojeong", _tojeong_chart, btn_key="tojeong"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.markdown("""
+    <div style="
+        background:linear-gradient(135deg,#0f1e35 0%,#1a0d28 100%);
+        border:1px solid rgba(201,168,76,0.35);
+        border-radius:16px;
+        padding:28px 24px 24px 24px;
+        margin-bottom:20px;
+        text-align:center;
+    ">
+      <div role="img" aria-label="韓國國旗" style="font-size:52px;margin-bottom:10px;">🇰🇷</div>
+      <div style="font-size:22px;font-weight:700;color:#C9A84C;letter-spacing:2px;margin-bottom:8px;">
+        土亭數命盤
+      </div>
+      <div style="font-size:13px;color:#8888aa;line-height:1.7;max-width:380px;margin:0 auto 18px auto;">
+        朝鮮時代土亭李先生所創的占數系統<br>
+        以先天數、後天數計算格局代碼<br>
+        查 129 格局斷語推斷吉凶
+      </div>
+      <div style="
+        display:inline-block;
+        background:rgba(205,46,58,0.15);
+        border:1px solid rgba(205,46,58,0.4);
+        border-radius:8px;
+        padding:8px 20px;
+        font-size:13px;
+        color:#f87171;
+      ">👈 請在左側填寫出生年月日時，即可起盤</div>
+    </div>""", unsafe_allow_html=True)
+
+    # --- 高棉占星 (Khmer Astrology / Reamker) ---
+    elif _selected_system == "tab_khmer":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _g = st.session_state["_calc_gender"]
+                _khmer_gender = "male" if _g in ("male", "男", "M") else "female"
+                _age = _p.get("age", 2026 - _p.get("year", 1995))
+                with st.spinner(t("spinner_khmer") if hasattr(t, "spinner_khmer") else "計算高棉占星盤..."):
+                    from astro.khmer import ReamkerAstrology, render_khmer_chart
+                    astro = ReamkerAstrology()
+                    _khmer_chart = astro.full_reading(
+                        birth_year=_p.get("year", 1995),
+                        gender=_khmer_gender,
+                        current_age=_age,
+                        language=st.session_state.get("lang", "zh")
+                    )
+                # Render chart via components.v1.html for full CSS/flexbox support
+                _khmer_lang = st.session_state.get("lang", "zh")
+                _khmer_html = render_khmer_chart(_khmer_chart, language=_khmer_lang)
+                st.components.v1.html(
+                    f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
+                    height=1050,
+                    scrolling=False,
+                )
+                # AI interpretation button
+                _render_ai_button("tab_khmer", _khmer_chart, btn_key="khmer")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_khmer") if hasattr(t, "desc_khmer") else "🇰🇭 **高棉占星** — 基於 François Bizot 2013 年論文與 Prochom Horasastra，重建吳哥時期失傳的 Reamker 占星系統。")
+
+    # --- 太乙命法 (Taiyi Life Method) ---
+    elif _selected_system == "tab_taiyi":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _g = st.session_state["_calc_gender"]
+                _taiyi_gender = "male" if _g in ("male", "男", "M") else "female"
+                with st.spinner(t("spinner_taiyi")):
+                    _taiyi_chart = compute_taiyi_chart(**_p, gender=_taiyi_gender)
+                render_taiyi_chart(
+                    _taiyi_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_taiyi", _taiyi_chart, btn_key="taiyi"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_taiyi"))
+
+    # --- 奇門祿命 (Qi Men Destiny Analysis) ---
+    elif _selected_system == "tab_qimen_luming":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_qimen_luming")):
+                    _qm_luming = compute_qimen_luming(**_p)
+                render_qimen_luming(
+                    _qm_luming,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_qimen_luming", _qm_luming, btn_key="qimen_luming"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_qimen_luming"))
+    elif _selected_system == "tab_acg":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_acg")):
+                    _acg_result = compute_astrocartography(**_p)
+
+                st.markdown(f"### {t('acg_title')}")
+
+                _acg_tab_map, _acg_tab_table, _acg_tab_transit = st.tabs([
+                    t("acg_subtab_map"),
+                    t("acg_subtab_table"),
+                    t("acg_subtab_transit"),
+                ])
+
+                # ── Sub-tab 1: 互動地圖 Interactive Map ──
+                with _acg_tab_map:
+                    import plotly.graph_objects as go
+
+                    # Planet & line type filters
+                    _acg_col1, _acg_col2 = st.columns(2)
+                    with _acg_col1:
+                        _acg_planets = st.multiselect(
+                            t("acg_planet_filter"),
+                            options=list(ACG_PLANETS.keys()),
+                            default=["Sun", "Moon", "Venus", "Mars", "Jupiter"],
+                            key="acg_planet_sel",
+                        )
+                    with _acg_col2:
+                        _acg_lines = st.multiselect(
+                            t("acg_line_filter"),
+                            options=["AC", "MC", "IC", "DC"],
+                            default=["AC", "MC", "IC", "DC"],
+                            key="acg_line_sel",
+                        )
+
+                    # Build Plotly map
+                    _acg_fig = go.Figure()
+
+                    # Line dash patterns for each line type
+                    _acg_dashes = {"AC": "solid", "MC": "dash", "IC": "dot", "DC": "dashdot"}
+
+                    for _planet in _acg_planets:
+                        _planet_data = _acg_result.lines.get(_planet, {})
+                        _glyph = PLANET_GLYPHS.get(_planet, "")
+                        _p_color = ACG_PLANET_COLORS.get(_planet, "#888")
+
+                        for _lt in _acg_lines:
+                            _pts = _planet_data.get(_lt, [])
+                            if not _pts:
+                                continue
+
+                            _lons = [p[0] for p in _pts]
+                            _lats = [p[1] for p in _pts]
+
+                            # Get meaning for hover
+                            _meaning = _acg_result.meanings.get(_planet, {}).get(_lt, "")
+
+                            _acg_fig.add_trace(go.Scattergeo(
+                                lon=_lons,
+                                lat=_lats,
+                                mode="lines",
+                                line=dict(
+                                    color=_p_color,
+                                    width=2,
+                                    dash=_acg_dashes.get(_lt, "solid"),
+                                ),
+                                name=f"{_planet} {_glyph} {_lt}",
+                                hovertemplate=(
+                                    f"<b>{_planet} {_glyph} {_lt}</b><br>"
+                                    f"經度: %{{lon:.1f}}°<br>"
+                                    f"緯度: %{{lat:.1f}}°<br>"
+                                    f"<i>{_meaning[:40]}</i>"
+                                    "<extra></extra>"
+                                ),
+                            ))
+
+                    # Add Paran points as markers
+                    if _acg_result.parans:
+                        _paran_lons = [p.longitude for p in _acg_result.parans[:50]]
+                        _paran_lats = [p.latitude for p in _acg_result.parans[:50]]
+                        _paran_texts = [
+                            f"{p.planet1} {p.line_type1} × {p.planet2} {p.line_type2}"
+                            for p in _acg_result.parans[:50]
+                        ]
+
+                        _acg_fig.add_trace(go.Scattergeo(
+                            lon=_paran_lons,
+                            lat=_paran_lats,
+                            mode="markers",
+                            marker=dict(
+                                size=8,
+                                color="#FFD700",
+                                symbol="star",
+                                line=dict(width=1, color="#333"),
+                            ),
+                            text=_paran_texts,
+                            name="Paran ✦",
+                            hovertemplate=(
+                                "<b>Paran 交叉點</b><br>"
+                                "%{text}<br>"
+                                "經度: %{lon:.1f}°, 緯度: %{lat:.1f}°"
+                                "<extra></extra>"
+                            ),
+                        ))
+
+                    # Add birth location marker
+                    _acg_fig.add_trace(go.Scattergeo(
+                        lon=[_p["longitude"]],
+                        lat=[_p["latitude"]],
+                        mode="markers+text",
+                        marker=dict(size=12, color="#e74c3c", symbol="diamond"),
+                        text=[_p.get("location_name", "Birth")],
+                        textposition="top center",
+                        name="出生地 Birth",
+                        hovertemplate=(
+                            "<b>出生地</b><br>"
+                            f"{_p.get('location_name', '')}<br>"
+                            f"經度: {_p['longitude']:.2f}°, 緯度: {_p['latitude']:.2f}°"
+                            "<extra></extra>"
+                        ),
+                    ))
+
+                    _acg_fig.update_geos(
+                        showcountries=True,
+                        countrycolor="rgba(100,100,100,0.3)",
+                        showcoastlines=True,
+                        coastlinecolor="rgba(150,150,150,0.4)",
+                        showland=True,
+                        landcolor="rgba(30,30,50,0.8)",
+                        showocean=True,
+                        oceancolor="rgba(20,20,40,0.9)",
+                        showlakes=False,
+                        projection_type="natural earth",
+                        bgcolor="rgba(0,0,0,0)",
+                    )
+
+                    _acg_fig.update_layout(
+                        height=550,
+                        margin=dict(l=0, r=0, t=30, b=0),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=-0.15,
+                            xanchor="center",
+                            x=0.5,
+                            font=dict(size=10),
+                        ),
+                        geo=dict(bgcolor="rgba(0,0,0,0)"),
+                    )
+
+                    st.plotly_chart(_acg_fig, width="stretch")
+
+                    # Legend
+                    _legend_cols = st.columns(4)
+                    _legend_items = [
+                        ("acg_line_ac", ACG_LINE_COLORS["AC"], "solid"),
+                        ("acg_line_mc", ACG_LINE_COLORS["MC"], "dashed"),
+                        ("acg_line_ic", ACG_LINE_COLORS["IC"], "dotted"),
+                        ("acg_line_dc", ACG_LINE_COLORS["DC"], "dashdot"),
+                    ]
+                    for _col, (_key, _color, _style) in zip(_legend_cols, _legend_items):
+                        with _col:
+                            st.markdown(
+                                f'<div style="display:flex;align-items:center;gap:6px;">'
+                                f'<div style="width:24px;height:3px;background:{_color};'
+                                f'border-style:{_style};"></div>'
+                                f'<span style="font-size:12px;">{t(_key)}</span></div>',
+                                unsafe_allow_html=True,
+                            )
+
+                    # Paran section
+                    if _acg_result.parans:
+                        with st.expander(t("acg_paran_header"), expanded=False):
+                            import pandas as pd
+                            _paran_rows = []
+                            for _pr in _acg_result.parans[:30]:
+                                _paran_rows.append({
+                                    "行星1": f"{_pr.planet1} {PLANET_GLYPHS.get(_pr.planet1, '')}",
+                                    "線型1": _pr.line_type1,
+                                    "行星2": f"{_pr.planet2} {PLANET_GLYPHS.get(_pr.planet2, '')}",
+                                    "線型2": _pr.line_type2,
+                                    "緯度": f"{_pr.latitude:.1f}°",
+                                    "經度": f"{_pr.longitude:.1f}°",
+                                })
+                            if _paran_rows:
+                                st.dataframe(pd.DataFrame(_paran_rows), hide_index=True, width="stretch")
+
+                    # AI button
+                    _render_ai_button("tab_acg", _acg_result, btn_key="acg_map",
+                                      page_content=format_acg_for_prompt(_acg_result))
+
+                # ── Sub-tab 2: 行星線資料表 Planet Line Data Table ──
+                with _acg_tab_table:
+                    import pandas as pd
+                    st.subheader(t("acg_subtab_table"))
+
+                    _table_rows = []
+                    for _planet_name, _line_dict in _acg_result.lines.items():
+                        _glyph = PLANET_GLYPHS.get(_planet_name, "")
+                        for _lt in ("AC", "MC", "IC", "DC"):
+                            _pts = _line_dict.get(_lt, [])
+                            _meaning = _acg_result.meanings.get(_planet_name, {}).get(_lt, "")
+                            if _pts:
+                                _mid = len(_pts) // 2
+                                _table_rows.append({
+                                    "行星 Planet": f"{_planet_name} {_glyph}",
+                                    "線型 Type": _lt,
+                                    "黃經 Lon": f"{_acg_result.planet_longitudes.get(_planet_name, 0):.2f}°",
+                                    "代表經度 Geo Lon": f"{_pts[_mid][0]:.1f}°",
+                                    "點數 Points": len(_pts),
+                                    "解釋 Meaning": _meaning,
+                                })
+                    if _table_rows:
+                        st.dataframe(pd.DataFrame(_table_rows), hide_index=True, width="stretch")
+
+                    _render_ai_button("tab_acg", _acg_result, btn_key="acg_table",
+                                      page_content=format_acg_for_prompt(_acg_result))
+
+                # ── Sub-tab 3: 流年搬遷線 Transit ACG ──
+                with _acg_tab_transit:
+                    st.subheader(t("acg_subtab_transit"))
+
+                    _tr_col1, _tr_col2 = st.columns(2)
+                    with _tr_col1:
+                        _tr_date = st.date_input(
+                            t("acg_transit_date"),
+                            value=datetime.now().date(),
+                            key="acg_tr_date",
+                        )
+                    with _tr_col2:
+                        _tr_time = st.time_input(
+                            t("acg_transit_time"),
+                            value=time(12, 0),
+                            key="acg_tr_time",
+                        )
+
+                    # Year slider for quick navigation
+                    _tr_year_slider = st.slider(
+                        "Year / 年份",
+                        min_value=1950,
+                        max_value=2050,
+                        value=_tr_date.year,
+                        key="acg_tr_year_slider",
+                    )
+
+                    # Compute transit ACG
+                    with st.spinner(t("spinner_acg")):
+                        _tr_acg = compute_astrocartography_transit(
+                            natal_year=_p["year"], natal_month=_p["month"],
+                            natal_day=_p["day"], natal_hour=_p["hour"],
+                            natal_minute=_p["minute"], natal_timezone=_p["timezone"],
+                            transit_year=_tr_year_slider,
+                            transit_month=_tr_date.month,
+                            transit_day=_tr_date.day,
+                            transit_hour=_tr_time.hour,
+                            transit_minute=_tr_time.minute,
+                            transit_timezone=_p["timezone"],
+                        )
+
+                    # Transit map
+                    import plotly.graph_objects as go
+                    _tr_fig = go.Figure()
+
+                    _tr_planets_sel = st.multiselect(
+                        t("acg_planet_filter"),
+                        options=list(ACG_PLANETS.keys()),
+                        default=["Sun", "Moon", "Jupiter", "Saturn"],
+                        key="acg_tr_planet_sel",
+                    )
+                    _tr_dashes = {"AC": "solid", "MC": "dash", "IC": "dot", "DC": "dashdot"}
+
+                    for _planet in _tr_planets_sel:
+                        _planet_data = _tr_acg.lines.get(_planet, {})
+                        _glyph = PLANET_GLYPHS.get(_planet, "")
+                        _p_color = ACG_PLANET_COLORS.get(_planet, "#888")
+
+                        for _lt in ("AC", "MC", "IC", "DC"):
+                            _pts = _planet_data.get(_lt, [])
+                            if not _pts:
+                                continue
+                            _lons = [p[0] for p in _pts]
+                            _lats = [p[1] for p in _pts]
+
+                            _tr_fig.add_trace(go.Scattergeo(
+                                lon=_lons,
+                                lat=_lats,
+                                mode="lines",
+                                line=dict(color=_p_color, width=2,
+                                          dash=_tr_dashes.get(_lt, "solid")),
+                                name=f"{_planet} {_glyph} {_lt} (Transit)",
+                            ))
+
+                    _tr_fig.update_geos(
+                        showcountries=True,
+                        countrycolor="rgba(100,100,100,0.3)",
+                        showcoastlines=True,
+                        coastlinecolor="rgba(150,150,150,0.4)",
+                        showland=True,
+                        landcolor="rgba(30,30,50,0.8)",
+                        showocean=True,
+                        oceancolor="rgba(20,20,40,0.9)",
+                        projection_type="natural earth",
+                        bgcolor="rgba(0,0,0,0)",
+                    )
+                    _tr_fig.update_layout(
+                        height=500,
+                        margin=dict(l=0, r=0, t=30, b=0),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        legend=dict(orientation="h", yanchor="bottom", y=-0.15,
+                                    xanchor="center", x=0.5, font=dict(size=10)),
+                        geo=dict(bgcolor="rgba(0,0,0,0)"),
+                    )
+
+                    st.plotly_chart(_tr_fig, width="stretch")
+
+                    _render_ai_button("tab_acg", _tr_acg, btn_key="acg_transit",
+                                      page_content=format_acg_for_prompt(_tr_acg))
+
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_acg"))
+
+    # --- 天王星派占星 (Uranian / Hamburg School) ---
+    elif _selected_system == "tab_uranian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_uranian")):
+                    _uranian_result = compute_uranian_chart(**_p)
+                render_uranian_chart(_uranian_result)
+                _render_ai_button("tab_uranian", _uranian_result, btn_key="uranian")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_uranian"))
+    elif _selected_system == "tab_cosmobiology":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_cosmobiology")):
+                    _cosmo_result = compute_cosmobiology_chart(**_p)
+                render_cosmobiology(_cosmo_result)
+                _render_ai_button("tab_cosmobiology", _cosmo_result, btn_key="cosmobiology")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_cosmobiology"))
+    elif _selected_system == "tab_harmonic":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_harmonic")):
+                    _harmonic_result = compute_multi_harmonic(**_p)
+                render_harmonic(_harmonic_result)
+                _render_ai_button("tab_harmonic", _harmonic_result, btn_key="harmonic")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_harmonic"))
+    elif _selected_system == "tab_primary_directions":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_primary_directions")):
+                    _pd_result = compute_primary_directions(**_p)
+                render_primary_directions(_pd_result)
+                _render_ai_button("tab_primary_directions", _pd_result, btn_key="primary_directions")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_primary_directions_prompt"))
+            st.markdown(t("desc_primary_directions"))
+    elif _selected_system == "tab_wariga":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_wariga")):
+                    _wariga_result = compute_wariga(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        lat=_p["latitude"], lon=_p["longitude"],
+                    )
+                render_wariga_chart(_wariga_result)
+                _render_ai_button("tab_wariga", _wariga_result, btn_key="wariga")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_wariga"))
+
+    elif _selected_system == "tab_jawa_weton":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_jawa_weton")):
+                    _jawa_result = compute_weton(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        location_name=_p.get("location_name", ""),
+                        timezone=_p.get("timezone", 7.0),
+                    )
+                render_jawa_weton_chart(_jawa_result)
+                _render_ai_button("tab_jawa_weton", _jawa_result, btn_key="jawa_weton")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_jawa_weton"))
+
+    elif _selected_system == "tab_polynesian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_polynesian")):
+                    _poly_result = compute_polynesian_chart(
+                        year=_p["year"], month=_p["month"], day=_p["day"],
+                        hour=_p["hour"], minute=_p["minute"],
+                        lat=_p.get("latitude", 21.3),
+                        lon=_p.get("longitude", -157.8),
+                        timezone_offset=_p.get("timezone", 0.0),
+                        location_name=_p.get("location_name", ""),
+                    )
+                render_polynesian_chart_ui(_poly_result)
+                _render_ai_button("tab_polynesian", _poly_result, btn_key="polynesian")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_polynesian"))
+
+    # --- 出生時間校正 Birth Chart Rectification ---
+    elif _selected_system == "tab_rectification":
+        _p = st.session_state.get("_calc_params", {})
+        render_rectification_page(
+            default_date=(
+                date(_p["year"], _p["month"], _p["day"])
+                if _p else None
+            ),
+            default_lat=_p.get("latitude", 22.3193),
+            default_lon=_p.get("longitude", 114.1694),
+            default_tz=_p.get("timezone", 8.0),
         )
-    except Exception as _e:
-        st.error(f"{t('error_tab_compute')}：{_e}")
-        st.exception(_e)
-elif _selected_system == "tab_esoteric":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_esoteric")):
-                _esoteric_result = compute_esoteric_chart(**_p)
-            render_esoteric_chart(_esoteric_result)
-            _render_ai_button("tab_esoteric", _esoteric_result, btn_key="esoteric")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
-        st.info(t("info_esoteric_prompt"))
-        st.markdown(t("desc_esoteric"))
 
-# ============================================================
-# --- 人間圖 Human Design ---
-elif _selected_system == "tab_human_design":
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_human_design")):
-                _hd_result = compute_human_design_chart(
+    # --- 赫密士出生前世盤 Trutine of Hermes / Prenatal Epoch ---
+    elif _selected_system == "tab_trutine_of_hermes":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                render_trutine_chart(
                     year=_p["year"],
                     month=_p["month"],
                     day=_p["day"],
                     hour=_p["hour"],
-                    minute=_p["minute"],
-                    timezone=_p.get("timezone", 8.0),
+                    minute=_p.get("minute", 0),
+                    timezone=_p.get("timezone", 0.0),
                     latitude=_p.get("latitude", 25.033),
                     longitude=_p.get("longitude", 121.565),
                     location_name=_p.get("location_name", ""),
                 )
-            render_human_design_chart(_hd_result)
-            _render_ai_button("tab_human_design", _hd_result, btn_key="human_design")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_trutine_of_hermes_prompt"))
+            st.markdown(t("desc_trutine_of_hermes"))
+
+    # --- 六爻終身卦 Lifetime Liu Yao Hexagram ---
+    elif _selected_system == "tab_liuyao_lifetime":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_liuyao_lifetime")):
+                    _liuyao_result = compute_lifetime_hexagram(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        location_name=_p.get("location_name", ""),
+                    )
+                render_liuyao_lifetime_chart(_liuyao_result)
+                _render_ai_button("tab_liuyao_lifetime", _liuyao_result, btn_key="liuyao_lifetime")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_liuyao_lifetime"))
+
+    # --- 拜占庭占星 Byzantine Astrology ---
+    elif _selected_system == "tab_byzantine_astrology":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                render_byzantine_astrology_chart(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p.get("minute", 0),
+                    timezone=_p.get("timezone", 0.0),
+                    latitude=_p.get("latitude", 41.016),
+                    longitude=_p.get("longitude", 28.977),
+                    location_name=_p.get("location_name", ""),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_byzantine_astrology_prompt"))
+            st.markdown(t("desc_byzantine_astrology"))
+
+    # --- 醫學占星 Medical Astrology (Iatromathematics) ---
+    elif _selected_system == "tab_medical_astrology":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_medical_astrology")):
+                    _medical_result = compute_medical_chart(**_p)
+                render_medical_astrology_chart(_medical_result)
+                _render_ai_button("tab_medical_astrology", _medical_result, btn_key="medical_astrology")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_medical_astrology_prompt"))
+            st.markdown(t("desc_medical_astrology"))
+
+    elif _selected_system == "tab_shanghan_qianfa":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_shanghan_qianfa")):
+                    _shanghan_result = compute_shanghan_qianfa(**_p)
+                render_shanghan_qianfa_chart(_shanghan_result)
+                _render_ai_button("tab_shanghan_qianfa", _shanghan_result, btn_key="shanghan_qianfa")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_shanghan_qianfa_prompt"))
+            st.markdown(t("desc_shanghan_qianfa"))
+
+    # --- 北極神數 (Beiji Shenshu) ---
+    elif _selected_system == "tab_beiji":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_beiji")):
+                    render_beiji_chart(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        gender=st.session_state.get("_calc_gender", "男"),
+                    )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_beiji_prompt"))
+            st.markdown(t("desc_beiji"))
+
+    # --- 南極神數 Nanji Shenshu ---
+    elif _selected_system == "tab_nanji":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_nanji")):
+                    render_nanji_chart(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p.get("minute", 0),
+                        gender=st.session_state.get("_calc_gender", "男"),
+                    )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_nanji_prompt"))
+            st.markdown(t("desc_nanji"))
+
+    # --- 子平八字 Ziping Bazi ---
+    elif _selected_system == "tab_bazi":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_bazi")):
+                    _bazi_result = compute_bazi_chart(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        gender=st.session_state.get("_calc_gender", "男"),
+                        timezone=_p.get("timezone", 8.0),
+                        latitude=_p.get("latitude", 25.033),
+                        longitude=_p.get("longitude", 121.565),
+                        location_name=_p.get("location_name", ""),
+                    )
+                render_bazi_chart(_bazi_result)
+                _render_ai_button("tab_bazi", _bazi_result, btn_key="bazi")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_bazi_prompt"))
+            st.markdown(t("desc_bazi"))
+
+    # ============================================================
+    # --- 傳統卜卦占星 Traditional Horary Astrology ---
+    elif _selected_system == "tab_horary":
+        _p = st.session_state.get("_calc_params", {})
+        try:
+            render_horary_chart(
+                year=_p.get("year", 2024),
+                month=_p.get("month", 1),
+                day=_p.get("day", 1),
+                hour=_p.get("hour", 12),
+                minute=_p.get("minute", 0),
+                timezone=_p.get("tz", 0.0),
+                latitude=_p.get("lat", 25.033),
+                longitude=_p.get("lon", 121.565),
+                location_name=_p.get("location_name", ""),
+            )
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
-    else:
-        st.info(t("info_human_design_prompt"))
-        st.markdown(t("desc_human_design"))
+    elif _selected_system == "tab_esoteric":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_esoteric")):
+                    _esoteric_result = compute_esoteric_chart(**_p)
+                render_esoteric_chart(_esoteric_result)
+                _render_ai_button("tab_esoteric", _esoteric_result, btn_key="esoteric")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_esoteric_prompt"))
+            st.markdown(t("desc_esoteric"))
 
-# ============================================================
-# --- 擇日占星 Electional Astrology / Vedic Muhurta ---
-elif _selected_system == "tab_electional":
+    # ============================================================
+    # --- 人間圖 Human Design ---
+    elif _selected_system == "tab_human_design":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_human_design")):
+                    _hd_result = compute_human_design_chart(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        timezone=_p.get("timezone", 8.0),
+                        latitude=_p.get("latitude", 25.033),
+                        longitude=_p.get("longitude", 121.565),
+                        location_name=_p.get("location_name", ""),
+                    )
+                render_human_design_chart(_hd_result)
+                _render_ai_button("tab_human_design", _hd_result, btn_key="human_design")
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_human_design_prompt"))
+            st.markdown(t("desc_human_design"))
+
+    # ============================================================
+    # --- 擇日占星 Electional Astrology / Vedic Muhurta ---
+    elif _selected_system == "tab_electional":
+        _p = st.session_state.get("_calc_params", {})
+        try:
+            render_electional_chart(
+                year=_p.get("year", 2024),
+                month=_p.get("month", 1),
+                day=_p.get("day", 1),
+                hour=_p.get("hour", 12),
+                minute=_p.get("minute", 0),
+                timezone=_p.get("tz", 0.0),
+                latitude=_p.get("lat", 25.033),
+                longitude=_p.get("lon", 121.565),
+                location_name=_p.get("location_name", ""),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    # Global Fixed AI Chat Panel — always visible at page bottom
+    # 全域固定 AI 聊天面板 — 固定在所有頁面底部
+    # ============================================================
+
+# ── Transit / Progressions tab ───────────────────────────────────────────
+with _transit_tab:
+    st.info(t("transit_tab_hint"))
+    if _is_calculated:
+        _p = st.session_state.get("_calc_params", {})
+        if _p:
+            st.subheader(t("transit_quick_title"))
+            try:
+                from astro.western.western import compute_western_chart as _cwc
+                from astro.western.western_transit import compute_western_transits as _cwt
+                import pandas as pd
+                _w_base = _cwc(**_p)
+                _now_dt = datetime.now()
+                _transits = _cwt(
+                    _w_base,
+                    target_year=_now_dt.year,
+                    target_month=_now_dt.month,
+                    target_day=_now_dt.day,
+                    target_hour=_now_dt.hour,
+                    target_minute=_now_dt.minute,
+                    timezone=_p.get("timezone", 8.0),
+                )
+                if _transits:
+                    _tr_rows = []
+                    for _tr in _transits[:20]:
+                        _tr_rows.append({
+                            auto_cn("過運星", "Transit"):  getattr(_tr, "transit_planet", ""),
+                            auto_cn("相位", "Aspect"):    getattr(_tr, "aspect", ""),
+                            auto_cn("本命星", "Natal"):   getattr(_tr, "natal_planet", ""),
+                            auto_cn("精確度", "Orb"):     f"{getattr(_tr, 'orb', 0):.2f}°",
+                        })
+                    st.dataframe(pd.DataFrame(_tr_rows), hide_index=True, width='stretch')
+                else:
+                    st.info(auto_cn("目前無主要過運相位", "No major transits at this time"))
+            except Exception as _e:
+                st.caption(auto_cn(f"過運計算不可用：{_e}", f"Transit unavailable: {_e}"))
+
+# ── AI Deep Analysis tab ─────────────────────────────────────────────────
+with _ai_tab:
+    _render_global_ai_chat()
+
+# ── Cross-system Comparison tab ──────────────────────────────────────────
+with _compare_tab:
+    st.info(t("compare_tab_hint"))
+    if st.session_state.get("_cross_system_enabled"):
+        _p = st.session_state.get("_calc_params", {})
+        if _p:
+            try:
+                from astro.cross_compare import render_cross_comparison as _rcc
+                _rcc(_p)
+            except Exception:
+                pass
+    else:
+        st.markdown(
+            auto_cn(
+                "### 🔄 跨體系比較\n"
+                "請在**左側側邊欄**啟用「跨體系比較」開關，"
+                "系統將同時計算西洋、印度、七政四餘、紫微斗數和希臘占星，"
+                "並提供 AI 交叉比對解讀。",
+                "### 🔄 Cross-system Comparison\n"
+                "Enable the 'Cross-system Comparison' toggle in the **sidebar** to compute "
+                "Western, Vedic, Chinese, Zi Wei and Hellenistic charts simultaneously "
+                "with AI cross-system synthesis.",
+            )
+        )
+
+# ── Electional Tools tab ─────────────────────────────────────────────────
+with _elect_tab:
     _p = st.session_state.get("_calc_params", {})
     try:
         render_electional_chart(
@@ -5682,16 +5959,33 @@ elif _selected_system == "tab_electional":
             day=_p.get("day", 1),
             hour=_p.get("hour", 12),
             minute=_p.get("minute", 0),
-            timezone=_p.get("tz", 0.0),
-            latitude=_p.get("lat", 25.033),
-            longitude=_p.get("lon", 121.565),
+            timezone=_p.get("timezone", 8.0),
+            latitude=_p.get("latitude", 25.033),
+            longitude=_p.get("longitude", 121.565),
             location_name=_p.get("location_name", ""),
         )
-    except Exception as _e:
-        st.error(f"{t('error_tab_compute')}：{_e}")
-        st.exception(_e)
+    except Exception as _e_elect:
+        st.error(f"{t('error_tab_compute')}：{_e_elect}")
 
-# Global Fixed AI Chat Panel — always visible at page bottom
-# 全域固定 AI 聊天面板 — 固定在所有頁面底部
-# ============================================================
-_render_global_ai_chat()
+# ── Map & Relocation tab ─────────────────────────────────────────────────
+with _relo_tab:
+    st.info(
+        auto_cn(
+            "💡 完整星移地圖功能請選擇左側「星移地圖 (Astrocartography)」體系。此分頁提供快速地理位置概覽。",
+            "💡 For the full Astrocartography experience select 'Astrocartography' from the sidebar. "
+            "This tab provides a quick geographic overview.",
+        )
+    )
+    _p = st.session_state.get("_calc_params", {})
+    if _p:
+        try:
+            from astro.world_map import render_world_map as _render_wm
+            _render_wm()
+        except Exception:
+            if st.button(
+                auto_cn("切換至星移地圖", "Go to Astrocartography"),
+                key="_relo_goto_acg",
+            ):
+                st.session_state["_system_select"] = "tab_acg"
+                st.rerun()
+

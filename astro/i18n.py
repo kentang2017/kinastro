@@ -158,6 +158,79 @@ TRANSLATIONS = {
         "zh": "🔮 開始排盤",
         "en": "🔮 Calculate Chart",
     },
+    # ── Birth data form ──────────────────────────────────────────────────────
+    "generate_chart_btn": {
+        "zh": "🌟 生成命盤",
+        "en": "🌟 Generate Chart",
+    },
+    "form_validation_date": {
+        "zh": "⚠️ 請輸入有效的出生日期",
+        "en": "⚠️ Please enter a valid birth date",
+    },
+    "form_validation_location": {
+        "zh": "⚠️ 自訂地點：緯度需在 −90°~90°，經度需在 −180°~180°",
+        "en": "⚠️ Custom location: latitude must be −90°~90°, longitude −180°~180°",
+    },
+    "form_hint_custom_coords": {
+        "zh": "請填入自訂座標",
+        "en": "Enter custom coordinates",
+    },
+    # ── Main navigation tabs ─────────────────────────────────────────────────
+    "main_tab_natal": {
+        "zh": "🌟 本命盤",
+        "en": "🌟 Natal Chart",
+    },
+    "main_tab_transit": {
+        "zh": "📅 流年 / 大運 / 過運",
+        "en": "📅 Transits / Progressions",
+    },
+    "main_tab_ai": {
+        "zh": "🤖 AI 深度解讀",
+        "en": "🤖 AI Analysis",
+    },
+    "main_tab_compare": {
+        "zh": "🔄 跨體系比較",
+        "en": "🔄 Cross-system Comparison",
+    },
+    "main_tab_electional": {
+        "zh": "📆 擇日工具",
+        "en": "📆 Electional Tools",
+    },
+    "main_tab_relocation": {
+        "zh": "🗺️ 地圖與 Relocation",
+        "en": "🗺️ Map & Relocation",
+    },
+    # ── Transit quick-panel (main tab 2) ─────────────────────────────────────
+    "transit_tab_hint": {
+        "zh": "💡 過運（流年）功能已整合在各體系的子分頁中。請先從左側選擇體系，再切換至「流年過運」子頁籤。",
+        "en": "💡 Transit features are available within each system's sub-tabs. Select a system from the sidebar, then switch to the 'Transits' sub-tab.",
+    },
+    "transit_quick_title": {
+        "zh": "西洋占星快速過運查詢",
+        "en": "Western Astrology Quick Transit Lookup",
+    },
+    # ── Cross-system comparison tab ──────────────────────────────────────────
+    "compare_tab_hint": {
+        "zh": "💡 請在左側側邊欄啟用「跨體系比較」開關，並選擇任意體系查看命盤。",
+        "en": "💡 Enable the 'Cross-system Comparison' toggle in the sidebar, then select any system to view the multi-system synthesis.",
+    },
+    # ── Share chart ──────────────────────────────────────────────────────────
+    "share_chart_btn": {
+        "zh": "🔗 複製分享連結",
+        "en": "🔗 Copy Share Link",
+    },
+    "share_chart_copied": {
+        "zh": "✅ 分享連結已複製至剪貼簿！",
+        "en": "✅ Share link copied to clipboard!",
+    },
+    "share_chart_hint": {
+        "zh": "分享此連結可讓他人直接開啟你的命盤設定",
+        "en": "Share this link to let others open your chart settings directly",
+    },
+    "share_chart_loaded": {
+        "zh": "✅ 已從分享連結載入命盤資料",
+        "en": "✅ Chart loaded from shared link",
+    },
     "gender_header": {
         "zh": "性別",
         "en": "Gender",
