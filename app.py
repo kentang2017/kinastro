@@ -9,8 +9,9 @@ Multi-System Astrology Chart Application
 宿曜道、泰國占星、緬甸（Mahabote）、巴厘 Wariga、爪哇 Weton、蒙古祖爾海（Zurkhai）、
 藏傳時輪金剛、九星氣學、土亭數、高棉占星、波利尼西亞／夏威夷、
 卡巴拉、猶太 Mazzalot、薩珊波斯、阿拉伯占星、也門占星、Picatrix 占星魔法、
-瑪雅、阿茲特克、古埃及十度區間（Decans）、巴比倫占星
-共四十九種體系，使用 pyswisseph 進行天文計算。
+瑪雅、阿茲特克、古埃及十度區間（Decans）、巴比倫占星、
+醫學占星、傷寒鈐法、傳統卜卦占星（Traditional Horary Astrology）
+共五十二種體系，使用 pyswisseph 進行天文計算。
 """
 
 import os
@@ -227,17 +228,17 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">五十一體系占星排盤平台</span>
+          <span class="hp-title-sub">五十二體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
           紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星到傷寒鈐法——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十一種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十二種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">51</div>
+            <div class="hp-stat-num">52</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -279,8 +280,14 @@ def render_homepage():
          ["卡巴拉", "猶太星宿", "薩珊波斯", "阿拉伯占星", "葉門占星", "Picatrix 占星魔法"],
          "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
         ("🏺", "古代文明", "Ancient Civilizations",
-         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星", "醫學占星", "傷寒鈐法"],
+         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星"],
          "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
+        ("⚕️", "醫占", "Medical Astrology",
+         ["醫學占星", "傷寒鈐法"],
+         "#4CAF8E", "rgba(76,175,142,0.1)", "rgba(76,175,142,0.22)"),
+        ("📜", "傳統卜卦占星", "Traditional Horary",
+         ["William Lilly 問卜", "Bonatti 卜星", "VOC 月亮", "Vedic Prashna"],
+         "#7C5CBF", "rgba(124,92,191,0.1)", "rgba(124,92,191,0.26)"),
     ]
 
     _cat_html = '<div class="hp-cat-grid">'
@@ -304,8 +311,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "五十一體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球五十一種占星體系"),
+        ("🔮", "五十二體系合一",
+         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球五十二種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
@@ -1108,7 +1115,8 @@ with st.sidebar:
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
-        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa", "tab_horary"]),
+        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
+        ("cat_horary", ["tab_horary"]),
     ]
 
     _CATEGORY_ICONS = {
@@ -1120,6 +1128,7 @@ with st.sidebar:
         "cat_middle_east": "🕌",
         "cat_ancient": "🏺",
         "cat_yi_zhan": "⚕️",
+        "cat_horary": "📜",
     }
 
     _SYSTEM_LABELS = {

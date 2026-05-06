@@ -39,140 +39,151 @@ from .constants import (
 
 _HORARY_CSS = """
 <style>
-/* ── Horary Module Global Styles ────────────────────────────── */
+/* ── Horary Module — Celestial Midnight Palette ─────────────── */
 .horary-header {
-    background: linear-gradient(135deg, #1a0d00 0%, #2e1800 50%, #4a2800 100%);
-    border: 1px solid #8B6914;
-    border-left: 6px solid #C5A03F;
+    background: linear-gradient(135deg, #0b1120 0%, #131e35 45%, #1b2a4a 100%);
+    border: 1px solid #2d4a7a;
+    border-left: 6px solid #C9A84C;
     padding: 18px 24px;
-    border-radius: 6px;
+    border-radius: 8px;
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 20px rgba(11,17,32,0.6), inset 0 1px 0 rgba(201,168,76,0.15);
 }
 .horary-header::before {
     content: '';
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%231a0d00'/%3E%3Ccircle cx='1' cy='1' r='0.5' fill='%23C5A03F' opacity='0.08'/%3E%3C/svg%3E");
+    background: radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(100,130,220,0.05) 0%, transparent 60%);
     pointer-events: none;
 }
-.horary-header h2 { color: #E8C97A; margin: 0 0 4px 0; font-size: 1.5em; font-family: serif; }
-.horary-header p  { color: #c4a876; margin: 0; font-size: 0.88em; font-style: italic; }
+.horary-header h2 { color: #E8D5A3; margin: 0 0 4px 0; font-size: 1.5em; font-family: 'Georgia', serif; letter-spacing: 0.03em; }
+.horary-header p  { color: #9aafd4; margin: 0; font-size: 0.88em; font-style: italic; }
 
 .horary-section {
-    background: rgba(197,160,63,0.04);
-    border: 1px solid #8B691422;
-    border-radius: 6px;
+    background: rgba(19,30,53,0.55);
+    border: 1px solid rgba(100,140,220,0.18);
+    border-radius: 8px;
     padding: 14px 18px;
     margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
-.horary-section h4 { color: #C5A03F; margin: 0 0 10px 0; font-family: serif; letter-spacing: 0.02em; }
+.horary-section h4 { color: #C9A84C; margin: 0 0 10px 0; font-family: 'Georgia', serif; letter-spacing: 0.04em; }
 
 .stricture-warning {
-    background: rgba(220,80,40,0.12);
-    border-left: 4px solid #DC5028;
+    background: rgba(220,60,60,0.13);
+    border-left: 4px solid #E05555;
     border-radius: 4px;
     padding: 8px 14px;
     margin-bottom: 8px;
-    color: #f4a07c;
+    color: #f5a0a0;
 }
 .stricture-caution {
-    background: rgba(255,180,0,0.10);
-    border-left: 4px solid #FFB400;
+    background: rgba(201,168,76,0.12);
+    border-left: 4px solid #C9A84C;
     border-radius: 4px;
     padding: 8px 14px;
     margin-bottom: 8px;
-    color: #f0d080;
+    color: #e8d08a;
 }
 .stricture-info {
-    background: rgba(100,150,255,0.10);
-    border-left: 4px solid #6496FF;
+    background: rgba(90,130,240,0.12);
+    border-left: 4px solid #6488E8;
     border-radius: 4px;
     padding: 8px 14px;
     margin-bottom: 8px;
-    color: #a0b8f0;
+    color: #aac0f0;
 }
 
 .verdict-yes {
-    background: rgba(40,167,69,0.15);
-    border: 2px solid #28a745;
-    border-radius: 8px;
-    padding: 12px 20px;
-    color: #7edf9a;
+    background: linear-gradient(135deg, rgba(34,150,90,0.18), rgba(20,100,60,0.12));
+    border: 2px solid #2a9e62;
+    border-radius: 10px;
+    padding: 14px 22px;
+    color: #7ee8a8;
     font-size: 1.1em;
-    font-family: serif;
+    font-family: 'Georgia', serif;
     font-weight: bold;
     text-align: center;
+    box-shadow: 0 0 16px rgba(34,150,90,0.15);
 }
 .verdict-no {
-    background: rgba(220,53,69,0.15);
-    border: 2px solid #dc3545;
-    border-radius: 8px;
-    padding: 12px 20px;
-    color: #f08898;
+    background: linear-gradient(135deg, rgba(200,50,60,0.18), rgba(140,30,40,0.12));
+    border: 2px solid #c83c48;
+    border-radius: 10px;
+    padding: 14px 22px;
+    color: #f09090;
     font-size: 1.1em;
-    font-family: serif;
+    font-family: 'Georgia', serif;
     font-weight: bold;
     text-align: center;
+    box-shadow: 0 0 16px rgba(200,50,60,0.15);
 }
 .verdict-unclear {
-    background: rgba(255,193,7,0.12);
-    border: 2px solid #ffc107;
-    border-radius: 8px;
-    padding: 12px 20px;
-    color: #f0d060;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(140,110,40,0.1));
+    border: 2px solid #C9A84C;
+    border-radius: 10px;
+    padding: 14px 22px;
+    color: #e8d08a;
     font-size: 1.1em;
-    font-family: serif;
+    font-family: 'Georgia', serif;
     font-weight: bold;
     text-align: center;
+    box-shadow: 0 0 16px rgba(201,168,76,0.12);
 }
 
 .planet-row {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
-    border-radius: 3px;
-    margin-bottom: 4px;
-    background: rgba(197,160,63,0.04);
-    border: 1px solid #8B691415;
-    font-family: monospace;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    background: rgba(19,30,53,0.6);
+    border: 1px solid rgba(100,140,220,0.12);
+    font-family: 'Courier New', monospace;
     font-size: 0.88em;
 }
-.planet-strong { border-left: 3px solid #28a745; }
-.planet-weak   { border-left: 3px solid #dc3545; }
-.planet-neutral{ border-left: 3px solid #8B6914; }
+.planet-strong { border-left: 3px solid #2a9e62; }
+.planet-weak   { border-left: 3px solid #c83c48; }
+.planet-neutral{ border-left: 3px solid #4a6aa0; }
 
 .judgment-text {
-    background: rgba(30,15,0,0.6);
-    border: 1px solid #8B6914;
-    border-radius: 6px;
-    padding: 16px 20px;
+    background: rgba(11,17,32,0.75);
+    border: 1px solid rgba(100,140,220,0.22);
+    border-radius: 8px;
+    padding: 18px 22px;
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 0.9em;
-    line-height: 1.7;
-    color: #d4c09c;
+    line-height: 1.8;
+    color: #c8d8f0;
     white-space: pre-wrap;
+    box-shadow: inset 0 2px 12px rgba(0,0,0,0.3);
 }
 
 .arudha-box {
-    background: linear-gradient(135deg, rgba(120,60,0,0.3), rgba(60,20,0,0.4));
-    border: 1px solid #C5A03F66;
-    border-radius: 8px;
-    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(50,30,100,0.35), rgba(20,30,70,0.45));
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 10px;
+    padding: 13px 18px;
     margin: 8px 0;
     font-style: italic;
-    color: #E8C97A;
+    color: #E8D5A3;
+    box-shadow: 0 2px 10px rgba(50,30,100,0.2);
 }
 
 .classical-quote {
-    border-left: 3px solid #C5A03F;
-    padding: 6px 12px;
-    margin: 8px 0;
+    border-left: 3px solid #C9A84C;
+    padding: 6px 14px;
+    margin: 10px 0;
     font-style: italic;
-    color: #b89a5c;
+    color: #9aafd4;
     font-size: 0.88em;
-    font-family: Georgia, serif;
+    font-family: 'Georgia', serif;
+    background: rgba(100,140,220,0.05);
+    border-radius: 0 4px 4px 0;
 }
+
 </style>
 """
 
@@ -197,31 +208,31 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
     R_inner = 165
     R_planet = 200
 
-    # Parchment colours
-    bg_colour = "#F4E9C8"
-    paper_mid = "#E8D5A0"
-    ink_dark = "#2C1A00"
-    ink_gold = "#8B5E00"
-    ink_red = "#8B1A00"
-    circle_colour = "#5C3A00"
-    text_colour = "#1E0C00"
+    # Celestial midnight colours
+    bg_colour = "#0b1120"
+    paper_mid = "#131e35"
+    ink_dark = "#c8d8f0"
+    ink_gold = "#C9A84C"
+    ink_red = "#E05555"
+    circle_colour = "#2d4a7a"
+    text_colour = "#E8D5A3"
 
     svg_parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
         f'width="{W}" height="{H}" font-family="Georgia,serif">',
 
-        # ── Background parchment ────────────────────────────────────
+        # ── Background — deep night sky ────────────────────────────────
         f'<defs>',
-        f'  <radialGradient id="parchment" cx="50%" cy="45%" r="60%">',
-        f'    <stop offset="0%" stop-color="#F8F0D4"/>',
-        f'    <stop offset="70%" stop-color="#EDE0B0"/>',
-        f'    <stop offset="100%" stop-color="#D4C080"/>',
+        f'  <radialGradient id="parchment" cx="50%" cy="45%" r="65%">',
+        f'    <stop offset="0%" stop-color="#1b2a4a"/>',
+        f'    <stop offset="60%" stop-color="#131e35"/>',
+        f'    <stop offset="100%" stop-color="#0b1120"/>',
         f'  </radialGradient>',
         f'  <filter id="paper-texture" x="-5%" y="-5%" width="110%" height="110%">',
         f'    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" '
         f'      stitchTiles="stitch" result="noise"/>',
         f'    <feColorMatrix type="saturate" values="0" in="noise" result="grey"/>',
-        f'    <feBlend in="SourceGraphic" in2="grey" mode="multiply" result="blend"/>',
+        f'    <feBlend in="SourceGraphic" in2="grey" mode="soft-light" result="blend"/>',
         f'    <feComposite in="blend" in2="SourceGraphic" operator="in"/>',
         f'  </filter>',
         f'  <filter id="ink-blur">',
@@ -231,13 +242,13 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
 
         # Outer border
         f'<rect width="{W}" height="{H}" rx="12" ry="12" fill="url(#parchment)" '
-        f'stroke="{circle_colour}" stroke-width="3" filter="url(#paper-texture)"/>',
+        f'stroke="{circle_colour}" stroke-width="3"/>',
 
         # Decorative outer frame (double border)
         f'<rect x="8" y="8" width="{W-16}" height="{H-16}" rx="8" ry="8" '
-        f'fill="none" stroke="{ink_gold}" stroke-width="1.2" opacity="0.6"/>',
+        f'fill="none" stroke="{ink_gold}" stroke-width="1.2" opacity="0.5"/>',
         f'<rect x="12" y="12" width="{W-24}" height="{H-24}" rx="6" ry="6" '
-        f'fill="none" stroke="{ink_dark}" stroke-width="0.5" opacity="0.3"/>',
+        f'fill="none" stroke="rgba(100,140,220,0.2)" stroke-width="0.5"/>',
 
         # ── Outer circle (zodiac band) ──────────────────────────────
         f'<circle cx="{cx}" cy="{cy}" r="{R_outer}" fill="none" '
@@ -246,21 +257,21 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
         f'stroke="{circle_colour}" stroke-width="0.8"/>',
 
         # ── Inner house circle ──────────────────────────────────────
-        f'<circle cx="{cx}" cy="{cy}" r="{R_inner}" fill="rgba(244,233,200,0.7)" '
+        f'<circle cx="{cx}" cy="{cy}" r="{R_inner}" fill="rgba(11,17,32,0.6)" '
         f'stroke="{circle_colour}" stroke-width="1.5"/>',
 
         # ── Center circle (horizon / cross) ────────────────────────
-        f'<circle cx="{cx}" cy="{cy}" r="24" fill="rgba(244,233,200,0.9)" '
+        f'<circle cx="{cx}" cy="{cy}" r="24" fill="rgba(19,30,53,0.9)" '
         f'stroke="{ink_gold}" stroke-width="1"/>',
     ]
 
     # ── Draw zodiac signs band ──────────────────────────────────────
     SIGN_GLYPHS = [s[1] for s in ZODIAC_SIGNS]
     SIGN_COLOURS = {
-        "Fire":  "#8B1A00",
-        "Earth": "#5C3A00",
-        "Air":   "#1A3A5C",
-        "Water": "#0A3B5C",
+        "Fire":  "#E05555",
+        "Earth": "#C9A84C",
+        "Air":   "#6488E8",
+        "Water": "#4aaad4",
     }
 
     for i in range(12):
@@ -340,12 +351,12 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
         planet_xy[p.name] = (px, py)
 
     ASPECT_COLOURS = {
-        "trine":       "#1A6E28",  # green — benefic
-        "sextile":     "#1A4E8E",  # blue — benefic
-        "conjunction": "#5C3A00",  # dark gold — neutral
-        "square":      "#8B1A00",  # dark red — malefic
-        "opposition":  "#6B0000",  # deep red — malefic
-        "quincunx":    "#5C5C00",  # olive — neutral
+        "trine":       "#2ecc71",  # emerald green — benefic
+        "sextile":     "#4a9eff",  # bright blue — benefic
+        "conjunction": "#C9A84C",  # gold — neutral
+        "square":      "#E05555",  # vivid red — malefic
+        "opposition":  "#c0392b",  # deep red — malefic
+        "quincunx":    "#9b59b6",  # violet — neutral
     }
 
     for asp in chart.aspects[:12]:  # limit to top 12 aspects for clarity
@@ -364,13 +375,13 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
 
     # ── Planets ──────────────────────────────────────────────────────
     PLANET_ELEM_COLOURS = {
-        "Sun":     "#B8860B",
-        "Moon":    "#708090",
-        "Mercury": "#2E4A8E",
-        "Venus":   "#8B2252",
-        "Mars":    "#8B1A00",
-        "Jupiter": "#1A5C1A",
-        "Saturn":  "#3A2800",
+        "Sun":     "#F5C842",
+        "Moon":    "#B0C4DE",
+        "Mercury": "#6488E8",
+        "Venus":   "#E878B0",
+        "Mars":    "#E05555",
+        "Jupiter": "#2ecc71",
+        "Saturn":  "#9aafd4",
     }
 
     for p in chart.planets:
@@ -387,15 +398,15 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
 
         # Background circle for the planet
         if is_querent or is_quesited:
-            ring_c = "#C5A03F" if is_querent else "#8B1A00"
+            ring_c = "#C9A84C" if is_querent else "#E05555"
             svg_parts.append(
                 f'<circle cx="{px:.1f}" cy="{py:.1f}" r="13" '
-                f'fill="rgba(244,233,200,0.9)" stroke="{ring_c}" stroke-width="2"/>'
+                f'fill="rgba(19,30,53,0.95)" stroke="{ring_c}" stroke-width="2"/>'
             )
         else:
             svg_parts.append(
                 f'<circle cx="{px:.1f}" cy="{py:.1f}" r="11" '
-                f'fill="rgba(244,233,200,0.85)" stroke="{circle_colour}" stroke-width="1"/>'
+                f'fill="rgba(11,17,32,0.9)" stroke="{circle_colour}" stroke-width="1"/>'
             )
 
         # Planet glyph
@@ -501,37 +512,31 @@ def _render_north_indian_prashna_svg(chart: VedicPrashnaChart) -> str:
     W, H = 520, 540
     cx, cy = W // 2, H // 2 - 10
 
-    # Antique Indian manuscript palette
-    bg_colour = "#FAF0DC"
-    border_colour = "#8B4A00"
-    ink_colour = "#2C0D00"
-    gold_colour = "#A0680A"
-    red_colour = "#8B1A00"
-    blue_colour = "#1A3060"
+    # Celestial midnight — Vedic style
+    bg_colour = "#0e1526"
+    border_colour = "#2d4a7a"
+    ink_colour = "#c8d8f0"
+    gold_colour = "#C9A84C"
+    red_colour = "#E05555"
+    blue_colour = "#6488E8"
 
     svg_parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
         f'width="{W}" height="{H}" font-family="serif">',
 
-        # Parchment background
+        # Night sky background
         f'<defs>',
         f'  <linearGradient id="vp-bg" x1="0%" y1="0%" x2="100%" y2="100%">',
-        f'    <stop offset="0%" stop-color="#FDF5E4"/>',
-        f'    <stop offset="50%" stop-color="#F5E8C4"/>',
-        f'    <stop offset="100%" stop-color="#E8D4A0"/>',
+        f'    <stop offset="0%" stop-color="#1b2a4a"/>',
+        f'    <stop offset="50%" stop-color="#131e35"/>',
+        f'    <stop offset="100%" stop-color="#0e1526"/>',
         f'  </linearGradient>',
-        f'  <filter id="vp-texture">',
-        f'    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" '
-        f'      stitchTiles="stitch" result="noise"/>',
-        f'    <feColorMatrix in="noise" type="saturate" values="0.2" result="colorNoise"/>',
-        f'    <feBlend in="SourceGraphic" in2="colorNoise" mode="multiply"/>',
-        f'  </filter>',
         f'</defs>',
 
         f'<rect width="{W}" height="{H}" rx="8" ry="8" fill="url(#vp-bg)" '
         f'stroke="{border_colour}" stroke-width="3"/>',
         f'<rect x="6" y="6" width="{W-12}" height="{H-12}" rx="5" ry="5" '
-        f'fill="none" stroke="{gold_colour}" stroke-width="1" opacity="0.5"/>',
+        f'fill="none" stroke="{gold_colour}" stroke-width="1" opacity="0.4"/>',
     ]
 
     # ── North Indian diamond grid ─────────────────────────────────
@@ -720,11 +725,11 @@ def _render_south_indian_prashna_svg(chart: VedicPrashnaChart) -> str:
     ox = (W - 4 * sq) // 2
     oy = 50
 
-    bg_colour = "#FAF0DC"
-    border_colour = "#8B4A00"
-    ink_colour = "#2C0D00"
-    gold_colour = "#A0680A"
-    red_colour = "#8B1A00"
+    bg_colour = "#0e1526"
+    border_colour = "#2d4a7a"
+    ink_colour = "#c8d8f0"
+    gold_colour = "#C9A84C"
+    red_colour = "#E05555"
 
     svg_parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
