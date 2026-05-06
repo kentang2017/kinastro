@@ -109,6 +109,7 @@ from astro.western.advanced_bodies import (
 )
 from astro.western.uranian import compute_uranian_chart, render_uranian_chart
 from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
+from astro.harmonic import compute_multi_harmonic, render_harmonic
 from astro.esoteric import compute_esoteric_chart
 from astro.esoteric.renderer import render_streamlit as render_esoteric_chart
 from astro.western.predictive_ui import render_predictive_suite
@@ -1122,7 +1123,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_bazi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1176,6 +1177,7 @@ with st.sidebar:
         "tab_acg": t("tab_acg"),
         "tab_uranian": t("tab_uranian"),
         "tab_cosmobiology": t("tab_cosmobiology"),
+        "tab_harmonic": t("tab_harmonic"),
         "tab_liuren": t("tab_liuren"),
         "tab_fendjing": t("tab_fendjing"),
         "tab_taiyi": t("tab_taiyi"),
@@ -1236,6 +1238,7 @@ with st.sidebar:
         "tab_acg": t("sys_hint_acg"),
         "tab_uranian": t("sys_hint_uranian"),
         "tab_cosmobiology": t("sys_hint_cosmobiology"),
+        "tab_harmonic": t("sys_hint_harmonic"),
         "tab_liuren": t("sys_hint_liuren"),
         "tab_fendjing": t("sys_hint_fendjing"),
         "tab_taiyi": t("sys_hint_taiyi"),
@@ -5246,6 +5249,20 @@ elif _selected_system == "tab_cosmobiology":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_cosmobiology"))
+elif _selected_system == "tab_harmonic":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_harmonic")):
+                _harmonic_result = compute_multi_harmonic(**_p)
+            render_harmonic(_harmonic_result)
+            _render_ai_button("tab_harmonic", _harmonic_result, btn_key="harmonic")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_calc_prompt"))
+        st.markdown(t("desc_harmonic"))
 elif _selected_system == "tab_wariga":
     if _is_calculated:
         try:
