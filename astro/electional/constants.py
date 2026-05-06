@@ -745,7 +745,7 @@ VEDIC_RASHIS: List[Dict] = [
 # Lagna signs that are auspicious/inauspicious for each activity
 LAGNA_GOOD_FOR: Dict[str, List[int]] = {
     # sign index 0-11
-    "marriage":          [1, 3, 4, 6, 8, 11],   # Taurus, Cancer, Leo, Libra, Scorpio, Pisces
+    "marriage":          [1, 3, 4, 6, 7, 11],   # Taurus, Cancer, Leo, Libra, Scorpio, Pisces
     "business_opening":  [0, 2, 4, 5, 8, 10],
     "contract_signing":  [2, 3, 5, 6, 8, 10, 11],
     "relocation":        [0, 1, 3, 6, 9, 11],
@@ -757,7 +757,7 @@ LAGNA_GOOD_FOR: Dict[str, List[int]] = {
 }
 
 LAGNA_AVOID_FOR: Dict[str, List[int]] = {
-    "marriage":          [0, 2, 5, 7, 9, 10],  # Aries, Gemini, Virgo, Scorpio, Capricorn, Aquarius
+    "marriage":          [0, 2, 5, 8, 9, 10],  # Aries, Gemini, Virgo, Sagittarius, Capricorn, Aquarius
     "business_opening":  [3, 6, 7, 11],
     "contract_signing":  [0, 4, 7],
     "relocation":        [2, 4, 5, 7, 10],

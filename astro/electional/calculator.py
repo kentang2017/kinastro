@@ -1045,7 +1045,7 @@ def _compute_panchanga(jd: float) -> Dict[str, Any]:
     # Karana 1 (first half of Tithi 1): Kimstughna
     # Karanas 2-57: cycle of 7 movable
     # Karana 58: Shakuni, 59: Chatushpada, 60: Naga
-    FIXED_KARANA_MAP = {1: 10, 58: 7, 59: 8, 60: 9}  # maps position to KARANAS index
+    FIXED_KARANA_MAP = {1: 11, 58: 8, 59: 9, 60: 10}  # maps position to KARANAS num (1-based)
     if karana_in_month in FIXED_KARANA_MAP:
         karana_data = KARANAS[FIXED_KARANA_MAP[karana_in_month] - 1]
     else:
