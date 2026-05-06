@@ -1725,6 +1725,7 @@ transmitted by **Chen Xiyi**.
     "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
     "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
     "cat_yi_zhan": {"zh": "醫占", "en": "Medical Astrology"},
+    "cat_horary": {"zh": "傳統卜卦占星", "en": "Traditional Horary Astrology"},
     "cat_korean": {"zh": "韓國體系", "en": "Korean Systems"},
     "cat_khmer": {"zh": "高棉體系", "en": "Khmer Systems"},
 
