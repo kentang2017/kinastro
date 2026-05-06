@@ -98,6 +98,7 @@ from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
 from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
 from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
 from astro.polynesian_hawaiian.renderer import render_streamlit as render_polynesian_chart_ui
+from astro.persian.renderer import render_streamlit as render_deep_sassanian_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
@@ -1133,7 +1134,7 @@ with st.sidebar:
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
-        ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
+        ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_persian_deep", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian", "tab_sumerian"]),
         ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
         ("cat_horary", ["tab_horary", "tab_electional"]),
@@ -1193,6 +1194,7 @@ with st.sidebar:
         "tab_celtic_tree": t("tab_celtic_tree"),
         "tab_sabian": t("sabian_system_label"),
         "tab_persian": t("tab_persian"),
+        "tab_persian_deep": t("tab_persian_deep"),
         "tab_kp": t("tab_kp"),
         "tab_tieban": t("tab_tieban"),
         "tab_shaozi": t("tab_shaozi"),
@@ -1259,6 +1261,7 @@ with st.sidebar:
         "tab_celtic_tree": t("sys_hint_celtic_tree"),
         "tab_sabian": t("sys_hint_sabian"),
         "tab_persian": t("sys_hint_persian"),
+        "tab_persian_deep": t("sys_hint_persian_deep"),
         "tab_kp": t("sys_hint_kp"),
         "tab_tieban": t("sys_hint_tieban"),
         "tab_shaozi": t("sys_hint_shaozi"),
@@ -2790,6 +2793,30 @@ elif _selected_system == "tab_persian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_persian"))
+
+# --- 薩珊波斯 進階版 Advanced Sassanian Persian Astrology ---
+elif _selected_system == "tab_persian_deep":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_persian_deep")):
+                render_deep_sassanian_chart(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p.get("minute", 0),
+                    timezone=_p.get("tz", 0.0),
+                    latitude=_p.get("lat", 0.0),
+                    longitude=_p.get("lon", 0.0),
+                    location_name=_p.get("location_name", ""),
+                )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_persian_deep_prompt"))
+        st.markdown(t("desc_persian_deep"))
 
 # --- KP Astrology (Krishnamurti Paddhati) ---
 elif _selected_system == "tab_kp":

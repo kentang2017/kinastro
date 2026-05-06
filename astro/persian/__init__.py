@@ -54,10 +54,25 @@ __all__ = [
     "get_royal_star_pahlavi",
     "render_faravahar_element",
     "render_eight_pointed_star",
-    # 完整星盤計算
+    # 完整星盤計算 (基礎版)
     "compute_sassanian_chart",
     "SassanianChart",
     "SassanianPlanet",
     "FirdarPeriod",
     "HylegResult",
+    # 進階版 (lazy-loaded)
+    "compute_deep_sassanian_chart",
+    "render_deep_streamlit",
 ]
+
+
+def compute_deep_sassanian_chart(*args, **kwargs):  # type: ignore[override]
+    """Lazy-load and call the advanced Sassanian chart calculator."""
+    from .calculator import compute_deep_sassanian_chart as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_deep_streamlit(*args, **kwargs):  # type: ignore[override]
+    """Lazy-load and call the advanced Sassanian Streamlit renderer."""
+    from .renderer import render_streamlit as _fn
+    return _fn(*args, **kwargs)
