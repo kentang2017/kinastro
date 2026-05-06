@@ -3407,6 +3407,26 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看醫學占星分析。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Medical Astrology analysis.",
     },
+    "tab_byzantine_astrology": {
+        "zh": "✚ 拜占庭占星",
+        "en": "✚ Byzantine Astrology",
+    },
+    "desc_byzantine_astrology": {
+        "zh": "✚ **拜占庭占星（Byzantine Astrology）** — 東羅馬帝國占星傳統（公元4–15世紀）。融合希臘化與阿拉伯技法，涵蓋政治星盤（皇帝、城市、宗教）、基督教-占星融合、地震占（地震占）、月行占（月相預兆）、雷鳴占（雷鳴預兆）。主要人物：赫費斯提翁、保羅·亞歷山大里亞、雷托里烏斯、埃德薩的塞奧菲盧斯、約翰·阿布拉米烏斯。",
+        "en": "✚ **Byzantine Astrology** — Eastern Roman Empire astrological tradition (4th–15th century CE). Bridging Hellenistic and Arabic techniques, covering political horoscopes (emperors, cities, religions), Christian-astrological syncretism, Seismologia (earthquake omens), Selenodromia (moon phase omens), Vrontologia (thunder omens). Key figures: Hephaestion of Thebes, Paulus Alexandrinus, Rhetorius of Egypt, Theophilus of Edessa, John Abramius.",
+    },
+    "spinner_byzantine_astrology": {
+        "zh": "計算拜占庭占星排盤…",
+        "en": "Computing Byzantine Astrology chart…",
+    },
+    "sys_hint_byzantine_astrology": {
+        "zh": "東羅馬帝國占星，政治星盤，地震月相雷鳴徵兆，基督教融合",
+        "en": "Eastern Roman astrology, political horoscopes, omen tables, Christian syncretism",
+    },
+    "info_byzantine_astrology_prompt": {
+        "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看拜占庭占星分析。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Byzantine Astrology analysis.",
+    },
     "tab_shanghan_qianfa": {
         "zh": "🌿 傷寒鈐法",
         "en": "🌿 Shanghan Qianfa",
