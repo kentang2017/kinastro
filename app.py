@@ -108,6 +108,8 @@ from astro.western.advanced_bodies import (
 )
 from astro.western.uranian import compute_uranian_chart, render_uranian_chart
 from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
+from astro.esoteric import compute_esoteric_chart
+from astro.esoteric.renderer import render_streamlit as render_esoteric_chart
 from astro.western.predictive_ui import render_predictive_suite
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
 from astro.natal_summary import generate_natal_summary
@@ -1119,7 +1121,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_bazi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1189,7 +1191,7 @@ with st.sidebar:
         "tab_wuyunliuqi": t("tab_wuyunliuqi"),
         "tab_picatrix_behenian": t("tab_picatrix_behenian"),
         "tab_rectification": t("tab_rectification"),
-        "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
+        "tab_esoteric": t("tab_esoteric"),
         "tab_medical_astrology": t("tab_medical_astrology"),
         "tab_shanghan_qianfa": t("tab_shanghan_qianfa"),
         "tab_beiji": t("tab_beiji"),
@@ -1247,7 +1249,7 @@ with st.sidebar:
         "tab_wuyunliuqi": t("sys_hint_wuyunliuqi"),
         "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
         "tab_rectification": t("sys_hint_rectification"),
-        "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
+        "tab_esoteric": t("sys_hint_esoteric"),
         "tab_medical_astrology": t("sys_hint_medical_astrology"),
         "tab_shanghan_qianfa": t("sys_hint_shanghan_qianfa"),
         "tab_beiji": t("sys_hint_beiji"),
@@ -5434,6 +5436,20 @@ elif _selected_system == "tab_horary":
     except Exception as _e:
         st.error(f"{t('error_tab_compute')}：{_e}")
         st.exception(_e)
+elif _selected_system == "tab_esoteric":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_esoteric")):
+                _esoteric_result = compute_esoteric_chart(**_p)
+            render_esoteric_chart(_esoteric_result)
+            _render_ai_button("tab_esoteric", _esoteric_result, btn_key="esoteric")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_esoteric_prompt"))
+        st.markdown(t("desc_esoteric"))
 
 # Global Fixed AI Chat Panel — always visible at page bottom
 # 全域固定 AI 聊天面板 — 固定在所有頁面底部

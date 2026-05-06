@@ -3501,6 +3501,48 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入問卦時間與地點，點擊「開始排盤」後在卜卦占星頁面輸入問題進行判斷。",
         "en": "👈 Enter the time and location of the question on the left, then click 'Calculate Chart' and enter your question in the Horary tab.",
     },
+    "tab_esoteric": {
+        "zh": "✨ 靈性占星（七道光線）",
+        "en": "✨ Esoteric Astrology (Seven Rays)",
+    },
+    "sys_hint_esoteric": {
+        "zh": "Alice Bailey 七道光線體系 · 靈魂光線 · 靈性統治星 · 靈性進化路徑",
+        "en": "Alice Bailey Seven Rays · Soul Ray · Esoteric Rulers · Spiritual Evolution Path",
+    },
+    "spinner_esoteric": {
+        "zh": "正在計算靈性占星七道光線命盤…",
+        "en": "Computing Esoteric Astrology Seven Rays chart…",
+    },
+    "desc_esoteric": {
+        "zh": (
+            "**靈性占星（Esoteric Astrology）** — Alice A. Bailey 七道光線體系。\n\n"
+            "• 嚴格依照《秘傳占星》（*Esoteric Astrology*，七道光線論文第三卷，1951年）。\n"
+            "• 七道光線完整實作：意志/力量、愛-智慧、主動智性、和諧、具體科學、奉獻、典禮秩序。\n"
+            "• 靈性統治星（Esoteric Rulers）：Bailey 定義的每個星座靈魂層次統治星。\n"
+            "• 靈魂光線（Soul Ray）與人格光線（Personality Ray）傾向性指標分析。\n"
+            "• 七道光線曼陀羅 SVG 視覺化：神聖幾何、七芒星、彩色光線效果。\n"
+            "• 幻相（Glamours）識別與靈性服務方向分析。\n\n"
+            "⚠️ 靈魂光線判斷具有解釋性質，非機械公式。最終確認需靈性洞察。\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "**Esoteric Astrology** — Alice A. Bailey's Seven Rays System.\n\n"
+            "• Strictly follows *Esoteric Astrology* (A Treatise on the Seven Rays, Vol. III, 1951).\n"
+            "• Full Seven Rays: Will/Power, Love-Wisdom, Active Intelligence, Harmony, "
+            "Concrete Science, Devotion, Ceremonial Order.\n"
+            "• Esoteric Rulers: Bailey's soul-level rulers for all 12 signs.\n"
+            "• Soul Ray and Personality Ray tendency indicators.\n"
+            "• Seven Rays Mandala SVG: sacred geometry, heptagram, ray beam effects.\n"
+            "• Glamour identification and spiritual service direction analysis.\n\n"
+            "⚠️ Soul Ray determination is indicative, not mechanical. "
+            "Final confirmation requires spiritual insight.\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
+    "info_esoteric_prompt": {
+        "zh": "👈 請輸入出生資料後點擊「開始排盤」，進行靈性占星七道光線分析。",
+        "en": "👈 Enter birth data and click 'Calculate Chart' to begin the Seven Rays Esoteric Astrology analysis.",
+    },
 }
 
 def get_ui_lang() -> str:
