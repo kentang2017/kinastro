@@ -3855,6 +3855,60 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生資料，然後點擊「開始排盤」查看赫密士前世盤分析。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Prenatal Epoch analysis.",
     },
+    # ── Human Design 人間圖 ────────────────────────────────────────────────────
+    "tab_human_design": {
+        "zh": "☯ 人間圖（Human Design）",
+        "en": "☯ Human Design",
+    },
+    "sys_hint_human_design": {
+        "zh": "Ra Uru Hu · 類型/策略/權威 · 九大中心 · BodyGraph · 閘門/通道",
+        "en": "Ra Uru Hu · Type/Strategy/Authority · Nine Centers · BodyGraph · Gates/Channels",
+    },
+    "spinner_human_design": {
+        "zh": "正在計算人間圖命盤（包含設計日期太陽弧計算）…",
+        "en": "Computing Human Design chart (including Solar Arc Design date)…",
+    },
+    "desc_human_design": {
+        "zh": (
+            "☯ **人間圖（Human Design）** — Ra Uru Hu 1987年創立，融合易經（I-Ching）、"
+            "占星學、卡巴拉生命樹、印度脈輪系統與量子物理。\n\n"
+            "**五大類型（Types）：**\n"
+            "• 顯示者（Manifestor）~8% — 策略：告知；簽名：平靜\n"
+            "• 生產者（Generator）~37% — 策略：回應；簽名：滿足\n"
+            "• 顯示生產者（Manifesting Generator）~33% — 策略：回應後告知；簽名：滿足與平靜\n"
+            "• 投射者（Projector）~21% — 策略：等待邀請；簽名：成功\n"
+            "• 反映者（Reflector）~1% — 策略：等待月亮週期；簽名：驚喜\n\n"
+            "**核心計算（pyswisseph 高精度）：**\n"
+            "• 有意識命盤（Personality）= 出生時刻的行星位置\n"
+            "• 無意識命盤（Design）= 太陽弧約88°前的行星位置（約88天）\n"
+            "• Rave Mandala 64閘門映射，精確到六爻線位\n"
+            "• 九大中心定義判斷、36通道分析、類型/策略/權威推算\n"
+            "• 人生十字架（Incarnation Cross）四閘門確認\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "☯ **Human Design** — Founded by Ra Uru Hu in 1987, synthesizing "
+            "the I-Ching, Astrology, Kabbalah Tree of Life, Hindu Chakra system, "
+            "and Quantum Physics.\n\n"
+            "**Five Types:**\n"
+            "• Manifestor ~8% — Strategy: To Inform; Signature: Peace\n"
+            "• Generator ~37% — Strategy: To Respond; Signature: Satisfaction\n"
+            "• Manifesting Generator ~33% — Strategy: Respond + Inform; Signature: Satisfaction & Peace\n"
+            "• Projector ~21% — Strategy: Wait for Invitation; Signature: Success\n"
+            "• Reflector ~1% — Strategy: Wait & Reflect (lunar cycle); Signature: Surprise\n\n"
+            "**Core Calculations (pyswisseph precision):**\n"
+            "• Personality chart = planetary positions at exact birth time\n"
+            "• Design chart = positions when Sun was ~88° Solar Arc before birth (~88 days)\n"
+            "• Rave Mandala 64-gate mapping precise to hexagram line\n"
+            "• Nine-center definition, 36 channels, Type/Strategy/Authority\n"
+            "• Incarnation Cross (4 Sun/Earth gate activations)\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
+    "info_human_design_prompt": {
+        "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」進行人間圖分析。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' for your Human Design analysis.",
+    },
 }
 
 def get_ui_lang() -> str:

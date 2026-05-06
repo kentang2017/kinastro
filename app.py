@@ -119,6 +119,8 @@ from astro.harmonic import compute_multi_harmonic, render_harmonic
 from astro.primary_directions import compute_primary_directions, render_primary_directions
 from astro.esoteric import compute_esoteric_chart
 from astro.esoteric.renderer import render_streamlit as render_esoteric_chart
+from astro.human_design import compute_human_design_chart
+from astro.human_design.renderer import render_streamlit as render_human_design_chart
 from astro.western.predictive_ui import render_predictive_suite
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
 from astro.natal_summary import generate_natal_summary
@@ -1131,7 +1133,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology", "tab_human_design"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_persian_deep", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1208,6 +1210,7 @@ with st.sidebar:
         "tab_esoteric": t("tab_esoteric"),
         "tab_medical_astrology": t("tab_medical_astrology"),
         "tab_byzantine_astrology": t("tab_byzantine_astrology"),
+        "tab_human_design": t("tab_human_design"),
         "tab_shanghan_qianfa": t("tab_shanghan_qianfa"),
         "tab_beiji": t("tab_beiji"),
         "tab_nanji": t("tab_nanji"),
@@ -1275,6 +1278,7 @@ with st.sidebar:
         "tab_esoteric": t("sys_hint_esoteric"),
         "tab_medical_astrology": t("sys_hint_medical_astrology"),
         "tab_byzantine_astrology": t("sys_hint_byzantine_astrology"),
+        "tab_human_design": t("sys_hint_human_design"),
         "tab_shanghan_qianfa": t("sys_hint_shanghan_qianfa"),
         "tab_beiji": t("sys_hint_beiji"),
         "tab_nanji": t("sys_hint_nanji"),
@@ -5637,6 +5641,33 @@ elif _selected_system == "tab_esoteric":
     else:
         st.info(t("info_esoteric_prompt"))
         st.markdown(t("desc_esoteric"))
+
+# ============================================================
+# --- 人間圖 Human Design ---
+elif _selected_system == "tab_human_design":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_human_design")):
+                _hd_result = compute_human_design_chart(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p["minute"],
+                    timezone=_p.get("timezone", 8.0),
+                    latitude=_p.get("latitude", 25.033),
+                    longitude=_p.get("longitude", 121.565),
+                    location_name=_p.get("location_name", ""),
+                )
+            render_human_design_chart(_hd_result)
+            _render_ai_button("tab_human_design", _hd_result, btn_key="human_design")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_human_design_prompt"))
+        st.markdown(t("desc_human_design"))
 
 # ============================================================
 # --- 擇日占星 Electional Astrology / Vedic Muhurta ---
