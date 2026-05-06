@@ -489,7 +489,7 @@ def _render_gestation_timeline(chart: PrenatalEpochChart) -> None:
   <div style="margin-top:10px;padding-top:8px;border-top:1px dashed rgba(168,184,200,0.15);">
     <span style="color:#888;">{'出生時月相：' if lang == 'zh' else 'Moon phase at birth:'}</span>
     <span style="color:#A8B8C8;">{phase_emoji} {phase_zh}</span>
-    <span style="color:#666;">（{'長距' if chart.is_waxing else '短距'} {'上弦' if chart.is_waxing else '下弦'}，
+    <span style="color:#666;">（{'上弦（漸盈）' if chart.is_waxing else '下弦（漸虧）'}，
     {'伸長' if lang == 'zh' else 'elongation'} {chart.moon_elongation:.1f}°）</span>
   </div>
   <div style="margin-top:6px;">
