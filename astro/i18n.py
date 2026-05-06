@@ -3517,6 +3517,50 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行子平八字推算。",
         "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Ziping Bazi.",
     },
+    # ── Sumerian / Mesopotamian Astrology (蘇美/美索不達米亞占星) ──────────────
+    "tab_sumerian": {
+        "zh": "𒀭 蘇美/美索不達米亞占星",
+        "en": "𒀭 Sumerian / Mesopotamian",
+    },
+    "desc_sumerian": {
+        "zh": (
+            "**蘇美 / 美索不達米亞占星**\n\n"
+            "人類最古老的占星傳統，源自公元前 3000 年的美索不達米亞文明。\n\n"
+            "**核心文獻：**\n"
+            "- **MUL.APIN 星表**（約公元前 1000 年）：66 顆恆星/星座的昏旦時間，12 宮黃道分割，"
+            "三路天球分帶（恩利爾/安努/埃阿之路）\n"
+            "- **Enūma Anu Enlil**（約 70 片泥板，公元前 2000–500 年）：史上最龐大天文預兆集，"
+            "將行星運行與國家命運對應\n"
+            "- **K.8538 尼尼微星盤**（約公元前 650 年）：已知最早的圓形星圖，8 區間楔形泥板\n\n"
+            "七大行星神：Šamaš（太陽）、Sîn（月）、Ištar（金星）、Nabû（水星）、"
+            "Nergal（火星）、Marduk（木星）、Ninurta（土星）"
+        ),
+        "en": (
+            "**Sumerian / Mesopotamian Astrology**\n\n"
+            "Humanity's oldest astrological tradition, originating in Mesopotamia c. 3000 BCE.\n\n"
+            "**Core sources:**\n"
+            "- **MUL.APIN** (~1000 BCE): 66 stars/constellations with heliacal risings, 12-sign sidereal "
+            "zodiac, three sky paths (Enlil / Anu / Ea)\n"
+            "- **Enūma Anu Enlil** (~70 tablets, 2000–500 BCE): the world's largest omen series, "
+            "linking planetary phenomena to royal and national fate\n"
+            "- **K.8538 Nineveh Planisphere** (~650 BCE): the oldest known circular star map, "
+            "8-sector wedge-shaped clay tablet\n\n"
+            "Seven planetary deities: Šamaš (Sun), Sîn (Moon), Ištar (Venus), Nabû (Mercury), "
+            "Nergal (Mars), Marduk (Jupiter), Ninurta (Saturn)"
+        ),
+    },
+    "spinner_sumerian": {
+        "zh": "計算蘇美/美索不達米亞星盤中…",
+        "en": "Computing Sumerian / Mesopotamian chart…",
+    },
+    "sys_hint_sumerian": {
+        "zh": "MUL.APIN 星表，Enūma Anu Enlil 預兆，K.8538 尼尼微星盤，七大行星神",
+        "en": "MUL.APIN star catalogue, Enūma Anu Enlil omens, K.8538 planisphere, seven planetary deities",
+    },
+    "info_sumerian_prompt": {
+        "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看蘇美/美索不達米亞占星分析。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Sumerian / Mesopotamian Astrology analysis.",
+    },
     "tab_horary": {
         "zh": "📜 傳統卜卦占星",
         "en": "📜 Traditional Horary",
