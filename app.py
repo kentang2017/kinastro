@@ -5669,7 +5669,8 @@ elif _selected_system == "tab_human_design":
         st.info(t("info_human_design_prompt"))
         st.markdown(t("desc_human_design"))
 
-
+# ============================================================
+# --- 擇日占星 Electional Astrology / Vedic Muhurta ---
 elif _selected_system == "tab_electional":
     _p = st.session_state.get("_calc_params", {})
     try:

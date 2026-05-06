@@ -430,7 +430,6 @@ def _is_throat_motor_connected(
     if "Throat" not in defined_centers:
         return False
 
-    targets = MOTOR_CENTERS - defined_centers.symmetric_difference(MOTOR_CENTERS)  # motor ∩ defined
     targets = MOTOR_CENTERS & defined_centers
     if exclude_sacral:
         targets -= {"Sacral"}

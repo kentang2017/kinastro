@@ -88,7 +88,7 @@ def generator_chart() -> HumanDesignChart:
 #  1. Gate/Line Mapping
 # ============================================================
 
-class TestGateLineMaping:
+class TestGateLineMapping:
     """Test Rave Mandala gate and line mapping from ecliptic longitude."""
 
     def test_gate_sequence_length(self):
