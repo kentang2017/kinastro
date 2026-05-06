@@ -3596,6 +3596,53 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入時間與地點，點擊「開始排盤」後選擇活動類型進行擇日分析，或使用搜尋模式找出最佳吉時。",
         "en": "👈 Enter date, time and location on the left, click 'Calculate Chart', then select an activity type for electional analysis or use Search mode to find optimal windows.",
     },
+    "tab_harmonic": {
+        "zh": "🎵 和諧占星",
+        "zh_cn": "🎵 和谐占星",
+        "en": "🎵 Harmonic Astrology",
+    },
+    "sys_hint_harmonic": {
+        "zh": "John Addey 諧波體系，5H 才能，7H 靈性，9H 進化，神聖幾何曼陀羅",
+        "zh_cn": "John Addey 谐波体系，5H 才能，7H 灵性，9H 进化，神圣几何曼陀罗",
+        "en": "John Addey harmonics: H5 talent, H7 spirituality, H9 evolution, sacred geometry mandalas",
+    },
+    "spinner_harmonic": {
+        "zh": "正在計算和諧占星盤…",
+        "zh_cn": "正在计算和谐占星盘…",
+        "en": "Computing Harmonic Astrology charts…",
+    },
+    "desc_harmonic": {
+        "zh": (
+            "🎵 **和諧占星（Harmonic Astrology）** — John Addey 創立。\n\n"
+            "• 嚴格依照 John Addey《Harmonics in Astrology》（1976）及 David Hamblin《Harmonic Charts》（1983）。\n"
+            "• 核心原理：第 N 諧波盤 = 所有行星經度 × N（mod 360°）。\n"
+            "• 5H（五諧波）：天賦與創意表現的最重要指標。\n"
+            "• 7H（七諧波）：靈性、神秘直覺與業力關係。\n"
+            "• 9H（九諧波）：靈性進化與高層意識。\n"
+            "• 支援 H1、H2、H3、H4、H5、H7、H9、H12 及自訂諧波。\n"
+            "• 神聖幾何曼陀羅 SVG 視覺化（每個諧波獨特色彩主題）。\n"
+            "• 多諧波綜合分析（Hamblin 行星重點識別法）。\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "🎵 **Harmonic Astrology** — Founded by John Addey.\n\n"
+            "• Strictly follows John Addey's *Harmonics in Astrology* (1976) "
+            "and David Hamblin's *Harmonic Charts* (1983).\n"
+            "• Core principle: Nth Harmonic Chart = all longitudes × N (mod 360°).\n"
+            "• H5 (5th Harmonic): the premier indicator of talent and creative expression.\n"
+            "• H7 (7th Harmonic): spirituality, mystical intuition, karmic bonds.\n"
+            "• H9 (9th Harmonic): spiritual evolution and elevated consciousness.\n"
+            "• Supports H1, H2, H3, H4, H5, H7, H9, H12 and custom harmonics.\n"
+            "• Sacred geometry Mandala SVG visuals (unique color theme per harmonic).\n"
+            "• Multi-harmonic analysis (Hamblin planetary emphasis method).\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
+    "info_harmonic_prompt": {
+        "zh": "👈 請在左側輸入出生年月日時及地點，點擊「開始排盤」進行和諧占星分析。",
+        "zh_cn": "👈 请在左侧输入出生年月日时及地点，点击「开始排盘」进行和谐占星分析。",
+        "en": "👈 Enter birth date, time and location on the left, then click 'Calculate Chart' for Harmonic Astrology analysis.",
+    },
 }
 
 def get_ui_lang() -> str:

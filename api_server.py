@@ -44,6 +44,7 @@ from astro.sanshi.taiyi import compute_taiyi_chart
 from astro.bazi import compute_bazi
 from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
 from astro.esoteric import compute_esoteric_chart
+from astro.harmonic import compute_multi_harmonic
 from astro.electional.calculator import (
     compute_western_electional,
     compute_vedic_muhurta,
@@ -837,11 +838,92 @@ async def electional_chart(params: ElectionalParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+class HarmonicParams(BirthParams):
+    """Parameters for Harmonic Astrology (John Addey)."""
+
+    harmonics: list[int] = Field(
+        default_factory=lambda: [1, 2, 3, 4, 5, 7, 9, 12],
+        description=(
+            "List of harmonic numbers to compute. "
+            "Defaults to the standard set: [1, 2, 3, 4, 5, 7, 9, 12]. "
+            "Any positive integer is supported."
+        ),
+    )
 
 
-# =========================================================================
-#  Aggregate endpoint — compute ALL systems in one call
-# =========================================================================
+@app.post("/api/harmonic", response_model=ChartResponse, tags=["Systems"])
+async def harmonic_chart(params: HarmonicParams) -> ChartResponse:
+    """Compute Harmonic Astrology charts following John Addey's method.
+
+    Implements:
+    - Nth Harmonic Chart: H_N(λ) = (N × λ) mod 360°  (Addey 1976, Ch. 2)
+    - Conjunctions in the harmonic chart (= natal N-th aspect within orb)
+    - Multi-harmonic analysis (Hamblin 1983: planetary emphasis across harmonics)
+
+    Supported harmonics (default): H1 H2 H3 H4 H5 H7 H9 H12
+    Custom harmonics: pass any list of positive integers.
+
+    Sources:
+    - Addey, *Harmonics in Astrology* (L.N. Fowler, 1976)
+    - Hamblin, *Harmonic Charts* (Aquarian Press, 1983)
+    """
+    try:
+        kw = _base_kwargs(params)
+        result = compute_multi_harmonic(harmonics=params.harmonics, **kw)
+        # Serialize to dict
+        data: dict = {
+            "harmonics": {},
+            "multi_emphasis": result.multi_emphasis,
+            "natal_planets": [
+                {
+                    "key": p.key,
+                    "name_en": p.name_en,
+                    "name_zh": p.name_zh,
+                    "symbol": p.symbol,
+                    "natal_longitude": round(p.natal_longitude, 4),
+                    "sign": p.sign,
+                    "sign_degree": round(p.sign_degree, 4),
+                    "retrograde": p.retrograde,
+                }
+                for p in result.natal_planets
+            ],
+        }
+        for n, chart in result.harmonic_charts.items():
+            data["harmonics"][str(n)] = {
+                "harmonic_number": n,
+                "name_en": chart.name_en,
+                "name_zh": chart.name_zh,
+                "theme_en": chart.theme_en,
+                "theme_zh": chart.theme_zh,
+                "conjunction_orb": chart.conjunction_orb,
+                "planets": [
+                    {
+                        "key": hp.key,
+                        "symbol": hp.symbol,
+                        "harmonic_longitude": round(hp.harmonic_longitude, 4),
+                        "natal_longitude": round(hp.natal_longitude, 4),
+                        "sign": hp.sign,
+                        "sign_degree": round(hp.sign_degree, 4),
+                    }
+                    for hp in chart.harmonic_planets
+                ],
+                "conjunctions": [
+                    {
+                        "planet_a": c.planet_a,
+                        "planet_b": c.planet_b,
+                        "harmonic_orb": round(c.harmonic_orb, 4),
+                        "natal_aspect": round(c.natal_aspect, 4),
+                        "natal_aspect_name": c.natal_aspect_name,
+                        "meaning_zh": c.meaning_zh,
+                        "meaning_en": c.meaning_en,
+                    }
+                    for c in chart.conjunctions
+                ],
+            }
+        return ChartResponse(system="harmonic", data=data)
+    except Exception as exc:
+        logger.exception("Harmonic Astrology chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 # Map of system name → (cached_fn, extra_params_builder)
 _SYSTEMS_BASIC: list[tuple[str, Any]] = [
