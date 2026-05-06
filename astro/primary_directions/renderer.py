@@ -153,6 +153,17 @@ _DEFAULT_COLOR = "#c8b878"
 
 
 # ──────────────────────────────────────────────────────────────
+# Shared helpers
+# ──────────────────────────────────────────────────────────────
+
+def _format_birth_str(year: int, month: int, day: int) -> str:
+    """Format a birth date string in the current UI language."""
+    if get_ui_lang() != "en":
+        return f"{year}年{month}月{day}日"
+    return f"{month}/{day}/{year}"
+
+
+# ──────────────────────────────────────────────────────────────
 # SVG Timeline (classical manuscript style)
 # ──────────────────────────────────────────────────────────────
 
@@ -273,9 +284,7 @@ def render_primary_directions_svg(
     _draw_manuscript_border(parts, width, height)
 
     # ── Title ─────────────────────────────────────────────────
-    birth_str = f"{result.year}年{result.month}月{result.day}日" \
-        if get_ui_lang() != "en" else \
-        f"{result.month}/{result.day}/{result.year}"
+    birth_str = _format_birth_str(result.year, result.month, result.day)
     loc = result.location_name or ""
     method_label = "Mundo (Placidus)" if result.method == "mundo" else "Zodiacal (Ptolemy)"
     key_label = {"naibod": "Naibod Key", "ptolemy": "Ptolemy Key",
@@ -519,8 +528,7 @@ def render_primary_directions(result: PrimaryDirectionsResult) -> None:
         "solar_arc": auto_cn("太陽弧時間鍵", "Solar Arc Key"),
     }.get(result.time_key, result.time_key)
 
-    birth_str = f"{result.year}年{result.month}月{result.day}日" if is_zh else \
-        f"{result.month}/{result.day}/{result.year}"
+    birth_str = _format_birth_str(result.year, result.month, result.day)
     loc = result.location_name or ""
 
     st.markdown(
