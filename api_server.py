@@ -413,11 +413,13 @@ def _cached_taiyi(key: str, year: int, month: int, day: int, hour: int,
 def _cached_bazi(key: str, year: int, month: int, day: int, hour: int,
                  minute: int, timezone: float, latitude: float,
                  longitude: float, location_name: str,
-                 gender: str) -> dict:
+                 gender: str, reference_date_iso: str) -> dict:
+    ref_date = date.fromisoformat(reference_date_iso)
     chart = compute_bazi(
         year=year, month=month, day=day, hour=hour, minute=minute,
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name, gender=gender,
+        reference_date=ref_date,
     )
     return _chart_to_dict(chart)
 
@@ -670,9 +672,11 @@ async def bazi_chart(params: ChineseParams) -> ChartResponse:
     current year fortune (流年), and shen sha (神煞).
     """
     try:
-        key = _cache_key(params, gender=params.gender)
+        today_iso = date.today().isoformat()
+        key = _cache_key(params, gender=params.gender, reference_date=today_iso)
         kwargs = _base_kwargs(params)
         kwargs["gender"] = params.gender
+        kwargs["reference_date_iso"] = today_iso
         data = _cached_bazi(key, **kwargs)
         return ChartResponse(system="bazi", data=data)
     except Exception as exc:

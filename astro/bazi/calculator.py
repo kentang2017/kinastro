@@ -558,7 +558,10 @@ def _determine_pattern(
             {k: v for k, v in wx_counts.items() if k != dm_wx},
             key=lambda x: wx_counts[x]
         )
-        dominant_ss = _get_shishen(day_stem, [t for t in TIANGAN if WUXING_TG[t] == dominant_wx][0])
+        dominant_ss_stems = [t for t in TIANGAN if WUXING_TG[t] == dominant_wx]
+        if not dominant_ss_stems:
+            return "普通格", "正格", "格局普通，依身強身弱取用。", "Ordinary pattern; use god based on strength."
+        dominant_ss = _get_shishen(day_stem, dominant_ss_stems[0])
         cong_patterns = {
             "正財": "從財格", "偏財": "從財格",
             "七殺": "從殺格", "正官": "從官格",
@@ -801,7 +804,6 @@ def _compute_dayun(
         except ValueError:
             dy_start_date = date(dy_year, dy_month, 28)
 
-        day_stem_for_ss = month_stem  # 用月干作為參考
         steps.append(DayunStep(
             ganzhi=gz,
             stem=s,
@@ -1192,10 +1194,21 @@ Within the five elements' generation and restraint, all of fate is contained."
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _get_liunian_gz(year: int) -> str:
-    """取某公曆年的流年干支（以立春為界）。"""
-    # 立春前後：近似以1月1日後使用當年；精確版需知是否已過立春
-    # 用2月4日作近似立春
-    ref_date = fromSolar(year, 2, 4)
+    """取某公曆年的流年干支（以立春為界）。
+
+    使用 sxtwl 找到實際立春日期（可能為2月3、4或5日），
+    以立春為歲首取年干支。
+    """
+    # 搜尋2月3日至2月6日中的立春（sxtwl index 3 = 立春）
+    for d in range(2, 8):
+        try:
+            cdate = fromSolar(year, 2, d)
+            if cdate.hasJieQi() and cdate.getJieQi() == 3:  # 3 = 立春
+                break
+        except Exception:
+            continue
+    # 取立春當日的年干支
+    ref_date = fromSolar(year, 2, d)
     tg_raw = ref_date.getYearGZ(False)
     return TIANGAN[tg_raw.tg] + DIZHI[tg_raw.dz]
 
