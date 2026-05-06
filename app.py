@@ -88,6 +88,7 @@ from astro.shanghan_qianfa.calculator import compute_shanghan_qianfa
 from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_qianfa_chart
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
 from astro.horary import render_streamlit as render_horary_chart
+from astro.electional import render_streamlit as render_electional_chart
 from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
 from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
 from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
@@ -1127,7 +1128,7 @@ with st.sidebar:
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
         ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
-        ("cat_horary", ["tab_horary"]),
+        ("cat_horary", ["tab_horary", "tab_electional"]),
     ]
 
     _CATEGORY_ICONS = {
@@ -1197,6 +1198,7 @@ with st.sidebar:
         "tab_beiji": t("tab_beiji"),
         "tab_bazi": t("tab_bazi"),
         "tab_horary": t("tab_horary"),
+        "tab_electional": t("tab_electional"),
         "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
     }
 
@@ -1256,6 +1258,7 @@ with st.sidebar:
         "tab_beiji": t("sys_hint_beiji"),
         "tab_bazi": t("sys_hint_bazi"),
         "tab_horary": t("sys_hint_horary"),
+        "tab_electional": t("sys_hint_electional"),
         "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
     }
 
@@ -5452,6 +5455,26 @@ elif _selected_system == "tab_esoteric":
     else:
         st.info(t("info_esoteric_prompt"))
         st.markdown(t("desc_esoteric"))
+
+# ============================================================
+# --- 擇日占星 Electional Astrology / Vedic Muhurta ---
+elif _selected_system == "tab_electional":
+    _p = st.session_state.get("_calc_params", {})
+    try:
+        render_electional_chart(
+            year=_p.get("year", 2024),
+            month=_p.get("month", 1),
+            day=_p.get("day", 1),
+            hour=_p.get("hour", 12),
+            minute=_p.get("minute", 0),
+            timezone=_p.get("tz", 0.0),
+            latitude=_p.get("lat", 25.033),
+            longitude=_p.get("lon", 121.565),
+            location_name=_p.get("location_name", ""),
+        )
+    except Exception as _e:
+        st.error(f"{t('error_tab_compute')}：{_e}")
+        st.exception(_e)
 
 # Global Fixed AI Chat Panel — always visible at page bottom
 # 全域固定 AI 聊天面板 — 固定在所有頁面底部

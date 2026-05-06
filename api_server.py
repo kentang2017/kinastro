@@ -44,6 +44,12 @@ from astro.sanshi.taiyi import compute_taiyi_chart
 from astro.bazi import compute_bazi
 from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
 from astro.esoteric import compute_esoteric_chart
+from astro.electional.calculator import (
+    compute_western_electional,
+    compute_vedic_muhurta,
+    find_western_elections,
+    find_vedic_muhurtas,
+)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -773,6 +779,61 @@ async def esoteric_chart(params: BirthParams) -> ChartResponse:
         return ChartResponse(system="esoteric", data=_chart_to_dict(chart))
     except Exception as exc:
         logger.exception("Esoteric Astrology chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+class ElectionalParams(BirthParams):
+    """Parameters for Electional Astrology / Vedic Muhurta."""
+
+    tradition: str = Field(
+        default="western",
+        description="Tradition: 'western' (Lilly/Bonatti) or 'vedic' (Muhurta Chintamani)",
+    )
+    activity_type: str = Field(
+        default="important_meeting",
+        description=(
+            "Activity type: 'marriage', 'business_opening', 'contract_signing', "
+            "'relocation', 'travel', 'surgery', 'property_purchase', "
+            "'litigation', 'important_meeting'"
+        ),
+    )
+
+
+@app.post("/api/electional", response_model=ChartResponse, tags=["Systems"])
+async def electional_chart(params: ElectionalParams) -> ChartResponse:
+    """Compute an Electional Astrology or Vedic Muhurta chart.
+
+    Supports both Western Electional (Lilly/Bonatti) and Vedic Muhurta
+    (Muhurta Chintamani / Kalaprakashika / BPHS) traditions.
+
+    Western Electional (``tradition='western'``):
+    - Planetary Hours (Chaldean order, Lilly CA p. 483)
+    - Moon Void of Course, Via Combusta, applying aspects, phase
+    - Essential dignities: domicile, exaltation, detriment, fall
+    - Activity-specific rules for 9 event types
+
+    Vedic Muhurta (``tradition='vedic'``):
+    - Panchanga: Tithi, Vara, Nakshatra, Yoga, Karana
+    - Gandanta detection (water/fire sign junctions)
+    - Vishti Karana (Bhadra) detection
+    - Lagna suitability, Jupiter/Venus visibility for marriage
+
+    Sources:
+    - Lilly, *Christian Astrology* (1647); Bonatti, *Liber Astronomiae* (~1277)
+    - *Muhurta Chintamani*; *Kalaprakashika*; *Brihat Parashara Hora Shastra*
+    """
+    try:
+        kw = _base_kwargs(params)
+        if params.tradition == "vedic":
+            chart = compute_vedic_muhurta(activity_type=params.activity_type, **kw)
+        else:
+            chart = compute_western_electional(activity_type=params.activity_type, **kw)
+        return ChartResponse(
+            system=f"electional_{params.tradition}",
+            data=_chart_to_dict(chart),
+        )
+    except Exception as exc:
+        logger.exception("Electional / Muhurta chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
