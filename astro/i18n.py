@@ -3465,6 +3465,39 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_bazi_prompt": {
         "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行子平八字推算。",
         "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Ziping Bazi.",
+    "tab_horary": {
+        "zh": "📜 傳統卜卦占星",
+        "en": "📜 Traditional Horary",
+    },
+    "desc_horary": {
+        "zh": (
+            "📜 **傳統卜卦占星（Traditional Horary Astrology）** — "
+            "融合西方 Lilly / Bonatti 傳統與吠陀《Prasna Marga》體系。"
+            "西方面向嚴格遵循 William Lilly《Christian Astrology》（1647）與 Guido Bonatti《Liber Astronomiae》（~1277）規則："
+            "Significators、本質尊貴與偶然尊貴、入相／離相相位、光之傳遞與聚合、虛空月、判斷障礙等。"
+            "吠陀面向依《Prasna Marga》計算問卦命宮、阿魯達命宮（Arudha Lagna）及傳統問卦判斷法。"
+        ),
+        "en": (
+            "📜 **Traditional Horary Astrology** — "
+            "Combines Western Lilly/Bonatti tradition with Vedic Prasna Marga. "
+            "Western horary strictly follows William Lilly's *Christian Astrology* (1647) and "
+            "Guido Bonatti's *Liber Astronomiae* (~1277): Significators, Essential & Accidental Dignities, "
+            "applying/separating aspects, Translation & Collection of Light, Void of Course Moon, "
+            "and Strictures Against Judgment. "
+            "Vedic Prashna follows *Prasna Marga* with Prasna Lagna, Arudha Lagna, and classical judgment rules."
+        ),
+    },
+    "spinner_horary": {
+        "zh": "計算傳統卜卦占星…",
+        "en": "Computing Traditional Horary chart…",
+    },
+    "sys_hint_horary": {
+        "zh": "Lilly/Bonatti 卜卦、虛空月、光之傳遞、吠陀問卦、Arudha Lagna",
+        "en": "Lilly/Bonatti horary, VOC Moon, Translation of Light, Vedic Prashna, Arudha Lagna",
+    },
+    "info_horary_prompt": {
+        "zh": "👈 請在左側輸入問卦時間與地點，點擊「開始排盤」後在卜卦占星頁面輸入問題進行判斷。",
+        "en": "👈 Enter the time and location of the question on the left, then click 'Calculate Chart' and enter your question in the Horary tab.",
     },
 }
 
