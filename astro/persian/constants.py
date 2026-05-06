@@ -301,7 +301,7 @@ ROYAL_STARS: Dict[str, Dict] = {
         "name_en":     "Regulus",
         "name_cn":     "軒轅十四",
         "name_pahlavi": "Vanant",
-        "longitude":   150.0,  # ~0° Virgo / 29°50' Leo
+        "longitude":   149.8,  # ~29°48' Leo (tropical; traditional position ~29°50' Leo)
         "orb":         2.5,
         "guardian":    "Summer Solstice",
         "meaning_en":  "Kingship, honor, fame; swift rise and fall if afflicted",

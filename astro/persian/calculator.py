@@ -77,6 +77,9 @@ _PLANET_IDS: Dict[str, int] = {
     "Saturn":  swe.SATURN,
 }
 
+# Direct sign-name to index lookup (faster than ZODIAC_SIGNS.index + generator)
+_SIGN_INDEX: Dict[str, int] = {z[0]: i for i, z in enumerate(ZODIAC_SIGNS)}
+
 # ─────────────────────────────────────────────────────────────
 # Data Classes
 # ─────────────────────────────────────────────────────────────
@@ -610,10 +613,9 @@ def _get_dignity(
             bound_lord = planet
             break
 
-    # Decan ruler
-    global_decan_idx = (ZODIAC_SIGNS.index(next(z for z in ZODIAC_SIGNS if z[0] == sign)) * 3
-                        + int(degree // 10))
-    decan_lord = DECAN_RULERS[global_decan_idx % 36]
+    # Decan ruler — clamp to [0, 2] to guard against floating-point edge at 30°
+    decan_idx = _SIGN_INDEX.get(sign, 0) * 3 + min(int(degree // 10), 2)
+    decan_lord = DECAN_RULERS[decan_idx % 36]
 
     if planet_name == dom:
         return "Domicile", "廟", 5.0
@@ -653,9 +655,7 @@ def _get_dignity_score_full(
             bound_lord = planet
             break
 
-    sign_list = [z[0] for z in ZODIAC_SIGNS]
-    si = sign_list.index(sign) if sign in sign_list else 0
-    decan_idx = si * 3 + int(degree // 10)
+    decan_idx = _SIGN_INDEX.get(sign, 0) * 3 + min(int(degree // 10), 2)
     decan_lord = DECAN_RULERS[decan_idx % 36]
 
     score = 0.0
@@ -745,8 +745,8 @@ def _compute_planets(jd: float, asc: float, is_day: bool) -> List[DeepPlanetPos]
                 bound_lord = planet
                 break
 
-        # Decan lord
-        decan_idx = sign_idx * 3 + int(deg_in_sign // 10)
+        # Decan lord — clamp to [0, 2] to guard against floating-point edge at 30°
+        decan_idx = sign_idx * 3 + min(int(deg_in_sign // 10), 2)
         decan_lord = DECAN_RULERS[decan_idx % 36]
 
         # Sect
@@ -1532,8 +1532,7 @@ def compute_deep_sassanian_chart(
     ut_hour = hour + minute / 60.0 - timezone
     jd = swe.julday(year, month, day, ut_hour)
 
-    # Set to tropical (no sidereal mode for Sassanian/Hellenistic)
-    swe.set_sid_mode(swe.SIDM_FAGAN_BRADLEY)
+    # Use tropical zodiac: do NOT pass swe.FLG_SIDEREAL in calc() calls
 
     # Compute Ascendant and MC via Placidus (for angles only)
     houses_data = swe.houses(jd, latitude, longitude, b'P')

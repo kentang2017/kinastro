@@ -266,58 +266,12 @@ def _build_diamond_chart_svg(chart: DeepSassanianChart) -> str:
         return (asc_sign_idx + house - 1) % 12
 
     # Diamond chart geometry:
-    # Outer square corners: top (cx, cy-half), right (cx+half, cy), bottom (cx, cy+half), left (cx-half, cy)
-    # Inner square (rotated 45°): same corners but half-size
-    # The 12 houses are triangular segments
-
-    T  = (cx,      cy-half)  # top
-    TR = (cx+half, cy-half)  # not used directly but helpful
-    R  = (cx+half, cy)       # right
-    BR = (cx+half, cy+half)
-    B  = (cx,      cy+half)  # bottom
-    BL = (cx-half, cy+half)
-    L  = (cx-half, cy)       # left
-    TL = (cx-half, cy-half)
-
     # House positions (center of each triangle sector):
-    # Traditional Indian/Persian diamond: 12 houses in 4 corners + 8 edges
-    # House 1 = right corner (ASC)
-    # Going counter-clockwise: 1=right, 2=top-right, 3=top, 4=top-left,
-    #                          5=left... (varies by tradition)
+    # Standard Indian/Persian diamond: 12 houses in 4 corners + 8 edges
+    # House 1 = right corner (ASC), House 10 = top, House 7 = bottom, House 4 = left
     # We use the standard South/East Asian 12-cell diamond layout.
 
-    # Cell vertices (12 triangular cells):
-    # inner_half = half // 2  (not needed, we use edge midpoints)
-    m = half // 2  # midpoint offset
-
-    # 12 house cells with (vertex list) and (text center):
-    # Layout matches the traditional "Rashi chart" / Persian format
-    house_cells = {
-        10: {"poly": [(cx, cy-m), T, (cx-m, cy), (cx, cy)],  "text": (cx,      cy-m*1.5)},
-        11: {"poly": [(cx, cy-m), TL, (cx-m, cy), (cx, cy)], "text": (cx-m,    cy-m*0.7)},
-        12: {"poly": [(cx-m, cy), TL, L, (cx, cy)],           "text": (cx-m*1.5, cy)},
-        1:  {"poly": [(cx, cy), R, (cx+m, cy-m), (cx, cy-m)], "text": (cx+m*1.5, cy)},
-        2:  {"poly": [(cx, cy-m), TR, R, (cx, cy)],            "text": (cx+m,    cy-m*0.7)},
-        3:  {"poly": [(cx, cy-m), T, TR, (cx, cy)],            "text": (cx+m,    cy-m*1.5)},
-    }
-    # Mirror for bottom half
-    house_cells[4]  = {"poly": [(cx, cy+m), T,  TL, (cx, cy)], "text": (cx,      cy+m*1.5)}
-    house_cells[5]  = {"poly": [(cx, cy+m), TL, L,  (cx, cy)], "text": (cx-m,    cy+m*0.7)}
-    house_cells[6]  = {"poly": [(cx-m, cy), L,  BL, (cx, cy)], "text": (cx-m*1.5, cy)}
-    house_cells[7]  = {"poly": [(cx, cy),   B,  BL, (cx-m, cy)], "text": (cx,    cy+m*1.5)}
-    house_cells[8]  = {"poly": [(cx, cy+m), BR, B,  (cx, cy)],   "text": (cx+m,  cy+m*0.7)}
-    house_cells[9]  = {"poly": [(cx, cy),   R,  BR, (cx+m, cy)], "text": (cx+m*1.5, cy)}
-
-    # Rebuild correctly with proper geometry
     # Standard diamond (12-cell) layout used in Indian/Persian astrology:
-    # Top cell = H10, left cell = H7, bottom cell = H4, right cell = H1 (ASC)
-    # Corner triangles: TL=H11, TR=H9, BL=H5 wait — different traditions differ.
-    # Using the most common version:
-
-    def _poly(*pts: tuple) -> str:
-        return " ".join(f"{p[0]},{p[1]}" for p in pts)
-
-    # Simpler correct geometry:
     # Outer diamond vertices (tilted square):
     OT = (cx,        cy - half)   # top
     OR = (cx + half, cy)          # right
@@ -751,8 +705,8 @@ def _render_antiscia(chart: DeepSassanianChart) -> None:
         rows.append({
             "行星": f"{p.glyph} {p.name_cn}",
             "本體位置": f"{p.sign} {p.degree_in_sign:.1f}°",
-            "反射點 (Antiscia)": f"{p.antiscion_sign} {(180.0 - p.longitude) % 30:.1f}°",
-            "對射點 (Contra-antiscia)": f"{p.contra_antiscion_sign} {(360.0 - p.longitude) % 30:.1f}°",
+            "反射點 (Antiscia)": f"{p.antiscion_sign} {p.antiscion_longitude % 30:.1f}°",
+            "對射點 (Contra-antiscia)": f"{p.contra_antiscion_sign} {p.contra_antiscion_longitude % 30:.1f}°",
             "多德卡 (Dodecatemoria)": f"{p.dodecatemoria_sign} ({p.dodecatemoria_sign_cn})",
         })
     st.dataframe(rows, width="stretch")
