@@ -87,6 +87,7 @@ from astro.medical_astrology.renderer import render_streamlit as render_medical_
 from astro.shanghan_qianfa.calculator import compute_shanghan_qianfa
 from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_qianfa_chart
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
+from astro.nanji.renderer import render_streamlit as render_nanji_chart
 from astro.horary import render_streamlit as render_horary_chart
 from astro.electional import render_streamlit as render_electional_chart
 from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
@@ -1123,7 +1124,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_bazi"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
@@ -1199,6 +1200,7 @@ with st.sidebar:
         "tab_medical_astrology": t("tab_medical_astrology"),
         "tab_shanghan_qianfa": t("tab_shanghan_qianfa"),
         "tab_beiji": t("tab_beiji"),
+        "tab_nanji": t("tab_nanji"),
         "tab_bazi": t("tab_bazi"),
         "tab_horary": t("tab_horary"),
         "tab_electional": t("tab_electional"),
@@ -1261,6 +1263,7 @@ with st.sidebar:
         "tab_medical_astrology": t("sys_hint_medical_astrology"),
         "tab_shanghan_qianfa": t("sys_hint_shanghan_qianfa"),
         "tab_beiji": t("sys_hint_beiji"),
+        "tab_nanji": t("sys_hint_nanji"),
         "tab_bazi": t("sys_hint_bazi"),
         "tab_horary": t("sys_hint_horary"),
         "tab_electional": t("sys_hint_electional"),
@@ -5428,6 +5431,27 @@ elif _selected_system == "tab_beiji":
     else:
         st.info(t("info_beiji_prompt"))
         st.markdown(t("desc_beiji"))
+
+# --- 南極神數 Nanji Shenshu ---
+elif _selected_system == "tab_nanji":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_nanji")):
+                render_nanji_chart(
+                    year=_p["year"],
+                    month=_p["month"],
+                    day=_p["day"],
+                    hour=_p["hour"],
+                    minute=_p.get("minute", 0),
+                    gender=st.session_state.get("_calc_gender", "男"),
+                )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_nanji_prompt"))
+        st.markdown(t("desc_nanji"))
 
 # --- 子平八字 Ziping Bazi ---
 elif _selected_system == "tab_bazi":
