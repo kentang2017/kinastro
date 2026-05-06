@@ -1128,12 +1128,12 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
-        ("cat_yi_zhan", ["tab_byzantine_astrology", "tab_medical_astrology", "tab_shanghan_qianfa"]),
+        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
         ("cat_horary", ["tab_horary", "tab_electional"]),
     ]
 
