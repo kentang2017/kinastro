@@ -1197,6 +1197,7 @@ with st.sidebar:
         "tab_beiji": t("tab_beiji"),
         "tab_bazi": t("tab_bazi"),
         "tab_horary": t("tab_horary"),
+        "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1255,6 +1256,7 @@ with st.sidebar:
         "tab_beiji": t("sys_hint_beiji"),
         "tab_bazi": t("sys_hint_bazi"),
         "tab_horary": t("sys_hint_horary"),
+        "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
