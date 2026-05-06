@@ -3465,6 +3465,7 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_bazi_prompt": {
         "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行子平八字推算。",
         "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Ziping Bazi.",
+    },
     "tab_horary": {
         "zh": "📜 傳統卜卦占星",
         "en": "📜 Traditional Horary",
