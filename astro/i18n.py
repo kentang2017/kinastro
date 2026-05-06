@@ -2884,8 +2884,8 @@ Enter your birth information to look up your tree month and its poetic attribute
         "en": "Black Moon Lilith",
     },
     "adv_group_main_belt": {
-        "zh": "主帶小行星（穀/智/婚/灶）",
-        "en": "Main Belt (Ceres/Pallas/Juno/Vesta)",
+        "zh": "主帶小行星（穀/智/婚/灶/健康）",
+        "en": "Main Belt (Ceres/Pallas/Juno/Vesta/Hygiea)",
     },
     "adv_group_centaurs": {
         "zh": "半人馬天體（涅索斯/卡莉克蘿）",
@@ -2894,6 +2894,14 @@ Enter your birth information to look up your tree month and its poetic attribute
     "adv_group_tnos": {
         "zh": "海外天體（伊/伐/夸/賽）",
         "en": "TNOs (Ixion/Varuna/Quaoar/Sedna)",
+    },
+    "adv_group_romance": {
+        "zh": "愛慾星（愛神星/賽姬星）",
+        "en": "Romance (Eros/Psyche)",
+    },
+    "adv_group_dwarf_planets": {
+        "zh": "矮行星（鬩神星）",
+        "en": "Dwarf Planets (Eris)",
     },
     "adv_no_results": {
         "zh": "未找到結果。",

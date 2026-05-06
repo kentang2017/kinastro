@@ -876,16 +876,31 @@ class TestExpandedAsteroids:
         from astro.western.asteroids import ASTEROID_CONFIG, ASTEROID_GROUPS
         names = [row[0] for row in ASTEROID_CONFIG]
         required = ["Chiron", "Pholus", "Lilith (Mean)", "Lilith (True)",
-                    "Ceres", "Pallas", "Juno", "Vesta",
+                    "Ceres", "Pallas", "Juno", "Vesta", "Hygiea",
+                    "Eros", "Psyche", "Eris",
                     "Nessus", "Chariklo", "Ixion", "Varuna", "Quaoar", "Sedna"]
         for r in required:
             assert r in names, f"Missing body in config: {r}"
 
     def test_groups_defined(self):
         from astro.western.asteroids import ASTEROID_GROUPS
-        expected_groups = ["chiron_pholus", "lilith", "main_belt", "centaurs", "tnos"]
+        expected_groups = ["chiron_pholus", "lilith", "main_belt", "romance",
+                           "centaurs", "tnos", "dwarf_planets"]
         for g in expected_groups:
             assert g in ASTEROID_GROUPS
+
+    def test_romance_group_contains_eros_and_psyche(self):
+        from astro.western.asteroids import ASTEROID_GROUPS
+        assert "Eros" in ASTEROID_GROUPS["romance"]
+        assert "Psyche" in ASTEROID_GROUPS["romance"]
+
+    def test_main_belt_contains_hygiea(self):
+        from astro.western.asteroids import ASTEROID_GROUPS
+        assert "Hygiea" in ASTEROID_GROUPS["main_belt"]
+
+    def test_dwarf_planets_contains_eris(self):
+        from astro.western.asteroids import ASTEROID_GROUPS
+        assert "Eris" in ASTEROID_GROUPS["dwarf_planets"]
 
     def test_compute_include_groups(self):
         from astro.western.asteroids import compute_asteroids
@@ -894,6 +909,13 @@ class TestExpandedAsteroids:
         # Lilith bodies should be returned (Mean Apogee always available)
         lilith_names = [a.name for a in asts]
         assert any("Lilith" in n for n in lilith_names)
+
+    def test_compute_romance_group(self):
+        from astro.western.asteroids import compute_asteroids
+        asts = compute_asteroids(JD, include_groups=["romance"])
+        assert isinstance(asts, list)
+        # Eros (433) and Psyche (16) require numbered asteroid ephemeris files;
+        # they are silently skipped when the files are absent, so only assert type.
 
     def test_asteroid_position_new_fields(self):
         from astro.western.asteroids import compute_asteroids

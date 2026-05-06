@@ -3,8 +3,10 @@ astro/asteroids.py — 小行星與半人馬天體位置計算
 (Asteroid & Centaur Positions)
 
 Supports: Chiron, Black Moon Lilith (mean & true), main-belt asteroids
-(Ceres, Pallas, Juno, Vesta), and popular centaurs/TNOs
-(Pholus, Nessus, Chariklo, Ixion, Varuna, Quaoar, Sedna).
+(Ceres, Pallas, Juno, Vesta), romance asteroids (Eros, Psyche),
+health/healing asteroid (Hygiea), dwarf planets (Eris),
+and popular centaurs/TNOs (Pholus, Nessus, Chariklo, Ixion, Varuna,
+Quaoar, Sedna).
 
 Design principles:
 - Config-driven: add new bodies by appending to ASTEROID_CONFIG.
@@ -52,6 +54,18 @@ ASTEROID_CONFIG = [
      "Partnership, commitment",        "合夥、承諾"),
     ("Vesta",        _AST + 4,            "⚶", "灶神星", "main_belt",
      "Devotion, sacred flame, focus",  "奉獻、聖火、專注"),
+    ("Hygiea",       _AST + 10,           "⚕", "健康神星", "main_belt",
+     "Health, healing, hygiene, prevention", "健康、療癒、預防"),
+
+    # — Romance asteroids ——————————————————————————————————————————————
+    ("Eros",         _AST + 433,          "♡", "愛神星",  "romance",
+     "Erotic desire, passionate attraction, obsession", "愛慾、熱情吸引、癡迷"),
+    ("Psyche",       _AST + 16,           "🦋", "賽姬星",  "romance",
+     "Soul, psyche, unconditional love, spiritual bond", "靈魂、無條件的愛、靈性連結"),
+
+    # — Dwarf planets ——————————————————————————————————————————————————
+    ("Eris",         _AST + 136199,       "⊗", "鬩神星",  "dwarf_planets",
+     "Discord, revelation, equality, radical disruption", "不和、揭示、平等、顛覆"),
 
     # — Centaurs & Trans-Neptunian Objects ————————————————————————————
     ("Nessus",       _AST + 7066,         "⛎", "涅索斯",  "centaur",
@@ -75,9 +89,11 @@ ASTEROIDS = {row[0]: row for row in ASTEROID_CONFIG}
 ASTEROID_GROUPS = {
     "chiron_pholus": ["Chiron", "Pholus"],
     "lilith":        ["Lilith (Mean)", "Lilith (True)"],
-    "main_belt":     ["Ceres", "Pallas", "Juno", "Vesta"],
+    "main_belt":     ["Ceres", "Pallas", "Juno", "Vesta", "Hygiea"],
+    "romance":       ["Eros", "Psyche"],
     "centaurs":      ["Nessus", "Chariklo"],
     "tnos":          ["Ixion", "Varuna", "Quaoar", "Sedna"],
+    "dwarf_planets": ["Eris"],
 }
 
 
