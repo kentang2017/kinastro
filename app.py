@@ -286,7 +286,7 @@ def render_homepage():
          ["醫學占星", "傷寒鈐法"],
          "#4CAF8E", "rgba(76,175,142,0.1)", "rgba(76,175,142,0.22)"),
         ("📜", "傳統卜卦占星", "Traditional Horary",
-         ["傳統卜卦占星", "William Lilly", "Vedic Prashna", "問卜占星"],
+         ["William Lilly 問卜", "Bonatti 卜星", "VOC 月亮", "Vedic Prashna"],
          "#7C5CBF", "rgba(124,92,191,0.1)", "rgba(124,92,191,0.26)"),
     ]
 

@@ -143,7 +143,6 @@ _HORARY_CSS = """
     border: 1px solid rgba(100,140,220,0.12);
     font-family: 'Courier New', monospace;
     font-size: 0.88em;
-    transition: background 0.15s;
 }
 .planet-strong { border-left: 3px solid #2a9e62; }
 .planet-weak   { border-left: 3px solid #c83c48; }
