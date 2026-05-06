@@ -1672,7 +1672,12 @@ def _render_global_ai_chat():
     _chart_obj = st.session_state.get("_global_chat_chart")
     _page_content = st.session_state.get("_global_chat_page_content", "")
 
-    if not _system_key or _chart_obj is None:
+    # Fallback: use the currently selected system so the chatbox always
+    # appears even on pages that don't call _render_ai_button explicitly.
+    if not _system_key:
+        _system_key = st.session_state.get("_system_select", "")
+
+    if not _system_key:
         return
 
     # User avatar based on sidebar gender selection
@@ -1763,9 +1768,12 @@ def _render_global_ai_chat():
                 return
 
         # Build messages list for the API
-        chart_prompt = format_chart_for_prompt(
-            _system_key, _chart_obj, page_content=_page_content,
-        )
+        if _chart_obj is not None:
+            chart_prompt = format_chart_for_prompt(
+                _system_key, _chart_obj, page_content=_page_content,
+            )
+        else:
+            chart_prompt = t("ai_no_chart")
         # Detect the language of the latest user message and choose the
         # matching system prompt so the AI responds in the same language.
         _user_lang = detect_language(_user_input)
