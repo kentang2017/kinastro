@@ -25,6 +25,7 @@ from .calculator import MesopotamianChart, MesopotamianPlanet, compute_sumerian_
 from .constants import (
     MESOPOTAMIAN_DEITIES,
     MULAPIN_PATHS,
+    MULAPIN_36_STARS,
     K8538_SECTORS,
     SUMER_GOLD,
     SUMER_GOLD_LIGHT,
@@ -667,10 +668,10 @@ def _render_mulapin_tab(chart: MesopotamianChart) -> None:
     # Full 36-star table
     with st.expander(auto_cn("📋 完整 36 顆星表", "📋 Full 36-Star MUL.APIN List"), expanded=False):
         import pandas as pd
+        from .constants import MULAPIN_36_STARS as _ALL_STARS
         rows = []
         month_labels = month_names_cn if get_lang() in ("zh", "zh_cn") else month_names_en
-        for star in sorted(__import__('astro.sumerian.constants', fromlist=['MULAPIN_36_STARS']).MULAPIN_36_STARS,
-                           key=lambda s: s["month"]):
+        for star in sorted(_ALL_STARS, key=lambda s: s["month"]):
             path_data = MULAPIN_PATHS.get(star["path"], {})
             rows.append({
                 auto_cn("巴比倫月份", "Bab. Month"): month_labels[star["month"]],

@@ -380,7 +380,6 @@ def compute_sumerian_chart(
     planets: List[MesopotamianPlanet] = []
 
     for planet_name, pid in _PLANET_IDS.items():
-        flags = swe.FLG_SIDEREAL | swe.FLG_SPEED | swe.FLG_EQUATORIAL
         res_ecl = swe.calc_ut(jd, pid, swe.FLG_SIDEREAL | swe.FLG_SPEED)
         res_equ = swe.calc_ut(jd, pid, swe.FLG_SIDEREAL | swe.FLG_EQUATORIAL)
 
