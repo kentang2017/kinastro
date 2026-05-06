@@ -3740,6 +3740,51 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh_cn": "👈 请在左侧输入出生年月日时及地点，点击「开始排盘」进行古典主限推运分析。",
         "en": "👈 Enter birth date, time and location on the left, then click 'Calculate Chart' for Primary Directions analysis.",
     },
+    "tab_trutine_of_hermes": {
+        "zh": "☿ 赫密士前世盤",
+        "en": "☿ Trutine of Hermes",
+    },
+    "sys_hint_trutine_of_hermes": {
+        "zh": "赫密士出生前世盤，托勒密《百句箴言》，月亮↔上升點互換，靈魂入身印記",
+        "en": "Prenatal Epoch, Ptolemy Centiloquium, Moon↔ASC/DSC reciprocity, soul incarnation imprint",
+    },
+    "desc_trutine_of_hermes": {
+        "zh": (
+            "☿ **赫密士出生前世盤（Trutine of Hermes / Prenatal Epoch）** — "
+            "古典希臘化占星術中最深刻的靈魂層級技術。\n\n"
+            "• **核心法則**（托勒密《百句箴言》第51條）：月亮在地平線上方→前世盤上升 = 本命月亮；"
+            "月亮在地平線下方→前世盤下降 = 本命月亮。\n"
+            "• **妊娠期回推**：從出生時刻回推約273天（9個太陰月），搜尋受孕星盤。\n"
+            "• **靈魂層級解讀**：前世盤代表靈魂選擇化身時的天象印記，揭示此世的靈魂任務。\n"
+            "• **校正驗證**：誤差 < 1° 可強力佐證出生時間準確性。\n"
+            "• **雙圈天球圖**：前世盤（外環）× 本命盤（內環）可視化對照。\n"
+            "• **跨盤相位**：前世盤與本命盤之間的相位揭示靈魂計劃與現實命運的對話。\n\n"
+            "支援三種歷史方法：赫密士/托勒密經典法、貝利標準法（1916）、賽法利亞爾太陽紀元法。\n\n"
+            "請輸入出生資料後點擊計算。"
+        ),
+        "en": (
+            "☿ **Trutine of Hermes (Prenatal Epoch)** — "
+            "The most profound soul-level technique in classical Hellenistic astrology.\n\n"
+            "• **Core Rule** (Ptolemy Centiloquium Ap. 51): Moon above horizon → Epoch ASC = Natal Moon; "
+            "Moon below → Epoch DSC = Natal Moon.\n"
+            "• **Gestation Retrograde**: Searches ~273 days before birth for the Conception chart.\n"
+            "• **Soul-Level Insights**: The Epoch represents the soul's celestial imprint at incarnation.\n"
+            "• **Rectification Validation**: Orb < 1° strongly confirms birth time accuracy.\n"
+            "• **Dual Zodiac Wheel**: Epoch (outer ring) × Natal (inner ring) visualisation.\n"
+            "• **Cross-Chart Aspects**: Epoch-Natal aspects reveal the soul plan vs lived life dialogue.\n\n"
+            "Supports three historical methods: Classical Hermes/Ptolemy, Bailey Standard (1916), "
+            "Sepharial Solar Epoch.\n\n"
+            "Enter birth data and click Calculate."
+        ),
+    },
+    "spinner_trutine_of_hermes": {
+        "zh": "計算前世盤中，請稍候…",
+        "en": "Computing Prenatal Epoch chart, please wait…",
+    },
+    "info_trutine_of_hermes_prompt": {
+        "zh": "👈 請在左側輸入出生資料，然後點擊「開始排盤」查看赫密士前世盤分析。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Prenatal Epoch analysis.",
+    },
 }
 
 def get_ui_lang() -> str:

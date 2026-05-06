@@ -172,6 +172,7 @@ from astro.chinese.taixuan.taixuan_renderer import (
     render_qigua_ui,
 )
 from astro.rectification.renderer import render_streamlit as render_rectification_page
+from astro.trutine_of_hermes.renderer import render_streamlit as render_trutine_chart
 from astro.bazi import compute_bazi as compute_bazi_chart, render_streamlit as render_bazi_chart
 
 
@@ -1127,7 +1128,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_esoteric"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1198,6 +1199,7 @@ with st.sidebar:
         "tab_wuyunliuqi": t("tab_wuyunliuqi"),
         "tab_picatrix_behenian": t("tab_picatrix_behenian"),
         "tab_rectification": t("tab_rectification"),
+        "tab_trutine_of_hermes": t("tab_trutine_of_hermes"),
         "tab_esoteric": t("tab_esoteric"),
         "tab_medical_astrology": t("tab_medical_astrology"),
         "tab_byzantine_astrology": t("tab_byzantine_astrology"),
@@ -1262,6 +1264,7 @@ with st.sidebar:
         "tab_wuyunliuqi": t("sys_hint_wuyunliuqi"),
         "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
         "tab_rectification": t("sys_hint_rectification"),
+        "tab_trutine_of_hermes": t("sys_hint_trutine_of_hermes"),
         "tab_esoteric": t("sys_hint_esoteric"),
         "tab_medical_astrology": t("sys_hint_medical_astrology"),
         "tab_byzantine_astrology": t("sys_hint_byzantine_astrology"),
@@ -5360,6 +5363,29 @@ elif _selected_system == "tab_rectification":
         default_lon=_p.get("longitude", 114.1694),
         default_tz=_p.get("timezone", 8.0),
     )
+
+# --- 赫密士出生前世盤 Trutine of Hermes / Prenatal Epoch ---
+elif _selected_system == "tab_trutine_of_hermes":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            render_trutine_chart(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p.get("minute", 0),
+                timezone=_p.get("timezone", 0.0),
+                latitude=_p.get("latitude", 25.033),
+                longitude=_p.get("longitude", 121.565),
+                location_name=_p.get("location_name", ""),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_trutine_of_hermes_prompt"))
+        st.markdown(t("desc_trutine_of_hermes"))
 
 # --- 六爻終身卦 Lifetime Liu Yao Hexagram ---
 elif _selected_system == "tab_liuyao_lifetime":
