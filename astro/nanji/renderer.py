@@ -294,7 +294,7 @@ def render_streamlit(
             f"<div style='background:#fffbf0;border-left:3px solid {SVG_SEAL_RED};"
             f"padding:10px 14px;border-radius:4px;margin-bottom:8px;'>"
             f"<b style='color:{SVG_SEAL_RED}'>【{entry.section} · {entry.code}】</b><br/>"
-            f"<span style='font-family:Noto Serif SC,serif;font-size:15px;'>"
+            f"<span style='font-family:Noto Serif SC,serif;font-size:15px;color:{SVG_INK_DARK};'>"
             f"{entry.verse}</span><br/>"
             f"<small style='color:{SVG_SUBTITLE_COLOR};'>{entry.comment}</small>"
             f"</div>",
@@ -341,8 +341,8 @@ def render_streamlit(
                 st.markdown(
                     f"<div style='background:#fffbf0;border-left:3px solid {SVG_SEAL_RED};"
                     f"padding:12px;border-radius:4px;margin-bottom:10px;'>"
-                    f"<b>【{entry.section} · {entry.code}】</b><br/>"
-                    f"<span style='font-family:Noto Serif SC,serif;font-size:15px;'>{entry.verse}</span><br/>"
+                    f"<b style='color:{SVG_SEAL_RED}'>【{entry.section} · {entry.code}】</b><br/>"
+                    f"<span style='font-family:Noto Serif SC,serif;font-size:15px;color:{SVG_INK_DARK};'>{entry.verse}</span><br/>"
                     f"<small style='color:{SVG_SUBTITLE_COLOR};'>{entry.comment}</small>"
                     f"</div>",
                     unsafe_allow_html=True,
