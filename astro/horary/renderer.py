@@ -41,11 +41,11 @@ _HORARY_CSS = """
 <style>
 /* ── Horary Module Global Styles ────────────────────────────── */
 .horary-header {
-    background: linear-gradient(135deg, #1a0d00 0%, #2e1800 50%, #4a2800 100%);
-    border: 1px solid #8B6914;
-    border-left: 6px solid #C5A03F;
+    background: linear-gradient(135deg, #0D1B2A 0%, #1B2D4A 50%, #2A3F62 100%);
+    border: 1px solid #3D5A80;
+    border-left: 6px solid #A78BFA;
     padding: 18px 24px;
-    border-radius: 6px;
+    border-radius: 8px;
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
@@ -53,74 +53,74 @@ _HORARY_CSS = """
 .horary-header::before {
     content: '';
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%231a0d00'/%3E%3Ccircle cx='1' cy='1' r='0.5' fill='%23C5A03F' opacity='0.08'/%3E%3C/svg%3E");
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Crect width='6' height='6' fill='%230D1B2A'/%3E%3Ccircle cx='1' cy='1' r='0.6' fill='%23A78BFA' opacity='0.06'/%3E%3C/svg%3E");
     pointer-events: none;
 }
-.horary-header h2 { color: #E8C97A; margin: 0 0 4px 0; font-size: 1.5em; font-family: serif; }
-.horary-header p  { color: #c4a876; margin: 0; font-size: 0.88em; font-style: italic; }
+.horary-header h2 { color: #C4B5FD; margin: 0 0 4px 0; font-size: 1.5em; font-family: serif; }
+.horary-header p  { color: #93A8C4; margin: 0; font-size: 0.88em; font-style: italic; }
 
 .horary-section {
-    background: rgba(197,160,63,0.04);
-    border: 1px solid #8B691422;
-    border-radius: 6px;
+    background: rgba(123,78,190,0.06);
+    border: 1px solid rgba(123,78,190,0.20);
+    border-radius: 8px;
     padding: 14px 18px;
     margin-bottom: 14px;
 }
-.horary-section h4 { color: #C5A03F; margin: 0 0 10px 0; font-family: serif; letter-spacing: 0.02em; }
+.horary-section h4 { color: #A78BFA; margin: 0 0 10px 0; font-family: serif; letter-spacing: 0.04em; }
 
 .stricture-warning {
     background: rgba(220,80,40,0.12);
-    border-left: 4px solid #DC5028;
+    border-left: 4px solid #E05A3A;
     border-radius: 4px;
     padding: 8px 14px;
     margin-bottom: 8px;
-    color: #f4a07c;
+    color: #F4A07C;
 }
 .stricture-caution {
-    background: rgba(255,180,0,0.10);
-    border-left: 4px solid #FFB400;
+    background: rgba(234,179,8,0.10);
+    border-left: 4px solid #EAB308;
     border-radius: 4px;
     padding: 8px 14px;
     margin-bottom: 8px;
-    color: #f0d080;
+    color: #F0D080;
 }
 .stricture-info {
-    background: rgba(100,150,255,0.10);
-    border-left: 4px solid #6496FF;
+    background: rgba(42,157,143,0.10);
+    border-left: 4px solid #2A9D8F;
     border-radius: 4px;
     padding: 8px 14px;
     margin-bottom: 8px;
-    color: #a0b8f0;
+    color: #7ECFC8;
 }
 
 .verdict-yes {
-    background: rgba(40,167,69,0.15);
-    border: 2px solid #28a745;
+    background: rgba(42,157,143,0.15);
+    border: 2px solid #2A9D8F;
     border-radius: 8px;
     padding: 12px 20px;
-    color: #7edf9a;
+    color: #7ECFC8;
     font-size: 1.1em;
     font-family: serif;
     font-weight: bold;
     text-align: center;
 }
 .verdict-no {
-    background: rgba(220,53,69,0.15);
-    border: 2px solid #dc3545;
+    background: rgba(155,34,38,0.15);
+    border: 2px solid #9B2226;
     border-radius: 8px;
     padding: 12px 20px;
-    color: #f08898;
+    color: #F08898;
     font-size: 1.1em;
     font-family: serif;
     font-weight: bold;
     text-align: center;
 }
 .verdict-unclear {
-    background: rgba(255,193,7,0.12);
-    border: 2px solid #ffc107;
+    background: rgba(167,139,250,0.12);
+    border: 2px solid #7B4EBE;
     border-radius: 8px;
     padding: 12px 20px;
-    color: #f0d060;
+    color: #C4B5FD;
     font-size: 1.1em;
     font-family: serif;
     font-weight: bold;
@@ -131,45 +131,45 @@ _HORARY_CSS = """
     display: flex;
     align-items: center;
     padding: 4px 8px;
-    border-radius: 3px;
+    border-radius: 4px;
     margin-bottom: 4px;
-    background: rgba(197,160,63,0.04);
-    border: 1px solid #8B691415;
+    background: rgba(13,27,42,0.6);
+    border: 1px solid rgba(61,90,128,0.35);
     font-family: monospace;
     font-size: 0.88em;
 }
-.planet-strong { border-left: 3px solid #28a745; }
-.planet-weak   { border-left: 3px solid #dc3545; }
-.planet-neutral{ border-left: 3px solid #8B6914; }
+.planet-strong { border-left: 3px solid #2A9D8F; }
+.planet-weak   { border-left: 3px solid #9B2226; }
+.planet-neutral{ border-left: 3px solid #7B4EBE; }
 
 .judgment-text {
-    background: rgba(30,15,0,0.6);
-    border: 1px solid #8B6914;
-    border-radius: 6px;
+    background: rgba(13,27,42,0.80);
+    border: 1px solid rgba(61,90,128,0.50);
+    border-radius: 8px;
     padding: 16px 20px;
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 0.9em;
     line-height: 1.7;
-    color: #d4c09c;
+    color: #C8D8EA;
     white-space: pre-wrap;
 }
 
 .arudha-box {
-    background: linear-gradient(135deg, rgba(120,60,0,0.3), rgba(60,20,0,0.4));
-    border: 1px solid #C5A03F66;
+    background: linear-gradient(135deg, rgba(123,78,190,0.20), rgba(42,63,98,0.30));
+    border: 1px solid rgba(167,139,250,0.35);
     border-radius: 8px;
     padding: 12px 16px;
     margin: 8px 0;
     font-style: italic;
-    color: #E8C97A;
+    color: #C4B5FD;
 }
 
 .classical-quote {
-    border-left: 3px solid #C5A03F;
+    border-left: 3px solid #A78BFA;
     padding: 6px 12px;
     margin: 8px 0;
     font-style: italic;
-    color: #b89a5c;
+    color: #93A8C4;
     font-size: 0.88em;
     font-family: Georgia, serif;
 }

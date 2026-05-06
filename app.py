@@ -232,12 +232,12 @@ def render_homepage():
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
-          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星到傷寒鈐法——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十一種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星到傷寒鈐法、<strong style="color:#A78BFA;">傳統卜卦占星</strong>——<br/>
+          堅占星將<strong style="color:#EAB308;font-weight:600;">全球五十四種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">51</div>
+            <div class="hp-stat-num">54</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -279,8 +279,14 @@ def render_homepage():
          ["卡巴拉", "猶太星宿", "薩珊波斯", "阿拉伯占星", "葉門占星", "Picatrix 占星魔法"],
          "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
         ("🏺", "古代文明", "Ancient Civilizations",
-         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星", "醫學占星", "傷寒鈐法"],
+         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星"],
          "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
+        ("⚕️", "醫占", "Medical Astrology",
+         ["醫學占星", "傷寒鈐法"],
+         "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
+        ("📜", "傳統卜卦占星", "Traditional Horary",
+         ["西洋卜卦", "吠陀問卜"],
+         "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
     ]
 
     _cat_html = '<div class="hp-cat-grid">'
@@ -1108,7 +1114,8 @@ with st.sidebar:
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
         ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
-        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa", "tab_horary"]),
+        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
+        ("cat_horary", ["tab_horary"]),
     ]
 
     _CATEGORY_ICONS = {
@@ -1120,6 +1127,7 @@ with st.sidebar:
         "cat_middle_east": "🕌",
         "cat_ancient": "🏺",
         "cat_yi_zhan": "⚕️",
+        "cat_horary": "📜",
     }
 
     _SYSTEM_LABELS = {
