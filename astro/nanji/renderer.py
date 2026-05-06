@@ -266,7 +266,7 @@ def render_streamlit(
     st.markdown("---")
     svg_html = _build_nanji_svg(njs)
     components.html(
-        f"<div style='width:100%;overflow-x:auto;text-align:center'>{svg_html}</div>",
+        f"<div style='width:100%;text-align:center'>{svg_html}</div>",
         height=440,
         scrolling=False,
     )

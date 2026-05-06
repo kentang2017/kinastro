@@ -509,7 +509,8 @@ class NanJiShenShu:
         y_tg_idx = TIANGAN.index(y_stem)
         y_dz_idx = DIZHI.index(y_branch)
         jiazi_idx = next(
-            i for i in range(60) if i % 10 == y_tg_idx and i % 12 == y_dz_idx
+            (i for i in range(60) if i % 10 == y_tg_idx and i % 12 == y_dz_idx),
+            0,
         )
         effective_year = 1984 + jiazi_idx
 
