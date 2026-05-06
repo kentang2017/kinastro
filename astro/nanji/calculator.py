@@ -159,6 +159,15 @@ class TiaowenDatabase:
         return len(self._entries)
 
 
+# 密碼標準化常量：
+# 需去除的尾部標點（JSON 原始資料中部分條目帶有多餘標點）
+_CODE_TRAILING_PUNCT = '：:。，,、'
+# 需去除的說明性後綴（如「宮。」「斷。」為手稿批注，不屬於密碼本體）
+_CODE_DESC_SUFFIXES = ('宮。', '斷。', '格。', '宮', '斷', '格')
+# 密碼有效字元長度上限（建除一字 + 宿名通常一字，最長不超過兩字共四個 UTF-8 字元）
+_MAX_CODE_LENGTH = 4
+
+
 def _normalize_code(code: str) -> str:
     """
     標準化密碼字串：去除標點符號後綴，修正常見異體字。
@@ -166,15 +175,14 @@ def _normalize_code(code: str) -> str:
     部分 JSON 條目中 code 含有多餘標點（如「建張：」「成斗：」），
     或使用異體字（「翌」vs「翼」、「嘴」vs「觜」），需統一。
     """
-    # 去除尾部標點
-    code = code.rstrip('：:。，,、')
-    # 去除行內說明性後綴（「宮。」「斷。」）
-    for suffix in ('宮。', '斷。', '格。', '宮', '斷', '格'):
-        if code.endswith(suffix) and len(code) > 4:
+    # 去除尾部標點（見 _CODE_TRAILING_PUNCT）
+    code = code.rstrip(_CODE_TRAILING_PUNCT)
+    # 去除行內說明性後綴（「宮。」「斷。」等，見 _CODE_DESC_SUFFIXES）
+    for suffix in _CODE_DESC_SUFFIXES:
+        if code.endswith(suffix) and len(code) > _MAX_CODE_LENGTH:
             code = code[:-len(suffix)]
-    # 只保留前兩個字（建除一字 + 宿名通常是一字）
-    # 但有些宿名是兩字（「女」「虛」「危」等均一字，故取前三字以防截斷宿名）
-    code = code[:4]
+    # 截取有效長度：密碼本體為建除一字 + 宿名一字，上限 _MAX_CODE_LENGTH 個字元
+    code = code[:_MAX_CODE_LENGTH]
     return code.strip()
 
 

@@ -177,7 +177,7 @@ class TestWuxingRelation:
     def test_huo_ke_jin(self):
         assert get_wuxing_relation("火", "金") == "火克金"
 
-    def test_tongles(self):
+    def test_tonglei(self):
         assert get_wuxing_relation("木", "木") == "同類"
 
 

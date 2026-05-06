@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Optional
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from astro.i18n import auto_cn, t
 
@@ -267,7 +268,6 @@ def render_streamlit(
     # ── 四柱 SVG 命盤
     st.markdown("---")
     svg_html = _build_nanji_svg(njs)
-    import streamlit.components.v1 as components
     components.html(f"<div style='text-align:center'>{svg_html}</div>", height=440)
 
     # ── 四柱文字摘要
