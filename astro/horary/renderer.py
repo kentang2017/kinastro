@@ -264,19 +264,11 @@ def render_western_horary_svg(chart: WesternHoraryChart) -> str:
     }
 
     for i in range(12):
-        # Angle: Aries at ASC (we rotate based on ASC)
-        asc_lon = chart.ascendant
-        sign_start_angle = -90 + ((i * 30.0) - asc_lon) * math.pi / 180.0 * 180.0 / math.pi
-        # Actually let's use a simpler rotation: place sign i at its ecliptic position
-        # The ASC is at the "9 o'clock" position (left side) in Western charts
-        # Ecliptic 0° (Aries) = 9 o'clock - ASC_angle
-        asc_angle_deg = asc_lon  # degrees on ecliptic
-        # Sign center: i * 30 + 15 degrees on ecliptic
-        sign_ecl = i * 30.0 + 15.0
-        angle_from_asc = sign_ecl - asc_angle_deg
-        svg_angle = -(angle_from_asc) - 90.0  # SVG: 0° = right, we want 0° = top
-        # In standard Western chart: ASC = left (180° in SVG), MC = top (90° SVG)
-        # Angle in chart: asc at 180°, so sign_angle = 180 - (ecl - asc)
+        # Place sign i at its ecliptic position.
+        # In standard Western chart: ASC = 9 o'clock (left / 180° in SVG coords),
+        # so sign_angle = 180 - (ecl - asc) when measured from the SVG origin.
+        asc_angle_deg = chart.ascendant
+        sign_ecl = i * 30.0 + 15.0  # midpoint of sign i on ecliptic
         svg_angle_rad = math.radians(180.0 - (sign_ecl - asc_angle_deg))
         mid_r = (R_outer + R_outer - 20) / 2
         gx = cx + mid_r * math.cos(svg_angle_rad)

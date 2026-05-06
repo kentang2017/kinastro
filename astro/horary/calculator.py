@@ -590,9 +590,7 @@ def _is_applying_aspect(lon1: float, lon2: float, spd1: float, spd2: float,
 
     # Orb of aspect currently vs future
     def _orb(d: float) -> float:
-        raw = abs(d)
-        # Account for opposition at 180
-        return abs(raw - target_angle) if target_angle <= 180 else abs(raw - target_angle)
+        return abs(abs(d) - target_angle)
 
     orb_now = _orb(diff_now)
     orb_fut = _orb(diff_fut)
@@ -1337,6 +1335,9 @@ def compute_western_horary(
     strictures = _check_strictures(ascendant, planets, moon_voc)
 
     # Planetary hour lord (radicality)
+    # Strict Lilly definition: radical when hour lord == ASC lord (Lilly CA p.121).
+    # Extended check: Bonatti (Consideration 1) also allows Moon's sign lord as
+    # a secondary indicator of the querent's sincerity.
     try:
         ph_lord = _compute_planetary_hour_lord(jd, latitude, longitude)
     except Exception:

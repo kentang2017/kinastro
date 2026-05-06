@@ -105,19 +105,15 @@ DOMICILE_RULERS: Dict[int, str] = {
     11: "Jupiter", # Pisces
 }
 
-# Exaltation rulers and exact degree
+# Exaltation rulers and exact degree (seven traditional planets only)
 # Source: Lilly CA pp. 106-107
 EXALTATION_RULERS: Dict[int, Tuple[str, int]] = {
     0:  ("Sun",     19),  # Sun exalted 19° Aries
     1:  ("Moon",    3),   # Moon exalted 3° Taurus
-    2:  ("North Node", 3),# North Node exalted 3° Gemini (not used in judgment)
     3:  ("Jupiter", 15),  # Jupiter exalted 15° Cancer
-    4:  ("Pluto",   0),   # modern — not used in traditional
     5:  ("Mercury", 15),  # Mercury exalted 15° Virgo
     6:  ("Saturn",  21),  # Saturn exalted 21° Libra
-    7:  ("Mars",    28),  # (fall position: Mars actually exalted in Capricorn)
     9:  ("Mars",    28),  # Mars exalted 28° Capricorn
-    10: ("None",    0),
     11: ("Venus",   27),  # Venus exalted 27° Pisces
 }
 
