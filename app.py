@@ -90,6 +90,8 @@ from astro.shanghan_qianfa.calculator import compute_shanghan_qianfa
 from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_qianfa_chart
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
 from astro.nanji.renderer import render_streamlit as render_nanji_chart
+from astro.sumerian.calculator import compute_sumerian_chart
+from astro.sumerian.renderer import render_streamlit as render_sumerian_chart
 from astro.horary import render_streamlit as render_horary_chart
 from astro.electional import render_streamlit as render_electional_chart
 from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
@@ -1132,7 +1134,7 @@ with st.sidebar:
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
-        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian"]),
+        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian", "tab_sumerian"]),
         ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
         ("cat_horary", ["tab_horary", "tab_electional"]),
     ]
@@ -1175,6 +1177,7 @@ with st.sidebar:
         "tab_nine_star_ki": t("tab_nine_star_ki"),
         "tab_hellenistic": t("tab_hellenistic"),
         "tab_babylonian": t("tab_babylonian"),
+        "tab_sumerian": t("tab_sumerian"),
         "tab_chinstar": t("tab_chinstar"),
         "tab_twelve_ci": t("tab_twelve_ci"),
         "tab_cetian_ziwei": t("tab_cetian_ziwei"),
@@ -1239,6 +1242,7 @@ with st.sidebar:
         "tab_nine_star_ki": t("sys_hint_nine_star_ki"),
         "tab_hellenistic": t("sys_hint_hellenistic"),
         "tab_babylonian": t("sys_hint_babylonian"),
+        "tab_sumerian": t("sys_hint_sumerian"),
         "tab_sukkayodo": t("sys_hint_sukkayodo"),
         "tab_chinstar": t("sys_hint_chinstar"),
         "tab_twelve_ci": t("sys_hint_twelve_ci"),
@@ -4332,6 +4336,38 @@ elif _selected_system == "tab_babylonian":
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_babylonian"))
+
+# --- 蘇美/美索不達米亞占星 (Sumerian / Mesopotamian Astrology) ---
+elif _selected_system == "tab_sumerian":
+    if _is_calculated:
+        try:
+            _p = st.session_state["_calc_params"]
+            render_sumerian_chart(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p.get("minute", 0),
+                timezone=_p.get("timezone", 0.0),
+                latitude=_p.get("latitude", 32.542),
+                longitude=_p.get("longitude", 44.421),
+                location_name=_p.get("location_name", ""),
+            )
+            _sumerian_chart = compute_sumerian_chart(
+                year=_p["year"], month=_p["month"], day=_p["day"],
+                hour=_p["hour"], minute=_p.get("minute", 0),
+                timezone=_p.get("timezone", 0.0),
+                lat=_p.get("latitude", 32.542),
+                lon=_p.get("longitude", 44.421),
+                location_name=_p.get("location_name", ""),
+            )
+            _render_ai_button("tab_sumerian", _sumerian_chart, btn_key="sumerian")
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    else:
+        st.info(t("info_sumerian_prompt"))
+        st.markdown(t("desc_sumerian"))
 
 # --- 達摩一掌經 (Damo One Palm Scripture) ---
 elif _selected_system == "tab_damo":
