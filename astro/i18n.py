@@ -1413,6 +1413,32 @@ transmitted by **Chen Xiyi**.
         "zh_cn": "正在渲染萨珊传统星盘...",
         "en": "Rendering Sassanian traditional chart...",
     },
+    # Advanced Sassanian / Persian Deep
+    "tab_persian_deep": {
+        "zh": "🏛️ 薩珊波斯・進階版",
+        "zh_cn": "🏛️ 萨珊波斯・进阶版",
+        "en": "🏛️ Sassanian Persia (Advanced)",
+    },
+    "sys_hint_persian_deep": {
+        "zh": "深度波斯薩珊占星：Firdaria（正確序列）、Hyleg/Alcocoden、Almuten、月度主限、埃及界、多德卡特摩里亞、反射點、14 個阿拉伯點及 Dorotheus 解讀。",
+        "zh_cn": "深度波斯萨珊占星：Firdaria（正确序列）、Hyleg/Alcocoden、Almuten、月度主限、埃及界、多德卡特摩里亚、反射点、14 个阿拉伯点及 Dorotheus 解读。",
+        "en": "Deep Sassanian Persian astrology: corrected Firdaria, Hyleg/Alcocoden, Almuten, monthly profections, Egyptian bounds, Dodecatemoria, Antiscia, 14 Arabic parts, and Dorotheus interpretation.",
+    },
+    "spinner_persian_deep": {
+        "zh": "正在計算進階波斯薩珊占星星盤...",
+        "zh_cn": "正在计算进阶波斯萨珊占星星盘...",
+        "en": "Computing advanced Sassanian Persian chart...",
+    },
+    "desc_persian_deep": {
+        "zh": "🏛️ **薩珊波斯進階占星** — 深度實現波斯薩珊王朝（224–651 CE）占星傳統的高階技術，基於多羅修斯《卡門天文學》、馬沙阿拉、阿布·馬沙爾等波斯阿拉伯占星大師的原典。\n\n**核心特色**：正確 Firdaria 序列（日夜有別）、Hyleg/Alcocoden 壽命三範圍計算、整宮制、埃及界、三分守護星、多德卡特摩里亞（12份法）、反射點/對射點、14 個波斯阿拉伯點、波斯 Dorotheus 解讀引擎、四顆皇家恆星。",
+        "zh_cn": "🏛️ **萨珊波斯进阶占星** — 深度实现波斯萨珊王朝（224–651 CE）占星传统的高阶技术。\n\n**核心特色**：正确 Firdaria 序列、Hyleg/Alcocoden 寿命三范围计算、整宫制、埃及界、三分守护星、多德卡特摩里亚、反射点、14 个波斯阿拉伯点、Dorotheus 解读引擎、四颗皇家恒星。",
+        "en": "🏛️ **Advanced Sassanian Persian Astrology** — Deep implementation of Sassanian dynasty (224–651 CE) astrological tradition based on Dorotheus, Masha'allah, and Abu Ma'shar.\n\nFeatures: Corrected Firdaria sequences (day/night), three-range Hyleg/Alcocoden longevity, Whole Sign Houses, Egyptian bounds, triplicity lords, Dodecatemoria, Antiscia, 14 Arabic parts, Dorotheus interpretation engine, Royal Stars of Persia.",
+    },
+    "info_persian_deep_prompt": {
+        "zh": "請輸入出生資料並點擊「計算」以查看薩珊波斯進階占星結果。",
+        "zh_cn": "请输入出生资料并点击「计算」以查看萨珊波斯进阶占星结果。",
+        "en": "Enter birth data and click 'Calculate' to view the advanced Sassanian Persian chart.",
+    },
     # Transit / Return / Synastry
     "return_year_label": {"zh": "返照年份", "en": "Return Year"},
     "synastry_header": {"zh": "合盤比較", "en": "Synastry Comparison"},
