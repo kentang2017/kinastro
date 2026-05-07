@@ -42,6 +42,7 @@ from astro.qizheng.qizheng_dasha import compute_dasha
 from astro.qizheng.qizheng_transit import compute_transit, compute_transit_now
 from astro.qizheng.zhangguo import compute_zhangguo
 from astro.qizheng.qizheng_electional import render_electional_tool
+from astro.qizheng.qizheng_financial import render_financial_tab
 from astro.western.western import compute_western_chart, render_western_chart
 from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
@@ -2087,13 +2088,14 @@ with _natal_tab:
                     chart = compute_chart(**_p, gender=_g)
 
                 # 子 tabs for the Chinese chart
-                _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect = st.tabs([
+                _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect, _ch_tab_financial = st.tabs([
                     t("ch_subtab_natal"),
                     t("ch_subtab_shensha"),
                     t("ch_subtab_dasha"),
                     t("ch_subtab_transit"),
                     t("ch_subtab_zhangguo"),
                     t("ch_subtab_electional"),
+                    t("ch_subtab_financial"),
                 ])
 
                 with _ch_tab_natal:
@@ -2194,6 +2196,13 @@ with _natal_tab:
 
                 with _ch_tab_elect:
                     render_electional_tool(timezone=input_tz)
+
+                with _ch_tab_financial:
+                    render_financial_tab(
+                        chart=chart,
+                        params=_p,
+                        input_tz=input_tz,
+                    )
 
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")

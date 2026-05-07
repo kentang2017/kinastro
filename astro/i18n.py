@@ -1536,6 +1536,9 @@ transmitted by **Chen Xiyi**.
     # ── Qizheng electional ──────────────────────────────────
     "ch_subtab_electional": {"zh": "擇日", "en": "Electional"},
 
+    # ── Qizheng financial astrology ─────────────────────────
+    "ch_subtab_financial": {"zh": "💰 金融占星", "en": "💰 Financial Astrology"},
+
     # ── Fixed stars & asteroids ─────────────────────────────
     "show_fixed_stars": {"zh": "顯示恆星合相", "en": "Show Fixed Star Conjunctions"},
     "show_asteroids": {"zh": "顯示小行星", "en": "Show Asteroids"},
