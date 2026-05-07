@@ -633,7 +633,7 @@ _reg(System(
     name_en="Sabian Symbols",
     category="cat_western",
     icon="🔯",
-    tab_key="tab_sabian",      # Note: app.py uses "sabian_system_label" for display
+    tab_key="sabian_system_label",  # app.py uses "sabian_system_label" (not "tab_sabian")
     desc_key="desc_sabian",
     spinner_key="spinner_western",   # Sabian uses the western spinner
     hint_key="sys_hint_sabian",
@@ -1265,6 +1265,7 @@ _reg(System(
     spinner_key="spinner_persian",
     hint_key="sys_hint_persian",
     sub_tabs=[
+        # app.py reuses "western_subtab_natal" for the Persian intro/natal tab
         SubTab("western_subtab_natal",       "natal"),
         SubTab("persian_firdar_title",       "firdar"),
         SubTab("persian_hyleg_title",        "hyleg"),
