@@ -73,12 +73,34 @@ class ChartData:
     julian_day: float
     planets: list           # List[PlanetPosition]
     houses: list            # List[HouseData]
-    ascendant: float        # 上升點度數
+    ascendant: float        # 上升點度數（黃道回歸坐標）
     midheaven: float        # 中天度數
     solar_month: int        # 節氣月 (1-12)
     hour_branch: int        # 時辰地支索引 (0-11)
     ming_gong_branch: int   # 命宮地支索引 (0-11)
     gender: str             # 性別 ("male" / "female")
+    liming_lon: float = 0.0  # 立命黃道度（中國傳統七政四餘曆元坐標，用於二十八宿命度計算）
+
+
+# ============================================================
+# 七政四餘命度計算：中國傳統天球坐標
+# 七政四餘繼承唐代印度占星傳統，命度以唐代曆元（約760 CE）為參考點。
+# 此歲差修正量用於將黃道回歸坐標轉換為中國傳統恒星坐標，以定命宮二十八宿入宿度。
+# ============================================================
+_QIZHENG_AYANAMSA_J2000 = 17.32   # J2000.0 歲差量（度），唐代曆元約760 CE
+_J2000_JD = 2451545.0               # J2000.0 儒略日
+
+
+def _compute_liming_lon(tropical_ascendant: float, julian_day: float) -> float:
+    """
+    將黃道回歸上升點轉換為中國七政四餘傳統坐標，以計算立命二十八宿入宿度。
+
+    七政四餘依唐代曆元（約760 CE）定義恒星坐標，此函數以線性歲差修正
+    （50.29角秒/年）將回歸坐標轉換為該曆元坐標。
+    """
+    precession_rate = 50.29 / (365.25 * 3600)  # 度/日
+    ayanamsa = _QIZHENG_AYANAMSA_J2000 + (julian_day - _J2000_JD) * precession_rate
+    return _normalize_degree(tropical_ascendant - ayanamsa)
 
 
 def _normalize_degree(deg: float) -> float:
@@ -474,6 +496,7 @@ def compute_chart(
         hour_branch=hour_branch,
         ming_gong_branch=ming_gong_branch,
         gender=gender,
+        liming_lon=_compute_liming_lon(ascendant, jd),
     )
 
 
