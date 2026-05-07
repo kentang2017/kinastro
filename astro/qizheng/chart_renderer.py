@@ -1555,6 +1555,8 @@ def _ecl_to_mansion_text(lon: float) -> str:
     if arc_min == 60:
         arc_min = 0
         deg_int += 1
+    if deg_int >= 30:
+        deg_int = 0
 
     return f"{deg_int:02d}{branch_name}{sign_elem}{arc_min:02d}'{arc_sec:02d}"
 
@@ -1583,21 +1585,17 @@ def _build_planet_mansion_rows(chart: ChartData, mansion_list: list) -> list[dic
     返回 list of dict with keys: name, element, mansion, mansion_deg_text, sign_text, altitude, retrograde
     """
     rows = []
+    # Build a lookup dict for fast mansion start_lon and element access
+    mansion_lookup: dict[str, tuple[float, str]] = {
+        m["name"]: (m["start_lon"], m["element"]) for m in mansion_list
+    }
     for p in chart.planets:
         lon = _normalize_degree(p.longitude)
         mansion_name, mansion_deg, _, _ = _get_mansion_info_for_system(lon, mansion_list)
 
-        # 找對應宿的元素 (from mansion_list)
-        mansion_elem = ""
-        for m in mansion_list:
-            if m["name"] == mansion_name:
-                mansion_elem = m["element"]
-                break
-
+        mansion_start_lon, mansion_elem = mansion_lookup.get(mansion_name, (lon, ""))
         sign_text = _ecl_to_mansion_text(lon)
-        mansion_deg_text = _ecl_to_mansion_text(
-            [m["start_lon"] for m in mansion_list if m["name"] == mansion_name][0] + mansion_deg
-        ) if mansion_name else sign_text
+        mansion_deg_text = _ecl_to_mansion_text(mansion_start_lon + mansion_deg) if mansion_name else sign_text
 
         rows.append({
             "name": p.name,
