@@ -430,7 +430,7 @@ class ChunZiShu:
 
         # ── 父親屬相（多模式匹配，由嚴格到寬鬆）
         for pat in (
-            rf"父[是命]{{0,1}}屬([{_ZODIAC_CHARS}])",
+            rf"父[是命]?屬([{_ZODIAC_CHARS}])",
             rf"父親屬([{_ZODIAC_CHARS}])",
             rf"父屬([{_ZODIAC_CHARS}])",
         ):
@@ -441,7 +441,7 @@ class ChunZiShu:
 
         # ── 母親屬相
         for pat in (
-            rf"母[是命]{{0,1}}屬([{_ZODIAC_CHARS}])",
+            rf"母[是命]?屬([{_ZODIAC_CHARS}])",
             rf"母親屬([{_ZODIAC_CHARS}])",
             rf"母屬([{_ZODIAC_CHARS}])",
         ):
@@ -458,7 +458,7 @@ class ChunZiShu:
         # ── 妻宮屬相
         for pat in (
             rf"妻宮屬([{_ZODIAC_CHARS}])",
-            rf"妻[命]{{0,1}}屬([{_ZODIAC_CHARS}])",
+            rf"妻[命]?屬([{_ZODIAC_CHARS}])",
             rf"配偶屬([{_ZODIAC_CHARS}])",
         ):
             if m := re.search(pat, text):
@@ -535,7 +535,7 @@ class ChunZiShu:
             壽元整數（歲）；無法解析則回傳 None。
         """
         for pat in (
-            rf"壽[享元]{{0,1}}({_CN_AGE_PAT})歲",
+            rf"壽[享元]?({_CN_AGE_PAT})歲",
             rf"享壽({_CN_AGE_PAT})歲",
             rf"壽到({_CN_AGE_PAT})歲",
             rf"壽至({_CN_AGE_PAT})歲",
