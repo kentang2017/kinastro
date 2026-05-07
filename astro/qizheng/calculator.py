@@ -87,8 +87,10 @@ class ChartData:
 # 七政四餘繼承唐代印度占星傳統，命度以唐代曆元（約760 CE）為參考點。
 # 此歲差修正量用於將黃道回歸坐標轉換為中國傳統恒星坐標，以定命宮二十八宿入宿度。
 # ============================================================
-_QIZHENG_AYANAMSA_J2000 = 17.32   # J2000.0 歲差量（度），唐代曆元約760 CE
-_J2000_JD = 2451545.0               # J2000.0 儒略日
+# 唐代曆元（約760 CE）在 J2000.0 時的歲差量（度）
+# 計算：(2000 - 760) 年 × 50.29角秒/年 ÷ 3600 ≈ 17.32°
+_TANG_EPOCH_AYANAMSA_AT_J2000 = 17.32
+_JD_J2000 = 2451545.0               # J2000.0 儒略日（標準天文曆元）
 
 
 def _compute_liming_lon(tropical_ascendant: float, julian_day: float) -> float:
@@ -99,7 +101,7 @@ def _compute_liming_lon(tropical_ascendant: float, julian_day: float) -> float:
     （50.29角秒/年）將回歸坐標轉換為該曆元坐標。
     """
     precession_rate = 50.29 / (365.25 * 3600)  # 度/日
-    ayanamsa = _QIZHENG_AYANAMSA_J2000 + (julian_day - _J2000_JD) * precession_rate
+    ayanamsa = _TANG_EPOCH_AYANAMSA_AT_J2000 + (julian_day - _JD_J2000) * precession_rate
     return _normalize_degree(tropical_ascendant - ayanamsa)
 
 
