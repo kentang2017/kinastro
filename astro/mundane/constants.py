@@ -274,7 +274,7 @@ GREAT_CONJUNCTIONS: List[Dict[str, Any]] = [
     },
     {
         "year": 1981, "month": 1,  "day": 1,
-        "longitude": 243.0, "sign_index": 8,  # Sagittarius (Libra)
+        "longitude": 185.0, "sign_index": 6,  # Libra
         "notes_zh": "天秤座合相，里根時代，蘇聯解體前夕",
         "notes_en": "Libra conjunction, Reagan era, eve of Soviet collapse",
     },
@@ -298,7 +298,7 @@ GREAT_CONJUNCTIONS: List[Dict[str, Any]] = [
     },
     {
         "year": 2060, "month": 4,  "day": 7,
-        "longitude": 60.0,  "sign_index": 1,  # Gemini (projected)
+        "longitude": 60.0,  "sign_index": 2,  # Gemini (60–90°)
         "notes_zh": "雙子座合相（預測），風象三合完成",
         "notes_en": "Gemini conjunction (projected), Air triplicity complete",
     },

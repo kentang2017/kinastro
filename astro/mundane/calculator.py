@@ -135,17 +135,24 @@ def _planet_house_whole_sign(planet_lon: float, asc_lon: float) -> int:
 
 
 def _planet_house_placidus(planet_lon: float, cusps: List[float]) -> int:
-    """Return 1-based Placidus house number for a planet."""
-    for i in range(11, 0, -1):
+    """Return 1-based Placidus house number for a planet.
+
+    House i spans from cusps[i] to cusps[i+1], where cusps[13] wraps
+    back to cusps[1] (house 12 spans cusps[12] → cusps[1]).
+    """
+    pl = planet_lon % 360
+    for i in range(12, 0, -1):
         cusp_start = cusps[i] % 360
-        cusp_end   = cusps[(i % 12) + 1] % 360 if i < 12 else cusps[1] % 360
-        pl = planet_lon % 360
+        # cusp_end: house 12 wraps to cusp[1]; all others go to cusp[i+1]
+        next_idx = (i % 12) + 1
+        cusp_end = cusps[next_idx] % 360
         if cusp_end > cusp_start:
             if cusp_start <= pl < cusp_end:
-                return i + 1
+                return i
         else:
+            # Wraps around 0°/360° boundary
             if pl >= cusp_start or pl < cusp_end:
-                return i + 1
+                return i
     return 1
 
 

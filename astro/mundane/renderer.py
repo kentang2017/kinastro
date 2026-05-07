@@ -283,17 +283,16 @@ def _build_mundane_svg(chart: MundaneChart) -> str:
         x1i, y1i = _polar_to_xy(_CX, _CY, _R_INNER, a_start)
         x2i, y2i = _polar_to_xy(_CX, _CY, _R_INNER, a_end)
 
-        # Determine arc direction (counter-clockwise for astro wheel)
-        large_arc = 0  # 30° arc is always < 180°
-        # For counter-clockwise: sweep-flag = 0 if we compute angles counter-clockwise
-        # SVG arcs: sweep=1 → clockwise, sweep=0 → counter-clockwise
+        # Counter-clockwise sweep for astrology wheel (increasing longitude goes CCW)
         sweep = 0
+        # Inner arc must sweep the opposite direction to close the segment correctly
+        sweep_inner = 1 - sweep  # = 1 (clockwise) to close the sector shape
 
         path = (
             f"M {x1o:.2f},{y1o:.2f} "
             f"A {_R_OUTER},{_R_OUTER} 0 {large_arc},{sweep} {x2o:.2f},{y2o:.2f} "
             f"L {x2i:.2f},{y2i:.2f} "
-            f"A {_R_INNER},{_R_INNER} 0 {large_arc},{1 - sweep} {x1i:.2f},{y1i:.2f} Z"
+            f"A {_R_INNER},{_R_INNER} 0 {large_arc},{sweep_inner} {x1i:.2f},{y1i:.2f} Z"
         )
         lines.append(
             f'<path d="{path}" fill="{color}" fill-opacity="0.25" '
@@ -341,8 +340,8 @@ def _build_mundane_svg(chart: MundaneChart) -> str:
     for lon_val, label, col in [
         (asc, "ASC", "#FFD700"),
         (chart.mc, "MC", "#C0C0C0"),
-        ((asc + 180) % 360, "DSC", "#FFD700"),
-        ((chart.mc + 180) % 360, "IC", "#C0C0C0"),
+        ((asc + 180) % 360, "DSC", "#FFD700"),          # DSC is always exactly opposite ASC
+        ((chart.mc + 180) % 360, "IC", "#C0C0C0"),      # IC is always exactly opposite MC
     ]:
         a = _lon_to_angle_svg(lon_val, asc)
         xi, yi = _polar_to_xy(_CX, _CY, _R_INNER - 2, a)
