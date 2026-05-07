@@ -285,6 +285,8 @@ def _build_mundane_svg(chart: MundaneChart) -> str:
 
         # Counter-clockwise sweep for astrology wheel (increasing longitude goes CCW)
         sweep = 0
+        # Each sign spans exactly 30°, always less than 180°, so large-arc-flag = 0
+        large_arc = 0
         # Inner arc must sweep the opposite direction to close the segment correctly
         sweep_inner = 1 - sweep  # = 1 (clockwise) to close the sector shape
 
