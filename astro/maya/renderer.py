@@ -625,7 +625,7 @@ def _render_cross_system_tab(chart: MayanChart) -> None:
                 f'<div style="font-size:12px;color:#d4b896;line-height:1.8;">'
                 f'<b>太陽星座：</b>{sun_planet.sign_glyph} {sun_planet.sign} ({sun_planet.sign_chinese})<br>'
                 f'<b>太陽黃經：</b>{sun_planet.longitude:.2f}°<br>'
-                f'<b>Tzolk'in 映射：</b>{sun_planet.tzolkin_glyph} {sun_planet.tzolkin_sign_name}<br>'
+                f"<b>Tzolk'in 映射：</b>{sun_planet.tzolkin_glyph} {sun_planet.tzolkin_sign_name}<br>"
                 f'<b>出生日期：</b>{chart.year}/{chart.month}/{chart.day}<br>'
                 f'<b>Calendar Round：</b>{chart.calendar_round.round_str}'
                 f'</div></div>',
