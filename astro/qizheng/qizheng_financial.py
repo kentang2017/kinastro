@@ -292,7 +292,7 @@ def _estimate_next_conjunction(from_jd: float) -> dict:
         step = 30.0
         jd = from_jd
         prev_diff = None
-        for _ in range(500):   # 最多搜尋 ~40 年
+        for _ in range(500):   # 最多搜尋 ~41 年 / search up to ~41 years
             jup, _ = swe.calc_ut(jd, swe.JUPITER)
             sat, _ = swe.calc_ut(jd, swe.SATURN)
             diff = abs(_normalize_degree(jup[0] - sat[0]))
@@ -346,7 +346,6 @@ def _compute_upcoming_wealth_transits(
     Returns a list of dicts sorted by date.
     """
     results = []
-    orb = 3.0   # 容許度
 
     # 關鍵出生盤感受點：木星、土星、紫氣、財帛宮宮頭
     natal_points = []
@@ -369,8 +368,8 @@ def _compute_upcoming_wealth_transits(
         "對沖 180°": 180,
     }
 
-    now_jd = birth_jd  # 從出生時算起（用於 session 計算），實際流時在呼叫端傳入
-    # 重新以「現在」為起點
+    orb = 3.0   # 容許度 / orb tolerance
+    # 以「現在」為掃描起點 / start scan from current moment
     utc_now = datetime.now(tz=tz_cls.utc)
     local_now = utc_now + timedelta(hours=tz)
     now_jd = swe.julday(
@@ -914,6 +913,10 @@ def _render_wealth_transits(fin: FinancialData, go):
     for tr in transits:
         fill_colors.append("rgba(34,197,94,0.15)" if tr["favorable"] else "rgba(239,68,68,0.15)")
 
+    # 第一欄用財星顏色標示，其餘欄用統一深色背景
+    _neutral_col = ["rgba(20,10,60,0.3)"] * len(transits)
+    cell_colors = [fill_colors] + [_neutral_col] * (len(df_t.columns) - 1)
+
     fig = go.Figure(go.Table(
         header=dict(
             values=list(df_t.columns),
@@ -924,7 +927,7 @@ def _render_wealth_transits(fin: FinancialData, go):
         ),
         cells=dict(
             values=[df_t[c].tolist() for c in df_t.columns],
-            fill_color=[fill_colors] + [["rgba(20,10,60,0.3)"] * len(transits)] * (len(df_t.columns) - 1),
+            fill_color=cell_colors,
             font=dict(color="#d4c8ff", size=11),
             align="left",
             line_color="rgba(180,140,255,0.15)",
@@ -1300,14 +1303,13 @@ def _render_financial_ai_button(fin: FinancialData, chart: ChartData):
 
     # 將 context 推送給全域 AI chat（複用現有機制）
     try:
-        import streamlit as _st
-        _st.session_state["_global_chat_system"] = "tab_chinese_financial"
-        _st.session_state["_global_chat_chart"] = ai_context
+        st.session_state["_global_chat_system"] = "tab_chinese_financial"
+        st.session_state["_global_chat_chart"] = ai_context
         _transit_summary = ", ".join(
             f"{t['date']} {t['transit_planet']} {t['aspect']} {t['natal_point']}"
             for t in fin.upcoming_transits[:5]
         )
-        _st.session_state["_global_chat_page_content"] = (
+        st.session_state["_global_chat_page_content"] = (
             f"金融占星分析 / Financial Astrology Analysis:\n"
             f"財富評分: {fin.total_wealth_score}\n"
             f"{fin.summary_zh}\n{fin.summary_en}\n"
