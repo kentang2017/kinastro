@@ -3627,6 +3627,36 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行子平八字推算。",
         "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Ziping Bazi.",
     },
+    # ── 蠢子數纏度 (ChunZiShu) ────────────────────────────────────────────────
+    "tab_chunzi": {
+        "zh": "☵ 蠢子數",
+        "en": "☵ ChunZiShu",
+    },
+    "desc_chunzi": {
+        "zh": (
+            "☵ **蠢子數纏度（ChunZiShu）** — 以二十八宿 + 七政四餘 + 度數為核心的傳統詩詞命理系統。"
+            "特別擅長女命婚姻、子息、父母、事業的交叉驗證。"
+            "資料庫收錄 4574 筆詩詞，代碼格式：宿名 + 星曜 + 度數 + 地支，例如：室巨9未。"
+        ),
+        "en": (
+            "☵ **ChunZiShu (Encampment Degree)** — A traditional Chinese verse-based divination system "
+            "using 28 Lunar Mansions, Seven Governors (Seven Planets + Four Remainders), and degrees. "
+            "Specialises in marriage, children, parents, and career cross-verification. "
+            "Database contains 4,574 verses."
+        ),
+    },
+    "spinner_chunzi": {
+        "zh": "載入蠢子數資料庫…",
+        "en": "Loading ChunZiShu database…",
+    },
+    "sys_hint_chunzi": {
+        "zh": "蠢子數纏度，二十八宿，七政四餘，4574筆詩詞，女命推算",
+        "en": "ChunZiShu, 28 Lunar Mansions, Seven Governors, 4574 verses, female destiny",
+    },
+    "info_chunzi_prompt": {
+        "zh": "👈 蠢子數為詩詞查詢工具，可直接在右側輸入代碼或關鍵字查詢，無需先排盤。",
+        "en": "👈 ChunZiShu is a verse lookup tool. Enter a code or keyword on the right to search directly.",
+    },
     # ── Sumerian / Mesopotamian Astrology (蘇美/美索不達米亞占星) ──────────────
     "tab_sumerian": {
         "zh": "𒀭 蘇美/美索不達米亞占星",

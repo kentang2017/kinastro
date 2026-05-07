@@ -92,6 +92,7 @@ from astro.shanghan_qianfa.calculator import compute_shanghan_qianfa
 from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_qianfa_chart
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
 from astro.nanji.renderer import render_streamlit as render_nanji_chart
+from astro.chunzi.renderer import render_streamlit as render_chunzi_chart
 from astro.sumerian.calculator import compute_sumerian_chart
 from astro.sumerian.renderer import render_streamlit as render_sumerian_chart
 from astro.horary import render_streamlit as render_horary_chart
@@ -1271,7 +1272,7 @@ with st.sidebar:
     # Categorised system layout — accordion for easier navigation
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi"]),
+        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi", "tab_chunzi"]),
         ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology", "tab_human_design"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
@@ -1354,6 +1355,7 @@ with st.sidebar:
         "tab_beiji": t("tab_beiji"),
         "tab_nanji": t("tab_nanji"),
         "tab_bazi": t("tab_bazi"),
+        "tab_chunzi": t("tab_chunzi"),
         "tab_horary": t("tab_horary"),
         "tab_electional": t("tab_electional"),
         "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
@@ -1422,6 +1424,7 @@ with st.sidebar:
         "tab_beiji": t("sys_hint_beiji"),
         "tab_nanji": t("sys_hint_nanji"),
         "tab_bazi": t("sys_hint_bazi"),
+        "tab_chunzi": t("sys_hint_chunzi"),
         "tab_horary": t("sys_hint_horary"),
         "tab_electional": t("sys_hint_electional"),
         "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
@@ -5799,6 +5802,15 @@ with _natal_tab:
         else:
             st.info(t("info_bazi_prompt"))
             st.markdown(t("desc_bazi"))
+
+    # --- 蠢子數纏度 ChunZiShu ---
+    elif _selected_system == "tab_chunzi":
+        try:
+            with st.spinner(t("spinner_chunzi")):
+                render_chunzi_chart()
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
 
     # ============================================================
     # --- 傳統卜卦占星 Traditional Horary Astrology ---

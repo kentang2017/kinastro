@@ -17,6 +17,13 @@ from .chunzi import (
     ChunZiShu,
 )
 
+
+def render_streamlit() -> None:
+    """懶載入 Streamlit 渲染器（避免非 UI 環境載入 streamlit）"""
+    from .renderer import render_streamlit as _render
+    _render()
+
+
 __all__ = [
     "ChunZiShu",
     "MANSIONS_28",
@@ -24,4 +31,5 @@ __all__ = [
     "BRANCH_ZODIAC",
     "ZODIAC_BRANCH",
     "CHINESE_NUM",
+    "render_streamlit",
 ]
