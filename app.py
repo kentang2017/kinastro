@@ -2049,6 +2049,8 @@ if _qp_restored and not st.session_state.get("_qp_notice_shown"):
 
 
 # No top-level tab navigation — every system renders directly on the page.
+# contextlib.nullcontext() is used as a compatibility shim so the existing
+# `with _natal_tab:` blocks work without modification.
 _natal_tab = contextlib.nullcontext()
 
 # ── Share-chart button (shown in main area when a system is active) ───────
