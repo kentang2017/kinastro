@@ -37,6 +37,7 @@ from astro.qizheng.chart_renderer import (
     render_transit_comparison,
     render_zhangguo,
     render_ming_gong_interpretations,
+    render_mansion_text_panel,
 )
 from astro.qizheng.shensha import compute_shensha
 from astro.qizheng.qizheng_dasha import compute_dasha
@@ -2087,7 +2088,7 @@ with _natal_tab:
                     chart = compute_chart(**_p, gender=_g)
 
                 # 子 tabs for the Chinese chart
-                _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect, _ch_tab_financial = st.tabs([
+                _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect, _ch_tab_financial, _ch_tab_mansion = st.tabs([
                     t("ch_subtab_natal"),
                     t("ch_subtab_shensha"),
                     t("ch_subtab_dasha"),
@@ -2095,6 +2096,7 @@ with _natal_tab:
                     t("ch_subtab_zhangguo"),
                     t("ch_subtab_electional"),
                     t("ch_subtab_financial"),
+                    t("ch_subtab_mansion"),
                 ])
 
                 with _ch_tab_natal:
@@ -2202,6 +2204,9 @@ with _natal_tab:
                         params=_p,
                         input_tz=input_tz,
                     )
+
+                with _ch_tab_mansion:
+                    render_mansion_text_panel(chart)
 
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")

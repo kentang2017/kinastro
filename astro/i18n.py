@@ -1539,6 +1539,9 @@ transmitted by **Chen Xiyi**.
     # ── Qizheng financial astrology ─────────────────────────
     "ch_subtab_financial": {"zh": "💰 金融占星", "en": "💰 Financial Astrology"},
 
+    # ── Qizheng 28 mansions text panel ──────────────────────
+    "ch_subtab_mansion": {"zh": "🌟 二十八宿", "en": "🌟 28 Mansions"},
+
     # ── Fixed stars & asteroids ─────────────────────────────
     "show_fixed_stars": {"zh": "顯示恆星合相", "en": "Show Fixed Star Conjunctions"},
     "show_asteroids": {"zh": "顯示小行星", "en": "Show Asteroids"},
