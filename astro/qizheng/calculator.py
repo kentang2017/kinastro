@@ -20,6 +20,7 @@ from .constants import (
     TWELVE_PALACES,
     FIVE_ELEMENTS,
     TWENTY_EIGHT_MANSIONS,
+    TWENTY_EIGHT_MANSIONS_ANCIENT,
     EARTHLY_BRANCHES,
     ZODIAC_SIGN_ELEMENTS,
 )
@@ -144,6 +145,34 @@ def _get_mansion_info(lon: float) -> tuple:
                 return TWENTY_EIGHT_MANSIONS[i]["name"], deg_in, i, width
     width0 = (TWENTY_EIGHT_MANSIONS[1]["start_lon"] - TWENTY_EIGHT_MANSIONS[0]["start_lon"]) % 360.0
     return TWENTY_EIGHT_MANSIONS[0]["name"], 0.0, 0, width0
+
+
+def _get_mansion_info_for_system(lon: float, mansion_list: list) -> tuple:
+    """
+    根據黃經度數與指定宿界列表取得二十八宿名稱、宿內度數、宿索引與宿寬度。
+
+    Parameters:
+        lon: 黃經度數
+        mansion_list: 宿界列表（TWENTY_EIGHT_MANSIONS 或 TWENTY_EIGHT_MANSIONS_ANCIENT）
+
+    Returns:
+        (mansion_name, mansion_degree, mansion_index, mansion_width)
+    """
+    lon = _normalize_degree(lon)
+    n = len(mansion_list)
+    for i in range(n):
+        start = mansion_list[i]["start_lon"]
+        end = mansion_list[(i + 1) % n]["start_lon"]
+        width = (end - start) % 360.0
+        if start < end:
+            if start <= lon < end:
+                return mansion_list[i]["name"], lon - start, i, width
+        else:
+            if lon >= start or lon < end:
+                deg_in = (lon - start) % 360.0
+                return mansion_list[i]["name"], deg_in, i, width
+    width0 = (mansion_list[1]["start_lon"] - mansion_list[0]["start_lon"]) % 360.0
+    return mansion_list[0]["name"], 0.0, 0, width0
 
 
 def _check_qidu(sign_degree: float, mansion_degree: float, mansion_width: float) -> bool:

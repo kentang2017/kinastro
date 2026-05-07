@@ -14,9 +14,11 @@ import swisseph as swe
 from .calculator import (
     ChartData, format_degree, get_mansion_index_for_degree,
     _normalize_degree, _degree_to_sign_degree, _get_mansion_info,
+    _get_mansion_info_for_system,
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
+    TWENTY_EIGHT_MANSIONS_ANCIENT,
     TWELVE_SIGNS_CHINESE, TWELVE_SIGNS_WESTERN, EARTHLY_BRANCHES,
     FIVE_ELEMENTS, ZODIAC_SIGN_ELEMENTS,
 )
@@ -1514,4 +1516,139 @@ def render_ming_gong_interpretations(chart: ChartData):
                     st.markdown(text)
     else:
         st.info("命宮無入宮星曜。")
+
+
+# ============================================================
+# 二十八宿文字顯示 (Twenty-Eight Mansions Text Display)
+# ============================================================
+
+# 黃道宮索引 (0=白羊/戌) → 地支索引
+_SIGN_IDX_TO_BRANCH = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 11]
+# 地支名稱
+_BRANCHES_DISPLAY = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+
+
+def _ecl_to_mansion_text(lon: float) -> str:
+    """
+    將黃經度數轉換為七政四餘傳統文字格式。
+
+    例如: 33.79° → '03酉金47'24'
+    格式: [sign_deg:02d][branch][sign_elem][arc_min:02d]'[arc_sec:02d]
+
+    Returns:
+        格式化字串，如 '03酉金47'24'
+    """
+    lon = _normalize_degree(lon)
+    sign_idx = int(lon / 30.0)
+    sign_deg_float = lon - sign_idx * 30.0
+    branch_idx = _SIGN_IDX_TO_BRANCH[sign_idx]
+    branch_name = _BRANCHES_DISPLAY[branch_idx]
+    sign_elem = ZODIAC_SIGN_ELEMENTS[sign_idx]
+
+    deg_int = int(sign_deg_float)
+    remaining = (sign_deg_float - deg_int) * 60.0
+    arc_min = int(remaining)
+    arc_sec = round((remaining - arc_min) * 60.0)
+    if arc_sec == 60:
+        arc_sec = 0
+        arc_min += 1
+    if arc_min == 60:
+        arc_min = 0
+        deg_int += 1
+
+    return f"{deg_int:02d}{branch_name}{sign_elem}{arc_min:02d}'{arc_sec:02d}"
+
+
+def _build_mansion_boundary_text(mansion_list: list) -> str:
+    """
+    為指定宿界列表建立28宿位置文字，格式類似 MOIRA 輸出：
+    婁金: 03酉金47'24  胃土: 16酉金45'39  ...（每行4宿）
+    """
+    lines = []
+    items = []
+    for m in mansion_list:
+        lon = m["start_lon"]
+        pos_text = _ecl_to_mansion_text(lon)
+        items.append(f"{m['name']}{m['element']}: {pos_text}")
+
+    # Output 4 mansions per line
+    for i in range(0, len(items), 4):
+        lines.append("  ".join(items[i:i + 4]))
+    return "\n".join(lines)
+
+
+def _build_planet_mansion_rows(chart: ChartData, mansion_list: list) -> list[dict]:
+    """
+    計算每顆星曜在指定宿界制下的入宿位置，
+    返回 list of dict with keys: name, element, mansion, mansion_deg_text, sign_text, altitude, retrograde
+    """
+    rows = []
+    for p in chart.planets:
+        lon = _normalize_degree(p.longitude)
+        mansion_name, mansion_deg, _, _ = _get_mansion_info_for_system(lon, mansion_list)
+
+        # 找對應宿的元素 (from mansion_list)
+        mansion_elem = ""
+        for m in mansion_list:
+            if m["name"] == mansion_name:
+                mansion_elem = m["element"]
+                break
+
+        sign_text = _ecl_to_mansion_text(lon)
+        mansion_deg_text = _ecl_to_mansion_text(
+            [m["start_lon"] for m in mansion_list if m["name"] == mansion_name][0] + mansion_deg
+        ) if mansion_name else sign_text
+
+        rows.append({
+            "name": p.name,
+            "element": p.element,
+            "mansion": mansion_name,
+            "mansion_elem": mansion_elem,
+            "mansion_deg_text": mansion_deg_text,
+            "sign_text": sign_text,
+            "altitude": getattr(p, "altitude", 0.0),
+            "retrograde": p.retrograde,
+        })
+    return rows
+
+
+def render_mansion_text_panel(chart: ChartData):
+    """渲染二十八宿文字內容面板 — 以今制和古制分頁顯示。
+
+    顯示內容：
+    1. 28宿宿界位置（以傳統中文格式）
+    2. 各星曜所在宿及入宿度（今制 / 古制）
+    """
+    st.subheader("🌟 二十八宿宿界與星曜入宿")
+
+    tab_modern, tab_ancient = st.tabs(["今制", "古制"])
+
+    for tab, mansion_list, label in [
+        (tab_modern, TWENTY_EIGHT_MANSIONS, "今制"),
+        (tab_ancient, TWENTY_EIGHT_MANSIONS_ANCIENT, "古制"),
+    ]:
+        with tab:
+            st.markdown(f"**{label}二十八宿宿界（距星黃經）**")
+            boundary_text = _build_mansion_boundary_text(mansion_list)
+            st.code(boundary_text, language=None)
+
+            st.markdown(f"**{label}各星曜入宿位置**")
+            rows = _build_planet_mansion_rows(chart, mansion_list)
+
+            header = "| 星曜 | 五行 | 入宿 | 宿元素 | 入宿度 | 黃道位置 | 高度角 | 逆行 |"
+            sep = "|:----:|:----:|:----:|:------:|:------:|:--------:|:------:|:----:|"
+            md_rows = [header, sep]
+            for r in rows:
+                color = PLANET_COLORS.get(r["name"], "#c8c8c8")
+                name_html = (
+                    f'<span style="color:{color};font-weight:bold">{r["name"]}</span>'
+                )
+                retro = "℞" if r["retrograde"] else ""
+                alt_str = f'{r["altitude"]:+.1f}°'
+                md_rows.append(
+                    f"| {name_html} | {r['element']} | {r['mansion']} "
+                    f"| {r['mansion_elem']} | {r['mansion_deg_text']} "
+                    f"| {r['sign_text']} | {alt_str} | {retro} |"
+                )
+            st.markdown("\n".join(md_rows), unsafe_allow_html=True)
 

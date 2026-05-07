@@ -110,6 +110,46 @@ TWENTY_EIGHT_MANSIONS = [
 ]
 
 # ============================================================
+# 二十八宿古制 (Twenty-Eight Lunar Mansions — Classical System)
+# 依傳統古籍距星黃經（約漢唐曆元），與今制差約18°（歲差所致）。
+# 格式同 TWENTY_EIGHT_MANSIONS，但 start_lon 使用古典度數。
+# ============================================================
+TWENTY_EIGHT_MANSIONS_ANCIENT = [
+    # 東方青龍七宿
+    {"name": "角", "element": "木", "animal": "蛟", "group": "東方青龍", "start_lon": 187.2000},
+    {"name": "亢", "element": "金", "animal": "龍", "group": "東方青龍", "start_lon": 200.0000},
+    {"name": "氐", "element": "土", "animal": "貉", "group": "東方青龍", "start_lon": 208.9000},
+    {"name": "房", "element": "日", "animal": "兔", "group": "東方青龍", "start_lon": 225.2000},
+    {"name": "心", "element": "月", "animal": "狐", "group": "東方青龍", "start_lon": 230.6000},
+    {"name": "尾", "element": "火", "animal": "虎", "group": "東方青龍", "start_lon": 237.0000},
+    {"name": "箕", "element": "水", "animal": "豹", "group": "東方青龍", "start_lon": 255.6000},
+    # 北方玄武七宿
+    {"name": "斗", "element": "木", "animal": "獬", "group": "北方玄武", "start_lon": 266.3000},
+    {"name": "牛", "element": "金", "animal": "牛", "group": "北方玄武", "start_lon": 290.1000},
+    {"name": "女", "element": "土", "animal": "蝠", "group": "北方玄武", "start_lon": 298.0000},
+    {"name": "虛", "element": "日", "animal": "鼠", "group": "北方玄武", "start_lon": 308.9000},
+    {"name": "危", "element": "月", "animal": "燕", "group": "北方玄武", "start_lon": 318.3000},
+    {"name": "室", "element": "火", "animal": "豬", "group": "北方玄武", "start_lon": 333.6000},
+    {"name": "壁", "element": "水", "animal": "貐", "group": "北方玄武", "start_lon": 349.4000},
+    # 西方白虎七宿
+    {"name": "奎", "element": "木", "animal": "狼", "group": "西方白虎", "start_lon": 358.3000},
+    {"name": "婁", "element": "金", "animal": "狗", "group": "西方白虎", "start_lon": 15.9000},
+    {"name": "胃", "element": "土", "animal": "雉", "group": "西方白虎", "start_lon": 26.3000},
+    {"name": "昴", "element": "日", "animal": "雞", "group": "西方白虎", "start_lon": 41.1000},
+    {"name": "畢", "element": "月", "animal": "烏", "group": "西方白虎", "start_lon": 53.2000},
+    {"name": "觜", "element": "火", "animal": "猴", "group": "西方白虎", "start_lon": 69.0000},
+    {"name": "參", "element": "水", "animal": "猿", "group": "西方白虎", "start_lon": 70.0000},
+    # 南方朱雀七宿
+    {"name": "井", "element": "木", "animal": "犴", "group": "南方朱雀", "start_lon": 81.8000},
+    {"name": "鬼", "element": "金", "animal": "羊", "group": "南方朱雀", "start_lon": 112.3000},
+    {"name": "柳", "element": "土", "animal": "獐", "group": "南方朱雀", "start_lon": 115.2000},
+    {"name": "星", "element": "日", "animal": "馬", "group": "南方朱雀", "start_lon": 130.5000},
+    {"name": "張", "element": "月", "animal": "鹿", "group": "南方朱雀", "start_lon": 136.4000},
+    {"name": "翼", "element": "火", "animal": "蛇", "group": "南方朱雀", "start_lon": 151.4000},
+    {"name": "軫", "element": "水", "animal": "蚓", "group": "南方朱雀", "start_lon": 170.1000},
+]
+
+# ============================================================
 # 星曜顏色 (Planet Colors for Display)
 # ============================================================
 PLANET_COLORS = {
