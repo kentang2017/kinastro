@@ -54,6 +54,7 @@ def render_streamlit() -> None:
     蠢子數 Streamlit 主渲染函式（不需出生資料，為查詢工具）
     """
     czs = ChunZiShu()
+    _verse_count = len(czs.df)
 
     # ── 標題
     st.markdown(
@@ -61,7 +62,7 @@ def render_streamlit() -> None:
         f"letter-spacing:4px;text-align:center;'>☵ 蠢子數 ☵</h2>",
         unsafe_allow_html=True,
     )
-    st.caption(auto_cn("蠢子數纏度 · 二十八宿 + 七政四餘 + 度數 · 4574 筆詩詞"))
+    st.caption(auto_cn(f"蠢子數纏度 · 二十八宿 + 七政四餘 + 度數 · {_verse_count} 筆詩詞"))
     st.markdown("---")
 
     # ── 代碼查詢
@@ -197,6 +198,6 @@ def render_streamlit() -> None:
             "**蠢子數纏度**\n\n"
             "以二十八宿 + 七政四餘 + 度數為核心的傳統詩詞命理系統，"
             "特別擅長女命婚姻、子息、父母、事業的交叉驗證。\n\n"
-            "資料庫收錄 4574 筆詩詞，代碼格式：宿名 + 星曜 + 度數 + 地支，例如：室巨9未。"
+            f"資料庫收錄 {_verse_count} 筆詩詞，代碼格式：宿名 + 星曜 + 度數 + 地支，例如：室巨9未。"
         )
     )
