@@ -47,6 +47,9 @@ CHINESE_NUM: Dict[str, int] = {
 }
 """中文數字（一至十）→ 整數對照表。"""
 
+INT_TO_CN: Dict[int, str] = {v: k for k, v in CHINESE_NUM.items()}
+"""整數（1–10）→ 中文數字對照表（CHINESE_NUM 的逆映射）。"""
+
 MANSIONS_28: List[str] = [
     "角", "亢", "氐", "房", "心", "尾", "箕",   # 東方青龍七宿
     "斗", "牛", "女", "虛", "危", "室", "壁",   # 北方玄武七宿
@@ -61,6 +64,12 @@ _ZODIAC_CHARS = "鼠牛虎兔龍蛇馬羊猴雞狗豬"
 _BRANCH_CHARS = "".join(BRANCHES)
 _CN_DIGIT_PAT = "[一二三四五六七八九十]"
 _CN_AGE_PAT = "[一二三四五六七八九十]{2,3}"
+
+# 月份中文名稱對照（1–12），詩詞習慣以「正月」代一月
+_MONTH_CN: Dict[int, str] = {
+    1: "正", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六",
+    7: "七", 8: "八", 9: "九", 10: "十", 11: "十一", 12: "十二",
+}
 
 # 模組預設 CSV 路徑（使用絕對路徑，避免受 CWD 影響）
 _DEFAULT_CSV: Path = Path(__file__).parent / "data" / "chunzi_verse.csv"
@@ -92,6 +101,53 @@ def _cn_to_int(text: str) -> Optional[int]:
     if len(text) == 3 and text[1] == "十":        # X十Y → X*10 + Y
         return CHINESE_NUM.get(text[0], 0) * 10 + CHINESE_NUM.get(text[2], 0)
     return None
+
+
+def _build_day_cn(day: int) -> str:
+    """將 1–30 的日期轉換為傳統詩詞中使用的中文日期字串。
+
+    Args:
+        day: 1–30 之間的整數。
+
+    Returns:
+        中文日期字串，例如 1→「初一」、10→「初十」、11→「十一」、20→「二十」。
+        輸入超出範圍時回傳空字串。
+    """
+    if day <= 0 or day > 30:
+        return ""
+    if day == 10:
+        return "初十"
+    if day < 10:
+        return f"初{INT_TO_CN.get(day, '')}"
+    tens = day // 10
+    ones = day % 10
+    tens_cn = INT_TO_CN.get(tens, "")
+    # ones == 0 means a multiple of 10 (e.g. 20 → "二十"), so no trailing digit
+    ones_cn = INT_TO_CN.get(ones, "") if ones else ""
+    return f"{tens_cn}十{ones_cn}"
+
+
+def _extract_branch(pillar: str) -> str:
+    """從八字柱（天干地支組合）中提取地支。
+
+    Args:
+        pillar: 八字柱，例如「辛未」（天干+地支）或單一地支「未」。
+
+    Returns:
+        地支字元，例如「未」；若無法識別則回傳原字串。
+
+    Examples:
+        >>> _extract_branch("辛未")
+        '未'
+        >>> _extract_branch("未")
+        '未'
+    """
+    pillar = pillar.strip()
+    if len(pillar) >= 2 and pillar[1] in BRANCHES:
+        return pillar[1]
+    if pillar and pillar[0] in BRANCHES:
+        return pillar[0]
+    return pillar
 
 
 # ── ChunZiVerse dataclass ────────────────────────────────────────────────────
@@ -395,6 +451,210 @@ class ChunZiShu:
         """
         # TODO: 接入真正的考時法推算邏輯
         return []
+
+    def get_hour_codes(
+        self,
+        gender: str,
+        hour_branch: str,
+        ke: Optional[int] = None,
+    ) -> List[str]:
+        """【Phase 1】根據性別、時辰地支（與可選刻數）找出候選詩詞代碼。
+
+        搜尋資料庫中含有「X時生人」文字的詩詞，並依性別與刻數進行篩選與排序：
+
+        - 坤造（女命）：優先回傳 category == "女" 的詩詞，其次為其他宿分類。
+        - 乾造（男命）：優先回傳 category != "女" 的詩詞。
+        - 若提供 ke，同時搜尋含「X刻生」的詩詞；若有交集則優先回傳；
+          若交集為空，則改回傳單純時辰匹配的結果。
+
+        Args:
+            gender: 性別，「乾」（男）或「坤」（女）。
+            hour_branch: 出生時辰地支，例如「未」、「子」。
+              可接受完整八字柱（如「辛未」），自動提取地支。
+            ke: 出生刻數（整數 1–10，可選）。
+
+        Returns:
+            符合條件的詩詞代碼列表；無符合結果時回傳空列表。
+
+        Examples:
+            >>> czs = ChunZiShu()
+            >>> czs.get_hour_codes("坤", "未", ke=3)
+            [...]
+            >>> czs.get_hour_codes("乾", "辛未")  # 自動提取地支「未」
+            [...]
+        """
+        branch = _extract_branch(hour_branch)
+        if not branch or branch not in BRANCHES:
+            return []
+
+        hour_pattern = f"{branch}時生人"
+        hour_mask = self.df["verse"].str.contains(hour_pattern, regex=False, na=False)
+        hour_df = self.df[hour_mask].copy()
+
+        if hour_df.empty:
+            return []
+
+        # 依性別排序：坤造優先「女」分類，乾造優先非「女」分類
+        if gender == "坤":
+            hour_df = pd.concat([
+                hour_df[hour_df["category"] == "女"],
+                hour_df[hour_df["category"] != "女"],
+            ])
+        else:
+            hour_df = pd.concat([
+                hour_df[hour_df["category"] != "女"],
+                hour_df[hour_df["category"] == "女"],
+            ])
+
+        hour_codes = hour_df["code"].tolist()
+
+        if ke is not None:
+            ke_cn = INT_TO_CN.get(ke)
+            if ke_cn:
+                ke_pattern = f"{ke_cn}刻生"
+                ke_mask = self.df["verse"].str.contains(ke_pattern, regex=False, na=False)
+                ke_codes = set(self.df[ke_mask]["code"].tolist())
+                # 時 + 刻 交集優先；若交集為空則回退至純時辰結果
+                intersection = [c for c in hour_codes if c in ke_codes]
+                if intersection:
+                    return intersection
+
+        return hour_codes
+
+    def get_month_day_codes(
+        self,
+        gender: str,
+        month: int,
+        day: int,
+    ) -> List[str]:
+        """【Phase 2 Hook】根據性別、農曆月份與日期找出候選詩詞代碼。
+
+        搜尋資料庫中含有「X月...X日」文字的詩詞。
+        此功能目前仍處於 Phase 2 階段，邏輯尚未完整，
+        可依需求擴充月份/日期的模糊匹配規則。
+
+        Args:
+            gender: 性別，「乾」（男）或「坤」（女）。
+            month: 農曆出生月份（整數 1–12）。
+            day: 農曆出生日（整數 1–30）。
+
+        Returns:
+            符合條件的詩詞代碼列表；無符合結果或月日超出範圍時回傳空列表。
+
+        Note:
+            本方法為 Phase 2 Hook，子類別可覆寫此方法以接入完整規則。
+            目前實作採用基礎文字比對，尚未支援閏月或農曆換算。
+        """
+        month_cn = _MONTH_CN.get(month, "")
+        day_cn = _build_day_cn(day)
+        if not month_cn or not day_cn:
+            return []
+
+        # 搜尋「X月...X日」或「X月生X日」等常見格式
+        # 詩詞範例：「生辰五月初九日」、「閏三月生二十七」
+        month_pat = f"{month_cn}月"
+        day_pat = day_cn
+
+        mask_month = self.df["verse"].str.contains(month_pat, regex=False, na=False)
+        mask_day = self.df["verse"].str.contains(day_pat, regex=False, na=False)
+        combined = self.df[mask_month & mask_day].copy()
+
+        if combined.empty:
+            return []
+
+        # 依性別排序
+        if gender == "坤":
+            combined = pd.concat([
+                combined[combined["category"] == "女"],
+                combined[combined["category"] != "女"],
+            ])
+        else:
+            combined = pd.concat([
+                combined[combined["category"] != "女"],
+                combined[combined["category"] == "女"],
+            ])
+
+        return combined["code"].tolist()
+
+    def cast_chart(
+        self,
+        gender: str,
+        year: str,
+        month: str,
+        day: str,
+        hour: str,
+        ke: Optional[int] = None,
+        lunar_month: Optional[int] = None,
+        lunar_day: Optional[int] = None,
+    ) -> "ChunZiChart":
+        """根據性別、八字與刻數，自動找出候選詩詞並回傳 ChunZiChart 物件。
+
+        此方法為主要起盤入口（Phase 1 + Phase 2 合併）：
+
+        - **Phase 1**：依時辰地支（從 ``hour`` 柱提取）與刻數搜尋時辰條文。
+        - **Phase 2**：若同時提供 ``lunar_month`` 和 ``lunar_day``，
+          則額外搜尋月日條文並合併至結果中。
+
+        多來源代碼會去重合併，坤造優先保留「女」分類詩詞的順序。
+
+        Args:
+            gender: 性別，「乾」（男）或「坤」（女）。
+            year: 年柱，例如「丁丑」。
+            month: 月柱，例如「乙巳」。
+            day: 日柱，例如「甲子」。
+            hour: 時柱，例如「辛未」。地支將自動提取。
+            ke: 出生刻數（整數 1–10，可選）。
+            lunar_month: 農曆出生月份（整數 1–12，可選；提供時啟用 Phase 2）。
+            lunar_day: 農曆出生日（整數 1–30，可選；需與 lunar_month 同時提供）。
+
+        Returns:
+            已載入候選詩詞的 ChunZiChart 物件。
+            若未找到任何代碼，ChunZiChart.codes 為空列表，
+            並會發出 UserWarning 提示。
+
+        Raises:
+            ValueError: 當 gender 不為「乾」或「坤」時。
+
+        Examples:
+            >>> czs = ChunZiShu()
+            >>> chart = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未", ke=3)
+            >>> chart.print_summary()
+
+            >>> # 同時提供農曆月日（Phase 2）
+            >>> chart = czs.cast_chart(
+            ...     "坤", "癸丑", "壬戌", "庚寅", "丁丑",
+            ...     ke=6, lunar_month=5, lunar_day=9
+            ... )
+        """
+        if gender not in ("乾", "坤"):
+            raise ValueError(f"gender 必須為「乾」或「坤」，收到：「{gender}」")
+
+        bazi = f"{year} {month} {day} {hour}"
+
+        # Phase 1：依時辰（+ 刻數）找候選代碼
+        hour_codes = self.get_hour_codes(gender, hour, ke=ke)
+
+        # Phase 2：依農曆月日找候選代碼（需明確提供）
+        month_day_codes: List[str] = []
+        if lunar_month is not None and lunar_day is not None:
+            month_day_codes = self.get_month_day_codes(gender, lunar_month, lunar_day)
+
+        # 合併去重（保留來源順序：時辰優先，月日補充）
+        merged_codes = list(dict.fromkeys(hour_codes + month_day_codes))
+
+        if not merged_codes:
+            warnings.warn(
+                f"cast_chart：未能從資料庫中找到符合條件的詩詞代碼。"
+                f"（gender={gender}, hour={hour}, ke={ke}"
+                + (f", lunar={lunar_month}/{lunar_day}" if lunar_month else "")
+                + "）建議手動呼叫 add_codes() 補充代碼。",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        chart = ChunZiChart(gender=gender, bazi=bazi, ke=ke, codes=merged_codes)
+        chart.add_codes(merged_codes, self)
+        return chart
 
     # ── 私有方法 ─────────────────────────────────────────────────────────────
 
@@ -802,13 +1062,34 @@ class ChunZiChart:
             "analysis": self.analysis,
         }
 
+    def to_json(self, indent: int = 2, ensure_ascii: bool = False) -> str:
+        """將命例序列化為 JSON 字串。
+
+        Args:
+            indent: JSON 縮排空格數，預設 2。
+            ensure_ascii: 是否將非 ASCII 字元轉義；預設 False（保留中文）。
+
+        Returns:
+            格式化的 JSON 字串，包含命例所有資料。
+
+        Example:
+            >>> chart.to_json()
+            '{"gender": "坤", "bazi": "...", ...}'
+        """
+        import json
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=ensure_ascii)
+
 
 # ── 使用範例 ─────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     czs = ChunZiShu()
 
-    # === 第一命例 ===
+    print("=" * 50)
+    print("【手動模式】直接傳入已知代碼")
+    print("=" * 50)
+
+    # === 第一命例（手動模式）===
     chart1 = ChunZiChart("坤", "丁丑 乙巳 甲子 辛未", ke=3)
     chart1.add_codes(
         ["室巨9未", "角陰13酉", "柳計6巳", "虛陽7午", "女火5辰", "壁紫3未"],
@@ -816,7 +1097,29 @@ if __name__ == "__main__":
     )
     chart1.print_summary()
 
-    # === 第二命例 ===
+    # === 第二命例（手動模式）===
     chart2 = ChunZiChart("坤", "癸丑 壬戌 庚寅 丁丑", ke=6)
     chart2.add_codes(["畢龍6巳"], czs)
     chart2.print_summary()
+
+    print()
+    print("=" * 50)
+    print("【半自動模式】cast_chart() 從時辰自動搜尋條文")
+    print("=" * 50)
+
+    # === 第一命例（半自動模式）：坤造，辛未時，第3刻 ===
+    chart3 = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未", ke=3)
+    print(f"\n自動找到 {len(chart3.codes)} 條時辰條文：{chart3.codes[:5]}")
+    chart3.print_summary()
+
+    # === 第二命例（半自動模式 + Phase 2）：坤造，丁丑時，第6刻，農曆五月初九 ===
+    chart4 = czs.cast_chart(
+        "坤", "癸丑", "壬戌", "庚寅", "丁丑",
+        ke=6, lunar_month=5, lunar_day=9,
+    )
+    print(f"\n自動找到 {len(chart4.codes)} 條條文（時辰+月日）：{chart4.codes[:5]}")
+    chart4.print_summary()
+
+    # === 展示 to_json() ===
+    print("\n=== to_json() 輸出範例（前 300 字）===")
+    print(chart3.to_json()[:300])

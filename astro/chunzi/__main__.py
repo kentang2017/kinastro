@@ -9,6 +9,8 @@ astro/chunzi/__main__.py — 蠢子數命令列介面
     python -m astro.chunzi mansion 室
     python -m astro.chunzi tags "未時生人" "先去父"
     python -m astro.chunzi explain 室巨9未
+    python -m astro.chunzi cast 坤 丁丑 乙巳 甲子 辛未 --ke 3
+    python -m astro.chunzi cast 坤 癸丑 壬戌 庚寅 丁丑 --ke 6 --lunar-month 5 --lunar-day 9
 """
 
 import argparse
@@ -72,6 +74,37 @@ def _make_parser() -> argparse.ArgumentParser:
     # explain：結構化解析
     p_explain = sub.add_parser("explain", help="結構化解析詩詞（父母屬相、妻宮、子息等）")
     p_explain.add_argument("code", help="詩詞代碼，例如：室巨9未")
+
+    # cast：半自動起盤
+    p_cast = sub.add_parser(
+        "cast",
+        help="半自動起盤（性別 + 八字 → 自動找條文）",
+        description=(
+            "根據性別與四柱八字自動搜尋候選詩詞，輸出命例總覽。\n"
+            "範例：python -m astro.chunzi cast 坤 丁丑 乙巳 甲子 辛未 --ke 3"
+        ),
+    )
+    p_cast.add_argument("gender", help="性別：乾（男）或坤（女）")
+    p_cast.add_argument("year", help="年柱，例如：丁丑")
+    p_cast.add_argument("month", help="月柱，例如：乙巳")
+    p_cast.add_argument("day", help="日柱，例如：甲子")
+    p_cast.add_argument("hour", help="時柱，例如：辛未")
+    p_cast.add_argument("--ke", type=int, default=None, help="出生刻數（整數 1–10，可選）")
+    p_cast.add_argument(
+        "--lunar-month", type=int, default=None, dest="lunar_month",
+        help="農曆出生月份（整數 1–12，可選；啟用 Phase 2 月日搜尋）",
+    )
+    p_cast.add_argument(
+        "--lunar-day", type=int, default=None, dest="lunar_day",
+        help="農曆出生日（整數 1–30，可選；需與 --lunar-month 同時使用）",
+    )
+    p_cast.add_argument(
+        "--json", action="store_true", dest="as_json", help="以 JSON 格式輸出"
+    )
+    p_cast.add_argument(
+        "--limit", type=int, default=None,
+        help="顯示的最大條文數（預設不限）",
+    )
 
     return parser
 
@@ -154,6 +187,49 @@ def main() -> None:
             print(f"命理標記：{'、'.join(info['flags'])}")
         else:
             print("命理標記：（無特殊標記）")
+
+    elif args.command == "cast":
+        import warnings
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            try:
+                chart = czs.cast_chart(
+                    gender=args.gender,
+                    year=args.year,
+                    month=args.month,
+                    day=args.day,
+                    hour=args.hour,
+                    ke=args.ke,
+                    lunar_month=args.lunar_month,
+                    lunar_day=args.lunar_day,
+                )
+            except ValueError as exc:
+                print(f"⚠️  {exc}", file=sys.stderr)
+                sys.exit(1)
+        for w in caught:
+            print(f"⚠️  {w.message}", file=sys.stderr)
+
+        if not chart.codes:
+            print("⚠️  未找到任何候選條文，請手動補充代碼。", file=sys.stderr)
+            sys.exit(1)
+
+        # 可選：限制顯示數量（不截斷 codes，只影響 verses 列印）
+        display_codes = chart.codes[: args.limit] if args.limit else chart.codes
+        if args.as_json:
+            data = chart.to_dict()
+            if args.limit:
+                data["codes"] = display_codes
+                analysis = data.get("analysis") or {}
+                analysis["verses"] = analysis.get("verses", [])[: args.limit]
+                data["analysis"] = analysis
+            print(json.dumps(data, ensure_ascii=False, indent=2))
+        else:
+            if args.limit and len(chart.codes) > args.limit:
+                print(
+                    f"共找到 {len(chart.codes)} 條條文，顯示前 {args.limit} 條：",
+                    file=sys.stderr,
+                )
+            chart.print_summary()
 
 
 if __name__ == "__main__":

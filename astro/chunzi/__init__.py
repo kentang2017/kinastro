@@ -12,6 +12,7 @@ from .chunzi import (
     BRANCHES,
     BRANCH_ZODIAC,
     CHINESE_NUM,
+    INT_TO_CN,
     MANSIONS_28,
     ZODIAC_BRANCH,
     ChunZiChart,
@@ -35,5 +36,6 @@ __all__ = [
     "BRANCH_ZODIAC",
     "ZODIAC_BRANCH",
     "CHINESE_NUM",
+    "INT_TO_CN",
     "render_streamlit",
 ]

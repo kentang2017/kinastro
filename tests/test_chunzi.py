@@ -288,3 +288,206 @@ class TestExplain:
         # 若有「壽享」詩詞存在，至少應能解析出一筆
         if results:
             assert parsed_any
+
+
+# ============================================================
+# get_hour_codes 測試
+# ============================================================
+
+
+class TestGetHourCodes:
+    def test_returns_list(self, czs: ChunZiShu) -> None:
+        """get_hour_codes 應回傳列表。"""
+        results = czs.get_hour_codes("坤", "未")
+        assert isinstance(results, list)
+
+    def test_known_hour_returns_nonempty(self, czs: ChunZiShu) -> None:
+        """已知時辰應回傳非空列表。"""
+        results = czs.get_hour_codes("坤", "未")
+        assert len(results) > 0
+
+    def test_verse_contains_hour_pattern(self, czs: ChunZiShu) -> None:
+        """所有回傳代碼的詩詞應包含「X時生人」文字。"""
+        results = czs.get_hour_codes("乾", "子")
+        for code in results:
+            verse_row = czs.get_verse(code)
+            assert verse_row is not None
+            assert "子時生人" in verse_row["verse"]
+
+    def test_accepts_full_pillar(self, czs: ChunZiShu) -> None:
+        """get_hour_codes 應能接受完整八字柱（如「辛未」）並自動提取地支。"""
+        by_branch = czs.get_hour_codes("坤", "未")
+        by_pillar = czs.get_hour_codes("坤", "辛未")
+        assert by_branch == by_pillar
+
+    def test_invalid_branch_returns_empty(self, czs: ChunZiShu) -> None:
+        """無效時辰應回傳空列表。"""
+        results = czs.get_hour_codes("坤", "永")
+        assert results == []
+
+    def test_ke_intersection_filters(self, czs: ChunZiShu) -> None:
+        """提供 ke 時，有時辰+刻數交集則應回傳更少的結果。"""
+        without_ke = czs.get_hour_codes("坤", "未")
+        with_ke = czs.get_hour_codes("坤", "未", ke=3)
+        # ke 交集若非空，應比純時辰結果少（或相等，當所有時辰條文都匹配 ke 時）
+        assert isinstance(with_ke, list)
+        assert len(with_ke) <= len(without_ke)
+
+    def test_ke_fallback_when_no_intersection(self, czs: ChunZiShu) -> None:
+        """若時辰+刻數交集為空，應回退至純時辰匹配結果（非空）。"""
+        # ke=99 必然無匹配，應回退
+        results = czs.get_hour_codes("坤", "未", ke=99)
+        # 回退結果應與不傳 ke 相同
+        without_ke = czs.get_hour_codes("坤", "未")
+        assert results == without_ke
+
+    def test_female_priority(self, czs: ChunZiShu) -> None:
+        """坤造結果應優先回傳 category == '女' 的詩詞代碼。"""
+        results = czs.get_hour_codes("坤", "子")
+        if not results:
+            return  # 若無結果則跳過
+        # 找第一個 category == "女" 的索引
+        female_indices = []
+        for i, code in enumerate(results):
+            row = czs.get_verse(code)
+            if row and row.get("category") == "女":
+                female_indices.append(i)
+        if female_indices:
+            # 「女」分類詩詞應排在前面（索引較小）
+            non_female_indices = [
+                i for i, code in enumerate(results)
+                if czs.get_verse(code) and czs.get_verse(code).get("category") != "女"
+            ]
+            if non_female_indices:
+                assert min(female_indices) < max(non_female_indices) or \
+                       min(female_indices) <= min(non_female_indices)
+
+
+# ============================================================
+# get_month_day_codes 測試
+# ============================================================
+
+
+class TestGetMonthDayCodes:
+    def test_returns_list(self, czs: ChunZiShu) -> None:
+        """get_month_day_codes 應回傳列表。"""
+        results = czs.get_month_day_codes("坤", 5, 9)
+        assert isinstance(results, list)
+
+    def test_known_date_returns_nonempty(self, czs: ChunZiShu) -> None:
+        """已知存在詩詞的月日組合應回傳非空列表。"""
+        # 資料中存在「生辰五月初九日」的詩詞
+        results = czs.get_month_day_codes("坤", 5, 9)
+        assert len(results) > 0
+
+    def test_invalid_month_returns_empty(self, czs: ChunZiShu) -> None:
+        """月份超出範圍（13）應回傳空列表。"""
+        results = czs.get_month_day_codes("坤", 13, 9)
+        assert results == []
+
+    def test_invalid_day_returns_empty(self, czs: ChunZiShu) -> None:
+        """日期超出範圍（31）應回傳空列表。"""
+        results = czs.get_month_day_codes("坤", 5, 31)
+        assert results == []
+
+    def test_verse_contains_month_pattern(self, czs: ChunZiShu) -> None:
+        """回傳代碼的詩詞應同時包含月份與日期文字。"""
+        results = czs.get_month_day_codes("坤", 5, 9)
+        for code in results:
+            row = czs.get_verse(code)
+            assert row is not None
+            assert "五月" in row["verse"]
+            assert "初九" in row["verse"]
+
+
+# ============================================================
+# cast_chart 測試
+# ============================================================
+
+
+class TestCastChart:
+    def test_returns_chart(self, czs: ChunZiShu) -> None:
+        """cast_chart 應回傳 ChunZiChart 物件。"""
+        from astro.chunzi import ChunZiChart
+        chart = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未", ke=3)
+        assert isinstance(chart, ChunZiChart)
+
+    def test_bazi_set_correctly(self, czs: ChunZiShu) -> None:
+        """ChunZiChart.bazi 應為四柱空格連接的字串。"""
+        chart = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未", ke=3)
+        assert chart.bazi == "丁丑 乙巳 甲子 辛未"
+
+    def test_ke_set_correctly(self, czs: ChunZiShu) -> None:
+        """ChunZiChart.ke 應與傳入值相同。"""
+        chart = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未", ke=3)
+        assert chart.ke == 3
+
+    def test_codes_nonempty_for_known_hour(self, czs: ChunZiShu) -> None:
+        """有效時辰應產生至少一個候選代碼。"""
+        chart = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未")
+        assert len(chart.codes) > 0
+
+    def test_gender_validation(self, czs: ChunZiShu) -> None:
+        """傳入無效 gender 應拋出 ValueError。"""
+        import pytest
+        with pytest.raises(ValueError):
+            czs.cast_chart("男", "丁丑", "乙巳", "甲子", "辛未")
+
+    def test_phase2_with_lunar_date(self, czs: ChunZiShu) -> None:
+        """提供農曆月日時應合併月日條文。"""
+        without_lunar = czs.cast_chart("坤", "癸丑", "壬戌", "庚寅", "丁丑", ke=6)
+        with_lunar = czs.cast_chart(
+            "坤", "癸丑", "壬戌", "庚寅", "丁丑", ke=6,
+            lunar_month=5, lunar_day=9,
+        )
+        # 提供月日後，codes 應大於等於不提供時的數量
+        assert len(with_lunar.codes) >= len(without_lunar.codes)
+
+    def test_chart_has_analysis(self, czs: ChunZiShu) -> None:
+        """cast_chart 回傳的 chart.analysis 應為非空字典。"""
+        chart = czs.cast_chart("乾", "丁丑", "乙巳", "甲子", "辛未")
+        assert isinstance(chart.analysis, dict)
+        assert "parents" in chart.analysis
+
+    def test_chart_summary_returns_string(self, czs: ChunZiShu) -> None:
+        """chart.summary() 應回傳非空字串。"""
+        chart = czs.cast_chart("坤", "丁丑", "乙巳", "甲子", "辛未", ke=3)
+        summary = chart.summary()
+        assert isinstance(summary, str)
+        assert len(summary) > 0
+
+
+# ============================================================
+# ChunZiChart.to_json 測試
+# ============================================================
+
+
+class TestChunZiChartToJson:
+    def test_returns_valid_json(self, czs: ChunZiShu) -> None:
+        """to_json() 應回傳可解析的 JSON 字串。"""
+        import json
+        from astro.chunzi import ChunZiChart
+        chart = ChunZiChart("坤", "丁丑 乙巳 甲子 辛未", ke=3)
+        chart.add_codes(["室巨9未"], czs)
+        data = json.loads(chart.to_json())
+        assert data["gender"] == "坤"
+        assert data["ke"] == 3
+
+    def test_json_has_all_keys(self, czs: ChunZiShu) -> None:
+        """to_json() 解析後應包含 gender、bazi、ke、codes、analysis 欄位。"""
+        import json
+        from astro.chunzi import ChunZiChart
+        chart = ChunZiChart("坤", "丁丑 乙巳 甲子 辛未", ke=3)
+        chart.add_codes(["室巨9未"], czs)
+        data = json.loads(chart.to_json())
+        for key in ("gender", "bazi", "ke", "codes", "analysis"):
+            assert key in data
+
+    def test_json_preserves_chinese(self, czs: ChunZiShu) -> None:
+        """to_json() 預設應保留中文字元（ensure_ascii=False）。"""
+        from astro.chunzi import ChunZiChart
+        chart = ChunZiChart("坤", "丁丑 乙巳 甲子 辛未", ke=3)
+        chart.add_codes(["室巨9未"], czs)
+        result = chart.to_json()
+        assert "坤" in result
+
