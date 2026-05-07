@@ -219,7 +219,9 @@ def main() -> None:
             data = chart.to_dict()
             if args.limit:
                 data["codes"] = display_codes
-                data["analysis"]["verses"] = data["analysis"].get("verses", [])[:args.limit]
+                analysis = data.get("analysis") or {}
+                analysis["verses"] = analysis.get("verses", [])[: args.limit]
+                data["analysis"] = analysis
             print(json.dumps(data, ensure_ascii=False, indent=2))
         else:
             if args.limit and len(chart.codes) > args.limit:

@@ -122,6 +122,7 @@ def _build_day_cn(day: int) -> str:
     tens = day // 10
     ones = day % 10
     tens_cn = INT_TO_CN.get(tens, "")
+    # ones == 0 means a multiple of 10 (e.g. 20 → "二十"), so no trailing digit
     ones_cn = INT_TO_CN.get(ones, "") if ones else ""
     return f"{tens_cn}十{ones_cn}"
 
@@ -505,7 +506,7 @@ class ChunZiShu:
                 hour_df[hour_df["category"] == "女"],
             ])
 
-        hour_codes = list(hour_df["code"].tolist())
+        hour_codes = hour_df["code"].tolist()
 
         if ke is not None:
             ke_cn = INT_TO_CN.get(ke)
@@ -573,7 +574,7 @@ class ChunZiShu:
                 combined[combined["category"] == "女"],
             ])
 
-        return list(combined["code"].tolist())
+        return combined["code"].tolist()
 
     def cast_chart(
         self,
@@ -639,10 +640,7 @@ class ChunZiShu:
             month_day_codes = self.get_month_day_codes(gender, lunar_month, lunar_day)
 
         # 合併去重（保留來源順序：時辰優先，月日補充）
-        seen: Dict[str, None] = {}
-        for c in hour_codes + month_day_codes:
-            seen[c] = None
-        merged_codes = list(seen.keys())
+        merged_codes = list(dict.fromkeys(hour_codes + month_day_codes))
 
         if not merged_codes:
             warnings.warn(
