@@ -580,9 +580,13 @@ def _is_night_birth(chart: ChartData):
 
 
 def _to_chinese_numeral(n: int) -> str:
-    """Convert integer 0-99 to Chinese numeral string (e.g. 8 → 八, 11 → 十一)."""
+    """Convert integer 0-99 to Chinese numeral string (e.g. 8 → 八, 11 → 十一).
+
+    Input is clamped to the range [0, 99].
+    """
     UNITS = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
-    if n <= 0:
+    n = max(0, min(n, 99))
+    if n == 0:
         return "零"
     if n < 10:
         return UNITS[n]
@@ -599,11 +603,13 @@ def _to_chinese_numeral(n: int) -> str:
 def _format_liming_mansion(ascendant: float, mansion_list: list) -> str:
     """Format 立命 in classical style: 宿名+元素+度數(中文)+度立命.
 
+    Degree within the mansion is rounded to the nearest integer following
+    traditional Chinese astronomy notation (入宿幾度).
     Examples: 參水八度立命, 井木十一度立命
     """
     name, deg, idx, _ = _get_mansion_info_for_system(ascendant, mansion_list)
     element = mansion_list[idx]["element"]
-    degree_cn = _to_chinese_numeral(int(deg))
+    degree_cn = _to_chinese_numeral(round(deg))
     return f"{name}{element}{degree_cn}度立命"
 
 
