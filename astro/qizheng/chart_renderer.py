@@ -1119,8 +1119,8 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     )
 
     # 立命度數 — 今制 and 古制 mansion format (e.g. 參水八度立命 / 井木十一度立命)
-    liming_modern = _format_liming_mansion(chart.ascendant, TWENTY_EIGHT_MANSIONS)
-    liming_ancient = _format_liming_mansion(chart.ascendant, TWENTY_EIGHT_MANSIONS_ANCIENT)
+    liming_modern = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS)
+    liming_ancient = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS_ANCIENT)
     svg.append(
         f'<text x="{CX}" y="{CY + 16}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#d4af37" '
@@ -1318,7 +1318,7 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
         ming_branch = EARTHLY_BRANCHES[chart.ming_gong_branch]
         ming_mansion = ""
         ming_degree = 0.0
-        ming_mansion, ming_degree, _, _ = _get_mansion_info(chart.ascendant)
+        ming_mansion, ming_degree, _, _ = _get_mansion_info(chart.liming_lon)
         st.markdown(
             f"- **立命：** {ming_branch} {format_degree(chart.ascendant)} · "
             f"{ming_mansion} {ming_degree:.2f}°\n"
