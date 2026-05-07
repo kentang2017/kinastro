@@ -579,6 +579,34 @@ def _is_night_birth(chart: ChartData):
         return chart.hour < 6 or chart.hour >= 18
 
 
+def _to_chinese_numeral(n: int) -> str:
+    """Convert integer 0-99 to Chinese numeral string (e.g. 8 → 八, 11 → 十一)."""
+    UNITS = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
+    if n <= 0:
+        return "零"
+    if n < 10:
+        return UNITS[n]
+    if n == 10:
+        return "十"
+    tens, ones = divmod(n, 10)
+    if ones == 0:
+        return UNITS[tens] + "十"
+    if tens == 1:
+        return "十" + UNITS[ones]
+    return UNITS[tens] + "十" + UNITS[ones]
+
+
+def _format_liming_mansion(ascendant: float, mansion_list: list) -> str:
+    """Format 立命 in classical style: 宿名+元素+度數(中文)+度立命.
+
+    Examples: 參水八度立命, 井木十一度立命
+    """
+    name, deg, idx, _ = _get_mansion_info_for_system(ascendant, mansion_list)
+    element = mansion_list[idx]["element"]
+    degree_cn = _to_chinese_numeral(int(deg))
+    return f"{name}{element}{degree_cn}度立命"
+
+
 def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     """渲染二十八宿圓環圖 — 以 SVG 圓盤呈現完整七政四餘盤
 
@@ -1084,21 +1112,23 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         f'命宮 {ming_branch} ({direction_label})</text>'
     )
 
-    # Find the planet at ming_gong for degree info
-    ming_planet_info = ""
-    for p in chart.planets:
-        if p.palace_index == 0:
-            ming_planet_info = f"{p.mansion_name} {p.mansion_degree:.2f}°"
-            break
-
+    # 立命度數 — 今制 and 古制 mansion format (e.g. 參水八度立命 / 井木十一度立命)
+    liming_modern = _format_liming_mansion(chart.ascendant, TWENTY_EIGHT_MANSIONS)
+    liming_ancient = _format_liming_mansion(chart.ascendant, TWENTY_EIGHT_MANSIONS_ANCIENT)
     svg.append(
-        f'<text x="{CX}" y="{CY + 18}" text-anchor="middle" '
+        f'<text x="{CX}" y="{CY + 16}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#d4af37" '
-        f'font-size="10" font-family="serif">'
-        f'立命 {ming_branch} {format_degree(chart.ascendant)}</text>'
+        f'font-size="12" font-weight="bold" font-family="serif">'
+        f'今：{liming_modern}</text>'
     )
     svg.append(
-        f'<text x="{CX}" y="{CY + 34}" text-anchor="middle" '
+        f'<text x="{CX}" y="{CY + 32}" text-anchor="middle" '
+        f'dominant-baseline="central" fill="#c8a060" '
+        f'font-size="10" font-family="serif">'
+        f'古：{liming_ancient}</text>'
+    )
+    svg.append(
+        f'<text x="{CX}" y="{CY + 48}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#7ec8e3" '
         f'font-size="10" font-family="serif">'
         f'中天 {format_degree(chart.midheaven)}</text>'
@@ -1108,7 +1138,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     if dasha.current_period_idx >= 0:
         cp = dasha.periods[dasha.current_period_idx]
         svg.append(
-            f'<text x="{CX}" y="{CY + 52}" text-anchor="middle" '
+            f'<text x="{CX}" y="{CY + 64}" text-anchor="middle" '
             f'dominant-baseline="central" fill="#a080c0" '
             f'font-size="9" font-family="serif">'
             f'行限 {cp.palace_name} '
@@ -1116,7 +1146,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         )
 
     svg.append(
-        f'<text x="{CX}" y="{CY + 68}" text-anchor="middle" '
+        f'<text x="{CX}" y="{CY + 80}" text-anchor="middle" '
         f'dominant-baseline="central" fill="#888" '
         f'font-size="9" font-family="serif">'
         f'UTC{chart.timezone:+.1f}</text>'
