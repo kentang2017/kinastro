@@ -4202,7 +4202,7 @@ with _natal_tab:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
         else:
-            st.info(t("info_calc_prompt"))
+            st.info(t("info_maya_prompt"))
             st.markdown(t("desc_maya"))
 
     # --- 阿茲特克占星 ---
