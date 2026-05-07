@@ -2074,7 +2074,7 @@ with _natal_tab:
          font-size:0.82rem;white-space:nowrap;">
   {t('share_chart_btn')}
 </button>"""
-        st.markdown(_copy_js, unsafe_allow_html=True)
+        st.html(_copy_js)
 
 with _natal_tab:
     # --- 七政四餘（中國） ---
