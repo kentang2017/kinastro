@@ -13,6 +13,7 @@ Multi-System Astrology Chart Application
 共四十九種體系，使用 pyswisseph 進行天文計算。
 """
 
+import contextlib
 import os
 import random
 import textwrap
@@ -2047,18 +2048,8 @@ if _qp_restored and not st.session_state.get("_qp_notice_shown"):
     st.session_state["_qp_notice_shown"] = True
 
 
-# ── Main navigation tabs ─────────────────────────────────────────────────
-# Six primary tabs organise all system content, transit tools, AI analysis,
-# cross-system comparison, electional tools, and relocation maps.
-_ka_main_tabs = st.tabs([
-    t("main_tab_natal"),
-    t("main_tab_transit"),
-    t("main_tab_ai"),
-    t("main_tab_compare"),
-    t("main_tab_electional"),
-    t("main_tab_relocation"),
-])
-_natal_tab, _transit_tab, _ai_tab, _compare_tab, _elect_tab, _relo_tab = _ka_main_tabs
+# No top-level tab navigation — every system renders directly on the page.
+_natal_tab = contextlib.nullcontext()
 
 # ── Share-chart button (shown in main area when a system is active) ───────
 with _natal_tab:
@@ -5888,113 +5879,5 @@ with _natal_tab:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
 
-    # Global Fixed AI Chat Panel — always visible at page bottom
-    # 全域固定 AI 聊天面板 — 固定在所有頁面底部
-    # ============================================================
-
-# ── Transit / Progressions tab ───────────────────────────────────────────
-with _transit_tab:
-    st.info(t("transit_tab_hint"))
-    if _is_calculated:
-        _p = st.session_state.get("_calc_params", {})
-        if _p:
-            st.subheader(t("transit_quick_title"))
-            try:
-                from astro.western.western import compute_western_chart as _cwc
-                from astro.western.western_transit import compute_western_transits as _cwt
-                import pandas as pd
-                _w_base = _cwc(**_p)
-                _now_dt = datetime.now()
-                _transits = _cwt(
-                    _w_base,
-                    target_year=_now_dt.year,
-                    target_month=_now_dt.month,
-                    target_day=_now_dt.day,
-                    target_hour=_now_dt.hour,
-                    target_minute=_now_dt.minute,
-                    timezone=_p.get("timezone", 8.0),
-                )
-                if _transits:
-                    _tr_rows = []
-                    for _tr in _transits[:20]:
-                        _tr_rows.append({
-                            auto_cn("過運星", "Transit"):  getattr(_tr, "transit_planet", ""),
-                            auto_cn("相位", "Aspect"):    getattr(_tr, "aspect", ""),
-                            auto_cn("本命星", "Natal"):   getattr(_tr, "natal_planet", ""),
-                            auto_cn("精確度", "Orb"):     f"{getattr(_tr, 'orb', 0):.2f}°",
-                        })
-                    st.dataframe(pd.DataFrame(_tr_rows), hide_index=True, width='stretch')
-                else:
-                    st.info(auto_cn("目前無主要過運相位", "No major transits at this time"))
-            except Exception as _e:
-                st.caption(auto_cn(f"過運計算不可用：{_e}", f"Transit unavailable: {_e}"))
-
-# ── AI Deep Analysis tab ─────────────────────────────────────────────────
-with _ai_tab:
-    _render_global_ai_chat()
-
-# ── Cross-system Comparison tab ──────────────────────────────────────────
-with _compare_tab:
-    st.info(t("compare_tab_hint"))
-    if st.session_state.get("_cross_system_enabled"):
-        _p = st.session_state.get("_calc_params", {})
-        if _p:
-            try:
-                from astro.cross_compare import render_cross_comparison as _rcc
-                _rcc(_p)
-            except Exception:
-                pass
-    else:
-        st.markdown(
-            auto_cn(
-                "### 🔄 跨體系比較\n"
-                "請在**左側側邊欄**啟用「跨體系比較」開關，"
-                "系統將同時計算西洋、印度、七政四餘、紫微斗數和希臘占星，"
-                "並提供 AI 交叉比對解讀。",
-                "### 🔄 Cross-system Comparison\n"
-                "Enable the 'Cross-system Comparison' toggle in the **sidebar** to compute "
-                "Western, Vedic, Chinese, Zi Wei and Hellenistic charts simultaneously "
-                "with AI cross-system synthesis.",
-            )
-        )
-
-# ── Electional Tools tab ─────────────────────────────────────────────────
-with _elect_tab:
-    _p = st.session_state.get("_calc_params", {})
-    try:
-        render_electional_chart(
-            year=_p.get("year", 2024),
-            month=_p.get("month", 1),
-            day=_p.get("day", 1),
-            hour=_p.get("hour", 12),
-            minute=_p.get("minute", 0),
-            timezone=_p.get("timezone", 8.0),
-            latitude=_p.get("latitude", 25.033),
-            longitude=_p.get("longitude", 121.565),
-            location_name=_p.get("location_name", ""),
-        )
-    except Exception as _e_elect:
-        st.error(f"{t('error_tab_compute')}：{_e_elect}")
-
-# ── Map & Relocation tab ─────────────────────────────────────────────────
-with _relo_tab:
-    st.info(
-        auto_cn(
-            "💡 完整星移地圖功能請選擇左側「星移地圖 (Astrocartography)」體系。此分頁提供快速地理位置概覽。",
-            "💡 For the full Astrocartography experience select 'Astrocartography' from the sidebar. "
-            "This tab provides a quick geographic overview.",
-        )
-    )
-    _p = st.session_state.get("_calc_params", {})
-    if _p:
-        try:
-            from astro.world_map import render_world_map as _render_wm
-            _render_wm()
-        except Exception:
-            if st.button(
-                auto_cn("切換至星移地圖", "Go to Astrocartography"),
-                key="_relo_goto_acg",
-            ):
-                st.session_state["_system_select"] = "tab_acg"
-                st.rerun()
-
+# ── Global AI chatbox — fixed at the bottom of every page ──────────────────
+_render_global_ai_chat()
