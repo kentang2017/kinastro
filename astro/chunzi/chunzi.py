@@ -38,6 +38,12 @@ BRANCH_ZODIAC = {
 # 屬相對應地支（反向查詢）
 ZODIAC_BRANCH = {v: k for k, v in BRANCH_ZODIAC.items()}
 
+# 中文數字對照（一→1，兩→2，…，十→10），供 explain() 和 _parse_chinese_number() 共用
+CHINESE_NUM: Dict[str, int] = {
+    "零": 0, "一": 1, "二": 2, "三": 3, "四": 4, "五": 5,
+    "六": 6, "七": 7, "八": 8, "九": 9, "十": 10, "兩": 2,
+}
+
 
 class ChunZiShu:
     """蠢子數纏度查詢主類別。
@@ -283,13 +289,11 @@ class ChunZiShu:
             r"結([一二三四五六七八九十\d]+)果",
             r"滿樹花開結([一二三四五六七八九十\d]+)果",
         ]
-        chinese_num = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5,
-                       "六": 6, "七": 7, "八": 8, "九": 9, "十": 10, "兩": 2}
         for pat in child_patterns:
             m = re.search(pat, verse)
             if m:
                 raw = m.group(1)
-                result["children_count"] = chinese_num.get(raw, int(raw) if raw.isdigit() else None)
+                result["children_count"] = CHINESE_NUM.get(raw, int(raw) if raw.isdigit() else None)
                 break
 
         # ------ 出生時辰 ------
@@ -305,7 +309,7 @@ class ChunZiShu:
         m = re.search(ke_pat, verse)
         if m:
             raw = m.group(1)
-            result["birth_ke"] = chinese_num.get(raw, int(raw) if raw.isdigit() else None)
+            result["birth_ke"] = CHINESE_NUM.get(raw, int(raw) if raw.isdigit() else None)
 
         # ------ 壽元 ------
         # 匹配：壽享X歲 / X歲辭人世 / 壽X歲 / 壽X齡
@@ -370,21 +374,16 @@ def _parse_chinese_number(text: str) -> Optional[int]:
     Returns:
         對應整數，無法解析時回傳 None。
     """
-    units = {"十": 10, "百": 100}
-    digits = {
-        "零": 0, "一": 1, "二": 2, "三": 3, "四": 4,
-        "五": 5, "六": 6, "七": 7, "八": 8, "九": 9,
-    }
     if text.isdigit():
         return int(text)
-    # 簡易解析：X十Y 或 百X 格式
+    # 簡易解析：X十Y 或 百X 格式（使用模組級 CHINESE_NUM 常數）
     m = re.match(r"([一二三四五六七八九]?)十([一二三四五六七八九]?)", text)
     if m:
-        tens = digits.get(m.group(1), 1) if m.group(1) else 1
-        ones = digits.get(m.group(2), 0) if m.group(2) else 0
+        tens = CHINESE_NUM.get(m.group(1), 1) if m.group(1) else 1
+        ones = CHINESE_NUM.get(m.group(2), 0) if m.group(2) else 0
         return tens * 10 + ones
-    if text in digits:
-        return digits[text]
+    if text in CHINESE_NUM:
+        return CHINESE_NUM[text]
     return None
 
 

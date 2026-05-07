@@ -101,7 +101,14 @@ def main() -> None:
                 print(f"  {r['code']}: {r['verse'][:60]}...")
 
     elif args.command == "batch":
-        codes = [c.strip() for c in args.codes.split(",") if c.strip()]
+        raw_codes = args.codes.split(",")
+        codes = [c.strip() for c in raw_codes if c.strip()]
+        skipped = [c for c in raw_codes if not c.strip()]
+        if skipped:
+            print(f"⚠️  已略過 {len(skipped)} 個空白代碼項目", file=sys.stderr)
+        if not codes:
+            print("⚠️  未提供任何有效代碼", file=sys.stderr)
+            sys.exit(1)
         results = czs.batch_lookup(codes)
         if args.as_json:
             print(json.dumps(results, ensure_ascii=False, indent=2))

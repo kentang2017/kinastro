@@ -258,16 +258,15 @@ class TestExplain:
 
     def test_parse_parents_from_verse(self, czs: ChunZiShu) -> None:
         """若詩詞含「父是屬X母屬Y」應正確解析父母屬相。"""
+        from astro.chunzi import BRANCH_ZODIAC
+        valid_zodiacs = set(BRANCH_ZODIAC.values())
         # 使用已知含父母屬相的詩詞
         result = czs.search("父是屬", limit=5)
         for r in result:
             info = czs.explain(r["code"])
             if info.get("father_zodiac"):
                 # 解析出的屬相應為有效屬相
-                assert info["father_zodiac"] in (
-                    "鼠", "牛", "虎", "兔", "龍", "蛇",
-                    "馬", "羊", "猴", "雞", "狗", "豬"
-                )
+                assert info["father_zodiac"] in valid_zodiacs
                 break
 
     def test_flags_is_list(self, czs: ChunZiShu) -> None:

@@ -11,6 +11,7 @@ astro/chunzi/__init__.py — 蠢子數模組公開介面
 from .chunzi import (
     BRANCHES,
     BRANCH_ZODIAC,
+    CHINESE_NUM,
     MANSIONS_28,
     ZODIAC_BRANCH,
     ChunZiShu,
@@ -22,4 +23,5 @@ __all__ = [
     "BRANCHES",
     "BRANCH_ZODIAC",
     "ZODIAC_BRANCH",
+    "CHINESE_NUM",
 ]
