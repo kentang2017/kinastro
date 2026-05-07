@@ -14,7 +14,9 @@ from .chunzi import (
     CHINESE_NUM,
     MANSIONS_28,
     ZODIAC_BRANCH,
+    ChunZiChart,
     ChunZiShu,
+    ChunZiVerse,
 )
 
 
@@ -25,7 +27,9 @@ def render_streamlit() -> None:
 
 
 __all__ = [
+    "ChunZiChart",
     "ChunZiShu",
+    "ChunZiVerse",
     "MANSIONS_28",
     "BRANCHES",
     "BRANCH_ZODIAC",
