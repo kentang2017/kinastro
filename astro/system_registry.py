@@ -1552,6 +1552,41 @@ _reg(System(
 ))
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# cat_western — Mundane Astrology 世俗占星 🌍
+# ═════════════════════════════════════════════════════════════════════════════
+
+_reg(System(
+    id="tab_mundane",
+    name_zh="世俗占星",
+    name_en="Mundane Astrology",
+    category="cat_western",
+    icon="🌍",
+    tab_key="tab_mundane",
+    desc_key="desc_mundane",
+    spinner_key="spinner_mundane",
+    hint_key="sys_hint_mundane",
+    sub_tabs=[
+        SubTab("mundane_ingress",      "ingress"),
+        SubTab("mundane_eclipse",      "eclipse"),
+        SubTab("mundane_conjunction",  "conjunction"),
+        SubTab("mundane_national",     "national"),
+    ],
+    tags=[
+        "mundane", "world astrology", "national astrology",
+        "ingress", "eclipse", "great conjunction", "jupiter saturn",
+        "世俗占星", "國家占星", "入宮圖", "日月食", "木土合相", "時代",
+    ],
+    maturity="beta",
+    accent_color="#1B4F8A",   # Deep navy for world/macro theme
+    recommended_house_system="Whole Sign",
+    supports_transit=True,
+    origin_culture="Western / Chinese",
+    tradition_period="Classical to Modern",
+    ai_persona_key="info_mundane_prompt",
+))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Derived helper data structures
 # ─────────────────────────────────────────────────────────────────────────────
