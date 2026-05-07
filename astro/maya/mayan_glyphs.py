@@ -11,6 +11,7 @@ Pure Python + SVG string generation, no external resource dependencies.
 
 from __future__ import annotations
 import math
+import random
 from .constants import TZOLKIN_DAY_DATA
 
 
@@ -110,9 +111,8 @@ def generate_tzolkin_wheel_svg(
     )
     lines.append(f'<rect width="{size}" height="{size}" fill="url(#bgGrad)"/>')
 
-    # Subtle starfield
-    import random
-    rng = random.Random(42)  # fixed seed for reproducibility
+    # Subtle starfield (fixed seed for reproducibility)
+    rng = random.Random(42)
     for _ in range(60):
         sx = rng.uniform(0, size)
         sy = rng.uniform(0, size)

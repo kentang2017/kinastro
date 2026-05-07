@@ -18,6 +18,7 @@ from .constants import (
     TZOLKIN_DAY_DATA,
     VENUS_CYCLE_DAYS,
     MAYAN_EPOCH_JD,
+    DEGREES_PER_TZOLKIN_SIGN,
 )
 from .tzolkin import compute_tzolkin, compute_haab, compute_calendar_round, TzolkinDay, HaabDay, CalendarRound
 from .long_count import jd_to_long_count, LongCount
@@ -157,32 +158,34 @@ def _compute_venus_info(jd: float, venus_lon: float, sun_lon: float) -> VenusCyc
     計算金星週期相位資訊。
     Compute Venus cycle phase information.
     """
-    from .constants import VENUS_PHASES
+    from .constants import VENUS_PHASES, DEGREES_PER_TZOLKIN_SIGN
     from .tzolkin import compute_tzolkin
 
-    elongation = _normalize(venus_lon - sun_lon)
-    if elongation > 180:
-        elongation = 360 - elongation  # 0–180
-
-    # Determine phase by elongation
-    # Morning star: Venus ahead of Sun (elongation in range, rising before Sun)
-    # This is a simplified determination:
+    # Signed elongation (0–360°, east = 0–180, west = 180–360)
     diff = _normalize(venus_lon - sun_lon)
+
+    # Unsign elongation for display (0–180°)
+    elongation = diff if diff <= 180 else 360 - diff
+
+    # Determine Venus synodic phase:
+    #   diff < 10° or diff > 350° → inferior conjunction (Venus between Earth & Sun)
+    #   10° ≤ diff ≤ 170°         → evening star (Venus east of Sun, sets after Sun)
+    #   170° < diff < 190°        → superior conjunction (Venus behind Sun)
+    #   190° ≤ diff ≤ 350°        → morning star (Venus west of Sun, rises before Sun)
     if diff < 10 or diff > 350:
         phase_idx = 3   # inferior conjunction
-    elif diff > 180:
-        phase_idx = 0   # morning star (Venus west of Sun, rises before Sun)
-    elif diff < 10:
+    elif diff > 190:
+        phase_idx = 0   # morning star (Venus west of Sun)
+    elif diff > 170:
         phase_idx = 1   # superior conjunction
     else:
-        phase_idx = 2   # evening star (Venus east of Sun, sets after Sun)
+        phase_idx = 2   # evening star (Venus east of Sun)
 
     phase = VENUS_PHASES[phase_idx]
 
-    # Venus Tzolk'in sign
+    # Venus Tzolk'in sign: map Venus longitude to a day sign (18° per sign)
     v_tz = compute_tzolkin(jd)
-    # Map Venus longitude to a day sign (every 18° = one day sign)
-    v_sign_idx = int(_normalize(venus_lon) / 18.0) % 20
+    v_sign_idx = int(_normalize(venus_lon) / DEGREES_PER_TZOLKIN_SIGN) % 20
     v_sign = TZOLKIN_DAY_DATA[v_sign_idx]
 
     return VenusCycleInfo(
@@ -241,8 +244,8 @@ def compute_maya_chart(
         idx = _sign_index(plon)
         sign_info = ZODIAC_SIGNS[idx]
 
-        # Map planet longitude to a Tzolk'in sign
-        tz_sign_idx = int(plon / 18.0) % 20
+        # Map planet longitude to a Tzolk'in sign (18° per sign)
+        tz_sign_idx = int(plon / DEGREES_PER_TZOLKIN_SIGN) % 20
         tz_sign_data = TZOLKIN_DAY_DATA[tz_sign_idx]
 
         planets.append(MayanPlanet(

@@ -11,6 +11,7 @@ GMT correlation verification:
 
 import math
 import pytest
+import swisseph as swe
 
 from astro.maya.tzolkin import compute_tzolkin, compute_haab, compute_calendar_round
 from astro.maya.long_count import jd_to_long_count, long_count_to_jd, parse_long_count
@@ -313,8 +314,8 @@ class TestIntegration:
 
     @pytest.fixture
     def sample_jd(self):
-        """A sample Julian Day (1990-01-15 noon, ~JD 2447907)"""
-        import swisseph as swe
+        """A sample Julian Day for 1990-01-15 noon UTC (chosen as a modern date
+        within B'ak'tun 12 to test full chart computation without edge cases)."""
         return swe.julday(1990, 1, 15, 12.0)
 
     def test_full_chart_computation(self, sample_jd):

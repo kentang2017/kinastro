@@ -16,7 +16,7 @@ from __future__ import annotations
 import streamlit as st
 
 from .calculator import MayanChart
-from .constants import TZOLKIN_DAY_DATA, TZOLKIN_NUMBERS, HAAB_MONTHS, PLANET_COLORS
+from .constants import TZOLKIN_DAY_DATA, TZOLKIN_NUMBERS, HAAB_MONTHS, PLANET_COLORS, DEGREES_PER_TZOLKIN_SIGN
 from .mayan_glyphs import (
     generate_tzolkin_wheel_svg,
     generate_day_sign_card_html,
@@ -243,7 +243,7 @@ def _render_long_count_tab(chart: MayanChart) -> None:
         f'<div style="background:linear-gradient(135deg,#1a0a0a,#2a1a00);'
         f'border:1px solid #8B4513;border-radius:12px;padding:16px;'
         f'color:#d4b896;font-family:Georgia,serif;line-height:1.7;">'
-        f'<b style="color:#FFD700;font-size:15px;">{lc.katun_meaning_cn[:20]}…</b><br>'
+        f'<b style="color:#FFD700;font-size:15px;">{lc.katun_meaning_cn[:20] + ("…" if len(lc.katun_meaning_cn) > 20 else "")}</b><br>'
         f'{get_period_summary(lc, "zh")}'
         f'</div>',
         unsafe_allow_html=True,
@@ -462,7 +462,7 @@ def _render_venus_tab(chart: MayanChart) -> None:
     # Venus and Tzolk'in connection
     st.markdown("---")
     st.markdown("#### 🌀 金星在 Tzolk'in 中的位置")
-    v_sign = TZOLKIN_DAY_DATA[int(venus.venus_longitude / 18.0) % 20]
+    v_sign = TZOLKIN_DAY_DATA[int(venus.venus_longitude / DEGREES_PER_TZOLKIN_SIGN) % 20]
     st.markdown(
         f'<div style="background:#1a1a00;border:1px solid #c8a800;'
         f'border-radius:10px;padding:14px;color:white;">'

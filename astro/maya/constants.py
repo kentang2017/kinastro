@@ -5,6 +5,9 @@ astro/maya/constants.py — 瑪雅占星常量 (Maya Astrology Constants)
 Contains complete constants and interpretive data for Tzolk'in, Haab, and Long Count.
 
 GMT Correlation (Goodman-Martinez-Thompson): JD 584283 = 0.0.0.0.0 = 4 Ajaw 8 Kumku
+
+Note: swisseph is imported solely to resolve planet ID constants (swe.SUN, swe.VENUS, …)
+used in MAYAN_PLANETS. Actual ephemeris calculations happen in calculator.py.
 """
 
 import swisseph as swe
@@ -35,6 +38,10 @@ KINS_PER_TUN    = 360        # 18 Winals
 KINS_PER_KATUN  = 7_200      # 20 Tuns
 KINS_PER_BAKTUN = 144_000    # 20 Katuns
 KINS_PER_PIKTUN = 2_880_000  # 20 Baktuns
+
+# Degrees of ecliptic longitude per Tzolk'in sign (360° / 20 signs = 18°/sign)
+# Used to map planetary longitudes to a Tzolk'in day sign.
+DEGREES_PER_TZOLKIN_SIGN: float = 18.0
 
 # ============================================================
 # Tzolk'in 二十日符號 (20 Day Signs)

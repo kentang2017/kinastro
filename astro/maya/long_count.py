@@ -127,7 +127,7 @@ def parse_long_count(lc_str: str) -> Optional[tuple[int, int, int, int, int]]:
         parts = [int(p.strip()) for p in lc_str.split(".")]
         if len(parts) != 5:
             return None
-        return tuple(parts)  # type: ignore[return-value]
+        return (parts[0], parts[1], parts[2], parts[3], parts[4])
     except (ValueError, AttributeError):
         return None
 
