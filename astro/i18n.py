@@ -1839,7 +1839,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_thai": {"zh": "泰國傳統命理解讀", "en": "Traditional Thai fate reading"},
     "sys_hint_kabbalistic": {"zh": "猶太神祕主義占星", "en": "Jewish mystical astrology"},
     "sys_hint_arabic": {"zh": "伊斯蘭黃金時代占星術", "en": "Islamic Golden Age astrology"},
-    "sys_hint_maya": {"zh": "瑪雅文明曆法占卜", "en": "Mayan calendar-based divination"},
+    "sys_hint_maya": {"zh": "瑪雅 Tzolk'in 神聖曆、Long Count 長紀年、Calendar Round 52年循環", "en": "Maya Tzolk'in sacred calendar, Long Count, Calendar Round 52-year cycle"},
     "sys_hint_aztec": {"zh": "阿茲特克文明神聖曆占卜", "en": "Aztec Tonalpohualli sacred calendar divination"},
     "sys_hint_mahabote": {"zh": "緬甸／撣族 Mahabote 深度排盤", "en": "Burmese/Shan Mahabote deep astrology"},
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
@@ -3776,6 +3776,10 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_esoteric_prompt": {
         "zh": "👈 請輸入出生資料後點擊「開始排盤」，進行靈性占星七道光線分析。",
         "en": "👈 Enter birth data and click 'Calculate Chart' to begin the Seven Rays Esoteric Astrology analysis.",
+    },
+    "info_maya_prompt": {
+        "zh": "👈 請在左側輸入出生日期，點擊「開始排盤」以計算您的 Tzolk'in 日符號、Long Count 位置與完整瑪雅命盤。",
+        "en": "👈 Enter your birth date on the left and click 'Calculate Chart' to discover your Tzolk'in day sign, Long Count position, and full Maya chart.",
     },
     "tab_electional": {
         "zh": "⏳ 擇日占星（Electional / Muhurta）",
