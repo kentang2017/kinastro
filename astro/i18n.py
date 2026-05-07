@@ -4023,6 +4023,50 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」進行人間圖分析。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' for your Human Design analysis.",
     },
+
+    # ── Mundane Astrology 世俗占星 / 國家占星 ──────────────────────────────────
+    "tab_mundane": {
+        "zh": "🌍 世俗占星",
+        "en": "🌍 Mundane Astrology",
+    },
+    "sys_hint_mundane": {
+        "zh": "國家占星・入宮圖・日月食・木土大合相・時代脈動",
+        "en": "National Astrology · Ingress Charts · Eclipses · Great Conjunctions · World Trends",
+    },
+    "desc_mundane": {
+        "zh": (
+            "🌍 **世俗占星（Mundane Astrology）** — 研究國家、時代與世界大事的占星分支。\n\n"
+            "• **入宮圖（Ingress Chart）**：太陽進入基本星座（春分牡羊、夏至巨蟹、秋分天秤、冬至摩羯），"
+            "預示國家與世界的季節性趨勢。\n"
+            "• **日月食圖（Eclipse Chart）**：日食影響長達 6–12 個月，月食約 1 個月，"
+            "揭示重大國家事件。\n"
+            "• **木土大合相（Great Conjunctions）**：每約 20 年一次的木星-土星合相，"
+            "標誌時代轉折。2020 年進入風象三角（寶瓶座），開啟資訊科技新紀元。\n"
+            "• **國家運勢總覽**：選擇國家，結合外行星過運與入宮圖進行宏觀分析。\n\n"
+            "融合西方 Mundane 傳統（Campion、Baigent、Lilly）與中國欽天監天象紀事傳統。\n"
+            "AI 以欽天監星官人格，莊重詩意地解讀時代星象。"
+        ),
+        "en": (
+            "🌍 **Mundane Astrology** — The branch of astrology studying nations, eras, and world events.\n\n"
+            "• **Ingress Charts**: Sun's entry into cardinal signs (Aries/Cancer/Libra/Capricorn) "
+            "forecasting seasonal national and world trends.\n"
+            "• **Eclipse Charts**: Solar eclipses influence 6–12 months; lunar eclipses ~1 month, "
+            "revealing major national events.\n"
+            "• **Great Conjunctions**: Jupiter-Saturn conjunctions every ~20 years, marking historical "
+            "turning points. The 2020 Aquarius conjunction opened the Air era of information and technology.\n"
+            "• **National Overview**: Select any country for macro outer-planet transit analysis.\n\n"
+            "Synthesises Western Mundane tradition (Campion, Baigent, Lilly) with "
+            "Chinese Imperial Astronomical Bureau (欽天監) sky-omen records."
+        ),
+    },
+    "spinner_mundane": {
+        "zh": "計算世俗占星星盤中…",
+        "en": "Computing Mundane Astrology chart…",
+    },
+    "info_mundane_prompt": {
+        "zh": "👈 世俗占星不需出生資料，直接點擊左側頁面進行分析。",
+        "en": "👈 Mundane Astrology does not require birth data. Use the controls within each tab.",
+    },
 }
 
 def get_ui_lang() -> str:

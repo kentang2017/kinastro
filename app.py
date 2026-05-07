@@ -182,6 +182,7 @@ from astro.chinese.taixuan.taixuan_renderer import (
 from astro.rectification.renderer import render_streamlit as render_rectification_page
 from astro.trutine_of_hermes.renderer import render_streamlit as render_trutine_chart
 from astro.bazi import compute_bazi as compute_bazi_chart, render_streamlit as render_bazi_chart
+from astro.mundane import render_streamlit as render_mundane_chart
 
 
 # ============================================================
@@ -1273,7 +1274,7 @@ with st.sidebar:
     _SYSTEM_CATEGORIES = [
         ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
         ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi", "tab_chunzi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology", "tab_human_design"]),
+        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology", "tab_human_design", "tab_mundane"]),
         ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
         ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
         ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_persian_deep", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
@@ -1360,6 +1361,7 @@ with st.sidebar:
         "tab_electional": t("tab_electional"),
         "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
         "tab_primary_directions": t("tab_primary_directions"),
+        "tab_mundane": t("tab_mundane"),
     }
 
     # Short hints for each system (beginner-friendly)
@@ -1429,6 +1431,7 @@ with st.sidebar:
         "tab_electional": t("sys_hint_electional"),
         "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
         "tab_primary_directions": t("sys_hint_primary_directions"),
+        "tab_mundane": t("sys_hint_mundane"),
     }
 
     _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
@@ -5887,6 +5890,26 @@ with _natal_tab:
                 timezone=_p.get("tz", 0.0),
                 latitude=_p.get("lat", 25.033),
                 longitude=_p.get("lon", 121.565),
+                location_name=_p.get("location_name", ""),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    # ============================================================
+    # --- 世俗占星 Mundane Astrology ---
+    elif _selected_system == "tab_mundane":
+        try:
+            _p = st.session_state.get("_calc_params", {})
+            render_mundane_chart(
+                year=_p.get("year"),
+                month=_p.get("month"),
+                day=_p.get("day"),
+                hour=_p.get("hour"),
+                minute=_p.get("minute"),
+                timezone=_p.get("timezone"),
+                latitude=_p.get("latitude"),
+                longitude=_p.get("longitude"),
                 location_name=_p.get("location_name", ""),
             )
         except Exception as _e:
