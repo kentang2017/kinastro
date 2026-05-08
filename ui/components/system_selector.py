@@ -13,7 +13,6 @@ def render_system_selector(
     t: Callable[[str], str],
     search_query: str,
     current_system: str | None,
-    lang: str,
 ) -> str | None:
     """Render categorized system selector from `astro.system_registry`.
 
@@ -22,8 +21,6 @@ def render_system_selector(
         t: i18n translate function.
         search_query: User input in search box.
         current_system: Current selected system id.
-        lang: Current language code.
-
     Returns:
         Selected system id (or existing one if unchanged).
     """
@@ -32,7 +29,6 @@ def render_system_selector(
 
     selected_system = current_system
     query = (search_query or "").strip().lower()
-    beginner_systems = {"tab_western", "tab_ziwei"}
 
     for category in list_categories():
         systems = get_systems_by_category(category)
@@ -55,46 +51,16 @@ def render_system_selector(
             col_a, col_b = st_module.columns(2, gap="small")
             for idx, sys in enumerate(filtered):
                 is_active = sys.id == selected_system
-                beginner = (
-                    "🌟 推薦入門"
-                    if lang in ("zh", "zh_cn")
-                    else "🌟 Start here"
-                ) if sys.id in beginner_systems else ""
-                badge_html = (
-                    f'<div class="ka-system-card-badge">{beginner}</div>'
-                    if beginner
-                    else ""
-                )
-                card_html = (
-                    '<div class="ka-system-card" '
-                    f'style="--ka-system-accent:{sys.accent_color};">'
-                    f'<div class="ka-system-card-title">{t(sys.tab_key)}</div>'
-                    f"{badge_html}"
-                    "</div>"
-                )
                 with (col_a if idx % 2 == 0 else col_b):
-                    st_module.markdown(card_html, unsafe_allow_html=True)
-                    if is_active:
-                        if st_module.button(
-                            "✨ " + t("generate_chart_btn"),
-                            key=f"_sys_btn_{sys.id}",
-                            width="stretch",
-                            type="primary",
-                            help=t(sys.hint_key),
-                        ):
-                            selected_system = sys.id
-                            st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
-                            st_module.rerun()
-                    else:
-                        if st_module.button(
-                            t(sys.tab_key),
-                            key=f"_sys_btn_{sys.id}",
-                            width="stretch",
-                            type="secondary",
-                            help=t(sys.hint_key),
-                        ):
-                            selected_system = sys.id
-                            st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
-                            st_module.rerun()
+                    if st_module.button(
+                        t(sys.tab_key),
+                        key=f"_sys_btn_{sys.id}",
+                        width="stretch",
+                        type="primary" if is_active else "secondary",
+                        help=t(sys.hint_key),
+                    ):
+                        selected_system = sys.id
+                        st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
+                        st_module.rerun()
 
     return selected_system
