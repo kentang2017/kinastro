@@ -1136,17 +1136,20 @@ with st.sidebar:
         st.rerun()
 
     # ── Birth data form — all inputs wrapped so only submit triggers rerun ──
+    # Initialise session-state defaults once so widgets can use key= without value=
+    if "birth_date_input" not in st.session_state:
+        st.session_state["birth_date_input"] = date(1990, 1, 1)
+    if "birth_time_input" not in st.session_state:
+        st.session_state["birth_time_input"] = time(12, 0)
     with st.form("birth_data_form", border=False):
         birth_date = st.date_input(
             t("birth_date"),
-            value=st.session_state.get("birth_date_input", date(1990, 1, 1)),
             min_value=date(1, 1, 1),
             max_value=date(date.today().year, 12, 31),
             key="birth_date_input",
         )
         birth_time = st.time_input(
             t("birth_time"),
-            value=st.session_state.get("birth_time_input", time(12, 0)),
             key="birth_time_input",
         )
 
