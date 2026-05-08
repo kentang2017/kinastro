@@ -7,15 +7,6 @@ from typing import Callable
 from ui.state import SessionKeys
 
 
-def _compact_hint(text: str, max_len: int = 72) -> str:
-    """Return single-line compact hint for card display."""
-
-    cleaned = " ".join((text or "").split())
-    if len(cleaned) <= max_len:
-        return cleaned
-    return cleaned[: max_len - 1].rstrip() + "…"
-
-
 def render_system_selector(
     *,
     st_module,
@@ -64,7 +55,6 @@ def render_system_selector(
             col_a, col_b = st_module.columns(2, gap="small")
             for idx, sys in enumerate(filtered):
                 is_active = sys.id == selected_system
-                hint = _compact_hint(t(sys.hint_key))
                 beginner = (
                     "🌟 推薦入門"
                     if lang in ("zh", "zh_cn")
@@ -78,8 +68,7 @@ def render_system_selector(
                 card_html = (
                     '<div class="ka-system-card" '
                     f'style="--ka-system-accent:{sys.accent_color};">'
-                    f'<div class="ka-system-card-title">{sys.icon} {t(sys.tab_key)}</div>'
-                    f'<div class="ka-system-card-desc">{hint}</div>'
+                    f'<div class="ka-system-card-title">{t(sys.tab_key)}</div>'
                     f"{badge_html}"
                     "</div>"
                 )

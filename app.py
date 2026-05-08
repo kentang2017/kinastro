@@ -75,7 +75,7 @@ from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart,
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
-from astro.amazigh import compute_amazigh_chart, render_amazigh_sky_svg
+from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_amazigh_sky_svg
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
@@ -4274,13 +4274,24 @@ if not _engine_handled:
                         longitude=_p["longitude"],
                         location_name=_p.get("location_name", ""),
                     )
-                st.markdown(render_amazigh_sky_svg(_amazigh_chart), unsafe_allow_html=True)
-                if _amazigh_chart.direction:
-                    st.caption(
-                        f"{_amazigh_chart.direction.name_zh} / {_amazigh_chart.direction.name_en} · "
-                        f"{_amazigh_chart.direction.season_zh} / {_amazigh_chart.direction.season_en}"
+                _amz_tab_sky, _amz_tab_chart = st.tabs([
+                    "ⵣ 星空圖 Sky Chart",
+                    "📊 占星資料 Chart Data",
+                ])
+                with _amz_tab_sky:
+                    st.markdown(render_amazigh_sky_svg(_amazigh_chart), unsafe_allow_html=True)
+                    if _amazigh_chart.direction:
+                        st.caption(
+                            f"{_amazigh_chart.direction.name_zh} / {_amazigh_chart.direction.name_en} · "
+                            f"{_amazigh_chart.direction.season_zh} / {_amazigh_chart.direction.season_en}"
+                        )
+                    _render_ai_button("tab_amazigh", _amazigh_chart, btn_key="amazigh_sky")
+                with _amz_tab_chart:
+                    render_amazigh_chart(
+                        _amazigh_chart,
+                        after_chart_hook=lambda: _render_ai_button("tab_amazigh", _amazigh_chart, btn_key="amazigh_chart"),
                     )
-                st.markdown(t("desc_amazigh"))
+                    st.markdown(t("desc_amazigh"))
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
