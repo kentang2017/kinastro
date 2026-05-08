@@ -83,26 +83,25 @@ class ChartData:
 
 
 # ============================================================
-# 七政四餘命度計算：中國傳統天球坐標
-# 七政四餘繼承唐代印度占星傳統，命度以唐代曆元（約760 CE）為參考點。
-# 此歲差修正量用於將黃道回歸坐標轉換為中國傳統恒星坐標，以定命宮二十八宿入宿度。
+# 七政四餘命度計算：本地恒星時（LMST）基準
+# 立命二十八宿入宿度以本地恒星時為基礎計算，
+# 公式：立命度 = (格林威治恒星時 × 15 + 出生地經度 - 265.0) mod 360
+# 其中 265.0° 為系統參考常數（歷元定義偏移量）。
 # ============================================================
-# 唐代曆元（約760 CE）在 J2000.0 時的歲差量（度）
-# 計算：(2000 - 760) 年 × 50.29角秒/年 ÷ 3600 ≈ 17.32°
-_TANG_EPOCH_AYANAMSA_AT_J2000 = 17.32
-_JD_J2000 = 2451545.0               # J2000.0 儒略日（標準天文曆元）
+_LIMING_LMST_OFFSET = 265.0  # 本地恒星時基準偏移量（度）
 
 
-def _compute_liming_lon(tropical_ascendant: float, julian_day: float) -> float:
+def _compute_liming_lon(julian_day: float, birth_longitude: float) -> float:
     """
-    將黃道回歸上升點轉換為中國七政四餘傳統坐標，以計算立命二十八宿入宿度。
+    以本地恒星時（LMST）計算立命二十八宿入宿度坐標。
 
-    七政四餘依唐代曆元（約760 CE）定義恒星坐標，此函數以線性歲差修正
-    （50.29角秒/年）將回歸坐標轉換為該曆元坐標。
+    立命度 = (GMST × 15 + 出生地經度 - 265.0) mod 360
+
+    其中 GMST 為格林威治平恒星時（小時），birth_longitude 為出生地地理經度（度），
+    265.0° 為傳統七政四餘立命系統參考偏移常數。
     """
-    precession_rate = 50.29 / (365.25 * 3600)  # 度/日
-    ayanamsa = _TANG_EPOCH_AYANAMSA_AT_J2000 + (julian_day - _JD_J2000) * precession_rate
-    return _normalize_degree(tropical_ascendant - ayanamsa)
+    gmst_degrees = swe.sidtime(julian_day) * 15.0
+    return _normalize_degree(gmst_degrees + birth_longitude - _LIMING_LMST_OFFSET)
 
 
 def _normalize_degree(deg: float) -> float:
@@ -498,7 +497,7 @@ def compute_chart(
         hour_branch=hour_branch,
         ming_gong_branch=ming_gong_branch,
         gender=gender,
-        liming_lon=_compute_liming_lon(ascendant, jd),
+        liming_lon=_compute_liming_lon(jd, longitude),
     )
 
 

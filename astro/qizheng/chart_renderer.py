@@ -603,13 +603,13 @@ def _to_chinese_numeral(n: int) -> str:
 def _format_liming_mansion(ascendant: float, mansion_list: list) -> str:
     """Format 立命 in classical style: 宿名+元素+度數(中文)+度立命.
 
-    Degree within the mansion is rounded to the nearest integer following
-    traditional Chinese astronomy notation (入宿幾度).
+    Degree within the mansion is truncated to the integer part (入宿幾度),
+    following the traditional Chinese astronomy floor-degree convention.
     Examples: 參水八度立命, 井木十一度立命
     """
     name, deg, idx, _ = _get_mansion_info_for_system(ascendant, mansion_list)
     element = mansion_list[idx]["element"]
-    degree_cn = _to_chinese_numeral(round(deg))
+    degree_cn = _to_chinese_numeral(int(deg))
     return f"{name}{element}{degree_cn}度立命"
 
 
