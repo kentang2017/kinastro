@@ -425,8 +425,7 @@ def render_amazigh_chart(chart: AmazighChart, after_chart_hook=None) -> None:
         st.write(f"**時區 (Timezone):** UTC{chart.timezone:+.1f}")
     with col2:
         st.write(f"**地點 (Location):** {chart.location_name or '—'}")
-        asc_deg = chart.ascendant % 30.0
-        asc_sign_en, asc_sign_zh, _ = _sign_from_lon(chart.ascendant)
+        asc_sign_en, asc_sign_zh, asc_deg = _sign_from_lon(chart.ascendant)
         st.write(f"**上升點 (ASC):** {asc_sign_en} ({asc_sign_zh}) {asc_deg:.2f}°")
         if chart.direction:
             st.write(
