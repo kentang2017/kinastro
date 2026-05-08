@@ -100,7 +100,7 @@ def _compute_liming_lon(julian_day: float, birth_longitude: float) -> float:
     其中 GMST 為格林威治平恒星時（小時），birth_longitude 為出生地地理經度（度），
     265.0° 為傳統七政四餘立命系統參考偏移常數。
     """
-    gmst_degrees = swe.sidtime(julian_day) * 15.0
+    gmst_degrees = swe.sidtime(julian_day) * 15.0  # GMST (hours) × 15 → degrees
     return _normalize_degree(gmst_degrees + birth_longitude - _LIMING_LMST_OFFSET)
 
 
