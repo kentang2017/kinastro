@@ -1360,6 +1360,24 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_amazigh",
+    name_zh="柏柏爾占星",
+    name_en="Amazigh (Berber) Astrology",
+    category="cat_middle_east",
+    icon="ⵣ",
+    tab_key="tab_amazigh",
+    desc_key="desc_amazigh",
+    spinner_key="spinner_amazigh",
+    hint_key="sys_hint_amazigh",
+    tags=["amazigh", "berber", "north africa", "fixed stars", "lots"],
+    maturity="beta",
+    accent_color=_a("cat_middle_east"),
+    origin_culture="Amazigh / Berber (North Africa)",
+    tradition_period="Traditional to Contemporary",
+    ai_persona_key="info_amazigh_prompt",
+))
+
+_reg(System(
     id="tab_picatrix_behenian",
     name_zh="Picatrix 占星魔法",
     name_en="Picatrix Star Magic",
