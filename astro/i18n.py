@@ -1935,6 +1935,30 @@ transmitted by **Chen Xiyi**.
         "zh": "選擇你想了解的命理",
         "en": "Pick Your Destiny Reading",
     },
+    "lang_switcher_label": {
+        "zh": "語言切換",
+        "en": "Language",
+    },
+    "overview_dashboard_title": {
+        "zh": "概覽 Dashboard",
+        "en": "Overview Dashboard",
+    },
+    "overview_dashboard_open": {
+        "zh": "查看詳細",
+        "en": "Open Details",
+    },
+    "overview_dashboard_current": {
+        "zh": "目前體系",
+        "en": "Current System",
+    },
+    "overview_dashboard_loading": {
+        "zh": "彙整多體系關鍵指標中…",
+        "en": "Building multi-system overview…",
+    },
+    "status_chart_ready": {
+        "zh": "命盤已更新，請從下方概覽快速切換體系深入查看。",
+        "en": "Chart updated. Use the overview cards below to jump into any system.",
+    },
 
     # ── GUI Optimization: Simplified info prompt ───────────
     "info_calc_prompt": {

@@ -7,6 +7,15 @@ from typing import Callable
 from ui.state import SessionKeys
 
 
+def _compact_hint(text: str, max_len: int = 72) -> str:
+    """Return single-line compact hint for card display."""
+
+    cleaned = " ".join((text or "").split())
+    if len(cleaned) <= max_len:
+        return cleaned
+    return cleaned[: max_len - 1].rstrip() + "…"
+
+
 def render_system_selector(
     *,
     st_module,
@@ -52,21 +61,44 @@ def render_system_selector(
         cat_label = f"{CATEGORY_ICONS.get(category, '📌')} {t(category)}"
 
         with st_module.expander(cat_label, expanded=cat_has_active or bool(query)):
-            for sys in filtered:
+            col_a, col_b = st_module.columns(2, gap="small")
+            for idx, sys in enumerate(filtered):
                 is_active = sys.id == selected_system
-                if st_module.button(
-                    f"{t(sys.tab_key)}",
-                    key=f"_sys_btn_{sys.id}",
-                    width="stretch",
-                    type="primary" if is_active else "secondary",
-                    help=t(sys.hint_key),
-                ):
-                    selected_system = sys.id
-                    st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
-                    st_module.rerun()
-                if sys.id in beginner_systems and lang in ("zh", "zh_cn"):
-                    st_module.caption("🌟 推薦入門")
-                elif sys.id in beginner_systems:
-                    st_module.caption("🌟 Start here")
+                hint = _compact_hint(t(sys.hint_key))
+                beginner = (
+                    "🌟 推薦入門"
+                    if lang in ("zh", "zh_cn")
+                    else "🌟 Start here"
+                ) if sys.id in beginner_systems else ""
+                badge_html = (
+                    f'<div class="ka-system-card-badge">{beginner}</div>'
+                    if beginner
+                    else ""
+                )
+                card_html = (
+                    '<div class="ka-system-card" '
+                    f'style="--ka-system-accent:{sys.accent_color};">'
+                    f'<div class="ka-system-card-title">{sys.icon} {t(sys.tab_key)}</div>'
+                    f'<div class="ka-system-card-desc">{hint}</div>'
+                    f"{badge_html}"
+                    "</div>"
+                )
+                with (col_a if idx % 2 == 0 else col_b):
+                    st_module.markdown(card_html, unsafe_allow_html=True)
+                    switch_label = (
+                        "切換體系"
+                        if lang in ("zh", "zh_cn")
+                        else "Open System"
+                    )
+                    if st_module.button(
+                        "✨ " + (t("generate_chart_btn") if is_active else switch_label),
+                        key=f"_sys_btn_{sys.id}",
+                        width="stretch",
+                        type="primary" if is_active else "secondary",
+                        help=t(sys.hint_key),
+                    ):
+                        selected_system = sys.id
+                        st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
+                        st_module.rerun()
 
     return selected_system
