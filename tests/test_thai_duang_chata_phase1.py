@@ -89,7 +89,12 @@ def test_renderer_svg_output():
         longitude=100.5018,
     )
 
-    svg = renderer.build_duang_chata_svg(chart, lang="zh")
-    assert "<svg" in svg
-    assert "命數" in svg
-    assert "☊" in svg or "☋" in svg
+    svg_zh = renderer.build_duang_chata_svg(chart, lang="zh")
+    svg_en = renderer.build_duang_chata_svg(chart, lang="en")
+    svg_th = renderer.build_duang_chata_svg(chart, lang="th")
+
+    assert "<svg" in svg_zh
+    assert "命數" in svg_zh
+    assert "Fortune" in svg_en
+    assert "เลขชะตา" in svg_th
+    assert "☊" in svg_zh or "☋" in svg_zh

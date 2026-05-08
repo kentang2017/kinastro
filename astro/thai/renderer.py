@@ -118,7 +118,8 @@ def build_duang_chata_svg(chart: Any, *, lang: str = "zh", size: int = 680) -> s
         angle = p.longitude
         px, py = _polar(cx, cy, r_planet, angle)
         color = PLANET_COLORS.get(p.key, "#f0f0f0")
-        label = f"{p.symbol} {SIGNS[p.sign_index]['th']} {p.sign_degree:.1f}°"
+        sign_name = SIGNS[p.sign_index].get(lang) or SIGNS[p.sign_index]["zh"]
+        label = f"{p.symbol} {sign_name} {p.sign_degree:.1f}°"
         parts.append(
             f'<circle cx="{px:.2f}" cy="{py:.2f}" r="12" fill="#0b0b14" stroke="{color}" stroke-width="1.4">'
             f'<title>{label}</title></circle>'
