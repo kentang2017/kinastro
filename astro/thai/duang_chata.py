@@ -201,9 +201,8 @@ def _sign_degree(lon: float) -> float:
 def _compute_fortune_number(year: int, month: int, day: int) -> tuple[int, Dict[str, str]]:
     animal = THAI_ZODIAC_ANIMALS[(year - 4) % 12]
     total = int(animal["number"]) + int(month) + int(day)
-    while total > 10:
-        total -= 10
-    if total <= 0 or total == 10:
+    total = ((total - 1) % 10) + 1
+    if total == 10:
         total = 1
     return total, animal
 
