@@ -18,7 +18,7 @@ from .calculator import (
 )
 from .constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
-    TWENTY_EIGHT_MANSIONS_ANCIENT,
+    TWENTY_EIGHT_MANSIONS_ANCIENT, TWENTY_EIGHT_MANSIONS_LIMING,
     TWELVE_SIGNS_CHINESE, TWELVE_SIGNS_WESTERN, EARTHLY_BRANCHES,
     FIVE_ELEMENTS, ZODIAC_SIGN_ELEMENTS,
 )
@@ -1119,7 +1119,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
     )
 
     # 立命度數 — 今制 and 古制 mansion format (e.g. 參水八度立命 / 井木十一度立命)
-    liming_modern = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS)
+    liming_modern = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS_LIMING)
     liming_ancient = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS_ANCIENT)
     svg.append(
         f'<text x="{CX}" y="{CY + 16}" text-anchor="middle" '
@@ -1658,7 +1658,7 @@ def render_mansion_text_panel(chart: ChartData):
     tab_modern, tab_ancient = st.tabs(["今制", "古制"])
 
     for tab, mansion_list, label in [
-        (tab_modern, TWENTY_EIGHT_MANSIONS, "今制"),
+        (tab_modern, TWENTY_EIGHT_MANSIONS_LIMING, "今制"),
         (tab_ancient, TWENTY_EIGHT_MANSIONS_ANCIENT, "古制"),
     ]:
         with tab:
