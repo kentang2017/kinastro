@@ -53,9 +53,9 @@
 
 ## 🧭 體系總覽 | Systems at a Glance
 
-> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 (新增世俗占星) → 亞洲／印度 → 中東 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星
+> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；本次同步補上世俗占星
 >
-> *Systems displayed by category: Popular → Three Formulae → Chinese → Western (now including Mundane Astrology) → Asian / Indian → Middle East → Ancient → Medical Astrology (incl. Byzantine Astrology) → Traditional Horary → Electional*
+> *Systems displayed by category: Popular → Three Formulae → Chinese → Western → Indian → Asian → Middle East → Ancient → Medical Astrology (incl. Byzantine Astrology) → Traditional Horary → Electional; this refresh also adds Mundane Astrology to the overview*
 
 | # | 體系 System | 黃道 Zodiac | 子功能 Sub-features |
 |:-:|---|---|---|

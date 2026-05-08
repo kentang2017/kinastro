@@ -285,7 +285,7 @@ def render_homepage():
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
-          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、<br/>
+          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>
           傳統卜卦占星、擇日占星到蠢子數——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
