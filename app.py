@@ -1291,14 +1291,12 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    _cur_lang = st.session_state.get("lang", "zh")
     _selected_system = st.session_state.get(SessionKeys.SYSTEM_SELECT, None)
     _selected_system = render_system_selector(
         st_module=st,
         t=t,
         search_query=_system_search,
         current_system=_selected_system,
-        lang=_cur_lang,
     )
 
     # ── History of Astrology link ─────────────────────────────
