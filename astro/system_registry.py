@@ -145,6 +145,7 @@ _ACCENT = {
     "cat_indian":     "#E87416",  # 番紅花橙——印度吠陀
     "cat_asian":      "#2E7D32",  # 翠綠——亞洲體系
     "cat_middle_east":"#B8860B",  # 古金——中東體系
+    "cat_africa":     "#8B4513",  # 赭紅——非洲體系
     "cat_ancient":    "#6B4226",  # 古銅——古文明
     "cat_yi_zhan":    "#1B5E20",  # 醫綠——醫占
     "cat_horary":     "#6A0DAD",  # 深紫——卜卦
@@ -161,6 +162,7 @@ CATEGORY_ORDER: List[str] = [
     "cat_indian",
     "cat_asian",
     "cat_middle_east",
+    "cat_africa",
     "cat_ancient",
     "cat_yi_zhan",
     "cat_horary",
@@ -177,6 +179,7 @@ CATEGORY_ICONS: Dict[str, str] = {
     "cat_indian":     "🪷",
     "cat_asian":      "🌏",
     "cat_middle_east":"🕌",
+    "cat_africa":     "🌍",
     "cat_ancient":    "🏺",
     "cat_yi_zhan":    "⚕️",
     "cat_horary":     "📜",
@@ -1363,7 +1366,7 @@ _reg(System(
     id="tab_amazigh",
     name_zh="柏柏爾占星",
     name_en="Amazigh (Berber) Astrology",
-    category="cat_middle_east",
+    category="cat_africa",
     icon="ⵣ",
     tab_key="tab_amazigh",
     desc_key="desc_amazigh",
@@ -1371,7 +1374,7 @@ _reg(System(
     hint_key="sys_hint_amazigh",
     tags=["amazigh", "berber", "north africa", "fixed stars", "lots"],
     maturity="beta",
-    accent_color=_a("cat_middle_east"),
+    accent_color=_a("cat_africa"),
     origin_culture="Amazigh / Berber (North Africa)",
     tradition_period="Traditional to Contemporary",
     ai_persona_key="info_amazigh_prompt",

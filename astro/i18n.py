@@ -1828,6 +1828,7 @@ transmitted by **Chen Xiyi**.
     "cat_indian": {"zh": "印度體系", "en": "Indian Systems"},
     "cat_asian": {"zh": "亞洲體系", "en": "Asian Systems"},
     "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
+    "cat_africa": {"zh": "非洲體系", "en": "African Systems"},
     "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
     "cat_yi_zhan": {"zh": "醫占", "en": "Medical Astrology"},
     "cat_horary": {"zh": "傳統卜卦占星", "en": "Traditional Horary Astrology"},
