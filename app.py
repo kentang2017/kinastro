@@ -19,6 +19,7 @@ import random
 import textwrap
 import streamlit as st
 from datetime import datetime, date, time
+from typing import Any
 
 from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
@@ -184,6 +185,13 @@ from astro.rectification.renderer import render_streamlit as render_rectificatio
 from astro.trutine_of_hermes.renderer import render_streamlit as render_trutine_chart
 from astro.bazi import compute_bazi as compute_bazi_chart, render_streamlit as render_bazi_chart
 from astro.mundane import render_streamlit as render_mundane_chart
+from astro.system_registry import get_system
+
+from ui.state import SessionKeys, init_session_state_defaults
+from ui.components.birth_form import BirthChartParams, build_birth_params
+from ui.components.system_selector import render_system_selector
+from ui.system_engine import EXECUTION_REGISTRY
+from ui.system_handlers.phase1_handlers import build_ziwei_handler
 
 
 # ============================================================
@@ -435,6 +443,7 @@ def inject_custom_css():
 
 
 inject_custom_css()
+init_session_state_defaults(st)
 
 
 def _build_star_particles_html() -> str:
@@ -1278,216 +1287,15 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    # Categorised system layout — accordion for easier navigation
-    _SYSTEM_CATEGORIES = [
-        ("cat_sanshi", ["tab_liuren", "tab_taiyi", "tab_qimen_luming"]),
-        ("cat_chinese", ["tab_ziwei", "tab_chinese", "tab_chinstar", "tab_twelve_ci", "tab_cetian_ziwei", "tab_damo", "tab_tieban", "tab_shaozi", "tab_fendjing", "tab_taixuan", "tab_wuyunliuqi", "tab_liuyao_lifetime", "tab_beiji", "tab_nanji", "tab_bazi", "tab_chunzi"]),
-        ("cat_western", ["tab_western", "tab_sabian", "tab_hellenistic", "tab_acg", "tab_uranian", "tab_cosmobiology", "tab_harmonic", "tab_primary_directions", "tab_celtic_tree", "tab_rectification", "tab_trutine_of_hermes", "tab_esoteric", "tab_byzantine_astrology", "tab_human_design", "tab_mundane"]),
-        ("cat_indian", ["tab_indian", "tab_lal_kitab", "tab_nadi", "tab_jaimini", "tab_kp"]),
-        ("cat_asian", ["tab_tojeong", "tab_sukkayodo", "tab_thai", "tab_mahabote", "tab_wariga", "tab_jawa_weton", "tab_zurkhai", "tab_tibetan", "tab_nine_star_ki", "tab_khmer", "tab_polynesian"]),
-        ("cat_middle_east", ["tab_kabbalistic", "tab_mazzalot", "tab_persian", "tab_persian_deep", "tab_arabic", "tab_yemeni", "tab_picatrix_behenian"]),
-        ("cat_ancient", ["tab_maya", "tab_aztec", "tab_decans", "tab_babylonian", "tab_sumerian"]),
-        ("cat_yi_zhan", ["tab_medical_astrology", "tab_shanghan_qianfa"]),
-        ("cat_horary", ["tab_horary", "tab_electional"]),
-    ]
-
-    _CATEGORY_ICONS = {
-        "cat_sanshi": "☯️",
-        "cat_chinese": "🏮",
-        "cat_western": "🏛️",
-        "cat_indian": "🪷",
-        "cat_asian": "🌏",
-        "cat_middle_east": "🕌",
-        "cat_ancient": "🏺",
-        "cat_yi_zhan": "⚕️",
-        "cat_horary": "📜",
-    }
-
-    _SYSTEM_LABELS = {
-        "tab_chinese": t("tab_chinese"),
-        "tab_ziwei": t("tab_ziwei"),
-        "tab_western": t("tab_western"),
-        "tab_indian": t("tab_indian"),
-        "tab_lal_kitab": t("tab_lal_kitab"),
-        "tab_sukkayodo": t("tab_sukkayodo"),
-        "tab_thai": t("tab_thai"),
-        "tab_kabbalistic": t("tab_kabbalistic"),
-        "tab_mazzalot": t("tab_mazzalot"),
-        "tab_arabic": t("tab_arabic"),
-        "tab_yemeni": t("tab_yemeni"),
-        "tab_maya": t("tab_maya"),
-        "tab_aztec": t("tab_aztec"),
-        "tab_mahabote": t("tab_mahabote"),
-        "tab_wariga": t("tab_wariga"),
-        "tab_jawa_weton": t("tab_jawa_weton"),
-        "tab_polynesian": t("tab_polynesian"),
-        "tab_decans": t("tab_decans"),
-        "tab_nadi": t("tab_nadi"),
-        "tab_jaimini": t("tab_jaimini"),
-        "tab_zurkhai": t("tab_zurkhai"),
-        "tab_tibetan": t("tab_tibetan"),
-        "tab_nine_star_ki": t("tab_nine_star_ki"),
-        "tab_hellenistic": t("tab_hellenistic"),
-        "tab_babylonian": t("tab_babylonian"),
-        "tab_sumerian": t("tab_sumerian"),
-        "tab_chinstar": t("tab_chinstar"),
-        "tab_twelve_ci": t("tab_twelve_ci"),
-        "tab_cetian_ziwei": t("tab_cetian_ziwei"),
-        "tab_damo": t("tab_damo"),
-        "tab_acg": t("tab_acg"),
-        "tab_uranian": t("tab_uranian"),
-        "tab_cosmobiology": t("tab_cosmobiology"),
-        "tab_harmonic": t("tab_harmonic"),
-        "tab_liuren": t("tab_liuren"),
-        "tab_fendjing": t("tab_fendjing"),
-        "tab_taiyi": t("tab_taiyi"),
-        "tab_qimen_luming": t("tab_qimen_luming"),
-        "tab_celtic_tree": t("tab_celtic_tree"),
-        "tab_sabian": t("sabian_system_label"),
-        "tab_persian": t("tab_persian"),
-        "tab_persian_deep": t("tab_persian_deep"),
-        "tab_kp": t("tab_kp"),
-        "tab_tieban": t("tab_tieban"),
-        "tab_shaozi": t("tab_shaozi"),
-        "tab_tojeong": t("tab_tojeong"),
-        "tab_khmer": t("tab_khmer"),
-        "tab_taixuan": t("tab_taixuan"),
-        "tab_wuyunliuqi": t("tab_wuyunliuqi"),
-        "tab_picatrix_behenian": t("tab_picatrix_behenian"),
-        "tab_rectification": t("tab_rectification"),
-        "tab_trutine_of_hermes": t("tab_trutine_of_hermes"),
-        "tab_esoteric": t("tab_esoteric"),
-        "tab_medical_astrology": t("tab_medical_astrology"),
-        "tab_byzantine_astrology": t("tab_byzantine_astrology"),
-        "tab_human_design": t("tab_human_design"),
-        "tab_shanghan_qianfa": t("tab_shanghan_qianfa"),
-        "tab_beiji": t("tab_beiji"),
-        "tab_nanji": t("tab_nanji"),
-        "tab_bazi": t("tab_bazi"),
-        "tab_chunzi": t("tab_chunzi"),
-        "tab_horary": t("tab_horary"),
-        "tab_electional": t("tab_electional"),
-        "tab_liuyao_lifetime": t("tab_liuyao_lifetime"),
-        "tab_primary_directions": t("tab_primary_directions"),
-        "tab_mundane": t("tab_mundane"),
-    }
-
-    # Short hints for each system (beginner-friendly)
-    _SYSTEM_HINTS = {
-        "tab_western": t("sys_hint_western"),
-        "tab_ziwei": t("sys_hint_ziwei"),
-        "tab_chinese": t("sys_hint_chinese"),
-        "tab_indian": t("sys_hint_indian"),
-        "tab_lal_kitab": t("sys_hint_lal_kitab"),
-        "tab_thai": t("sys_hint_thai"),
-        "tab_kabbalistic": t("sys_hint_kabbalistic"),
-        "tab_mazzalot": t("sys_hint_mazzalot"),
-        "tab_arabic": t("sys_hint_arabic"),
-        "tab_yemeni": t("sys_hint_yemeni"),
-        "tab_maya": t("sys_hint_maya"),
-        "tab_aztec": t("sys_hint_aztec"),
-        "tab_mahabote": t("sys_hint_mahabote"),
-        "tab_wariga": t("sys_hint_wariga"),
-        "tab_jawa_weton": t("sys_hint_jawa_weton"),
-        "tab_polynesian": t("sys_hint_polynesian"),
-        "tab_decans": t("sys_hint_decans"),
-        "tab_nadi": t("sys_hint_nadi"),
-        "tab_jaimini": t("sys_hint_jaimini"),
-        "tab_zurkhai": t("sys_hint_zurkhai"),
-        "tab_tibetan": t("sys_hint_tibetan"),
-        "tab_nine_star_ki": t("sys_hint_nine_star_ki"),
-        "tab_hellenistic": t("sys_hint_hellenistic"),
-        "tab_babylonian": t("sys_hint_babylonian"),
-        "tab_sumerian": t("sys_hint_sumerian"),
-        "tab_sukkayodo": t("sys_hint_sukkayodo"),
-        "tab_chinstar": t("sys_hint_chinstar"),
-        "tab_twelve_ci": t("sys_hint_twelve_ci"),
-        "tab_cetian_ziwei": t("sys_hint_cetian_ziwei"),
-        "tab_damo": t("sys_hint_damo"),
-        "tab_acg": t("sys_hint_acg"),
-        "tab_uranian": t("sys_hint_uranian"),
-        "tab_cosmobiology": t("sys_hint_cosmobiology"),
-        "tab_harmonic": t("sys_hint_harmonic"),
-        "tab_liuren": t("sys_hint_liuren"),
-        "tab_fendjing": t("sys_hint_fendjing"),
-        "tab_taiyi": t("sys_hint_taiyi"),
-        "tab_qimen_luming": t("sys_hint_qimen_luming"),
-        "tab_celtic_tree": t("sys_hint_celtic_tree"),
-        "tab_sabian": t("sys_hint_sabian"),
-        "tab_persian": t("sys_hint_persian"),
-        "tab_persian_deep": t("sys_hint_persian_deep"),
-        "tab_kp": t("sys_hint_kp"),
-        "tab_tieban": t("sys_hint_tieban"),
-        "tab_shaozi": t("sys_hint_shaozi"),
-        "tab_tojeong": t("sys_hint_tojeong"),
-        "tab_khmer": t("sys_hint_khmer"),
-        "tab_taixuan": t("sys_hint_taixuan"),
-        "tab_wuyunliuqi": t("sys_hint_wuyunliuqi"),
-        "tab_picatrix_behenian": t("sys_hint_picatrix_behenian"),
-        "tab_rectification": t("sys_hint_rectification"),
-        "tab_trutine_of_hermes": t("sys_hint_trutine_of_hermes"),
-        "tab_esoteric": t("sys_hint_esoteric"),
-        "tab_medical_astrology": t("sys_hint_medical_astrology"),
-        "tab_byzantine_astrology": t("sys_hint_byzantine_astrology"),
-        "tab_human_design": t("sys_hint_human_design"),
-        "tab_shanghan_qianfa": t("sys_hint_shanghan_qianfa"),
-        "tab_beiji": t("sys_hint_beiji"),
-        "tab_nanji": t("sys_hint_nanji"),
-        "tab_bazi": t("sys_hint_bazi"),
-        "tab_chunzi": t("sys_hint_chunzi"),
-        "tab_horary": t("sys_hint_horary"),
-        "tab_electional": t("sys_hint_electional"),
-        "tab_liuyao_lifetime": t("sys_hint_liuyao_lifetime"),
-        "tab_primary_directions": t("sys_hint_primary_directions"),
-        "tab_mundane": t("sys_hint_mundane"),
-    }
-
-    _BEGINNER_SYSTEMS = {"tab_western", "tab_ziwei"}
     _cur_lang = st.session_state.get("lang", "zh")
-
-    # Resolve current selection - only if already selected
-    _selected_system = st.session_state.get("_system_select", None)
-
-    # Filter systems by search query
-    _search_q = _system_search.strip().lower() if _system_search else ""
-
-    # Render categorised icon card grids inside collapsible expanders
-    for _cat_key, _cat_systems in _SYSTEM_CATEGORIES:
-        # Filter systems matching search
-        if _search_q:
-            _filtered = [
-                s for s in _cat_systems
-                if _search_q in _SYSTEM_LABELS.get(s, "").lower()
-                or _search_q in _SYSTEM_HINTS.get(s, "").lower()
-            ]
-            if not _filtered:
-                continue
-        else:
-            _filtered = _cat_systems
-
-        # Determine if this category contains the active system
-        _cat_has_active = _selected_system is not None and _selected_system in _filtered
-        _cat_icon = _CATEGORY_ICONS.get(_cat_key, "📌")
-        _cat_label = f"{_cat_icon} {t(_cat_key)}"
-
-        with st.expander(_cat_label, expanded=_cat_has_active or bool(_search_q)):
-            # Functional buttons for system selection
-            for _sk in _filtered:
-                _is_active = (_sk == _selected_system)
-                _btn_type = "primary" if _is_active else "secondary"
-                _badge = ""
-                if _sk in _BEGINNER_SYSTEMS:
-                    _badge_text = auto_cn("推薦") if _cur_lang in ("zh", "zh_cn") else "Start here"
-                    _badge = f' <span class="beginner-badge">{_badge_text}</span>'
-                if st.button(
-                    f"{_SYSTEM_LABELS[_sk]}",
-                    key=f"_sys_btn_{_sk}",
-                    width="stretch",
-                    type=_btn_type,
-                ):
-                    st.session_state["_system_select"] = _sk
-                    _selected_system = _sk
-                    st.rerun()
+    _selected_system = st.session_state.get(SessionKeys.SYSTEM_SELECT, None)
+    _selected_system = render_system_selector(
+        st_module=st,
+        t=t,
+        search_query=_system_search,
+        current_system=_selected_system,
+        lang=_cur_lang,
+    )
 
     # ── History of Astrology link ─────────────────────────────
     if st.button(
@@ -1828,6 +1636,48 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
 _render_ai_button = _render_ai_chat
 
 
+def _init_execution_registry_once() -> None:
+    """Register Phase 1 executable handlers once per app run."""
+    if EXECUTION_REGISTRY.has_handler("tab_ziwei"):
+        return
+    EXECUTION_REGISTRY.register(
+        build_ziwei_handler(
+            compute_ziwei_chart=compute_ziwei_chart,
+            render_ziwei_chart=render_ziwei_chart,
+            ai_button_sink=_render_ai_button,
+        )
+    )
+
+
+def _resolve_birth_params(
+    *,
+    confirmed_params: dict[str, Any] | None,
+    confirmed_gender: str,
+    birth_date_val: date,
+    birth_time_val: time,
+    timezone_val: float,
+    latitude_val: float,
+    longitude_val: float,
+    location_name_val: str,
+    fallback_gender: str,
+) -> BirthChartParams:
+    """Resolve unified birth parameters from confirmed/session/live widget values."""
+    if confirmed_params:
+        return BirthChartParams.from_dict(
+            confirmed_params,
+            gender=confirmed_gender or fallback_gender,
+        )
+    return build_birth_params(
+        birth_date=birth_date_val,
+        birth_time=birth_time_val,
+        timezone=timezone_val,
+        latitude=latitude_val,
+        longitude=longitude_val,
+        location_name=location_name_val,
+        gender=fallback_gender,
+    )
+
+
 def _render_global_ai_chat():
     """Render the fixed-bottom AI chat panel using stored chart context.
 
@@ -2032,27 +1882,30 @@ if "_system_select" not in st.session_state:
 # Use confirmed params (submitted via form) when available, else fall back to
 # current widget values so the chart still renders on first load.
 _confirmed = st.session_state.get("_confirmed_params")
-if _confirmed:
-    _params = _confirmed
-    gender = st.session_state.get("_confirmed_gender", gender)
-    # Re-extract local convenience variables from confirmed params
-    birth_date = date(_params["year"], _params["month"], _params["day"])
-    birth_time = time(_params["hour"], _params["minute"])
-    input_tz  = _params["timezone"]
-    input_lat = _params["latitude"]
-    input_lon = _params["longitude"]
-    location_name = _params.get("location_name", location_name)
-else:
-    _params = dict(
-        year=birth_date.year, month=birth_date.month, day=birth_date.day,
-        hour=birth_time.hour, minute=birth_time.minute,
-        timezone=input_tz, latitude=input_lat, longitude=input_lon,
-        location_name=location_name,
-    )
+_birth_params = _resolve_birth_params(
+    confirmed_params=_confirmed,
+    confirmed_gender=st.session_state.get(SessionKeys.CONFIRMED_GENDER, gender),
+    birth_date_val=birth_date,
+    birth_time_val=birth_time,
+    timezone_val=input_tz,
+    latitude_val=input_lat,
+    longitude_val=input_lon,
+    location_name_val=location_name,
+    fallback_gender=gender,
+)
+_params = _birth_params.to_dict()
+gender = _birth_params.gender
+birth_date = date(_birth_params.year, _birth_params.month, _birth_params.day)
+birth_time = time(_birth_params.hour, _birth_params.minute)
+input_tz = _birth_params.timezone
+input_lat = _birth_params.latitude
+input_lon = _birth_params.longitude
+location_name = _birth_params.location_name
+
 # Store params in session_state for lazy per-tab computation
-st.session_state["_calc_params"] = _params
-st.session_state["_calc_gender"] = gender
-st.session_state["_calculated"] = True
+st.session_state[SessionKeys.CALC_PARAMS] = _params
+st.session_state[SessionKeys.CALC_GENDER] = gender
+st.session_state[SessionKeys.CALCULATED] = True
 
 _is_calculated = True
 
@@ -2085,6 +1938,47 @@ with _natal_tab:
         st.html(_copy_js)
 
 with _natal_tab:
+    _init_execution_registry_once()
+    _engine_options: dict[str, Any] = {}
+    if _selected_system == "tab_ziwei":
+        _ziwei_col1, _ziwei_col2 = st.columns([3, 1])
+        with _ziwei_col2:
+            _vietnam_mode = st.toggle(
+                "🇻🇳 越南 Tử Vi 模式",
+                value=st.session_state.get("_ziwei_vietnam_mode", False),
+                help="啟用越南 Tử Vi Đẩu Số 模式：以貓代兔、融入越南佛教與農耕文化詮釋",
+                key="_ziwei_vietnam_toggle",
+            )
+            st.session_state["_ziwei_vietnam_mode"] = _vietnam_mode
+            _engine_options["vietnam_mode"] = _vietnam_mode
+        with _ziwei_col1:
+            if _vietnam_mode:
+                st.markdown(
+                    '<span style="background:#DA251D;color:#FFCD00;'
+                    'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
+                    '🇻🇳 越南 Tử Vi Đẩu Số 模式已啟用</span>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    '<span style="background:#1a1a2e;color:#c8a96e;'
+                    'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
+                    '🌟 中國紫微斗數模式</span>',
+                    unsafe_allow_html=True,
+                )
+
+    _meta = get_system(_selected_system or "")
+    _spinner_key = _meta.spinner_key if _meta else "info_calc_prompt"
+    _engine_handled = _is_calculated and EXECUTION_REGISTRY.run_system(
+        system_id=_selected_system or "",
+        params=_birth_params,
+        options=_engine_options,
+        spinner_text=t(_spinner_key),
+        st_module=st,
+        on_error=lambda _e: (st.error(f"{t('error_tab_compute')}：{_e}"), st.exception(_e)),
+    )
+
+if not _engine_handled:
     # --- 七政四餘（中國） ---
     if _selected_system == "tab_chinese":
         if _is_calculated:
