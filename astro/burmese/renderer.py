@@ -7,11 +7,8 @@ from __future__ import annotations
 
 import math
 from html import escape
-from typing import Literal
 
-from .mahabote import BurmeseMahaboteChart
-
-Language = Literal["zh", "en"]
+from .mahabote import BurmeseMahaboteChart, Language
 
 
 def build_mahabote_wheel_svg(chart: BurmeseMahaboteChart, lang: Language = "zh", size: int = 520) -> str:

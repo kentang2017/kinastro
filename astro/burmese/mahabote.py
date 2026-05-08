@@ -13,13 +13,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, TypedDict
 
 Language = Literal["zh", "en"]
 
 THINGYAN_CUTOFF_OVERRIDES: Dict[int, int] = {
     # Optional year-specific override for Myanmar New Year day in April.
     # Default behavior (no override): April 17.
+    # Example: {2024: 16}
 }
 
 MAHABOTE_HOUSES: List[Dict[str, str]] = [
@@ -161,6 +162,22 @@ WEEKDAY_TO_SYMBOL_KEY = {
 
 SYMBOL_INDEX = {item["key"]: i for i, item in enumerate(SYMBOLS_8)}
 SYMBOL_BY_KEY = {item["key"]: item for item in SYMBOLS_8}
+WEEKDAY_BASE_KEY = {
+    0: "sunday",
+    1: "monday",
+    2: "tuesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+}
+
+
+class BirthWeekdayInfo(TypedDict):
+    weekday_index: int
+    is_wednesday_pm: bool
+    weekday_key: str
+    weekday_name_en: str
+    weekday_name_zh: str
 
 
 @dataclass(frozen=True)
@@ -241,7 +258,7 @@ def gregorian_to_myanmar_year(year: int, month: int, day: int) -> int:
     return year - 639
 
 
-def birth_weekday_info(year: int, month: int, day: int, hour: int) -> Dict[str, object]:
+def birth_weekday_info(year: int, month: int, day: int, hour: int) -> BirthWeekdayInfo:
     """Return weekday split into 8 Mahabote symbols (Wednesday AM/PM split)."""
     wd = date(year, month, day).weekday()  # Mon=0..Sun=6
     idx = (wd + 1) % 7  # Sun=0..Sat=6
@@ -258,8 +275,7 @@ def birth_weekday_info(year: int, month: int, day: int, hour: int) -> Dict[str, 
         name_en = "Wednesday AM"
         name_zh = "星期三上午"
     else:
-        keys = ["sunday", "monday", "tuesday", "wednesday_am", "thursday", "friday", "saturday"]
-        key = keys[idx]
+        key = WEEKDAY_BASE_KEY[idx]
         name_en = names_en[idx]
         name_zh = names_zh[idx]
 
