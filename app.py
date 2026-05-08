@@ -191,6 +191,7 @@ from astro.system_registry import get_system
 from ui.state import SessionKeys, init_session_state_defaults
 from ui.components.birth_form import BirthChartParams, build_birth_params
 from ui.components.system_selector import render_system_selector
+from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
 
@@ -729,16 +730,17 @@ def _render_bphs_result(bphs_result):
         st.caption(f"💡 {auto_cn(note)}")
 
 
-# ── Language switcher (dropdown above page title) ───────────────
+# ── Language switcher (prominent top control) ───────────────────
 _cur_lang = st.session_state.get("lang", "zh")
 _lang_labels = ["🌐 繁體中文", "🌐 简体中文", "🌐 English"]
 _lang_codes = ["zh", "zh_cn", "en"]
 _cur_lang_idx = _lang_codes.index(_cur_lang) if _cur_lang in _lang_codes else 0
 
-_lang_spacer, _lang_drop = st.columns([4, 1])
-with _lang_drop:
+st.markdown('<div class="ka-lang-switcher">🌐 ' + t("lang_switcher_label") + "</div>", unsafe_allow_html=True)
+_lang_col1, _lang_col2, _lang_col3 = st.columns([1, 2, 1])
+with _lang_col2:
     _sel_lang = st.selectbox(
-        "🌐",
+        t("lang_switcher_label"),
         options=_lang_labels,
         index=_cur_lang_idx,
         key="_lang_select",
@@ -1263,6 +1265,7 @@ with st.sidebar:
                 st.session_state["_custom_lon"] = input_lon
                 st.session_state["_custom_tz"]  = input_tz
             # Mark that the user has confirmed the birth data
+            st.session_state["_calc_success_flash"] = True
             st.session_state["_birth_confirmed"] = True
             st.session_state["_confirmed_params"] = dict(
                 year=birth_date.year, month=birth_date.month, day=birth_date.day,
@@ -1679,6 +1682,119 @@ def _resolve_birth_params(
     )
 
 
+@st.cache_data(show_spinner=False)
+def _cached_overview_snapshot(params_payload: dict[str, Any], gender: str) -> dict[str, dict[str, str]]:
+    """Compute lightweight dashboard metrics for popular systems."""
+    out: dict[str, dict[str, str]] = {}
+
+    try:
+        west = compute_western_chart(**params_payload)
+        sun = next((p for p in getattr(west, "planets", []) if "Sun" in getattr(p, "name", "")), None)
+        sun_sign = getattr(sun, "sign_chinese", "") or getattr(sun, "sign", "") or "-"
+        out["tab_western"] = {
+            "main": f"☉ {sun_sign}",
+            "sub": f"P:{len(getattr(west, 'planets', []))} · A:{len(getattr(west, 'aspects', []))}",
+        }
+    except Exception:
+        pass
+
+    try:
+        ziwei = compute_ziwei_chart(**params_payload, gender=gender)
+        out["tab_ziwei"] = {
+            "main": f"{getattr(ziwei, 'ming_zhu', '-')}",
+            "sub": f"宮:{len(getattr(ziwei, 'palaces', []))} · 局:{getattr(ziwei, 'wu_xing_ju', '-')}",
+        }
+    except Exception:
+        pass
+
+    try:
+        chinese = compute_chart(**params_payload, gender=gender)
+        out["tab_chinese"] = {
+            "main": f"{getattr(chinese, 'solar_month', '-')}",
+            "sub": f"P:{len(getattr(chinese, 'planets', []))} · H:{len(getattr(chinese, 'houses', []))}",
+        }
+    except Exception:
+        pass
+
+    try:
+        vedic = compute_vedic_chart(**params_payload)
+        moon = next((p for p in getattr(vedic, "planets", []) if "Chandra" in getattr(p, "name", "")), None)
+        nak = getattr(moon, "nakshatra", "-")
+        out["tab_indian"] = {
+            "main": f"☾ {nak}",
+            "sub": f"P:{len(getattr(vedic, 'planets', []))} · H:{len(getattr(vedic, 'houses', []))}",
+        }
+    except Exception:
+        pass
+
+    return out
+
+
+def _build_overview_items(params_payload: dict[str, Any], gender: str) -> list[dict[str, str]]:
+    """Build rendered overview item cards in fixed priority order."""
+    snapshot = _cached_overview_snapshot(params_payload, gender)
+    ordered = ["tab_western", "tab_ziwei", "tab_chinese", "tab_indian"]
+    items: list[dict[str, str]] = []
+    for sys_id in ordered:
+        meta = get_system(sys_id)
+        metric = snapshot.get(sys_id)
+        if not meta or not metric:
+            continue
+        items.append(
+            {
+                "system_id": sys_id,
+                "icon": meta.icon,
+                "title": t(meta.tab_key),
+                "metric_main": metric.get("main", "-"),
+                "metric_sub": metric.get("sub", "-"),
+                "accent": meta.accent_color,
+            }
+        )
+    return items
+
+
+def _render_interactive_html(*, html: str, height: int, key: str) -> None:
+    """Render embedded HTML/SVG with lightweight hover + click zoom tooltip UX."""
+    component = f"""
+    <div id="{key}" class="ka-interactive-frame">
+      {html}
+      <div class="ka-svg-tip" id="{key}-tip"></div>
+    </div>
+    <script>
+    (function(){{
+      const root = document.getElementById("{key}");
+      if (!root) return;
+      const tip = document.getElementById("{key}-tip");
+      const svg = root.querySelector("svg");
+      if (!svg) return;
+      root.classList.add("ka-interactive-ready");
+      let zoomed = false;
+      svg.style.cursor = "zoom-in";
+      svg.addEventListener("click", function(){{
+        zoomed = !zoomed;
+        svg.style.transition = "transform .25s ease";
+        svg.style.transformOrigin = "50% 50%";
+        svg.style.transform = zoomed ? "scale(1.22)" : "scale(1)";
+      }});
+      svg.addEventListener("mousemove", function(e){{
+        const el = e.target;
+        const txt = (el.getAttribute("aria-label") || el.getAttribute("title") || el.textContent || "").trim();
+        if (!txt || txt.length < 2) {{
+          tip.style.opacity = "0";
+          return;
+        }}
+        tip.textContent = txt.slice(0, 52);
+        tip.style.left = (e.clientX + 12) + "px";
+        tip.style.top = (e.clientY + 12) + "px";
+        tip.style.opacity = "1";
+      }});
+      svg.addEventListener("mouseleave", function(){{ tip.style.opacity = "0"; }});
+    }})();
+    </script>
+    """
+    st.components.v1.html(component, height=height, scrolling=False)
+
+
 def _render_global_ai_chat():
     """Render the fixed-bottom AI chat panel using stored chart context.
 
@@ -1910,10 +2026,28 @@ st.session_state[SessionKeys.CALCULATED] = True
 
 _is_calculated = True
 
+# Success flash banner after each new calculation submission
+if st.session_state.get("_calc_success_flash"):
+    st.markdown(
+        f'<div class="ka-status-success">✅ {t("status_chart_ready")}</div>',
+        unsafe_allow_html=True,
+    )
+    st.session_state["_calc_success_flash"] = False
+
 # Show "loaded from share link" notice once
 if _qp_restored and not st.session_state.get("_qp_notice_shown"):
     st.success(t("share_chart_loaded"))
     st.session_state["_qp_notice_shown"] = True
+
+# Overview dashboard with popular-system key indicators
+with st.spinner(t("overview_dashboard_loading")):
+    _overview_items = _build_overview_items(_params, gender)
+render_overview_dashboard(
+    st_module=st,
+    t=t,
+    items=_overview_items,
+    current_system=_selected_system,
+)
 
 
 # No top-level tab navigation — every system renders directly on the page.
@@ -2630,24 +2764,28 @@ if not _engine_handled:
                         {t('sabian_scroll_hint')}
                     </p>
                     """
-                    st.components.v1.html(_scroll_component, height=360, scrolling=False)
+                    _render_interactive_html(
+                        html=_scroll_component,
+                        height=360,
+                        key="sabian-scroll-strip",
+                    )
 
                     st.divider()
 
                     # Detail section: use tabs for each planet (compact vertical space)
                     _tab_labels = [f"{_planet_glyphs.get(n, '')} {n}" for n, _ in _sabian_data_list]
                     _tabs = st.tabs(_tab_labels)
-                    for _tab, (_pname, _sabian) in zip(_tabs, _sabian_data_list):
+                    for _idx, (_tab, (_pname, _sabian)) in enumerate(zip(_tabs, _sabian_data_list)):
                         with _tab:
                             _svg = render_sabian_svg(
                                 _sabian['planet_longitude'],
                                 size=300,
                                 language=_sabian_lang,
                             )
-                            st.components.v1.html(
-                                f'<div style="width:100%;max-width:320px;margin:0 auto">{_svg}</div>',
+                            _render_interactive_html(
+                                html=f'<div style="width:100%;max-width:320px;margin:0 auto">{_svg}</div>',
                                 height=380,
-                                scrolling=False,
+                                key=f"sabian-detail-{_idx}",
                             )
                             st.markdown(f"*{t('sabian_formula_label')}:* {_sabian['formula']}")
                             st.markdown(f"*{t('sabian_positive_label')}:* {_sabian['positive']}")
@@ -2717,12 +2855,12 @@ if not _engine_handled:
                     
                     # 使用 st.components.v1.html 顯示 SVG（響應式高度）
                     # viewBox 500x650，使用 width: 100% 確保 PC/手機皆完整顯示
-                    st.components.v1.html(
-                        f'''<div style="width: 100%; max-width: 600px; margin: 0 auto;">
+                    _render_interactive_html(
+                        html=f'''<div style="width: 100%; max-width: 600px; margin: 0 auto;">
                             {svg_content}
                         </div>''',
                         height=720,
-                        scrolling=False
+                        key="sassanian-main-svg",
                     )
                     
                 except Exception as e:
@@ -3009,7 +3147,11 @@ if not _engine_handled:
                     # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
                     # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
                     svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
-                    st.components.v1.html(svg_chart, height=760, scrolling=False)
+                    _render_interactive_html(
+                        html=svg_chart,
+                        height=760,
+                        key="tieban-main-svg",
+                    )
 
                     # ② 核心數字卡片（HTML，手機單列）
                     _tb_lang = get_lang()
@@ -5063,10 +5205,10 @@ if not _engine_handled:
                 # Render chart via components.v1.html for full CSS/flexbox support
                 _khmer_lang = st.session_state.get("lang", "zh")
                 _khmer_html = render_khmer_chart(_khmer_chart, language=_khmer_lang)
-                st.components.v1.html(
-                    f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
+                _render_interactive_html(
+                    html=f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
                     height=1050,
-                    scrolling=False,
+                    key="khmer-main-svg",
                 )
                 # AI interpretation button
                 _render_ai_button("tab_khmer", _khmer_chart, btn_key="khmer")
