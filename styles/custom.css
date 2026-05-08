@@ -1241,7 +1241,7 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     border-radius: 12px;
     padding: 8px 10px;
     margin: 2px 0 6px 0;
-    min-height: 82px;
+    min-height: 48px;
 }
 .ka-system-card-title {
     font-size: 0.78rem;
@@ -1346,9 +1346,8 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     .ka-overview-card-sub { font-size: 0.72rem; }
     .ka-lang-switcher { margin-top: 2px; }
     .ka-system-card {
-        min-height: 72px;
+        min-height: 44px;
         padding: 8px 8px;
     }
     .ka-system-card-title { font-size: 0.72rem; }
-    .ka-system-card-desc { font-size: 0.62rem; }
 }

@@ -409,3 +409,81 @@ def render_amazigh_sky_svg(chart: AmazighChart, size: int = 520) -> str:
         )
     svg.append("</svg>")
     return "".join(svg)
+
+
+def render_amazigh_chart(chart: AmazighChart, after_chart_hook=None) -> None:
+    """Render a full Amazigh astrology chart in Streamlit."""
+    import streamlit as st
+
+    sect = "☀️ 日盤 (Day Chart)" if chart.is_day_chart else "🌙 夜盤 (Night Chart)"
+    st.info(f"**盤型 (Sect)**: {sect}")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**日期 (Date):** {chart.year}/{chart.month}/{chart.day}")
+        st.write(f"**時間 (Time):** {chart.hour:02d}:{chart.minute:02d}")
+        st.write(f"**時區 (Timezone):** UTC{chart.timezone:+.1f}")
+    with col2:
+        st.write(f"**地點 (Location):** {chart.location_name or '—'}")
+        asc_deg = chart.ascendant % 30.0
+        asc_sign_en, asc_sign_zh, _ = _sign_from_lon(chart.ascendant)
+        st.write(f"**上升點 (ASC):** {asc_sign_en} ({asc_sign_zh}) {asc_deg:.2f}°")
+        if chart.direction:
+            st.write(
+                f"**方位 (Direction):** {chart.direction.name_zh} / {chart.direction.name_en}"
+                f" · {chart.direction.season_zh} / {chart.direction.season_en}"
+            )
+
+    if after_chart_hook:
+        after_chart_hook()
+
+    st.divider()
+
+    # ── Planet positions ──────────────────────────────────────
+    st.markdown("#### 🪐 七曜位置 (Planet Positions)")
+    if chart.planets:
+        planet_rows = []
+        for p in chart.planets:
+            sign_en, sign_zh, deg_in_sign = _sign_from_lon(p.longitude)
+            retro = "℞" if p.retrograde else ""
+            planet_rows.append({
+                "星體 Planet": f"{p.name_zh} / {p.name_en}",
+                "星座 Sign": f"{sign_en} ({sign_zh})",
+                "度數 Degree": f"{deg_in_sign:.2f}°{retro}",
+                "黃道度 Longitude": f"{p.longitude:.2f}°",
+            })
+        st.dataframe(planet_rows, use_container_width=True, hide_index=True)
+
+    st.divider()
+
+    # ── Lots (Fortune Points) ─────────────────────────────────
+    st.markdown("#### ✦ 命運點 (Lots)")
+    if chart.lots:
+        lot_rows = []
+        for lot in chart.lots:
+            lot_rows.append({
+                "名稱 Name": f"{lot.name_zh} / {lot.name_en}",
+                "星座 Sign": f"{lot.sign_en} ({lot.sign_zh})",
+                "度數 Degree": f"{lot.degree_in_sign:.2f}°",
+                "含義 Meaning": lot.meaning_zh,
+            })
+        st.dataframe(lot_rows, use_container_width=True, hide_index=True)
+
+    st.divider()
+
+    # ── Fixed Stars ───────────────────────────────────────────
+    st.markdown("#### ⭐ 固定星 (Fixed Stars)")
+    if chart.fixed_stars:
+        star_rows = []
+        for star in chart.fixed_stars:
+            sign_en, sign_zh, deg_in_sign = _sign_from_lon(star.longitude)
+            star_rows.append({
+                "星名 Star": f"{star.name_zh} / {star.name_en}",
+                "星座 Constellation": star.constellation,
+                "黃道位置 Position": f"{sign_en} ({sign_zh}) {deg_in_sign:.2f}°",
+                "星等 Magnitude": f"{star.magnitude:.2f}",
+                "含義 Meaning": star.meaning_zh,
+            })
+        st.dataframe(star_rows, use_container_width=True, hide_index=True)
+
+    st.caption(chart.cultural_note)
