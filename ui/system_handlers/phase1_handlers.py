@@ -21,8 +21,9 @@ def build_ziwei_handler(*, compute_ziwei_chart, render_ziwei_chart, ai_button_si
         return compute_ziwei_chart(**params_payload, gender=params_payload.get("gender", "male"), vietnam_mode=vietnam_mode)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]):
-        payload = params.to_dict()
-        payload["gender"] = params.gender
+        # `to_dict()` intentionally preserves legacy compute kwargs only.
+        # Gender is injected separately for systems that need it.
+        payload = {**params.to_dict(), "gender": params.gender}
         return _cached_compute(payload, bool(options.get("vietnam_mode", False)))
 
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:

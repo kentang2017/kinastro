@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Callable
 
+from ui.state import SessionKeys
+
 
 def render_system_selector(
     *,
@@ -60,7 +62,7 @@ def render_system_selector(
                     help=t(sys.hint_key),
                 ):
                     selected_system = sys.id
-                    st_module.session_state["_system_select"] = selected_system
+                    st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
                     st_module.rerun()
                 if sys.id in beginner_systems and lang in ("zh", "zh_cn"):
                     st_module.caption("🌟 推薦入門")

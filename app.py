@@ -1969,13 +1969,16 @@ with _natal_tab:
 
     _meta = get_system(_selected_system or "")
     _spinner_key = _meta.spinner_key if _meta else "info_calc_prompt"
+    def _engine_error_handler(err: Exception) -> None:
+        st.error(f"{t('error_tab_compute')}：{err}")
+        st.exception(err)
     _engine_handled = _is_calculated and EXECUTION_REGISTRY.run_system(
         system_id=_selected_system or "",
         params=_birth_params,
         options=_engine_options,
         spinner_text=t(_spinner_key),
         st_module=st,
-        on_error=lambda _e: (st.error(f"{t('error_tab_compute')}：{_e}"), st.exception(_e)),
+        on_error=_engine_error_handler,
     )
 
 if not _engine_handled:
