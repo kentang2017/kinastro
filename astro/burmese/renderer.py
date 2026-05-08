@@ -10,15 +10,27 @@ from html import escape
 
 from .mahabote import BurmeseMahaboteChart, Language
 
+WHEEL_START_ANGLE_DEGREES = -157.5  # Centers the NE segment at top-right, then clockwise.
+
 
 def build_mahabote_wheel_svg(chart: BurmeseMahaboteChart, lang: Language = "zh", size: int = 520) -> str:
+    """Build a phase-1 Burmese Mahabote 8-segment wheel SVG.
+
+    Parameters
+    ----------
+    chart : BurmeseMahaboteChart
+        Precomputed Mahabote phase-1 chart data.
+    lang : {"zh", "en"}
+        Output label language for direction/planet/house text.
+    size : int
+        SVG canvas size in pixels (width = height = size).
+    """
     cx, cy = size / 2, size / 2
     r_outer = size * 0.46
     r_inner = size * 0.2
     r_symbol = size * 0.34
     r_label = size * 0.41
     r_animal = size * 0.27
-    start_offset = -67.5 - 90
 
     title = "緬甸 Mahabote 八曜輪盤" if lang == "zh" else "Burmese Mahabote 8-Symbol Wheel"
 
@@ -29,9 +41,9 @@ def build_mahabote_wheel_svg(chart: BurmeseMahaboteChart, lang: Language = "zh",
     ]
 
     for idx, sec in enumerate(chart.wheel_symbols):
-        a0 = math.radians(start_offset + idx * 45)
-        a1 = math.radians(start_offset + (idx + 1) * 45)
-        am = math.radians(start_offset + idx * 45 + 22.5)
+        a0 = math.radians(WHEEL_START_ANGLE_DEGREES + idx * 45)
+        a1 = math.radians(WHEEL_START_ANGLE_DEGREES + (idx + 1) * 45)
+        am = math.radians(WHEEL_START_ANGLE_DEGREES + idx * 45 + 22.5)
 
         x0o, y0o = cx + r_outer * math.cos(a0), cy + r_outer * math.sin(a0)
         x1o, y1o = cx + r_outer * math.cos(a1), cy + r_outer * math.sin(a1)

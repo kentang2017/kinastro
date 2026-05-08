@@ -16,12 +16,28 @@ from datetime import date
 from typing import Dict, List, Literal, Optional, TypedDict
 
 Language = Literal["zh", "en"]
+DEFAULT_THINGYAN_CUTOFF_DAY = 17
 
 THINGYAN_CUTOFF_OVERRIDES: Dict[int, int] = {
     # Optional year-specific override for Myanmar New Year day in April.
-    # Default behavior (no override): April 17.
+    # Default behavior (no override): DEFAULT_THINGYAN_CUTOFF_DAY (April 17).
     # Example: {2024: 16}
 }
+
+class SymbolInfo(TypedDict):
+    key: str
+    weekday: str
+    weekday_number: int
+    direction: str
+    direction_zh: str
+    planet: str
+    planet_symbol: str
+    planet_zh: str
+    animal: str
+    animal_zh: str
+    animal_icon: str
+    color: str
+
 
 MAHABOTE_HOUSES: List[Dict[str, str]] = [
     {"key": "bhin", "name_zh": "本命宮", "name_en": "Bhin", "theme_zh": "性格", "theme_en": "Character"},
@@ -34,7 +50,7 @@ MAHABOTE_HOUSES: List[Dict[str, str]] = [
     {"key": "kamma", "name_zh": "業力宮", "name_en": "Kamma", "theme_zh": "業力", "theme_en": "Karma"},
 ]
 
-SYMBOLS_8: List[Dict[str, object]] = [
+SYMBOLS_8: List[SymbolInfo] = [
     {
         "key": "sun",
         "weekday": "sunday",
@@ -223,7 +239,7 @@ class BurmeseMahaboteChart:
     birth_house_index: int = 0
 
     houses: List[HousePlacement] = field(default_factory=list)
-    wheel_symbols: List[Dict[str, object]] = field(default_factory=list)
+    wheel_symbols: List[SymbolInfo] = field(default_factory=list)
 
     def summary(self, lang: Language = "zh") -> str:
         if lang == "en":
@@ -243,7 +259,7 @@ class BurmeseMahaboteChart:
 
 def _thingyan_cutoff_day(year: int) -> int:
     """Return the Myanmar New Year day in April used for traditional conversion."""
-    return THINGYAN_CUTOFF_OVERRIDES.get(year, 17)
+    return THINGYAN_CUTOFF_OVERRIDES.get(year, DEFAULT_THINGYAN_CUTOFF_DAY)
 
 
 def gregorian_to_myanmar_year(year: int, month: int, day: int) -> int:
