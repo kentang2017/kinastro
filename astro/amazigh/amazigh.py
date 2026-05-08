@@ -16,7 +16,7 @@ import json
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 import swisseph as swe
 
@@ -48,7 +48,17 @@ _ZODIAC_SIGNS = [
     ("Pisces", "雙魚座"),
 ]
 
-_DIRECTION_SECTORS: List[Dict[str, str | float]] = [
+class DirectionSector(TypedDict):
+    key: str
+    name_en: str
+    name_zh: str
+    az_start: float
+    az_end: float
+    season_en: str
+    season_zh: str
+
+
+_DIRECTION_SECTORS: List[DirectionSector] = [
     {"key": "N", "name_en": "North", "name_zh": "北方", "az_start": 337.5, "az_end": 22.5, "season_en": "Winter", "season_zh": "冬季"},
     {"key": "NE", "name_en": "Northeast", "name_zh": "東北", "az_start": 22.5, "az_end": 67.5, "season_en": "Spring", "season_zh": "春季"},
     {"key": "E", "name_en": "East", "name_zh": "東方", "az_start": 67.5, "az_end": 112.5, "season_en": "Spring", "season_zh": "春季"},
@@ -58,6 +68,21 @@ _DIRECTION_SECTORS: List[Dict[str, str | float]] = [
     {"key": "W", "name_en": "West", "name_zh": "西方", "az_start": 247.5, "az_end": 292.5, "season_en": "Autumn", "season_zh": "秋季"},
     {"key": "NW", "name_en": "Northwest", "name_zh": "西北", "az_start": 292.5, "az_end": 337.5, "season_en": "Winter", "season_zh": "冬季"},
 ]
+
+_SVG_BG_INNER = "#162238"
+_SVG_BG_OUTER = "#0b1220"
+_SVG_BORDER = "#7FA2C8"
+_SVG_CARDINAL = "#D8E6F4"
+_SVG_STAR = "#F5D38B"
+_SVG_LOT = "#7BC8A4"
+_SVG_CENTER_FILL = "#101a2d"
+_SVG_CENTER_STROKE = "#8CAFD0"
+_SVG_CENTER_TEXT = "#E8EEF7"
+_SVG_CENTER_SUBTEXT = "#A6C3E0"
+_SVG_SECTOR_COLORS = ["#203046", "#273754", "#2D3D5B", "#334462"]
+_MIN_STAR_RADIUS = 2.0
+_STAR_RADIUS_BASE = 5.4
+_STAR_MAGNITUDE_CLAMP = 3.5
 
 
 @dataclass
@@ -175,7 +200,7 @@ def _sign_from_lon(lon: float) -> Tuple[str, str, float]:
 
 
 def _is_day_chart(sun_lon: float, asc: float) -> bool:
-    return ((_norm(sun_lon - asc) + 360.0) % 360.0) < 180.0
+    return _norm(sun_lon - asc) < 180.0
 
 
 def _resolve_direction(azimuth: float) -> AmazighDirection:
@@ -328,17 +353,16 @@ def render_amazigh_sky_svg(chart: AmazighChart, size: int = 520) -> str:
     r_ring = r_outer * 0.86
     r_star = r_outer * 0.64
 
-    sector_colors = ["#203046", "#273754", "#2D3D5B", "#334462"]
     svg: List[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 {size} {size}">',
         "<defs>",
         '<radialGradient id="amazighBg" cx="50%" cy="50%" r="50%">',
-        '<stop offset="0%" stop-color="#162238" />',
-        '<stop offset="100%" stop-color="#0b1220" />',
+        f'<stop offset="0%" stop-color="{_SVG_BG_INNER}" />',
+        f'<stop offset="100%" stop-color="{_SVG_BG_OUTER}" />',
         "</radialGradient>",
         '<filter id="glow"><feGaussianBlur stdDeviation="1.6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>',
         "</defs>",
-        f'<circle cx="{cx}" cy="{cy}" r="{r_outer}" fill="url(#amazighBg)" stroke="#7FA2C8" stroke-width="1.5"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_outer}" fill="url(#amazighBg)" stroke="{_SVG_BORDER}" stroke-width="1.5"/>',
     ]
 
     for i in range(8):
@@ -348,39 +372,39 @@ def render_amazigh_sky_svg(chart: AmazighChart, size: int = 520) -> str:
         x2, y2 = cx + r_ring * math.cos(a1), cy + r_ring * math.sin(a1)
         svg.append(
             f'<path d="M {cx} {cy} L {x1:.1f} {y1:.1f} A {r_ring:.1f} {r_ring:.1f} 0 0 1 {x2:.1f} {y2:.1f} Z" '
-            f'fill="{sector_colors[i % len(sector_colors)]}" fill-opacity="0.22" />'
+            f'fill="{_SVG_SECTOR_COLORS[i % len(_SVG_SECTOR_COLORS)]}" fill-opacity="0.22" />'
         )
 
     for cardinal, deg in [("N", 270), ("E", 0), ("S", 90), ("W", 180)]:
         rad = math.radians(deg)
         tx, ty = cx + (r_outer - 20) * math.cos(rad), cy + (r_outer - 20) * math.sin(rad)
         svg.append(
-            f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="middle" fill="#D8E6F4" '
+            f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="middle" fill="{_SVG_CARDINAL}" '
             f'font-size="13" font-weight="700">{cardinal}</text>'
         )
 
     for star in chart.fixed_stars:
         ang = math.radians(star.longitude - 90.0)
         px, py = cx + r_star * math.cos(ang), cy + r_star * math.sin(ang)
-        radius = max(2.0, 5.4 - min(star.magnitude, 3.5))
+        radius = max(_MIN_STAR_RADIUS, _STAR_RADIUS_BASE - min(star.magnitude, _STAR_MAGNITUDE_CLAMP))
         svg.append(
-            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{radius:.1f}" fill="#F5D38B" fill-opacity="0.95" filter="url(#glow)" />'
+            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{radius:.1f}" fill="{_SVG_STAR}" fill-opacity="0.95" filter="url(#glow)" />'
         )
 
     for lot in chart.lots[:4]:
         ang = math.radians(lot.longitude - 90.0)
         px, py = cx + (r_star * 0.84) * math.cos(ang), cy + (r_star * 0.84) * math.sin(ang)
-        svg.append(f'<rect x="{px-2:.1f}" y="{py-2:.1f}" width="4" height="4" fill="#7BC8A4" />')
+        svg.append(f'<rect x="{px-2:.1f}" y="{py-2:.1f}" width="4" height="4" fill="{_SVG_LOT}" />')
 
     svg.append(
-        f'<circle cx="{cx}" cy="{cy}" r="{r_outer*0.22:.1f}" fill="#101a2d" stroke="#8CAFD0" stroke-width="1.1"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="{r_outer*0.22:.1f}" fill="{_SVG_CENTER_FILL}" stroke="{_SVG_CENTER_STROKE}" stroke-width="1.1"/>'
     )
     svg.append(
-        f'<text x="{cx}" y="{cy-4}" text-anchor="middle" fill="#E8EEF7" font-size="12">Amazigh Sky</text>'
+        f'<text x="{cx}" y="{cy-4}" text-anchor="middle" fill="{_SVG_CENTER_TEXT}" font-size="12">Amazigh Sky</text>'
     )
     if chart.direction:
         svg.append(
-            f'<text x="{cx}" y="{cy+12}" text-anchor="middle" fill="#A6C3E0" font-size="10">'
+            f'<text x="{cx}" y="{cy+12}" text-anchor="middle" fill="{_SVG_CENTER_SUBTEXT}" font-size="10">'
             f'{chart.direction.name_en} · {chart.direction.season_en}</text>'
         )
     svg.append("</svg>")
