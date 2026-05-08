@@ -1073,6 +1073,16 @@ _reg(System(
     origin_culture="Burmese",
     tradition_period="Traditional Burmese",
     ai_persona_key="info_mahabote_prompt",
+    extra={
+        "phase1_core_module_example": "astro.burmese.mahabote",
+        "phase1_renderer_module_example": "astro.burmese.renderer",
+        "phase1_features": [
+            "myanmar_year_with_thingyan_cutoff",
+            "eight_symbol_weekday_split_wednesday_am_pm",
+            "fixed_eight_house_mapping",
+            "basic_svg_wheel_renderer",
+        ],
+    },
 ))
 
 _reg(System(
