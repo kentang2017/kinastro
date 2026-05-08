@@ -192,8 +192,42 @@ from astro.mundane import render_streamlit as render_mundane_chart
 def render_homepage():
     """Render the aesthetic homepage landing page."""
 
+    _categories = [
+        ("☯️", "三式神機", "San Shi Divination",
+         ["大六壬", "太乙神數", "奇門祿命"],
+         "#C9A84C", "rgba(201,168,76,0.12)", "rgba(201,168,76,0.28)"),
+        ("🏮", "中式占星", "Chinese Systems",
+         ["紫微斗數", "七政四餘", "萬化仙禽", "十二星次", "策天飛星", "達摩一掌經", "鐵板神數", "邵子神數",
+          "鬼谷分定經", "太玄數占星", "五運六氣", "六爻終身卦", "北極神數", "南極神數", "子平八字", "蠢子數"],
+         "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
+        ("🏛️", "西洋占星", "Western Astrology",
+         ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "宇宙生物學", "和諧占星",
+          "古典主限推運", "凱爾特樹", "出生時間校正", "赫密士前世盤", "靈性占星", "拜占庭占星", "人間圖", "世俗占星"],
+         "#7B9ED9", "rgba(123,158,217,0.1)", "rgba(123,158,217,0.22)"),
+        ("🪷", "印度占星", "Vedic Jyotish",
+         ["Jyotish", "紅皮書 Lal Kitab", "納迪占星", "Jaimini", "KP 占星"],
+         "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
+        ("🌏", "亞洲體系", "Asian Systems",
+         ["土亭數", "宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "祖爾海", "藏傳時輪金剛",
+          "九星氣學", "高棉占星", "波利尼西亞"],
+         "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
+        ("🕌", "中東體系", "Middle Eastern",
+         ["卡巴拉", "猶太 Mazzalot", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法"],
+         "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
+        ("🏺", "古代文明", "Ancient Civilizations",
+         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞"],
+         "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
+        ("⚕️", "醫占", "Medical Astrology",
+         ["醫學占星", "傷寒鈐法"],
+         "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
+        ("📜", "傳統卜卦／擇日", "Horary & Electional",
+         ["傳統卜卦占星", "擇日占星"],
+         "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
+    ]
+    _total_systems = sum(len(systems) for _, _, _, systems, _, _, _ in _categories)
+
     # ── Hero Section ──────────────────────────────────────────
-    st.markdown(textwrap.dedent("""
+    st.markdown(textwrap.dedent(f"""
     <div class="hp-hero">
       <div class="hp-constellation">
         <svg width="100%" height="100%" viewBox="0 0 900 420"
@@ -246,17 +280,17 @@ def render_homepage():
         <h1 class="hp-title">
           <span class="hp-title-line1">堅占星</span>
           <span class="hp-title-line2">KinAstro</span>
-          <span class="hp-title-sub">六十五體系占星排盤平台</span>
+          <span class="hp-title-sub">{_total_systems} 體系占星排盤平台</span>
         </h1>
         <p class="hp-desc">
           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
-          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、醫學占星、<strong style="color:#A78BFA;">拜占庭占星</strong>到傷寒鈐法、<strong style="color:#A78BFA;">傳統卜卦占星</strong>到蠢子數、擇日占星——<br/>
-          堅占星將<strong style="color:#EAB308;font-weight:600;">全球六十五種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+          紅皮書 Lal Kitab、薩珊波斯占星、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、<br/>
+          傳統卜卦占星、擇日占星到蠢子數——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
         </p>
         <div class="hp-stats">
           <div class="hp-stat">
-            <div class="hp-stat-num">65</div>
+            <div class="hp-stat-num">{_total_systems}</div>
             <div class="hp-stat-label">占星體系 Systems</div>
           </div>
           <div class="hp-stat-sep">✦</div>
@@ -277,36 +311,6 @@ def render_homepage():
 
     # ── System Categories Showcase ────────────────────────────
     st.markdown('<div class="hp-section-title">占星體系總覽</div>', unsafe_allow_html=True)
-
-    _categories = [
-        ("☯️", "三式神機", "San Shi Divination",
-         ["大六壬", "太乙神數", "奇門遁甲"],
-         "#C9A84C", "rgba(201,168,76,0.12)", "rgba(201,168,76,0.28)"),
-        ("🏮", "中式占星", "Chinese Systems",
-         ["七政四餘", "紫微斗數", "萬化仙禽", "鐵板神數", "達摩一掌經", "十二星次", "太玄數占星", "鬼谷分定經", "六爻終身卦", "北極神數", "南極神數", "子平八字", "蠢子數"],
-         "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
-        ("🏛️", "西洋占星", "Western Astrology",
-         ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "凱爾特樹", "宇宙生物學", "出生時間校正", "和諧占星", "古典主限推運", "赫密士前世盤", "靈性占星", "人間圖"],
-         "#7B9ED9", "rgba(123,158,217,0.1)", "rgba(123,158,217,0.22)"),
-        ("🪷", "印度占星", "Vedic Jyotish",
-         ["Jyotish", "納迪占星", "Jaimini", "KP 占星", "紅皮書 Lal Kitab"],
-         "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
-        ("🌏", "亞洲體系", "Asian Systems",
-         ["宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "波利尼西亞", "祖爾海", "藏曆", "九星氣學"],
-         "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
-        ("🕌", "中東體系", "Middle Eastern",
-         ["卡巴拉", "猶太星宿", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "葉門占星", "Picatrix 占星魔法"],
-         "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
-        ("🏺", "古代文明", "Ancient Civilizations",
-         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞"],
-         "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
-        ("⚕️", "醫占", "Medical Astrology",
-         ["拜占庭占星", "醫學占星", "傷寒鈐法"],
-         "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
-        ("📜", "傳統卜卦占星", "Traditional Horary",
-         ["西洋卜卦", "吠陀問卜", "擇日占星"],
-         "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
-    ]
 
     _cat_html = '<div class="hp-cat-grid">'
     for icon, title_zh, title_en, systems, accent, bg, border_col in _categories:
@@ -329,8 +333,8 @@ def render_homepage():
     st.markdown('<div class="hp-section-title">核心特色</div>', unsafe_allow_html=True)
 
     _features = [
-        ("🔮", "六十五體系合一",
-         "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球六十五種占星體系"),
+        ("🔮", f"{_total_systems} 體系合一",
+         f"在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球 {_total_systems} 種占星體系"),
         ("🪐", "精密天文計算",
          "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算"),
         ("🤖", "AI 智慧分析",
