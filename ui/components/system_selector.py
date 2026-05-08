@@ -74,20 +74,27 @@ def render_system_selector(
                 )
                 with (col_a if idx % 2 == 0 else col_b):
                     st_module.markdown(card_html, unsafe_allow_html=True)
-                    switch_label = (
-                        "切換體系"
-                        if lang in ("zh", "zh_cn")
-                        else "Open System"
-                    )
-                    if st_module.button(
-                        "✨ " + (t("generate_chart_btn") if is_active else switch_label),
-                        key=f"_sys_btn_{sys.id}",
-                        width="stretch",
-                        type="primary" if is_active else "secondary",
-                        help=t(sys.hint_key),
-                    ):
-                        selected_system = sys.id
-                        st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
-                        st_module.rerun()
+                    if is_active:
+                        if st_module.button(
+                            "✨ " + t("generate_chart_btn"),
+                            key=f"_sys_btn_{sys.id}",
+                            width="stretch",
+                            type="primary",
+                            help=t(sys.hint_key),
+                        ):
+                            selected_system = sys.id
+                            st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
+                            st_module.rerun()
+                    else:
+                        if st_module.button(
+                            t(sys.tab_key),
+                            key=f"_sys_btn_{sys.id}",
+                            width="stretch",
+                            type="secondary",
+                            help=t(sys.hint_key),
+                        ):
+                            selected_system = sys.id
+                            st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
+                            st_module.rerun()
 
     return selected_system
