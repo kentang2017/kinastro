@@ -2038,14 +2038,16 @@ if _qp_restored and not st.session_state.get("_qp_notice_shown"):
     st.session_state["_qp_notice_shown"] = True
 
 # Overview dashboard with popular-system key indicators
-with st.spinner(t("overview_dashboard_loading")):
-    _overview_items = _build_overview_items(_params, gender)
-render_overview_dashboard(
-    st_module=st,
-    t=t,
-    items=_overview_items,
-    current_system=_selected_system,
-)
+# Only show when no specific system is selected
+if not _selected_system:
+    with st.spinner(t("overview_dashboard_loading")):
+        _overview_items = _build_overview_items(_params, gender)
+    render_overview_dashboard(
+        st_module=st,
+        t=t,
+        items=_overview_items,
+        current_system=_selected_system,
+    )
 
 
 # No top-level tab navigation — every system renders directly on the page.
