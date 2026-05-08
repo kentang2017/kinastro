@@ -75,6 +75,7 @@ from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart,
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
+from astro.amazigh import compute_amazigh_chart, render_amazigh_sky_svg
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
@@ -4113,6 +4114,37 @@ if not _engine_handled:
         else:
             st.info(t("info_maya_prompt"))
             st.markdown(t("desc_maya"))
+
+    # --- Amazigh (Berber) 北非柏柏爾占星 ---
+    elif _selected_system == "tab_amazigh":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_amazigh")):
+                    _amazigh_chart = compute_amazigh_chart(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        timezone=_p["timezone"],
+                        latitude=_p["latitude"],
+                        longitude=_p["longitude"],
+                        location_name=_p.get("location_name", ""),
+                    )
+                st.markdown(render_amazigh_sky_svg(_amazigh_chart), unsafe_allow_html=True)
+                if _amazigh_chart.direction:
+                    st.caption(
+                        f"{_amazigh_chart.direction.name_zh} / {_amazigh_chart.direction.name_en} · "
+                        f"{_amazigh_chart.direction.season_zh} / {_amazigh_chart.direction.season_en}"
+                    )
+                st.markdown(t("desc_amazigh"))
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_amazigh_prompt"))
+            st.markdown(t("desc_amazigh"))
 
     # --- 阿茲特克占星 ---
     elif _selected_system == "tab_aztec":

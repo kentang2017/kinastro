@@ -3540,6 +3540,26 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看拜占庭占星分析。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Byzantine Astrology analysis.",
     },
+    "tab_amazigh": {
+        "zh": "ⵣ 柏柏爾占星",
+        "en": "ⵣ Amazigh Astrology",
+    },
+    "desc_amazigh": {
+        "zh": "ⵣ **Amazigh（柏柏爾）占星** — 北非柏柏爾傳統啟發的星空方位占星。整合七曜位置、固定星、Lots（命運點）與方位季節象徵，呈現以方向與節令為核心的解讀框架。",
+        "en": "ⵣ **Amazigh (Berber) Astrology** — A North African Berber-inspired directional sky system integrating seven planets, fixed stars, Lots, and seasonal-direction symbolism.",
+    },
+    "spinner_amazigh": {
+        "zh": "計算柏柏爾占星盤…",
+        "en": "Computing Amazigh chart…",
+    },
+    "sys_hint_amazigh": {
+        "zh": "北非柏柏爾占星：七曜、固定星、Lots 與方位季節象徵",
+        "en": "North African Amazigh astrology: planets, fixed stars, Lots, and directional seasons",
+    },
+    "info_amazigh_prompt": {
+        "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」查看柏柏爾占星。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view Amazigh astrology.",
+    },
     "tab_shanghan_qianfa": {
         "zh": "🌿 傷寒鈐法",
         "en": "🌿 Shanghan Qianfa",
