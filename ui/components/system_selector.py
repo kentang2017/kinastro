@@ -48,19 +48,17 @@ def render_system_selector(
         cat_label = f"{CATEGORY_ICONS.get(category, '📌')} {t(category)}"
 
         with st_module.expander(cat_label, expanded=cat_has_active or bool(query)):
-            col_a, col_b = st_module.columns(2, gap="small")
-            for idx, sys in enumerate(filtered):
+            for sys in filtered:
                 is_active = sys.id == selected_system
-                with (col_a if idx % 2 == 0 else col_b):
-                    if st_module.button(
-                        t(sys.tab_key),
-                        key=f"_sys_btn_{sys.id}",
-                        width="stretch",
-                        type="primary" if is_active else "secondary",
-                        help=t(sys.hint_key),
-                    ):
-                        selected_system = sys.id
-                        st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
-                        st_module.rerun()
+                if st_module.button(
+                    t(sys.tab_key),
+                    key=f"_sys_btn_{sys.id}",
+                    width="stretch",
+                    type="primary" if is_active else "secondary",
+                    help=t(sys.hint_key),
+                ):
+                    selected_system = sys.id
+                    st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system
+                    st_module.rerun()
 
     return selected_system
