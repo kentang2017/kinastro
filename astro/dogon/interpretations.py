@@ -23,7 +23,7 @@ def build_dogon_personal_influence(
 
     influence_zh = (
         f"你的 Sirius 赤緯為 {sirius_declination:.2f}°，落於「{zone_result.label}」：{zone_zh}。"
-        f"目前位於 Sigui 50 年週期的 {naring_year_phrase(sigui, zh=True)}，與下一次 Sigui 尚有 {sigui.years_until_next:.2f} 年。"
+        f"目前位於 Sigui 50 年週期的 {nearing_year_phrase(sigui, zh=True)}，與下一次 Sigui 尚有 {sigui.years_until_next:.2f} 年。"
         f"此配置傾向在個人生命中強化『儀式記憶—祖先敘事—社群責任』三者連動。"
         f" {lat_msg_zh}"
     )
@@ -38,7 +38,7 @@ def build_dogon_personal_influence(
     return influence_zh, influence_en
 
 
-def naring_year_phrase(sigui: SiguiCycleInfo, zh: bool = True) -> str:
+def nearing_year_phrase(sigui: SiguiCycleInfo, zh: bool = True) -> str:
     if zh:
         return f"第 {sigui.years_since_previous:.2f} 年（上一輪 {sigui.previous_year}）"
     return f"year {sigui.years_since_previous:.2f} since {sigui.previous_year}"
