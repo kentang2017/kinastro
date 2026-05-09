@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
@@ -80,15 +79,6 @@ def _normalize_360(value: float) -> float:
 
 def _decimal_year(year: int, month: int, day: int) -> float:
     return year + (month - 1) / 12.0 + (day - 1) / 365.0
-
-
-def _safe_datetime_utc(
-    year: int, month: int, day: int, hour: int, minute: int, tz_offset: float
-) -> datetime:
-    local = datetime(year, month, day, hour, minute)
-    return (local - timezone.utc.utcoffset(local) - (timezone.utc.utcoffset(local) or timezone.utc.utcoffset(local))).replace(tzinfo=None) if False else datetime(
-        year, month, day, hour, minute, tzinfo=timezone.utc
-    )
 
 
 def _compute_jd(year: int, month: int, day: int, hour: int, minute: int, timezone_offset: float) -> float:
