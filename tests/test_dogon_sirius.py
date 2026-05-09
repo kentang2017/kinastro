@@ -4,6 +4,7 @@ from astro.dogon.calculator import (
     compute_dogon_sirius_chart,
     format_dogon_sirius_for_prompt,
     load_dogon_constants,
+    _resolve_zone,
 )
 
 
@@ -47,3 +48,17 @@ def test_prompt_contains_sigui_and_zone():
     prompt = format_dogon_sirius_for_prompt(chart, lang="en")
     assert "Sigui" in prompt
     assert "Zone:" in prompt
+
+
+def test_zone_resolution_all_ranges_and_out_of_band():
+    zones = load_dogon_constants()["zones"]
+    z1 = _resolve_zone(-16.0, zones)
+    z2 = _resolve_zone(2.0, zones)
+    z3 = _resolve_zone(20.0, zones)
+    z4 = _resolve_zone(60.0, zones)
+
+    assert z1.zone_id == "nommo_corridor"
+    assert z2.zone_id == "seed_axis"
+    assert z3.zone_id == "mask_horizon"
+    assert z4.zone_id is None
+    assert z4.in_zone is False

@@ -44,9 +44,15 @@ def _build_svg_fallback(chart: DogonSiriusChart, constants: dict) -> str:
         f'<circle cx="{cx}" cy="{cy}" r="{r0 * 0.66}" fill="none" stroke="{colors["stardust"]}" stroke-width="1" opacity="0.55"/>',
     ]
 
+    radius_map = {
+        "sirius_a": r0,
+        "sirius_b": r0 * 0.66,
+        "sirius_c": r0 * 0.5,
+    }
+
     for body in chart.bodies:
         cfg = body_cfg[body.key]
-        px, py = pos(body.longitude, r0 if body.key == "sirius_a" else (r0 * 0.66 if body.key == "sirius_b" else r0 * 0.5))
+        px, py = pos(body.longitude, radius_map.get(body.key, r0 * 0.5))
         lines.append(
             f'<circle cx="{px:.2f}" cy="{py:.2f}" r="{cfg["radius"]}" fill="{cfg["color"]}" opacity="0.95"/>'
         )

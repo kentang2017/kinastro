@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
@@ -78,7 +79,12 @@ def _normalize_360(value: float) -> float:
 
 
 def _decimal_year(year: int, month: int, day: int) -> float:
-    return year + (month - 1) / 12.0 + (day - 1) / 365.0
+    start = datetime(year, 1, 1)
+    current = datetime(year, month, day)
+    next_start = datetime(year + 1, 1, 1)
+    total_days = (next_start - start).days
+    elapsed_days = (current - start).days
+    return year + (elapsed_days / max(1, total_days))
 
 
 def _compute_jd(year: int, month: int, day: int, hour: int, minute: int, timezone_offset: float) -> float:

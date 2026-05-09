@@ -12,7 +12,6 @@ def build_dogon_personal_influence(
     latitude: float,
     longitude: float,
 ) -> tuple[str, str]:
-    nearing = "接近" if sigui.years_until_next <= 8 else "遠離"
     nearing_en = "approaching" if sigui.years_until_next <= 8 else "between"
 
     zone_zh = zone_result.meaning_zh
@@ -21,12 +20,9 @@ def build_dogon_personal_influence(
     lat_msg_zh = "高緯度地區可見性變化較大，建議重視節律而非單點判讀。" if abs(latitude) > 66 else "可見性條件穩定，可結合年度觀測節點。"
     lat_msg_en = "At polar/high latitudes, visibility varies strongly; prioritize ritual rhythm over single-point readings." if abs(latitude) > 66 else "Visibility is relatively stable; combine with yearly observation markers."
 
-    influence_zh = (
-        f"你的 Sirius 赤緯為 {sirius_declination:.2f}°，落於「{zone_result.label}」：{zone_zh}。"
-        f"目前位於 Sigui 50 年週期的 {nearing_year_phrase(sigui, zh=True)}，與下一次 Sigui 尚有 {sigui.years_until_next:.2f} 年。"
-        f"此配置傾向在個人生命中強化『儀式記憶—祖先敘事—社群責任』三者連動。"
-        f" {lat_msg_zh}"
-    )
+    influence_zh = f"""你的 Sirius 赤緯為 {sirius_declination:.2f}°，落於「{zone_result.label}」：{zone_zh}。
+目前位於 Sigui 50 年週期的 {nearing_year_phrase(sigui, zh=True)}，與下一次 Sigui 尚有 {sigui.years_until_next:.2f} 年。
+此配置傾向在個人生命中強化『儀式記憶—祖先敘事—社群責任』三者連動。{lat_msg_zh}"""
 
     influence_en = (
         f"Your Sirius declination is {sirius_declination:.2f}°, mapped to '{zone_result.label}': {zone_en}. "
