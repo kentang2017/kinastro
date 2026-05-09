@@ -75,6 +75,7 @@ from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart,
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
+from astro.dogon import compute_dogon_sirius_chart, render_dogon_sirius_chart
 from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_amazigh_sky_svg
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
@@ -225,7 +226,7 @@ def render_homepage():
          ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法"],
          "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
         ("🏺", "古代文明", "Ancient Civilizations",
-         ["瑪雅占星", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞"],
+         ["瑪雅占星", "多貢天狼星宇宙學", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞"],
          "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
         ("⚕️", "醫占", "Medical Astrology",
          ["醫學占星", "傷寒鈐法"],
@@ -4256,6 +4257,24 @@ if not _engine_handled:
         else:
             st.info(t("info_maya_prompt"))
             st.markdown(t("desc_maya"))
+
+    # --- Dogon Sirius Cosmology ---
+    elif _selected_system == "tab_dogon_sirius":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_dogon_sirius")):
+                    _dogon_chart = compute_dogon_sirius_chart(**_p)
+                render_dogon_sirius_chart(
+                    _dogon_chart,
+                    after_chart_hook=lambda: _render_ai_button("tab_dogon_sirius", _dogon_chart, btn_key="dogon_sirius"),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_dogon_sirius_prompt"))
+            st.markdown(t("desc_dogon_sirius"))
 
     # --- Amazigh (Berber) 北非柏柏爾占星 ---
     elif _selected_system == "tab_amazigh":
