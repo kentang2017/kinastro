@@ -1226,11 +1226,11 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
    ══════════════════════════════════════════════════════════════ */
 
 .ka-lang-switcher {
-    text-align: center;
-    font-size: 0.9rem;
+    text-align: right;
+    font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.4px;
-    margin: 2px 0 8px 0;
+    margin: 2px 0 4px 0;
     color: #e0e0ff;
 }
 
