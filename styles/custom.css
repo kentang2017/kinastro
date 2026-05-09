@@ -500,6 +500,16 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
     color: var(--ka-stellar-silver);
 }
 
+/* Sidebar system buttons: force single-column (one per row) on desktop */
+section[data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stHorizontalBlock"] {
+    flex-direction: column !important;
+}
+section[data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+    flex: 0 0 100% !important;
+    min-width: 100% !important;
+    width: 100% !important;
+}
+
 /* Active sidebar buttons */
 section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"] {
     background: linear-gradient(135deg, #7C3AED 0%, #EAB308 100%) !important;
