@@ -296,6 +296,10 @@ TRANSLATIONS = {
         "zh": "🏺 瑪雅占星",
         "en": "🏺 Maya Astrology",
     },
+    "tab_dogon_sirius": {
+        "zh": "🜂 多貢天狼星宇宙學",
+        "en": "🜂 Dogon Sirius Cosmology",
+    },
     "tab_aztec": {
         "zh": "🦅 阿茲特克占星",
         "en": "🦅 Aztec Astrology",
@@ -432,6 +436,10 @@ TRANSLATIONS = {
     "spinner_maya": {
         "zh": "正在計算瑪雅占星排盤...",
         "en": "Calculating Maya astrology chart...",
+    },
+    "spinner_dogon_sirius": {
+        "zh": "正在計算多貢天狼星宇宙學...",
+        "en": "Calculating Dogon Sirius cosmology...",
     },
     "spinner_aztec": {
         "zh": "正在計算阿茲特克占星排盤...",
@@ -861,6 +869,36 @@ Sukkayodo is used for date selection and divination of auspiciousness in daily l
 - **Haab (Civil Calendar)**: 365 days — 18 months × 20 days + 5 Wayeb nameless days
 - **Calendar Round**: Tzolkin × Haab synchronised cycle, ~52 years per round
 - **Planetary Overlay**: Western planetary positions mapped to Tzolkin energies
+""",
+    },
+    "desc_dogon_sirius": {
+        "zh": """
+### 什麼是多貢天狼星宇宙學？
+
+**Dogon Sirius Cosmology** 以馬利多貢族口傳宇宙觀為核心，聚焦 Sirius（天狼星）相關傳統：
+
+- **Sirius A / Sigu Tolo**：可見主星與儀式時間節律
+- **Sirius B / Po Tolo**：高密度「種子」象徵
+- **Sirius C / Emme Ya**：傳說性伴星，作為文化宇宙學敘事
+- **Sigui 50 年週期**：對應社群更新與祖先記憶傳承節點
+- **跨文化比較**：並列埃及、巴比倫、瑪雅等 Sirius 傳統
+
+⚠️ 本模組將相關內容呈現為文化人類學語境（含學術爭議標註），
+不主張其為現代天文學定論。
+""",
+        "en": """
+### What is Dogon Sirius Cosmology?
+
+**Dogon Sirius Cosmology** centers on Dogon (Mali) oral cosmic traditions around Sirius:
+
+- **Sirius A / Sigu Tolo**: visible principal star and ritual timing anchor
+- **Sirius B / Po Tolo**: dense “seed” symbol
+- **Sirius C / Emme Ya**: lore-level companion in cosmological narrative
+- **50-year Sigui cycle**: communal renewal and ancestral memory marker
+- **Cross-cultural comparison**: parallels with Egyptian, Babylonian, and Maya Sirius emphasis
+
+⚠️ This module presents the material as cultural anthropology (with contested claims clearly noted),
+not as settled modern astronomical fact.
 """,
     },
     "desc_aztec": {
@@ -1844,6 +1882,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_kabbalistic": {"zh": "猶太神祕主義占星", "en": "Jewish mystical astrology"},
     "sys_hint_arabic": {"zh": "伊斯蘭黃金時代占星術", "en": "Islamic Golden Age astrology"},
     "sys_hint_maya": {"zh": "瑪雅 Tzolk'in 神聖曆、Long Count 長紀年、Calendar Round 52年循環", "en": "Maya Tzolk'in sacred calendar, Long Count, Calendar Round 52-year cycle"},
+    "sys_hint_dogon_sirius": {"zh": "多貢天狼星傳統：Po Tolo、Nommo、Sigui 50 年週期", "en": "Dogon Sirius lore: Po Tolo, Nommo, and the 50-year Sigui cycle"},
     "sys_hint_aztec": {"zh": "阿茲特克文明神聖曆占卜", "en": "Aztec Tonalpohualli sacred calendar divination"},
     "sys_hint_mahabote": {"zh": "緬甸／撣族 Mahabote 深度排盤", "en": "Burmese/Shan Mahabote deep astrology"},
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
@@ -3828,6 +3867,10 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_maya_prompt": {
         "zh": "👈 請在左側輸入出生日期，點擊「開始排盤」以計算您的 Tzolk'in 日符號、Long Count 位置與完整瑪雅命盤。",
         "en": "👈 Enter your birth date on the left and click 'Calculate Chart' to discover your Tzolk'in day sign, Long Count position, and full Maya chart.",
+    },
+    "info_dogon_sirius_prompt": {
+        "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看你與 Dogon 天狼星傳統（Po Tolo／Nommo／Sigui）的連結。",
+        "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to explore your connection with Dogon Sirius traditions (Po Tolo/Nommo/Sigui).",
     },
     "tab_electional": {
         "zh": "⏳ 擇日占星（Electional / Muhurta）",

@@ -1,0 +1,111 @@
+{
+  "system": {
+    "name": "Dogon Sirius Cosmology",
+    "name_short": "dogon_sirius",
+    "culture": "Dogon (Mali)",
+    "sigui_cycle_years": 50,
+    "sigui_anchor_year": 1967,
+    "disclaimer": {
+      "zh": "本模組呈現 Dogon 口傳宇宙觀（含 Marcel Griaule 系列紀錄）作為文化知識，不等同現代天文學或歷史定論；部分內容存在學術爭議。",
+      "en": "This module presents Dogon oral cosmology (including lore documented in the Marcel Griaule corpus) as cultural knowledge, not as settled modern scientific fact; some claims remain academically contested."
+    }
+  },
+  "palette": {
+    "ochre": "#B66A2A",
+    "indigo": "#1E2957",
+    "earth": "#8F6B3F",
+    "black": "#111111",
+    "stardust": "#D9BF8B",
+    "nommo": "#4CA8A8"
+  },
+  "bodies": {
+    "sirius_a": {
+      "label": "Sirius A",
+      "dogon_name": "Sigu Tolo",
+      "color": "#F5E2B8",
+      "radius": 10,
+      "period_years": 50.0,
+      "cultural": {
+        "zh": "可見主星，與 Sigui 祭儀週期關聯。",
+        "en": "Visible principal star linked to the Sigui ceremonial cycle."
+      }
+    },
+    "sirius_b": {
+      "label": "Sirius B",
+      "dogon_name": "Po Tolo",
+      "color": "#D0D7F2",
+      "radius": 6,
+      "period_years": 50.1,
+      "cultural": {
+        "zh": "Po Tolo 在口傳中象徵高密度『種子』。",
+        "en": "Po Tolo is a dense 'seed' symbol in oral tradition."
+      }
+    },
+    "sirius_c": {
+      "label": "Sirius C",
+      "dogon_name": "Emme Ya",
+      "color": "#4CA8A8",
+      "radius": 5,
+      "period_years": 32.0,
+      "cultural": {
+        "zh": "Emme Ya 為傳說層次天體，用於文化象徵而非觀測定論。",
+        "en": "Emme Ya is modeled as lore-level body for cultural symbolism, not observational certainty."
+      }
+    }
+  },
+  "zones": [
+    {
+      "id": "nommo_corridor",
+      "label": "Nommo Corridor",
+      "declination_min": -25.0,
+      "declination_max": -5.0,
+      "meaning_zh": "祖靈交流與傳承門徑",
+      "meaning_en": "Ancestral transmission corridor"
+    },
+    {
+      "id": "seed_axis",
+      "label": "Seed Axis",
+      "declination_min": -5.0,
+      "declination_max": 15.0,
+      "meaning_zh": "創造、播種與生命循環",
+      "meaning_en": "Creation, seeding, and cyclical renewal"
+    },
+    {
+      "id": "mask_horizon",
+      "label": "Mask Horizon",
+      "declination_min": 15.0,
+      "declination_max": 35.0,
+      "meaning_zh": "儀式顯化與集體記憶",
+      "meaning_en": "Ritual manifestation and collective memory"
+    }
+  ],
+  "references": [
+    "Griaule, Marcel & Dieterlen, Germaine (mid-20th c. ethnographic corpus)",
+    "van Beek, W. E. A. (critical reassessment)",
+    "Temple, Robert (popularized but contested interpretations)",
+    "Modern astronomy: Sirius A/B orbital period ~50 years"
+  ],
+  "cross_cultural": [
+    {
+      "system": "Egyptian Decans",
+      "focus": {
+        "zh": "索普德特（Sopdet）與天狼星歲首、尼羅河氾濫週期",
+        "en": "Sopdet/Sirius and Nile-cycle calendrical timing"
+      }
+    },
+    {
+      "system": "Babylonian",
+      "focus": {
+        "zh": "固定星與王權預兆傳統",
+        "en": "Fixed-star omen and kingship traditions"
+      }
+    },
+    {
+      "system": "Maya",
+      "focus": {
+        "zh": "長週期曆法與儀式時間結構",
+        "en": "Long-cycle calendrics and ritual time structures"
+      }
+    }
+  ]
+}

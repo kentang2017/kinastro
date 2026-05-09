@@ -35,6 +35,7 @@ SYSTEM_ICONS: dict[str, str] = {
     "tab_damo":         "🤚",
     # ── Ancient / Mesoamerican ──
     "tab_maya":         "🐍",
+    "tab_dogon_sirius": "🜂",
     "tab_aztec":        "🦅",
     "tab_decans":       "🏺",
     "tab_babylonian":   "📜",
@@ -74,6 +75,7 @@ SYSTEM_ACCENT_COLORS: dict[str, str] = {
     "tab_yemeni":       "#3AB09E",
     # ── Ancient / Mesoamerican ──
     "tab_maya":         "#4AA068",
+    "tab_dogon_sirius": "#8F6B3F",
     "tab_aztec":        "#C44D2A",
     "tab_decans":       "#D4A04A",
     "tab_babylonian":   "#B8956A",
@@ -108,6 +110,7 @@ SYSTEM_CSS_CLASS: dict[str, str] = {
     "tab_arabic":       "arabic-chart",
     "tab_yemeni":       "arabic-chart",
     "tab_maya":         "maya-chart",
+    "tab_dogon_sirius": "maya-chart",
     "tab_aztec":        "aztec-chart",
     "tab_decans":       "egyptian-chart",
     "tab_babylonian":   "babylonian-chart",
