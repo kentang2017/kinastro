@@ -484,7 +484,7 @@ if st.session_state.get("_star_particles", True):
 # ── Initialise language from the persisted selectbox widget value ────────────
 # Language switcher uses a dropdown (selectbox). We check for the
 # "_lang_select" session_state key that is set by the dropdown.
-_LANG_MAP = {"🌐 繁體中文": "zh", "🌐 简体中文": "zh_cn", "🌐 English": "en"}
+_LANG_MAP = {"繁體中文": "zh", "简体中文": "zh_cn", "English": "en"}
 
 if "_lang_select" in st.session_state:
     _sel = st.session_state["_lang_select"]
@@ -730,15 +730,14 @@ def _render_bphs_result(bphs_result):
         st.caption(f"💡 {auto_cn(note)}")
 
 
-# ── Language switcher (prominent top control) ───────────────────
+# ── Language switcher (top right corner) ───────────────────
 _cur_lang = st.session_state.get("lang", "zh")
-_lang_labels = ["🌐 繁體中文", "🌐 简体中文", "🌐 English"]
+_lang_labels = ["繁體中文", "简体中文", "English"]
 _lang_codes = ["zh", "zh_cn", "en"]
 _cur_lang_idx = _lang_codes.index(_cur_lang) if _cur_lang in _lang_codes else 0
 
-st.markdown('<div class="ka-lang-switcher">🌐 ' + t("lang_switcher_label") + "</div>", unsafe_allow_html=True)
-_lang_col1, _lang_col2, _lang_col3 = st.columns([1, 2, 1])
-with _lang_col2:
+_lang_spacer, _lang_col = st.columns([4, 1])
+with _lang_col:
     _sel_lang = st.selectbox(
         t("lang_switcher_label"),
         options=_lang_labels,
