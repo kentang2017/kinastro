@@ -235,7 +235,7 @@ def render_homepage():
          ["西洋卜卦", "吠陀問卜", "擇日占星"],
          "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
     ]
-    _total_systems = 68  # 67 registered systems + ChunZiShu
+    _total_systems = 68  # 67 registered systems + ChunZiShu = 68 total
 
     # ── Hero Section ──────────────────────────────────────────
     st.markdown(textwrap.dedent(f"""
