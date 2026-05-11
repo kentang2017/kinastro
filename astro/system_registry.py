@@ -1422,6 +1422,27 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_andean",
+    name_zh="印加／安地斯占星",
+    name_en="Inca / Andean Astrology",
+    category="cat_ancient",
+    icon="⛰️",
+    tab_key="tab_andean",
+    desc_key="desc_andean",
+    spinner_key="spinner_andean",
+    hint_key="sys_hint_andean",
+    tags=[
+        "andean", "inca", "mayu", "dark constellations", "yana phuyu",
+        "qatachillay", "chakana", "southern cross", "agro-omens", "ancient",
+    ],
+    maturity="beta",
+    accent_color=_a("cat_ancient"),
+    origin_culture="Andean / Inca (Quechua)",
+    tradition_period="Pre-Columbian Andes to living traditions",
+    ai_persona_key="info_andean_prompt",
+))
+
+_reg(System(
     id="tab_dogon_sirius",
     name_zh="多貢天狼星宇宙學",
     name_en="Dogon Sirius Cosmology",
