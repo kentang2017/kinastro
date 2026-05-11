@@ -467,7 +467,7 @@ TRANSLATIONS = {
     },
     "spinner_andean": {
         "zh": "正在計算印加天河暗星宿排盤...",
-        "en": "Calculating Inca / Andean Mayu chart…",
+        "en": "Calculating Inca / Andean Mayu chart...",
     },
     "spinner_decans": {
         "zh": "正在計算古埃及十度區間排盤...",

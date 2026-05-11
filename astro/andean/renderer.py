@@ -287,7 +287,7 @@ def _render_planets_tab(st: Any, chart: Any) -> None:
             "逆行": "♺" if p.retrograde else "",
             "RA": f"{p.ra:.1f}°",
             "Dec": f"{p.dec:.1f}°",
-            "銀緯 l": f"{p.galactic_l:.1f}°",
+            "銀經 l": f"{p.galactic_l:.1f}°",
             "銀緯 b": f"{p.galactic_b:.1f}°",
             "地平高度": f"{p.altitude:.1f}°",
             "最近暗星宿": p.nearest_dark_constellation,
@@ -298,7 +298,7 @@ def _render_planets_tab(st: Any, chart: Any) -> None:
     st.dataframe(df, use_container_width=True, hide_index=True)
 
     st.caption(
-        "銀緯 l = 銀河經度（Galactic Longitude）；"
+        "銀經 l = 銀河經度（Galactic Longitude）；"
         "銀緯 b = 銀河緯度（Galactic Latitude）；"
         "地平高度 > 5° 且離太陽 > 12° 者為可見。"
     )
