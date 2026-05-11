@@ -2,7 +2,7 @@
 
 > **tags:** andean, inca, ceque, southern-cross, pleiades, peru
 > **origin:** 印加帝國（1438–1533 年）及更早 | Inca Empire (1438–1533 CE) and earlier
-> **category:** indigenous
+> **category:** ancient
 
 ---
 
