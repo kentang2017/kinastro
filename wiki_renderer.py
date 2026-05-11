@@ -136,7 +136,7 @@ _WIKI_CSS = """
 
 # ── Data loading (cached) ─────────────────────────────────────────────────────
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(show_spinner=False)
 def _load_index() -> list[dict[str, str]]:
     """Load wiki/systems/index.csv and return list of system dicts."""
     idx_path = _WIKI_DIR / "index.csv"
@@ -160,7 +160,7 @@ def _load_index() -> list[dict[str, str]]:
     return systems
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(show_spinner=False)
 def _load_md(filename: str) -> str:
     """Load and return Markdown content for a given system file (no .md suffix)."""
     path = _WIKI_DIR / f"{filename}.md"
@@ -238,8 +238,8 @@ _TIMELINE_EVENTS = [
     (1970,  "KP 占星體系", "KP Astrology system", "indian"),
     (1975,  "Jim Lewis 地點占星", "Jim Lewis Astrocartography", "western"),
     (1987,  "Project Hindsight 希臘復興", "Project Hindsight: Hellenistic revival", "western"),
-    (2000,  "數位排盤普及", "Digital chart software widespread", "ancient"),
-    (2020,  "AI 整合占星", "AI-integrated astrology platforms", "ancient"),
+    (2000,  "數位排盤普及", "Digital chart software widespread", "western"),
+    (2020,  "AI 整合占星", "AI-integrated astrology platforms", "western"),
 ]
 
 _CAT_COLORS = {
@@ -312,7 +312,7 @@ def _build_timeline_figure(lang: str) -> Any:
             shown_cats.add(cat)
 
     x_label = "年份（公元前為負數）" if lang in ("zh", "zh_cn") else "Year (negative = BCE)"
-    title_text = "📜 占星歷史大事記 | Astrology Historical Timeline" if lang in ("zh", "zh_cn") else "📜 Astrology Historical Timeline"
+    title_text = "📜 占星歷史大事記" if lang in ("zh", "zh_cn") else "📜 Astrology Historical Timeline"
 
     fig.update_layout(
         title=dict(text=title_text, font=dict(size=15, color="#c8a96e")),
@@ -464,7 +464,8 @@ def _render_article(filename: str, is_zh: bool) -> None:
 def _md_to_html(md: str) -> str:
     """
     Convert Markdown to HTML for st.markdown unsafe rendering.
-    Uses Python's markdown library if available, otherwise returns pre-wrapped text.
+    Uses Python's markdown library if available, otherwise falls back to
+    Streamlit's native markdown rendering path (plain text in a pre block).
     """
     try:
         import markdown as md_lib  # type: ignore
@@ -473,13 +474,26 @@ def _md_to_html(md: str) -> str:
             extensions=["tables", "fenced_code", "nl2br"],
         )
     except ImportError:
-        # Fallback: render as raw markdown through Streamlit native (called separately)
-        return f"<pre>{md}</pre>"
+        # markdown library not installed — surface a notice to the developer
+        st.warning(
+            "⚠️ Python `markdown` package not installed. "
+            "Content is shown as plain text. Run `pip install markdown` for rich rendering."
+        )
+        return f"<pre style='white-space:pre-wrap'>{md}</pre>"
 
 
 def _render_timeline_tab(lang: str, is_zh: bool) -> None:
     """Render the Plotly historical timeline."""
-    import plotly.graph_objects as go  # noqa: F401 — ensure plotly available
+    try:
+        import plotly.graph_objects as go  # noqa: F401
+    except ImportError:
+        msg = (
+            "⚠️ Plotly 未安裝，無法顯示時間軸。請執行 `pip install plotly`。"
+            if is_zh else
+            "⚠️ Plotly is not installed. Cannot display timeline. Run `pip install plotly`."
+        )
+        st.error(msg)
+        return
 
     fig = _build_timeline_figure(lang)
     st.plotly_chart(fig, use_container_width=True)
