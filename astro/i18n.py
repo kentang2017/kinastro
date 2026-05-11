@@ -320,6 +320,10 @@ TRANSLATIONS = {
         "zh": "🌺 波利尼西亞／夏威夷星辰知識",
         "en": "🌺 Polynesian / Hawaiian Star Lore",
     },
+    "tab_andean": {
+        "zh": "⛰️ 印加／安地斯占星",
+        "en": "⛰️ Inca / Andean Astrology",
+    },
     "tab_decans": {
         "zh": "🏛️ 古埃及十度區間",
         "en": "🏛️ Egyptian Decans",
@@ -460,6 +464,10 @@ TRANSLATIONS = {
     "spinner_polynesian": {
         "zh": "正在計算夏威夷星辰排盤...",
         "en": "Calculating Hawaiian Star Lore chart...",
+    },
+    "spinner_andean": {
+        "zh": "正在計算印加天河暗星宿排盤...",
+        "en": "Calculating Inca / Andean Mayu chart…",
     },
     "spinner_decans": {
         "zh": "正在計算古埃及十度區間排盤...",
@@ -869,6 +877,69 @@ Sukkayodo is used for date selection and divination of auspiciousness in daily l
 - **Haab (Civil Calendar)**: 365 days — 18 months × 20 days + 5 Wayeb nameless days
 - **Calendar Round**: Tzolkin × Haab synchronised cycle, ~52 years per round
 - **Planetary Overlay**: Western planetary positions mapped to Tzolkin energies
+""",
+    },
+    "desc_andean": {
+        "zh": """
+### 什麼是印加／安地斯占星？
+
+**安地斯占星**源自南美安第斯山脈前哥倫比亞文明（印加帝國 Tahuantinsuyu）與活態克丘亞語傳統。
+
+#### 🌌 天河（Mayu）
+銀河對安地斯人而言是神聖天河（Mayu / Hatun Mayu），連結三界：
+- **Hanan Pacha**（上界 / 天界）
+- **Kay Pacha**（此界 / 現世）
+- **Uku Pacha**（下界 / 地底）
+
+#### 🦙 暗星宿（Yana Phuyu / 陰雲星座）
+安地斯「黃道」由銀河暗雲組成的動物靈魂構成，主要包括：
+- **Qatachillay**（母駱馬與幼駱馬）—— 繁殖、雨季
+- **Hamp'atu**（蟾蜍）—— 播種時機
+- **Mach'aqway**（蛇）—— 轉化、三界通道
+- **Atoq**（狐狸）—— 試煉、機智
+- **Kuntur**（兀鷹）—— 祖靈、高瞻
+- **Lluthu**（山鶉）—— 謙遜、日常勤勞
+- **Michiq**（牧羊人）—— 秩序、守護
+
+#### ⭐ 明星標記
+- **Collca**（昴宿星團）—— 穀倉、農業新年
+- **Chakana**（南十字座）—— 宇宙階梯、四方秩序
+- **Orion 三星** —— 播種時機
+
+#### 占星原則
+無西方十二宮式出生盤；重視 **偕日出 / 偕日落**（heliacal rising/setting）、
+天河位置、暗星宿可見性與季節農業預兆。
+""",
+        "en": """
+### What is Inca / Andean Astrology?
+
+**Andean Astrology** originates from the pre-Columbian civilisations of the South American Andes
+(the Inca Empire, Tahuantinsuyu) and living Quechua oral traditions.
+
+#### 🌌 Mayu (The Sacred Milky Way)
+The Milky Way is a sacred river (Mayu / Hatun Mayu) connecting the three realms:
+- **Hanan Pacha** (the upper / celestial world)
+- **Kay Pacha** (this world / the present)
+- **Uku Pacha** (the inner / lower world)
+
+#### 🦙 Yana Phuyu (Dark Cloud Constellations)
+The Andean "zodiac" is formed by living animal spirits in the dark-dust rifts of the Milky Way:
+- **Qatachillay** (Llama & Baby Llama) — fertility, rainy season
+- **Hamp'atu** (Toad) — sowing timing
+- **Mach'aqway** (Serpent) — transformation, inter-world gateway
+- **Atoq** (Fox) — trial, cunning
+- **Kuntur** (Condor) — ancestral vision
+- **Lluthu** (Partridge) — humility, daily labour
+- **Michiq** (Shepherd) — order, guardianship
+
+#### ⭐ Bright Markers
+- **Collca** (Pleiades) — granary, agro-new-year marker
+- **Chakana** (Southern Cross) — cosmic staircase, four-directional order
+- **Orion's Belt** — sowing timing
+
+#### Astrological Principles
+No Western-style zodiac wheel; emphasis on **heliacal rising/setting**, Mayu position,
+dark-cloud visibility, and seasonal agricultural omens.
 """,
     },
     "desc_dogon_sirius": {
@@ -1888,6 +1959,10 @@ transmitted by **Chen Xiyi**.
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
     "sys_hint_jawa_weton": {"zh": "爪哇 Weton 命理 + 合婚計算", "en": "Javanese Weton destiny & marriage compatibility"},
     "sys_hint_polynesian": {"zh": "夏威夷 / 玻里尼西亞星辰知識與航海星羅盤", "en": "Hawaiian / Polynesian Star Lore & Navigation Compass"},
+    "sys_hint_andean": {
+        "zh": "印加天河（Mayu）、暗星宿（Yana Phuyu）、南十字 Chakana、昴宿穀倉預兆",
+        "en": "Inca Mayu sky-river, Yana Phuyu dark cloud animals, Chakana cross, Pleiades harvest omens",
+    },
     "sys_hint_decans": {"zh": "古埃及十度區間預測", "en": "Ancient Egyptian decan predictions"},
     "sys_hint_nadi": {"zh": "南印度棕櫚葉手稿", "en": "South Indian palm-leaf readings"},
     "sys_hint_zurkhai": {"zh": "蒙古藏傳佛教占星", "en": "Mongolian Tibetan Buddhist astrology"},
@@ -3871,6 +3946,10 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_dogon_sirius_prompt": {
         "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看你與 Dogon 天狼星傳統（Po Tolo／Nommo／Sigui）的連結。",
         "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to explore your connection with Dogon Sirius traditions (Po Tolo/Nommo/Sigui).",
+    },
+    "info_andean_prompt": {
+        "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看你在印加天河（Mayu）中的暗星宿守護、出生動物靈，以及銀河占星解讀。",
+        "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to see your Andean Mayu sky map, dark-cloud constellation guardians, and birth animal spirit.",
     },
     "tab_electional": {
         "zh": "⏳ 擇日占星（Electional / Muhurta）",

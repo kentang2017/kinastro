@@ -105,6 +105,8 @@ from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
 from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
 from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
 from astro.polynesian_hawaiian.renderer import render_streamlit as render_polynesian_chart_ui
+from astro.andean import compute_andean_chart as _compute_andean_chart_fn
+from astro.andean import render_streamlit as render_andean_chart_ui
 from astro.persian.renderer import render_streamlit as render_deep_sassanian_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
@@ -4257,6 +4259,36 @@ if not _engine_handled:
         else:
             st.info(t("info_maya_prompt"))
             st.markdown(t("desc_maya"))
+
+    # --- 印加 / 安地斯占星 ---
+    elif _selected_system == "tab_andean":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_andean")):
+                    _andean_chart = _compute_andean_chart_fn(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        timezone=_p["timezone"],
+                        latitude=_p["latitude"],
+                        longitude=_p["longitude"],
+                        location_name=_p.get("location_name", ""),
+                    )
+                render_andean_chart_ui(
+                    _andean_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_andean", _andean_chart, btn_key="andean"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_andean_prompt"))
+            st.markdown(t("desc_andean"))
 
     # --- Dogon Sirius Cosmology ---
     elif _selected_system == "tab_dogon_sirius":
