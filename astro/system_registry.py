@@ -457,6 +457,31 @@ _reg(System(
     ai_persona_key="info_shaozi_prompt",
 ))
 
+
+_reg(System(
+    id="tab_diqiyijue",
+    name_zh="滌器遺訣",
+    name_en="Di Qi Yi Jue",
+    category="cat_chinese",
+    icon="🌀",
+    tab_key="tab_diqiyijue",
+    desc_key="desc_diqiyijue",
+    spinner_key="spinner_diqiyijue",
+    hint_key="sys_hint_diqiyijue",
+    sub_tabs=[
+        SubTab("diqiyijue_subtab_chart", "chart"),
+        SubTab("diqiyijue_subtab_analysis", "analysis"),
+        SubTab("diqiyijue_subtab_flow", "flow"),
+        SubTab("diqiyijue_subtab_classic", "classic"),
+    ],
+    tags=["滌器遺訣", "邵子氣數", "diqiyijue", "qi_shu", "chinese", "numerology"],
+    maturity="core",
+    accent_color=_a("cat_chinese"),
+    origin_culture="Chinese",
+    tradition_period="Song Dynasty (Shao Yong tradition)",
+    ai_persona_key="info_diqiyijue_prompt",
+))
+
 _reg(System(
     id="tab_fendjing",
     name_zh="鬼谷分定經",

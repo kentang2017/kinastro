@@ -1,10 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-涤器遗诀 (DiQiYiJue) —— 康节气数 / 气孕数 / 皇极数 完整 Python 模組
 
-嚴格依據《涤器遗诀》原文記載之全部古法實現。
 """
+astro/diqiyijue/calculator.py — Di Qi Yi Jue core computation module.
+
+Integrates the legacy 滌器遺訣 implementation into KinAstro with a pure
+`compute_diqiyijue_chart()` API and a dataclass result structure.
+"""
+
+from __future__ import annotations
 
 # ============================================================
 # 基礎常量與工具函數
@@ -2093,83 +2095,234 @@ def flow_year(birth_ganzhi: dict, year_ganzhi: str, age: int,
     return chart.flow_year(year_ganzhi=year_ganzhi, age=age)
 
 
+
+
 # ============================================================
-# 驗證：以李谊四柱為例
+# KinAstro integration wrappers
 # ============================================================
 
-if __name__ == "__main__":
-    import json
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List
 
-    # 李谊：己丑年 乙亥月 庚寅日 丁丑時
-    li_yi = {
-        "年": "己丑",
-        "月": "乙亥",
-        "日": "庚寅",
-        "時": "丁丑",
+from sxtwl import fromSolar
+
+
+_GENDER_MAP = {
+    "male": "男",
+    "female": "女",
+    "男": "男",
+    "女": "女",
+}
+
+
+def _normalize_gender(gender: str) -> str:
+    """Normalize gender labels for Di Qi Yi Jue computations."""
+    return _GENDER_MAP.get((gender or "男").strip().lower(), _GENDER_MAP.get(gender, "男"))
+
+
+_WUSHU_DUN = {
+    "甲": "甲", "己": "甲",
+    "乙": "丙", "庚": "丙",
+    "丙": "戊", "辛": "戊",
+    "丁": "庚", "壬": "庚",
+    "戊": "壬", "癸": "壬",
+}
+
+
+def _hour_to_branch_idx(hour: int) -> int:
+    """Convert 24-hour time to the Earthly Branch hour index."""
+    if hour == 23:
+        return 0
+    return (hour + 1) // 2 % 12
+
+
+def _compute_four_pillars_for_diqiyijue(
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+) -> tuple[tuple[str, str], tuple[str, str], tuple[str, str], tuple[str, str]]:
+    """Compute Four Pillars using sxtwl without importing Streamlit-heavy modules."""
+    calc_year, calc_month, calc_day, calc_hour = year, month, day, hour
+    if hour == 23:
+        from datetime import date as _date, timedelta as _timedelta
+
+        dt = _date(year, month, day) + _timedelta(days=1)
+        calc_year, calc_month, calc_day = dt.year, dt.month, dt.day
+        calc_hour = 0
+
+    cdate = fromSolar(calc_year, calc_month, calc_day)
+
+    ygz_raw = cdate.getYearGZ(False)
+    y_stem = TIANGAN[ygz_raw.tg]
+    y_branch = DIZHI[ygz_raw.dz]
+
+    mgz_raw = cdate.getMonthGZ()
+    m_stem = TIANGAN[mgz_raw.tg]
+    m_branch = DIZHI[mgz_raw.dz]
+
+    dgz_raw = cdate.getDayGZ()
+    d_stem = TIANGAN[dgz_raw.tg]
+    d_branch = DIZHI[dgz_raw.dz]
+
+    h_branch = DIZHI[_hour_to_branch_idx(calc_hour)]
+    h_stem_base = _WUSHU_DUN[d_stem]
+    h_stem_idx = (tiangan_index(h_stem_base) + dizhi_index(h_branch)) % 10
+    h_stem = TIANGAN[h_stem_idx]
+
+    return (y_stem, y_branch), (m_stem, m_branch), (d_stem, d_branch), (h_stem, h_branch)
+
+
+def _compute_birth_ganzhi(year: int, month: int, day: int, hour: int, minute: int) -> dict[str, str]:
+    """Convert Gregorian birth data to Four Pillars ganzhi strings.
+
+    Minute is accepted for API symmetry with the public chart function, but the
+    classical Four Pillars conversion only changes at the hour boundary.
+    """
+    _ = minute
+    year_pillar, month_pillar, day_pillar, hour_pillar = _compute_four_pillars_for_diqiyijue(
+        year, month, day, hour
+    )
+    return {
+        "年": "".join(year_pillar),
+        "月": "".join(month_pillar),
+        "日": "".join(day_pillar),
+        "時": "".join(hour_pillar),
     }
 
-    print("=" * 60)
-    print("涤器遗诀排盤——李谊命例")
-    print("=" * 60)
 
-    dq = DiQiYiJue(li_yi, gender="男")
+@dataclass(frozen=True)
+class DiqiyijueChart:
+    """Structured Di Qi Yi Jue chart data returned by the public compute API."""
 
-    print(f"\n【胎月】{dq.tai_gz}（納音：{dq.tai_nayin}）")
-    print(f"  驗證：月柱乙亥，進干一位→丙，進支四位→寅，胎月丙寅 ✓")
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    timezone: float
+    latitude: float
+    longitude: float
+    location_name: str = ""
+    gender: str = "男"
+    four_pillars: Dict[str, str] = field(default_factory=dict)
+    tai_month: str = ""
+    five_lines: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    yuan_numbers: List[int] = field(default_factory=list)
+    ying_numbers: List[int] = field(default_factory=list)
+    eight_palaces_numbers: List[int] = field(default_factory=list)
+    eight_palaces_wuxing: List[str] = field(default_factory=list)
+    eight_palaces_details: List[Dict[str, Any]] = field(default_factory=list)
+    core_four_positions: List[int] = field(default_factory=list)
+    alternate_four_positions: List[int] = field(default_factory=list)
+    guankong: Dict[str, Any] = field(default_factory=dict)
+    bagua_tibian: Dict[str, Any] = field(default_factory=dict)
+    destiny_palace: Dict[str, Any] = field(default_factory=dict)
+    qipao_bagong: List[Dict[str, Any]] = field(default_factory=list)
+    qipao_bengong: List[Dict[str, Any]] = field(default_factory=list)
+    shu_wei: Dict[str, Any] = field(default_factory=dict)
+    he_yun: Dict[str, Any] = field(default_factory=dict)
+    ying_gua: Dict[str, Any] = field(default_factory=dict)
+    ming_zhu: Dict[str, Any] = field(default_factory=dict)
+    san_qi_ji_men: Dict[str, Any] = field(default_factory=dict)
+    gui_ge: List[str] = field(default_factory=list)
+    xiong_xing: List[str] = field(default_factory=list)
+    guan_sha: List[str] = field(default_factory=list)
+    ke_shu: Dict[str, Any] = field(default_factory=dict)
+    shou_xian: Dict[str, Any] = field(default_factory=dict)
+    dayun: List[Dict[str, Any]] = field(default_factory=list)
+    xiaoyun_preview: List[Dict[str, Any]] = field(default_factory=list)
+    full_chart: Dict[str, Any] = field(default_factory=dict)
 
-    print(f"\n【元數】{dq.yuan_shu}")
-    print(f"  驗證：丙→己=4, 丙→乙=10→1, 丙→庚=5, 丙→丁=2 → [4,1,5,2] ✓")
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a JSON-serialisable dictionary view of the chart."""
+        return asdict(self)
 
-    print(f"\n【影數】{dq.ying_shu}")
-    print(f"  驗證：寅→丑=12→2, 寅→亥=10→1, 寅→寅=1, 寅→丑=12→2 → [2,1,1,2] ✓")
 
-    print(f"\n【八宮數列】{dq.ba_gong_raw}")
-    print(f"  驗證：4152×2112=8769024，補0→87690240")
-    print(f"  原文：八七六九〇二四〇 ✓")
+class DiqiyijueEngine(DiQiYiJue):
+    """Backward-compatible engine alias for the legacy DiQiYiJue implementation."""
 
-    print(f"\n【八宮五行】{dq.ba_gong_wuxing}")
 
-    print(f"\n【本宮四位】{dq.ben_gong_siwei}")
-    print(f"  驗證：鬼基=4+0=4, 乳養=0+2=2, 雁翡=6+9=15→5(進1),")
-    print(f"  倫己=8+7+1=16→6+1=7 → [7,5,2,4] ✓")
 
-    print(f"\n【觀空定卦】{dq.guankong}")
-    print(f"  驗證：7+5+2+4=18, 5+2+4=11, 7+5+2=14, 7+4=11, 2+5=7,")
-    print(f"  7+5=12, 2+4=6 → 皆不滿十 → 乾卦 ✓")
+def compute_diqiyijue_chart(
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    timezone: float,
+    latitude: float,
+    longitude: float,
+    location_name: str = "",
+    gender: str = "male",
+) -> DiqiyijueChart:
+    """Compute a Di Qi Yi Jue chart from Gregorian birth data."""
+    birth_ganzhi = _compute_birth_ganzhi(year, month, day, hour, minute)
+    gender_zh = _normalize_gender(gender)
+    engine = DiQiYiJue(birth_ganzhi=birth_ganzhi, gender=gender_zh)
+    full_chart = engine.calculate_chart()
 
-    print(f"\n【八卦體變】{dq.bagua_tibian_result}")
-    print(f"  驗證：7奇5奇2偶4偶→〇〇●●→巽變卦，先巽後艮 ✓")
+    return DiqiyijueChart(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        location_name=location_name,
+        gender=gender_zh,
+        four_pillars=dict(birth_ganzhi),
+        tai_month=engine.tai_gz,
+        five_lines={
+            key: {"干支": gz, "納音": ny}
+            for key, gz, ny in (
+                ("胎", engine.tai_gz, engine.tai_nayin),
+                ("年", engine.year_gz, engine.year_nayin),
+                ("月", engine.month_gz, engine.month_nayin),
+                ("日", engine.day_gz, engine.day_nayin),
+                ("時", engine.hour_gz, engine.hour_nayin),
+            )
+        },
+        yuan_numbers=list(engine.yuan_shu),
+        ying_numbers=list(engine.ying_shu),
+        eight_palaces_numbers=list(engine.ba_gong_raw),
+        eight_palaces_wuxing=list(engine.ba_gong_wuxing),
+        eight_palaces_details=list(full_chart["八宮"]["詳情"]),
+        core_four_positions=list(engine.ben_gong_siwei),
+        alternate_four_positions=list(engine.ben_gong_biefa),
+        guankong=dict(engine.guankong),
+        bagua_tibian=dict(engine.bagua_tibian_result),
+        destiny_palace=dict(full_chart["命宮"]),
+        qipao_bagong=list(engine.qipao_bagong),
+        qipao_bengong=list(engine.qipao_bengong),
+        shu_wei=dict(engine.shu_wei),
+        he_yun=dict(engine.he_yun),
+        ying_gua=dict(engine.ying_gua()),
+        ming_zhu=dict(engine.ming_zhu()),
+        san_qi_ji_men=dict(engine.san_qi_ji_men()),
+        gui_ge=list(engine.gui_ge()),
+        xiong_xing=list(engine.xiong_xing()),
+        guan_sha=list(engine.guan_sha()),
+        ke_shu=dict(engine.ke_shu()),
+        shou_xian=dict(engine.shou_xian()),
+        dayun=list(engine.dayun),
+        xiaoyun_preview=list(engine.xiaoyun[:12]),
+        full_chart=full_chart,
+    )
 
-    print(f"\n【都數】{dq.du_shu}")
-    print(f"  驗證：8+7+6+9+0+2+4+0=36 ✓")
 
-    print(f"\n【命宮】{BAGONG_NAMES[dq.ming_gong_idx]}（{dq.ming_gong_wx}）")
-    print(f"  驗證：36從倫起1，到翡宮為4→36%8=4→翡宮九金 ✓")
-
-    print(f"\n【數尾】{dq.shu_wei}")
-    print(f"  驗證：7+5+2+4=18，零數8木 ✓")
-
-    # 流年測試：壬申年，行年44
-    print(f"\n{'=' * 60}")
-    print(f"流年：壬申年，行年44歲")
-    print(f"{'=' * 60}")
-    ly = dq.flow_year(year_ganzhi="壬申", age=44)
-    print(f"  流籌四位：{ly['流籌四位']}")
-    print(f"  驗證：7524×44=331056，取中間四位→[3,1,0,5]")
-    print(f"  觀空定卦：{ly['觀空定卦']['卦名']}")
-    print(f"  齒卦：{ly['齒卦']}")
-
-    # 別法流籌驗證
-    ly2 = dq.flow_year_biefa(year_ganzhi="壬申", age=44)
-    print(f"\n  別法流籌四位：{ly2['流籌四位']}")
-    print(f"  驗證：8919×44=392436，取中間四位→[9,2,4,3]")
-    print(f"  原文「李谊壬申流筹为九二四三」✓")
-
-    print(f"\n{'=' * 60}")
-    print("完整排盤輸出（摘要）")
-    print(f"{'=' * 60}")
-    chart = dq.calculate_chart()
-    # 只打印非敏感的關鍵摘要
-    for key in ["胎月", "元數", "影數", "本宮四位", "都數", "數尾", "貴格", "凶星"]:
-        val = chart[key]
-        print(f"  {key}: {val}")
+__all__ = [
+    "BAGONG_FULLNAMES",
+    "BAGONG_NAMES",
+    "BAGONG_XING",
+    "DiQiYiJue",
+    "DiqiyijueChart",
+    "DiqiyijueEngine",
+    "calculate_chart",
+    "compute_diqiyijue_chart",
+    "flow_year",
+    "guankong_dinggua",
+    "bagua_tibian",
+]
