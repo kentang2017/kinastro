@@ -2174,8 +2174,12 @@ def _compute_four_pillars_for_diqiyijue(
 
 
 def _compute_birth_ganzhi(year: int, month: int, day: int, hour: int, minute: int) -> dict[str, str]:
-    """Convert Gregorian birth data to Four Pillars ganzhi strings."""
-    del minute
+    """Convert Gregorian birth data to Four Pillars ganzhi strings.
+
+    Minute is accepted for API symmetry with the public chart function, but the
+    classical Four Pillars conversion only changes at the hour boundary.
+    """
+    _ = minute
     year_pillar, month_pillar, day_pillar, hour_pillar = _compute_four_pillars_for_diqiyijue(
         year, month, day, hour
     )
@@ -2322,84 +2326,3 @@ __all__ = [
     "guankong_dinggua",
     "bagua_tibian",
 ]
-
-# ============================================================
-# 驗證：以李谊四柱為例
-# ============================================================
-
-if __name__ == "__main__":
-    import json
-
-    # 李谊：己丑年 乙亥月 庚寅日 丁丑時
-    li_yi = {
-        "年": "己丑",
-        "月": "乙亥",
-        "日": "庚寅",
-        "時": "丁丑",
-    }
-
-    print("=" * 60)
-    print("涤器遗诀排盤——李谊命例")
-    print("=" * 60)
-
-    dq = DiQiYiJue(li_yi, gender="男")
-
-    print(f"\n【胎月】{dq.tai_gz}（納音：{dq.tai_nayin}）")
-    print(f"  驗證：月柱乙亥，進干一位→丙，進支四位→寅，胎月丙寅 ✓")
-
-    print(f"\n【元數】{dq.yuan_shu}")
-    print(f"  驗證：丙→己=4, 丙→乙=10→1, 丙→庚=5, 丙→丁=2 → [4,1,5,2] ✓")
-
-    print(f"\n【影數】{dq.ying_shu}")
-    print(f"  驗證：寅→丑=12→2, 寅→亥=10→1, 寅→寅=1, 寅→丑=12→2 → [2,1,1,2] ✓")
-
-    print(f"\n【八宮數列】{dq.ba_gong_raw}")
-    print(f"  驗證：4152×2112=8769024，補0→87690240")
-    print(f"  原文：八七六九〇二四〇 ✓")
-
-    print(f"\n【八宮五行】{dq.ba_gong_wuxing}")
-
-    print(f"\n【本宮四位】{dq.ben_gong_siwei}")
-    print(f"  驗證：鬼基=4+0=4, 乳養=0+2=2, 雁翡=6+9=15→5(進1),")
-    print(f"  倫己=8+7+1=16→6+1=7 → [7,5,2,4] ✓")
-
-    print(f"\n【觀空定卦】{dq.guankong}")
-    print(f"  驗證：7+5+2+4=18, 5+2+4=11, 7+5+2=14, 7+4=11, 2+5=7,")
-    print(f"  7+5=12, 2+4=6 → 皆不滿十 → 乾卦 ✓")
-
-    print(f"\n【八卦體變】{dq.bagua_tibian_result}")
-    print(f"  驗證：7奇5奇2偶4偶→〇〇●●→巽變卦，先巽後艮 ✓")
-
-    print(f"\n【都數】{dq.du_shu}")
-    print(f"  驗證：8+7+6+9+0+2+4+0=36 ✓")
-
-    print(f"\n【命宮】{BAGONG_NAMES[dq.ming_gong_idx]}（{dq.ming_gong_wx}）")
-    print(f"  驗證：36從倫起1，到翡宮為4→36%8=4→翡宮九金 ✓")
-
-    print(f"\n【數尾】{dq.shu_wei}")
-    print(f"  驗證：7+5+2+4=18，零數8木 ✓")
-
-    # 流年測試：壬申年，行年44
-    print(f"\n{'=' * 60}")
-    print(f"流年：壬申年，行年44歲")
-    print(f"{'=' * 60}")
-    ly = dq.flow_year(year_ganzhi="壬申", age=44)
-    print(f"  流籌四位：{ly['流籌四位']}")
-    print(f"  驗證：7524×44=331056，取中間四位→[3,1,0,5]")
-    print(f"  觀空定卦：{ly['觀空定卦']['卦名']}")
-    print(f"  齒卦：{ly['齒卦']}")
-
-    # 別法流籌驗證
-    ly2 = dq.flow_year_biefa(year_ganzhi="壬申", age=44)
-    print(f"\n  別法流籌四位：{ly2['流籌四位']}")
-    print(f"  驗證：8919×44=392436，取中間四位→[9,2,4,3]")
-    print(f"  原文「李谊壬申流筹为九二四三」✓")
-
-    print(f"\n{'=' * 60}")
-    print("完整排盤輸出（摘要）")
-    print(f"{'=' * 60}")
-    chart = dq.calculate_chart()
-    # 只打印非敏感的關鍵摘要
-    for key in ["胎月", "元數", "影數", "本宮四位", "都數", "數尾", "貴格", "凶星"]:
-        val = chart[key]
-        print(f"  {key}: {val}")
