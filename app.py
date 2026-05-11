@@ -98,6 +98,7 @@ from astro.beiji.renderer import render_streamlit as render_beiji_chart
 from astro.nanji.renderer import render_streamlit as render_nanji_chart
 from astro.chunzi.renderer import render_streamlit as render_chunzi_chart
 from astro.sumerian.calculator import compute_sumerian_chart
+from wiki_renderer import render_wiki
 from astro.sumerian.renderer import render_streamlit as render_sumerian_chart
 from astro.horary import render_streamlit as render_horary_chart
 from astro.electional import render_streamlit as render_electional_chart
@@ -1308,6 +1309,16 @@ with st.sidebar:
         type="secondary",
     ):
         st.session_state["_system_select"] = "tab_history"
+        st.rerun()
+
+    # ── Astrology Wiki link ────────────────────────────────────
+    if st.button(
+        t("tab_wiki"),
+        key="_btn_wiki",
+        width="stretch",
+        type="secondary",
+    ):
+        st.session_state["_system_select"] = "tab_wiki"
         st.rerun()
 
     # ── Star particles toggle ──────────────────────────────────
@@ -3722,6 +3733,10 @@ if not _engine_handled:
             st.info("請先建立文件 / Please create the document first.")
         
         _render_ai_button("tab_history", {"system": "astrology_history"}, btn_key="history")
+
+    # --- Astrology Wiki ---
+    elif _selected_system == "tab_wiki":
+        render_wiki(lang=_cur_lang)
 
     # --- 印度占星 ---
     elif _selected_system == "tab_indian":
