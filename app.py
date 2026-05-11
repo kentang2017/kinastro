@@ -80,6 +80,7 @@ from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_am
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
+from astro.diqiyijue import compute_diqiyijue_chart, render_diqiyijue_chart
 from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
 from astro.burmese_mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.wariga.calculator import WarigaCalculator, compute_wariga
@@ -238,7 +239,7 @@ def render_homepage():
          ["西洋卜卦", "吠陀問卜", "擇日占星"],
          "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
     ]
-    _total_systems = 68  # 67 registered systems + ChunZiShu = 68 total
+    _total_systems = 69  # 68 registered systems + ChunZiShu = 69 total
 
     # ── Hero Section ──────────────────────────────────────────
     st.markdown(textwrap.dedent(f"""
@@ -4779,6 +4780,28 @@ if not _engine_handled:
         else:
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_damo"))
+
+    # --- 滌器遺訣 Di Qi Yi Jue ---
+    elif _selected_system == "tab_diqiyijue":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _diqiyijue_params = dict(_p)
+                _diqiyijue_params["gender"] = gender
+                with st.spinner(t("spinner_diqiyijue")):
+                    _diqiyijue_chart = compute_diqiyijue_chart(**_diqiyijue_params)
+                render_diqiyijue_chart(
+                    _diqiyijue_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_diqiyijue", _diqiyijue_chart, btn_key="diqiyijue"
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_diqiyijue_prompt"))
+            st.markdown(t("desc_diqiyijue"))
 
     # --- 十二星次 (Twelve Ci) ---
     elif _selected_system == "tab_twelve_ci":

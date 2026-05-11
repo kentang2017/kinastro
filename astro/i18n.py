@@ -2291,6 +2291,75 @@ transmitted by **Chen Xiyi**.
     "mazzalot_subtab_natal": {"zh": "本命盤", "en": "Natal"},
     "mazzalot_subtab_omens": {"zh": "靈性解讀", "en": "Spiritual Readings"},
 
+
+    # ── 滌器遺訣 (Di Qi Yi Jue) ───────────────────────────────────────
+    "tab_diqiyijue": {
+        "zh": "🌀 滌器遺訣",
+        "en": "🌀 Di Qi Yi Jue",
+    },
+    "sys_hint_diqiyijue": {
+        "zh": "邵子氣數古法——胎月、八宮、填空法與陰陽數合化",
+        "en": "Shao Yong numerology with fetal month, eight palaces, void-filling, and yin-yang number synthesis",
+    },
+    "desc_diqiyijue": {
+        "zh": (
+            "**滌器遺訣（Di Qi Yi Jue / 邵子氣數）** — 以胎月、五條、八宮、本宮四位為骨架，"
+            "結合填空法、觀空定卦、八卦體變、起胞法、合孕數與流籌法的古法命理系統。\n\n"
+            "此模組會自動從輸入的公曆出生時間換算四柱，輸出胎月、元影數、八宮、命宮、大運與流年流籌等核心結果。"
+        ),
+        "en": (
+            "**Di Qi Yi Jue (Shao Yong Qi Numerology)** — A classical numerological destiny method built around the fetal month, five lines, eight palaces, void filling, guankong divination, bagua transformation, qipao life-stage analysis, and flow-year procedures."
+        ),
+    },
+    "spinner_diqiyijue": {"zh": "推算滌器遺訣中…", "en": "Computing Di Qi Yi Jue chart…"},
+    "info_diqiyijue_prompt": {
+        "zh": "👈 請在左側輸入出生年月日時及性別，點擊「開始排盤」進行滌器遺訣推演。",
+        "en": "👈 Enter birth date/time and gender on the left, then click 'Calculate Chart' for Di Qi Yi Jue.",
+    },
+    "diqiyijue_chart_title": {"zh": "🌀 滌器遺訣 / 邵子氣數", "en": "🌀 Di Qi Yi Jue / Shao Yong Qi Numerology"},
+    "diqiyijue_subtab_chart": {"zh": "八宮盤", "en": "Eight Palaces"},
+    "diqiyijue_subtab_analysis": {"zh": "命局分析", "en": "Chart Analysis"},
+    "diqiyijue_subtab_flow": {"zh": "流籌流年", "en": "Flow-Year"},
+    "diqiyijue_subtab_classic": {"zh": "古法提要", "en": "Classical Notes"},
+    "diqiyijue_birth_pillars": {"zh": "四柱", "en": "Four Pillars"},
+    "diqiyijue_birth_gender": {"zh": "性別", "en": "Gender"},
+    "diqiyijue_metric_tai": {"zh": "胎月", "en": "Fetal Month"},
+    "diqiyijue_metric_guankong": {"zh": "觀空定卦", "en": "Guankong"},
+    "diqiyijue_metric_tibian": {"zh": "八卦體變", "en": "Bagua Transformation"},
+    "diqiyijue_metric_destiny": {"zh": "命宮", "en": "Destiny Palace"},
+    "diqiyijue_section_five_lines": {"zh": "五條與納音", "en": "Five Lines & Na Yin"},
+    "diqiyijue_section_core": {"zh": "核心數據", "en": "Core Numbers"},
+    "diqiyijue_section_eight_palaces": {"zh": "八宮詳情", "en": "Eight Palaces Details"},
+    "diqiyijue_section_qipao": {"zh": "起胞法", "en": "Qipao Life Stages"},
+    "diqiyijue_qipao_bagong": {"zh": "八宮起胞", "en": "Eight-Palace Qipao"},
+    "diqiyijue_qipao_bengong": {"zh": "本宮四位起胞", "en": "Core Four-Position Qipao"},
+    "diqiyijue_section_relationships": {"zh": "合孕數與陰陽合化", "en": "Pregnancy Numbers & Yin-Yang Synthesis"},
+    "diqiyijue_section_mingzhu": {"zh": "命主", "en": "Inner / Outer Lords"},
+    "diqiyijue_section_patterns": {"zh": "格局與關殺", "en": "Patterns & Obstacles"},
+    "diqiyijue_section_fate_cycles": {"zh": "大小運", "en": "Fortune Cycles"},
+    "diqiyijue_section_flow_year": {"zh": "流籌卦", "en": "Flow-Year Chart"},
+    "diqiyijue_section_biefa_flow": {"zh": "本宮別法流籌", "en": "Alternate Flow Method"},
+    "diqiyijue_section_method_summary": {"zh": "方法摘要", "en": "Method Summary"},
+    "diqiyijue_section_classic_points": {"zh": "古法要點", "en": "Classical Points"},
+    "diqiyijue_row_yuan": {"zh": "元數", "en": "Yuan Numbers"},
+    "diqiyijue_row_ying": {"zh": "影數", "en": "Ying Numbers"},
+    "diqiyijue_row_bengong": {"zh": "本宮四位", "en": "Core Four Positions"},
+    "diqiyijue_row_biefa": {"zh": "本宮別法", "en": "Alternate Four Positions"},
+    "diqiyijue_row_shuwei": {"zh": "數尾", "en": "Tail Number"},
+    "diqiyijue_label_guige": {"zh": "貴格", "en": "Auspicious Patterns"},
+    "diqiyijue_label_xiongxing": {"zh": "凶星", "en": "Inauspicious Stars"},
+    "diqiyijue_label_guansha": {"zh": "關殺", "en": "Obstacles / Sha"},
+    "diqiyijue_none": {"zh": "無", "en": "None"},
+    "diqiyijue_flow_age": {"zh": "行年歲數", "en": "Running Age"},
+    "diqiyijue_flow_year_ganzhi": {"zh": "流年干支（選填）", "en": "Flow-Year Ganzhi (optional)"},
+    "diqiyijue_method_1": {"zh": "以月柱進干一位、進支四位求胎月，形成五條起點。", "en": "Derive the fetal month by advancing the month stem by one and the branch by four steps."},
+    "diqiyijue_method_2": {"zh": "由胎干、胎支分別順數到年月日時，得到元數與影數。", "en": "Count forward from the fetal stem and branch to derive yuan and ying numbers."},
+    "diqiyijue_method_3": {"zh": "以鋪地錦乘法得八宮，再依填空法、觀空定卦與八卦體變分析命局。", "en": "Generate the eight palaces by multiplication, then analyse them through void filling, guankong, and bagua transformation."},
+    "diqiyijue_method_4": {"zh": "結合命宮、起胞法、合孕數與流籌法，觀察人生階段與流年變化。", "en": "Combine the destiny palace, qipao method, pregnancy numbers, and flow-year procedures for timing analysis."},
+    "diqiyijue_classic_point_1": {"zh": "胎月為全盤之始，後續元影數、八宮與本宮皆由此展開。", "en": "The fetal month is the starting pivot for the entire chart."},
+    "diqiyijue_classic_point_2": {"zh": "八宮空位須依年、月、日、時納音與己宮五行填補，不能直接視為無。", "en": "Void palace positions must be filled according to Na Yin and Ji-palace rules rather than treated as empty."},
+    "diqiyijue_classic_point_3": {"zh": "流籌與本宮別法常配合齒卦、八觀與賊星同看，以判行運吉凶。", "en": "Flow-year analysis is read together with tooth trigram, baguan relations, and thief stars."},
+
     # ── 達摩一掌經 (Damo One Palm Scripture) ────────────────────
     "tab_damo": {
         "zh": "🤚 達摩一掌經",
