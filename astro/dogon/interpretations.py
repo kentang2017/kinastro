@@ -140,10 +140,15 @@ def build_cross_system_comparison(chart_data: dict, lang: str = "zh") -> str:
 
     dogon_info = chart_data.get("dogon", {})
     if dogon_info:
+        sirius_dec = dogon_info.get("sirius_dec")
+        years_until = dogon_info.get("years_until_sigui")
+        zone = dogon_info.get("zone", "未知星域" if is_zh else "unknown zone")
+        dec_str = f"{sirius_dec:.2f}°" if isinstance(sirius_dec, (int, float)) else "?"
+        yrs_str = f"{years_until:.1f}" if isinstance(years_until, (int, float)) else "?"
         if is_zh:
-            lines.append(f"🌟 Dogon：Sirius 赤緯 {dogon_info.get('sirius_dec', '?'):.2f}°，{dogon_info.get('zone', '未知星域')}，距下次 Sigui {dogon_info.get('years_until_sigui', '?'):.1f} 年。")
+            lines.append(f"🌟 Dogon：Sirius 赤緯 {dec_str}，{zone}，距下次 Sigui {yrs_str} 年。")
         else:
-            lines.append(f"🌟 Dogon: Sirius dec {dogon_info.get('sirius_dec', '?'):.2f}°, {dogon_info.get('zone', 'unknown zone')}, {dogon_info.get('years_until_sigui', '?'):.1f} yr to Sigui.")
+            lines.append(f"🌟 Dogon: Sirius dec {dec_str}, {zone}, {yrs_str} yr to Sigui.")
 
     vedic_info = chart_data.get("vedic", {})
     if vedic_info:
