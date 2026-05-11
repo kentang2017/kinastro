@@ -26,8 +26,14 @@ def render_dogon_sirius_chart(*args, **kwargs) -> None:
     return _fn(*args, **kwargs)
 
 
+def build_cross_system_comparison(*args, **kwargs) -> str:
+    from .interpretations import build_cross_system_comparison as _fn
+    return _fn(*args, **kwargs)
+
+
 __all__ = [
     "compute_dogon_sirius_chart",
     "format_dogon_sirius_for_prompt",
     "render_dogon_sirius_chart",
+    "build_cross_system_comparison",
 ]
