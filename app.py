@@ -53,6 +53,7 @@ from astro.western.harmonic import render_harmonic_chart
 from astro.western.draconic import render_draconic_chart
 from astro.western.western_synastry import compute_synastry
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
+from astro.vedic.financial import render_vedic_financial_tab
 from astro.lal_kitab import compute_lal_kitab_chart, render_lal_kitab_chart, render_lal_kitab_1952_page
 from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha
 from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
@@ -3749,13 +3750,14 @@ if not _engine_handled:
                 with st.spinner(t("spinner_indian")):
                     v_chart = compute_vedic_chart(**_p)
 
-                _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs, _v_tab_varga = st.tabs([
+                _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs, _v_tab_varga, _v_tab_financial = st.tabs([
                     t("vedic_subtab_rashi"),
                     t("vedic_subtab_dasha"),
                     t("vedic_subtab_ashtaka"),
                     t("vedic_subtab_yogas"),
                     t("vedic_subtab_bphs"),
                     t("vedic_subtab_varga"),
+                    t("vedic_subtab_financial"),
                 ])
 
                 with _v_tab_rashi:
@@ -3862,6 +3864,9 @@ if not _engine_handled:
                             _vc = compute_varga_chart(_vk, v_chart.planets, v_chart.ascendant)
                             render_single_varga(_vc)
                     _render_ai_button("tab_indian", v_chart, btn_key="vedic_varga")
+
+                with _v_tab_financial:
+                    render_vedic_financial_tab(input_tz=float(_p.get("timezone", 8.0)))
 
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
