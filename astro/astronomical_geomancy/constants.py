@@ -16,6 +16,10 @@ elemental affinity.
 from __future__ import annotations
 from typing import Dict, List, Tuple
 
+# System display names
+SYSTEM_NAME_ZH = "地占占星"
+SYSTEM_NAME_EN = "Astronomical Geomancy"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 16 Geomantic Figures / 十六地占圖形
 # ─────────────────────────────────────────────────────────────────────────────

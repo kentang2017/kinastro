@@ -25,6 +25,8 @@ from .constants import (
     DOT_SINGLE,
     GEOMANCY_THEME,
     QUESTION_TYPES,
+    SYSTEM_NAME_EN,
+    SYSTEM_NAME_ZH,
     ZODIAC_SIGNS,
 )
 from .models import GeomancyChart, GeomancyFigure, HouseInfo
@@ -201,11 +203,11 @@ def build_geomancy_wheel_svg(chart: GeomancyChart) -> str:
     )
     svg_parts.append(
         f'<text x="{cx}" y="{cy-12}" text-anchor="middle" fill="#E9D38C" '
-        'font-size="13" font-family="serif" font-weight="bold">地占占星</text>'
+        f'font-size="13" font-family="serif" font-weight="bold">{SYSTEM_NAME_ZH}</text>'
     )
     svg_parts.append(
         f'<text x="{cx}" y="{cy+10}" text-anchor="middle" fill="#CCAA58" '
-        'font-size="9.5" font-family="serif">Geomantic Astrology</text>'
+        f'font-size="9.5" font-family="serif">{SYSTEM_NAME_EN}</text>'
     )
     svg_parts.append(
         f'<text x="{cx}" y="{cy+30}" text-anchor="middle" fill="#AFC3DE" '
@@ -265,7 +267,7 @@ def render_input_panel() -> Optional[dict]:
     st.markdown(_CSS, unsafe_allow_html=True)
     st.markdown(
         f'<div class="geo-header">'
-        f'<h2>🔮 {auto_cn("地占占星", "Astronomical Geomancy")}</h2>'
+        f'<h2>🔮 {auto_cn(SYSTEM_NAME_ZH, SYSTEM_NAME_EN)}</h2>'
         f'<p>{auto_cn("Gerardus Cremonensis 地占占星系統（12世紀）", "Gerardus Cremonensis Geomantic Astrology System (12th c.)")}</p>'
         f'</div>',
         unsafe_allow_html=True,
@@ -530,7 +532,7 @@ def render_streamlit(
     # Header
     st.markdown(
         f'<div class="geo-header">'
-        f'<h2>🔮 {auto_cn("地占占星", "Astronomical Geomancy")} — '
+        f'<h2>🔮 {auto_cn(SYSTEM_NAME_ZH, SYSTEM_NAME_EN)} — '
         f'Gerardus Cremonensis</h2>'
         f'<p>{auto_cn(f"問題：{chart.question} ｜ {chart.timestamp}", f"Question: {chart.question} | {chart.timestamp}")}</p>'
         f'</div>',
