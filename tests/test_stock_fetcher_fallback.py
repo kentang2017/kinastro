@@ -84,3 +84,50 @@ def test_fetch_stock_info_reports_error_when_primary_and_fallback_fail(monkeypat
     stock = stock_fetcher.fetch_stock_info("AAPL")
     assert "Cannot connect to Yahoo Finance" in stock.error
     assert "fallback also failed" in stock.error
+
+
+def test_fetch_stock_info_derives_52w_range_from_history_when_missing(monkeypatch):
+    stock_fetcher = _load_stock_fetcher_module()
+
+    class FakeHistory:
+        empty = False
+
+        def __init__(self):
+            self._cols = {
+                "High": [101.2, 110.5, 108.3],
+                "Low": [89.6, 92.1, 91.3],
+                "Close": [95.0, 109.2, 100.8],
+            }
+
+        def get(self, key, default=None):
+            return self._cols.get(key, default)
+
+    class FakeTicker:
+        @property
+        def info(self):
+            return {
+                "symbol": "AAPL",
+                "quoteType": "EQUITY",
+                "shortName": "Apple Inc.",
+                "longName": "Apple Inc.",
+                "currentPrice": 100.8,
+                "previousClose": 99.0,
+                "currency": "USD",
+                "firstTradeDateEpochUtc": 1_200_000_000,
+                # fiftyTwoWeekHigh / fiftyTwoWeekLow intentionally missing
+            }
+
+        @property
+        def fast_info(self):
+            return {}
+
+        def history(self, period="1y", auto_adjust=False):
+            return FakeHistory()
+
+    fake_yf = types.SimpleNamespace(Ticker=lambda _: FakeTicker())
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+
+    stock = stock_fetcher.fetch_stock_info("AAPL")
+    assert stock.error == ""
+    assert stock.week52_high == 110.5
+    assert stock.week52_low == 89.6

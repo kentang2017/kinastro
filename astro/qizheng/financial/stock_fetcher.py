@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 import json
+import math
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Optional
@@ -98,6 +99,36 @@ def _extract_zh_name(info: dict) -> str:
 def _is_rate_limited(msg: str) -> bool:
     text = (msg or "").lower()
     return "too many requests" in text or "429" in text or "rate limit" in text
+
+
+def _to_finite_float(value) -> Optional[float]:
+    """將數值安全轉為 float，非數值或 NaN 則回傳 None。"""
+    if not isinstance(value, (int, float)):
+        return None
+    val = float(value)
+    if math.isnan(val):
+        return None
+    return val
+
+
+def _series_numeric_values(series) -> list[float]:
+    """從 pandas-like 序列抽取有效數值清單。"""
+    if series is None:
+        return []
+    try:
+        raw_values = series.dropna().tolist()
+    except Exception:
+        try:
+            raw_values = list(series)
+        except Exception:
+            return []
+
+    values: list[float] = []
+    for raw in raw_values:
+        val = _to_finite_float(raw)
+        if val is not None:
+            values.append(val)
+    return values
 
 
 def _fetch_chart_quote_fallback(normalized_ticker: str) -> tuple[dict, str]:
@@ -267,6 +298,25 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
 
     week52_high = info.get("fiftyTwoWeekHigh")
     week52_low  = info.get("fiftyTwoWeekLow")
+    if tkr is not None and (week52_high is None or week52_low is None):
+        try:
+            hist_1y = tkr.history(period="1y", auto_adjust=False)
+        except Exception:
+            hist_1y = None
+
+        if hist_1y is not None and not getattr(hist_1y, "empty", True):
+            highs = _series_numeric_values(hist_1y.get("High"))
+            lows = _series_numeric_values(hist_1y.get("Low"))
+            closes = _series_numeric_values(hist_1y.get("Close"))
+
+            if week52_high is None:
+                base_highs = highs or closes
+                if base_highs:
+                    week52_high = max(base_highs)
+            if week52_low is None:
+                base_lows = lows or closes
+                if base_lows:
+                    week52_low = min(base_lows)
 
     # ── 上市日期 ─────────────────────────────────────────
     ipo_date: Optional[date] = None
