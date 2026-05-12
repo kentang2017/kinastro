@@ -35,6 +35,9 @@ _BEARISH_RATIO_STRONG = 35.0
 _BEARISH_RATIO_MILD = 45.0
 _BEARISH_SCORE_THRESHOLD = -4
 _GOLDEN_RATIO_STEPS = (0.236, 0.382, 0.618, 1.0, 1.618)
+_FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
+_BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
+_BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
 
 
 # ============================================================
@@ -816,8 +819,6 @@ def _render_price_forecast(stock, stock_data, go):
     trend_factor = max(_MIN_TREND_FACTOR, min(_MAX_TREND_FACTOR, trend_factor))
 
     golden_steps = _GOLDEN_RATIO_STEPS
-    horizons = ["1個月", "3個月", "6個月", "1年", "3年以上"]
-
     direction = 1.0
     if ratio < _BEARISH_RATIO_STRONG and total_score < 0:
         direction = -1.0
@@ -825,7 +826,7 @@ def _render_price_forecast(stock, stock_data, go):
         direction = -1.0
 
     targets = []
-    for step, horizon in zip(golden_steps, horizons):
+    for step, horizon in zip(golden_steps, _FORECAST_HORIZONS):
         move = price_range * step * trend_factor * direction
         target_price = max(_MIN_PRICE_FLOOR, current + move)
         targets.append({"horizon": horizon, "step": step, "price": target_price})
@@ -887,12 +888,11 @@ def _render_price_forecast(stock, stock_data, go):
             )
 
     fig = go.Figure()
-    x_points = ["現價"] + horizons
+    x_points = ["現價"] + list(_FORECAST_HORIZONS)
     y_points = [current] + [t["price"] for t in targets]
     line_color = "#FFD700" if direction > 0 else "#f87171"
-    marker_color = ["#FFD700", "#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700"] if direction > 0 else [
-        "#FFD700", "#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171"
-    ]
+    marker_tail = _BULLISH_FORECAST_COLORS if direction > 0 else _BEARISH_FORECAST_COLORS
+    marker_color = ["#FFD700", *list(marker_tail[:len(targets)])]
 
     fig.add_trace(go.Scatter(
         x=x_points,
