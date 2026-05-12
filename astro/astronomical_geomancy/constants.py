@@ -2,7 +2,7 @@
 astro/astronomical_geomancy/constants.py
 ═══════════════════════════════════════════════════════════════
 Constants for Gerardus Cremonensis' Astronomical Geomancy
-(天文幾何占卜 / Geomantia Astronomica)
+(地占占星 / Geomantia Astronomica)
 
 Reference: Gerardus Cremonensis, "Astronomical Geomancy" (12th c.),
 as preserved in Burnett & Pingree, "The Liber Aristotilis of Hugo of

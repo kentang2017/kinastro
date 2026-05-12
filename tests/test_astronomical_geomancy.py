@@ -2,7 +2,7 @@
 tests/test_astronomical_geomancy.py
 ════════════════════════════════════
 Unit tests for the Astronomical Geomancy module
-(Gerardus Cremonensis, 天文幾何占卜).
+(Gerardus Cremonensis, 地占占星).
 """
 
 from __future__ import annotations
@@ -256,7 +256,7 @@ def test_format_prompt_zh():
         manual_seed=42,
     )
     prompt = format_geomancy_for_prompt(chart, lang="zh")
-    assert "天文幾何占卜" in prompt
+    assert "地占占星" in prompt
     assert "我今年財運如何" in prompt
     assert "第1宮" in prompt
     assert "上升圖形" in prompt

@@ -1,7 +1,7 @@
 """
 astro/astronomical_geomancy/renderer.py
 ══════════════════════════════════════════════════════════════
-Streamlit renderer for Astronomical Geomancy (天文幾何占卜).
+Streamlit renderer for Astronomical Geomancy (地占占星).
 
 Renders:
   - Input panel (question, question type, seed mode)
@@ -94,109 +94,123 @@ _CSS = """
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_geomancy_wheel_svg(chart: GeomancyChart) -> str:
-    """
-    Build a 12-house geomantic wheel SVG showing:
-    - Outer zodiac ring with sign glyphs
-    - 12 house divisions with house numbers
-    - Planet glyphs placed in their houses
-    - Ascendant marker
-    """
-    cx, cy, r_outer, r_inner, r_label = 280, 280, 240, 160, 200
-    r_planet = 125
+    """Build a classical-style astrology wheel SVG for geomantic charting."""
+    cx, cy = 320, 320
+    r_outer = 286
+    r_sign = 250
+    r_house_outer = 226
+    r_house_inner = 146
+    r_planet = 112
+    r_hub = 70
+
+    def _polar(radius: float, angle_deg: float) -> tuple[float, float]:
+        rad = math.radians(angle_deg)
+        return cx + radius * math.cos(rad), cy - radius * math.sin(rad)
+
     svg_parts = [
-        f'<svg viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" '
-        f'style="background:#0B0F1E;border-radius:50%;max-width:500px">',
-        # Outer background circle
-        f'<circle cx="{cx}" cy="{cy}" r="{r_outer}" fill="#0D1529" stroke="#C8A24A" stroke-width="2"/>',
-        # Inner circle
-        f'<circle cx="{cx}" cy="{cy}" r="{r_inner}" fill="#080D18" stroke="#2A3A50" stroke-width="1.5"/>',
-        # Inner hub
-        f'<circle cx="{cx}" cy="{cy}" r="55" fill="#0B0F1E" stroke="#C8A24A" stroke-width="1.5"/>',
-        # Hub text
-        f'<text x="{cx}" y="{cy-8}" text-anchor="middle" fill="#EDD88A" '
-        f'font-size="11" font-family="serif">天文幾何</text>',
-        f'<text x="{cx}" y="{cy+10}" text-anchor="middle" fill="#C8A24A" '
-        f'font-size="9" font-family="serif">Geomantia</text>',
-        f'<text x="{cx}" y="{cy+26}" text-anchor="middle" fill="#C8A24A" '
-        f'font-size="9" font-family="serif">Astronomica</text>',
+        (
+            '<svg viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg" '
+            'style="max-width:560px;width:100%;display:block;margin:auto;'
+            'border-radius:14px;background:#090f1f">'
+        ),
+        "<defs>",
+        '<radialGradient id="geoSky" cx="50%" cy="45%" r="70%">'
+        '<stop offset="0%" stop-color="#162744"/>'
+        '<stop offset="55%" stop-color="#0e1730"/>'
+        '<stop offset="100%" stop-color="#070c18"/>'
+        "</radialGradient>",
+        '<radialGradient id="geoInner" cx="50%" cy="50%" r="75%">'
+        '<stop offset="0%" stop-color="#0f1f3b"/>'
+        '<stop offset="100%" stop-color="#060b15"/>'
+        "</radialGradient>",
+        '<filter id="softGlow">'
+        '<feGaussianBlur stdDeviation="1.4" result="blur"/>'
+        '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>'
+        "</filter>",
+        "</defs>",
+        '<rect x="0" y="0" width="640" height="640" fill="url(#geoSky)"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_outer}" fill="none" '
+        'stroke="#D3AF58" stroke-width="2.2"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_sign}" fill="none" '
+        'stroke="#C8A24A" stroke-width="1"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_house_outer}" fill="none" '
+        'stroke="#324565" stroke-width="1"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_house_inner}" fill="url(#geoInner)" '
+        'stroke="#3D5478" stroke-width="1.1"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_planet}" fill="none" '
+        'stroke="#6E87A8" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.75"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r_hub}" fill="#071022" '
+        'stroke="#D3AF58" stroke-width="1.6"/>',
     ]
 
-    # 12 house dividers and labels
-    for i in range(12):
-        # House divisions from ASC (left, 180° in SVG where 0°=right)
-        # Traditional wheel: ASC at left (180°), houses go counter-clockwise
-        angle_deg = 180.0 - i * 30.0  # house i starts at this angle
-        angle_rad = math.radians(angle_deg)
+    element_colors = {
+        "Fire": "#ED8479",
+        "Earth": "#A3CF74",
+        "Air": "#8CBFFF",
+        "Water": "#7FD9DF",
+    }
 
-        # Dividing line
-        x1 = cx + r_inner * math.cos(angle_rad)
-        y1 = cy - r_inner * math.sin(angle_rad)
-        x2 = cx + r_outer * math.cos(angle_rad)
-        y2 = cy - r_outer * math.sin(angle_rad)
-        line_color = "#C8A24A" if i == 0 else "#2A3A50"
-        line_width = "2.5" if i == 0 else "1"
+    for i in range(12):
+        angle_deg = 180.0 - i * 30.0
+        mid_angle = angle_deg - 15.0
+        x1, y1 = _polar(r_house_inner, angle_deg)
+        x2, y2 = _polar(r_outer, angle_deg)
+        divider_color = "#D3AF58" if i == 0 else "#2B4060"
+        divider_width = "2.1" if i == 0 else "1"
         svg_parts.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-            f'stroke="{line_color}" stroke-width="{line_width}"/>'
+            f'stroke="{divider_color}" stroke-width="{divider_width}"/>'
         )
 
-        # House number label (mid-house angle)
-        mid_angle_rad = math.radians(angle_deg - 15.0)
-        lx = cx + r_planet * math.cos(mid_angle_rad)
-        ly = cy - r_planet * math.sin(mid_angle_rad)
-        house_num = i + 1
+        hx, hy = _polar((r_house_outer + r_house_inner) / 2, mid_angle)
         svg_parts.append(
-            f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" '
-            f'dominant-baseline="middle" fill="#7BAFD4" font-size="13" '
-            f'font-family="serif" font-weight="bold">{house_num}</text>'
+            f'<text x="{hx:.1f}" y="{hy:.1f}" text-anchor="middle" '
+            'dominant-baseline="middle" fill="#9FC2EA" font-size="13" '
+            'font-family="serif" font-weight="bold">'
+            f"{i + 1}</text>"
         )
 
-        # Sign glyph in outer ring
         house_info = chart.houses[i]
-        glyph = house_info.glyph
-        sign_mid_rad = math.radians(angle_deg - 15.0)
-        sx = cx + r_label * math.cos(sign_mid_rad)
-        sy = cy - r_label * math.sin(sign_mid_rad)
-        element_colors = {"Fire": "#FF6B6B", "Earth": "#8BC34A",
-                          "Air": "#64B5F6", "Water": "#4DD0E1"}
-        sign_color = element_colors.get(house_info.element, "#EDD88A")
+        sx, sy = _polar(r_sign, mid_angle)
+        sign_color = element_colors.get(house_info.element, "#E7CD84")
         svg_parts.append(
             f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" '
-            f'dominant-baseline="middle" fill="{sign_color}" font-size="18">'
-            f'{glyph}</text>'
+            f'dominant-baseline="middle" fill="{sign_color}" '
+            'font-size="22" font-family="Noto Sans Symbols2, serif" '
+            'filter="url(#softGlow)">'
+            f'{house_info.glyph}</text>'
         )
 
-        # Planet glyphs in house
         if house_info.planets:
-            # Place up to 3 planets, slightly offset
-            pcount = len(house_info.planets)
+            pcount = min(len(house_info.planets), 3)
             for pi, planet in enumerate(house_info.planets[:3]):
-                offset = (pi - (pcount - 1) / 2.0) * 0.12  # radians offset
-                p_angle = mid_angle_rad + offset
-                pr = 90 - pi * 6  # vary radius slightly
-                px = cx + pr * math.cos(p_angle)
-                py = cy - pr * math.sin(p_angle)
+                offset = (pi - (pcount - 1) / 2.0) * 7.0
+                px, py = _polar(r_planet - (pi * 7), mid_angle + offset)
                 svg_parts.append(
                     f'<text x="{px:.1f}" y="{py:.1f}" text-anchor="middle" '
-                    f'dominant-baseline="middle" fill="#C8A24A" font-size="14">'
-                    f'{planet.glyph}</text>'
+                    'dominant-baseline="middle" fill="#E2BC63" '
+                    'font-size="15" font-family="Noto Sans Symbols2, serif">'
+                    f"{planet.glyph}</text>"
                 )
 
-    # ASC marker
-    asc_angle = math.radians(180.0)
-    ax = cx + (r_outer + 12) * math.cos(asc_angle)
-    ay = cy - (r_outer + 12) * math.sin(asc_angle)
+    ax, ay = _polar(r_outer + 16, 180.0)
     svg_parts.append(
         f'<text x="{ax:.1f}" y="{ay:.1f}" text-anchor="middle" '
-        f'dominant-baseline="middle" fill="#C8A24A" font-size="12" '
-        f'font-weight="bold" font-family="serif">ASC</text>'
+        'dominant-baseline="middle" fill="#D3AF58" font-size="12" '
+        'font-weight="bold" font-family="serif">ASC</text>'
     )
-    # ASC sign
-    asc_sign_zh = chart.ascendant_sign_zh
     svg_parts.append(
-        f'<text x="{cx}" y="{cy+52}" text-anchor="middle" '
-        f'fill="#EDD88A" font-size="10" font-family="serif">'
-        f'{chart.ascendant_sign_zh} {chart.houses[0].glyph}</text>'
+        f'<text x="{cx}" y="{cy-12}" text-anchor="middle" fill="#E9D38C" '
+        'font-size="13" font-family="serif" font-weight="bold">地占占星</text>'
+    )
+    svg_parts.append(
+        f'<text x="{cx}" y="{cy+10}" text-anchor="middle" fill="#CCAA58" '
+        'font-size="9.5" font-family="serif">Geomantic Astrology</text>'
+    )
+    svg_parts.append(
+        f'<text x="{cx}" y="{cy+30}" text-anchor="middle" fill="#AFC3DE" '
+        'font-size="10" font-family="serif">'
+        f"{chart.ascendant_sign_zh} {chart.houses[0].glyph}</text>"
     )
 
     svg_parts.append("</svg>")
@@ -251,7 +265,7 @@ def render_input_panel() -> Optional[dict]:
     st.markdown(_CSS, unsafe_allow_html=True)
     st.markdown(
         f'<div class="geo-header">'
-        f'<h2>🔮 {auto_cn("天文幾何占卜", "Astronomical Geomancy")}</h2>'
+        f'<h2>🔮 {auto_cn("地占占星", "Astronomical Geomancy")}</h2>'
         f'<p>{auto_cn("Gerardus Cremonensis 地占占星系統（12世紀）", "Gerardus Cremonensis Geomantic Astrology System (12th c.)")}</p>'
         f'</div>',
         unsafe_allow_html=True,
@@ -516,7 +530,7 @@ def render_streamlit(
     # Header
     st.markdown(
         f'<div class="geo-header">'
-        f'<h2>🔮 {auto_cn("天文幾何占卜", "Astronomical Geomancy")} — '
+        f'<h2>🔮 {auto_cn("地占占星", "Astronomical Geomancy")} — '
         f'Gerardus Cremonensis</h2>'
         f'<p>{auto_cn(f"問題：{chart.question} ｜ {chart.timestamp}", f"Question: {chart.question} | {chart.timestamp}")}</p>'
         f'</div>',

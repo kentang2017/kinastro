@@ -1,4 +1,4 @@
-# 🔮 天文幾何占卜 | Astronomical Geomancy
+# 🔮 地占占星 | Astronomical Geomancy
 
 > **tags:** geomancy, geomantia, gerard cremonensis, arabic, medieval, divination, 12 houses, figures, middle east, latin
 > **origin:** 阿拉伯－拉丁，12世紀 | Arabic-Latin, 12th century
@@ -14,9 +14,9 @@
 
 *Gerardus Cremonensis (c. 1114–1187) was one of the most prolific translators of the Middle Ages, born in Cremona, Italy. Working in the translation school of Toledo, he translated over 70 Arabic scientific, philosophical, and medical works into Latin, including Ptolemy's Almagest and Euclid's Elements.*
 
-### 天文幾何占卜的起源 | Origins of Astronomical Geomancy
+### 地占占星的起源 | Origins of Astronomical Geomancy
 
-**Geomantia Astronomica**（天文幾何占卜）將兩種古老傳統合而為一：
+**Geomantia Astronomica**（地占占星）將兩種古老傳統合而為一：
 
 1. **地占（Geomancy）**：源自阿拉伯的 *'ilm al-raml*（沙地之學），通過在沙地或紙上隨機點戳，形成由奇偶點陣組成的「圖形」（figures），再進行占卜判斷。
 2. **古典占星十二宮位系統**：將地占圖形對應到12個宮位，每宮由一個星座主宰，並將7顆古典行星（太陽、月亮、水星、金星、火星、木星、土星）加上龍頭（☊）、龍尾（☋）分配到各宮。

@@ -1,7 +1,7 @@
 """
 astro/astronomical_geomancy/__init__.py
 ═══════════════════════════════════════
-Public API for the Astronomical Geomancy (天文幾何占卜) module.
+Public API for the Astronomical Geomancy (地占占星) module.
 """
 
 from .calculator import compute_geomancy_chart, format_geomancy_for_prompt
