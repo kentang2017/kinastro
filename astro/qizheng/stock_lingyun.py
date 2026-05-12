@@ -30,10 +30,10 @@ _PLANET_SWISS = {
     "冥王": swe.PLUTO,
 }
 _SEASONAL_MARKS = (
-    ("春分", 0.0, (3, 10), (3, 31)),
-    ("夏至", 90.0, (6, 10), (6, 30)),
-    ("秋分", 180.0, (9, 10), (9, 30)),
-    ("冬至", 270.0, (12, 10), (12, 31)),
+    ("春分", 0.0, (3, 15), (4, 5)),
+    ("夏至", 90.0, (6, 15), (7, 5)),
+    ("秋分", 180.0, (9, 15), (10, 5)),
+    ("冬至", 270.0, (12, 15), (1, 5)),
 )
 
 
@@ -110,7 +110,7 @@ def _search_minimum(start_jd: float, end_jd: float, eval_func) -> float:
         val = abs(eval_func(jd))
         if val < best_val:
             best_jd, best_val = jd, val
-        jd += 0.25
+        jd += 0.05
 
     step = 0.125
     for _ in range(20):
@@ -128,7 +128,8 @@ def _search_minimum(start_jd: float, end_jd: float, eval_func) -> float:
 
 def _find_ingress_jd(year: int, target_lon: float, window_start: tuple, window_end: tuple) -> float:
     start_jd = swe.julday(year, window_start[0], window_start[1], 0.0)
-    end_jd = swe.julday(year, window_end[0], window_end[1], 23.99)
+    end_year = year + 1 if window_end[0] < window_start[0] else year
+    end_jd = swe.julday(end_year, window_end[0], window_end[1], 23.99)
     return _search_minimum(start_jd, end_jd, lambda jd: _signed_angle_to_target(_sun_lon(jd), target_lon))
 
 
@@ -321,7 +322,8 @@ def get_four_great_transits(year: int, lat: float = 22.3, lon: float = 114.2) ->
     """
     四大天運統運（土星、木星、天王、海王）進關鍵宮位長期趨勢。
     """
-    spring = _build_ingress_chart(year, "春分", 0.0, lat, lon, (3, 10), (3, 31))
+    spring_name, spring_target, spring_start, spring_end = _SEASONAL_MARKS[0]
+    spring = _build_ingress_chart(year, spring_name, spring_target, lat, lon, spring_start, spring_end)
     planets = {p["planet"]: p for p in spring["planets"]}
     lines = []
     wording = {

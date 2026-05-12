@@ -592,7 +592,7 @@ def calculate_stock_score(solar_chart: dict) -> dict:
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
-def get_four_great_transits(year: int) -> str:
+def get_four_great_transits(year: int, lat: float = 22.3, lon: float = 114.2) -> str:
     """取得四大天運統運文字。"""
     from .stock_lingyun import get_four_great_transits as _impl
-    return _impl(year=year)
+    return _impl(year=year, lat=lat, lon=lon)

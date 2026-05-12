@@ -1282,10 +1282,12 @@ def _render_macro_market(input_tz: float = 8.0):
         f"本月趨勢評分：{lunation.get('monthly_trend_score', 0):+d}，"
         f"判斷：{lunation.get('monthly_trend_view', '中性')}"
     )
-    if lunation.get("new_moon"):
-        st.write(f"新月：{lunation['new_moon']['datetime_utc']}（相位差 {lunation['new_moon']['aspect_to_spring_sun']}°）")
-    if lunation.get("full_moon"):
-        st.write(f"滿月：{lunation['full_moon']['datetime_utc']}（相位差 {lunation['full_moon']['aspect_to_spring_sun']}°）")
+    nm = lunation.get("new_moon")
+    if nm:
+        st.write(f"新月：{nm.get('datetime_utc', '—')}（相位差 {nm.get('aspect_to_spring_sun', 0)}°）")
+    fm = lunation.get("full_moon")
+    if fm:
+        st.write(f"滿月：{fm.get('datetime_utc', '—')}（相位差 {fm.get('aspect_to_spring_sun', 0)}°）")
 
     conjs = data.get("major_conjunctions", [])
     st.markdown("**☌ 主要會合 / Major Conjunctions**")
