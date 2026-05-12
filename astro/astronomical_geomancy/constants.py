@@ -170,7 +170,7 @@ FIGURES: Dict[str, Dict] = {
     "Amissio": {
         "name_en": "Amissio",
         "name_zh": "失去",
-        "dots": [True, False, False, True],    # · ∷ ∷ ·  (mirrored from Caput)
+        "dots": [True, False, False, True],    # · ∷ ∷ ·  (same pattern as Caput Draconis; distinguished by planet/sign)
         "element": "Fire",
         "element_zh": "火",
         "planet": "Venus",

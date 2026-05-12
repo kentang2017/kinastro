@@ -140,7 +140,10 @@ def _place_planets(rng: random.Random, houses: List[HouseInfo]) -> List[PlanetIn
         dot_count = rng.randint(12, 144)  # enough variance for all 12 values
         remainder = dot_count % 12
         house_idx = remainder  # 0-based → house = remainder + 1
-        # If remainder == 0, some traditions assign house 12; keep as house 12
+        # Remainder 0 means the count divides evenly into 12.
+        # In Gerard's system a zero remainder conventionally rolls over to
+        # the 12th (last) house rather than being treated as house 0
+        # (which doesn't exist).  We therefore map index 0 → index 11 here.
         if remainder == 0:
             house_idx = 11
         house = houses[house_idx]

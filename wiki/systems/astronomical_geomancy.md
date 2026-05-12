@@ -8,7 +8,7 @@
 
 ## 歷史起源 | Historical Origins
 
-### Gerardus Cremonensis（杰拉德·克雷莫納）
+### Gerardus Cremonensis（傑拉德·克雷莫納）
 
 **Gerardus Cremonensis**（約1114–1187年），中世紀最偉大的翻譯家之一，出生於義大利克雷莫納。他在托萊多（Toledo）的翻譯學派工作，將超過70部阿拉伯文科學、哲學與醫學著作譯成拉丁文，包括托勒密的《天文學大成》（Almagest）、歐幾里得的《幾何原本》等經典。
 
