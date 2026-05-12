@@ -613,6 +613,24 @@ _reg(System(
     ai_persona_key="info_bazi_prompt",
 ))
 
+_reg(System(
+    id="tab_chunzi",
+    name_zh="蠢子數",
+    name_en="ChunZiShu",
+    category="cat_chinese",
+    icon="☵",
+    tab_key="tab_chunzi",
+    desc_key="desc_chunzi",
+    spinner_key="spinner_chunzi",
+    hint_key="sys_hint_chunzi",
+    tags=["蠢子數", "二十八宿", "七政四餘", "詩詞命理", "chunzi", "lunar mansions", "chinese"],
+    maturity="core",
+    accent_color=_a("cat_chinese"),
+    origin_culture="Chinese",
+    tradition_period="Traditional Chinese",
+    ai_persona_key="info_chunzi_prompt",
+))
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_western — 西方體系 🏛️
