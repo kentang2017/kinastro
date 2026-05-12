@@ -23,8 +23,8 @@ from astro.qizheng.financial.stock_fetcher import (
 )
 
 
-_BENEFIC = {"Jupiter", "Venus", "Mercury", "Moon"}
-_MALEFIC = {"Saturn", "Mars", "Rahu", "Ketu", "Sun"}
+_BENEFIC = frozenset({"Jupiter", "Venus", "Mercury", "Moon"})
+_MALEFIC = frozenset({"Saturn", "Mars", "Rahu", "Ketu", "Sun"})
 
 _PLANET_BASE_SCORE = {
     "Jupiter": 3,
@@ -53,10 +53,13 @@ _OWN_SIGNS = {
     "Saturn": {"Makara", "Kumbha"},
 }
 
+# Market tuple shape: (timezone, latitude, longitude)
 _MARKET_HK = (8.0, 22.3193, 114.1694)
 _MARKET_SH = (8.0, 31.2304, 121.4737)
 _MARKET_SZ = (8.0, 22.5431, 114.0579)
 _MARKET_DEFAULT = (-5.0, 40.7128, -74.0060)
+
+_QUERY_MINUTE = 30  # Use half-hour snapshot for hourly transit scoring.
 
 
 @dataclass
@@ -148,6 +151,7 @@ def compute_vedic_stock_data(
     current_price: Optional[float],
     week52_high: Optional[float],
     week52_low: Optional[float],
+    query_minute: int = _QUERY_MINUTE,
 ) -> VedicStockData:
     ipo_chart = compute_vedic_chart(
         year=ipo_year,
@@ -166,7 +170,7 @@ def compute_vedic_stock_data(
         month=query_month,
         day=query_day,
         hour=query_hour,
-        minute=30,
+        minute=query_minute,
         timezone=timezone,
         latitude=latitude,
         longitude=longitude,
@@ -251,6 +255,16 @@ def _infer_market_location(normalized_ticker: str) -> tuple[float, float, float]
     return _MARKET_DEFAULT
 
 
+def _format_price(value: Optional[float]) -> str:
+    if value is None:
+        return "—"
+    if value >= 1000:
+        return f"{value:.1f}"
+    if value >= 1:
+        return f"{value:.2f}"
+    return f"{value:.3f}"
+
+
 
 def render_vedic_financial_tab(input_tz: float = 8.0):
     st.markdown(
@@ -297,7 +311,7 @@ def render_vedic_financial_tab(input_tz: float = 8.0):
     with col_info:
         if stock and not stock.error:
             name = get_display_name(stock)
-            price_str = f"{stock.current_price:.3f}" if stock.current_price is not None else "—"
+            price_str = _format_price(stock.current_price)
             st.markdown(f"**{name}**  ")
             st.caption(f"{stock.normalized_ticker} | {stock.exchange or 'N/A'} | {stock.currency or 'N/A'}")
             st.write(f"現價 / Price: **{price_str}**")
@@ -377,6 +391,7 @@ def render_vedic_financial_tab(input_tz: float = 8.0):
             query_month=query_date.month,
             query_day=query_date.day,
             query_hour=int(query_hour),
+            query_minute=_QUERY_MINUTE,
             current_price=stock.current_price,
             week52_high=stock.week52_high,
             week52_low=stock.week52_low,
