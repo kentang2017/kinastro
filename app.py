@@ -6111,7 +6111,7 @@ if not _engine_handled:
             st.exception(_e)
 
     # ============================================================
-    # --- 天文幾何占卜 Astronomical Geomancy ---
+    # --- 地占占星 Astronomical Geomancy ---
     elif _selected_system == "tab_astro_geomancy":
         try:
             _geo_key = "geo_chart_result"

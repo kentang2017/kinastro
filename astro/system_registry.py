@@ -1582,7 +1582,7 @@ _reg(System(
 
 _reg(System(
     id="tab_astro_geomancy",
-    name_zh="天文幾何占卜",
+    name_zh="地占占星",
     name_en="Astronomical Geomancy",
     category="cat_middle_east",
     icon="🔮",

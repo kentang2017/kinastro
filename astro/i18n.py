@@ -4022,15 +4022,15 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看你在印加天河（Mayu）中的暗星宿守護、出生動物靈，以及銀河占星解讀。",
         "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to see your Andean Mayu sky map, dark-cloud constellation guardians, and birth animal spirit.",
     },
-    # ── Astronomical Geomancy (天文幾何占卜) ───────────────────────────────────
+    # ── Astronomical Geomancy (地占占星) ───────────────────────────────────
     "tab_astro_geomancy": {
-        "zh": "🔮 天文幾何占卜",
+        "zh": "🔮 地占占星",
         "en": "🔮 Astronomical Geomancy",
     },
     "desc_astro_geomancy": {
         "zh": (
-            "### 天文幾何占卜 — Gerardus Cremonensis 地占占星\n\n"
-            "**天文幾何占卜（Astronomical Geomancy / Geomantia Astronomica）**源自12世紀"
+            "### 地占占星 — Gerardus Cremonensis 地占占星\n\n"
+            "**地占占星（Astronomical Geomancy / Geomantia Astronomica）**源自12世紀"
             "阿拉伯－拉丁學者 **Gerardus Cremonensis**（杰拉德·克雷莫納，約1114–1187年）"
             "的原典手稿。\n\n"
             "#### 核心機制\n"
@@ -4047,7 +4047,7 @@ Enter your birth information to look up your tree month and its poetic attribute
             "#### 占卜應用\n"
             "此系統可解答生命、健康、財富、婚姻、事業、旅程等各類問題，"
             "依據行星落宮、星座性質與 Gerard 傳統判斷規則進行解讀。\n\n"
-            "👈 請在左側選擇「天文幾何占卜」，點擊進入後輸入問題起卦。"
+            "👈 請在左側選擇「地占占星」，點擊進入後輸入問題起卦。"
         ),
         "en": (
             "### Astronomical Geomancy — Gerardus Cremonensis\n\n"
@@ -4075,7 +4075,7 @@ Enter your birth information to look up your tree month and its poetic attribute
         ),
     },
     "spinner_astro_geomancy": {
-        "zh": "正在起卦天文幾何占卜盤...",
+        "zh": "正在起卦地占占星盤...",
         "en": "Casting Astronomical Geomancy chart...",
     },
     "sys_hint_astro_geomancy": {
@@ -4084,8 +4084,8 @@ Enter your birth information to look up your tree month and its poetic attribute
     },
     "info_astro_geomancy_prompt": {
         "zh": (
-            "🔮 請點擊左側「天文幾何占卜」進入系統，在頁面上方輸入你的問題並選擇問題類型，"
-            "然後點擊「起卦占卜」產生天文幾何星盤。此系統不需要出生資料，以傳統隨機點數法起卦。"
+            "🔮 請點擊左側「地占占星」進入系統，在頁面上方輸入你的問題並選擇問題類型，"
+            "然後點擊「起卦占卜」產生地占占星盤。此系統不需要出生資料，以傳統隨機點數法起卦。"
         ),
         "en": (
             "🔮 Click 'Astronomical Geomancy' in the sidebar to enter the system. "

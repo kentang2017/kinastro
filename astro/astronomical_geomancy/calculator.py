@@ -287,7 +287,7 @@ def format_geomancy_for_prompt(chart: GeomancyChart, lang: str = "zh") -> str:
 
     else:  # zh
         lines = [
-            "=== 天文幾何占卜（Gerard Cremonensis 地占占星）===",
+            "=== 地占占星（Gerard Cremonensis 地占占星）===",
             f"問題：{chart.question}",
             f"問題類型：{chart.question_type_zh}",
             f"上升圖形：{chart.ascendant_figure.name_zh}（{chart.ascendant_figure.name_en}）",
