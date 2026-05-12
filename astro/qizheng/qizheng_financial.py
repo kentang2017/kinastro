@@ -1270,8 +1270,54 @@ def _render_macro_market(input_tz: float = 8.0):
     sectors_df = pd.DataFrame(score.get("sector_scores", []))
     if not sectors_df.empty:
         sectors_df["sectors"] = sectors_df["sectors"].apply(lambda x: "、".join(x))
-        st.markdown("**📊 板塊看多看空 / Sector Bull-Bear Map**")
+        st.markdown("**📊 關鍵宮位板塊看多看空 / Key-House Sector Bull-Bear Map**")
         st.dataframe(sectors_df, width="stretch", hide_index=True)
+
+    # 完整十二宮（吳師青天運占星學）
+    twelve = score.get("twelve_houses", [])
+    if twelve:
+        st.markdown("**🏛️ 完整十二宮概覽（吳師青《天運占星學》）/ All Twelve Houses**")
+        for row in twelve:
+            h = row["house"]
+            wu_name = row["wu_name"]
+            summary = row["summary"]
+            verb = row["verb"]
+            keywords_str = "、".join(row["keywords"])
+            planets_str = "、".join(row["planets"]) if row["planets"] else "（空宮）"
+            is_key = row["is_key_house"]
+            score_val = row["score"]
+            view_val = row["view"]
+
+            # 評分顏色
+            if score_val is not None and score_val >= 1:
+                score_color = "#4ade80"
+            elif score_val is not None and score_val <= -1:
+                score_color = "#f87171"
+            else:
+                score_color = "#94a3b8"
+
+            key_badge = (
+                '<span style="background:#1e3a5f;color:#93c5fd;font-size:0.7em;'
+                'padding:1px 6px;border-radius:4px;margin-left:6px;">關鍵宮</span>'
+                if is_key else ""
+            )
+            score_display = (
+                f'&nbsp;|&nbsp;<span style="color:{score_color};">評分 {int(score_val):+d}／{view_val}</span>'
+                if score_val is not None
+                else ""
+            )
+
+            st.markdown(
+                f"""<div style="background:rgba(20,35,60,0.30);border:1px solid rgba(100,150,220,0.20);
+                border-radius:10px;padding:10px 14px;margin:5px 0;">
+                <strong style="color:#c7d2fe;">第{h}宮（{wu_name}）{key_badge}</strong>
+                {score_display}<br>
+                <span style="color:#e2e8f0;">{summary}。</span>
+                <span style="color:#94a3b8;font-size:0.9em;">關鍵詞：{keywords_str}等，{verb}。</span><br>
+                <span style="color:#fde68a;font-size:0.9em;">⭐ 當前入宮星曜：{planets_str}</span>
+                </div>""",
+                unsafe_allow_html=True,
+            )
 
     st.markdown("**🪐 四大天運統運 / Four Great Transits**")
     st.code(data.get("four_great_transits", "—"), language="text")

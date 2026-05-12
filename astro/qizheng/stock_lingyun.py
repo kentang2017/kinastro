@@ -24,6 +24,22 @@ REGION_PRESETS = {
 _KEY_HOUSES = (2, 5, 3, 4)
 _BENEFICS = {"木星", "金星", "太陽", "太陰"}
 _MALEFICS = {"火星", "土星", "天王", "海王", "冥王"}
+
+# 吳師青《天運占星學》十二宮含義
+_WU_TWELVE_HOUSES: dict[int, dict] = {
+    1:  {"wu_name": "人民宮", "summary": "代表地區、民衆", "keywords": ["社會康樂", "地區繁榮"], "verb": "增強"},
+    2:  {"wu_name": "經濟宮", "summary": "代表財富、貨幣", "keywords": ["銀行", "證券", "股市", "珠寶", "物資", "工商業"], "verb": "拓展"},
+    3:  {"wu_name": "新聞宮", "summary": "代表正義、公理", "keywords": ["報業", "交通", "運輸", "鐵路", "電話", "倉塢", "汽車", "織造", "航空", "公用事業", "無線電"], "verb": "躍進"},
+    4:  {"wu_name": "地產宮", "summary": "代表裕民、厚生", "keywords": ["石油", "礦產", "地產", "房屋", "建築", "酒店", "橡膠"], "verb": "繁榮"},
+    5:  {"wu_name": "娛樂宮", "summary": "代表樂育、健強", "keywords": ["教育", "文化", "股票", "賽馬", "賽球", "音樂", "戲劇", "電影", "出生率", "體育"], "verb": "擴展"},
+    6:  {"wu_name": "勞動宮", "summary": "代表生計、安定", "keywords": ["員工利益", "公共衛生", "調整工作", "保持秩序"], "verb": "改進"},
+    7:  {"wu_name": "國際宮", "summary": "代表親仁、睦鄰", "keywords": ["考察業務", "推廣外貿", "出入口商", "加強活躍", "訂立條約", "增進友誼"], "verb": "計劃"},
+    8:  {"wu_name": "遺產宮", "summary": "代表課稅、處置", "keywords": ["充實稅收", "人口生死", "保險商", "代理商"], "verb": "措施"},
+    9:  {"wu_name": "船務宮", "summary": "代表旅遊、利濟", "keywords": ["宗教", "旅業", "船務", "運輸"], "verb": "發揚"},
+    10: {"wu_name": "官商宮", "summary": "代表統治、貿易", "keywords": ["國王", "總統", "首相", "總督", "工商", "經濟", "財團", "巨賈"], "verb": "推進"},
+    11: {"wu_name": "議會宮", "summary": "代表民意、羣情", "keywords": ["辯論", "選舉", "會議", "立法", "行政"], "verb": "興革"},
+    12: {"wu_name": "救濟宮", "summary": "代表卹災、賑貧", "keywords": ["慈善機構", "福利事業", "公共醫院", "津貼學校", "育嬰院", "養老院"], "verb": "加強"},
+}
 _PLANET_SWISS = {
     "天王": swe.URANUS,
     "海王": swe.NEPTUNE,
@@ -249,7 +265,7 @@ def _detect_conjunctions(planets: list[dict], orb: float = 3.0) -> list[dict]:
 
 def calculate_stock_score(solar_chart: dict) -> dict:
     """
-    吳師青理論：關鍵宮位（2/5/3/4）以行星角度評分。
+    吳師青理論：關鍵宮位（2/5/3/4）以行星角度評分，並輸出完整十二宮資訊。
     """
     planets = solar_chart.get("planets", [])
     if not planets:
@@ -257,11 +273,20 @@ def calculate_stock_score(solar_chart: dict) -> dict:
             "total_score": 0,
             "market_view": "中性",
             "house_scores": {},
-            "sector_scores": {},
+            "sector_scores": [],
+            "twelve_houses": [],
             "aspects": [],
         }
 
-    house_scores = {2: 0, 5: 0, 3: 0, 4: 0}
+    # 建立宮位 → 行星清單的對照表（全 12 宮）
+    house_planets: dict[int, list[str]] = {h: [] for h in range(1, 13)}
+    for p in planets:
+        h = p["house"]
+        if 1 <= h <= 12:
+            house_planets[h].append(p["planet"])
+
+    # 關鍵宮位評分（2/5/3/4）
+    house_scores: dict[int, int] = {2: 0, 5: 0, 3: 0, 4: 0}
     aspect_rows = []
     for focus in [p for p in planets if p["house"] in _KEY_HOUSES]:
         for other in planets:
@@ -291,14 +316,16 @@ def calculate_stock_score(solar_chart: dict) -> dict:
             )
 
     total = sum(house_scores.values())
-    sectors = {
+
+    # 關鍵宮位板塊對照
+    key_sectors = {
         2: ["金融", "銀行", "證券", "保險", "地產"],
         5: ["娛樂", "遊戲", "科技成長", "消費可選"],
         3: ["交通", "物流", "通訊", "媒體"],
         4: ["能源", "建築", "公用事業", "內需民生"],
     }
     sector_scores = []
-    for house, names in sectors.items():
+    for house, names in key_sectors.items():
         sector_scores.append(
             {
                 "house": house,
@@ -309,11 +336,32 @@ def calculate_stock_score(solar_chart: dict) -> dict:
             }
         )
 
+    # 完整十二宮資訊（含吳師青含義）
+    twelve_houses = []
+    for h in range(1, 13):
+        wu = _WU_TWELVE_HOUSES[h]
+        score = house_scores.get(h, None)
+        twelve_houses.append(
+            {
+                "house": h,
+                "palace_name": TWELVE_PALACES[h - 1],
+                "wu_name": wu["wu_name"],
+                "summary": wu["summary"],
+                "keywords": wu["keywords"],
+                "verb": wu["verb"],
+                "planets": house_planets[h],
+                "score": score,
+                "view": _classify_score(score) if score is not None else "—",
+                "is_key_house": h in _KEY_HOUSES,
+            }
+        )
+
     return {
         "total_score": total,
         "market_view": _classify_score(total),
         "house_scores": house_scores,
         "sector_scores": sector_scores,
+        "twelve_houses": twelve_houses,
         "aspects": aspect_rows,
     }
 
