@@ -1634,6 +1634,7 @@ transmitted by **Chen Xiyi**.
     "vedic_subtab_yogas": {"zh": "瑜伽組合", "en": "Yogas"},
     "vedic_subtab_bphs": {"zh": "帕拉夏拉大占星經", "en": "BPHS Classic"},
     "vedic_subtab_varga": {"zh": "分盤 Varga", "en": "Divisional Charts"},
+    "vedic_subtab_financial": {"zh": "💰 金融占星", "en": "💰 Financial Astrology"},
     # ── Jaimini sub-tab labels ────────────────────────────────────────────────
     "jaimini_subtab_chart": {"zh": "🕉️ Rashi Drishti 排盤", "en": "🕉️ Rashi Drishti Chart"},
     "jaimini_subtab_dasha": {"zh": "📅 Chara Dasha 大運", "en": "📅 Chara Dasha"},
