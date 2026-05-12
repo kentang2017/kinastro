@@ -11,10 +11,15 @@ Streamlit UI，包含：
 
 from __future__ import annotations
 
+import math
 from datetime import date, datetime, timezone as tz_cls, timedelta
 from typing import Optional
 
 import streamlit as st
+
+
+# Maximum length for bad-planets display string
+_MAX_BAD_PLANETS_STR_LEN = 60
 
 
 # ============================================================
@@ -338,7 +343,12 @@ def _render_ipo_planets(stock_data, stock, go):
         ),
         cells=dict(
             values=[df[c].tolist() for c in df.columns],
-            fill_color=[[c] for c in fill_colors] + [["rgba(20,10,60,0.25)"] * len(planets)] * (len(df.columns) - 1),
+            fill_color=[
+                fill_colors,                                          # first column: planet-colored
+            ] + [
+                ["rgba(20,10,60,0.25)"] * len(planets)               # remaining columns: uniform
+                for _ in range(len(df.columns) - 1)
+            ],
             font=dict(color="#d4c8ff", size=11),
             align="left",
             line_color="rgba(255,200,50,0.15)",
@@ -383,13 +393,13 @@ def _render_zodiac_wheel(planets, go, title: str = ""):
         fig.add_shape(
             type="line",
             x0=0, y0=0,
-            x1=1.05 * __import__("math").cos(__import__("math").radians(90 - ang)),
-            y1=1.05 * __import__("math").sin(__import__("math").radians(90 - ang)),
+            x1=1.05 * math.cos(math.radians(90 - ang)),
+            y1=1.05 * math.sin(math.radians(90 - ang)),
             line=dict(color="rgba(255,200,50,0.2)", width=1),
         )
         mid_ang = ang + 15
-        mx = 0.82 * __import__("math").cos(__import__("math").radians(90 - mid_ang))
-        my = 0.82 * __import__("math").sin(__import__("math").radians(90 - mid_ang))
+        mx = 0.82 * math.cos(math.radians(90 - mid_ang))
+        my = 0.82 * math.sin(math.radians(90 - mid_ang))
         fig.add_annotation(
             x=mx, y=my, text=_ZH_SIGNS[i],
             showarrow=False,
@@ -397,7 +407,6 @@ def _render_zodiac_wheel(planets, go, title: str = ""):
         )
 
     # 外圈
-    import math
     theta_list = [90 - a for a in angles_deg]
     x_pts = [0.68 * math.cos(math.radians(t)) for t in theta_list]
     y_pts = [0.68 * math.sin(math.radians(t)) for t in theta_list]
@@ -849,7 +858,7 @@ def _render_ai_reading(stock, stock_data, input_tz: float):
     top_planets = sorted(df.entries if df else [], key=lambda e: e.score, reverse=True)
     top3_good = ", ".join(f"{e.planet}（{e.score:+d}）" for e in top_planets[:3] if e.score > 0)
     top3_bad  = ", ".join(f"{e.planet}（{e.score:+d}）" for e in reversed(top_planets) if e.score < 0)
-    top3_bad  = top3_bad[:60]  # 截斷
+    top3_bad  = top3_bad[:_MAX_BAD_PLANETS_STR_LEN]  # cap display length
 
     prompt_snippet = (
         f"股票：{name}（{stock.normalized_ticker}）\n"

@@ -316,7 +316,7 @@ def compute_stock_chart(
     Returns:
         StockChartData
     """
-    from ..stock_fetcher import get_strength_label
+    from .stock_fetcher import get_strength_label
 
     # ── IPO 出生盤行星 ────────────────────────────────────
     decimal_hour = ipo_hour + ipo_minute / 60.0 - timezone

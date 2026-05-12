@@ -128,7 +128,7 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
         )
 
     # 檢查是否取得有效資訊
-    if not info or info.get("trailingPegRatio") is None and not info.get("shortName"):
+    if not info or (info.get("trailingPegRatio") is None and not info.get("shortName")):
         # 有些股票只有 quoteType 但沒有詳細資訊
         if not info.get("quoteType") and not info.get("symbol"):
             return StockInfo(
@@ -174,7 +174,7 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
         first_epoch = info.get("firstTradeDateEpochUtc")
         if first_epoch:
             try:
-                ipo_date = datetime.utcfromtimestamp(first_epoch).date()
+                ipo_date = datetime.fromtimestamp(first_epoch, tz=timezone.utc).date()
             except Exception:
                 pass
 
