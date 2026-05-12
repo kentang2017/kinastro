@@ -198,7 +198,7 @@ def _render_compass_tab(result: "PolynesianResult") -> None:
         color=_HAW_HEADER, fontsize=11, y=0.98,
     )
 
-    st.pyplot(fig, use_container_width=False)
+    st.pyplot(fig, width="content")
     plt.close(fig)
 
     # Table of all compass houses

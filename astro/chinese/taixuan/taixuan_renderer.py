@@ -327,7 +327,7 @@ def render_annual_timeline(result: TaiXuanResult) -> None:
         margin=dict(l=50, r=20, t=50, b=40),
         height=360,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 # ── 主頁渲染函數 ─────────────────────────────────────────────
@@ -561,7 +561,7 @@ def _render_linkage_table(result: TaiXuanResult, is_en: bool) -> None:
             "五行" if not is_en else "Element": d["五行"],
         })
     if rows:
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
 
 def _render_full_table(all_table: List[Dict], active_serial: int, is_en: bool) -> None:
@@ -579,7 +579,7 @@ def _render_full_table(all_table: List[Dict], active_serial: int, is_en: bool) -
         })
     if rows:
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, use_container_width=True)
+        st.dataframe(df, hide_index=True, width="stretch")
 
 
 # ── 未起盤時的介紹卡片 ───────────────────────────────────────
@@ -672,7 +672,7 @@ def render_qigua_ui(after_chart_hook=None) -> None:
         if st.button(
             "🎴 搖卦問卜" if not is_en else "🎴 Cast Divination",
             type="primary",
-            use_container_width=True,
+            width="stretch",
             key="_taixuan_qigua_btn",
         ):
             with st.spinner("蓍草演算中……"):

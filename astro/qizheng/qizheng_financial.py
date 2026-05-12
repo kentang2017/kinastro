@@ -698,7 +698,7 @@ def _render_overview(fin: FinancialData, go):
             paper_bgcolor="rgba(0,0,0,0)",
             font={"color": "#c8aaff"},
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     # 財帛宮行星
     if fin.caibo_planets:
@@ -822,7 +822,7 @@ def _render_jupiter_saturn(fin: FinancialData, go):
         title=dict(text="木土大合相時間軸 / Great Conjunction Timeline", font=dict(color="#c8aaff", size=13)),
         font=dict(color="#c8aaff"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 擴張/收縮週期示意圖
     _render_expansion_contraction_chart(go)
@@ -892,7 +892,7 @@ def _render_expansion_contraction_chart(go):
         showlegend=False,
         font=dict(color="#c8aaff"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_wealth_transits(fin: FinancialData, go):
@@ -953,7 +953,7 @@ def _render_wealth_transits(fin: FinancialData, go):
         paper_bgcolor="rgba(0,0,0,0)",
         height=min(60 + len(transits) * 28, 600),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 時間軸圖：有利 vs 謹慎
     dates_fav = [tr["date"] for tr in transits if tr["favorable"]]
@@ -990,7 +990,7 @@ def _render_wealth_transits(fin: FinancialData, go):
         legend=dict(font=dict(color="#c8aaff"), bgcolor="rgba(0,0,0,0)"),
         font=dict(color="#c8aaff"),
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
 
 def _render_historical_correlations(go, fin_params: dict, input_tz: float):
@@ -1118,7 +1118,7 @@ def _render_historical_correlations(go, fin_params: dict, input_tz: float):
                       annotation_text=label,
                       annotation_font_color="#8090b0",
                       annotation_font_size=9)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_current_outlook(fin: FinancialData, chart: ChartData):

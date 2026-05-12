@@ -941,12 +941,12 @@ def _render_curve_ui(result: WuYunLiuQiResult) -> None:
 
         with tab_c1:
             st.line_chart(df.set_index("時間")["主氣步索引"],
-                          use_container_width=True)
+                          width="stretch")
             st.caption("縱軸：0=初之氣 … 5=終之氣")
 
         with tab_c2:
             st.line_chart(df.set_index("時間")["主運步索引"],
-                          use_container_width=True)
+                          width="stretch")
             st.caption("縱軸：0=初運 … 4=終運")
 
         with tab_c3:

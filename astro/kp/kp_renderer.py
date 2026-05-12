@@ -450,7 +450,7 @@ def _render_planet_table(
     # 顯示表格
     st.dataframe(
         table_data,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "行星": st.column_config.TextColumn("行星", width="small"),
@@ -557,7 +557,7 @@ def _render_cusp_table(
     # 顯示表格
     st.dataframe(
         table_data,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -785,7 +785,7 @@ def render_horary_interface() -> Optional[Dict]:
             help="問題越具體，答案越準確。避免假設性問題。"
         )
         
-        submitted = st.form_submit_button("🔮 開始問卜", use_container_width=True)
+        submitted = st.form_submit_button("🔮 開始問卜", width="stretch")
         
         if submitted:
             # 解析時間

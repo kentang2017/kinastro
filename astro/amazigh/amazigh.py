@@ -451,7 +451,7 @@ def render_amazigh_chart(chart: AmazighChart, after_chart_hook=None) -> None:
                 "度數 Degree": f"{deg_in_sign:.2f}°{retro}",
                 "黃道度 Longitude": f"{p.longitude:.2f}°",
             })
-        st.dataframe(planet_rows, use_container_width=True, hide_index=True)
+        st.dataframe(planet_rows, width="stretch", hide_index=True)
 
     st.divider()
 
@@ -466,7 +466,7 @@ def render_amazigh_chart(chart: AmazighChart, after_chart_hook=None) -> None:
                 "度數 Degree": f"{lot.degree_in_sign:.2f}°",
                 "含義 Meaning": lot.meaning_zh,
             })
-        st.dataframe(lot_rows, use_container_width=True, hide_index=True)
+        st.dataframe(lot_rows, width="stretch", hide_index=True)
 
     st.divider()
 
@@ -483,6 +483,6 @@ def render_amazigh_chart(chart: AmazighChart, after_chart_hook=None) -> None:
                 "星等 Magnitude": f"{star.magnitude:.2f}",
                 "含義 Meaning": star.meaning_zh,
             })
-        st.dataframe(star_rows, use_container_width=True, hide_index=True)
+        st.dataframe(star_rows, width="stretch", hide_index=True)
 
     st.caption(chart.cultural_note)

@@ -364,7 +364,7 @@ def _render_temperament_wheel(scores: Dict[str, float]) -> None:
             x=0.5,
         ),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_body_zone_table(body_zones: list, lang: str) -> None:

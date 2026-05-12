@@ -992,7 +992,7 @@ def _render_conjunctions_tab() -> None:
             margin=dict(l=40, r=40, t=50, b=40),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except ImportError:
         st.warning("Plotly not available for timeline chart.")
@@ -1165,7 +1165,7 @@ def _render_national_tab() -> None:
             showlegend=False,
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except ImportError:
         st.caption(auto_cn("需要 Plotly 才能顯示世界地圖。", "Plotly required for world map."))

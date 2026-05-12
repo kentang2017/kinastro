@@ -639,7 +639,7 @@ def render_celtic_tree_chart(
         })
 
     df = pd.DataFrame(rows)
-    st.dataframe(df, hide_index=True, use_container_width=True)
+    st.dataframe(df, hide_index=True, width="stretch")
 
     st.divider()
 
