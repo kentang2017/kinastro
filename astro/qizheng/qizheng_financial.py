@@ -1302,7 +1302,7 @@ def _render_macro_market(input_tz: float = 8.0):
                 if is_key else ""
             )
             score_display = (
-                f'&nbsp;|&nbsp;<span style="color:{score_color};">評分 {score_val:+d}／{view_val}</span>'
+                f'&nbsp;|&nbsp;<span style="color:{score_color};">評分 {int(score_val):+d}／{view_val}</span>'
                 if score_val is not None
                 else ""
             )
