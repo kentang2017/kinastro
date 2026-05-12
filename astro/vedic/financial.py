@@ -53,6 +53,11 @@ _OWN_SIGNS = {
     "Saturn": {"Makara", "Kumbha"},
 }
 
+_MARKET_HK = (8.0, 22.3193, 114.1694)
+_MARKET_SH = (8.0, 31.2304, 121.4737)
+_MARKET_SZ = (8.0, 22.5431, 114.0579)
+_MARKET_DEFAULT = (-5.0, 40.7128, -74.0060)
+
 
 @dataclass
 class VedicStockFortuneEntry:
@@ -215,7 +220,9 @@ def compute_vedic_stock_data(
         and week52_low is not None
         and week52_high != week52_low
     ):
-        ratio = max(0.0, min(1.0, (current_price - week52_low) / (week52_high - week52_low))) * 100.0
+        raw_ratio = (current_price - week52_low) / (week52_high - week52_low)
+        clamped_ratio = max(0.0, min(1.0, raw_ratio))
+        ratio = clamped_ratio * 100.0
     else:
         ratio = None
 
@@ -236,12 +243,12 @@ def compute_vedic_stock_data(
 def _infer_market_location(normalized_ticker: str) -> tuple[float, float, float]:
     t = (normalized_ticker or "").upper()
     if t.endswith(".HK"):
-        return 8.0, 22.3193, 114.1694
+        return _MARKET_HK
     if t.endswith(".SS"):
-        return 8.0, 31.2304, 121.4737
+        return _MARKET_SH
     if t.endswith(".SZ"):
-        return 8.0, 22.5431, 114.0579
-    return -5.0, 40.7128, -74.0060
+        return _MARKET_SZ
+    return _MARKET_DEFAULT
 
 
 
