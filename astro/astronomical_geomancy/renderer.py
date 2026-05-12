@@ -463,45 +463,33 @@ def _render_primary_interpretation(chart: GeomancyChart) -> None:
 
     # Gerard general rules
     with st.expander(auto_cn("📜 Gerard Cremonensis 傳統判斷規則", "📜 Gerard Cremonensis Traditional Rules")):
-        st.markdown(
-            f"""
-{auto_cn("""
-**壽命判斷**：觀第1宮上升星座與上升圖形的吉凶，搭配第8宮（死亡宮）行星情況。
-若上升為吉象（Fortuna Major / Laetitia / Acquisitio），命宮穩固，壽元充足；
-若上升為凶象（Tristitia / Cauda Draconis / Rubeus），需特別留意健康與生命力。
-
-**財富判斷**：第2宮星座與落宮行星決定財富豐寡。
-木星（♃）在第2宮為大吉；土星（♄）在第2宮阻礙財運；金星（♀）帶來穩定收入。
-
-**婚姻判斷**：第7宮主婚姻，觀上升（第1宮）與第7宮的行星關係。
-若為友星（如木星↔金星），則婚姻和諧；若為敵星（如火星↔金星），則婚姻多波折。
-
-**子女判斷**：第5宮主子女，木星在第5宮為多子多福；土星在第5宮則子嗣艱難。
-
-**事業判斷**：第10宮主事業名譽，太陽（☉）在此宮位大吉，土星（♄）則阻礙晉升。
-
-**旅行判斷**：第9宮主長途旅行，第3宮主短途。
-月亮（☽）在旅行宮表示旅途順利；火星（♂）則有危險。
-""", """
-**Lifespan**: Observe House 1 sign and figure quality, combined with House 8 (Death).
-Fortunate figures (Fortuna Major / Laetitia / Acquisitio) = strong vitality;
-Unfortunate figures (Tristitia / Cauda Draconis / Rubeus) = health concerns.
-
-**Wealth**: House 2 sign and planets determine financial fortune.
-Jupiter (♃) in House 2 = great gain; Saturn (♄) = restriction; Venus (♀) = steady income.
-
-**Marriage**: House 7 governs marriage. Check planet relationships between Houses 1 and 7.
-Friendly planets = harmonious union; Hostile planets = turbulent relationship.
-
-**Children**: House 5 governs offspring. Jupiter in House 5 = abundant children; Saturn = difficulty.
-
-**Career**: House 10 governs career. Sun (☉) there is very fortunate; Saturn obstructs promotion.
-
-**Travel**: House 9 = long journeys, House 3 = short journeys.
-Moon (☽) = smooth travels; Mars (♂) = danger.
-""")}
-"""
+        _zh_rules = (
+            "**壽命判斷**：觀第1宮上升星座與上升圖形的吉凶，搭配第8宮（死亡宮）行星情況。\n"
+            "若上升為吉象（Fortuna Major / Laetitia / Acquisitio），命宮穩固，壽元充足；\n"
+            "若上升為凶象（Tristitia / Cauda Draconis / Rubeus），需特別留意健康與生命力。\n\n"
+            "**財富判斷**：第2宮星座與落宮行星決定財富豐寡。\n"
+            "木星（♃）在第2宮為大吉；土星（♄）在第2宮阻礙財運；金星（♀）帶來穩定收入。\n\n"
+            "**婚姻判斷**：第7宮主婚姻，觀上升（第1宮）與第7宮的行星關係。\n"
+            "若為友星（如木星↔金星），則婚姻和諧；若為敵星（如火星↔金星），則婚姻多波折。\n\n"
+            "**子女判斷**：第5宮主子女，木星在第5宮為多子多福；土星在第5宮則子嗣艱難。\n\n"
+            "**事業判斷**：第10宮主事業名譽，太陽（☉）在此宮位大吉，土星（♄）則阻礙晉升。\n\n"
+            "**旅行判斷**：第9宮主長途旅行，第3宮主短途。\n"
+            "月亮（☽）在旅行宮表示旅途順利；火星（♂）則有危險。"
         )
+        _en_rules = (
+            "**Lifespan**: Observe House 1 sign and figure quality, combined with House 8 (Death).\n"
+            "Fortunate figures (Fortuna Major / Laetitia / Acquisitio) = strong vitality;\n"
+            "Unfortunate figures (Tristitia / Cauda Draconis / Rubeus) = health concerns.\n\n"
+            "**Wealth**: House 2 sign and planets determine financial fortune.\n"
+            "Jupiter (\u2643) in House 2 = great gain; Saturn (\u2644) = restriction; Venus (\u2640) = steady income.\n\n"
+            "**Marriage**: House 7 governs marriage. Check planet relationships between Houses 1 and 7.\n"
+            "Friendly planets = harmonious union; Hostile planets = turbulent relationship.\n\n"
+            "**Children**: House 5 governs offspring. Jupiter in House 5 = abundant children; Saturn = difficulty.\n\n"
+            "**Career**: House 10 governs career. Sun (\u2609) there is very fortunate; Saturn obstructs promotion.\n\n"
+            "**Travel**: House 9 = long journeys, House 3 = short journeys.\n"
+            "Moon (\u263d) = smooth travels; Mars (\u2642) = danger."
+        )
+        st.markdown(auto_cn(_zh_rules, _en_rules))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
