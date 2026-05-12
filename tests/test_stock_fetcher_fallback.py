@@ -19,6 +19,7 @@ def _load_stock_fetcher_module():
     spec = importlib.util.spec_from_file_location("stock_fetcher_under_test", file_path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 

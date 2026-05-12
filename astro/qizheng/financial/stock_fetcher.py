@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 import json
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone as tz_cls
+from datetime import date, datetime, timezone
 from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -119,16 +119,18 @@ def _fetch_chart_quote_fallback(normalized_ticker: str) -> tuple[dict, str]:
     except Exception as exc:
         return {}, f"Yahoo chart fallback parse error: {exc}"
 
-    chart = (payload.get("chart") or {})
-    result = (chart.get("result") or [])
+    chart = payload.get("chart") or {}
+    result = chart.get("result") or []
     if not result:
         err = chart.get("error") or {}
         desc = err.get("description") or "no chart data"
         return {}, f"Yahoo chart fallback failed: {desc}"
 
-    first = result[0] or {}
+    first = result[0] if result[0] is not None else {}
     meta = first.get("meta") or {}
-    quote = ((first.get("indicators") or {}).get("quote") or [{}])[0] or {}
+    indicators = first.get("indicators") or {}
+    quote_list = indicators.get("quote") or [{}]
+    quote = quote_list[0] or {}
     closes = quote.get("close") or []
     last_close = next((v for v in reversed(closes) if isinstance(v, (int, float))), None)
 
@@ -280,7 +282,7 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
         first_epoch = info.get("firstTradeDateEpochUtc")
         if first_epoch:
             try:
-                ipo_date = datetime.fromtimestamp(first_epoch, tz=tz_cls.utc).date()
+                ipo_date = datetime.fromtimestamp(first_epoch, tz=timezone.utc).date()
             except Exception:
                 pass
 
