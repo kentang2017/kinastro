@@ -110,6 +110,12 @@ from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
 from astro.polynesian_hawaiian.renderer import render_streamlit as render_polynesian_chart_ui
 from astro.andean import compute_andean_chart as _compute_andean_chart_fn
 from astro.andean import render_streamlit as render_andean_chart_ui
+from astro.astronomical_geomancy import (
+    compute_geomancy_chart as _compute_geomancy_chart,
+    format_geomancy_for_prompt as _format_geomancy_for_prompt,
+    render_streamlit as _render_geomancy_ui,
+    render_input_panel as _render_geomancy_input,
+)
 from astro.persian.renderer import render_streamlit as render_deep_sassanian_chart
 from astro.egyptian.decans import compute_decan_chart, render_decan_chart, render_decan_browse
 from astro.vedic.nadi import compute_nadi_chart, render_nadi_chart
@@ -6100,6 +6106,36 @@ if not _engine_handled:
                 longitude=_p.get("longitude"),
                 location_name=_p.get("location_name", ""),
             )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    # ============================================================
+    # --- 天文幾何占卜 Astronomical Geomancy ---
+    elif _selected_system == "tab_astro_geomancy":
+        try:
+            _geo_key = "geo_chart_result"
+            _geo_input = _render_geomancy_input()
+            if _geo_input is not None:
+                # User submitted a new question — recompute
+                with st.spinner(t("spinner_astro_geomancy")):
+                    _geo_chart = _compute_geomancy_chart(
+                        question=_geo_input["question"],
+                        question_type=_geo_input["question_type"],
+                        seed_mode=_geo_input["seed_mode"],
+                    )
+                st.session_state[_geo_key] = _geo_chart
+            if _geo_key in st.session_state:
+                _geo_chart = st.session_state[_geo_key]
+                _render_geomancy_ui(
+                    _geo_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_astro_geomancy", _geo_chart, btn_key="astro_geomancy"
+                    ),
+                )
+            else:
+                st.info(t("info_astro_geomancy_prompt"))
+                st.markdown(t("desc_astro_geomancy"))
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)

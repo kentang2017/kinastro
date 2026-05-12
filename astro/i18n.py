@@ -4022,6 +4022,78 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看你在印加天河（Mayu）中的暗星宿守護、出生動物靈，以及銀河占星解讀。",
         "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to see your Andean Mayu sky map, dark-cloud constellation guardians, and birth animal spirit.",
     },
+    # ── Astronomical Geomancy (天文幾何占卜) ───────────────────────────────────
+    "tab_astro_geomancy": {
+        "zh": "🔮 天文幾何占卜",
+        "en": "🔮 Astronomical Geomancy",
+    },
+    "desc_astro_geomancy": {
+        "zh": (
+            "### 天文幾何占卜 — Gerardus Cremonensis 地占占星\n\n"
+            "**天文幾何占卜（Astronomical Geomancy / Geomantia Astronomica）**源自12世紀"
+            "阿拉伯－拉丁學者 **Gerardus Cremonensis**（杰拉德·克雷莫納，約1114–1187年）"
+            "的原典手稿。\n\n"
+            "#### 核心機制\n"
+            "傳統地占占卜結合古典占星的宮位系統：\n"
+            "- 使用傳統幾何方式產生 **母親圖形**（4條隨機點線）\n"
+            "- 第一個母親圖形決定**上升圖形**，對應 Gerard 原典的**上升星座**\n"
+            "- 依序填滿 **12宮** 的星座（每宮 30°）\n"
+            "- 7顆古典行星 + 龍頭（☊）+ 龍尾（☋）各以隨機點數法決定落宮\n\n"
+            "#### 16個地占圖形\n"
+            "每個圖形由4行點陣構成，奇數點為「•」，偶數點為「∶」：\n"
+            "Acquisitio（白羊）、Laetitia（金牛）、Puer/Rubeus（雙子）、Albus（巨蟹）、"
+            "Via（獅子）、Conjunctio/Caput（處女）、Puella（天秤）、Amissio/Tristitia（天蠍）、"
+            "Cauda Draconis（射手）、Populus（摩羯）、Fortuna Major（水瓶）、Carcer（雙魚）\n\n"
+            "#### 占卜應用\n"
+            "此系統可解答生命、健康、財富、婚姻、事業、旅程等各類問題，"
+            "依據行星落宮、星座性質與 Gerard 傳統判斷規則進行解讀。\n\n"
+            "👈 請在左側選擇「天文幾何占卜」，點擊進入後輸入問題起卦。"
+        ),
+        "en": (
+            "### Astronomical Geomancy — Gerardus Cremonensis\n\n"
+            "**Astronomical Geomancy (Geomantia Astronomica)** originates from the 12th-century "
+            "Arabic-Latin scholar **Gerardus Cremonensis** (Gerard of Cremona, c. 1114–1187).\n\n"
+            "#### Core Mechanism\n"
+            "Traditional geomantic divination combined with the classical astrological house system:\n"
+            "- Generate **mother figures** using traditional random point counting (4 rows)\n"
+            "- The first mother figure determines the **Ascendant figure**, mapped to a zodiac sign\n"
+            "  per Gerard's authentic correspondence table\n"
+            "- Fill the remaining **12 houses** sequentially through the zodiac (30° per house)\n"
+            "- 7 classical planets + Caput Draconis (☊) + Cauda Draconis (☋) are each assigned "
+            "  to a house via random remainder (mod 12) calculation\n\n"
+            "#### 16 Geomantic Figures\n"
+            "Each figure consists of 4 rows of dots — odd count = single (•), even = double (∶):\n"
+            "Acquisitio (Aries), Laetitia (Taurus), Puer/Rubeus (Gemini), Albus (Cancer), "
+            "Via (Leo), Conjunctio/Caput (Virgo), Puella (Libra), Amissio/Tristitia (Scorpio), "
+            "Cauda Draconis (Sagittarius), Populus (Capricorn), Fortuna Major (Aquarius), "
+            "Carcer (Pisces)\n\n"
+            "#### Divination Applications\n"
+            "This system addresses questions about life, health, wealth, marriage, career, and "
+            "journeys, using planetary house placements, sign qualities, and Gerard's traditional "
+            "interpretive rules.\n\n"
+            "👈 Select 'Astronomical Geomancy' in the sidebar, then enter your question to cast the chart."
+        ),
+    },
+    "spinner_astro_geomancy": {
+        "zh": "正在起卦天文幾何占卜盤...",
+        "en": "Casting Astronomical Geomancy chart...",
+    },
+    "sys_hint_astro_geomancy": {
+        "zh": "Gerard Cremonensis 12世紀地占占星：16圖形 × 12宮 × 9行星",
+        "en": "Gerard Cremonensis 12th-c. geomantic astrology: 16 figures × 12 houses × 9 planets",
+    },
+    "info_astro_geomancy_prompt": {
+        "zh": (
+            "🔮 請點擊左側「天文幾何占卜」進入系統，在頁面上方輸入你的問題並選擇問題類型，"
+            "然後點擊「起卦占卜」產生天文幾何星盤。此系統不需要出生資料，以傳統隨機點數法起卦。"
+        ),
+        "en": (
+            "🔮 Click 'Astronomical Geomancy' in the sidebar to enter the system. "
+            "Enter your question and select a question type at the top of the page, "
+            "then click 'Cast the Chart' to generate your geomantic wheel. "
+            "This system requires no birth data — it casts the chart via traditional random point counting."
+        ),
+    },
     "tab_electional": {
         "zh": "⏳ 擇日占星（Electional / Muhurta）",
         "en": "⏳ Electional Astrology / Muhurta",
