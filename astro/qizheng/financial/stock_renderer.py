@@ -21,6 +21,21 @@ import streamlit as st
 # Maximum length for bad-planets display string
 _MAX_BAD_PLANETS_STR_LEN = 60
 
+# Forecast tuning constants (Gann-style golden ratio projection)
+_MIN_RANGE_PCT_OF_PRICE = 0.05
+_MIN_PRICE_FLOOR = 0.01
+_SCORE_BOOST_DIVISOR = 60.0
+_MAX_SCORE_BOOST = 0.2
+_RATIO_CENTER = 50.0
+_RATIO_BIAS_DIVISOR = 100.0
+_RATIO_BIAS_WEIGHT = 0.6
+_MIN_TREND_FACTOR = 0.65
+_MAX_TREND_FACTOR = 1.65
+_BEARISH_RATIO_STRONG = 35.0
+_BEARISH_RATIO_MILD = 45.0
+_BEARISH_SCORE_THRESHOLD = -4
+_GOLDEN_RATIO_STEPS = (0.236, 0.382, 0.618, 1.0, 1.618)
+
 
 # ============================================================
 # 主要渲染入口
@@ -793,26 +808,26 @@ def _render_price_forecast(stock, stock_data, go):
     display_name = get_display_name(stock)
     ratio = stock_data.price_ratio if stock_data.price_ratio is not None else 50.0
     total_score = stock_data.daily_fortune.total_score if stock_data.daily_fortune else 0
-    price_range = max(high - low, max(current * 0.05, 0.01))
+    price_range = max(high - low, max(current * _MIN_RANGE_PCT_OF_PRICE, _MIN_PRICE_FLOOR))
 
-    score_boost = max(-0.2, min(0.2, total_score / 60.0))
-    ratio_bias = ((ratio - 50.0) / 100.0) * 0.6
+    score_boost = max(-_MAX_SCORE_BOOST, min(_MAX_SCORE_BOOST, total_score / _SCORE_BOOST_DIVISOR))
+    ratio_bias = ((ratio - _RATIO_CENTER) / _RATIO_BIAS_DIVISOR) * _RATIO_BIAS_WEIGHT
     trend_factor = 1.0 + score_boost + ratio_bias
-    trend_factor = max(0.65, min(1.65, trend_factor))
+    trend_factor = max(_MIN_TREND_FACTOR, min(_MAX_TREND_FACTOR, trend_factor))
 
-    golden_steps = [0.236, 0.382, 0.618, 1.0, 1.618]
+    golden_steps = _GOLDEN_RATIO_STEPS
     horizons = ["1個月", "3個月", "6個月", "1年", "3年以上"]
 
     direction = 1.0
-    if ratio < 35 and total_score < 0:
+    if ratio < _BEARISH_RATIO_STRONG and total_score < 0:
         direction = -1.0
-    elif ratio < 45 and total_score <= -4:
+    elif ratio < _BEARISH_RATIO_MILD and total_score <= _BEARISH_SCORE_THRESHOLD:
         direction = -1.0
 
     targets = []
     for step, horizon in zip(golden_steps, horizons):
         move = price_range * step * trend_factor * direction
-        target_price = max(0.01, current + move)
+        target_price = max(_MIN_PRICE_FLOOR, current + move)
         targets.append({"horizon": horizon, "step": step, "price": target_price})
 
     st.markdown(
