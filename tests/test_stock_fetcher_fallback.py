@@ -122,8 +122,6 @@ def test_fetch_stock_info_derives_52w_range_from_history_when_missing(monkeypatc
             return {}
 
         def history(self, period="1y", auto_adjust=False):
-            if period == "1y":
-                return FakeHistory()
             return FakeHistory()
 
     fake_yf = types.SimpleNamespace(Ticker=lambda _: FakeTicker())
