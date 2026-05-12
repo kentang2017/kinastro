@@ -861,7 +861,7 @@ def _render_rectified_chart_tab(
                 ),
                 showlegend=False,
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     except ImportError:
         pass
 
@@ -965,7 +965,7 @@ def render_streamlit(
         st.divider()
         # Run button
         run_label = auto_cn("🔮 開始校正計算") if is_zh else "🔮 Start Rectification"
-        run_btn = st.button(run_label, key="_rect_run_btn", type="primary", use_container_width=True)
+        run_btn = st.button(run_label, key="_rect_run_btn", type="primary", width="stretch")
 
         if run_btn:
             if len(parsed_events) < 2:

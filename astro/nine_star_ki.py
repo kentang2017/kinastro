@@ -689,7 +689,7 @@ def render_nine_star_ki_chart(
                     star_info["color_zh"] if is_zh else star_info["color_en"]
                 ),
             })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     st.markdown("---")
 
@@ -787,7 +787,7 @@ def render_nine_star_ki_chart(
                 ("五行" if is_zh else "Element"): minfo["element_zh"] if is_zh else minfo["element_en"],
                 ("方位" if is_zh else "Direction"): minfo["direction_zh"] if is_zh else minfo["direction_en"],
             })
-        st.dataframe(pd.DataFrame(monthly_rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(monthly_rows), hide_index=True, width="stretch")
 
     # ── Compatibility Table ──────────────────────────────────
     with st.expander(
@@ -809,7 +809,7 @@ def render_nine_star_ki_chart(
                 ("相性" if is_zh else "Compatibility"): c["label_zh"] if is_zh else c["label_en"],
             })
         df_compat = pd.DataFrame(compat_rows)
-        st.dataframe(df_compat, hide_index=True, use_container_width=True)
+        st.dataframe(df_compat, hide_index=True, width="stretch")
         st.caption(
             "相性以五行生剋關係與傳統九星相性表為準。"
             if is_zh else

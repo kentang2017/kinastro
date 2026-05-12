@@ -295,7 +295,7 @@ def render_vedic_financial_tab(input_tz: float = 8.0):
             placeholder="700.HK / AAPL / 600519.SS",
             key="_vedic_stock_ticker_input",
         )
-        fetch_btn = st.button("📡 搜尋股票 / Fetch Stock", key="_vedic_stock_fetch_btn", use_container_width=True)
+        fetch_btn = st.button("📡 搜尋股票 / Fetch Stock", key="_vedic_stock_fetch_btn", width="stretch")
 
         if fetch_btn and ticker_input.strip():
             st.session_state["_vedic_stock_ticker"] = ticker_input.strip()

@@ -78,7 +78,7 @@ def render_streamlit() -> None:
             label_visibility="collapsed",
         )
     with col_btn:
-        do_lookup = st.button(auto_cn("查詢"), key="chunzi_lookup_btn", use_container_width=True)
+        do_lookup = st.button(auto_cn("查詢"), key="chunzi_lookup_btn", width="stretch")
 
     if do_lookup and query_code:
         result = czs.get_verse(query_code.strip())
@@ -127,7 +127,7 @@ def render_streamlit() -> None:
             label_visibility="collapsed",
         )
     with col_kw_btn:
-        do_search = st.button(auto_cn("搜尋"), key="chunzi_search_btn", use_container_width=True)
+        do_search = st.button(auto_cn("搜尋"), key="chunzi_search_btn", width="stretch")
 
     if do_search and keyword:
         results = czs.search(keyword.strip(), limit=int(limit))

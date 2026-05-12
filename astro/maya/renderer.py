@@ -332,7 +332,7 @@ def _render_historical_timeline(current_jd: float) -> None:
         height=250,
         margin=dict(l=40, r=40, t=30, b=50),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Table of events
     with st.expander("📋 查看完整歷史事件列表"):
@@ -528,7 +528,7 @@ def _render_venus_cycle_chart(venus) -> None:
             showarrow=False,
         )],
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 # ============================================================

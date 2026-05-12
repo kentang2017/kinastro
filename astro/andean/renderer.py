@@ -223,7 +223,7 @@ def _render_sky_tab(st: Any, chart: Any) -> None:
     st.markdown("")
 
     # Main sky figure
-    st.plotly_chart(_build_mayu_figure(chart), use_container_width=True)
+    st.plotly_chart(_build_mayu_figure(chart), width="stretch")
 
     # Stats row
     alive_count = len(chart.dark_constellations_alive)
@@ -295,7 +295,7 @@ def _render_planets_tab(st: Any, chart: Any) -> None:
         })
 
     df = pd.DataFrame(rows)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 
     st.caption(
         "銀經 l = 銀河經度（Galactic Longitude）；"

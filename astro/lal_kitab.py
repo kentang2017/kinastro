@@ -1146,7 +1146,7 @@ def render_lal_kitab_chart(
                     "Retro": retro_str,
                     "Status": pakka_str,
                 })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     # ── Tab 2: Planet Details ─────────────────────────────────
     with tab_planets:
@@ -1401,7 +1401,7 @@ def _render_1952_tab(chart: "LalKitabChart", lang: str = "zh") -> None:
                 "Remedy": info["remedy"],
             })
     if rows_35:
-        st.dataframe(pd.DataFrame(rows_35), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows_35), hide_index=True, width="stretch")
 
     # ── Section D: House colour remedies ──────────────────────
     st.divider()
@@ -1416,7 +1416,7 @@ def _render_1952_tab(chart: "LalKitabChart", lang: str = "zh") -> None:
             color_rows.append({"宮位": house_num, "補救建議": "；".join(remedies_list)})
         else:
             color_rows.append({"House": house_num, "Remedies": "; ".join(remedies_list)})
-    st.dataframe(pd.DataFrame(color_rows), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(color_rows), hide_index=True, width="stretch")
 
     # ── Section E: Farman Engine ───────────────────────────────
     st.divider()
@@ -1707,7 +1707,7 @@ def render_lal_kitab_1952_page(
                     "Pakka": pakka_str,
                     "Blind Status": blind,
                 })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
         if after_chart_hook:
             after_chart_hook()
@@ -1916,7 +1916,7 @@ def render_lal_kitab_1952_page(
             if rows_35:
                 if is_active_cycle:
                     st.info("▶ 目前正在此週期中！" if lang in ("zh", "zh_cn") else "▶ Currently in this cycle!")
-                st.dataframe(pd.DataFrame(rows_35), hide_index=True, use_container_width=True)
+                st.dataframe(pd.DataFrame(rows_35), hide_index=True, width="stretch")
 
     # ──────────────────────────────────────────────────────────
     # Tab 5: 手相壽命
@@ -2098,7 +2098,7 @@ def render_lal_kitab_1952_page(
                         "Note": frule.get("note", ""),
                     })
             if farman_rows:
-                st.dataframe(pd.DataFrame(farman_rows), hide_index=True, use_container_width=True)
+                st.dataframe(pd.DataFrame(farman_rows), hide_index=True, width="stretch")
 
         st.divider()
 
@@ -2195,7 +2195,7 @@ def render_lal_kitab_1952_page(
             else:
                 st.markdown("**📅 Weekday Auspicious Directions**")
                 wd_rows = [{"Weekday": k, "Auspicious Directions": " / ".join(v)} for k, v in WEEKDAY_DIRECTIONS.items()]
-            st.dataframe(pd.DataFrame(wd_rows), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(wd_rows), hide_index=True, width="stretch")
 
         with col_t2:
             if lang in ("zh", "zh_cn"):
@@ -2204,7 +2204,7 @@ def render_lal_kitab_1952_page(
             else:
                 st.markdown("**🕐 Birth Hour Auspicious Directions**")
                 td_rows = [{"Time Slot": k, "Auspicious Directions": " / ".join(v)} for k, v in TIME_DIRECTIONS.items()]
-            st.dataframe(pd.DataFrame(td_rows), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(td_rows), hide_index=True, width="stretch")
 
         st.divider()
 
@@ -2260,4 +2260,4 @@ def render_lal_kitab_1952_page(
                     "Planets": ", ".join(planets_in_h) if planets_in_h else "Empty",
                     "Remedy": "; ".join(rem_list),
                 })
-        st.dataframe(pd.DataFrame(hcr_rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(hcr_rows), hide_index=True, width="stretch")

@@ -253,7 +253,7 @@ def _render_secondary_progressions(
 
     if rows:
         df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
     # 重要相位高亮
     active_aspects = [
@@ -331,7 +331,7 @@ def _render_solar_arc(
         })
 
     if rows:
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
     # 活躍相位
     active_sa = [
@@ -404,7 +404,7 @@ def _render_primary_directions(
         })
 
     df = pd.DataFrame(rows)
-    st.dataframe(df, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(df, width="stretch", hide_index=True, height=400)
 
     # 詳細事件展示（前10個）
     _render_section_header("📅", "重要事件詳解", "Key Events Detail")
@@ -653,7 +653,7 @@ def _render_life_timeline(
     fig = _build_timeline_figure(
         timeline_events, major_events, birth_year, age_max, lang
     )
-    st.plotly_chart(fig, use_container_width=True, config={
+    st.plotly_chart(fig, width="stretch", config={
         "displayModeBar": True,
         "modeBarButtonsToAdd": ["downloadSVG"],
         "scrollZoom": True,
@@ -709,7 +709,7 @@ def _render_cross_reference(
 
     if rows:
         df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
     st.caption(
         "💡 七政大限按上升星座主星起算。對照僅供參考，各體系算法有所不同。\n"

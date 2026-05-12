@@ -94,7 +94,7 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
         )
 
         fetch_btn = st.button("📡 擷取股票資訊 / Fetch Stock Info", key="_stock_fetch_btn",
-                               use_container_width=True)
+                               width="stretch")
 
         if fetch_btn and ticker_input.strip():
             st.session_state["_stock_ticker"] = ticker_input.strip()
@@ -377,7 +377,7 @@ def _render_ipo_planets(stock_data, stock, go):
         paper_bgcolor="rgba(0,0,0,0)",
         height=min(80 + len(planets) * 28, 450),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 七政四餘輪形分佈圖（360° 黃道圓圈散點）
     _render_zodiac_wheel(planets, go, title=f"{name} 上市盤 / IPO Chart")
@@ -457,7 +457,7 @@ def _render_zodiac_wheel(planets, go, title: str = ""):
             line=dict(color="rgba(255,200,50,0.25)", width=1),
         )],
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_daily_fortune(stock_data, go, query_date: date, query_hour: int):
@@ -532,7 +532,7 @@ def _render_daily_fortune(stock_data, go, query_date: date, query_hour: int):
         yaxis=dict(color="#d4b860", gridcolor="rgba(255,200,50,0.05)"),
         font=dict(color="#d4c8ff"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 星曜斷語卡片
     st.markdown("**⭐ 各星曜流時斷語 / Per-Planet Judgment**")
@@ -607,7 +607,7 @@ def _render_hourly_timeline(go, query_date: date, timezone: float):
         yaxis=dict(title="Score", color="#9090b8", gridcolor="rgba(255,200,50,0.08)"),
         font=dict(color="#d4c8ff"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_price_strength(stock, stock_data, go):
@@ -672,7 +672,7 @@ def _render_strength_gauge(ratio: float, label_zh: str, label_en: str, color: st
         paper_bgcolor="rgba(0,0,0,0)",
         font={"color": "#d4c8ff"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # 五區間說明
     st.markdown(
@@ -924,7 +924,7 @@ def _render_price_forecast(stock, stock_data, go):
         title=dict(text="黃金分割時間軸目標價 / Golden Ratio Target Curve", font=dict(color="#FFD700", size=12)),
         font=dict(color="#d4c8ff"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_ai_reading(stock, stock_data, input_tz: float):

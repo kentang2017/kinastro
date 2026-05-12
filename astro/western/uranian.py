@@ -656,7 +656,7 @@ def render_uranian_chart(chart: UranianChart) -> None:
                     "Sign": f"{p.sign} {SIGN_CN.get(p.sign, '')} {p.sign_degree:.2f}°",
                     "90° Dial": f"{p.dial90:.4f}°",
                 })
-        st.dataframe(rows, use_container_width=True, hide_index=True)
+        st.dataframe(rows, width="stretch", hide_index=True)
 
         # Dial clusters
         if chart.dial90_clusters:
@@ -820,7 +820,7 @@ def render_uranian_chart(chart: UranianChart) -> None:
                     "Meaning (EN)": meanings.get("en", ""),
                     "Meaning (ZH)": meanings.get("zh", ""),
                 })
-        st.dataframe(tnp_rows, use_container_width=True, hide_index=True)
+        st.dataframe(tnp_rows, width="stretch", hide_index=True)
 
         st.markdown("---")
         if is_zh:

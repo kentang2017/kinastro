@@ -1145,7 +1145,7 @@ with st.sidebar:
     if _now_col.button(
         auto_cn("現時", "Now"),
         key="now_btn",
-        use_container_width=True,
+        width="stretch",
         help=auto_cn("填入現在的日期和時間", "Fill in the current date and time"),
     ):
         _now = datetime.now()
@@ -1261,7 +1261,7 @@ with st.sidebar:
         # Submit button — chart computation triggered only on click
         _form_submitted = st.form_submit_button(
             t("generate_chart_btn"),
-            use_container_width=True,
+            width="stretch",
             type="primary",
         )
         if _form_submitted:
@@ -2916,7 +2916,7 @@ if not _engine_handled:
                             "尊嚴": planet.essential_dignity,
                             "逆行": "✓" if planet.retrograde else "",
                         })
-                    st.dataframe(planet_data, use_container_width=True)
+                    st.dataframe(planet_data, width="stretch")
                     
                     # AI Analysis button
                     _render_ai_button("tab_persian", p_chart, btn_key="persian")
@@ -2945,7 +2945,7 @@ if not _engine_handled:
                                     "結束": sp.end_date,
                                     "年數": f"{sp.duration_years:.2f}",
                                 })
-                            st.dataframe(sub_data, use_container_width=True)
+                            st.dataframe(sub_data, width="stretch")
                 
                 with _p_tab_hyleg:
                     st.header(t("persian_hyleg_title"))
@@ -2988,7 +2988,7 @@ if not _engine_handled:
                             "起始": prof.start_date,
                             "結束": prof.end_date,
                         })
-                    st.dataframe(prof_data, use_container_width=True)
+                    st.dataframe(prof_data, width="stretch")
                 
                 with _p_tab_almuten:
                     st.header(t("persian_almuten_title"))
@@ -3005,7 +3005,7 @@ if not _engine_handled:
                             score_data = []
                             for key, score in p_chart.almuten_figuris.dignity_scores.items():
                                 score_data.append({"關鍵點": key, "分數": score})
-                            st.dataframe(score_data, use_container_width=True)
+                            st.dataframe(score_data, width="stretch")
                     else:
                         st.warning("無法計算 Almuten Figuris")
                 
@@ -3036,7 +3036,7 @@ if not _engine_handled:
                             "容許度": f"{rs.orb}°" if rs.orb > 0 else "—",
                             "顯著": "✓" if rs.is_prominent else "",
                         })
-                    st.dataframe(star_data, use_container_width=True)
+                    st.dataframe(star_data, width="stretch")
                 
                 with _p_tab_lots:
                     st.header(t("persian_lots_title"))
@@ -3051,7 +3051,7 @@ if not _engine_handled:
                             "星座": f"{lot.sign_cn} {lot.degree:.1f}°",
                             "宮位": f"第{lot.house}宮",
                         })
-                    st.dataframe(lots_data, use_container_width=True)
+                    st.dataframe(lots_data, width="stretch")
                     
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")

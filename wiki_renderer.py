@@ -423,7 +423,7 @@ def _render_systems_tab(
                         btn_label,
                         key=f"_wiki_btn_{s['file']}",
                         type=btn_type,
-                        use_container_width=True,
+                        width="stretch",
                     ):
                         st.session_state[selected_key] = s["file"]
                         st.rerun()
@@ -496,7 +496,7 @@ def _render_timeline_tab(lang: str, is_zh: bool) -> None:
         return
 
     fig = _build_timeline_figure(lang)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Instruction note
     note = (

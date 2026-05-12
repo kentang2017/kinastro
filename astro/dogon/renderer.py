@@ -228,7 +228,7 @@ def _render_sigui_timeline(chart: DogonSiriusChart, constants: dict, is_zh: bool
         ),
     )
     apply_chart_theme(fig)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def render_dogon_sirius_chart(chart: DogonSiriusChart, after_chart_hook=None) -> None:
@@ -387,7 +387,7 @@ margin-bottom:12px;">
             height=560,
         )
         apply_chart_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         fig_ok = True
     except Exception:
         pass

@@ -129,7 +129,7 @@ def render_mahabote_basic(chart: BurmeseMahaboteChart, lang: Language = "zh", wh
             }
         )
 
-    st.dataframe(rows, use_container_width=True, hide_index=True)
+    st.dataframe(rows, width="stretch", hide_index=True)
 
 
 __all__ = ["build_mahabote_wheel_svg", "render_mahabote_basic"]

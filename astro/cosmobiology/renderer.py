@@ -243,7 +243,7 @@ def _build_dial_plotly(points: List[CosmoPoint]) -> None:
         ),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 # ============================================================
@@ -413,7 +413,7 @@ def _render_dial_tab(chart: ComsobioChart, is_zh: bool) -> None:
                 "Sign / Degree": f"{p.sign}({SIGN_CN.get(p.sign, '')}) {p.sign_degree:.2f}°",
                 "90° Dial": f"{p.dial90:.4f}°",
             })
-    st.dataframe(rows, hide_index=True, use_container_width=True)
+    st.dataframe(rows, hide_index=True, width="stretch")
 
 
 # ============================================================
