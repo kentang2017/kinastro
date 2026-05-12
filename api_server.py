@@ -52,6 +52,10 @@ from astro.electional.calculator import (
     find_western_elections,
     find_vedic_muhurtas,
 )
+from astro.astronomical_geomancy.calculator import (
+    compute_geomancy_chart,
+    format_geomancy_for_prompt,
+)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -1169,5 +1173,57 @@ async def list_systems() -> dict[str, list[str]]:
             "bazi",
             "horary_western",
             "horary_vedic",
+            "astronomical_geomancy",
         ]
     }
+
+
+# =========================================================================
+#  Astronomical Geomancy endpoint
+# =========================================================================
+
+
+class GeomancyParams(BaseModel):
+    """Parameters for the Astronomical Geomancy endpoint."""
+
+    question: str = Field(default="", description="The querent's question")
+    question_type: str = Field(
+        default="custom",
+        description=(
+            "Question category key: life, health, wealth, marriage, career, "
+            "children, journey, religion, enemy, death, or custom"
+        ),
+    )
+    seed_mode: str = Field(
+        default="random",
+        description="Seed mode: 'random', 'time_seed', or 'manual'",
+    )
+    manual_seed: Optional[int] = Field(
+        default=None,
+        description="Deterministic seed (used when seed_mode='manual')",
+    )
+    lang: str = Field(default="zh", description="Output language: 'zh' or 'en'")
+
+
+@app.post("/api/astronomical_geomancy", response_model=ChartResponse, tags=["Divination"])
+async def astronomical_geomancy(params: GeomancyParams) -> ChartResponse:
+    """
+    Cast an Astronomical Geomancy chart per Gerardus Cremonensis (12th c.).
+
+    Generates 4 mother figures, assigns zodiac signs to 12 houses,
+    and places 7 classical planets + Caput/Cauda Draconis in houses.
+    Returns the full chart data and an AI-ready text prompt.
+    """
+    try:
+        chart = compute_geomancy_chart(
+            question=params.question,
+            question_type=params.question_type,
+            seed_mode=params.seed_mode,
+            manual_seed=params.manual_seed,
+        )
+        chart_dict = chart.to_json()
+        chart_dict["prompt"] = format_geomancy_for_prompt(chart, lang=params.lang)
+        return ChartResponse(system="astronomical_geomancy", data=chart_dict)
+    except Exception as exc:
+        logger.exception("Astronomical Geomancy chart failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

@@ -1580,6 +1580,28 @@ _reg(System(
     ai_persona_key="info_sumerian_prompt",
 ))
 
+_reg(System(
+    id="tab_astro_geomancy",
+    name_zh="天文幾何占卜",
+    name_en="Astronomical Geomancy",
+    category="cat_middle_east",
+    icon="🔮",
+    tab_key="tab_astro_geomancy",
+    desc_key="desc_astro_geomancy",
+    spinner_key="spinner_astro_geomancy",
+    hint_key="sys_hint_astro_geomancy",
+    tags=[
+        "geomancy", "geomantia", "gerard cremonensis", "arabic", "medieval",
+        "divination", "12 houses", "figures", "middle east", "latin",
+        "horary", "geomantic astrology",
+    ],
+    maturity="beta",
+    accent_color=_a("cat_middle_east"),
+    origin_culture="Arabic / Medieval Latin",
+    tradition_period="Medieval Islamic-Latin (12th c., Gerard of Cremona)",
+    ai_persona_key="info_astro_geomancy_prompt",
+))
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_yi_zhan — 醫占 ⚕️
