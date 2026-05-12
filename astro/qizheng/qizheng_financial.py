@@ -25,6 +25,7 @@ from .calculator import (
     ChartData, PlanetPosition,
     _normalize_degree, _get_western_sign, _get_chinese_sign,
     _degree_to_sign_degree,
+    get_stock_lingyun_chart,
 )
 from .qizheng_transit import compute_transit
 from .constants import FIVE_ELEMENTS, TWELVE_SIGNS_WESTERN
@@ -558,6 +559,7 @@ def render_financial_tab(
         _tab_transits,
         _tab_history,
         _tab_outlook,
+        _tab_macro,
         _tab_stock,
     ) = st.tabs([
         "🌟 財星總覽 / Overview",
@@ -565,6 +567,7 @@ def render_financial_tab(
         "🔄 財富過運 / Wealth Transits",
         "📜 歷史對照 / Historical Correlations",
         "🔭 金融展望 / Current Outlook",
+        "🌍 宏觀股市 / Macro Market",
         "📈 股票靈運 / Stock Fortune",
     ])
 
@@ -599,7 +602,13 @@ def render_financial_tab(
         _render_current_outlook(fin, chart)
 
     # ════════════════════════════════════════════════════
-    # 分頁 6：股票靈運占星儀 / Stock Fortune Astrologer
+    # 分頁 6：宏觀股市 / Macro Market
+    # ════════════════════════════════════════════════════
+    with _tab_macro:
+        _render_macro_market(input_tz=input_tz)
+
+    # ════════════════════════════════════════════════════
+    # 分頁 7：股票靈運占星儀 / Stock Fortune Astrologer
     # ════════════════════════════════════════════════════
     with _tab_stock:
         try:
@@ -1193,6 +1202,99 @@ def _render_current_outlook(fin: FinancialData, chart: ChartData):
     # AI 一鍵解讀
     st.markdown("**🤖 AI 金融占星解讀 / AI Financial Astrology Reading**")
     _render_financial_ai_button(fin, chart)
+
+
+def _render_macro_market(input_tz: float = 8.0):
+    """宏觀股市分頁：地區板塊看多看空與股票靈運。"""
+    from .stock_lingyun import REGION_PRESETS
+
+    st.subheader("🌍 宏觀股市 / Macro Market")
+    st.caption("依吳師青《天運占星學》：以太陽季節圖、關鍵宮位、天運統運與月相判斷板塊多空。")
+
+    utc_now = datetime.now(tz=tz_cls.utc)
+    local_now = utc_now + timedelta(hours=input_tz)
+
+    region = st.selectbox(
+        "分析地區 / Region",
+        options=list(REGION_PRESETS.keys()),
+        index=0,
+        key="macro_market_region",
+    )
+    col_y, col_m = st.columns(2)
+    with col_y:
+        year = st.number_input(
+            "年份 / Year",
+            min_value=1900,
+            max_value=2300,
+            value=int(local_now.year),
+            step=1,
+            key="macro_market_year",
+        )
+    with col_m:
+        month = st.number_input(
+            "月份 / Month",
+            min_value=1,
+            max_value=12,
+            value=int(local_now.month),
+            step=1,
+            key="macro_market_month",
+        )
+
+    lat = REGION_PRESETS[region]["lat"]
+    lon = REGION_PRESETS[region]["lon"]
+    with st.spinner("🔮 計算宏觀股市靈運… / Computing macro market spirit…"):
+        data = get_stock_lingyun_chart(year=int(year), month=int(month), lat=float(lat), lon=float(lon))
+
+    score = data.get("stock_score", {})
+    st.markdown(
+        f"""
+        <div style="background:rgba(20,40,70,0.35);border:1px solid rgba(120,180,255,0.25);
+        border-radius:12px;padding:14px 16px;margin:8px 0 14px 0;">
+        <strong style="color:#93c5fd;">關鍵宮位總分 / Total Score：</strong>
+        <span style="color:#e2e8f0;">{score.get('total_score', 0):+d}</span>
+        &nbsp;|&nbsp;
+        <strong style="color:#93c5fd;">宏觀判斷 / View：</strong>
+        <span style="color:#fde68a;">{score.get('market_view', '中性')}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    selected = data.get("selected_chart", {})
+    st.caption(
+        f"當月主盤 / Active seasonal chart: {selected.get('ingress_name', '—')} "
+        f"({selected.get('datetime_utc', '—')})"
+    )
+
+    import pandas as pd
+    sectors_df = pd.DataFrame(score.get("sector_scores", []))
+    if not sectors_df.empty:
+        sectors_df["sectors"] = sectors_df["sectors"].apply(lambda x: "、".join(x))
+        st.markdown("**📊 板塊看多看空 / Sector Bull-Bear Map**")
+        st.dataframe(sectors_df, width="stretch", hide_index=True)
+
+    st.markdown("**🪐 四大天運統運 / Four Great Transits**")
+    st.code(data.get("four_great_transits", "—"), language="text")
+
+    lunation = data.get("lunation", {})
+    st.markdown("**🌑🌕 新月滿月月勢 / Lunation Trend**")
+    st.write(
+        f"本月趨勢評分：{lunation.get('monthly_trend_score', 0):+d}，"
+        f"判斷：{lunation.get('monthly_trend_view', '中性')}"
+    )
+    nm = lunation.get("new_moon")
+    if nm:
+        st.write(f"新月：{nm.get('datetime_utc', '—')}（相位差 {nm.get('aspect_to_spring_sun', 0)}°）")
+    fm = lunation.get("full_moon")
+    if fm:
+        st.write(f"滿月：{fm.get('datetime_utc', '—')}（相位差 {fm.get('aspect_to_spring_sun', 0)}°）")
+
+    conjs = data.get("major_conjunctions", [])
+    st.markdown("**☌ 主要會合 / Major Conjunctions**")
+    if conjs:
+        st.dataframe(pd.DataFrame(conjs), width="stretch", hide_index=True)
+    else:
+        st.info("本季節圖未偵測到主要會合。")
 
 
 def _build_wealth_signals(fin: FinancialData) -> list:

@@ -571,3 +571,28 @@ def get_mansion_for_degree(lon: float) -> dict:
             - start_lon (float): 距星黃經度數
     """
     return TWENTY_EIGHT_MANSIONS[get_mansion_index_for_degree(lon)]
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_stock_lingyun_chart(
+    year: int,
+    month: int = None,
+    lat: float = 22.3,
+    lon: float = 114.2,
+) -> dict:
+    """取得宏觀股市股票靈運圖表資料。"""
+    from .stock_lingyun import get_stock_lingyun_chart as _impl
+    return _impl(year=year, month=month, lat=lat, lon=lon)
+
+
+def calculate_stock_score(solar_chart: dict) -> dict:
+    """計算宏觀股市關鍵宮位評分。"""
+    from .stock_lingyun import calculate_stock_score as _impl
+    return _impl(solar_chart)
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_four_great_transits(year: int, lat: float = 22.3, lon: float = 114.2) -> str:
+    """取得四大天運統運文字。"""
+    from .stock_lingyun import get_four_great_transits as _impl
+    return _impl(year=year, lat=lat, lon=lon)
