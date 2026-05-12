@@ -551,19 +551,21 @@ def render_financial_tab(
             st.exception(e)
             return
 
-    # ── 五個子分頁 ────────────────────────────────────────
+    # ── 六個子分頁 ────────────────────────────────────────
     (
         _tab_overview,
         _tab_jup_sat,
         _tab_transits,
         _tab_history,
         _tab_outlook,
+        _tab_stock,
     ) = st.tabs([
         "🌟 財星總覽 / Overview",
         "♃♄ 木土週期 / Jupiter-Saturn Cycles",
         "🔄 財富過運 / Wealth Transits",
         "📜 歷史對照 / Historical Correlations",
         "🔭 金融展望 / Current Outlook",
+        "📈 股票靈運 / Stock Fortune",
     ])
 
     # ════════════════════════════════════════════════════
@@ -595,6 +597,19 @@ def render_financial_tab(
     # ════════════════════════════════════════════════════
     with _tab_outlook:
         _render_current_outlook(fin, chart)
+
+    # ════════════════════════════════════════════════════
+    # 分頁 6：股票靈運占星儀 / Stock Fortune Astrologer
+    # ════════════════════════════════════════════════════
+    with _tab_stock:
+        try:
+            from .financial import render_stock_fortune_tab
+            render_stock_fortune_tab(input_tz=input_tz)
+        except ImportError as _ie:
+            st.error(f"股票靈運模組載入失敗 / Stock fortune module failed to load: {_ie}")
+        except Exception as _se:
+            st.error(f"股票靈運錯誤 / Stock fortune error: {_se}")
+            st.exception(_se)
 
 
 # ────────────────────────────────────────────────────────────
