@@ -21,6 +21,24 @@ import streamlit as st
 # Maximum length for bad-planets display string
 _MAX_BAD_PLANETS_STR_LEN = 60
 
+# Forecast tuning constants (Gann-style golden ratio projection)
+_MIN_RANGE_PCT_OF_PRICE = 0.05
+_MIN_PRICE_FLOOR = 0.01
+_SCORE_BOOST_DIVISOR = 60.0
+_MAX_SCORE_BOOST = 0.2
+_RATIO_CENTER = 50.0
+_RATIO_BIAS_DIVISOR = 100.0
+_RATIO_BIAS_WEIGHT = 0.6
+_MIN_TREND_FACTOR = 0.65
+_MAX_TREND_FACTOR = 1.65
+_BEARISH_RATIO_STRONG = 35.0
+_BEARISH_RATIO_MILD = 45.0
+_BEARISH_SCORE_THRESHOLD = -4
+_GOLDEN_RATIO_STEPS = (0.236, 0.382, 0.618, 1.0, 1.618)
+_FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
+_BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
+_BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
+
 
 # ============================================================
 # 主要渲染入口
@@ -616,9 +634,9 @@ def _render_price_strength(stock, stock_data, go):
         # 對應七政四餘解讀
         _render_strength_interpretation(ratio, label_zh, stock)
 
-    # 股價範圍視覺化
+    # 股價預測視覺化
     if stock.current_price and stock.week52_high and stock.week52_low:
-        _render_price_range_chart(stock, go)
+        _render_price_forecast(stock, stock_data, go)
 
 
 def _render_strength_gauge(ratio: float, label_zh: str, label_en: str, color: str, go):
@@ -780,65 +798,130 @@ def _render_strength_interpretation(ratio: float, label_zh: str, stock):
     )
 
 
-def _render_price_range_chart(stock, go):
-    """渲染股價 52 週範圍視覺圖"""
+def _render_price_forecast(stock, stock_data, go):
+    """渲染黃金分割 × 七政四餘股價預測視覺圖"""
+    from .stock_fetcher import get_display_name
+
     st.divider()
-    st.markdown("**📊 股價位置圖 / Price Range Chart**")
+    st.markdown("**🔮 股價預測 / Price Forecast**")
 
     low = stock.week52_low
     high = stock.week52_high
     current = stock.current_price
+    display_name = get_display_name(stock)
+    ratio = stock_data.price_ratio if stock_data.price_ratio is not None else 50.0
+    total_score = stock_data.daily_fortune.total_score if stock_data.daily_fortune else 0
+    price_range = max(high - low, max(current * _MIN_RANGE_PCT_OF_PRICE, _MIN_PRICE_FLOOR))
+
+    score_boost = max(-_MAX_SCORE_BOOST, min(_MAX_SCORE_BOOST, total_score / _SCORE_BOOST_DIVISOR))
+    ratio_bias = ((ratio - _RATIO_CENTER) / _RATIO_BIAS_DIVISOR) * _RATIO_BIAS_WEIGHT
+    trend_factor = 1.0 + score_boost + ratio_bias
+    trend_factor = max(_MIN_TREND_FACTOR, min(_MAX_TREND_FACTOR, trend_factor))
+
+    golden_steps = _GOLDEN_RATIO_STEPS
+    direction = 1.0
+    if ratio < _BEARISH_RATIO_STRONG and total_score < 0:
+        direction = -1.0
+    elif ratio < _BEARISH_RATIO_MILD and total_score <= _BEARISH_SCORE_THRESHOLD:
+        direction = -1.0
+
+    targets = []
+    for step, horizon in zip(golden_steps, _FORECAST_HORIZONS):
+        move = price_range * step * trend_factor * direction
+        target_price = max(_MIN_PRICE_FLOOR, current + move)
+        targets.append({"horizon": horizon, "step": step, "price": target_price})
+
+    st.markdown(
+        f"""
+        <div style="
+            background: radial-gradient(circle at top right, rgba(255,215,0,0.18), rgba(40,10,75,0.35) 45%, rgba(10,20,60,0.45));
+            border:1px solid rgba(255,215,0,0.35);
+            border-radius:14px;
+            padding:14px 16px;
+            margin:6px 0 14px 0;
+        ">
+            <div style="font-weight:700;color:#FFD700;font-size:0.97em;">
+                江恩占星學派 · 黃金分割比率 × 七政四餘
+            </div>
+            <div style="color:#d6c8ff;font-size:0.86em;margin-top:5px;">
+                {display_name} 以現價 <span style="color:#FFD700;">{current:.2f}</span> 為基準，
+                結合 52 週振幅與流時星曜分數（{total_score:+d}）推演未來目標價。
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    cols = st.columns(5, gap="small")
+    card_colors = [
+        "rgba(96,165,250,0.18)",
+        "rgba(56,189,248,0.18)",
+        "rgba(134,239,172,0.18)",
+        "rgba(250,204,21,0.18)",
+        "rgba(255,215,0,0.24)",
+    ]
+    for idx, target in enumerate(targets):
+        delta_pct = ((target["price"] - current) / current * 100.0) if current else 0.0
+        with cols[idx]:
+            st.markdown(
+                f"""
+                <div style="
+                    background:{card_colors[idx]};
+                    border:1px solid rgba(255,215,0,0.28);
+                    border-radius:12px;
+                    padding:10px 10px 9px 10px;
+                    min-height:106px;
+                ">
+                    <div style="font-size:0.78em;color:#d8cff8;">{target["horizon"]} 目標價</div>
+                    <div style="font-size:1.06em;font-weight:700;color:#FFD700;margin:4px 0 3px 0;">
+                        {target["price"]:.2f}
+                    </div>
+                    <div style="font-size:0.78em;color:{'#86efac' if delta_pct >= 0 else '#f87171'};">
+                        {delta_pct:+.2f}% vs 現價
+                    </div>
+                    <div style="font-size:0.72em;color:#a8b4d8;margin-top:4px;">
+                        φ {target["step"]:.3f}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     fig = go.Figure()
+    x_points = ["現價"] + list(_FORECAST_HORIZONS)
+    y_points = [current] + [t["price"] for t in targets]
+    line_color = "#FFD700" if direction > 0 else "#f87171"
+    marker_tail = _BULLISH_FORECAST_COLORS if direction > 0 else _BEARISH_FORECAST_COLORS
+    marker_color = ["#FFD700", *list(marker_tail[:len(targets)])]
 
-    # 背景色帶
-    zones = [
-        (low,  low  + (high-low)*0.2, "rgba(248,113,113,0.15)", "休囚"),
-        (low  + (high-low)*0.2, low + (high-low)*0.4, "rgba(251,146,60,0.12)", "失令"),
-        (low  + (high-low)*0.4, low + (high-low)*0.6, "rgba(96,165,250,0.10)", "中和"),
-        (low  + (high-low)*0.6, low + (high-low)*0.8, "rgba(134,239,172,0.12)", "得令"),
-        (low  + (high-low)*0.8, high, "rgba(255,200,50,0.15)", "旺相"),
-    ]
-    for z_low, z_high, z_color, z_label in zones:
-        fig.add_shape(
-            type="rect",
-            x0=0, x1=1,
-            y0=z_low, y1=z_high,
-            fillcolor=z_color,
-            line=dict(width=0),
-            layer="below",
-        )
-        fig.add_annotation(
-            x=0.02, y=(z_low + z_high) / 2,
-            text=z_label, showarrow=False,
-            font=dict(size=9, color="rgba(255,200,50,0.6)"),
-            xanchor="left",
-        )
+    fig.add_trace(go.Scatter(
+        x=x_points,
+        y=y_points,
+        mode="lines+markers+text",
+        line=dict(color=line_color, width=3),
+        marker=dict(size=8, color=marker_color, line=dict(color="rgba(255,255,255,0.4)", width=1)),
+        text=[f"{p:.2f}" for p in y_points],
+        textposition="top center",
+        textfont=dict(color="#d4c8ff", size=10),
+        hovertemplate="%{x}<br>預測價: %{y:.2f}<extra></extra>",
+    ))
 
-    # 當前股價線
     fig.add_hline(
         y=current,
-        line_color="#FFD700", line_width=2,
+        line_color="rgba(255,215,0,0.5)",
+        line_dash="dot",
         annotation_text=f"現價 {current:.2f}",
         annotation_font_color="#FFD700",
     )
-    # 52W High/Low 標記
-    fig.add_hline(y=high, line_dash="dot", line_color="rgba(134,239,172,0.5)", line_width=1,
-                  annotation_text=f"52W H: {high:.2f}",
-                  annotation_font_color="#86efac", annotation_font_size=9)
-    fig.add_hline(y=low, line_dash="dot", line_color="rgba(248,113,113,0.5)", line_width=1,
-                  annotation_text=f"52W L: {low:.2f}",
-                  annotation_font_color="#f87171", annotation_font_size=9)
 
     fig.update_layout(
-        height=250,
-        margin=dict(l=60, r=20, t=30, b=20),
+        height=315,
+        margin=dict(l=16, r=16, t=36, b=24),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(20,10,5,0.4)",
-        xaxis=dict(showticklabels=False, showgrid=False, range=[0, 1]),
-        yaxis=dict(color="#9090b8", gridcolor="rgba(255,200,50,0.08)",
-                   title=stock.currency or "Price"),
-        title=dict(text="52週股價區間 / 52-Week Price Range", font=dict(color="#FFD700", size=11)),
+        plot_bgcolor="rgba(12,10,34,0.52)",
+        xaxis=dict(color="#a8b4d8", gridcolor="rgba(255,200,50,0.08)"),
+        yaxis=dict(color="#a8b4d8", gridcolor="rgba(255,200,50,0.08)", title=stock.currency or "Price"),
+        title=dict(text="黃金分割時間軸目標價 / Golden Ratio Target Curve", font=dict(color="#FFD700", size=12)),
         font=dict(color="#d4c8ff"),
     )
     st.plotly_chart(fig, use_container_width=True)
