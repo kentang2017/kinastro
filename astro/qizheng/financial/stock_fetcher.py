@@ -12,9 +12,12 @@
 from __future__ import annotations
 
 import re
+import json
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timezone as tz_cls
 from typing import Optional
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 import streamlit as st
 
@@ -92,6 +95,60 @@ def _extract_zh_name(info: dict) -> str:
     return ""
 
 
+def _is_rate_limited(msg: str) -> bool:
+    text = (msg or "").lower()
+    return "too many requests" in text or "429" in text or "rate limit" in text
+
+
+def _fetch_chart_quote_fallback(normalized_ticker: str) -> tuple[dict, str]:
+    """
+    後備方案：使用 Yahoo chart API 取得基礎報價資訊。
+    """
+    url = (
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{normalized_ticker}"
+        "?range=1mo&interval=1d&includePrePost=false"
+    )
+    req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urlopen(req, timeout=8) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except HTTPError as exc:
+        return {}, f"Yahoo chart fallback HTTP {exc.code}: {exc.reason}"
+    except URLError as exc:
+        return {}, f"Yahoo chart fallback network error: {exc.reason}"
+    except Exception as exc:
+        return {}, f"Yahoo chart fallback parse error: {exc}"
+
+    chart = (payload.get("chart") or {})
+    result = (chart.get("result") or [])
+    if not result:
+        err = chart.get("error") or {}
+        desc = err.get("description") or "no chart data"
+        return {}, f"Yahoo chart fallback failed: {desc}"
+
+    first = result[0] or {}
+    meta = first.get("meta") or {}
+    quote = ((first.get("indicators") or {}).get("quote") or [{}])[0] or {}
+    closes = quote.get("close") or []
+    last_close = next((v for v in reversed(closes) if isinstance(v, (int, float))), None)
+
+    fallback_info = {
+        "symbol": meta.get("symbol") or normalized_ticker,
+        "quoteType": meta.get("instrumentType") or "EQUITY",
+        "shortName": meta.get("shortName") or meta.get("symbol") or normalized_ticker,
+        "longName": meta.get("longName") or meta.get("shortName") or normalized_ticker,
+        "exchange": meta.get("exchangeName") or meta.get("fullExchangeName") or "",
+        "currency": meta.get("currency") or "",
+        "currentPrice": meta.get("regularMarketPrice") or last_close,
+        "previousClose": meta.get("chartPreviousClose") or meta.get("previousClose"),
+        "fiftyTwoWeekHigh": meta.get("fiftyTwoWeekHigh"),
+        "fiftyTwoWeekLow": meta.get("fiftyTwoWeekLow"),
+        "firstTradeDateEpochUtc": meta.get("firstTradeDate"),
+        "marketCap": meta.get("marketCap"),
+    }
+    return fallback_info, ""
+
+
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_stock_info(ticker_input: str) -> StockInfo:
     """
@@ -117,20 +174,69 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
 
     normalized = _normalize_ticker(ticker_input)
 
+    tkr = None
+    info: dict = {}
+    primary_err = ""
     try:
         tkr = yf.Ticker(normalized)
         info = tkr.info or {}
     except Exception as exc:
-        return StockInfo(
-            ticker=ticker_input,
-            normalized_ticker=normalized,
-            error=f"無法連接 Yahoo Finance / Cannot connect to Yahoo Finance: {exc}",
+        primary_err = str(exc)
+
+    if tkr is not None:
+        try:
+            fast_info = dict(tkr.fast_info or {})
+        except Exception:
+            fast_info = {}
+        if fast_info:
+            info.setdefault("currentPrice", fast_info.get("lastPrice"))
+            info.setdefault("previousClose", fast_info.get("previousClose"))
+            info.setdefault("fiftyTwoWeekHigh", fast_info.get("fiftyTwoWeekHigh"))
+            info.setdefault("fiftyTwoWeekLow", fast_info.get("fiftyTwoWeekLow"))
+            info.setdefault("currency", fast_info.get("currency"))
+            info.setdefault("exchange", fast_info.get("exchange"))
+            info.setdefault("marketCap", fast_info.get("marketCap"))
+            info.setdefault("quoteType", "EQUITY")
+            info.setdefault("symbol", normalized)
+
+    needs_fallback = (
+        not info
+        or (
+            info.get("currentPrice") is None
+            and info.get("regularMarketPrice") is None
+            and info.get("shortName") is None
+            and info.get("quoteType") is None
         )
+    )
+    if needs_fallback:
+        fb_info, fb_err = _fetch_chart_quote_fallback(normalized)
+        if fb_info:
+            for key, val in fb_info.items():
+                if info.get(key) in (None, "") and val not in (None, ""):
+                    info[key] = val
+        elif primary_err:
+            primary_err = f"{primary_err}; {fb_err}" if fb_err else primary_err
+        elif fb_err:
+            primary_err = fb_err
 
     # 檢查是否取得有效資訊
-    if not info or (info.get("trailingPegRatio") is None and not info.get("shortName")):
+    if not info or (
+        info.get("trailingPegRatio") is None
+        and not info.get("shortName")
+        and info.get("currentPrice") is None
+        and info.get("regularMarketPrice") is None
+    ):
         # 有些股票只有 quoteType 但沒有詳細資訊
         if not info.get("quoteType") and not info.get("symbol"):
+            if primary_err:
+                msg = f"無法連接 Yahoo Finance / Cannot connect to Yahoo Finance: {primary_err}"
+                if _is_rate_limited(primary_err):
+                    msg += "（已嘗試後備方案仍失敗 / fallback also failed）"
+                return StockInfo(
+                    ticker=ticker_input,
+                    normalized_ticker=normalized,
+                    error=msg,
+                )
             return StockInfo(
                 ticker=ticker_input,
                 normalized_ticker=normalized,
@@ -174,7 +280,7 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
         first_epoch = info.get("firstTradeDateEpochUtc")
         if first_epoch:
             try:
-                ipo_date = datetime.fromtimestamp(first_epoch, tz=timezone.utc).date()
+                ipo_date = datetime.fromtimestamp(first_epoch, tz=tz_cls.utc).date()
             except Exception:
                 pass
 
