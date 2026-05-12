@@ -521,12 +521,12 @@ def test_compute_judge_and_reconciler_populated():
 
 
 def test_compute_summary_text_from_question():
-    """summary_text must incorporate the question."""
+    """summary_text must incorporate (part of) the question."""
     q = "我今年事業如何"
     chart = compute_geomancy_chart(
         question=q, seed_mode="manual", manual_seed=1
     )
-    assert q[:20] in chart.summary_text
+    assert q in chart.summary_text or chart.summary_text.startswith(q[:10])
 
 
 def test_compute_figures_16_all_valid_names():
