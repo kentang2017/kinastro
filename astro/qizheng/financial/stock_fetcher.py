@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 import json
+import math
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Optional
@@ -105,7 +106,7 @@ def _to_finite_float(value) -> Optional[float]:
     if not isinstance(value, (int, float)):
         return None
     val = float(value)
-    if val != val:  # NaN
+    if math.isnan(val):
         return None
     return val
 
