@@ -184,8 +184,9 @@ def build_geomancy_wheel_svg(chart: GeomancyChart) -> str:
         )
 
         if house_info.planets:
-            pcount = min(len(house_info.planets), 3)
-            for pi, planet in enumerate(house_info.planets[:3]):
+            shown_planets = house_info.planets[:3]
+            pcount = len(shown_planets)
+            for pi, planet in enumerate(shown_planets):
                 offset = (pi - (pcount - 1) / 2.0) * 7.0
                 px, py = _polar(r_planet - (pi * 7), mid_angle + offset)
                 svg_parts.append(
