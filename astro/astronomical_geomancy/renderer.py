@@ -481,13 +481,13 @@ def _render_primary_interpretation(chart: GeomancyChart) -> None:
             "Fortunate figures (Fortuna Major / Laetitia / Acquisitio) = strong vitality;\n"
             "Unfortunate figures (Tristitia / Cauda Draconis / Rubeus) = health concerns.\n\n"
             "**Wealth**: House 2 sign and planets determine financial fortune.\n"
-            "Jupiter (\u2643) in House 2 = great gain; Saturn (\u2644) = restriction; Venus (\u2640) = steady income.\n\n"
+            "Jupiter (♃) in House 2 = great gain; Saturn (♄) = restriction; Venus (♀) = steady income.\n\n"
             "**Marriage**: House 7 governs marriage. Check planet relationships between Houses 1 and 7.\n"
             "Friendly planets = harmonious union; Hostile planets = turbulent relationship.\n\n"
             "**Children**: House 5 governs offspring. Jupiter in House 5 = abundant children; Saturn = difficulty.\n\n"
-            "**Career**: House 10 governs career. Sun (\u2609) there is very fortunate; Saturn obstructs promotion.\n\n"
+            "**Career**: House 10 governs career. Sun (☉) there is very fortunate; Saturn obstructs promotion.\n\n"
             "**Travel**: House 9 = long journeys, House 3 = short journeys.\n"
-            "Moon (\u263d) = smooth travels; Mars (\u2642) = danger."
+            "Moon (☽) = smooth travels; Mars (♂) = danger."
         )
         st.markdown(auto_cn(_zh_rules, _en_rules))
 
