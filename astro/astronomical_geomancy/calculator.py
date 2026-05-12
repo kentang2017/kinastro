@@ -38,11 +38,6 @@ from .models import (
     PlanetInHouse,
 )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure list in canonical order (matches Polyphilus / Gerard tradition)
-# ─────────────────────────────────────────────────────────────────────────────
-
 _FIGURE_KEYS: List[str] = list(FIGURES.keys())
 
 
@@ -98,6 +93,122 @@ def _figure_for_ascendant(rng: random.Random) -> GeomancyFigure:
     """Pick the ascendant figure randomly from all 16 figures."""
     key = rng.choice(_FIGURE_KEYS)
     return _make_figure(key)
+
+
+def _make_figure_from_dots(dots: List[bool], rng: random.Random) -> GeomancyFigure:
+    """
+    Find (or randomly pick) a GeomancyFigure whose dot pattern matches *dots*.
+
+    Since some pairs of figures share identical dot patterns (e.g. Amissio and
+    Caput Draconis both use [True, False, False, True]), the first matching
+    figure in FIGURES insertion order is returned.  The figure's meaning is
+    ultimately determined by its position in the shield chain, not solely by
+    the dot pattern.
+    """
+    for key, data in FIGURES.items():
+        if list(data["dots"]) == dots:
+            return _make_figure(key)
+    # Fallback (safety net — should not occur for valid 4-bool patterns)
+    return _make_figure(rng.choice(_FIGURE_KEYS))
+
+
+def _combine_figures(a: GeomancyFigure, b: GeomancyFigure, rng: random.Random) -> GeomancyFigure:
+    """
+    Combine two figures using the classical geomantic addition rule.
+
+    For each of the 4 rows, the number of dots in the corresponding rows of
+    both figures are summed.  An odd total yields a single dot (True); an even
+    total yields a double dot (False).  Equivalently: XOR of the row booleans.
+    """
+    combined = [ad ^ bd for ad, bd in zip(a.dots, b.dots)]
+    return _make_figure_from_dots(combined, rng)
+
+
+def _compute_daughters(
+    mothers: List[GeomancyFigure], rng: random.Random
+) -> List[GeomancyFigure]:
+    """
+    Derive 4 Daughter figures by transposing the 4 Mothers' rows.
+
+    Daughter n has dots [Mother_1[n-1], Mother_2[n-1], Mother_3[n-1], Mother_4[n-1]].
+    """
+    daughters: List[GeomancyFigure] = []
+    for row_idx in range(4):
+        d_dots = [m.dots[row_idx] for m in mothers]
+        daughters.append(_make_figure_from_dots(d_dots, rng))
+    return daughters
+
+
+def _build_shield_chain(
+    mothers: List[GeomancyFigure], rng: random.Random
+) -> dict:
+    """
+    Build the complete Shield Chart chain from the 4 Mother figures.
+
+    Chain structure:
+        4 Mothers  →  4 Daughters (transpose)  →  4 Nieces/Nephews (combine pairs)
+        →  2 Witnesses (combine pairs of Nieces)  →  1 Judge (combine Witnesses)
+        →  1 Reconciler (combine Judge + Mother 1)
+
+    Returns a dict with keys:
+        "daughters"   : List[GeomancyFigure]  (4)
+        "nieces"      : List[GeomancyFigure]  (4)
+        "witnesses"   : List[GeomancyFigure]  (2, [left, right])
+        "judge"       : GeomancyFigure
+        "reconciler"  : GeomancyFigure
+        "figures_16"  : List[GeomancyFigure]  (all 16 in row-major square order)
+    """
+    daughters = _compute_daughters(mothers, rng)
+
+    nieces = [
+        _combine_figures(mothers[0], mothers[1], rng),
+        _combine_figures(mothers[2], mothers[3], rng),
+        _combine_figures(daughters[0], daughters[1], rng),
+        _combine_figures(daughters[2], daughters[3], rng),
+    ]
+
+    witnesses = [
+        _combine_figures(nieces[0], nieces[1], rng),   # left witness
+        _combine_figures(nieces[2], nieces[3], rng),   # right witness
+    ]
+
+    judge = _combine_figures(witnesses[0], witnesses[1], rng)
+    reconciler = _combine_figures(judge, mothers[0], rng)
+
+    # Row-major 4×4 layout:
+    #   Row 0: mothers[0..3]
+    #   Row 1: daughters[0..3]
+    #   Row 2: nieces[0..3]
+    #   Row 3: witnesses[0], witnesses[1], judge, reconciler
+    figures_16 = (
+        list(mothers)
+        + list(daughters)
+        + list(nieces)
+        + [witnesses[0], witnesses[1], judge, reconciler]
+    )
+
+    return {
+        "daughters": daughters,
+        "nieces": nieces,
+        "witnesses": witnesses,
+        "judge": judge,
+        "reconciler": reconciler,
+        "figures_16": figures_16,
+    }
+
+
+def _compute_horary_16_figures(
+    rng: random.Random,
+) -> tuple:
+    """
+    Generate 4 mother figures and build the complete shield chain.
+
+    Returns:
+        (mothers, chain_dict)
+    """
+    mothers = [_generate_figure(rng) for _ in range(4)]
+    chain = _build_shield_chain(mothers, rng)
+    return mothers, chain
 
 
 def _build_houses(asc_sign_num: int) -> List[HouseInfo]:
@@ -181,6 +292,9 @@ def compute_geomancy_chart(
     question_type: str = "custom",
     seed_mode: str = "random",
     manual_seed: Optional[int] = None,
+    mode: str = "horary",
+    layout: str = "square",
+    natal_payload: Optional[dict] = None,
 ) -> GeomancyChart:
     """
     Compute a complete Astronomical Geomancy chart.
@@ -190,9 +304,14 @@ def compute_geomancy_chart(
         question_type: One of the QUESTION_TYPES keys.
         seed_mode:     "random" | "time_seed" | "manual"
         manual_seed:   Used when seed_mode == "manual".
+        mode:          "horary" (default) | "natal_transcode"
+        layout:        "square" (default, 4×4 grid) | "shield"
+        natal_payload: Optional natal chart data for natal_transcode mode
+                       (reserved for future use; currently falls back to horary).
 
     Returns:
-        GeomancyChart with all houses and planet placements populated.
+        GeomancyChart with all houses, planet placements, and the full
+        Shield chain (figures_16, judge, reconciler) populated.
     """
     # Determine seed
     if seed_mode == "time_seed":
@@ -204,10 +323,10 @@ def compute_geomancy_chart(
 
     rng = random.Random(seed)
 
-    # Generate 4 mother figures
-    mother_figures: List[GeomancyFigure] = [
-        _generate_figure(rng) for _ in range(4)
-    ]
+    # Generate 4 mother figures and build the complete shield chain
+    # (natal_transcode is reserved for future natal-to-figure mapping;
+    #  currently uses the same horary random method)
+    mother_figures, chain = _compute_horary_16_figures(rng)
 
     # First mother figure = Ascendant figure
     asc_figure = mother_figures[0]
@@ -226,6 +345,12 @@ def compute_geomancy_chart(
 
     timestamp = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+    # Short summary text for the centre of the square chart
+    judge_fig = chain["judge"]
+    summary_text = (
+        f"{question[:40]}" if question else "Judgement Summary"
+    )
+
     return GeomancyChart(
         question=question,
         question_type=question_type,
@@ -241,6 +366,12 @@ def compute_geomancy_chart(
         planet_placements=planet_placements,
         primary_house=primary_house,
         timestamp=timestamp,
+        mode=mode,
+        layout=layout,
+        figures_16=chain["figures_16"],
+        judge=judge_fig,
+        reconciler=chain["reconciler"],
+        summary_text=summary_text,
     )
 
 
