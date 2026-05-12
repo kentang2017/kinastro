@@ -30,6 +30,8 @@ from .constants import (
     ZODIAC_SIGNS,
 )
 from .models import GeomancyChart, GeomancyFigure, HouseInfo
+from .chart_renderer_geomancy import render_geomancy_svg_chart, build_square_chart_svg
+from .geomancy_figures import get_figure_catalog
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -303,6 +305,26 @@ def render_input_panel() -> Optional[dict]:
             horizontal=True,
         )
 
+        col_m, col_l = st.columns(2)
+        with col_m:
+            mode = st.selectbox(
+                auto_cn("起卦方式", "Casting Mode"),
+                options=["horary", "natal_transcode"],
+                format_func=lambda v: {
+                    "horary": auto_cn("📖 卜卦地占（Horary）", "📖 Horary Geomancy"),
+                    "natal_transcode": auto_cn("🌟 出生圖轉換（Natal）", "🌟 Natal Transcode"),
+                }[v],
+            )
+        with col_l:
+            layout = st.selectbox(
+                auto_cn("圖盤佈局", "Chart Layout"),
+                options=["square", "shield"],
+                format_func=lambda v: {
+                    "square": auto_cn("🗺️ 古典方形盤", "🗺️ Square Chart"),
+                    "shield": auto_cn("🛡️ 盾牌盤", "🛡️ Shield Chart"),
+                }[v],
+            )
+
         submitted = st.form_submit_button(
             auto_cn("🔮 起卦占卜", "🔮 Cast the Chart"),
             use_container_width=True,
@@ -313,8 +335,248 @@ def render_input_panel() -> Optional[dict]:
             "question": question.strip() or auto_cn("未提供問題", "No question provided"),
             "question_type": question_type,
             "seed_mode": seed_mode,
+            "mode": mode,
+            "layout": layout,
         }
     return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Square chart tab / 古典方形圖盤
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _render_square_chart_tab(chart: GeomancyChart) -> None:
+    """Render the classical 4×4 square geomancy chart with controls."""
+    import streamlit as st
+    from astro.i18n import auto_cn
+
+    # Controls row
+    ctl1, ctl2, ctl3 = st.columns(3)
+    with ctl1:
+        theme = st.radio(
+            auto_cn("主題", "Theme"),
+            options=["parchment", "dark"],
+            format_func=lambda v: {
+                "parchment": auto_cn("📜 羊皮紙", "📜 Parchment"),
+                "dark": auto_cn("🌑 暗色", "🌑 Dark"),
+            }[v],
+            horizontal=True,
+            key="geo_sq_theme",
+        )
+    with ctl2:
+        lang = st.radio(
+            auto_cn("語言", "Language"),
+            options=["zh", "en"],
+            format_func=lambda v: {"zh": "中文", "en": "English"}[v],
+            horizontal=True,
+            key="geo_sq_lang",
+        )
+    with ctl3:
+        st.markdown(
+            f'<div style="padding-top:12px;font-size:0.85rem;color:#9E9E9E">'
+            f'16 Figures · {chart.mode} · {chart.layout}</div>',
+            unsafe_allow_html=True,
+        )
+
+    # Render the SVG chart
+    if chart.figures_16:
+        fig_names = [f.name_en for f in chart.figures_16]
+        render_geomancy_svg_chart(
+            figures_16=fig_names,
+            center_text=chart.summary_text or chart.question[:40],
+            theme=theme,
+            lang=lang,
+            chart_title=(
+                auto_cn("地占神聖方形圖盤", "The Sacred Square of Geomancy")
+            ),
+            height=940,
+        )
+    else:
+        st.info(auto_cn(
+            "未找到16個圖形，請重新起卦。",
+            "No figures found. Please cast the chart again.",
+        ))
+
+    # Judge & Reconciler info
+    if chart.judge or chart.reconciler:
+        st.markdown(
+            f'<h4 style="color:#EDD88A">⚖️ {auto_cn("判官與調解者", "Judge & Reconciler")}</h4>',
+            unsafe_allow_html=True,
+        )
+        c_j, c_r = st.columns(2)
+        catalog = get_figure_catalog()
+        for col, fig, role_zh, role_en in [
+            (c_j, chart.judge, "判官", "Judge"),
+            (c_r, chart.reconciler, "調解者", "Reconciler"),
+        ]:
+            if fig is None:
+                continue
+            info = catalog.get(fig.name_en, {})
+            omen = info.get("omen_zh" if lang == "zh" else "omen_en", "")
+            with col:
+                st.markdown(
+                    f'<div class="geo-figure-card" style="border:2px solid #C8A24A">'
+                    f'<div style="font-size:0.8rem;color:#7BAFD4">'
+                    f'{role_zh if lang == "zh" else role_en}</div>'
+                    f'<div class="fig-name">{fig.name_en}</div>'
+                    f'<div class="fig-zh">{fig.name_zh}</div>'
+                    f'<div style="font-size:0.8rem;color:#C8A24A;margin-top:4px">'
+                    f'{info.get("astrology_zh" if lang == "zh" else "astrology_en", "")}</div>'
+                    f'<div style="font-size:0.82rem;color:#B0B8C8;margin-top:6px;font-style:italic">'
+                    f'{omen}</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Figure Oracle & comparison / 圖形神諭與對比
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _render_figure_oracle(chart: GeomancyChart) -> None:
+    """Figure oracle panel: select any figure and view its traditional meaning."""
+    import streamlit as st
+    from astro.i18n import auto_cn
+
+    catalog = get_figure_catalog()
+    lang = st.session_state.get("geo_sq_lang", "zh")
+
+    st.markdown(
+        f'<h3 style="color:#EDD88A">🔯 {auto_cn("圖形神諭", "Figure Oracle")}</h3>',
+        unsafe_allow_html=True,
+    )
+
+    fig_options = list(catalog.keys())
+    selected = st.selectbox(
+        auto_cn("選擇圖形查詢", "Select a figure to consult"),
+        options=fig_options,
+        format_func=lambda n: f"{catalog[n]['latin']} / {catalog[n]['zh']}",
+        key="geo_oracle_select",
+    )
+
+    if selected:
+        info = catalog[selected]
+        omen_key = "omen_zh" if lang == "zh" else "omen_en"
+        astro_key = "astrology_zh" if lang == "zh" else "astrology_en"
+        wiki = info.get("wiki", "")
+
+        st.markdown(
+            f'<div class="geo-figure-card" style="text-align:left;padding:20px">'
+            f'<div class="fig-name" style="font-size:1.3rem">{info["latin"]}</div>'
+            f'<div class="fig-zh" style="font-size:1rem;margin-top:4px">{info["zh"]}</div>'
+            f'<hr style="border-color:#2A3A50;margin:10px 0"/>'
+            f'<div style="color:#C8A24A;font-size:0.88rem">⭐ {info.get(astro_key, "")}</div>'
+            f'<div style="color:#B0B8C8;font-size:0.9rem;margin-top:10px;font-style:italic">'
+            f'"{info.get(omen_key, "")}"</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        if wiki:
+            st.markdown(f'🔗 [{auto_cn("開啟 Wiki 詳頁", "Open Wiki page")}]({wiki})')
+
+    # Comparison buttons
+    st.markdown("---")
+    st.markdown(
+        f'<h4 style="color:#EDD88A">🔀 {auto_cn("對比分析", "Compare Systems")}</h4>',
+        unsafe_allow_html=True,
+    )
+    bc1, bc2 = st.columns(2)
+    with bc1:
+        if st.button(
+            auto_cn("🌟 與西方占星對比", "🌟 Compare with Western Astrology"),
+            key="geo_cmp_western",
+            width="stretch",
+        ):
+            if selected:
+                info = catalog[selected]
+                st.info(
+                    auto_cn(
+                        f"**{info['latin']}** 占星對應：{info.get('astrology_zh', '')}。"
+                        f"在西方占星中，此符號的守護行星掌管相應的宮位與星座特質。",
+                        f"**{info['latin']}** astrological correspondence: {info.get('astrology_en', '')}. "
+                        f"In Western Astrology, the ruling planet governs the associated house and sign qualities.",
+                    )
+                )
+    with bc2:
+        if st.button(
+            auto_cn("🪬 與七政四餘/紫微對比", "🪬 Compare with Qizheng/Ziwei"),
+            key="geo_cmp_qizheng",
+            width="stretch",
+        ):
+            if selected:
+                info = catalog[selected]
+                st.info(
+                    auto_cn(
+                        f"**{info['latin']}**（{info['zh']}）在七政四餘傳統中："
+                        f"可對應 {info.get('astrology_zh', '').split('·')[0].strip()} 之宮位能量；"
+                        f"在紫微斗數中，可與同元素星系相互印證。",
+                        f"**{info['latin']}** ({info['zh']}) in the Qizheng tradition: "
+                        f"corresponds to the energy of {info.get('astrology_en', '').split('·')[0].strip()}. "
+                        f"In Ziwei Doushu, cross-reference with stars of the same elemental affinity.",
+                    )
+                )
+
+    # Medieval-tone master interpretation
+    st.markdown("---")
+    st.markdown(
+        f'<h4 style="color:#EDD88A">📜 {auto_cn("中世紀地占師斷語", "Medieval Geomancer\'s Oracle")}</h4>',
+        unsafe_allow_html=True,
+    )
+    _render_agrippa_interpretation(chart)
+
+
+def _render_agrippa_interpretation(chart: GeomancyChart) -> None:
+    """Render a medieval-toned geomantic interpretation."""
+    import streamlit as st
+    from astro.i18n import auto_cn
+
+    lang = st.session_state.get("geo_sq_lang", "zh")
+    catalog = get_figure_catalog()
+    asc = chart.ascendant_figure
+    ph = chart.primary_house
+    house_info = chart.houses[ph - 1]
+    asc_info = catalog.get(asc.name_en, {})
+    omen = asc_info.get("omen_zh" if lang == "zh" else "omen_en", "")
+    judge = chart.judge
+    judge_info = catalog.get(judge.name_en, {}) if judge else {}
+    judge_omen = judge_info.get("omen_zh" if lang == "zh" else "omen_en", "") if judge else ""
+
+    if lang == "zh":
+        interpretation = (
+            f"以 Agrippa 之名，以 Al-Zanātī 之智，吾今論斷此卦：\n\n"
+            f"**上升圖形** *{asc.name_en}*（{asc.name_zh}）臨第一宮。"
+            f"{omen}\n\n"
+            f"**第 {ph} 宮**（{house_info.name_zh}）為此問之主宮，"
+            f"其星座為 {house_info.sign_zh} {house_info.glyph}，"
+            f"主題：{house_info.topics_zh}。"
+        )
+        if judge:
+            interpretation += (
+                f"\n\n**判官圖形** *{judge.name_en}*（{judge.name_zh}）乃此卦之終局判斷。"
+                f"{judge_omen}"
+            )
+    else:
+        interpretation = (
+            f"In the name of Agrippa and by the wisdom of Al-Zanātī, I now pronounce judgment:\n\n"
+            f"The **Ascendant Figure** *{asc.name_en}* rises in the First House. "
+            f"{omen}\n\n"
+            f"**House {ph}** ({house_info.name_en}) is the primary house for this question. "
+            f"Its sign is {house_info.sign} {house_info.glyph}, "
+            f"governing: {house_info.topics_en}."
+        )
+        if judge:
+            interpretation += (
+                f"\n\nThe **Judge** *{judge.name_en}* ({judge.name_zh}) reveals the final outcome. "
+                f"{judge_omen}"
+            )
+
+    st.markdown(
+        f'<div class="geo-house-card" style="border-left-color:#C8A24A;font-style:italic">'
+        f'<div style="color:#EDD88A;font-size:0.88rem">{interpretation}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -542,15 +804,23 @@ def render_streamlit(
 
     # Tabs
     tab_labels = [
+        auto_cn("🗺️ 古典方形盤", "🗺️ Square Chart"),
         auto_cn("🌐 星盤輪圖", "🌐 Wheel Chart"),
         auto_cn("🌿 母親圖形", "🌿 Mother Figures"),
         auto_cn("🪐 行星落宮", "🪐 Planet Placements"),
         auto_cn("🏛️ 宮位詳解", "🏛️ House Details"),
+        auto_cn("🔯 圖形神諭", "🔯 Figure Oracle"),
         auto_cn("📖 解讀", "📖 Reading"),
     ]
     tabs = st.tabs(tab_labels)
 
     with tabs[0]:
+        _render_square_chart_tab(chart)
+
+        if after_chart_hook:
+            after_chart_hook()
+
+    with tabs[1]:
         wheel_svg = build_geomancy_wheel_svg(chart)
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -578,17 +848,17 @@ def render_streamlit(
                     f"{h.sign_zh} {h.glyph}{planet_txt}"
                 )
 
-        if after_chart_hook:
-            after_chart_hook()
-
-    with tabs[1]:
+    with tabs[2]:
         _render_mother_figures(chart)
 
-    with tabs[2]:
+    with tabs[3]:
         _render_planet_table(chart)
 
-    with tabs[3]:
+    with tabs[4]:
         _render_house_details(chart)
 
-    with tabs[4]:
+    with tabs[5]:
+        _render_figure_oracle(chart)
+
+    with tabs[6]:
         _render_primary_interpretation(chart)

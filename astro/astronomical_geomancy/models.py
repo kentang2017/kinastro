@@ -7,6 +7,7 @@ Data-classes for Astronomical Geomancy chart results.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, List, Optional
 
 
@@ -34,6 +35,37 @@ class GeomancyFigure:
         for single in self.dots:
             lines.append("•" if single else "∶")
         return "\n".join(lines)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Geomancy mode and layout enumerations
+# ─────────────────────────────────────────────────────────────────────────────
+
+class GeomancyMode(str, Enum):
+    """Casting mode: horary question or natal-chart transcoding."""
+    horary = "horary"
+    natal_transcode = "natal_transcode"
+
+
+class GeomancyLayout(str, Enum):
+    """Chart layout: classical 4×4 square or linear shield."""
+    square = "square"
+    shield = "shield"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Extended figure meaning (typed catalog entry)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class FigureMeaning:
+    """Bilingual meaning record for a geomantic figure."""
+    latin: str
+    zh: str
+    en: str
+    astrology: str
+    omen_zh: str
+    wiki_url: str
 
 
 @dataclass
@@ -100,6 +132,22 @@ class GeomancyChart:
 
     # Timestamp
     timestamp: str
+
+    # ── Shield chain / Square chart fields (populated by _build_shield_chain) ─
+    # Casting mode and layout (default: horary / square)
+    mode: str = "horary"
+    layout: str = "square"
+
+    # All 16 figures in row-major order for the square chart
+    # (Mothers 1-4, Daughters 1-4, Nieces 1-4, Witnesses + Judge + Reconciler)
+    figures_16: List[GeomancyFigure] = field(default_factory=list)
+
+    # Derived special figures
+    judge: Optional[GeomancyFigure] = None
+    reconciler: Optional[GeomancyFigure] = None
+
+    # Short summary text (displayed in the centre of the square chart)
+    summary_text: str = ""
 
     def to_json(self) -> dict:
         """Serialise to plain dict for JSON export / AI prompt."""

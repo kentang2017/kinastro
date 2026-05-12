@@ -6123,6 +6123,8 @@ if not _engine_handled:
                         question=_geo_input["question"],
                         question_type=_geo_input["question_type"],
                         seed_mode=_geo_input["seed_mode"],
+                        mode=_geo_input.get("mode", "horary"),
+                        layout=_geo_input.get("layout", "square"),
                     )
                 st.session_state[_geo_key] = _geo_chart
             if _geo_key in st.session_state:
