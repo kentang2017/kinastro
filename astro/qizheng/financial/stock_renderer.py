@@ -40,6 +40,7 @@ _BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700
 _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
 _MIXED_DOMINANCE_THRESHOLD = 0.4
+_STRONG_DOMINANCE_THRESHOLD = 0.5
 
 
 # ============================================================
@@ -1077,7 +1078,11 @@ def _compatibility_grade(
     relationship_code = cmp.get("relationship_code")
 
     if score >= 2:
-        if relationship_code == "stock_feeds_you" and dominance_a >= 0.5 and dominance_b >= 0.5:
+        if (
+            relationship_code == "stock_feeds_you"
+            and dominance_a >= _STRONG_DOMINANCE_THRESHOLD
+            and dominance_b >= _STRONG_DOMINANCE_THRESHOLD
+        ):
             grade = "S"
             title_zh = "絕對配合"
             title_en = "Absolute Match"
@@ -1090,7 +1095,7 @@ def _compatibility_grade(
         title_zh = "良好契合"
         title_en = "Good Compatibility"
     elif score == 0:
-        # Dominance below 40% usually means no single element dominates, so neutral impact is milder.
+        # Dominance below _MIXED_DOMINANCE_THRESHOLD means no single element dominates.
         if dominance_a < _MIXED_DOMINANCE_THRESHOLD and dominance_b < _MIXED_DOMINANCE_THRESHOLD:
             grade = "C"
             title_zh = "中度契合"
