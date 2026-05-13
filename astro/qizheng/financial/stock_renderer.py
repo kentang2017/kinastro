@@ -39,6 +39,8 @@ _FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
 _BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
 _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
+_MIXED_DOMINANCE_THRESHOLD = 0.4
+_STRONG_DOMINANCE_THRESHOLD = 0.5
 
 
 # ============================================================
@@ -1064,6 +1066,60 @@ def _wuxing_bar(dist: dict, total: int, title: str):
     )
 
 
+def _compatibility_grade(
+    cmp: dict, bazi_distribution: dict[str, int], stock_distribution: dict[str, int]
+) -> dict[str, str]:
+    """將五行關係分數轉為契合評級（S~F）。"""
+    total_a = sum(bazi_distribution.values()) or 1
+    total_b = sum(stock_distribution.values()) or 1
+    dominance_a = max(bazi_distribution.values(), default=0) / total_a
+    dominance_b = max(stock_distribution.values(), default=0) / total_b
+    score = cmp.get("score", 0)
+    relationship_code = cmp.get("relationship_code")
+
+    if score >= 2:
+        if (
+            relationship_code == "stock_feeds_you"
+            and dominance_a >= _STRONG_DOMINANCE_THRESHOLD
+            and dominance_b >= _STRONG_DOMINANCE_THRESHOLD
+        ):
+            grade = "S"
+            title_zh = "絕對配合"
+            title_en = "Absolute Match"
+        else:
+            grade = "A"
+            title_zh = "高度契合"
+            title_en = "High Compatibility"
+    elif score == 1:
+        grade = "B"
+        title_zh = "良好契合"
+        title_en = "Good Compatibility"
+    elif score == 0:
+        # Dominance below _MIXED_DOMINANCE_THRESHOLD means no single element dominates.
+        if dominance_a < _MIXED_DOMINANCE_THRESHOLD and dominance_b < _MIXED_DOMINANCE_THRESHOLD:
+            grade = "C"
+            title_zh = "中度契合"
+            title_en = "Moderate Compatibility"
+        else:
+            grade = "D"
+            title_zh = "偏低契合"
+            title_en = "Low Compatibility"
+    elif score == -1:
+        grade = "E"
+        title_zh = "嚴重不合"
+        title_en = "Severely Incompatible"
+    else:
+        grade = "F"
+        title_zh = "完全不合"
+        title_en = "Totally Incompatible"
+
+    return {
+        "grade": grade,
+        "title_zh": title_zh,
+        "title_en": title_en,
+    }
+
+
 def _render_name_wuxing(stock):
     """
     渲染「名學五行分析」分頁：
@@ -1287,7 +1343,7 @@ def _render_name_wuxing(stock):
 
     # ── 對比分析 ──────────────────────────────────────
     st.markdown("---")
-    st.markdown("**⚖️ 命主 × 股票 五行對比 / BaZi vs. Stock Wuxing Compatibility**")
+    st.markdown("**⚖️ 命主與股票契合程度 / Personal-Stock Compatibility Rating**")
 
     comparisons = []
     if name_zh and name_result is not None and name_result["total"] > 0:
@@ -1308,8 +1364,11 @@ def _render_name_wuxing(stock):
             bazi_result["distribution"], "命主",
             dist_b, label_b,
         )
+        grade_info = _compatibility_grade(cmp, bazi_result["distribution"], dist_b)
 
-        score_icon = {2: "🌟", 1: "✅", 0: "🔵", -1: "⚠️", -2: "🔴"}.get(cmp["score"], "🔵")
+        score_icon = {"S": "👑", "A": "🌟", "B": "✅", "C": "🔵", "D": "🟡", "E": "⚠️", "F": "🔴"}.get(
+            grade_info["grade"], "🔵"
+        )
         st.markdown(
             f"""
             <div style="
@@ -1320,8 +1379,12 @@ def _render_name_wuxing(stock):
                 margin-bottom:10px;
             ">
             <div style="font-weight:700;color:{cmp['color']};font-size:1.0em;">
-                {score_icon} {cmp['relationship']} &nbsp;
-                <span style="font-size:0.85em;color:#9090b8;">({cmp['relationship_en']})</span>
+                {score_icon} 契合評級 {grade_info['grade']} 級 · {grade_info['title_zh']}
+                <span style="font-size:0.85em;color:#9090b8;">({grade_info['title_en']})</span>
+            </div>
+            <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
+                五行關係：{cmp['relationship']}
+                <span style="color:#7f8ea6;">({cmp['relationship_en']})</span>
             </div>
             <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
                 命主主元素：<span style="color:{cmp['color']};">{cmp['dominant_a']}</span>
@@ -1336,6 +1399,6 @@ def _render_name_wuxing(stock):
         )
 
     st.caption(
-        "⚠️ 名學五行分析僅供參考，不構成投資建議。"
-        " / Name Wuxing analysis is for reference only and does not constitute investment advice."
+        "⚠️ 契合評級僅供參考，不構成投資建議。"
+        " / Compatibility ratings are for reference only and do not constitute investment advice."
     )
