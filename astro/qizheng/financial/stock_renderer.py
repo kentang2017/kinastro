@@ -1073,6 +1073,7 @@ def _render_name_wuxing(stock):
     """
     from .name_wuxing import (
         analyze_name_wuxing,
+        analyze_english_name_wuxing,
         analyze_ticker_wuxing,
         get_bazi_wuxing,
         compare_wuxing,
@@ -1091,13 +1092,17 @@ def _render_name_wuxing(stock):
 
     ticker = stock.normalized_ticker
     name_zh = stock.name_zh or ""
+    name_en = stock.name_en or ""
+
+    # Pre-compute name analysis results so comparison section can reference them
+    name_result = analyze_name_wuxing(name_zh) if name_zh else None
+    en_result = analyze_english_name_wuxing(name_en) if (not name_zh and name_en) else None
 
     # ── 公司中文名稱五行 ──────────────────────────────
     st.markdown("---")
     st.markdown("**📝 公司名稱五行 / Company Name Wuxing**")
 
-    if name_zh:
-        name_result = analyze_name_wuxing(name_zh)
+    if name_zh and name_result is not None:
         total_name = name_result["total"] or 1
 
         # 字符明細卡片
@@ -1128,10 +1133,46 @@ def _render_name_wuxing(stock):
 
         _wuxing_bar(name_result["distribution"], total_name,
                     f"{name_zh} 名稱五行比重")
-    else:
+
+    if not name_zh and name_en:
+        # 無中文名稱時，分析英文公司名稱各字母五行
+        st.caption(
+            "⚠️ 暫無中文公司名稱，改以英文名稱字母進行五行分析。"
+            "（A-E→木、F-J→火、K-O→土、P-T→金、U-Z→水）\n"
+            "/ No Chinese name available — analysing English name letters instead. "
+            "(A-E→Wood, F-J→Fire, K-O→Earth, P-T→Metal, U-Z→Water)"
+        )
+        en_result = analyze_english_name_wuxing(name_en)
+        total_en = en_result["total"] or 1
+
+        letters_html = ""
+        for ld in en_result["letters"]:
+            color = WUXING_COLORS[ld["wuxing"]]
+            letters_html += (
+                f'<span style="display:inline-block;text-align:center;'
+                f'background:rgba(0,0,0,0.3);border:1px solid {color}33;'
+                f'border-radius:8px;padding:6px 12px;margin:4px;">'
+                f'<span style="font-size:1.5em;color:{color};">{ld["letter"]}</span><br/>'
+                f'<span style="font-size:0.72em;color:{color};">{ld["wuxing"]}</span>'
+                f'</span>'
+            )
+
+        st.markdown(
+            f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
+            f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
+            f'<div style="color:#FFD700;font-weight:600;margin-bottom:8px;">{name_en}</div>'
+            f'{letters_html}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        _wuxing_bar(en_result["distribution"], total_en,
+                    f"{name_en} 英文名稱字母五行比重")
+
+    if not name_zh and not name_en:
         st.info(
-            "此股票暫無中文公司名稱資料（yfinance 未返回中文名）。\n"
-            "/ No Chinese company name available from yfinance for this ticker."
+            "此股票暫無公司名稱資料。\n"
+            "/ No company name available for this ticker."
         )
 
     # ── 股票代碼數字五行 ──────────────────────────────
@@ -1243,9 +1284,13 @@ def _render_name_wuxing(stock):
     st.markdown("**⚖️ 命主 × 股票 五行對比 / BaZi vs. Stock Wuxing Compatibility**")
 
     comparisons = []
-    if name_zh and name_result["total"] > 0:
+    if name_zh and name_result is not None and name_result["total"] > 0:
         comparisons.append(
             (name_result["distribution"], f"公司名稱「{name_zh}」")
+        )
+    if en_result is not None and en_result["total"] > 0:
+        comparisons.append(
+            (en_result["distribution"], f"英文名稱「{name_en}」字母")
         )
     if ticker_result["total"] > 0:
         comparisons.append(

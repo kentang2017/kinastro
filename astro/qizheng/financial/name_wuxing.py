@@ -52,6 +52,16 @@ DIGIT_WUXING: dict[str, str] = {
     "9": "水", "0": "水",
 }
 
+# 英文字母五行（按字母序分五組，每組五至六個字母）
+# A-E → 木, F-J → 火, K-O → 土, P-T → 金, U-Z → 水
+LETTER_WUXING: dict[str, str] = {
+    "A": "木", "B": "木", "C": "木", "D": "木", "E": "木",
+    "F": "火", "G": "火", "H": "火", "I": "火", "J": "火",
+    "K": "土", "L": "土", "M": "土", "N": "土", "O": "土",
+    "P": "金", "Q": "金", "R": "金", "S": "金", "T": "金",
+    "U": "水", "V": "水", "W": "水", "X": "水", "Y": "水", "Z": "水",
+}
+
 # ──────────────────────────────────────────────────────────────────
 # 常見漢字筆劃表（傳統中文筆劃）
 # 覆蓋大量常見公司名稱字符
@@ -334,6 +344,46 @@ def analyze_name_wuxing(name: str) -> dict:
         "dominant": dominant,
         "unknown_chars": unknown,
         "total": len(chars_data),
+    }
+
+
+def analyze_english_name_wuxing(name: str) -> dict:
+    """
+    分析英文公司名稱各字母的五行屬性（A-E→木, F-J→火, K-O→土, P-T→金, U-Z→水）。
+
+    只計算字母（A-Z, a-z），忽略數字、空格及符號。
+
+    Parameters:
+        name: 英文公司名稱
+
+    Returns:
+        {
+          "letters": [{"letter": str, "wuxing": str}],
+          "distribution": {"木":int, "火":int, "土":int, "金":int, "水":int},
+          "dominant": str,
+          "total": int,
+        }
+    """
+    letters_data = []
+    dist: Counter = Counter()
+
+    for ch in name:
+        upper = ch.upper()
+        if upper in LETTER_WUXING:
+            wx = LETTER_WUXING[upper]
+            dist[wx] += 1
+            letters_data.append({"letter": ch, "wuxing": wx})
+
+    for el in WUXING_ELEMENTS:
+        dist.setdefault(el, 0)
+
+    dominant = dist.most_common(1)[0][0] if letters_data else "土"
+
+    return {
+        "letters": letters_data,
+        "distribution": dict(dist),
+        "dominant": dominant,
+        "total": len(letters_data),
     }
 
 
