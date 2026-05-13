@@ -520,7 +520,7 @@ def _render_figure_oracle(chart: GeomancyChart) -> None:
     # Medieval-tone master interpretation
     st.markdown("---")
     st.markdown(
-        f'<h4 style="color:#EDD88A">📜 {auto_cn("中世紀地占師斷語", "Medieval Geomancer\'s Oracle")}</h4>',
+        f'<h4 style="color:#EDD88A">📜 {auto_cn("中世紀地占師斷語", "Medieval Geomancer’s Oracle")}</h4>',
         unsafe_allow_html=True,
     )
     _render_agrippa_interpretation(chart)
