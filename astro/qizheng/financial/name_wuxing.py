@@ -461,10 +461,12 @@ def get_bazi_wuxing(year: int, month: int, day: int, hour: int = 12) -> dict:
         mgz = cdate.getMonthGZ()
         dgz = cdate.getDayGZ()
 
+        hgz = cdate.getHourGZ(hour)
         pillar_data = [
             ("年柱", TIANGAN[ygz.tg], DIZHI[ygz.dz]),
             ("月柱", TIANGAN[mgz.tg], DIZHI[mgz.dz]),
             ("日柱", TIANGAN[dgz.tg], DIZHI[dgz.dz]),
+            ("時柱", TIANGAN[hgz.tg], DIZHI[hgz.dz]),
         ]
 
         dist: Counter = Counter()
