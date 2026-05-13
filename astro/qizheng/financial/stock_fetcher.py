@@ -56,6 +56,8 @@ _EXCHANGE_SUFFIXES = {
 # 常用 A 股交易所代碼識別
 _SS_SZ_PATTERN = re.compile(r"^(\d{6})(?:\.(ss|sz))?$", re.IGNORECASE)
 _HK_PATTERN    = re.compile(r"^(\d{4,5})(?:\.hk)?$", re.IGNORECASE)
+A_SHARE_CODE_LENGTH = 6
+HK_STOCK_CODE_LENGTH = 5
 
 
 def _normalize_ticker(raw: str) -> str:
@@ -97,7 +99,8 @@ def _extract_zh_name(info: dict) -> str:
 
 
 def _contains_cjk(text: str) -> bool:
-    return any("\u4e00" <= c <= "\u9fff" for c in text or "")
+    content = text if text is not None else ""
+    return any("\u4e00" <= c <= "\u9fff" for c in content)
 
 
 def _iter_table_records(table) -> list[dict]:
@@ -127,6 +130,8 @@ def _find_name_by_code(
     if not target:
         return ""
 
+    norm_len = max(len(target), 1)
+
     for row in _iter_table_records(table):
         code_val = ""
         for key in code_keys:
@@ -135,7 +140,8 @@ def _find_name_by_code(
                 break
         if not code_val:
             continue
-        if code_val.zfill(len(target)) != target:
+        cmp_len = max(norm_len, len(code_val))
+        if code_val.zfill(cmp_len) != target.zfill(cmp_len):
             continue
 
         for key in name_keys:
@@ -166,7 +172,7 @@ def _extract_zh_name_via_akshare(normalized_ticker: str) -> str:
             table = ak.stock_info_a_code_name()
             return _find_name_by_code(
                 table,
-                target_code=code.zfill(6),
+                target_code=code.zfill(A_SHARE_CODE_LENGTH),
                 code_keys=("code", "代码"),
                 name_keys=("name", "名称"),
             )
@@ -174,7 +180,7 @@ def _extract_zh_name_via_akshare(normalized_ticker: str) -> str:
             table = ak.stock_hk_spot_em()
             return _find_name_by_code(
                 table,
-                target_code=code.zfill(5),
+                target_code=code.zfill(HK_STOCK_CODE_LENGTH),
                 code_keys=("代码", "symbol", "code"),
                 name_keys=("名称", "name"),
             )
