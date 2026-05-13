@@ -202,10 +202,11 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
             return
 
     # ── 結果分頁 ──────────────────────────────────────────
-    tab_ipo, tab_daily, tab_strength, tab_ai = st.tabs([
+    tab_ipo, tab_daily, tab_strength, tab_wuxing, tab_ai = st.tabs([
         "🌠 上市出生盤 / IPO Chart",
         "📅 流日流時吉凶 / Daily Fortune",
         "💹 股價強弱度 / Price Strength",
+        "🀄 名學五行 / Name Wuxing",
         "🤖 AI 靈運解讀 / AI Reading",
     ])
 
@@ -217,6 +218,9 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
 
     with tab_strength:
         _render_price_strength(stock, stock_data, go)
+
+    with tab_wuxing:
+        _render_name_wuxing(stock)
 
     with tab_ai:
         _render_ai_reading(stock, stock_data, input_tz)
@@ -230,9 +234,29 @@ def _render_stock_card(stock):
     """渲染股票資訊卡（中英名稱、即時股價、漲跌幅）"""
     from .stock_fetcher import get_display_name
 
-    display_name = get_display_name(stock)
-    price_str = f"{stock.current_price:.3f}" if stock.current_price else "—"
+    price_str = f"{stock.current_price:.2f}" if stock.current_price else "—"
     currency = stock.currency or ""
+
+    # 中文名稱行：優先顯示中文名，再顯示英文名
+    zh_name_html = ""
+    if stock.name_zh:
+        zh_name_html = (
+            f'<div style="font-size:1.15em;font-weight:700;color:#FFD700;margin-bottom:2px;">'
+            f'{stock.name_zh}'
+            f'</div>'
+        )
+        en_name_html = (
+            f'<div style="font-size:0.82em;color:#d4b860;margin-bottom:2px;">'
+            f'{stock.name_en}</div>'
+        ) if stock.name_en else ""
+    else:
+        display_name = get_display_name(stock)
+        zh_name_html = (
+            f'<div style="font-size:1.15em;font-weight:700;color:#FFD700;margin-bottom:2px;">'
+            f'{display_name}'
+            f'</div>'
+        )
+        en_name_html = ""
 
     if stock.price_change is not None:
         change_color = "#86efac" if stock.price_change >= 0 else "#f87171"
@@ -251,6 +275,9 @@ def _render_stock_card(stock):
         elif mc >= 1e6:
             mktcap_str = f"{mc/1e6:.2f}M {currency}"
 
+    w52h_str = f"{stock.week52_high:.2f}" if stock.week52_high is not None else "—"
+    w52l_str = f"{stock.week52_low:.2f}" if stock.week52_low is not None else "—"
+
     st.markdown(
         f"""
         <div style="
@@ -259,9 +286,8 @@ def _render_stock_card(stock):
             border-radius: 14px;
             padding: 16px 20px;
         ">
-        <div style="font-size:1.1em;font-weight:700;color:#FFD700;margin-bottom:4px;">
-            {display_name}
-        </div>
+        {zh_name_html}
+        {en_name_html}
         <div style="color:#d4b860;font-size:0.82em;margin-bottom:10px;">
             {stock.normalized_ticker}
             {"&nbsp;|&nbsp;" + stock.exchange if stock.exchange else ""}
@@ -272,9 +298,9 @@ def _render_stock_card(stock):
             &nbsp;<span style="font-size:0.6em;color:{change_color};">{change_str}</span>
         </div>
         <div style="font-size:0.82em;color:#9090b8;margin-top:6px;">
-            52W H: <span style="color:#86efac;">{stock.week52_high or '—'}</span>
+            52W H: <span style="color:#86efac;">{w52h_str}</span>
             &nbsp;|&nbsp;
-            52W L: <span style="color:#f87171;">{stock.week52_low or '—'}</span>
+            52W L: <span style="color:#f87171;">{w52l_str}</span>
             {"&nbsp;|&nbsp;市值 " + mktcap_str if mktcap_str else ""}
         </div>
         {"<div style='font-size:0.82em;color:#d4b860;margin-top:4px;'>上市日 IPO: " + str(stock.ipo_date) + "</div>" if stock.ipo_date else ""}
@@ -994,3 +1020,264 @@ def _render_ai_reading(stock, stock_data, input_tz: float):
     # 顯示 prompt 預覽（供用戶參考）
     with st.expander("🔍 AI 分析上下文預覽 / AI Context Preview"):
         st.code(prompt_snippet, language="text")
+
+
+# ============================================================
+# 名學五行分析
+# ============================================================
+
+def _wuxing_bar(dist: dict, total: int, title: str):
+    """渲染五行比重橫條圖（純 HTML/CSS，無需 plotly）"""
+    import streamlit as st
+    from .name_wuxing import WUXING_ELEMENTS, WUXING_COLORS
+
+    bars_html = ""
+    for el in WUXING_ELEMENTS:
+        count = dist.get(el, 0)
+        pct = (count / total * 100) if total > 0 else 0
+        color = WUXING_COLORS[el]
+        bars_html += (
+            f'<div style="display:flex;align-items:center;margin:4px 0;">'
+            f'<span style="width:28px;color:{color};font-weight:700;font-size:0.95em;">{el}</span>'
+            f'<div style="flex:1;background:rgba(255,255,255,0.06);border-radius:6px;height:14px;margin:0 8px;">'
+            f'<div style="width:{pct:.1f}%;background:{color};border-radius:6px;height:100%;'
+            f'transition:width 0.4s;"></div></div>'
+            f'<span style="color:{color};font-size:0.85em;min-width:60px;">'
+            f'{count}次 {pct:.0f}%</span>'
+            f'</div>'
+        )
+
+    st.markdown(
+        f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
+        f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
+        f'<div style="color:#d4b860;font-weight:600;margin-bottom:8px;">{title}</div>'
+        f'{bars_html}'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_name_wuxing(stock):
+    """
+    渲染「名學五行分析」分頁：
+    - 公司中文名稱各字筆劃 → 五行比重
+    - 股票代碼數字 → 五行比重
+    - 若 session 有出生日期，計算命主八字五行並對比
+    """
+    from .name_wuxing import (
+        analyze_name_wuxing,
+        analyze_ticker_wuxing,
+        get_bazi_wuxing,
+        compare_wuxing,
+        WUXING_COLORS,
+        WUXING_ELEMENTS,
+    )
+    from .stock_fetcher import get_display_name
+
+    st.subheader("🀄 名學五行分析 / Name & Ticker Wuxing Analysis")
+    st.caption(
+        "依「姓名學」五行理論，分析上市公司名稱漢字筆劃五行與股票代碼數字五行，"
+        "並與命主八字五行對比，判斷是否相生相和或相剋。\n"
+        "/ Using Chinese name numerology, analyse the Five Elements of the company name "
+        "characters and stock ticker digits, then compare with your BaZi birth chart elements."
+    )
+
+    ticker = stock.normalized_ticker
+    name_zh = stock.name_zh or ""
+
+    # ── 公司中文名稱五行 ──────────────────────────────
+    st.markdown("---")
+    st.markdown("**📝 公司名稱五行 / Company Name Wuxing**")
+
+    if name_zh:
+        name_result = analyze_name_wuxing(name_zh)
+        total_name = name_result["total"] or 1
+
+        # 字符明細卡片
+        chars_html = ""
+        for cd in name_result["chars"]:
+            color = WUXING_COLORS[cd["wuxing"]]
+            stroke_label = str(cd["strokes"]) if cd["strokes"] is not None else "?"
+            chars_html += (
+                f'<span style="display:inline-block;text-align:center;'
+                f'background:rgba(0,0,0,0.3);border:1px solid {color}33;'
+                f'border-radius:8px;padding:6px 12px;margin:4px;">'
+                f'<span style="font-size:1.5em;color:{color};">{cd["char"]}</span><br/>'
+                f'<span style="font-size:0.72em;color:{color};">{stroke_label}劃·{cd["wuxing"]}</span>'
+                f'</span>'
+            )
+
+        st.markdown(
+            f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
+            f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
+            f'<div style="color:#FFD700;font-weight:600;margin-bottom:8px;">{name_zh}</div>'
+            f'{chars_html}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        if name_result["unknown_chars"]:
+            st.caption(f"⚠️ 以下字符無筆劃資料，預設為「土」: {'、'.join(name_result['unknown_chars'])}")
+
+        _wuxing_bar(name_result["distribution"], total_name,
+                    f"{name_zh} 名稱五行比重")
+    else:
+        st.info(
+            "此股票暫無中文公司名稱資料（yfinance 未返回中文名）。\n"
+            "/ No Chinese company name available from yfinance for this ticker."
+        )
+
+    # ── 股票代碼數字五行 ──────────────────────────────
+    st.markdown("---")
+    st.markdown("**🔢 股票代碼數字五行 / Ticker Digit Wuxing**")
+
+    ticker_result = analyze_ticker_wuxing(ticker)
+    total_ticker = ticker_result["total"] or 1
+
+    if ticker_result["digits"]:
+        digits_html = ""
+        for dd in ticker_result["digits"]:
+            color = WUXING_COLORS[dd["wuxing"]]
+            digits_html += (
+                f'<span style="display:inline-block;text-align:center;'
+                f'background:rgba(0,0,0,0.3);border:1px solid {color}33;'
+                f'border-radius:8px;padding:6px 14px;margin:4px;">'
+                f'<span style="font-size:1.5em;color:{color};">{dd["digit"]}</span><br/>'
+                f'<span style="font-size:0.72em;color:{color};">{dd["wuxing"]}</span>'
+                f'</span>'
+            )
+
+        st.markdown(
+            f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
+            f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
+            f'<div style="color:#FFD700;font-weight:600;margin-bottom:8px;">{ticker}</div>'
+            f'{digits_html}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        _wuxing_bar(ticker_result["distribution"], total_ticker,
+                    f"{ticker} 代碼數字五行比重")
+    else:
+        st.info("股票代碼中無數字，無法分析五行。/ No digits found in ticker.")
+
+    # ── 命主八字五行（若有出生日期）────────────────────
+    st.markdown("---")
+    st.markdown("**🎂 命主八字五行 / Your BaZi Wuxing (from Sidebar Birth Date)**")
+
+    birth_date = st.session_state.get("birth_date_input")
+    confirmed_params = st.session_state.get("_confirmed_params")
+
+    bazi_year, bazi_month, bazi_day = None, None, None
+    if confirmed_params and confirmed_params.get("year"):
+        bazi_year = confirmed_params["year"]
+        bazi_month = confirmed_params["month"]
+        bazi_day = confirmed_params["day"]
+    elif birth_date is not None:
+        try:
+            bazi_year = birth_date.year
+            bazi_month = birth_date.month
+            bazi_day = birth_date.day
+        except AttributeError:
+            pass
+
+    if bazi_year is None:
+        st.info(
+            "請在左側邊欄輸入您的出生日期，即可比較命主八字五行與股票五行的相生相剋。\n"
+            "/ Enter your birth date in the sidebar to compare your BaZi elements "
+            "with the stock's Five Elements."
+        )
+        return
+
+    bazi_result = get_bazi_wuxing(bazi_year, bazi_month, bazi_day)
+
+    if not bazi_result["available"]:
+        st.warning(
+            f"無法計算八字五行（{bazi_result['error']}）。\n"
+            "/ Cannot compute BaZi elements."
+        )
+        return
+
+    # 八字四柱展示
+    from datetime import date as date_cls
+    birth_str = f"{bazi_year}-{bazi_month:02d}-{bazi_day:02d}"
+    pillars_html = ""
+    for p in bazi_result["pillars"]:
+        ws_color = WUXING_COLORS[p["wuxing_stem"]]
+        wb_color = WUXING_COLORS[p["wuxing_branch"]]
+        pillars_html += (
+            f'<span style="display:inline-block;text-align:center;'
+            f'background:rgba(0,0,0,0.3);border:1px solid rgba(255,200,50,0.2);'
+            f'border-radius:8px;padding:8px 14px;margin:4px;">'
+            f'<span style="font-size:0.72em;color:#9090b8;">{p["label"]}</span><br/>'
+            f'<span style="font-size:1.4em;color:{ws_color};">{p["stem"]}</span>'
+            f'<span style="font-size:1.4em;color:{wb_color};">{p["branch"]}</span><br/>'
+            f'<span style="font-size:0.72em;color:{ws_color};">{p["wuxing_stem"]}</span>'
+            f'<span style="font-size:0.72em;color:#9090b8;">·</span>'
+            f'<span style="font-size:0.72em;color:{wb_color};">{p["wuxing_branch"]}</span>'
+            f'</span>'
+        )
+
+    st.markdown(
+        f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
+        f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
+        f'<div style="color:#FFD700;font-weight:600;margin-bottom:8px;">'
+        f'命主出生日期 {birth_str} 三柱八字</div>'
+        f'{pillars_html}'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    _wuxing_bar(bazi_result["distribution"], sum(bazi_result["distribution"].values()) or 1,
+                "命主三柱六字五行比重（年月日）")
+
+    # ── 對比分析 ──────────────────────────────────────
+    st.markdown("---")
+    st.markdown("**⚖️ 命主 × 股票 五行對比 / BaZi vs. Stock Wuxing Compatibility**")
+
+    comparisons = []
+    if name_zh and name_result["total"] > 0:
+        comparisons.append(
+            (name_result["distribution"], f"公司名稱「{name_zh}」")
+        )
+    if ticker_result["total"] > 0:
+        comparisons.append(
+            (ticker_result["distribution"], f"股票代碼「{ticker}」數字")
+        )
+
+    for dist_b, label_b in comparisons:
+        cmp = compare_wuxing(
+            bazi_result["distribution"], "命主",
+            dist_b, label_b,
+        )
+
+        score_icon = {2: "🌟", 1: "✅", 0: "🔵", -1: "⚠️", -2: "🔴"}.get(cmp["score"], "🔵")
+        st.markdown(
+            f"""
+            <div style="
+                background:rgba(20,12,40,0.55);
+                border-left:4px solid {cmp['color']};
+                border-radius:0 10px 10px 0;
+                padding:12px 16px;
+                margin-bottom:10px;
+            ">
+            <div style="font-weight:700;color:{cmp['color']};font-size:1.0em;">
+                {score_icon} {cmp['relationship']} &nbsp;
+                <span style="font-size:0.85em;color:#9090b8;">({cmp['relationship_en']})</span>
+            </div>
+            <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
+                命主主元素：<span style="color:{cmp['color']};">{cmp['dominant_a']}</span>
+                &nbsp;⟷&nbsp;
+                {label_b}主元素：<span style="color:{cmp['color']};">{cmp['dominant_b']}</span>
+            </div>
+            <div style="color:#d4b860;font-size:0.91em;margin-bottom:6px;">{cmp['summary_zh']}</div>
+            <div style="color:#8090a8;font-size:0.82em;">{cmp['summary_en']}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.caption(
+        "⚠️ 名學五行分析僅供參考，不構成投資建議。"
+        " / Name Wuxing analysis is for reference only and does not constitute investment advice."
+    )
