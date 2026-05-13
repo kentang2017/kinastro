@@ -109,7 +109,7 @@ def _azimuth_to_templum(azimuth: float) -> int:
 # Dominant nature determination
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _determine_dominant_nature(planet_positions: List[EtruscanPlanetPosition]) -> str:
+def _determine_dominant_nature(planet_positions: list[EtruscanPlanetPosition]) -> str:
     """Determine the overall dominant nature of the chart.
 
     統計各行星所在 Templum 區域的天性，以最多的天性作為主導。
@@ -125,7 +125,7 @@ def _determine_dominant_nature(planet_positions: List[EtruscanPlanetPosition]) -
     Else → "neutral"
 
     Args:
-        planet_positions: List of computed planet positions.
+        planet_positions: list of computed planet positions.
 
     Returns:
         "favorable" | "unfavorable" | "neutral"
