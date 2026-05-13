@@ -74,6 +74,7 @@ from astro.brahma_jati import (
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
 from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart, build_mazzalot_star_of_david_svg
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
+from astro.arabic_lots import compute_albiruni_lots
 from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.dogon import compute_dogon_sirius_chart, render_dogon_sirius_chart
@@ -208,6 +209,7 @@ from ui.components.system_selector import render_system_selector
 from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
+from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 
 
 # ============================================================
@@ -4052,8 +4054,9 @@ if not _engine_handled:
         if _is_calculated:
             try:
                 _p = st.session_state["_calc_params"]
-                arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
+                arabic_subtab_chart, arabic_subtab_lots, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
                     t("arabic_subtab_chart"),
+                    t("arabic_subtab_lots"),
                     t("arabic_subtab_picatrix"),
                     t("arabic_subtab_shams"),
                     t("arabic_subtab_reference"),
@@ -4064,6 +4067,28 @@ if not _engine_handled:
                     with st.spinner(t("spinner_arabic")):
                         a_chart = compute_arabic_chart(**_p)
                     render_arabic_chart(a_chart, after_chart_hook=lambda: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
+
+                with arabic_subtab_lots:
+                    _lots_mode_label = st.selectbox(
+                        t("arabic_lots_zodiac_mode"),
+                        options=[t("arabic_lots_tropical"), t("arabic_lots_sidereal")],
+                        index=0,
+                        key="arabic_lots_mode",
+                    )
+                    _lots_mode = "sidereal" if _lots_mode_label == t("arabic_lots_sidereal") else "tropical"
+                    with st.spinner(t("spinner_arabic_lots")):
+                        _lots_result = compute_albiruni_lots(
+                            year=_p["year"],
+                            month=_p["month"],
+                            day=_p["day"],
+                            hour=_p["hour"],
+                            minute=_p["minute"],
+                            timezone=_p["timezone"],
+                            latitude=_p["latitude"],
+                            longitude=_p["longitude"],
+                            zodiac_mode=_lots_mode,
+                        )
+                    render_arabic_lots_dashboard(_lots_result, t)
 
                 # --- Picatrix 星體魔法 ---
                 with arabic_subtab_picatrix:
@@ -4140,8 +4165,9 @@ if not _engine_handled:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
         else:
-            arabic_subtab_chart, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
+            arabic_subtab_chart, arabic_subtab_lots, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
                 t("arabic_subtab_chart"),
+                t("arabic_subtab_lots"),
                 t("arabic_subtab_picatrix"),
                 t("arabic_subtab_shams"),
                 t("arabic_subtab_reference"),
@@ -4151,6 +4177,10 @@ if not _engine_handled:
             with arabic_subtab_chart:
                 st.info(t("info_calc_prompt"))
                 st.markdown(t("desc_arabic"))
+
+            with arabic_subtab_lots:
+                st.info(t("info_calc_prompt"))
+                st.markdown(t("desc_arabic_lots"))
 
             with arabic_subtab_picatrix:
                 st.subheader(t("picatrix_subheader"))
