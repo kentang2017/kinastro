@@ -5,15 +5,15 @@
 
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.7.0-00C853?style=for-the-badge)
-![Systems](https://img.shields.io/badge/Systems-70-FFD700?style=for-the-badge)
+![Systems](https://img.shields.io/badge/Systems-72-FFD700?style=for-the-badge)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**七十體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・五運六氣・萬化仙禽・六壬祿命・太乙命法・奇門祿命・六爻終身卦・鐵板神數・邵子神數・鬼谷分定經・滌器遺訣・北極神數・南極神數・子平八字・蠢子數・韓國・土亭數・高棉・Reamker 占星・西洋・宇宙生物學・出生時間校正・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・和諧占星・古典主限推運・赫密士前世盤・靈性占星・人間圖・世俗占星・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・Picatrix 占星魔法・也門・薩珊波斯・薩珊波斯進階版・柏柏爾占星・瑪雅・安地斯・多貢天狼星宇宙學・阿茲特克・古埃及十度區間・巴比倫・蘇美/美索不達米亞・波利尼西亞／夏威夷・拜占庭占星・醫學占星・傷寒鈐法・傳統卜卦占星・擇日占星**
-*70-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, Wu Yun Liu Qi, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Lifetime Liu Yao, Tie Ban Shen Shu, Shao Zi Shen Shu, Ghost Valley Fen Ding Jing, Diqiyijue, Beiji Shenshu, Nanji Shenshu, Ziping Bazi, ChunZiShu, Korean Tojeong, Khmer Reamker, Western, Cosmobiology (Ebertin), Rectification, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Harmonic Astrology, Primary Directions, Trutine of Hermes, Esoteric Astrology (Seven Rays), Human Design, Mundane Astrology, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Sukkayodo, Thai, Myanmar, Balinese Wariga, Javanese Weton, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻrif), Picatrix Star Magic, Yemeni Rasulid, Sassanian Persian, Sassanian Persia (Advanced), Amazigh (Berber) Astrology, Maya, Andean Cosmology, Dogon Sirius Cosmology, Aztec, Egyptian Decans, Babylonian, Sumerian / Mesopotamian, Polynesian / Hawaiian Star Lore, Byzantine Astrology, Medical Astrology (Iatromathematics), Shanghan Qianfa, Traditional Horary Astrology, Electional Astrology / Muhurta*
+**七十二體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・五運六氣・萬化仙禽・六壬祿命・太乙命法・奇門祿命・六爻終身卦・鐵板神數・邵子神數・鬼谷分定經・滌器遺訣・北極神數・南極神數・子平八字・蠢子數・韓國・土亭數・高棉・Reamker 占星・西洋・宇宙生物學・出生時間校正・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・和諧占星・古典主限推運・赫密士前世盤・靈性占星・人間圖・世俗占星・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・Picatrix 占星魔法・也門・薩珊波斯・薩珊波斯進階版・柏柏爾占星・地占占星・瑪雅・安地斯・多貢天狼星宇宙學・阿茲特克・古埃及十度區間・巴比倫・蘇美/美索不達米亞・伊特魯里亞占星・波利尼西亞／夏威夷・拜占庭占星・醫學占星・傷寒鈐法・傳統卜卦占星・擇日占星**
+*72-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, Wu Yun Liu Qi, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Lifetime Liu Yao, Tie Ban Shen Shu, Shao Zi Shen Shu, Ghost Valley Fen Ding Jing, Diqiyijue, Beiji Shenshu, Nanji Shenshu, Ziping Bazi, ChunZiShu, Korean Tojeong, Khmer Reamker, Western, Cosmobiology (Ebertin), Rectification, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Harmonic Astrology, Primary Directions, Trutine of Hermes, Esoteric Astrology (Seven Rays), Human Design, Mundane Astrology, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Sukkayodo, Thai, Myanmar, Balinese Wariga, Javanese Weton, Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻrif), Picatrix Star Magic, Yemeni Rasulid, Sassanian Persian, Sassanian Persia (Advanced), Amazigh (Berber) Astrology, Astronomical Geomancy, Maya, Andean Cosmology, Dogon Sirius Cosmology, Aztec, Egyptian Decans, Babylonian, Sumerian / Mesopotamian, Etruscan Astrology, Polynesian / Hawaiian Star Lore, Byzantine Astrology, Medical Astrology (Iatromathematics), Shanghan Qianfa, Traditional Horary Astrology, Electional Astrology / Muhurta*
 
 </div>
 
@@ -38,7 +38,7 @@
 
 | | 中文 | English |
 |---|---|---|
-| 🔮 **七十體系合一** | 在同一個介面中切換七十種占星體系，無需來回切換工具 | Switch between 70 astrology systems in one unified interface |
+| 🔮 **七十二體系合一** | 在同一個介面中切換七十二種占星體系，無需來回切換工具 | Switch between 72 astrology systems in one unified interface |
 | 🪐 **精密天文計算** | 使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文計算 | High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph) |
 | 🤖 **AI 智慧分析** | 整合 Cerebras AI，一鍵生成命盤深度解讀報告 | Integrated Cerebras AI for one-click in-depth chart analysis |
 | 🌏 **全球化支援** | 內建全球多個主要城市，亦支援自訂經緯度即時排盤 | Built-in global city presets with custom latitude/longitude support |
@@ -53,9 +53,9 @@
 
 ## 🧭 體系總覽 | Systems at a Glance
 
-> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 · 北非 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；本次更新納入蠢子數（ChunZiShu）
+> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 · 北非 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；本次更新納入地占占星（Astronomical Geomancy）與伊特魯里亞占星（Etruscan Astrology）
 >
-> *Systems displayed by category: Popular → Three Formulae → Chinese → Western → Indian → Asian → Middle East & North Africa → Ancient → Medical Astrology (incl. Byzantine Astrology) → Traditional Horary → Electional; this refresh adds ChunZiShu (28 Lunar Mansions verse divination)*
+> *Systems displayed by category: Popular → Three Formulae → Chinese → Western → Indian → Asian → Middle East & North Africa → Ancient → Medical Astrology (incl. Byzantine Astrology) → Traditional Horary → Electional; this refresh adds Astronomical Geomancy and Etruscan Astrology*
 
 | # | 體系 System | 黃道 Zodiac | 子功能 Sub-features |
 |:-:|---|---|---|
@@ -123,21 +123,23 @@
 | 56 | 🏛️ 薩珊波斯進階版 Sassanian Persia (Advanced) | 恆星 Sidereal | 正確 Firdaria 序列・Hyleg/Alcocoden 三範圍・多德卡特摩里亞・反射點・14 阿拉伯點 |
 | 57 | ✦ Picatrix 占星魔法 Picatrix Star Magic | 回歸 Tropical | 15 顆 Behenian 根源恆星・護符圖像・寶石草藥・星盤激活偵測 |
 | 58 | ⵣ 柏柏爾占星 Amazigh Astrology | 恆星 Sidereal | 七曜・固定星・Lots 命運點・四方位季節象徵・北非柏柏爾星空傳統 |
+| 59 | 🔮 地占占星 Astronomical Geomancy | — | 隨機點數・16 地占圖形・12 宮排列・占星格局判斷 |
 | | **🏺 古代文明 Ancient** | | |
-| 59 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
-| 60 | 🌿 印加／安地斯占星 Andean Cosmology | 文化宇宙學 Cosmology | Ceque 聖地線路・南十字 Chakana・昴宿星農曆觀測 |
-| 61 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
-| 62 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
-| 63 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
-| 64 | 🜂 多貢天狼星宇宙學 Dogon Sirius Cosmology | 文化宇宙學 Cosmology | Sirius A/B/C（Po Tolo／Emme Ya）・Sigui 50 年週期・跨文化比較 |
-| 65 | 𒀭 蘇美/美索不達米亞 Sumerian / Mesopotamian | 恆星 Sidereal | MUL.APIN 星表・Enūma Anu Enlil 預兆・K.8538 尼尼微星盤・七大行星神 |
+| 60 | 🏺 瑪雅 Maya | 瑪雅曆 Maya Cal. | Tzolkin・Haab・Long Count |
+| 61 | 🌿 印加／安地斯占星 Andean Cosmology | 文化宇宙學 Cosmology | Ceque 聖地線路・南十字 Chakana・昴宿星農曆觀測 |
+| 62 | 🦅 阿茲特克 Aztec | 阿茲特克曆 | Tonalpohualli・Trecena・守護神祇 |
+| 63 | 🏛️ 古埃及 Decans | 回歸 Tropical | 36 Decans・塔羅・Dendera 輪盤圖 |
+| 64 | 🏛️ 巴比倫 Babylonian | 恆星 Sidereal | MUL.APIN 星表・K.8538 星盤・Enūma Anu Enlil 預兆 |
+| 65 | 🜂 多貢天狼星宇宙學 Dogon Sirius Cosmology | 文化宇宙學 Cosmology | Sirius A/B/C（Po Tolo／Emme Ya）・Sigui 50 年週期・跨文化比較 |
+| 66 | 𒀭 蘇美/美索不達米亞 Sumerian / Mesopotamian | 恆星 Sidereal | MUL.APIN 星表・Enūma Anu Enlil 預兆・K.8538 尼尼微星盤・七大行星神 |
+| 67 | 🏺 伊特魯里亞占星 Etruscan Astrology | — | 皮亞琴察青銅肝臟・天宮十六區（Templum XVI）・閃電占卜・haruspicy |
 | | **⚕️ 醫占 Medical Astrology** | | |
-| 66 | ✚ 拜占庭占星 Byzantine Astrology | 回歸 Tropical | 政治星盤（皇帝・城市・宗教）・地震占・月行占・雷鳴占・基督教占星融合・赫費斯提翁傳統 |
-| 67 | ⚕️ 醫學占星 Medical Astrology | 回歸 Tropical | 黃道人體質分析・四液質・埃及三十六旬星身體對照・療癒擇時・疾病危機日計算 |
-| 68 | 🌿 傷寒鈐法 Shanghan Qianfa | 農曆 Lunar | 六經辨證・干支鈐法推算・六經歸屬・經方推薦・傳經預後 |
+| 68 | ✚ 拜占庭占星 Byzantine Astrology | 回歸 Tropical | 政治星盤（皇帝・城市・宗教）・地震占・月行占・雷鳴占・基督教占星融合・赫費斯提翁傳統 |
+| 69 | ⚕️ 醫學占星 Medical Astrology | 回歸 Tropical | 黃道人體質分析・四液質・埃及三十六旬星身體對照・療癒擇時・疾病危機日計算 |
+| 70 | 🌿 傷寒鈐法 Shanghan Qianfa | 農曆 Lunar | 六經辨證・干支鈐法推算・六經歸屬・經方推薦・傳經預後 |
 | | **📜 傳統卜卦占星 Traditional Horary Astrology** | | |
-| 69 | 📜 傳統卜卦占星 Traditional Horary | 回歸 / 恆星 | 西洋卜卦（Lilly/Bonatti）・吠陀問卜（Prashna Marga）・嚴格限制（Strictures）・應期推算・問題徵象主・問卜星盤 |
-| 70 | ⏳ 擇日占星 Electional / Muhurta | 回歸 / 恆星 | 西方 Lilly/Bonatti 擇日・行星時・吠陀五曆・婚姻擇日・Panchanga・最佳吉時搜尋 |
+| 71 | 📜 傳統卜卦占星 Traditional Horary | 回歸 / 恆星 | 西洋卜卦（Lilly/Bonatti）・吠陀問卜（Prashna Marga）・嚴格限制（Strictures）・應期推算・問題徵象主・問卜星盤 |
+| 72 | ⏳ 擇日占星 Electional / Muhurta | 回歸 / 恆星 | 西方 Lilly/Bonatti 擇日・行星時・吠陀五曆・婚姻擇日・Panchanga・最佳吉時搜尋 |
 
 ---
 
