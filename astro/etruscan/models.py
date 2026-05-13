@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ class EtruscanChart:
 
     # ── Computed core ──
     jd_ut: float
-    planet_positions: List[EtruscanPlanetPosition]
+    planet_positions: list  # list[EtruscanPlanetPosition]
     lightning_region: int
     dominant_nature: str
     ritual_type: str

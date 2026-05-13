@@ -78,6 +78,7 @@ def build_piacenza_liver_svg(
     cx, cy = 430, 295          # liver centre
     rx, ry = 360, 230          # liver ellipse radii
     height = 600
+    _SECTOR_RADIUS = 420.0     # exaggerated radius for sector wedge lines, clipped by liver ellipse
 
     region_map = _region_lookup()
 
@@ -110,12 +111,10 @@ def build_piacenza_liver_svg(
         # Conversion: svg_angle = azimuth - 90°
 
         def az_to_svg(az: float) -> tuple[float, float]:
-            """Convert azimuth to SVG x,y at radius r from centre."""
+            """Convert azimuth to SVG x,y at _SECTOR_RADIUS from centre."""
             svg_ang = math.radians(az - 90.0)
-            # Use an exaggerated radius to reach the liver edge
-            r = 420.0
-            x = cx + r * math.cos(svg_ang)
-            y = cy + r * math.sin(svg_ang)
+            x = cx + _SECTOR_RADIUS * math.cos(svg_ang)
+            y = cy + _SECTOR_RADIUS * math.sin(svg_ang)
             return x, y
 
         x1, y1 = az_to_svg(az_start)
@@ -123,10 +122,11 @@ def build_piacenza_liver_svg(
 
         # Build sector path: M centre, L x1 y1, A (large arc), L centre Z
         large_arc = 0  # always < 180°
+        r_str = f"{_SECTOR_RADIUS:.0f}"
         path_d = (
             f"M {cx},{cy} "
             f"L {x1:.1f},{y1:.1f} "
-            f"A 420,420 0 {large_arc},1 {x2:.1f},{y2:.1f} "
+            f"A {r_str},{r_str} 0 {large_arc},1 {x2:.1f},{y2:.1f} "
             f"Z"
         )
 
@@ -343,7 +343,7 @@ def build_piacenza_liver_svg(
     function moveTooltip(e) {{
       var x = e.clientX + 14;
       var y = e.clientY - 14;
-      if (x + 340 > window.innerWidth) x = e.clientX - 340;
+      if (x + 346 > window.innerWidth) x = e.clientX - 346;
       tt.style.left = x + 'px';
       tt.style.top  = y + 'px';
     }}
@@ -586,12 +586,13 @@ def _planet_table_html(
         above = "▲" if pos.is_above_horizon else "▽"
         above_c = BRONZE_THEME["favorable"] if pos.is_above_horizon else BRONZE_THEME["neutral"]
         td = f'style="padding:7px 10px;border:1px solid {BRONZE_THEME["border"]};color:{BRONZE_THEME["text"]};font-family:serif"'
+        deity_short = (deity[:30] + "…") if len(deity) > 30 else deity
         rows += f"""
 <tr style="background:{BRONZE_THEME['bg_card']}">
   <td {td}>{p_name}</td>
   <td {td} style="padding:7px 10px;border:1px solid {BRONZE_THEME['border']};text-align:center;font-size:16px">{pos.glyph}</td>
   <td {td} style="padding:7px 10px;border:1px solid {BRONZE_THEME['border']};color:{nature_color};font-weight:bold">{r_label}</td>
-  <td {td} style="padding:7px 10px;border:1px solid {BRONZE_THEME['border']};color:{BRONZE_THEME['text']};font-size:12px">{t_name} — {deity[:30]}…</td>
+  <td {td} style="padding:7px 10px;border:1px solid {BRONZE_THEME['border']};color:{BRONZE_THEME['text']};font-size:12px">{t_name} — {deity_short}</td>
   <td {td} style="padding:7px 10px;border:1px solid {BRONZE_THEME['border']};color:{nature_color}">{nature_label}</td>
   <td {td}>{pos.azimuth:.1f}°</td>
   <td {td}><span style="color:{above_c}">{above}</span> {pos.altitude:.1f}°</td>

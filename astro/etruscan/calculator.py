@@ -28,7 +28,7 @@ ecliptic longitude is used to derive an approximate azimuth.
 from __future__ import annotations
 
 import math
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import swisseph as swe
 
@@ -57,7 +57,11 @@ def _init_swe() -> None:
 # Zodiac sign helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-_SIGN_NAMES: List[str] = [
+# Standard atmospheric conditions for swe.azalt() computations
+_STANDARD_TEMPERATURE_CELSIUS: float = 15.0   # 標準大氣溫度 (°C)
+_STANDARD_PRESSURE_HPA: float = 1013.0        # 標準大氣壓 (hPa)
+
+_SIGN_NAMES: list[str] = [
     "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
     "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
 ]
@@ -198,7 +202,7 @@ def compute_etruscan_chart(
     # [geographic_longitude, geographic_latitude, altitude_above_sea_m]
     geopos = [longitude, latitude, 0.0]
 
-    planet_positions: List[EtruscanPlanetPosition] = []
+    planet_positions: list[EtruscanPlanetPosition] = []
 
     for planet_id, planet_info in ETRUSCAN_PLANETS.items():
         # ── Ecliptic position ──
@@ -221,8 +225,8 @@ def compute_etruscan_chart(
                 jd_ut,
                 swe.ECL2HOR,
                 geopos,
-                15.0,    # atmospheric temperature in Celsius (標準溫度)
-                1013.0,  # atmospheric pressure in hPa (標準氣壓)
+                _STANDARD_TEMPERATURE_CELSIUS,
+                _STANDARD_PRESSURE_HPA,
                 [ecl_lon, 0.0, 1.0],  # [ecl_lon, ecl_lat, distance]
             )
             # swe.azalt returns (azimuth, true_altitude, apparent_altitude)
