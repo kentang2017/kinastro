@@ -440,6 +440,13 @@ def get_bazi_wuxing(
     """
     從出生日期取得八字五行分佈（可選擇是否包含時柱）。
 
+    Args:
+        year: 出生年
+        month: 出生月
+        day: 出生日
+        hour: 出生時（0-23），僅在 include_hour=True 時使用
+        include_hour: 是否納入時柱（預設 True）
+
     Returns:
         {
           "pillars": [{"label":"年柱","stem":"甲","branch":"子","wuxing_stem":"木","wuxing_branch":"水"}, ...],
