@@ -520,6 +520,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
         {
           "dominant_a": str,
           "dominant_b": str,
+          "relationship_code": str,
           "relationship": str,  # 相生|相剋|比和|中性
           "relationship_en": str,
           "color": str,
@@ -537,6 +538,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
 
     # 關係判斷：以 A（命主）視角
     if dom_a == dom_b:
+        relationship_code = "same_element"
         relationship = "比和"
         rel_en = "Harmonious (Same Element)"
         color = "#60a5fa"
@@ -550,6 +552,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
             f"Natural resonance and mutual affinity; investment tends to be compatible."
         )
     elif WUXING_SHENG.get(dom_a) == dom_b:
+        relationship_code = "you_feed_stock"
         relationship = "相生（命主生股）"
         rel_en = "Productive (You Feed Stock)"
         color = "#86efac"
@@ -563,6 +566,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
             f"You energise the stock; long-term holding tends to be favourable."
         )
     elif WUXING_SHENG.get(dom_b) == dom_a:
+        relationship_code = "stock_feeds_you"
         relationship = "相生（股生命主）"
         rel_en = "Productive (Stock Feeds You)"
         color = "#86efac"
@@ -576,6 +580,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
             f"The stock's energy nourishes you; holding it may enhance your fortune."
         )
     elif WUXING_KE.get(dom_a) == dom_b:
+        relationship_code = "you_overcome_stock"
         relationship = "相剋（命主剋股）"
         rel_en = "Conflicting (You Overcome Stock)"
         color = "#fb923c"
@@ -589,6 +594,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
             f"Your energy may suppress the stock; proceed cautiously."
         )
     elif WUXING_KE.get(dom_b) == dom_a:
+        relationship_code = "stock_overcomes_you"
         relationship = "相剋（股剋命主）"
         rel_en = "Conflicting (Stock Overcomes You)"
         color = "#f87171"
@@ -602,6 +608,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
             f"The stock's energy suppresses yours; avoid heavy positions."
         )
     else:
+        relationship_code = "neutral"
         relationship = "中性"
         rel_en = "Neutral"
         color = "#9090b8"
@@ -618,6 +625,7 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
     return {
         "dominant_a": dom_a,
         "dominant_b": dom_b,
+        "relationship_code": relationship_code,
         "relationship": relationship,
         "relationship_en": rel_en,
         "color": color,

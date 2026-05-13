@@ -39,6 +39,7 @@ _FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
 _BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
 _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
+_MIXED_DOMINANCE_THRESHOLD = 0.4
 
 
 # ============================================================
@@ -1064,16 +1065,19 @@ def _wuxing_bar(dist: dict, total: int, title: str):
     )
 
 
-def _compatibility_grade(cmp: dict, dist_a: dict[str, int], dist_b: dict[str, int]) -> dict[str, str]:
+def _compatibility_grade(
+    cmp: dict, bazi_distribution: dict[str, int], stock_distribution: dict[str, int]
+) -> dict[str, str]:
     """將五行關係分數轉為契合評級（S~F）。"""
-    total_a = sum(dist_a.values()) or 1
-    total_b = sum(dist_b.values()) or 1
-    dominance_a = max(dist_a.values(), default=0) / total_a
-    dominance_b = max(dist_b.values(), default=0) / total_b
+    total_a = sum(bazi_distribution.values()) or 1
+    total_b = sum(stock_distribution.values()) or 1
+    dominance_a = max(bazi_distribution.values(), default=0) / total_a
+    dominance_b = max(stock_distribution.values(), default=0) / total_b
     score = cmp.get("score", 0)
+    relationship_code = cmp.get("relationship_code")
 
     if score >= 2:
-        if cmp.get("relationship") == "相生（股生命主）" and dominance_a >= 0.5 and dominance_b >= 0.5:
+        if relationship_code == "stock_feeds_you" and dominance_a >= 0.5 and dominance_b >= 0.5:
             grade = "S"
             title_zh = "絕對配合"
             title_en = "Absolute Match"
@@ -1086,7 +1090,8 @@ def _compatibility_grade(cmp: dict, dist_a: dict[str, int], dist_b: dict[str, in
         title_zh = "良好契合"
         title_en = "Good Compatibility"
     elif score == 0:
-        if dominance_a < 0.4 and dominance_b < 0.4:
+        # Dominance below 40% usually means no single element dominates, so neutral impact is milder.
+        if dominance_a < _MIXED_DOMINANCE_THRESHOLD and dominance_b < _MIXED_DOMINANCE_THRESHOLD:
             grade = "C"
             title_zh = "中度契合"
             title_en = "Moderate Compatibility"
@@ -1096,8 +1101,8 @@ def _compatibility_grade(cmp: dict, dist_a: dict[str, int], dist_b: dict[str, in
             title_en = "Low Compatibility"
     elif score == -1:
         grade = "E"
-        title_zh = "完全不合"
-        title_en = "Incompatible"
+        title_zh = "嚴重不合"
+        title_en = "Severely Incompatible"
     else:
         grade = "F"
         title_zh = "完全不合"
