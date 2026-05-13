@@ -287,7 +287,7 @@ def _render_stock_card(stock):
             padding: 16px 20px;
         ">
         {zh_name_html}
-        {en_name_html if stock.name_zh else ""}
+        {en_name_html}
         <div style="color:#d4b860;font-size:0.82em;margin-bottom:10px;">
             {stock.normalized_ticker}
             {"&nbsp;|&nbsp;" + stock.exchange if stock.exchange else ""}
