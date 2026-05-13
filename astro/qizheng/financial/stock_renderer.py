@@ -1215,11 +1215,12 @@ def _render_name_wuxing(stock):
     birth_date = st.session_state.get("birth_date_input")
     confirmed_params = st.session_state.get("_confirmed_params")
 
-    bazi_year, bazi_month, bazi_day = None, None, None
+    bazi_year, bazi_month, bazi_day, bazi_hour = None, None, None, 12  # noon as conventional default
     if confirmed_params and confirmed_params.get("year"):
         bazi_year = confirmed_params["year"]
         bazi_month = confirmed_params["month"]
         bazi_day = confirmed_params["day"]
+        bazi_hour = confirmed_params.get("hour", 12)
     elif birth_date is not None:
         try:
             bazi_year = birth_date.year
@@ -1227,6 +1228,12 @@ def _render_name_wuxing(stock):
             bazi_day = birth_date.day
         except AttributeError:
             pass
+        birth_time = st.session_state.get("birth_time_input")
+        if birth_time is not None:
+            try:
+                bazi_hour = birth_time.hour
+            except AttributeError:
+                pass
 
     if bazi_year is None:
         st.info(
@@ -1236,7 +1243,7 @@ def _render_name_wuxing(stock):
         )
         return
 
-    bazi_result = get_bazi_wuxing(bazi_year, bazi_month, bazi_day)
+    bazi_result = get_bazi_wuxing(bazi_year, bazi_month, bazi_day, bazi_hour)
 
     if not bazi_result["available"]:
         st.warning(
@@ -1269,14 +1276,14 @@ def _render_name_wuxing(stock):
         f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
         f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
         f'<div style="color:#FFD700;font-weight:600;margin-bottom:8px;">'
-        f'命主出生日期 {birth_str} 三柱八字</div>'
+        f'命主出生日期 {birth_str} 四柱八字</div>'
         f'{pillars_html}'
         f'</div>',
         unsafe_allow_html=True,
     )
 
     _wuxing_bar(bazi_result["distribution"], sum(bazi_result["distribution"].values()) or 1,
-                "命主三柱六字五行比重（年月日）")
+                "命主四柱八字五行比重（年月日時）")
 
     # ── 對比分析 ──────────────────────────────────────
     st.markdown("---")
