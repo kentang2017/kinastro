@@ -131,3 +131,54 @@ def test_fetch_stock_info_derives_52w_range_from_history_when_missing(monkeypatc
     assert stock.error == ""
     assert stock.week52_high == 110.5
     assert stock.week52_low == 89.6
+
+
+def test_fetch_stock_info_falls_back_to_akshare_for_a_share_zh_name(monkeypatch):
+    stock_fetcher = _load_stock_fetcher_module()
+
+    class FakeFrame:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def to_dict(self, orient):
+            assert orient == "records"
+            return self._rows
+
+    class FakeTicker:
+        @property
+        def info(self):
+            return {
+                "symbol": "600519.SS",
+                "quoteType": "EQUITY",
+                "shortName": "Kweichow Moutai",
+                "longName": "Kweichow Moutai Co., Ltd.",
+                "currentPrice": 1000.0,
+                "previousClose": 990.0,
+            }
+
+        @property
+        def fast_info(self):
+            return {}
+
+        def history(self, period="1y", auto_adjust=False):
+            class EmptyHistory:
+                empty = True
+
+            return EmptyHistory()
+
+    fake_yf = types.SimpleNamespace(Ticker=lambda _: FakeTicker())
+    fake_ak = types.SimpleNamespace(
+        stock_info_a_code_name=lambda: FakeFrame(
+            [
+                {"code": "600519", "name": "貴州茅台"},
+                {"code": "000001", "name": "平安銀行"},
+            ]
+        )
+    )
+
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+    monkeypatch.setitem(sys.modules, "akshare", fake_ak)
+
+    stock = stock_fetcher.fetch_stock_info("600519")
+    assert stock.error == ""
+    assert stock.name_zh == "貴州茅台"

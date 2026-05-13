@@ -56,6 +56,8 @@ _EXCHANGE_SUFFIXES = {
 # 常用 A 股交易所代碼識別
 _SS_SZ_PATTERN = re.compile(r"^(\d{6})(?:\.(ss|sz))?$", re.IGNORECASE)
 _HK_PATTERN    = re.compile(r"^(\d{4,5})(?:\.hk)?$", re.IGNORECASE)
+A_SHARE_CODE_LENGTH = 6
+HK_STOCK_CODE_LENGTH = 5
 
 
 def _normalize_ticker(raw: str) -> str:
@@ -93,6 +95,97 @@ def _extract_zh_name(info: dict) -> str:
         # 含 CJK 統一漢字則視為中文名稱
         if any("\u4e00" <= c <= "\u9fff" for c in val):
             return val
+    return ""
+
+
+def _contains_cjk(text: str) -> bool:
+    normalized_text = text if text is not None else ""
+    return any("\u4e00" <= c <= "\u9fff" for c in normalized_text)
+
+
+def _iter_table_records(table) -> list[dict]:
+    """將 pandas-like/list 轉為 dict records。"""
+    if table is None:
+        return []
+    if isinstance(table, list):
+        return [row for row in table if isinstance(row, dict)]
+    if hasattr(table, "to_dict"):
+        try:
+            records = table.to_dict("records")
+            if isinstance(records, list):
+                return [row for row in records if isinstance(row, dict)]
+        except Exception:
+            pass
+    return []
+
+
+def _find_name_by_code(
+    table,
+    *,
+    target_code: str,
+    code_keys: tuple[str, ...],
+    name_keys: tuple[str, ...],
+) -> str:
+    target = (target_code or "").strip().upper()
+    if not target:
+        return ""
+
+    norm_len = max(len(target), 1)
+
+    for row in _iter_table_records(table):
+        code_val = ""
+        for key in code_keys:
+            if key in row and row.get(key) is not None:
+                code_val = str(row.get(key)).strip().upper()
+                break
+        if not code_val:
+            continue
+        cmp_len = max(norm_len, len(code_val))
+        if code_val.zfill(cmp_len) != target.zfill(cmp_len):
+            continue
+
+        for key in name_keys:
+            name = str(row.get(key) or "").strip()
+            if name and _contains_cjk(name):
+                return name
+    return ""
+
+
+def _extract_zh_name_via_akshare(normalized_ticker: str) -> str:
+    """
+    用 akshare 後備抓取中文公司名（主要覆蓋 A 股/港股）。
+    """
+    if "." not in normalized_ticker:
+        return ""
+    code, suffix = normalized_ticker.split(".", 1)
+    suffix = suffix.upper()
+    if not code.isdigit() or suffix not in {"SS", "SZ", "HK"}:
+        return ""
+
+    try:
+        import akshare as ak  # lazy import
+    except Exception:
+        return ""
+
+    try:
+        if suffix in {"SS", "SZ"}:
+            table = ak.stock_info_a_code_name()
+            return _find_name_by_code(
+                table,
+                target_code=code.zfill(A_SHARE_CODE_LENGTH),
+                code_keys=("code", "代码"),
+                name_keys=("name", "名称"),
+            )
+        if suffix == "HK":
+            table = ak.stock_hk_spot_em()
+            return _find_name_by_code(
+                table,
+                target_code=code.zfill(HK_STOCK_CODE_LENGTH),
+                code_keys=("代码", "symbol", "code"),
+                name_keys=("名称", "name"),
+            )
+    except Exception:
+        pass
     return ""
 
 
@@ -283,6 +376,8 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
 
     # ── 名稱 ─────────────────────────────────────────────
     name_zh = _extract_zh_name(info)
+    if not name_zh:
+        name_zh = _extract_zh_name_via_akshare(normalized)
     name_en = info.get("longName") or info.get("shortName") or normalized
 
     # ── 股價 ─────────────────────────────────────────────
