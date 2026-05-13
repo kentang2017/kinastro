@@ -438,7 +438,7 @@ def get_bazi_wuxing(
     include_hour: bool = True,
 ) -> dict:
     """
-    從出生日期取得八字四柱五行分佈。
+    從出生日期取得八字五行分佈（可選擇是否包含時柱）。
 
     Returns:
         {
