@@ -123,6 +123,102 @@ _HOUSE_TOPIC_TEMPLATES_JSON = """
 }
 """
 
+# 宮位主題英文 → 中文翻譯對照表
+_HOUSE_TOPIC_ZH: dict[str, str] = {
+    # 第1宮
+    "Body Vitality": "身體活力",
+    "Temperament": "性情氣質",
+    "Constitution": "體質",
+    "Appearance": "外貌",
+    "Self Authority": "自我權威",
+    "Life Direction": "人生方向",
+    "Native Strength": "本命力量",
+    # 第2宮
+    "Money Assets": "金錢資產",
+    "Income Flow": "收入流動",
+    "Stored Wealth": "儲蓄財富",
+    "Possessions": "財物",
+    "Trade Capital": "交易資本",
+    "Sustenance": "生計",
+    "Liquidity": "資金流動",
+    # 第3宮
+    "Siblings": "手足",
+    "Courage in Speech": "言語勇氣",
+    "Letters": "書信文書",
+    "Journeys Short": "短途旅行",
+    "Learning Practice": "學習實踐",
+    "Allies Nearby": "近鄰盟友",
+    "Negotiation": "協商談判",
+    # 第4宮
+    "Ancestral Roots": "祖先根源",
+    "Homes and Land": "家宅土地",
+    "Patrimony": "祖傳遺產",
+    "Private Security": "私人安全",
+    "Hidden Treasure": "隱藏寶藏",
+    "Family Legacy": "家族遺業",
+    "Foundations": "根基",
+    # 第5宮
+    "Children Fortune": "子女運",
+    "Creative Joy": "創意喜悅",
+    "Pleasure": "娛樂歡愉",
+    "Pregnancy": "妊娠生育",
+    "Games and Risk": "博弈冒險",
+    "Honor Through Heirs": "子嗣榮耀",
+    "Love Affairs": "戀愛情事",
+    # 第6宮
+    "Illness Pattern": "疾病模式",
+    "Servants": "僕役下屬",
+    "Labor Burden": "勞務重擔",
+    "Small Animals": "小動物",
+    "Debts": "債務",
+    "Conflicts Daily": "日常衝突",
+    "Recovery Capacity": "康復能力",
+    # 第7宮
+    "Marriage Contract": "婚姻契約",
+    "Partnerships": "合夥關係",
+    "Open Enemies": "公開敵人",
+    "Public Deals": "公開交易",
+    "Sexual Union": "性結合",
+    "Litigation Opponents": "訴訟對手",
+    "Mutual Pacts": "相互盟約",
+    # 第8宮
+    "Death Causes": "死亡原因",
+    "Inheritance": "遺產",
+    "Fear Crisis": "恐懼危機",
+    "Losses": "損失",
+    "Other's Assets": "他人資產",
+    "Occult Depth": "神秘深處",
+    "Testaments": "遺囑",
+    # 第9宮
+    "Pilgrimage": "朝聖之旅",
+    "Religion": "宗教信仰",
+    "Doctrine": "教義學說",
+    "Long Journeys": "長途旅行",
+    "Law Wisdom": "法律智慧",
+    "Dream Omens": "夢兆預言",
+    # 第10宮
+    "Career Office": "事業官職",
+    "Authority": "權威地位",
+    "Kings and Rulers": "君王統治者",
+    "Reputation": "聲譽名望",
+    "Public Rank": "公眾地位",
+    "Achievement": "成就功業",
+    # 第11宮
+    "Allies Patrons": "盟友贊助者",
+    "Hopes": "希望願望",
+    "Gains from Career": "事業所得",
+    "Support Networks": "支持網絡",
+    "Royal Favors": "皇恩寵愛",
+    "Good Fortune": "好運",
+    # 第12宮
+    "Imprisonment": "囚禁監禁",
+    "Secret Enemies": "秘密敵人",
+    "Exile": "流放",
+    "Sorrow": "悲傷憂愁",
+    "Large Animals": "大型動物",
+    "Self Undoing": "自我毀滅",
+}
+
 
 @dataclass(frozen=True)
 class ArabicLotDefinition:
@@ -263,11 +359,12 @@ def _build_house_lots() -> list[dict[str, Any]]:
             else:
                 sig, trg = house_point, "ASC"
 
+            topic_zh = _HOUSE_TOPIC_ZH.get(topic, topic)
             result.append(
                 {
                     "id": f"lot_h{house}_{idx}_{topic_slug}",
                     "name_en": f"Lot of {topic} (House {house})",
-                    "name_zh": f"第{house}宮・{topic}",
+                    "name_zh": f"第{house}宮・{topic_zh}",
                     "name_ar": f"سهم البيت {house} رقم {idx}",
                     "category": "houses",
                     "group": f"house_{house}",
