@@ -3934,6 +3934,68 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」按鈕查看蘇美/美索不達米亞占星分析。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Sumerian / Mesopotamian Astrology analysis.",
     },
+    # ── Etruscan Astrology (伊特魯里亞占星) ─────────────────────────────────────
+    "tab_etruscan": {
+        "zh": "🏺 伊特魯里亞占星",
+        "en": "🏺 Etruscan Astrology",
+    },
+    "desc_etruscan": {
+        "zh": (
+            "### 伊特魯里亞占星 — 皮亞琴察青銅肝臟\n\n"
+            "**伊特魯里亞占星**源自公元前 7–1 世紀的義大利伊特魯里亞文明，"
+            "是羅馬占星術的重要前身之一。其核心文獻是 **皮亞琴察青銅肝臟**（Fegato di Piacenza，"
+            "約公元前 100 年），一枚銅製羊肝模型，外緣刻有 16 個「天宮區域」（Templum）。\n\n"
+            "#### 🏺 宇宙模型：天宮十六區（Templum XVI）\n"
+            "伊特魯里亞占星師（**haruspices**）面朝南方，"
+            "將天空分為從正北起順時針每 22.5° 的 16 個區域，每區由一位或一組神靈主宰：\n"
+            "- **Tin 廷尼亞（廷 / 朱庇特）** 掌管雷霆與天象（第 1–3 區）\n"
+            "- **Uni / Juno** 守護婚姻與女性（第 4 區）\n"
+            "- **Usil / 太陽神** 帶來光明與農業吉兆（第 6 區）\n"
+            "- **Nethuns / 尼普頓** 主宰水域（第 7 區）\n"
+            "- **Fufluns / 巴克斯** 代表歡宴與生命力（第 9 區）\n\n"
+            "#### ⚡ 閃電占卜（Fulgural Divination）\n"
+            "廷尼亞神持有 **九種雷霆**，每種雷霆從不同天宮區域降下，"
+            "代表吉凶迥異的神意。依雷霆降落的方向判斷吉凶。\n\n"
+            "#### 🔮 肝臟占卜（Haruspicy）\n"
+            "動物（通常為羊）的肝臟被視為宇宙的縮影，"
+            "其形狀、顏色、紋路與天宮方位對應，用於占卜國家大事。"
+        ),
+        "en": (
+            "### Etruscan Astrology — The Piacenza Bronze Liver\n\n"
+            "**Etruscan Astrology** originated in the Etruscan civilisation of Italy "
+            "(c. 7th–1st century BCE) and is a significant precursor to Roman astrology. "
+            "Its central artefact is the **Piacenza Bronze Liver** (*Fegato di Piacenza*, "
+            "c. 100 BCE), a bronze sheep liver inscribed with 16 sky regions called *Templa*.\n\n"
+            "#### 🏺 The Cosmic Model: Templum XVI\n"
+            "Etruscan diviners (**haruspices**) faced south and divided the sky into "
+            "16 sectors of 22.5° each, going clockwise from north. "
+            "Each sector is governed by a deity:\n"
+            "- **Tin / Tinia (Jupiter)** rules thunder and celestial signs (Regions 1–3)\n"
+            "- **Uni / Juno** protects marriage and women (Region 4)\n"
+            "- **Usil / the Sun God** brings light and agricultural omens (Region 6)\n"
+            "- **Nethuns / Neptune** governs waters (Region 7)\n"
+            "- **Fufluns / Bacchus** symbolises feasting and vital force (Region 9)\n\n"
+            "#### ⚡ Lightning Divination (*Fulgural Divination*)\n"
+            "Tinia wields **nine thunderbolts**, each descending from a different region "
+            "and carrying distinct divine messages of fortune or misfortune.\n\n"
+            "#### 🔮 Haruspicy\n"
+            "A sacrificial animal's liver (usually sheep) is regarded as a microcosm of "
+            "the cosmos, with its lobes, colours, and markings mapped to the Templum "
+            "sky-regions for divination of state affairs."
+        ),
+    },
+    "spinner_etruscan": {
+        "zh": "正在計算伊特魯里亞天宮排盤…",
+        "en": "Computing Etruscan Templum chart…",
+    },
+    "sys_hint_etruscan": {
+        "zh": "皮亞琴察青銅肝臟，天宮16區，廷尼亞九雷，haruspicy，閃電占卜",
+        "en": "Piacenza Bronze Liver, Templum XVI, Tinia's nine thunderbolts, haruspicy, lightning divination",
+    },
+    "info_etruscan_prompt": {
+        "zh": "👈 請在左側輸入排盤資料，點擊「開始排盤」以查看你的伊特魯里亞天宮排盤、皮亞琴察肝臟視覺化，以及閃電神諭解讀。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Etruscan Templum chart, the interactive Piacenza Liver, and the lightning oracle reading.",
+    },
     "tab_horary": {
         "zh": "📜 傳統卜卦占星",
         "en": "📜 Traditional Horary",
