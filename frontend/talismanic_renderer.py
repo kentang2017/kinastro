@@ -20,7 +20,13 @@ import math
 from datetime import datetime, timezone
 from typing import Optional
 
-import streamlit as st
+# ── Streamlit: import lazily so SVG-only functions work without st ────────────
+try:
+    import streamlit as st
+    _ST_AVAILABLE = True
+except ImportError:
+    st = None  # type: ignore[assignment]
+    _ST_AVAILABLE = False
 
 # ── 有條件引入計算模組 ────────────────────────────────────────
 try:
@@ -510,11 +516,10 @@ def generate_talisman_svg(
     ]
 
     if planet_lon is not None:
-        lon_text = f"♃ {planet_lon:.2f}°"
         parts.append(
             f'<text x="{cx}" y="{info_y + 23}" text-anchor="middle" '
             f'font-size="8" fill="{_C_SUBTLE}" opacity="0.8" font-family="monospace">'
-            f'Lon: {planet_lon:.2f}°</text>'
+            f'{_PLANET_SIGILS.get(planet, "✦")} Lon: {planet_lon:.2f}°</text>'
         )
 
     if moon_phase:

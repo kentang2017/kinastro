@@ -398,7 +398,7 @@ def get_moon_condition(jd: float, planet_positions: Optional[Dict[str, Tuple[flo
         phase, phase_cn = "Waning Crescent", "漸虧眉月"
 
     # Via Combusta 判斷
-    is_via_combusta = VIA_COMBUSTA_START <= moon_lon <= VIA_COMBUSTA_END
+    is_via_combusta = VIA_COMBUSTA_START <= moon_lon < VIA_COMBUSTA_END
 
     # Combust / Cazimi 判斷
     sun_sep = _arc_sep(moon_lon, sun_lon)

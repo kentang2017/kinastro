@@ -641,7 +641,7 @@ PLANETARY_TALISMANS: List[PlanetaryTalisman] = [
             "機智與聰慧", "旅途平安",
         ],
         electional_rules_en=[
-            "Mercury in Gemini or Virgo (domicile) or Virgo (exaltation)",
+            "Mercury in Gemini (domicile) or Virgo (domicile and exaltation)",
             "Mercury in the 1st, 3rd, or 9th house",
             "Moon applying to Mercury by favorable aspect",
             "Mercury direct and not under Sun's beams",

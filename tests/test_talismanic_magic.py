@@ -280,9 +280,12 @@ class TestMoonCondition:
         import swisseph as swe
         from astro.talismanic_magic import get_moon_condition
 
+        # Moon at 50°, Sun at 230° → phase_deg = (50 - 230) % 360 = 180° (exactly full)
+        # Use Moon at 50°, Sun at 240° → phase_deg = (50 - 240) % 360 = 170° – still waxing
+        # Use Moon at 50°, Sun at 220° → phase_deg = (50 - 220) % 360 = 190° → waning
         mock_positions = {
-            "Moon": (50.0, 13.0),    # 280° ahead of Sun (= 80° behind)
-            "Sun":  (330.0, 1.0),
+            "Moon": (50.0, 13.0),
+            "Sun":  (220.0, 1.0),   # phase_deg = (50 - 220) % 360 = 190° > 180 → waning
         }
         jd = swe.julday(2024, 1, 1, 12.0)
         moon = get_moon_condition(jd, mock_positions)
@@ -350,14 +353,13 @@ class TestMoonCondition:
 class TestElectionalScoring:
     """Test the Picatrix electional scoring system."""
 
-    def test_jupiter_in_exaltation_scores_high(self) -> None:
-        """Jupiter in Cancer (exaltation) should yield a high score."""
+    def test_jupiter_score_structure(self) -> None:
+        """ElectionalScore for Jupiter should have all required structural fields (validates scoring pipeline, not specific dignity state)."""
         import swisseph as swe
         from astro.talismanic_magic import evaluate_electional_moment
 
-        # Jupiter is in Cancer ~July 2024 — use a synthetic date for testing
-        # We patch via mock positions by computing at a known date
-        # 2024-07-15 UTC — Jupiter around 5° Gemini (not exaltation, but test structure)
+        # Use an arbitrary date for structural validation.
+        # Jupiter may or may not be in exaltation (Cancer) on this date.
         jd = swe.julday(2024, 7, 15, 12.0)
         result = evaluate_electional_moment("Jupiter", jd)
 
