@@ -5,6 +5,7 @@ Arabic Lots 互動 Dashboard。
 
 from __future__ import annotations
 
+import html
 from typing import Callable
 
 import streamlit as st
@@ -48,12 +49,18 @@ def render_arabic_lots_dashboard(result: ArabicLotsResult, t: Callable[[str], st
 
     sect_label = t("arabic_lots_day_chart") if result.is_day_chart else t("arabic_lots_night_chart")
     zodiac_label = t("arabic_lots_tropical") if result.zodiac_mode == "tropical" else t("arabic_lots_sidereal")
+    title = html.escape(t("arabic_lots_dashboard_title"))
+    total_label = html.escape(t("arabic_lots_total_count"))
+    sect_title = html.escape(t("arabic_lots_sect"))
+    zodiac_title = html.escape(t("arabic_lots_zodiac_mode"))
+    sect_label_esc = html.escape(sect_label)
+    zodiac_label_esc = html.escape(zodiac_label)
     st.markdown(
         (
             f'<div class="arabic-lots-card">'
-            f'<div class="arabic-lots-title">{t("arabic_lots_dashboard_title")}</div>'
-            f'<div class="arabic-lots-meta">{t("arabic_lots_total_count")}: {len(result.lots)} ｜ '
-            f'{t("arabic_lots_sect")}: {sect_label} ｜ {t("arabic_lots_zodiac_mode")}: {zodiac_label}</div>'
+            f'<div class="arabic-lots-title">{title}</div>'
+            f'<div class="arabic-lots-meta">{total_label}: {len(result.lots)} ｜ '
+            f'{sect_title}: {sect_label_esc} ｜ {zodiac_title}: {zodiac_label_esc}</div>'
             f'</div>'
         ),
         unsafe_allow_html=True,
@@ -88,18 +95,18 @@ def render_arabic_lots_dashboard(result: ArabicLotsResult, t: Callable[[str], st
     category_values = {category_options[k] for k in selected_categories}
     query = search.strip().lower()
 
-    filtered = [
-        lot for lot in result.lots
-        if lot.category in category_values
-        and (
-            not query
-            or query in lot.name_en.lower()
-            or query in lot.name_zh.lower()
-            or query in lot.name_ar.lower()
-            or query in lot.formula_day.lower()
-            or query in lot.formula_night.lower()
-        )
-    ]
+    filtered = []
+    for lot in result.lots:
+        if lot.category not in category_values:
+            continue
+        if query:
+            search_blob = (
+                f"{lot.name_en} {lot.name_zh} {lot.name_ar} "
+                f"{lot.formula_day} {lot.formula_night}"
+            ).lower()
+            if query not in search_blob:
+                continue
+        filtered.append(lot)
 
     if sort_mode == t("arabic_lots_sort_priority"):
         filtered.sort(key=lambda x: (-x.priority, x.name_en))

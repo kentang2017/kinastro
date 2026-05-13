@@ -8,7 +8,6 @@ from astro.arabic_lots import (
     AL_BIRUNI_97_LOTS,
     compute_albiruni_lots,
     get_top_priority_lots,
-    _resolve_formula,
 )
 
 
@@ -46,15 +45,42 @@ def test_compute_albiruni_lots_basic_ranges():
         assert 1 <= lot.house <= 12
 
 
-def test_day_night_formula_reversal_for_fortune():
-    fortune = next(d for d in AL_BIRUNI_97_LOTS if d.id == "lot_fortune")
-    day_formula = _resolve_formula(fortune, is_day_chart=True)
-    night_formula = _resolve_formula(fortune, is_day_chart=False)
+def test_day_and_night_charts_are_distinct_for_sect_sensitive_lots():
+    day_result = compute_albiruni_lots(
+        year=1990,
+        month=1,
+        day=1,
+        hour=12,
+        minute=0,
+        timezone=8.0,
+        latitude=22.3193,
+        longitude=114.1694,
+        zodiac_mode="tropical",
+    )
+    night_result = compute_albiruni_lots(
+        year=1990,
+        month=1,
+        day=1,
+        hour=0,
+        minute=30,
+        timezone=8.0,
+        latitude=22.3193,
+        longitude=114.1694,
+        zodiac_mode="tropical",
+    )
 
-    assert day_formula.significator == "MOON"
-    assert day_formula.trigger == "SUN"
-    assert night_formula.significator == "SUN"
-    assert night_formula.trigger == "MOON"
+    assert day_result.is_day_chart is True
+    assert night_result.is_day_chart is False
+
+    day_fortune = next((l for l in day_result.lots if l.id == "lot_fortune"), None)
+    night_fortune = next((l for l in night_result.lots if l.id == "lot_fortune"), None)
+    assert day_fortune is not None
+    assert night_fortune is not None
+    assert day_fortune.formula_day == "ASC + MOON - SUN"
+    assert day_fortune.formula_night == "ASC + SUN - MOON"
+    assert night_fortune.formula_day == "ASC + MOON - SUN"
+    assert night_fortune.formula_night == "ASC + SUN - MOON"
+    assert abs(day_fortune.longitude - night_fortune.longitude) > 0.1
 
 
 def test_tropical_and_sidereal_results_differ():

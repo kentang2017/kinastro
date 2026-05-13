@@ -4069,13 +4069,17 @@ if not _engine_handled:
                     render_arabic_chart(a_chart, after_chart_hook=lambda: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
 
                 with arabic_subtab_lots:
-                    _lots_mode_label = st.selectbox(
+                    _lots_mode_options = {
+                        "tropical": t("arabic_lots_tropical"),
+                        "sidereal": t("arabic_lots_sidereal"),
+                    }
+                    _lots_mode = st.selectbox(
                         t("arabic_lots_zodiac_mode"),
-                        options=[t("arabic_lots_tropical"), t("arabic_lots_sidereal")],
+                        options=list(_lots_mode_options.keys()),
+                        format_func=lambda _mode: _lots_mode_options[_mode],
                         index=0,
                         key="arabic_lots_mode",
                     )
-                    _lots_mode = "sidereal" if _lots_mode_label == t("arabic_lots_sidereal") else "tropical"
                     with st.spinner(t("spinner_arabic_lots")):
                         _lots_result = compute_albiruni_lots(
                             year=_p["year"],

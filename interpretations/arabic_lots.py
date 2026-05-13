@@ -16,7 +16,7 @@ class LotInterpretation:
     interpretation_zh: str
     interpretation_en: str
     source: str
-    myth_link: str
+    mythological_reference: str
 
 
 BASE_INTERPRETATIONS: dict[str, LotInterpretation] = {
@@ -27,7 +27,7 @@ BASE_INTERPRETATIONS: dict[str, LotInterpretation] = {
         interpretation_zh="主身體福祉、物質際遇與生活可得資源。與吉星合、受吉相時，常見財務與機運提升。",
         interpretation_en="Represents bodily fortune, material conditions, and accessible resources. Benefic aspects often increase prosperity and opportunity.",
         source="Al-Biruni, Book of Instruction in the Elements of the Art of Astrology",
-        myth_link="Tyche / Fortuna",
+        mythological_reference="Tyche / Fortuna",
     ),
     "lot_spirit": LotInterpretation(
         lot_id="lot_spirit",
@@ -36,7 +36,7 @@ BASE_INTERPRETATIONS: dict[str, LotInterpretation] = {
         interpretation_zh="主意志、使命感與主動選擇。與太陽、火星互動佳時，行動力與決策力更強。",
         interpretation_en="Signifies will, vocation, and intentional action. Supportive ties to Sun/Mars increase agency and determination.",
         source="Al-Biruni, Book of Instruction in the Elements of the Art of Astrology",
-        myth_link="Nous / Daimon",
+        mythological_reference="Nous / Daimon",
     ),
     "lot_marriage": LotInterpretation(
         lot_id="lot_marriage",
@@ -45,7 +45,7 @@ BASE_INTERPRETATIONS: dict[str, LotInterpretation] = {
         interpretation_zh="主伴侶關係、婚配契約與結盟品質。與第七宮與金星狀態需合併判讀。",
         interpretation_en="Indicates partnership contracts, marriage quality, and alliance dynamics. Read together with 7th-house and Venus condition.",
         source="Al-Biruni and later medieval Arabic tradition",
-        myth_link="Venus–Saturn relational covenant symbolism",
+        mythological_reference="Venus–Saturn relational covenant symbolism",
     ),
 }
 

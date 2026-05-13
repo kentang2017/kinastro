@@ -60,6 +60,10 @@ HOUSE_TO_PLANET = {
     11: "JUPITER",
     12: "SATURN",
 }
+MALEFIC_HOUSES = {6, 8, 12}  # Classically viewed as difficult houses / 古典中常視為艱難宮位
+SIDEREAL_MODE = swe.SIDM_FAGAN_BRADLEY
+SIDEREAL_T0 = 0.0
+SIDEREAL_AYAN_T0 = 0.0
 
 BENEFICENCE_LABELS = {
     "benefic": {"zh": "吉", "en": "Benefic"},
@@ -271,14 +275,17 @@ def _build_house_lots() -> list[dict[str, Any]]:
                     "significator_day": sig,
                     "trigger_day": trg,
                     "reverses_by_sect": True,
-                    "beneficence": "mixed" if house not in {6, 8, 12} else "malefic",
+                    "beneficence": "mixed" if house not in MALEFIC_HOUSES else "malefic",
                     "priority": 70 - house,
                     "source": "Al-Biruni",
                 }
             )
 
     if len(result) != 80:
-        raise ValueError(f"House lots must be 80, got {len(result)}")
+        raise ValueError(
+            f"Internal error: expected exactly 80 house lots, got {len(result)}. "
+            "This indicates a bug in _build_house_lots()."
+        )
     return result
 
 
@@ -309,7 +316,9 @@ def _build_points(
 
     flags = swe.FLG_SWIEPH
     if zodiac_mode == "sidereal":
-        swe.set_sid_mode(swe.SIDM_FAGAN_BRADLEY, 0.0, 0.0)
+        # Configure Fagan-Bradley ayanamsa for sidereal calculations:
+        # set_sid_mode(mode, t0, ayan_t0)
+        swe.set_sid_mode(SIDEREAL_MODE, SIDEREAL_T0, SIDEREAL_AYAN_T0)
         flags |= swe.FLG_SIDEREAL
 
     angles = _safe_houses(jd, latitude, longitude, flags)
