@@ -55,7 +55,7 @@ def _nature_icon(nature: str) -> str:
 def build_piacenza_liver_svg(
     chart: Any,
     lang: str = "zh",
-    width: int = 900,
+    width: int = 900,  # kept for backward compatibility; ignored (responsive layout used instead)
 ) -> str:
     """Generate an interactive HTML string with the Piacenza Liver visualisation.
 
@@ -230,7 +230,8 @@ def build_piacenza_liver_svg(
 
     html = f"""
 <div style="background:{BRONZE_THEME['bg']};padding:20px;border-radius:12px;
-     border:1px solid {BRONZE_THEME['border']};position:relative">
+     border:1px solid {BRONZE_THEME['border']};position:relative;
+     width:100%;box-sizing:border-box">
 
   <!-- Tooltip overlay -->
   <div id="etruscan-tooltip" style="
@@ -247,9 +248,10 @@ def build_piacenza_liver_svg(
          opacity:0.85;font-size:12px"></div>
   </div>
 
-  <svg viewBox="0 0 900 600" width="{width}" height="{width * height // 900}"
+  <div style="width:100%;max-width:900px;margin:0 auto">
+  <svg viewBox="0 0 900 600" width="100%"
        xmlns="http://www.w3.org/2000/svg" id="piacenza-liver-svg"
-       style="display:block;margin:0 auto">
+       style="display:block">
 
     <defs>
       <!-- Radial gradient: warm bronze centre → dark edge -->
@@ -323,6 +325,7 @@ def build_piacenza_liver_svg(
     </text>
 
   </svg>
+  </div><!-- end responsive wrapper -->
 
   <script>
   (function() {{
@@ -377,6 +380,17 @@ def build_piacenza_liver_svg(
       el.addEventListener('mousemove', moveTooltip);
       el.addEventListener('mouseleave', hideTooltip);
     }});
+
+    // Responsive iframe height — notify Streamlit parent
+    function notifyHeight() {{
+      var wrapper = document.getElementById('piacenza-liver-svg');
+      if (!wrapper) return;
+      var rect = wrapper.getBoundingClientRect();
+      var h = Math.round(rect.height) + 60;
+      window.parent.postMessage({{type: 'streamlit:setFrameHeight', height: h}}, '*');
+    }}
+    setTimeout(notifyHeight, 120);
+    window.addEventListener('resize', notifyHeight);
   }})();
   </script>
 </div>
@@ -730,8 +744,8 @@ def render_streamlit(
     # Tab 1 — Piacenza Liver SVG
     # ─────────────────────────────────────────────────────────────────────────
     with tab1:
-        svg_html = build_piacenza_liver_svg(chart, lang=lang, width=860)
-        components.html(svg_html, height=650)
+        svg_html = build_piacenza_liver_svg(chart, lang=lang)
+        components.html(svg_html, height=700)
 
         # Legend cards for occupied Templum regions
         occupied_regions = sorted(
