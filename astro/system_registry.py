@@ -1581,6 +1581,28 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_etruscan",
+    name_zh="伊特魯里亞占星",
+    name_en="Etruscan Astrology",
+    category="cat_ancient",
+    icon="🏺",
+    tab_key="tab_etruscan",
+    desc_key="desc_etruscan",
+    spinner_key="spinner_etruscan",
+    hint_key="sys_hint_etruscan",
+    tags=[
+        "etruscan", "piacenza", "liver", "haruspicy", "templum",
+        "fulgural divination", "tinia", "ancient", "italy",
+        "bronze liver", "omens", "thunderbolt",
+    ],
+    maturity="beta",
+    accent_color="#8C6F4E",   # Etruscan bronze
+    origin_culture="Etruscan",
+    tradition_period="Etruscan (7th–1st century BCE)",
+    ai_persona_key="info_etruscan_prompt",
+))
+
+_reg(System(
     id="tab_astro_geomancy",
     name_zh="地占占星",
     name_en="Astronomical Geomancy",
