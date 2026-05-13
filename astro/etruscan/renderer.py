@@ -383,13 +383,13 @@ def build_piacenza_liver_svg(
 
     // Responsive iframe height — notify Streamlit parent
     function notifyHeight() {{
-      var wrapper = document.getElementById('piacenza-liver-svg');
-      if (!wrapper) return;
-      var rect = wrapper.getBoundingClientRect();
-      var h = Math.round(rect.height) + 60;
+      var svg = document.getElementById('piacenza-liver-svg');
+      if (!svg) return;
+      var rect = svg.getBoundingClientRect();
+      var h = Math.round(rect.height) + 60;  // +60 for outer div padding/border
       window.parent.postMessage({{type: 'streamlit:setFrameHeight', height: h}}, '*');
     }}
-    setTimeout(notifyHeight, 120);
+    setTimeout(notifyHeight, 120);  // wait for layout to settle before measuring
     window.addEventListener('resize', notifyHeight);
   }})();
   </script>
