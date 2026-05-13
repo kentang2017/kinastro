@@ -38,6 +38,7 @@ _GOLDEN_RATIO_STEPS = (0.236, 0.382, 0.618, 1.0, 1.618)
 _FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
 _BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
 _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
+_DEFAULT_IPO_DATE = date(2000, 1, 1)
 
 
 # ============================================================
@@ -108,6 +109,12 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
                 st.session_state["_stock_info"] = stock
 
         stock = st.session_state.get("_stock_info")
+        if stock and not stock.error:
+            current_ipo_ticker = (stock.normalized_ticker or active_ticker).strip().upper()
+            last_ipo_ticker = st.session_state.get("_stock_ipo_source_ticker", "")
+            if current_ipo_ticker and current_ipo_ticker != last_ipo_ticker:
+                st.session_state["_stock_ipo_date"] = stock.ipo_date or _DEFAULT_IPO_DATE
+                st.session_state["_stock_ipo_source_ticker"] = current_ipo_ticker
 
         if stock and stock.error:
             st.error(f"⚠️ {stock.error}")
@@ -132,7 +139,7 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
 
     col_d, col_t, col_tz2 = st.columns(3)
     with col_d:
-        default_ipo = stock.ipo_date or date(2000, 1, 1)
+        default_ipo = stock.ipo_date or _DEFAULT_IPO_DATE
         ipo_date = st.date_input(
             "上市日期 / IPO Date",
             value=default_ipo,
