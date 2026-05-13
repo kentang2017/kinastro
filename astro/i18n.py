@@ -353,6 +353,10 @@ TRANSLATIONS = {
         "zh": "☪ 阿拉伯占星",
         "en": "☪ Arabic Astrology",
     },
+    "arabic_subtab_lots": {
+        "zh": "🧿 Al-Biruni 97 阿拉伯點",
+        "en": "🧿 Al-Biruni 97 Lots",
+    },
     "arabic_subtab_picatrix": {
         "zh": "📜 Picatrix 星體魔法",
         "en": "📜 Picatrix Stellar Magic",
@@ -436,6 +440,10 @@ TRANSLATIONS = {
     "spinner_arabic": {
         "zh": "正在計算阿拉伯占星排盤...",
         "en": "Calculating Arabic astrology chart...",
+    },
+    "spinner_arabic_lots": {
+        "zh": "正在計算 Al-Biruni 97 阿拉伯點...",
+        "en": "Calculating Al-Biruni 97 Arabic Lots...",
     },
     "spinner_maya": {
         "zh": "正在計算瑪雅占星排盤...",
@@ -855,6 +863,58 @@ Sukkayodo is used for date selection and divination of auspiciousness in daily l
 - **Tropical Zodiac**: Uses Placidus house system
 """,
     },
+    "desc_arabic_lots": {
+        "zh": """
+### Al-Biruni 97 阿拉伯點（完整 Lots 引擎）
+
+- 收錄 **97 個經典 Lots**：7 行星 Lots + 80 宮位 Lots + 10 專題 Lots  
+- 核心公式：**Lot = Personal Point + Significator - Trigger**  
+- 自動判斷 **日盤 / 夜盤（Sect）**，套用公式反轉  
+- 支援 **Tropical / Sidereal** 雙黃道模式  
+- 可依分類、關鍵字、宮位與優先級快速篩選
+""",
+        "en": """
+### Al-Biruni 97 Arabic Lots (Complete Engine)
+
+- Includes **97 classical Lots**: 7 planetary + 80 house-based + 10 special-topic lots  
+- Core formula: **Lot = Personal Point + Significator - Trigger**  
+- Automatic **day/night sect** detection with formula reversal  
+- Supports both **Tropical and Sidereal** zodiac modes  
+- Dashboard supports search, filtering, and priority-based sorting
+""",
+    },
+    "arabic_lots_dashboard_title": {"zh": "Al-Biruni 97 阿拉伯點總覽", "en": "Al-Biruni 97 Lots Overview"},
+    "arabic_lots_total_count": {"zh": "總數", "en": "Total"},
+    "arabic_lots_sect": {"zh": "盤型", "en": "Sect"},
+    "arabic_lots_day_chart": {"zh": "日盤", "en": "Day Chart"},
+    "arabic_lots_night_chart": {"zh": "夜盤", "en": "Night Chart"},
+    "arabic_lots_zodiac_mode": {"zh": "黃道模式", "en": "Zodiac Mode"},
+    "arabic_lots_tropical": {"zh": "Tropical 回歸黃道", "en": "Tropical"},
+    "arabic_lots_sidereal": {"zh": "Sidereal 恆星黃道", "en": "Sidereal"},
+    "arabic_lots_search": {"zh": "搜尋 Lots", "en": "Search Lots"},
+    "arabic_lots_search_placeholder": {
+        "zh": "可搜尋中英阿文名稱、公式關鍵字",
+        "en": "Search by Chinese/English/Arabic name or formula keyword",
+    },
+    "arabic_lots_filter_category": {"zh": "分類篩選", "en": "Category Filter"},
+    "arabic_lots_category_planetary": {"zh": "行星 Lots", "en": "Planetary Lots"},
+    "arabic_lots_category_houses": {"zh": "宮位 Lots", "en": "House Lots"},
+    "arabic_lots_category_special": {"zh": "專題 Lots", "en": "Special Lots"},
+    "arabic_lots_sort": {"zh": "排序", "en": "Sort"},
+    "arabic_lots_sort_priority": {"zh": "依重要度", "en": "By Priority"},
+    "arabic_lots_sort_longitude": {"zh": "依黃經", "en": "By Longitude"},
+    "arabic_lots_sort_house": {"zh": "依宮位", "en": "By House"},
+    "arabic_lots_sort_name": {"zh": "依名稱", "en": "By Name"},
+    "arabic_lots_filtered_count": {"zh": "篩選後筆數", "en": "Filtered Rows"},
+    "arabic_lots_col_name": {"zh": "Lot 名稱", "en": "Lot Name"},
+    "arabic_lots_col_arabic": {"zh": "阿拉伯文", "en": "Arabic"},
+    "arabic_lots_col_category": {"zh": "分類", "en": "Category"},
+    "arabic_lots_col_formula": {"zh": "公式", "en": "Formula"},
+    "arabic_lots_col_position": {"zh": "位置", "en": "Position"},
+    "arabic_lots_col_house": {"zh": "宮位", "en": "House"},
+    "arabic_lots_col_beneficence": {"zh": "吉凶", "en": "Beneficence"},
+    "arabic_lots_col_priority": {"zh": "重要度", "en": "Priority"},
+    "arabic_lots_top10_title": {"zh": "前 10 大重要 Lots", "en": "Top 10 Priority Lots"},
     "desc_maya": {
         "zh": """
 ### 什麼是瑪雅占星？

@@ -1368,6 +1368,7 @@ _reg(System(
     hint_key="sys_hint_arabic",
     sub_tabs=[
         SubTab("arabic_subtab_chart",     "chart"),
+        SubTab("arabic_subtab_lots",      "lots"),
         SubTab("arabic_subtab_picatrix",  "picatrix"),
         SubTab("arabic_subtab_shams",     "shams"),
         SubTab("arabic_subtab_reference", "reference"),
