@@ -99,8 +99,8 @@ def _extract_zh_name(info: dict) -> str:
 
 
 def _contains_cjk(text: str) -> bool:
-    content = text if text is not None else ""
-    return any("\u4e00" <= c <= "\u9fff" for c in content)
+    normalized_text = text if text is not None else ""
+    return any("\u4e00" <= c <= "\u9fff" for c in normalized_text)
 
 
 def _iter_table_records(table) -> list[dict]:
@@ -185,7 +185,7 @@ def _extract_zh_name_via_akshare(normalized_ticker: str) -> str:
                 name_keys=("名称", "name"),
             )
     except Exception:
-        return ""
+        pass
     return ""
 
 
