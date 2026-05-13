@@ -4350,7 +4350,8 @@ if not _engine_handled:
             st.markdown(t("desc_etruscan"))
 
     # --- Dogon Sirius Cosmology ---
-    elif _selected_system == "tab_dogon_sirius":        if _is_calculated:
+    elif _selected_system == "tab_dogon_sirius":
+        if _is_calculated:
             try:
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_dogon_sirius")):
