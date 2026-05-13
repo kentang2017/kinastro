@@ -108,6 +108,12 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
                 st.session_state["_stock_info"] = stock
 
         stock = st.session_state.get("_stock_info")
+        if stock and not stock.error:
+            current_ipo_ticker = (stock.normalized_ticker or active_ticker).strip().upper()
+            last_ipo_ticker = st.session_state.get("_stock_ipo_source_ticker", "")
+            if current_ipo_ticker and current_ipo_ticker != last_ipo_ticker:
+                st.session_state["_stock_ipo_date"] = stock.ipo_date or date(2000, 1, 1)
+                st.session_state["_stock_ipo_source_ticker"] = current_ipo_ticker
 
         if stock and stock.error:
             st.error(f"⚠️ {stock.error}")
