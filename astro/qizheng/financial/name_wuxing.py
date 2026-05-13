@@ -349,7 +349,9 @@ def analyze_name_wuxing(name: str) -> dict:
 
 def analyze_english_name_wuxing(name: str) -> dict:
     """
-    分析英文公司名稱各字母的五行屬性（A-E→木, F-J→火, K-O→土, P-T→金, U-Z→水）。
+    分析英文公司名稱各字母的五行屬性。
+    字母按字母序分為五組：A-E→木, F-J→火, K-O→土, P-T→金, U-Z→水
+    （前四組各含5個字母，最後一組含6個字母 U-Z）。
 
     只計算字母（A-Z, a-z），忽略數字、空格及符號。
 

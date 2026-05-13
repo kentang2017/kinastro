@@ -1134,7 +1134,7 @@ def _render_name_wuxing(stock):
         _wuxing_bar(name_result["distribution"], total_name,
                     f"{name_zh} 名稱五行比重")
 
-    if not name_zh and name_en:
+    if not name_zh and name_en and en_result is not None:
         # 無中文名稱時，分析英文公司名稱各字母五行
         st.caption(
             "⚠️ 暫無中文公司名稱，改以英文名稱字母進行五行分析。"
@@ -1142,7 +1142,6 @@ def _render_name_wuxing(stock):
             "/ No Chinese name available — analysing English name letters instead. "
             "(A-E→Wood, F-J→Fire, K-O→Earth, P-T→Metal, U-Z→Water)"
         )
-        en_result = analyze_english_name_wuxing(name_en)
         total_en = en_result["total"] or 1
 
         letters_html = ""
