@@ -1215,7 +1215,7 @@ def _render_name_wuxing(stock):
     birth_date = st.session_state.get("birth_date_input")
     confirmed_params = st.session_state.get("_confirmed_params")
 
-    bazi_year, bazi_month, bazi_day, bazi_hour = None, None, None, 12
+    bazi_year, bazi_month, bazi_day, bazi_hour = None, None, None, 12  # noon as conventional default
     if confirmed_params and confirmed_params.get("year"):
         bazi_year = confirmed_params["year"]
         bazi_month = confirmed_params["month"]
