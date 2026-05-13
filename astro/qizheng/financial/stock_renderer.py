@@ -1299,7 +1299,13 @@ def _render_name_wuxing(stock):
         )
         return
 
-    bazi_result = get_bazi_wuxing(bazi_year, bazi_month, bazi_day, bazi_hour)
+    bazi_result = get_bazi_wuxing(
+        bazi_year,
+        bazi_month,
+        bazi_day,
+        bazi_hour,
+        include_hour=False,
+    )
 
     if not bazi_result["available"]:
         st.warning(
@@ -1332,14 +1338,14 @@ def _render_name_wuxing(stock):
         f'<div style="background:rgba(20,12,40,0.5);border:1px solid rgba(255,200,50,0.2);'
         f'border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
         f'<div style="color:#FFD700;font-weight:600;margin-bottom:8px;">'
-        f'命主出生日期 {birth_str} 四柱八字</div>'
+        f'命主出生日期 {birth_str} 年月日三柱</div>'
         f'{pillars_html}'
         f'</div>',
         unsafe_allow_html=True,
     )
 
     _wuxing_bar(bazi_result["distribution"], sum(bazi_result["distribution"].values()) or 1,
-                "命主四柱八字五行比重（年月日時）")
+                "命主三柱五行比重（年月日）")
 
     # ── 對比分析 ──────────────────────────────────────
     st.markdown("---")
