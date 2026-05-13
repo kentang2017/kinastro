@@ -695,12 +695,16 @@ def render_streamlit(
 """, unsafe_allow_html=True)
 
     # Main tabs
-    tab_activations, tab_talisman, tab_electional, tab_today, tab_compendium = st.tabs([
+    (tab_activations, tab_talisman, tab_electional, tab_today,
+     tab_compendium, tab_wizard, tab_elect_calc, tab_talisman_db) = st.tabs([
         auto_cn("⚡ 星盤激活"),
         auto_cn("🔮 護符製作"),
         auto_cn("📅 擇日器"),
         auto_cn("🌟 今日魔法"),
         auto_cn("📚 星典瀏覽"),
+        auto_cn("⚗ 製符嚮導"),
+        auto_cn("🗓 電擇計算器"),
+        auto_cn("📖 護符資料庫"),
     ])
 
     with tab_activations:
@@ -738,3 +742,43 @@ def render_streamlit(
         st.subheader(auto_cn("📚 十五 Behenian 恆星全典"))
         st.caption(auto_cn("完整瀏覽十五顆 Behenian 根源恆星的古典對應與魔法傳統"))
         _render_compendium_tab()
+
+    # ── 新增模組：互動式嚮導 + 電擇計算器 + 護符資料庫 ──────
+    with tab_wizard:
+        st.subheader(auto_cn("⚗ 互動式 Talisman 製作嚮導"))
+        st.caption(auto_cn(
+            "選擇目的 → 系統推薦最適行星護符 → 生成古抄本風格 SVG 護符 · "
+            "依據 Picatrix《賢者之目的》傳統"
+        ))
+        try:
+            from frontend.talismanic_renderer import render_talisman_wizard
+            render_talisman_wizard()
+        except Exception as _e:
+            st.error(auto_cn(f"嚮導模組載入失敗：{_e}"))
+            st.exception(_e)
+
+    with tab_elect_calc:
+        st.subheader(auto_cn("🗓 Picatrix 電擇計算器"))
+        st.caption(auto_cn(
+            "精確評估任意時刻製作指定行星護符的適宜程度 · "
+            "嚴格遵循 Picatrix 卷二第十章 + Lilly 擇日規則"
+        ))
+        try:
+            from frontend.talismanic_renderer import render_electional_calc
+            render_electional_calc()
+        except Exception as _e:
+            st.error(auto_cn(f"電擇模組載入失敗：{_e}"))
+            st.exception(_e)
+
+    with tab_talisman_db:
+        st.subheader(auto_cn("📖 完整護符資料庫"))
+        st.caption(auto_cn(
+            "七行星護符 + 36 Decan 護符完整資料 · "
+            "源自 Picatrix、Agrippa、Hermes Trismegistus 三大傳統"
+        ))
+        try:
+            from frontend.talismanic_renderer import render_talisman_database
+            render_talisman_database()
+        except Exception as _e:
+            st.error(auto_cn(f"資料庫模組載入失敗：{_e}"))
+            st.exception(_e)
