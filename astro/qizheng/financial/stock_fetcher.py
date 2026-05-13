@@ -327,10 +327,10 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
 
     needs_fallback = (
         not info
+        or (not info.get("shortName") and not info.get("longName"))
         or (
             info.get("currentPrice") is None
             and info.get("regularMarketPrice") is None
-            and info.get("shortName") is None
             and info.get("quoteType") is None
         )
     )
@@ -430,19 +430,6 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
                 ipo_date = datetime.fromtimestamp(first_epoch, tz=timezone.utc).date()
             except Exception:
                 pass
-
-    # 備用：從歷史資料取第一筆交易日
-    if ipo_date is None:
-        try:
-            hist = tkr.history(period="max", auto_adjust=True)
-            if not hist.empty:
-                idx = hist.index[0]
-                if hasattr(idx, "date"):
-                    ipo_date = idx.date()
-                else:
-                    ipo_date = idx.to_pydatetime().date()
-        except Exception:
-            pass
 
     return StockInfo(
         ticker=ticker_input,
