@@ -43,6 +43,17 @@ _SIDEWAYS_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#a78bfa", "#c084fc", "#d8b4f
 _SIDEWAYS_OSCILLATION = (-0.22, 0.14, -0.08, 0.17, 0.05)
 _BULLISH_COMPOSITE_THRESHOLD = 2.4
 _BEARISH_COMPOSITE_THRESHOLD = -2.4
+_ASPECT_BALANCE_WEIGHT = 0.85
+_REVERSION_STRENGTH_FACTOR = 0.35
+_BASE_DIRECTIONAL_STRENGTH = 0.82
+_DIRECTIONAL_SCORE_MULTIPLIER = 0.08
+_MIN_DIRECTIONAL_STRENGTH = 0.75
+_MAX_DIRECTIONAL_STRENGTH = 1.35
+_SIDEWAYS_BAND_BASE = 0.08
+_SIDEWAYS_BAND_SCORE_MULTIPLIER = 0.015
+_SIDEWAYS_BAND_MAX = 0.2
+_SIDEWAYS_BASE_REVERSION = 0.45
+_SIDEWAYS_STEP_MULTIPLIER = 0.3
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
 _MIXED_DOMINANCE_THRESHOLD = 0.4
 _STRONG_DOMINANCE_THRESHOLD = 0.5
@@ -716,7 +727,7 @@ def _build_price_forecast_profile(
         ((ratio_value - 50.0) / 15.0)
         + _clamp(total_score / 4.0, -3.0, 3.0)
         + _clamp(gann_total / 4.0, -3.0, 3.0)
-        + _clamp(aspect_balance * 0.85, -2.4, 2.4)
+        + _clamp(aspect_balance * _ASPECT_BALANCE_WEIGHT, -2.4, 2.4)
         + cycle_alignment * cycle_factor
     )
 
@@ -750,9 +761,17 @@ def _build_price_forecast_profile(
         marker_tail = _BEARISH_FORECAST_COLORS
 
     midpoint = low + (high - low) * 0.5
-    reversion_strength = (midpoint - current) * 0.35
-    directional_strength = _clamp(0.82 + abs(composite_score) * 0.08, 0.75, 1.35)
-    sideways_band = price_range * _clamp(0.08 + abs(composite_score) * 0.015, 0.08, 0.2)
+    reversion_strength = (midpoint - current) * _REVERSION_STRENGTH_FACTOR
+    directional_strength = _clamp(
+        _BASE_DIRECTIONAL_STRENGTH + abs(composite_score) * _DIRECTIONAL_SCORE_MULTIPLIER,
+        _MIN_DIRECTIONAL_STRENGTH,
+        _MAX_DIRECTIONAL_STRENGTH,
+    )
+    sideways_band = price_range * _clamp(
+        _SIDEWAYS_BAND_BASE + abs(composite_score) * _SIDEWAYS_BAND_SCORE_MULTIPLIER,
+        _SIDEWAYS_BAND_BASE,
+        _SIDEWAYS_BAND_MAX,
+    )
 
     targets = []
     for idx, (step, horizon) in enumerate(zip(_GOLDEN_RATIO_STEPS, _FORECAST_HORIZONS)):
@@ -764,7 +783,7 @@ def _build_price_forecast_profile(
             target_price = current - move
         else:
             oscillation = sideways_band * _SIDEWAYS_OSCILLATION[idx]
-            target_price = current + reversion_strength * (0.45 + step * 0.3) + oscillation
+            target_price = current + reversion_strength * (_SIDEWAYS_BASE_REVERSION + step * _SIDEWAYS_STEP_MULTIPLIER) + oscillation
             target_price = _clamp(
                 target_price,
                 max(_MIN_PRICE_FLOOR, low - price_range * 0.08),
