@@ -39,6 +39,21 @@ _GOLDEN_RATIO_STEPS = (0.236, 0.382, 0.618, 1.0, 1.618)
 _FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
 _BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
 _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
+_SIDEWAYS_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#a78bfa", "#c084fc", "#d8b4fe")
+_SIDEWAYS_OSCILLATION = (-0.22, 0.14, -0.08, 0.17, 0.05)
+_BULLISH_COMPOSITE_THRESHOLD = 2.4
+_BEARISH_COMPOSITE_THRESHOLD = -2.4
+_ASPECT_BALANCE_WEIGHT = 0.85
+_REVERSION_STRENGTH_FACTOR = 0.35
+_BASE_DIRECTIONAL_STRENGTH = 0.82
+_DIRECTIONAL_SCORE_MULTIPLIER = 0.08
+_MIN_DIRECTIONAL_STRENGTH = 0.75
+_MAX_DIRECTIONAL_STRENGTH = 1.35
+_SIDEWAYS_BAND_BASE = 0.08
+_SIDEWAYS_BAND_SCORE_MULTIPLIER = 0.015
+_SIDEWAYS_BAND_MAX = 0.2
+_SIDEWAYS_BASE_REVERSION = 0.45
+_SIDEWAYS_STEP_MULTIPLIER = 0.3
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
 _MIXED_DOMINANCE_THRESHOLD = 0.4
 _STRONG_DOMINANCE_THRESHOLD = 0.5
@@ -237,7 +252,15 @@ def render_stock_fortune_tab(input_tz: float = 8.0):
         _render_daily_fortune(stock_data, go, query_date, query_hour)
 
     with tab_strength:
-        _render_price_strength(stock, stock_data, go)
+        _render_price_strength(
+            stock,
+            stock_data,
+            go,
+            ipo_date=ipo_date,
+            query_date=query_date,
+            query_hour=query_hour,
+            timezone=float(ipo_tz),
+        )
 
     with tab_wuxing:
         _render_name_wuxing(stock)
@@ -656,7 +679,138 @@ def _render_hourly_timeline(go, query_date: date, timezone: float):
     st.plotly_chart(fig, width="stretch")
 
 
-def _render_price_strength(stock, stock_data, go):
+def _clamp(value: float, lower: float, upper: float) -> float:
+    return max(lower, min(upper, value))
+
+
+def _build_gann_stock_context(ipo_date: date, query_date: date, query_hour: int, timezone: float) -> Optional[dict]:
+    """以股票上市日作為出生圖，計算江恩 × 七政四餘時窗共振。"""
+    from .gann_macro_stock import build_gann_macro_timing
+
+    as_of_datetime = datetime.combine(query_date, datetime.min.time()) + timedelta(hours=query_hour)
+    return build_gann_macro_timing(
+        market_natal_date=ipo_date,
+        as_of_datetime=as_of_datetime,
+        timezone=timezone,
+        cycle_scale=0.05,
+        use_trading_days=True,
+        cycle_orb_days=10,
+    )
+
+
+def _build_price_forecast_profile(
+    *,
+    current: float,
+    high: float,
+    low: float,
+    ratio: Optional[float],
+    total_score: int,
+    gann_context: Optional[dict] = None,
+) -> dict:
+    """綜合江恩時窗、七政四餘分數與 52 週位置，生成趨勢與目標價。"""
+    ratio_value = 50.0 if ratio is None else ratio
+    gann_scores = (gann_context or {}).get("scores", {})
+    gann_total = float(gann_scores.get("total_score", 0))
+    positive_aspects = int(gann_scores.get("positive_aspect_count", 0))
+    negative_aspects = int(gann_scores.get("negative_aspect_count", 0))
+    aspect_balance = positive_aspects - negative_aspects
+    cycle_alignment = len((gann_context or {}).get("near_cycle_hits", []))
+
+    price_range = max(high - low, max(current * _MIN_RANGE_PCT_OF_PRICE, _MIN_PRICE_FLOOR))
+    score_boost = _clamp(total_score / _SCORE_BOOST_DIVISOR, -_MAX_SCORE_BOOST, _MAX_SCORE_BOOST)
+    ratio_bias = ((ratio_value - _RATIO_CENTER) / _RATIO_BIAS_DIVISOR) * _RATIO_BIAS_WEIGHT
+    gann_bias = _clamp(gann_total / 20.0, -0.25, 0.25)
+    trend_factor = _clamp(1.0 + score_boost + ratio_bias + gann_bias, _MIN_TREND_FACTOR, _MAX_TREND_FACTOR)
+    cycle_factor = 0.25 if gann_total > 0 else (-0.25 if gann_total < 0 else 0.0)
+
+    composite_score = (
+        ((ratio_value - 50.0) / 15.0)
+        + _clamp(total_score / 4.0, -3.0, 3.0)
+        + _clamp(gann_total / 4.0, -3.0, 3.0)
+        + _clamp(aspect_balance * _ASPECT_BALANCE_WEIGHT, -2.4, 2.4)
+        + cycle_alignment * cycle_factor
+    )
+
+    regime_key = "sideways"
+    regime_zh = "橫行整理"
+    regime_en = "Sideways"
+    direction = 0.0
+    line_color = "#60a5fa"
+    marker_tail = _SIDEWAYS_FORECAST_COLORS
+
+    if (
+        composite_score >= _BULLISH_COMPOSITE_THRESHOLD
+        or (ratio_value >= 72.0 and total_score >= 0 and aspect_balance >= 0)
+    ):
+        regime_key = "bullish"
+        regime_zh = "上行趨勢"
+        regime_en = "Bullish"
+        direction = 1.0
+        line_color = "#FFD700"
+        marker_tail = _BULLISH_FORECAST_COLORS
+    elif (
+        composite_score <= _BEARISH_COMPOSITE_THRESHOLD
+        or (ratio_value <= 28.0 and total_score <= 0 and aspect_balance <= 0)
+        or (ratio_value < _BEARISH_RATIO_MILD and total_score <= _BEARISH_SCORE_THRESHOLD and gann_total <= 0)
+    ):
+        regime_key = "bearish"
+        regime_zh = "下行趨勢"
+        regime_en = "Bearish"
+        direction = -1.0
+        line_color = "#f87171"
+        marker_tail = _BEARISH_FORECAST_COLORS
+
+    midpoint = low + (high - low) * 0.5
+    reversion_strength = (midpoint - current) * _REVERSION_STRENGTH_FACTOR
+    directional_strength = _clamp(
+        _BASE_DIRECTIONAL_STRENGTH + abs(composite_score) * _DIRECTIONAL_SCORE_MULTIPLIER,
+        _MIN_DIRECTIONAL_STRENGTH,
+        _MAX_DIRECTIONAL_STRENGTH,
+    )
+    sideways_band = price_range * _clamp(
+        _SIDEWAYS_BAND_BASE + abs(composite_score) * _SIDEWAYS_BAND_SCORE_MULTIPLIER,
+        _SIDEWAYS_BAND_BASE,
+        _SIDEWAYS_BAND_MAX,
+    )
+
+    targets = []
+    for idx, (step, horizon) in enumerate(zip(_GOLDEN_RATIO_STEPS, _FORECAST_HORIZONS)):
+        if regime_key == "bullish":
+            move = price_range * step * trend_factor * directional_strength
+            target_price = current + move
+        elif regime_key == "bearish":
+            move = price_range * step * trend_factor * directional_strength
+            target_price = current - move
+        else:
+            oscillation = sideways_band * _SIDEWAYS_OSCILLATION[idx]
+            target_price = current + reversion_strength * (_SIDEWAYS_BASE_REVERSION + step * _SIDEWAYS_STEP_MULTIPLIER) + oscillation
+            target_price = _clamp(
+                target_price,
+                max(_MIN_PRICE_FLOOR, low - price_range * 0.08),
+                high + price_range * 0.08,
+            )
+        targets.append({"horizon": horizon, "step": step, "price": max(_MIN_PRICE_FLOOR, target_price)})
+
+    return {
+        "price_range": price_range,
+        "trend_factor": trend_factor,
+        "trend_score": composite_score,
+        "direction": direction,
+        "regime_key": regime_key,
+        "regime_zh": regime_zh,
+        "regime_en": regime_en,
+        "line_color": line_color,
+        "marker_tail": marker_tail,
+        "gann_total": gann_total,
+        "gann_classification": gann_scores.get("classification", "未啟用"),
+        "positive_aspects": positive_aspects,
+        "negative_aspects": negative_aspects,
+        "cycle_alignment": cycle_alignment,
+        "targets": targets,
+    }
+
+
+def _render_price_strength(stock, stock_data, go, *, ipo_date: date, query_date: date, query_hour: int, timezone: float):
     """渲染股價比例強弱度分頁"""
     from .stock_fetcher import get_display_name
 
@@ -682,7 +836,15 @@ def _render_price_strength(stock, stock_data, go):
 
     # 股價預測視覺化
     if stock.current_price and stock.week52_high and stock.week52_low:
-        _render_price_forecast(stock, stock_data, go)
+        _render_price_forecast(
+            stock,
+            stock_data,
+            go,
+            ipo_date=ipo_date,
+            query_date=query_date,
+            query_hour=query_hour,
+            timezone=timezone,
+        )
 
 
 def _render_strength_gauge(ratio: float, label_zh: str, label_en: str, color: str, go):
@@ -844,7 +1006,7 @@ def _render_strength_interpretation(ratio: float, label_zh: str, stock):
     )
 
 
-def _render_price_forecast(stock, stock_data, go):
+def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date: date, query_hour: int, timezone: float):
     """渲染黃金分割 × 七政四餘股價預測視覺圖"""
     from .stock_fetcher import get_display_name
 
@@ -857,25 +1019,23 @@ def _render_price_forecast(stock, stock_data, go):
     display_name = get_display_name(stock)
     ratio = stock_data.price_ratio if stock_data.price_ratio is not None else 50.0
     total_score = stock_data.daily_fortune.total_score if stock_data.daily_fortune else 0
-    price_range = max(high - low, max(current * _MIN_RANGE_PCT_OF_PRICE, _MIN_PRICE_FLOOR))
+    gann_context = None
+    gann_error = None
+    try:
+        gann_context = _build_gann_stock_context(ipo_date, query_date, query_hour, timezone)
+    except Exception as exc:
+        gann_context = None
+        gann_error = str(exc)
 
-    score_boost = max(-_MAX_SCORE_BOOST, min(_MAX_SCORE_BOOST, total_score / _SCORE_BOOST_DIVISOR))
-    ratio_bias = ((ratio - _RATIO_CENTER) / _RATIO_BIAS_DIVISOR) * _RATIO_BIAS_WEIGHT
-    trend_factor = 1.0 + score_boost + ratio_bias
-    trend_factor = max(_MIN_TREND_FACTOR, min(_MAX_TREND_FACTOR, trend_factor))
-
-    golden_steps = _GOLDEN_RATIO_STEPS
-    direction = 1.0
-    if ratio < _BEARISH_RATIO_STRONG and total_score < 0:
-        direction = -1.0
-    elif ratio < _BEARISH_RATIO_MILD and total_score <= _BEARISH_SCORE_THRESHOLD:
-        direction = -1.0
-
-    targets = []
-    for step, horizon in zip(golden_steps, _FORECAST_HORIZONS):
-        move = price_range * step * trend_factor * direction
-        target_price = max(_MIN_PRICE_FLOOR, current + move)
-        targets.append({"horizon": horizon, "step": step, "price": target_price})
+    forecast = _build_price_forecast_profile(
+        current=current,
+        high=high,
+        low=low,
+        ratio=ratio,
+        total_score=total_score,
+        gann_context=gann_context,
+    )
+    targets = forecast["targets"]
 
     st.markdown(
         f"""
@@ -891,7 +1051,28 @@ def _render_price_forecast(stock, stock_data, go):
             </div>
             <div style="color:#d6c8ff;font-size:0.86em;margin-top:5px;">
                 {display_name} 以現價 <span style="color:#FFD700;">{current:.2f}</span> 為基準，
-                結合 52 週振幅與流時星曜分數（{total_score:+d}）推演未來目標價。
+                結合 52 週振幅、流時星曜分數（{total_score:+d}）與江恩周期共振，
+                先判斷 <span style="color:{forecast["line_color"]};">{forecast["regime_zh"]}</span>，
+                再推演未來目標價。
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+              <span style="background:rgba(96,165,250,0.16);border-radius:6px;padding:4px 10px;color:#bfdbfe;font-size:0.8em;">
+                趨勢分數 {forecast["trend_score"]:+.2f}
+              </span>
+              <span style="background:rgba(192,132,252,0.16);border-radius:6px;padding:4px 10px;color:#d8b4fe;font-size:0.8em;">
+                江恩共振 {forecast["gann_total"]:+.0f}／{escape(str(forecast["gann_classification"]))}
+              </span>
+              <span style="background:rgba(134,239,172,0.15);border-radius:6px;padding:4px 10px;color:#86efac;font-size:0.8em;">
+                正向守照 {forecast["positive_aspects"]}
+              </span>
+              <span style="background:rgba(248,113,113,0.15);border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:0.8em;">
+                負向守照 {forecast["negative_aspects"]}
+              </span>
+              {(
+                  f'<span style="background:rgba(251,146,60,0.14);border-radius:6px;padding:4px 10px;color:#fdba74;font-size:0.8em;">'
+                  f'江恩模組回退：{escape(gann_error[:48])}'
+                  f'</span>'
+              ) if gann_error else ""}
             </div>
         </div>
         """,
@@ -936,9 +1117,8 @@ def _render_price_forecast(stock, stock_data, go):
     fig = go.Figure()
     x_points = ["現價"] + list(_FORECAST_HORIZONS)
     y_points = [current] + [t["price"] for t in targets]
-    line_color = "#FFD700" if direction > 0 else "#f87171"
-    marker_tail = _BULLISH_FORECAST_COLORS if direction > 0 else _BEARISH_FORECAST_COLORS
-    marker_color = ["#FFD700", *list(marker_tail[:len(targets)])]
+    line_color = forecast["line_color"]
+    marker_color = ["#FFD700", *list(forecast["marker_tail"][:len(targets)])]
 
     fig.add_trace(go.Scatter(
         x=x_points,
@@ -951,6 +1131,14 @@ def _render_price_forecast(stock, stock_data, go):
         textfont=dict(color="#d4c8ff", size=10),
         hovertemplate="%{x}<br>預測價: %{y:.2f}<extra></extra>",
     ))
+
+    if forecast["regime_key"] == "sideways":
+        fig.add_hrect(
+            y0=max(_MIN_PRICE_FLOOR, low),
+            y1=high,
+            fillcolor="rgba(96,165,250,0.08)",
+            line_width=0,
+        )
 
     fig.add_hline(
         y=current,
@@ -967,7 +1155,10 @@ def _render_price_forecast(stock, stock_data, go):
         plot_bgcolor="rgba(12,10,34,0.52)",
         xaxis=dict(color="#a8b4d8", gridcolor="rgba(255,200,50,0.08)"),
         yaxis=dict(color="#a8b4d8", gridcolor="rgba(255,200,50,0.08)", title=stock.currency or "Price"),
-        title=dict(text="黃金分割時間軸目標價 / Golden Ratio Target Curve", font=dict(color="#FFD700", size=12)),
+        title=dict(
+            text=f"未來預測折線圖 / {forecast['regime_en']} Forecast Curve",
+            font=dict(color="#FFD700", size=12),
+        ),
         font=dict(color="#d4c8ff"),
     )
     st.plotly_chart(fig, width="stretch")
