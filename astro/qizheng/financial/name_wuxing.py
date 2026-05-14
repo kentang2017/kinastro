@@ -13,6 +13,12 @@
   末位數 5, 6 → 土
   末位數 7, 8 → 金
   末位數 9, 0 → 水
+
+股票代碼數字規則（金融實盤優化）：
+  9, 3, 5 → 火（強）
+  4, 8    → 木（強）
+  7, 0, 6 → 金（弱）
+  1, 2    → 水（弱）
 """
 
 from __future__ import annotations
@@ -44,12 +50,59 @@ WUXING_SHENGME = {v: k for k, v in WUXING_SHENG.items()}
 WUXING_KEME = {v: k for k, v in WUXING_KE.items()}
 
 # 數字五行（0-9）
+# 依金融占星實盤優化：強化火（9/3/5）與木（4/8），弱化金（7/0/6）與水（1/2）
 DIGIT_WUXING: dict[str, str] = {
-    "1": "木", "2": "木",
-    "3": "火", "4": "火",
-    "5": "土", "6": "土",
-    "7": "金", "8": "金",
-    "9": "水", "0": "水",
+    "0": "金",
+    "1": "水",
+    "2": "水",
+    "3": "火",
+    "4": "木",
+    "5": "火",
+    "6": "金",
+    "7": "金",
+    "8": "木",
+    "9": "火",
+}
+
+_FAVOURABLE_NAME_KEYWORDS_ZH = {
+    "光": "火", "麗": "火", "能": "火", "源": "火", "陽": "火", "昇": "火", "耀": "火",
+    "聖": "火", "彩": "火", "帝": "火", "天": "火",
+    "協": "木", "信": "木", "義": "木", "宜": "木", "愛": "木", "都": "木", "市": "木",
+    "南": "火", "方": "火",
+}
+_UNFAVOURABLE_NAME_KEYWORDS_ZH = {
+    "銀": "金", "鋼": "金", "鐵": "金", "晶": "金", "控": "金", "電": "水",
+    "集": "土", "團": "土", "國": "土", "際": "土", "白": "金", "重": "土", "慶": "土",
+}
+
+_FAVOURABLE_KEYWORDS_EN = {
+    "energy": "火", "solar": "火", "light": "火", "bright": "火",
+    "green": "木", "tech": "木", "inno": "木", "innovation": "木",
+}
+_UNFAVOURABLE_KEYWORDS_EN = {
+    "bank": "金", "securities": "金", "telecom": "水", "steel": "金",
+    "metal": "金", "property": "土", "estate": "土", "semiconductor": "金",
+}
+
+_INDUSTRY_KEYWORDS = {
+    "新能源": "火",
+    "太陽能": "火",
+    "光伏": "火",
+    "環保": "木",
+    "科技": "木",
+    "電子": "木",
+    "創新": "木",
+    "汽車": "火",
+    "消費": "木",
+    "鋼": "金",
+    "鐵": "金",
+    "金屬": "金",
+    "半導體": "金",
+    "金融": "金",
+    "券商": "金",
+    "電訊": "水",
+    "地產": "土",
+    "房地產": "土",
 }
 
 # 英文字母五行（按字母序分五組，每組五至六個字母）
@@ -297,6 +350,50 @@ def _get_stroke_count(char: str) -> Optional[int]:
     return _STROKE_COUNT.get(char)
 
 
+def _zero_distribution() -> dict[str, float]:
+    return {el: 0.0 for el in WUXING_ELEMENTS}
+
+
+def _digit_weighted_element_score(digit: str) -> dict[str, float]:
+    score = _zero_distribution()
+    if digit in {"3", "5", "9"}:
+        score["火"] += 1.9
+        score["木"] += 0.4
+    elif digit in {"4", "8"}:
+        score["木"] += 1.5
+        score["火"] += 0.3
+    elif digit in {"1", "2"}:
+        score["水"] += 0.45
+    else:  # 0, 6, 7
+        score["金"] += 0.45
+    return score
+
+
+def _match_keyword_distribution(
+    text: str,
+    favourable: dict[str, str],
+    unfavourable: dict[str, str],
+    *,
+    favourable_weight: float,
+    unfavourable_element_weight: float,
+) -> tuple[dict[str, float], list[dict[str, str]]]:
+    dist = _zero_distribution()
+    hits: list[dict[str, str]] = []
+    normalized_text = (text or "").lower()
+
+    for key, element in favourable.items():
+        if key.lower() in normalized_text:
+            dist[element] += favourable_weight
+            hits.append({"keyword": key, "element": element, "effect": "favourable"})
+
+    for key, element in unfavourable.items():
+        if key.lower() in normalized_text:
+            dist[element] += unfavourable_element_weight
+            hits.append({"keyword": key, "element": element, "effect": "unfavourable"})
+
+    return dist, hits
+
+
 def analyze_name_wuxing(name: str) -> dict:
     """
     分析中文公司名稱各字的五行屬性。
@@ -338,9 +435,23 @@ def analyze_name_wuxing(name: str) -> dict:
 
     dominant = dist.most_common(1)[0][0] if chars_data else "土"
 
+    keyword_distribution, keyword_hits = _match_keyword_distribution(
+        name,
+        _FAVOURABLE_NAME_KEYWORDS_ZH,
+        _UNFAVOURABLE_NAME_KEYWORDS_ZH,
+        favourable_weight=1.0,
+        unfavourable_element_weight=1.2,
+    )
+
     return {
         "chars": chars_data,
         "distribution": dict(dist),
+        "weighted_distribution": {
+            element: float(dist.get(element, 0)) + keyword_distribution.get(element, 0.0)
+            for element in WUXING_ELEMENTS
+        },
+        "keyword_distribution": keyword_distribution,
+        "keyword_hits": keyword_hits,
         "dominant": dominant,
         "unknown_chars": unknown,
         "total": len(chars_data),
@@ -381,9 +492,23 @@ def analyze_english_name_wuxing(name: str) -> dict:
 
     dominant = dist.most_common(1)[0][0] if letters_data else "土"
 
+    keyword_distribution, keyword_hits = _match_keyword_distribution(
+        name,
+        _FAVOURABLE_KEYWORDS_EN,
+        _UNFAVOURABLE_KEYWORDS_EN,
+        favourable_weight=1.2,
+        unfavourable_element_weight=1.2,
+    )
+
     return {
         "letters": letters_data,
         "distribution": dict(dist),
+        "weighted_distribution": {
+            element: float(dist.get(element, 0)) + keyword_distribution.get(element, 0.0)
+            for element in WUXING_ELEMENTS
+        },
+        "keyword_distribution": keyword_distribution,
+        "keyword_hits": keyword_hits,
         "dominant": dominant,
         "total": len(letters_data),
     }
@@ -400,8 +525,10 @@ def analyze_ticker_wuxing(ticker: str) -> dict:
         {
           "digits": [{"digit": str, "wuxing": str}],
           "distribution": {"木":int, "火":int, "土":int, "金":int, "水":int},
+          "weighted_distribution": {"木":float, ...},
           "dominant": str,
           "ticker_clean": str,  # 僅數字部分
+          "numerology_score": float,
         }
     """
     import re
@@ -411,22 +538,72 @@ def analyze_ticker_wuxing(ticker: str) -> dict:
     digits_data = []
     dist: Counter = Counter()
 
+    weighted_dist = _zero_distribution()
+
     for d in digits:
         wx = DIGIT_WUXING[d]
         dist[wx] += 1
         digits_data.append({"digit": d, "wuxing": wx})
+        weighted_by_digit = _digit_weighted_element_score(d)
+        for element, value in weighted_by_digit.items():
+            weighted_dist[element] += value
 
     for el in WUXING_ELEMENTS:
         dist.setdefault(el, 0)
 
     dominant = dist.most_common(1)[0][0] if digits_data else "土"
+    lucky_digit_count = sum(1 for d in digits if d in {"3", "5", "8", "9"})
+    suppressive_digit_count = sum(1 for d in digits if d in {"0", "1", "2", "6", "7"})
+    numerology_score = lucky_digit_count * 1.8 - suppressive_digit_count * 1.4
 
     return {
         "digits": digits_data,
         "distribution": dict(dist),
+        "weighted_distribution": weighted_dist,
         "dominant": dominant,
         "ticker_clean": "".join(digits),
+        "lucky_digit_count": lucky_digit_count,
+        "suppressive_digit_count": suppressive_digit_count,
+        "numerology_score": numerology_score,
         "total": len(digits),
+    }
+
+
+def analyze_industry_wuxing(industry: str) -> dict:
+    """分析公司主要業務行業對應五行。"""
+    normalized_industry = industry or ""
+    dist = Counter()
+    matched_keywords: list[dict[str, str]] = []
+
+    for keyword, element in _INDUSTRY_KEYWORDS.items():
+        if keyword in normalized_industry:
+            dist[element] += 1
+            matched_keywords.append({"keyword": keyword, "element": element})
+
+    for el in WUXING_ELEMENTS:
+        dist.setdefault(el, 0)
+
+    if sum(dist.values()) == 0:
+        dist["土"] += 1
+
+    weighted_distribution = {el: float(dist.get(el, 0)) for el in WUXING_ELEMENTS}
+    for item in matched_keywords:
+        if item["element"] in {"木", "火"}:
+            weighted_distribution[item["element"]] += 1.0
+        elif item["element"] in {"金", "水"}:
+            weighted_distribution[item["element"]] += 1.1
+        else:
+            weighted_distribution[item["element"]] += 0.8
+
+    dominant = max(dist, key=lambda k: dist.get(k, 0)) if dist else "土"
+
+    return {
+        "industry": normalized_industry,
+        "matched_keywords": matched_keywords,
+        "distribution": dict(dist),
+        "weighted_distribution": weighted_distribution,
+        "dominant": dominant,
+        "total": sum(dist.values()),
     }
 
 

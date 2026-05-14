@@ -88,6 +88,8 @@ def test_composite_compatibility_grade_with_merged_distributions(financial_modul
         comparison,
         personal_distribution,
         combined_stock_distribution,
+        day_master_element="木",
+        user_profile_note="身旺",
     )
 
     assert comparison["relationship_code"] == "stock_feeds_you"
@@ -96,4 +98,54 @@ def test_composite_compatibility_grade_with_merged_distributions(financial_modul
         "grade": "S",
         "title_zh": "絕對配合",
         "title_en": "Absolute Match",
+        "score_value": "100.0",
+        "fit_note_zh": "對用戶木日元身旺：喜用比重 100%，忌神壓力 0%。",
+        "advice_zh": "推薦買賣建議：可分批布局／偏買進。",
     }
+
+
+def test_weak_fire_profile_heavily_penalises_metal_water(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    comparison = {
+        "score": -2,
+        "relationship_code": "stock_overcomes_you",
+    }
+    personal_distribution = {"木": 1, "火": 1, "土": 1, "金": 2, "水": 2}
+    stock_distribution = {"木": 0.0, "火": 0.0, "土": 0.5, "金": 2.5, "水": 2.5}
+
+    grade = stock_renderer._compatibility_grade(
+        comparison,
+        personal_distribution,
+        stock_distribution,
+        day_master_element="火",
+        numerology_score=-2.0,
+        user_profile_note="身弱",
+    )
+
+    assert grade["grade"] == "F"
+    assert "身弱" in grade["fit_note_zh"]
+    assert "迴避或嚴格止損" in grade["advice_zh"]
+
+
+def test_weak_fire_profile_rewards_wood_fire_setup(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    comparison = {
+        "score": 2,
+        "relationship_code": "stock_feeds_you",
+    }
+    personal_distribution = {"木": 2, "火": 1, "土": 1, "金": 1, "水": 1}
+    stock_distribution = {"木": 2.4, "火": 3.1, "土": 0.5, "金": 0.2, "水": 0.1}
+
+    grade = stock_renderer._compatibility_grade(
+        comparison,
+        personal_distribution,
+        stock_distribution,
+        day_master_element="火",
+        numerology_score=3.0,
+        user_profile_note="身弱",
+    )
+
+    assert grade["grade"] in {"A", "S"}
+    assert "偏買進" in grade["advice_zh"]
