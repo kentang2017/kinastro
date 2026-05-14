@@ -41,6 +41,15 @@ _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
 _MIXED_DOMINANCE_THRESHOLD = 0.4
 _STRONG_DOMINANCE_THRESHOLD = 0.5
+_GRADE_ICONS = {
+    "S": "👑",
+    "A": "🌟",
+    "B": "✅",
+    "C": "🔵",
+    "D": "🟡",
+    "E": "⚠️",
+    "F": "🔴",
+}
 
 
 # ============================================================
@@ -1140,9 +1149,7 @@ def _render_compatibility_card(
     source_text: str | None = None,
 ) -> None:
     """渲染契合評級卡片。"""
-    score_icon = {"S": "👑", "A": "🌟", "B": "✅", "C": "🔵", "D": "🟡", "E": "⚠️", "F": "🔴"}.get(
-        grade_info["grade"], "🔵"
-    )
+    score_icon = _GRADE_ICONS.get(grade_info["grade"], "🔵")
     source_html = ""
     if source_text:
         source_html = (

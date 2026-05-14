@@ -3,8 +3,11 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
 
-def _load_financial_modules():
+
+@pytest.fixture
+def financial_modules():
     fake_st = types.ModuleType("streamlit")
     fake_st.markdown = lambda *args, **kwargs: None
     sys.modules["streamlit"] = fake_st
@@ -41,12 +44,21 @@ def _load_financial_modules():
         spec.loader.exec_module(module)
         loaded_modules[module_name] = module
 
-    return loaded_modules
+    yield loaded_modules
+
+    for module_name in (
+        "streamlit",
+        "astro",
+        "astro.qizheng",
+        "astro.qizheng.financial",
+        "astro.qizheng.financial.name_wuxing",
+        "astro.qizheng.financial.stock_renderer",
+    ):
+        sys.modules.pop(module_name, None)
 
 
-def test_merge_wuxing_distributions_sums_each_element():
-    modules = _load_financial_modules()
-    stock_renderer = modules["astro.qizheng.financial.stock_renderer"]
+def test_merge_wuxing_distributions_sums_each_element(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
 
     merged = stock_renderer._merge_wuxing_distributions(
         {"木": 2, "火": 1, "土": 0, "金": 0, "水": 0},
@@ -56,10 +68,9 @@ def test_merge_wuxing_distributions_sums_each_element():
     assert merged == {"木": 2, "火": 1, "土": 1, "金": 2, "水": 1}
 
 
-def test_overall_compatibility_uses_combined_name_and_ticker_distribution():
-    modules = _load_financial_modules()
-    name_wuxing = modules["astro.qizheng.financial.name_wuxing"]
-    stock_renderer = modules["astro.qizheng.financial.stock_renderer"]
+def test_overall_compatibility_uses_combined_name_and_ticker_distribution(financial_modules):
+    name_wuxing = financial_modules["astro.qizheng.financial.name_wuxing"]
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
 
     personal_distribution = {"木": 3, "火": 0, "土": 0, "金": 0, "水": 0}
     combined_stock_distribution = stock_renderer._merge_wuxing_distributions(
