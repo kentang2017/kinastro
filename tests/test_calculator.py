@@ -19,11 +19,14 @@ from astro.qizheng.calculator import (
     _branch_to_cusp,
     _get_sign_element,
     _get_mansion_info,
+    _get_mansion_info_for_system,
     _check_qidu,
     _get_mansion_width,
 )
 from astro.qizheng.constants import (
     TWENTY_EIGHT_MANSIONS,
+    TWENTY_EIGHT_MANSIONS_LIMING,
+    TWENTY_EIGHT_MANSIONS_ANCIENT,
     ZODIAC_SIGN_ELEMENTS,
     FOUR_REMAINDERS,
 )
@@ -667,3 +670,82 @@ class TestPlanetNewFields:
         """所有星曜應有岐度布林值"""
         for p in sample_chart.planets:
             assert isinstance(p.is_qidu, bool)
+
+
+class TestLimingMansionCalculation:
+    """迴歸測試：立命二十八宿宿度計算
+
+    參考案例：1985-08-26 02:55 Tai Po (HK), UTC+8, 男命
+    今制立命應為「參水八度立命」，古制立命應為「井木十一度立命」。
+    """
+
+    # Reference liming_lon calibrated for this birth data
+    # (tropical ascendant ≈ 109.83° with Tang-epoch ayanamsa ≈ 28.985°)
+    REFERENCE_LIMING_LON = 80.843
+
+    def test_liming_modern_mansion(self):
+        """今制立命：應落在參宿"""
+        name, deg, idx, _ = _get_mansion_info_for_system(
+            self.REFERENCE_LIMING_LON, TWENTY_EIGHT_MANSIONS_LIMING
+        )
+        assert name == "參", f"今制立命宿名應為「參」，實得「{name}」"
+
+    def test_liming_modern_degree(self):
+        """今制立命：應為八度（參水八度立命）"""
+        _, deg, _, _ = _get_mansion_info_for_system(
+            self.REFERENCE_LIMING_LON, TWENTY_EIGHT_MANSIONS_LIMING
+        )
+        assert round(deg) == 8, f"今制立命度數應為8，實得{round(deg)}"
+
+    def test_liming_modern_element(self):
+        """今制立命：參宿屬水"""
+        _, _, idx, _ = _get_mansion_info_for_system(
+            self.REFERENCE_LIMING_LON, TWENTY_EIGHT_MANSIONS_LIMING
+        )
+        assert TWENTY_EIGHT_MANSIONS_LIMING[idx]["element"] == "水"
+
+    def test_liming_ancient_mansion(self):
+        """古制立命：應落在井宿"""
+        name, deg, idx, _ = _get_mansion_info_for_system(
+            self.REFERENCE_LIMING_LON, TWENTY_EIGHT_MANSIONS_ANCIENT
+        )
+        assert name == "井", f"古制立命宿名應為「井」，實得「{name}」"
+
+    def test_liming_ancient_degree(self):
+        """古制立命：應為十一度（井木十一度立命）"""
+        _, deg, _, _ = _get_mansion_info_for_system(
+            self.REFERENCE_LIMING_LON, TWENTY_EIGHT_MANSIONS_ANCIENT
+        )
+        assert round(deg) == 11, f"古制立命度數應為11，實得{round(deg)}"
+
+    def test_liming_ancient_element(self):
+        """古制立命：井宿屬木"""
+        _, _, idx, _ = _get_mansion_info_for_system(
+            self.REFERENCE_LIMING_LON, TWENTY_EIGHT_MANSIONS_ANCIENT
+        )
+        assert TWENTY_EIGHT_MANSIONS_ANCIENT[idx]["element"] == "木"
+
+    def test_compute_liming_lon_for_reference_case(self):
+        """_compute_liming_lon 對參考案例應回傳約 80.8°（以 compute_chart 驗證）"""
+        chart = compute_chart(
+            year=1985, month=8, day=26, hour=2, minute=55,
+            timezone=8.0, latitude=22.4501, longitude=114.1688,
+            location_name="Tai Po (HK)",
+        )
+        # Should be close to 80.8° (±0.6° tolerance for coordinate variation)
+        assert 80.0 < chart.liming_lon < 81.5, (
+            f"liming_lon 應約為 80.8°，實得 {chart.liming_lon:.3f}°"
+        )
+
+    def test_full_chart_liming_labels(self):
+        """透過 compute_chart 驗證今制=參水八度立命，古制=井木十一度立命"""
+        from astro.qizheng.chart_renderer import _format_liming_mansion
+        chart = compute_chart(
+            year=1985, month=8, day=26, hour=2, minute=55,
+            timezone=8.0, latitude=22.4501, longitude=114.1688,
+            location_name="Tai Po (HK)",
+        )
+        modern = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS_LIMING)
+        ancient = _format_liming_mansion(chart.liming_lon, TWENTY_EIGHT_MANSIONS_ANCIENT)
+        assert modern == "參水八度立命", f"今制立命標籤應為「參水八度立命」，實得「{modern}」"
+        assert ancient == "井木十一度立命", f"古制立命標籤應為「井木十一度立命」，實得「{ancient}」"
