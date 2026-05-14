@@ -14,9 +14,11 @@ Multi-System Astrology Chart Application
 """
 
 import contextlib
+import json
 import os
 import random
 import textwrap
+from pathlib import Path
 import streamlit as st
 from datetime import datetime, date, time
 from typing import Any
@@ -775,374 +777,134 @@ if "_system_select" in st.session_state:
 # ============================================================
 # 世界城市資料 (城市, 緯度, 經度, 時區)
 # ============================================================
-# Internal keys are Chinese; CITY_NAMES_EN maps them to English display names.
-# 預設城市：香港
-CITY_PRESETS = {
-    "香港": (22.3193, 114.1694, 8.0),
-    "北京": (39.9042, 116.4074, 8.0),
-    "上海": (31.2304, 121.4737, 8.0),
-    "台北": (25.0330, 121.5654, 8.0),
-    "高雄": (22.6273, 120.3014, 8.0),
-    "台中": (24.1477, 120.6736, 8.0),
-    "台南": (22.9999, 120.2269, 8.0),
-    "新北": (25.0120, 121.4657, 8.0),
-    "桃園": (24.9936, 121.3010, 8.0),
-    "新竹": (24.8138, 120.9675, 8.0),
-    "基隆": (25.1276, 121.7392, 8.0),
-    "嘉義": (23.4801, 120.4491, 8.0),
-    "花蓮": (23.9910, 121.6108, 8.0),
-    "屏東": (22.6762, 120.4929, 8.0),
-    "宜蘭": (24.7570, 121.7533, 8.0),
-    "彰化": (24.0518, 120.5161, 8.0),
-    "苗栗": (24.5602, 120.8214, 8.0),
-    "南投": (23.9061, 120.6942, 8.0),
-    "雲林": (23.7092, 120.4313, 8.0),
-    "台東": (22.7583, 121.1444, 8.0),
-    "澎湖": (23.5711, 119.5793, 8.0),
-    "廣州": (23.1291, 113.2644, 8.0),
-    "深圳": (22.5431, 114.0579, 8.0),
-    "澳門": (22.1987, 113.5439, 8.0),
-    "成都": (30.5728, 104.0668, 8.0),
-    "重慶": (29.4316, 106.9123, 8.0),
-    "武漢": (30.5928, 114.3055, 8.0),
-    "南京": (32.0603, 118.7969, 8.0),
-    "杭州": (30.2741, 120.1551, 8.0),
-    "西安": (34.3416, 108.9398, 8.0),
-    "昆明": (25.0389, 102.7183, 8.0),
-    "拉薩": (29.6500, 91.1000, 8.0),
-    "烏魯木齊": (43.8256, 87.6168, 8.0),
-    "天津": (39.3434, 117.3616, 8.0),
-    "瀋陽": (41.8057, 123.4315, 8.0),
-    "大連": (38.9140, 121.6147, 8.0),
-    "哈爾濱": (45.8038, 126.5350, 8.0),
-    "長春": (43.8171, 125.3235, 8.0),
-    "濟南": (36.6512, 116.9972, 8.0),
-    "青島": (36.0671, 120.3826, 8.0),
-    "鄭州": (34.7466, 113.6254, 8.0),
-    "長沙": (28.2282, 112.9388, 8.0),
-    "福州": (26.0745, 119.2965, 8.0),
-    "廈門": (24.4798, 118.0894, 8.0),
-    "南昌": (28.6820, 115.8579, 8.0),
-    "合肥": (31.8206, 117.2272, 8.0),
-    "貴陽": (26.6470, 106.6302, 8.0),
-    "南寧": (22.8170, 108.3665, 8.0),
-    "海口": (20.0174, 110.3492, 8.0),
-    "蘭州": (36.0611, 103.8343, 8.0),
-    "太原": (37.8706, 112.5489, 8.0),
-    "呼和浩特": (40.8424, 111.7490, 8.0),
-    "石家莊": (38.0428, 114.5149, 8.0),
-    "銀川": (38.4872, 106.2309, 8.0),
-    "西寧": (36.6171, 101.7782, 8.0),
-    "蘇州": (31.2990, 120.5853, 8.0),
-    "無錫": (31.4906, 120.3119, 8.0),
-    "寧波": (29.8683, 121.5440, 8.0),
-    "溫州": (28.0000, 120.6500, 8.0),
-    "珠海": (22.2710, 113.5767, 8.0),
-    "佛山": (23.0218, 113.1218, 8.0),
-    "東莞": (23.0208, 113.7518, 8.0),
-    "東京": (35.6762, 139.6503, 9.0),
-    "大阪": (34.6937, 135.5023, 9.0),
-    "京都": (35.0116, 135.7681, 9.0),
-    "首爾": (37.5665, 126.9780, 9.0),
-    "釜山": (35.1796, 129.0756, 9.0),
-    "新加坡": (1.3521, 103.8198, 8.0),
-    "吉隆坡": (3.1390, 101.6869, 8.0),
-    "曼谷": (13.7563, 100.5018, 7.0),
-    "清邁": (18.7883, 98.9853, 7.0),
-    "河內": (21.0278, 105.8342, 7.0),
-    "胡志明市": (10.8231, 106.6297, 7.0),
-    "雅加達": ((-6.2088), 106.8456, 7.0),
-    "馬尼拉": (14.5995, 120.9842, 8.0),
-    "金邊": (11.5564, 104.9282, 7.0),
-    "仰光": (16.8661, 96.1951, 6.5),
-    "新德里": (28.6139, 77.2090, 5.5),
-    "孟買": (19.0760, 72.8777, 5.5),
-    "加爾各答": (22.5726, 88.3639, 5.5),
-    "班加羅爾": (12.9716, 77.5946, 5.5),
-    "清奈": (13.0827, 80.2707, 5.5),
-    "可倫坡": (6.9271, 79.8612, 5.5),
-    "加德滿都": (27.7172, 85.3240, 5.75),
-    "達卡": (23.8103, 90.4125, 6.0),
-    "伊斯蘭堡": (33.6844, 73.0479, 5.0),
-    "卡拉奇": (24.8607, 67.0011, 5.0),
-    "喀布爾": (34.5553, 69.2075, 4.5),
-    "德黑蘭": (35.6892, 51.3890, 3.5),
-    "巴格達": (33.3152, 44.3661, 3.0),
-    "利雅得": (24.7136, 46.6753, 3.0),
-    "杜拜": (25.2048, 55.2708, 4.0),
-    "多哈": (25.2854, 51.5310, 3.0),
-    "安卡拉": (39.9334, 32.8597, 3.0),
-    "伊斯坦堡": (41.0082, 28.9784, 3.0),
-    "耶路撒冷": (31.7683, 35.2137, 2.0),
-    "開羅": (30.0444, 31.2357, 2.0),
-    "奈洛比": ((-1.2921), 36.8219, 3.0),
-    "約翰尼斯堡": ((-26.2041), 28.0473, 2.0),
-    "開普敦": ((-33.9249), 18.4241, 2.0),
-    "拉哥斯": (6.5244, 3.3792, 1.0),
-    "阿克拉": (5.6037, (-0.1870), 0.0),
-    "卡薩布蘭卡": (33.5731, (-7.5898), 1.0),
-    "烏蘭巴托": (47.9077, 106.8832, 8.0),
-    "莫斯科": (55.7558, 37.6173, 3.0),
-    "聖彼得堡": (59.9343, 30.3351, 3.0),
-    "倫敦": (51.5074, (-0.1278), 0.0),
-    "巴黎": (48.8566, 2.3522, 1.0),
-    "柏林": (52.5200, 13.4050, 1.0),
-    "羅馬": (41.9028, 12.4964, 1.0),
-    "馬德里": (40.4168, (-3.7038), 1.0),
-    "里斯本": (38.7223, (-9.1393), 0.0),
-    "阿姆斯特丹": (52.3676, 4.9041, 1.0),
-    "布魯塞爾": (50.8503, 4.3517, 1.0),
-    "維也納": (48.2082, 16.3738, 1.0),
-    "蘇黎世": (47.3769, 8.5417, 1.0),
-    "斯德哥爾摩": (59.3293, 18.0686, 1.0),
-    "奧斯陸": (59.9139, 10.7522, 1.0),
-    "哥本哈根": (55.6761, 12.5683, 1.0),
-    "赫爾辛基": (60.1699, 24.9384, 2.0),
-    "華沙": (52.2297, 21.0122, 1.0),
-    "布拉格": (50.0755, 14.4378, 1.0),
-    "布達佩斯": (47.4979, 19.0402, 1.0),
-    "雅典": (37.9838, 23.7275, 2.0),
-    "都柏林": (53.3498, (-6.2603), 0.0),
-    "紐約": (40.7128, (-74.0060), -5.0),
-    "洛杉磯": (34.0522, (-118.2437), -8.0),
-    "芝加哥": (41.8781, (-87.6298), -6.0),
-    "休斯頓": (29.7604, (-95.3698), -6.0),
-    "舊金山": (37.7749, (-122.4194), -8.0),
-    "華盛頓": (38.9072, (-77.0369), -5.0),
-    "多倫多": (43.6532, (-79.3832), -5.0),
-    "溫哥華": (49.2827, (-123.1207), -8.0),
-    "蒙特利爾": (45.5017, (-73.5673), -5.0),
-    "墨西哥城": (19.4326, (-99.1332), -6.0),
-    "哈瓦那": (23.1136, (-82.3666), -5.0),
-    "波哥大": (4.7110, (-74.0721), -5.0),
-    "利馬": ((-12.0464), (-77.0428), -5.0),
-    "聖保羅": ((-23.5505), (-46.6333), -3.0),
-    "里約熱內盧": ((-22.9068), (-43.1729), -3.0),
-    "布宜諾斯艾利斯": ((-34.6037), (-58.3816), -3.0),
-    "聖地亞哥": ((-33.4489), (-70.6693), -4.0),
-    "悉尼": ((-33.8688), 151.2093, 10.0),
-    "墨爾本": ((-37.8136), 144.9631, 10.0),
-    "奧克蘭": ((-36.8485), 174.7633, 12.0),
-    "檀香山": (21.3069, (-157.8583), -10.0),
-    "自訂": (0.0, 0.0, 0.0),
-}
+_CITY_DATA_DIR = Path(__file__).resolve().parent / "tools" / "cities"
+_CITY_WORLD_LIMIT = 3000
+_CHINA_REGION_TZ = 8.0
 
-CITY_NAMES_EN = {
-    "香港": "Hong Kong",
-    "北京": "Beijing",
-    "上海": "Shanghai",
-    "台北": "Taipei",
-    "高雄": "Kaohsiung",
-    "台中": "Taichung",
-    "台南": "Tainan",
-    "新北": "New Taipei",
-    "桃園": "Taoyuan",
-    "新竹": "Hsinchu",
-    "基隆": "Keelung",
-    "嘉義": "Chiayi",
-    "花蓮": "Hualien",
-    "屏東": "Pingtung",
-    "宜蘭": "Yilan",
-    "彰化": "Changhua",
-    "苗栗": "Miaoli",
-    "南投": "Nantou",
-    "雲林": "Yunlin",
-    "台東": "Taitung",
-    "澎湖": "Penghu",
-    "廣州": "Guangzhou",
-    "深圳": "Shenzhen",
-    "澳門": "Macau",
-    "成都": "Chengdu",
-    "重慶": "Chongqing",
-    "武漢": "Wuhan",
-    "南京": "Nanjing",
-    "杭州": "Hangzhou",
-    "西安": "Xi'an",
-    "昆明": "Kunming",
-    "拉薩": "Lhasa",
-    "烏魯木齊": "Urumqi",
-    "天津": "Tianjin",
-    "瀋陽": "Shenyang",
-    "大連": "Dalian",
-    "哈爾濱": "Harbin",
-    "長春": "Changchun",
-    "濟南": "Jinan",
-    "青島": "Qingdao",
-    "鄭州": "Zhengzhou",
-    "長沙": "Changsha",
-    "福州": "Fuzhou",
-    "廈門": "Xiamen",
-    "南昌": "Nanchang",
-    "合肥": "Hefei",
-    "貴陽": "Guiyang",
-    "南寧": "Nanning",
-    "海口": "Haikou",
-    "蘭州": "Lanzhou",
-    "太原": "Taiyuan",
-    "呼和浩特": "Hohhot",
-    "石家莊": "Shijiazhuang",
-    "銀川": "Yinchuan",
-    "西寧": "Xining",
-    "蘇州": "Suzhou",
-    "無錫": "Wuxi",
-    "寧波": "Ningbo",
-    "溫州": "Wenzhou",
-    "珠海": "Zhuhai",
-    "佛山": "Foshan",
-    "東莞": "Dongguan",
-    "東京": "Tokyo",
-    "大阪": "Osaka",
-    "京都": "Kyoto",
-    "首爾": "Seoul",
-    "釜山": "Busan",
-    "新加坡": "Singapore",
-    "吉隆坡": "Kuala Lumpur",
-    "曼谷": "Bangkok",
-    "清邁": "Chiang Mai",
-    "河內": "Hanoi",
-    "胡志明市": "Ho Chi Minh City",
-    "雅加達": "Jakarta",
-    "馬尼拉": "Manila",
-    "金邊": "Phnom Penh",
-    "仰光": "Yangon",
-    "新德里": "New Delhi",
-    "孟買": "Mumbai",
-    "加爾各答": "Kolkata",
-    "班加羅爾": "Bangalore",
-    "清奈": "Chennai",
-    "可倫坡": "Colombo",
-    "加德滿都": "Kathmandu",
-    "達卡": "Dhaka",
-    "伊斯蘭堡": "Islamabad",
-    "卡拉奇": "Karachi",
-    "喀布爾": "Kabul",
-    "德黑蘭": "Tehran",
-    "巴格達": "Baghdad",
-    "利雅得": "Riyadh",
-    "杜拜": "Dubai",
-    "多哈": "Doha",
-    "安卡拉": "Ankara",
-    "伊斯坦堡": "Istanbul",
-    "耶路撒冷": "Jerusalem",
-    "開羅": "Cairo",
-    "奈洛比": "Nairobi",
-    "約翰尼斯堡": "Johannesburg",
-    "開普敦": "Cape Town",
-    "拉哥斯": "Lagos",
-    "阿克拉": "Accra",
-    "卡薩布蘭卡": "Casablanca",
-    "烏蘭巴托": "Ulaanbaatar",
-    "莫斯科": "Moscow",
-    "聖彼得堡": "Saint Petersburg",
-    "倫敦": "London",
-    "巴黎": "Paris",
-    "柏林": "Berlin",
-    "羅馬": "Rome",
-    "馬德里": "Madrid",
-    "里斯本": "Lisbon",
-    "阿姆斯特丹": "Amsterdam",
-    "布魯塞爾": "Brussels",
-    "維也納": "Vienna",
-    "蘇黎世": "Zurich",
-    "斯德哥爾摩": "Stockholm",
-    "奧斯陸": "Oslo",
-    "哥本哈根": "Copenhagen",
-    "赫爾辛基": "Helsinki",
-    "華沙": "Warsaw",
-    "布拉格": "Prague",
-    "布達佩斯": "Budapest",
-    "雅典": "Athens",
-    "都柏林": "Dublin",
-    "紐約": "New York",
-    "洛杉磯": "Los Angeles",
-    "芝加哥": "Chicago",
-    "休斯頓": "Houston",
-    "舊金山": "San Francisco",
-    "華盛頓": "Washington D.C.",
-    "多倫多": "Toronto",
-    "溫哥華": "Vancouver",
-    "蒙特利爾": "Montreal",
-    "墨西哥城": "Mexico City",
-    "哈瓦那": "Havana",
-    "波哥大": "Bogota",
-    "利馬": "Lima",
-    "聖保羅": "São Paulo",
-    "里約熱內盧": "Rio de Janeiro",
-    "布宜諾斯艾利斯": "Buenos Aires",
-    "聖地亞哥": "Santiago",
-    "悉尼": "Sydney",
-    "墨爾本": "Melbourne",
-    "奧克蘭": "Auckland",
-    "檀香山": "Honolulu",
-    "自訂": "Custom",
-}
 
-# ============================================================
-# 地區分組 — Region → City cascading selector
-# ============================================================
-CITY_REGIONS = {
-    "region_hk_macau": ["香港", "澳門"],
-    "region_taiwan": [
-        "台北", "高雄", "台中", "台南", "新北", "桃園", "新竹",
-        "基隆", "嘉義", "花蓮", "屏東", "宜蘭", "彰化", "苗栗",
-        "南投", "雲林", "台東", "澎湖",
-    ],
-    "region_mainland_south": [
-        "廣州", "深圳", "珠海", "佛山", "東莞", "海口", "南寧",
-    ],
-    "region_mainland_east": [
-        "上海", "南京", "杭州", "蘇州", "無錫", "寧波", "溫州",
-        "合肥", "福州", "廈門", "南昌", "濟南", "青島",
-    ],
-    "region_mainland_north": [
-        "北京", "天津", "石家莊", "太原", "呼和浩特",
-        "瀋陽", "大連", "哈爾濱", "長春",
-    ],
-    "region_mainland_central": [
-        "武漢", "長沙", "鄭州", "貴陽",
-    ],
-    "region_mainland_west": [
-        "成都", "重慶", "昆明", "西安", "拉薩", "烏魯木齊",
-        "蘭州", "銀川", "西寧",
-    ],
-    "region_japan_korea": ["東京", "大阪", "京都", "首爾", "釜山"],
-    "region_southeast_asia": [
-        "新加坡", "吉隆坡", "曼谷", "清邁", "河內", "胡志明市",
-        "雅加達", "馬尼拉", "金邊", "仰光",
-    ],
-    "region_south_asia": [
-        "新德里", "孟買", "加爾各答", "班加羅爾", "清奈",
-        "可倫坡", "加德滿都", "達卡", "伊斯蘭堡", "卡拉奇",
-    ],
-    "region_middle_east": [
-        "喀布爾", "德黑蘭", "巴格達", "利雅得", "杜拜",
-        "多哈", "安卡拉", "伊斯坦堡", "耶路撒冷", "開羅",
-    ],
-    "region_africa": [
-        "奈洛比", "約翰尼斯堡", "開普敦", "拉哥斯", "阿克拉",
-        "卡薩布蘭卡",
-    ],
-    "region_russia_central_asia": [
-        "莫斯科", "聖彼得堡", "烏蘭巴托",
-    ],
-    "region_europe": [
-        "倫敦", "巴黎", "柏林", "羅馬", "馬德里", "里斯本",
-        "阿姆斯特丹", "布魯塞爾", "維也納", "蘇黎世",
-        "斯德哥爾摩", "奧斯陸", "哥本哈根", "赫爾辛基",
-        "華沙", "布拉格", "布達佩斯", "雅典", "都柏林",
-    ],
-    "region_north_america": [
-        "紐約", "洛杉磯", "芝加哥", "休斯頓", "舊金山",
-        "華盛頓", "多倫多", "溫哥華", "蒙特利爾", "墨西哥城",
-        "哈瓦那",
-    ],
-    "region_south_america": [
-        "波哥大", "利馬", "聖保羅", "里約熱內盧",
-        "布宜諾斯艾利斯", "聖地亞哥",
-    ],
-    "region_oceania": ["悉尼", "墨爾本", "奧克蘭", "檀香山"],
-    "region_custom": ["自訂"],
-}
+def _normalize_tz_from_lon(lon: float) -> float:
+    # Approximate timezone using 15° longitude per hour, rounded to nearest 0.5.
+    tz = round((float(lon) / 15.0) * 2) / 2
+    return max(-12.0, min(14.0, tz))
+
+
+def _safe_pop(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+@st.cache_data(show_spinner=False)
+def _build_city_sidebar_data() -> tuple[
+    dict[str, tuple[float, float, float]],
+    dict[str, dict[str, tuple[float, float, float]]],
+    list[str],
+]:
+    city_presets: dict[str, tuple[float, float, float]] = {}
+    city_regions: dict[str, dict[str, tuple[float, float, float]]] = {}
+
+    def _add_city(city_name: str, lat: float, lon: float, tz: float) -> None:
+        if city_name not in city_presets:
+            city_presets[city_name] = (lat, lon, tz)
+        city_regions.setdefault(city_name, {})
+
+    def _add_region(city_name: str, region_name: str, lat: float, lon: float, tz: float) -> None:
+        city_regions.setdefault(city_name, {})[region_name] = (lat, lon, tz)
+
+    # China hierarchical dataset: province/city -> district
+    china_file = _CITY_DATA_DIR / "china_cities.json"
+    if china_file.exists():
+        china_data = json.loads(china_file.read_text(encoding="utf-8"))
+
+        def _collect_china_city(city_node: dict) -> None:
+            city_name = (city_node.get("name") or "").strip()
+            center = city_node.get("center") or {}
+            if not city_name or "latitude" not in center or "longitude" not in center:
+                return
+
+            lat = float(center["latitude"])
+            lon = float(center["longitude"])
+            tz = _CHINA_REGION_TZ
+            _add_city(city_name, lat, lon, tz)
+
+            for area in city_node.get("districts", []) or []:
+                area_name = (area.get("name") or "").strip()
+                area_center = area.get("center") or {}
+                if area_name and "latitude" in area_center and "longitude" in area_center:
+                    _add_region(
+                        city_name,
+                        area_name,
+                        float(area_center["latitude"]),
+                        float(area_center["longitude"]),
+                        tz,
+                    )
+
+        for province in china_data.get("districts", []) or []:
+            province_name = province.get("name")
+            province_center = province.get("center") or {}
+            province_tz = _CHINA_REGION_TZ
+
+            city_children = [
+                c for c in (province.get("districts", []) or [])
+                if c.get("level") == "city"
+            ]
+            if city_children:
+                for city_node in city_children:
+                    _collect_china_city(city_node)
+            elif province_name and "latitude" in province_center and "longitude" in province_center:
+                # Direct-controlled municipalities / SAR fallback
+                _add_city(
+                    province_name,
+                    float(province_center["latitude"]),
+                    float(province_center["longitude"]),
+                    province_tz,
+                )
+                for area in province.get("districts", []) or []:
+                    area_name = (area.get("name") or "").strip()
+                    area_center = area.get("center") or {}
+                    if area_name and "latitude" in area_center and "longitude" in area_center:
+                        _add_region(
+                            province_name,
+                            area_name,
+                            float(area_center["latitude"]),
+                            float(area_center["longitude"]),
+                            province_tz,
+                        )
+
+    # World flat dataset: city + admin fields
+    world_file = _CITY_DATA_DIR / "cities.json"
+    if world_file.exists():
+        world_rows = json.loads(world_file.read_text(encoding="utf-8"))
+        world_rows.sort(key=lambda r: _safe_pop(r.get("pop")), reverse=True)
+
+        for row in world_rows[:_CITY_WORLD_LIMIT]:
+            name = (row.get("name") or "").strip()
+            country = (row.get("country") or "").strip()
+            if not name or "lat" not in row or "lon" not in row:
+                continue
+
+            city_label = f"{name} ({country})" if country else name
+            lat = float(row["lat"])
+            lon = float(row["lon"])
+            tz = _CHINA_REGION_TZ if country in {"CN", "HK", "MO", "TW"} else _normalize_tz_from_lon(lon)
+            _add_city(city_label, lat, lon, tz)
+
+            for region_name in [row.get("admin2"), row.get("admin1")]:
+                region = (region_name or "").strip()
+                if region:
+                    _add_region(city_label, region, lat, lon, tz)
+
+    # Custom fallback
+    city_presets["自訂"] = (0.0, 0.0, 0.0)
+    city_regions["自訂"] = {}
+
+    city_options = sorted([c for c in city_presets if c != "自訂"]) + ["自訂"]
+    return city_presets, city_regions, city_options
+
+
+CITY_PRESETS, CITY_REGION_PRESETS, CITY_OPTIONS = _build_city_sidebar_data()
+
 
 # ============================================================
 # 側邊欄 - 輸入排盤資料
@@ -1182,36 +944,35 @@ with st.sidebar:
             key="birth_time_input",
         )
 
-        # 地點輸入 — cascading Region → City selector
+        # 地點輸入 — City first, then show Region dropdown after city selected
         st.subheader(t("birth_location"))
-        _is_en = st.session_state.get("lang") == "en"
-        _region_keys = list(CITY_REGIONS.keys())
-        _selected_region = st.selectbox(
-            t("region_label"),
-            options=_region_keys,
-            index=0,  # default: 港澳
-            format_func=lambda r: t(r),
-            key="region_sel",
-        )
-        _cities_in_region = CITY_REGIONS[_selected_region]
-        _city_format = (
-            (lambda c: CITY_NAMES_EN.get(c, c))
-            if _is_en
-            else (lambda c: c)
-        )
         city = st.selectbox(
             t("city_preset"),
-            options=_cities_in_region,
-            format_func=_city_format,
+            options=CITY_OPTIONS,
             key="city_sel",
         )
+        _selected_region_name = ""
+        _selected_region_coords: tuple[float, float, float] | None = None
+
+        # 選完城市後才顯示地區 dropdown
+        if city != "自訂":
+            _regions_for_city = sorted(CITY_REGION_PRESETS.get(city, {}).keys())
+            if _regions_for_city:
+                _selected_region_name = st.selectbox(
+                    t("region_label"),
+                    options=_regions_for_city,
+                    key="subregion_sel",
+                )
+                _selected_region_coords = CITY_REGION_PRESETS[city].get(_selected_region_name)
 
         # Always show lat/lon/tz so values are visible inside the form.
         # When a preset city is selected the fields are pre-populated and
         # disabled; for 自訂 (custom) they are editable.
         _is_custom = city == "自訂"
         if not _is_custom:
-            _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
+            _preset_lat, _preset_lon, _preset_tz = (
+                _selected_region_coords if _selected_region_coords is not None else CITY_PRESETS[city]
+            )
         else:
             _preset_lat = st.session_state.get("_custom_lat", 22.3193)
             _preset_lon = st.session_state.get("_custom_lon", 114.1694)
@@ -1255,7 +1016,7 @@ with st.sidebar:
         if _is_custom:
             location_name = t("custom_location")
         else:
-            location_name = CITY_NAMES_EN.get(city, city) if _is_en else city
+            location_name = f"{city} - {_selected_region_name}" if _selected_region_name else city
 
         # 性別（用於七政四餘宮位方向）
         st.subheader(t("gender_header"))
