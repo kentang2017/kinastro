@@ -897,6 +897,22 @@ with st.sidebar:
         st.session_state["birth_date_input"] = date(1990, 1, 1)
     if "birth_time_input" not in st.session_state:
         st.session_state["birth_time_input"] = time(12, 0)
+    # Place city selector outside the form so switching city reruns immediately
+    # and can sync lat/lon/timezone fields.
+    st.subheader(t("birth_location"))
+    city = st.selectbox(
+        t("city_preset"),
+        options=CITY_OPTIONS,
+        key="city_sel",
+    )
+
+    _prev_city = st.session_state.get("_prev_city_sel")
+    if _prev_city == "自訂" and city != "自訂":
+        st.session_state["_custom_lat"] = float(st.session_state.get("_lat_input", 22.3193))
+        st.session_state["_custom_lon"] = float(st.session_state.get("_lon_input", 114.1694))
+        st.session_state["_custom_tz"] = float(st.session_state.get("_tz_input", 8.0))
+    st.session_state["_prev_city_sel"] = city
+
     with st.form("birth_data_form", border=False):
         birth_date = st.date_input(
             t("birth_date"),
@@ -909,24 +925,23 @@ with st.sidebar:
             key="birth_time_input",
         )
 
-        # 地點輸入 — City preset or custom coordinates
-        st.subheader(t("birth_location"))
-        city = st.selectbox(
-            t("city_preset"),
-            options=CITY_OPTIONS,
-            key="city_sel",
-        )
-
         # Always show lat/lon/tz so values are visible inside the form.
         # When a preset city is selected the fields are pre-populated and
         # disabled; for 自訂 (custom) they are editable.
         _is_custom = city == "自訂"
         if not _is_custom:
             _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
+            st.session_state["_lat_input"] = float(_preset_lat)
+            st.session_state["_lon_input"] = float(_preset_lon)
+            st.session_state["_tz_input"] = float(_preset_tz)
         else:
             _preset_lat = st.session_state.get("_custom_lat", 22.3193)
             _preset_lon = st.session_state.get("_custom_lon", 114.1694)
             _preset_tz  = st.session_state.get("_custom_tz",  8.0)
+            if _prev_city != "自訂":
+                st.session_state["_lat_input"] = float(_preset_lat)
+                st.session_state["_lon_input"] = float(_preset_lon)
+                st.session_state["_tz_input"] = float(_preset_tz)
 
         _coord_col1, _coord_col2 = st.columns(2)
         with _coord_col1:
