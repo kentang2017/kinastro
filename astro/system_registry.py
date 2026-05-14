@@ -1168,6 +1168,32 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_bintang_duabelas",
+    name_zh="馬來十二星宮",
+    name_en="Bintang Duabelas",
+    category="cat_asian",
+    icon="⭐",
+    tab_key="tab_bintang_duabelas",
+    desc_key="desc_bintang_duabelas",
+    spinner_key="spinner_bintang_duabelas",
+    hint_key="sys_hint_bintang_duabelas",
+    tags=[
+        "bintang duabelas",
+        "malay",
+        "jawi",
+        "abjad",
+        "hisab nama",
+        "planetary hours",
+        "asian",
+    ],
+    maturity="beta",
+    accent_color=_a("cat_asian"),
+    origin_culture="Malay / Nusantara",
+    tradition_period="Islamic Malay manuscripts",
+    ai_persona_key="info_bintang_duabelas_prompt",
+))
+
+_reg(System(
     id="tab_zurkhai",
     name_zh="蒙古祖爾海",
     name_en="Mongolian Zurkhai",
