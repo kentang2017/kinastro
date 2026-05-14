@@ -89,6 +89,7 @@ from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.jawa_weton.calculator import WetonCalculator, compute_weton
 from astro.jawa_weton.renderer import render_streamlit as render_jawa_weton_chart
+from astro.bintang_duabelas.renderer import render_streamlit as render_bintang_duabelas_chart
 from astro.liuyao_lifetime.calculator import compute_lifetime_hexagram
 from astro.liuyao_lifetime.renderer import render_streamlit as render_liuyao_lifetime_chart
 from astro.medical_astrology.calculator import compute_medical_chart
@@ -5861,6 +5862,25 @@ if not _engine_handled:
         else:
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_jawa_weton"))
+
+    elif _selected_system == "tab_bintang_duabelas":
+        try:
+            _default_birth_datetime = None
+            if _is_calculated:
+                _p = st.session_state["_calc_params"]
+                _default_birth_datetime = datetime(
+                    _p["year"],
+                    _p["month"],
+                    _p["day"],
+                    _p["hour"],
+                    _p["minute"],
+                )
+            st.info(t("info_bintang_duabelas_prompt"))
+            with st.spinner(t("spinner_bintang_duabelas")):
+                render_bintang_duabelas_chart(_default_birth_datetime)
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
 
     elif _selected_system == "tab_polynesian":
         if _is_calculated:

@@ -316,6 +316,10 @@ TRANSLATIONS = {
         "zh": "🏺 爪哇 Weton / Primbon",
         "en": "🏺 Javanese Weton / Primbon",
     },
+    "tab_bintang_duabelas": {
+        "zh": "⭐ 馬來十二星宮",
+        "en": "⭐ Bintang Duabelas",
+    },
     "tab_polynesian": {
         "zh": "🌺 波利尼西亞／夏威夷星辰知識",
         "en": "🌺 Polynesian / Hawaiian Star Lore",
@@ -468,6 +472,10 @@ TRANSLATIONS = {
     "spinner_jawa_weton": {
         "zh": "正在計算爪哇 Weton 排盤...",
         "en": "Calculating Javanese Weton chart...",
+    },
+    "spinner_bintang_duabelas": {
+        "zh": "正在整理 Bintang Duabelas 工具...",
+        "en": "Preparing Bintang Duabelas tools...",
     },
     "spinner_polynesian": {
         "zh": "正在計算夏威夷星辰排盤...",
@@ -1138,6 +1146,33 @@ a combination of Saptawara (7-day week) × Pancawara (5-day market week) = 35 de
 - **Neptu**: Numerological value used for marriage compatibility and electional purposes
 - **35-day Weton cycle**: 7 × 5 = 35 unique Weton combinations repeating every 35 days
 - **Marriage compatibility**: Sum of two Weton Neptus mapped to classical Primbon results
+""",
+    },
+    "desc_bintang_duabelas": {
+        "zh": """
+### 什麼是 Bintang Duabelas？
+
+**Bintang Duabelas** 是馬來－阿拉伯傳統的數理與十二宮工具箱，結合 **Abjad** 字母數值、
+**Hisab Nama** 姓名餘數法、**十二星宮**、**行星時辰** 與 **Azimat** 實務。
+
+- **Abjad / Jawi 姓名數值**：把阿拉伯字母或 Jawi 姓名換算成數值
+- **Hisab Nama**：用模數餘數推算疾病來源、婚姻相合、胎兒占與失蹤占
+- **十二星宮**：以本人與母名決定對應星宮與十二宮落點
+- **行星時辰**：依星期與晝夜序列判斷吉時與凶時
+- **Azimat**：依用途提供護符文字、製作時機與簡要指引
+""",
+        "en": """
+### What is Bintang Duabelas?
+
+**Bintang Duabelas** is a Malay-Arabic practical toolkit combining **Abjad** letter values,
+**Hisab Nama** remainder divination, the **twelve star houses**, **planetary hours**, and
+recommended **Azimat** talisman recipes.
+
+- **Abjad / Jawi name values**: Convert Arabic or Jawi names into numerical totals
+- **Hisab Nama**: Use modular remainders for illness source, marriage compatibility, fetal, and missing-person readings
+- **Twelve star houses**: Map the querent and mother-name total to a star sign and house
+- **Planetary hours**: Read auspicious and difficult hours from weekday day/night sequences
+- **Azimat**: Browse talisman texts, timing, and practical preparation notes
 """,
     },
     "desc_polynesian": {
@@ -2020,6 +2055,10 @@ transmitted by **Chen Xiyi**.
     "sys_hint_mahabote": {"zh": "緬甸／撣族 Mahabote 深度排盤", "en": "Burmese/Shan Mahabote deep astrology"},
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
     "sys_hint_jawa_weton": {"zh": "爪哇 Weton 命理 + 合婚計算", "en": "Javanese Weton destiny & marriage compatibility"},
+    "sys_hint_bintang_duabelas": {
+        "zh": "馬來 Jawi Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat",
+        "en": "Malay Jawi Abjad, Hisab Nama, twelve houses, planetary hours, and Azimat",
+    },
     "sys_hint_polynesian": {"zh": "夏威夷 / 玻里尼西亞星辰知識與航海星羅盤", "en": "Hawaiian / Polynesian Star Lore & Navigation Compass"},
     "sys_hint_andean": {
         "zh": "印加天河（Mayu）、暗星宿（Yana Phuyu）、南十字 Chakana、昴宿穀倉預兆",
@@ -4143,6 +4182,10 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_andean_prompt": {
         "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看你在印加天河（Mayu）中的暗星宿守護、出生動物靈，以及銀河占星解讀。",
         "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to see your Andean Mayu sky map, dark-cloud constellation guardians, and birth animal spirit.",
+    },
+    "info_bintang_duabelas_prompt": {
+        "zh": "👈 直接在頁面內輸入姓名、星期或時間，即可使用 Bintang Duabelas 的 Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat 工具。",
+        "en": "👈 Enter names, weekday, or time directly on the page to use the Bintang Duabelas Abjad, Hisab Nama, twelve-house, planetary-hour, and Azimat tools.",
     },
     # ── Astronomical Geomancy (地占占星) ───────────────────────────────────
     "tab_astro_geomancy": {
