@@ -710,13 +710,14 @@ def _build_price_forecast_profile(
     ratio_bias = ((ratio_value - _RATIO_CENTER) / _RATIO_BIAS_DIVISOR) * _RATIO_BIAS_WEIGHT
     gann_bias = _clamp(gann_total / 20.0, -0.25, 0.25)
     trend_factor = _clamp(1.0 + score_boost + ratio_bias + gann_bias, _MIN_TREND_FACTOR, _MAX_TREND_FACTOR)
+    cycle_factor = 0.25 if gann_total > 0 else (-0.25 if gann_total < 0 else 0.0)
 
     composite_score = (
         ((ratio_value - 50.0) / 15.0)
         + _clamp(total_score / 4.0, -3.0, 3.0)
         + _clamp(gann_total / 4.0, -3.0, 3.0)
         + _clamp(aspect_balance * 0.85, -2.4, 2.4)
-        + cycle_alignment * (0.25 if gann_total > 0 else -0.25 if gann_total < 0 else 0.0)
+        + cycle_alignment * cycle_factor
     )
 
     regime_key = "sideways"
@@ -1000,10 +1001,12 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
     ratio = stock_data.price_ratio if stock_data.price_ratio is not None else 50.0
     total_score = stock_data.daily_fortune.total_score if stock_data.daily_fortune else 0
     gann_context = None
+    gann_error = None
     try:
         gann_context = _build_gann_stock_context(ipo_date, query_date, query_hour, timezone)
-    except Exception:
+    except Exception as exc:
         gann_context = None
+        gann_error = str(exc)
 
     forecast = _build_price_forecast_profile(
         current=current,
@@ -1046,6 +1049,11 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
               <span style="background:rgba(248,113,113,0.15);border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:0.8em;">
                 負向守照 {forecast["negative_aspects"]}
               </span>
+              {(
+                  f'<span style="background:rgba(251,146,60,0.14);border-radius:6px;padding:4px 10px;color:#fdba74;font-size:0.8em;">'
+                  f'江恩模組回退：{escape(gann_error[:48])}'
+                  f'</span>'
+              ) if gann_error else ""}
             </div>
         </div>
         """,
