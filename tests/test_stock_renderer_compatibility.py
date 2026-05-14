@@ -68,7 +68,7 @@ def test_merge_wuxing_distributions_sums_each_element(financial_modules):
     assert merged == {"木": 2, "火": 1, "土": 1, "金": 2, "水": 1}
 
 
-def test_overall_compatibility_uses_combined_name_and_ticker_distribution(financial_modules):
+def test_composite_compatibility_grade_with_merged_distributions(financial_modules):
     name_wuxing = financial_modules["astro.qizheng.financial.name_wuxing"]
     stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
 

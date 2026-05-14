@@ -12,6 +12,7 @@ Streamlit UI，包含：
 from __future__ import annotations
 
 import math
+from html import escape
 from datetime import date, datetime, timezone as tz_cls, timedelta
 from typing import Optional
 
@@ -1152,10 +1153,11 @@ def _render_compatibility_card(
     score_icon = _GRADE_ICONS.get(grade_info["grade"], "🔵")
     source_html = ""
     if source_text:
+        escaped_source_text = escape(source_text)
         source_html = (
             f'<div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">'
-            f'綜合來源：{source_text}'
-            f'<span style="color:#7f8ea6;"> / Combined sources: {source_text}</span>'
+            f'綜合來源：{escaped_source_text}'
+            f'<span style="color:#7f8ea6;"> / Combined sources: {escaped_source_text}</span>'
             f'</div>'
         )
 
