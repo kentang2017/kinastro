@@ -135,7 +135,7 @@ def _hour_ring_trace(
 ) -> go.Barpolar:
     """建立日時/夜時的同心圓 trace。"""
     phase_segments = [segment for segment in segments if segment.phase == phase]
-    radius = 0.82 if phase == "day" else 0.82
+    radius = 0.82
     base = 0.95 if phase == "day" else 2.0
     return go.Barpolar(
         r=[radius] * len(phase_segments),
