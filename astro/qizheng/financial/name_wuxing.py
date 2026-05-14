@@ -375,7 +375,7 @@ def _match_keyword_distribution(
     unfavourable: dict[str, str],
     *,
     favourable_weight: float,
-    unfavourable_weight: float,
+    unfavourable_element_weight: float,
 ) -> tuple[dict[str, float], list[dict[str, str]]]:
     dist = _zero_distribution()
     hits: list[dict[str, str]] = []
@@ -388,7 +388,7 @@ def _match_keyword_distribution(
 
     for key, element in unfavourable.items():
         if key.lower() in normalized_text:
-            dist[element] += unfavourable_weight
+            dist[element] += unfavourable_element_weight
             hits.append({"keyword": key, "element": element, "effect": "unfavourable"})
 
     return dist, hits
@@ -440,7 +440,7 @@ def analyze_name_wuxing(name: str) -> dict:
         _FAVOURABLE_NAME_KEYWORDS_ZH,
         _UNFAVOURABLE_NAME_KEYWORDS_ZH,
         favourable_weight=1.0,
-        unfavourable_weight=1.2,
+        unfavourable_element_weight=1.2,
     )
 
     return {
@@ -497,7 +497,7 @@ def analyze_english_name_wuxing(name: str) -> dict:
         _FAVOURABLE_KEYWORDS_EN,
         _UNFAVOURABLE_KEYWORDS_EN,
         favourable_weight=1.2,
-        unfavourable_weight=1.2,
+        unfavourable_element_weight=1.2,
     )
 
     return {
@@ -552,7 +552,7 @@ def analyze_ticker_wuxing(ticker: str) -> dict:
         dist.setdefault(el, 0)
 
     dominant = dist.most_common(1)[0][0] if digits_data else "土"
-    lucky_digit_count = sum(1 for d in digits if d in {"3", "8", "9"})
+    lucky_digit_count = sum(1 for d in digits if d in {"3", "5", "8", "9"})
     suppressive_digit_count = sum(1 for d in digits if d in {"0", "1", "2", "6", "7"})
     numerology_score = lucky_digit_count * 1.8 - suppressive_digit_count * 1.4
 

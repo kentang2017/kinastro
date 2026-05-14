@@ -1087,7 +1087,7 @@ def _compatibility_grade(
     user_profile_note: str = "",
 ) -> dict[str, str]:
     """將五行關係分數轉為契合評級（S~F），加入身強弱與用忌神邏輯。"""
-    from .name_wuxing import WUXING_KE, WUXING_KEME, WUXING_SHENGME
+    from .name_wuxing import WUXING_KE, WUXING_KEME, WUXING_SHENG, WUXING_SHENGME
 
     total_a = sum(bazi_distribution.values()) or 1
     total_b = sum(stock_distribution.values()) or 1
@@ -1100,7 +1100,7 @@ def _compatibility_grade(
     support_ratio = stock_ratio.get(day_master_element, 0.0) + stock_ratio.get(support_el, 0.0)
     pressure_ratio = stock_ratio.get(pressure_el, 0.0)
     wealth_ratio = stock_ratio.get(wealth_el, 0.0)
-    drain_ratio = stock_ratio.get(WUXING_SHENGME.get(wealth_el, "土"), 0.0)
+    drain_ratio = stock_ratio.get(WUXING_SHENG.get(day_master_element, "土"), 0.0)
 
     score = 50.0
     score += cmp.get("score", 0) * 11.5
@@ -1193,7 +1193,7 @@ def _merge_weighted_wuxing_distributions(
 
 def _get_day_master_profile(bazi_result: dict) -> tuple[str, str]:
     """回傳日主五行與簡化身強弱描述。"""
-    from .name_wuxing import WUXING_SHENGME
+    from .name_wuxing import WUXING_KE, WUXING_KEME, WUXING_SHENGME
 
     day_master = "火"
     for pillar in bazi_result.get("pillars", []):
@@ -1203,8 +1203,8 @@ def _get_day_master_profile(bazi_result: dict) -> tuple[str, str]:
 
     dist = bazi_result.get("distribution", {})
     support = dist.get(day_master, 0) + dist.get(WUXING_SHENGME.get(day_master, "木"), 0)
-    pressure = dist.get("金", 0) + dist.get("水", 0) if day_master == "火" else 0
-    profile = "身弱" if support <= 2 or pressure >= 3 else "身旺"
+    pressure = dist.get(WUXING_KEME.get(day_master, "金"), 0) + dist.get(WUXING_KE.get(day_master, "土"), 0)
+    profile = "身弱" if support + 1 < pressure or support <= 2 else "身旺"
     return day_master, profile
 
 
