@@ -430,9 +430,22 @@ def analyze_ticker_wuxing(ticker: str) -> dict:
     }
 
 
-def get_bazi_wuxing(year: int, month: int, day: int, hour: int = 12) -> dict:
+def get_bazi_wuxing(
+    year: int,
+    month: int,
+    day: int,
+    hour: int = 12,
+    include_hour: bool = True,
+) -> dict:
     """
-    從出生日期取得八字四柱五行分佈。
+    從出生日期取得八字五行分佈（可選擇是否包含時柱）。
+
+    Args:
+        year: 出生年
+        month: 出生月
+        day: 出生日
+        hour: 出生時（0-23），僅在 include_hour=True 時使用
+        include_hour: 是否納入時柱（預設 True）
 
     Returns:
         {
@@ -461,13 +474,14 @@ def get_bazi_wuxing(year: int, month: int, day: int, hour: int = 12) -> dict:
         mgz = cdate.getMonthGZ()
         dgz = cdate.getDayGZ()
 
-        hgz = cdate.getHourGZ(hour)
         pillar_data = [
             ("年柱", TIANGAN[ygz.tg], DIZHI[ygz.dz]),
             ("月柱", TIANGAN[mgz.tg], DIZHI[mgz.dz]),
             ("日柱", TIANGAN[dgz.tg], DIZHI[dgz.dz]),
-            ("時柱", TIANGAN[hgz.tg], DIZHI[hgz.dz]),
         ]
+        if include_hour:
+            hgz = cdate.getHourGZ(hour)
+            pillar_data.append(("時柱", TIANGAN[hgz.tg], DIZHI[hgz.dz]))
 
         dist: Counter = Counter()
         pillars = []
