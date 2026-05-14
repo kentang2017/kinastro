@@ -903,7 +903,7 @@ def _build_city_sidebar_data() -> tuple[
     return city_presets, city_regions, city_options
 
 
-CITY_PRESETS, CITY_REGION_PRESETS, CITY_OPTIONS = _build_city_sidebar_data()
+CITY_PRESETS, _, CITY_OPTIONS = _build_city_sidebar_data()
 
 
 # ============================================================
@@ -944,35 +944,20 @@ with st.sidebar:
             key="birth_time_input",
         )
 
-        # 地點輸入 — City first, then show Region dropdown after city selected
+        # 地點輸入 — City preset or custom coordinates
         st.subheader(t("birth_location"))
         city = st.selectbox(
             t("city_preset"),
             options=CITY_OPTIONS,
             key="city_sel",
         )
-        _selected_region_name = ""
-        _selected_region_coords: tuple[float, float, float] | None = None
-
-        # 選完城市後才顯示地區 dropdown
-        if city != "自訂":
-            _regions_for_city = sorted(CITY_REGION_PRESETS.get(city, {}).keys())
-            if _regions_for_city:
-                _selected_region_name = st.selectbox(
-                    t("region_label"),
-                    options=_regions_for_city,
-                    key="subregion_sel",
-                )
-                _selected_region_coords = CITY_REGION_PRESETS[city].get(_selected_region_name)
 
         # Always show lat/lon/tz so values are visible inside the form.
         # When a preset city is selected the fields are pre-populated and
         # disabled; for 自訂 (custom) they are editable.
         _is_custom = city == "自訂"
         if not _is_custom:
-            _preset_lat, _preset_lon, _preset_tz = (
-                _selected_region_coords if _selected_region_coords is not None else CITY_PRESETS[city]
-            )
+            _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
         else:
             _preset_lat = st.session_state.get("_custom_lat", 22.3193)
             _preset_lon = st.session_state.get("_custom_lon", 114.1694)
@@ -1016,7 +1001,7 @@ with st.sidebar:
         if _is_custom:
             location_name = t("custom_location")
         else:
-            location_name = f"{city} - {_selected_region_name}" if _selected_region_name else city
+            location_name = city
 
         # 性別（用於七政四餘宮位方向）
         st.subheader(t("gender_header"))
