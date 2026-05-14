@@ -8,6 +8,10 @@ from typing import Any
 import streamlit as st
 
 from astro.i18n import auto_cn
+from frontend.bintang_duabelas_renderer import (
+    render_planetary_hours_wheel,
+    render_twelve_houses_wheel,
+)
 
 from .core import BintangDuabelasEngine
 
@@ -72,6 +76,23 @@ def _render_hour_list(hours: list[dict[str, Any]]) -> None:
                 f"{item['fortune_zh']} · {item['start'].strftime('%H:%M')}–{item['end'].strftime('%H:%M')}"
             )
         )
+
+
+def _house_script_label(script: str) -> str:
+    labels = {
+        "zh": auto_cn("中文 / Chinese"),
+        "en": auto_cn("英文 / English"),
+        "jawi": auto_cn("Jawi / Arabic"),
+    }
+    return labels.get(script, script)
+
+
+def _script_house_name(house: dict[str, Any], script: str) -> str:
+    if script == "jawi":
+        return str(house.get("name_ar", house.get("name_malay", "—")))
+    if script == "en":
+        return str(house.get("name_en", house.get("name_malay", "—")))
+    return str(house.get("name_zh", house.get("name_malay", "—")))
 
 
 def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
@@ -166,16 +187,24 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
     with tab_stars:
         person_name = st.text_input(auto_cn("本人姓名"), key="bd_person_name")
         mother_name = st.text_input(auto_cn("母親姓名"), key="bd_mother_name")
+        house_script = st.selectbox(
+            auto_cn("宮位顯示語言"),
+            options=["zh", "en", "jawi"],
+            format_func=_house_script_label,
+            key="bd_house_script",
+        )
         house_number = st.selectbox(
             auto_cn("查看宮位"),
             options=list(range(1, 13)),
             key="bd_house_number",
         )
 
-        selected_house = engine.get_house(int(house_number))
+        houses = engine.get_all_houses()
+        highlight_house: int | None = None
         if person_name.strip() and mother_name.strip():
             sign = engine.determine_star_sign(person_name, mother_name)
             reading = engine.get_full_reading(person_name, mother_name)
+            highlight_house = int(reading["house"]["house_number"])
             _render_metrics(
                 {
                     "sign_number": sign["sign_number"],
@@ -194,6 +223,27 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
             _render_mapping(reading["house"])
         else:
             st.info(auto_cn("輸入本人與母親姓名可推算十二星宮與落宮。"))
+
+        st.subheader(auto_cn("十二星宮文化圓盤"))
+        st.caption(auto_cn("點擊輪盤扇區可快速切換下方宮位詳解。"))
+        clicked_house = render_twelve_houses_wheel(
+            houses,
+            highlight_house=highlight_house,
+            script=house_script,
+            chart_key="bd_house_wheel_chart",
+        )
+        current_house_number = int(st.session_state.get("bd_house_number", house_number))
+        if clicked_house is not None and clicked_house != current_house_number:
+            st.session_state["bd_house_number"] = clicked_house
+            st.rerun()
+
+        selected_house = engine.get_house(int(st.session_state.get("bd_house_number", house_number)))
+        st.markdown(
+            auto_cn(
+                f"**{auto_cn('當前宮位')}**：Rumah {selected_house.get('house_number')} · "
+                f"{_script_house_name(selected_house, house_script)}"
+            )
+        )
 
         with st.expander(auto_cn("宮位資料"), expanded=not (person_name.strip() and mother_name.strip())):
             _render_mapping(selected_house)
@@ -244,6 +294,8 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
         yearly = engine.get_yearly_fortune(birth_datetime=moment)
         current_hour = hour_result["current_hour"]
         day_key = engine.hours.weekday_to_day_key(moment.weekday())
+        daytime_hours = engine.hours.get_hours_for_date(moment.date(), is_night=False, sunrise=sunrise, sunset=sunset)
+        nighttime_hours = engine.hours.get_hours_for_date(moment.date(), is_night=True, sunrise=sunrise, sunset=sunset)
 
         _render_metrics(
             {
@@ -262,6 +314,14 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
                 f"**當前時辰**：第 {current_hour['hour']} 時辰 · {current_hour['fortune_zh']} · "
                 f"{current_hour['start'].strftime('%H:%M')}–{current_hour['end'].strftime('%H:%M')}"
             )
+        )
+        st.subheader(auto_cn("行星時辰輪（24 小時）"))
+        st.caption(auto_cn("內圈為日時辰，外圈為夜時辰；顏色區分吉凶屬性。"))
+        render_planetary_hours_wheel(
+            daytime_hours,
+            nighttime_hours,
+            current_hour=current_hour,
+            chart_key="bd_planetary_hours_chart",
         )
         with st.expander(auto_cn("十二時辰排程"), expanded=True):
             _render_hour_list(hour_result["hours"])
