@@ -779,11 +779,20 @@ if "_system_select" in st.session_state:
 # ============================================================
 _CITY_DATA_DIR = Path(__file__).resolve().parent / "tools" / "cities"
 _CITY_WORLD_LIMIT = 3000
+_CHINA_REGION_TZ = 8.0
 
 
 def _normalize_tz_from_lon(lon: float) -> float:
+    # Approximate timezone using 15° longitude per hour, rounded to nearest 0.5.
     tz = round((float(lon) / 15.0) * 2) / 2
     return max(-12.0, min(14.0, tz))
+
+
+def _safe_pop(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 @st.cache_data(show_spinner=False)
@@ -816,7 +825,7 @@ def _build_city_sidebar_data() -> tuple[
 
             lat = float(center["latitude"])
             lon = float(center["longitude"])
-            tz = 8.0
+            tz = _CHINA_REGION_TZ
             _add_city(city_name, lat, lon, tz)
 
             for area in city_node.get("districts", []) or []:
@@ -834,7 +843,7 @@ def _build_city_sidebar_data() -> tuple[
         for province in china_data.get("districts", []) or []:
             province_name = province.get("name")
             province_center = province.get("center") or {}
-            province_tz = 8.0
+            province_tz = _CHINA_REGION_TZ
 
             city_children = [
                 c for c in (province.get("districts", []) or [])
@@ -867,7 +876,7 @@ def _build_city_sidebar_data() -> tuple[
     world_file = _CITY_DATA_DIR / "cities.json"
     if world_file.exists():
         world_rows = json.loads(world_file.read_text(encoding="utf-8"))
-        world_rows.sort(key=lambda r: int(r.get("pop") or 0), reverse=True)
+        world_rows.sort(key=lambda r: _safe_pop(r.get("pop")), reverse=True)
 
         for row in world_rows[:_CITY_WORLD_LIMIT]:
             name = (row.get("name") or "").strip()
@@ -878,7 +887,7 @@ def _build_city_sidebar_data() -> tuple[
             city_label = f"{name} ({country})" if country else name
             lat = float(row["lat"])
             lon = float(row["lon"])
-            tz = 8.0 if country in {"CN", "HK", "MO", "TW"} else _normalize_tz_from_lon(lon)
+            tz = _CHINA_REGION_TZ if country in {"CN", "HK", "MO", "TW"} else _normalize_tz_from_lon(lon)
             _add_city(city_label, lat, lon, tz)
 
             for region_name in [row.get("admin2"), row.get("admin1")]:
@@ -890,8 +899,7 @@ def _build_city_sidebar_data() -> tuple[
     city_presets["自訂"] = (0.0, 0.0, 0.0)
     city_regions["自訂"] = {}
 
-    city_options = sorted([c for c in city_presets if c != "自訂"])
-    city_options.append("自訂")
+    city_options = sorted([c for c in city_presets if c != "自訂"]) + ["自訂"]
     return city_presets, city_regions, city_options
 
 
@@ -962,9 +970,9 @@ with st.sidebar:
         # disabled; for 自訂 (custom) they are editable.
         _is_custom = city == "自訂"
         if not _is_custom:
-            _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
-            if _selected_region_coords is not None:
-                _preset_lat, _preset_lon, _preset_tz = _selected_region_coords
+            _preset_lat, _preset_lon, _preset_tz = (
+                _selected_region_coords if _selected_region_coords is not None else CITY_PRESETS[city]
+            )
         else:
             _preset_lat = st.session_state.get("_custom_lat", 22.3193)
             _preset_lon = st.session_state.get("_custom_lon", 114.1694)
