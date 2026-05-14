@@ -1741,6 +1741,27 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_european_geomancy",
+    name_zh="歐洲地占",
+    name_en="European Geomancy",
+    category="cat_horary",
+    icon="🜃",
+    tab_key="tab_european_geomancy",
+    desc_key="desc_european_geomancy",
+    spinner_key="spinner_european_geomancy",
+    hint_key="sys_hint_european_geomancy",
+    tags=[
+        "geomancy", "european geomancy", "renaissance", "shield chart",
+        "house chart", "agrippa", "divination", "horary",
+    ],
+    maturity="beta",
+    accent_color="#8A6A3A",
+    origin_culture="European (Medieval/Renaissance)",
+    tradition_period="Medieval to Renaissance",
+    ai_persona_key="info_european_geomancy_prompt",
+))
+
+_reg(System(
     id="tab_electional",
     name_zh="擇日占星",
     name_en="Electional Astrology / Muhurta",
