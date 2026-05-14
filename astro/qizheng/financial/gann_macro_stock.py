@@ -18,6 +18,12 @@ import swisseph as swe
 
 _IMPORTANT_STARS = ("木星", "土星", "羅睺", "計都", "月孛", "紫氣")
 _ALL_QIZHENG_STARS = ("太陽", "太陰", "水星", "金星", "火星", "木星", "土星", "羅睺", "計都", "月孛", "紫氣")
+_IMPORTANT_STAR_BONUS = 1
+_CYCLE_SCORE_WEIGHT = 2
+_HIGH_RESONANCE_THRESHOLD = 8
+_MEDIUM_RESONANCE_THRESHOLD = 4
+_WEAK_RESONANCE_THRESHOLD = 1
+_SQ9_ANGLE_TO_SQRT_STEP = 1.0 / 180.0
 _ASPECT_WEIGHTS = {
     0.0: ("合", 2),
     60.0: ("六合", 1),
@@ -33,6 +39,14 @@ GANN_NATAL_PRESETS = {
     "Hang Seng（1969-11-24）": date(1969, 11, 24),
     "TSEC 台灣加權（1967-02-09）": date(1967, 2, 9),
     "SSE Composite（1990-12-19）": date(1990, 12, 19),
+}
+GANN_NATAL_DEFAULT = "Hang Seng（1969-11-24）"
+GANN_NATAL_REFERENCE_PRICES = {
+    "Dow Jones（1896-05-26）": 40000.0,
+    "S&P 500（1957-03-04）": 5000.0,
+    "Hang Seng（1969-11-24）": 20000.0,
+    "TSEC 台灣加權（1967-02-09）": 20000.0,
+    "SSE Composite（1990-12-19）": 3500.0,
 }
 
 
@@ -190,8 +204,9 @@ def build_market_natal_longitudes(
     from ..constants import FOUR_REMAINDERS, SEVEN_GOVERNORS
 
     d = _to_date(market_natal_date)
-    decimal_hour = 12.0 - timezone
-    jd = swe.julday(d.year, d.month, d.day, decimal_hour)
+    local_noon_as_utc = datetime(d.year, d.month, d.day, 12, 0) - timedelta(hours=timezone)
+    decimal_hour = local_noon_as_utc.hour + local_noon_as_utc.minute / 60.0
+    jd = swe.julday(local_noon_as_utc.year, local_noon_as_utc.month, local_noon_as_utc.day, decimal_hour)
 
     planets: dict[str, float] = {}
     for name, pid in SEVEN_GOVERNORS.items():
@@ -241,7 +256,7 @@ def evaluate_qizheng_resonance(
         matched = None
         for target, (aspect_name, base_score) in _ASPECT_WEIGHTS.items():
             if abs(diff - target) <= orb:
-                bonus = 1 if star in _IMPORTANT_STARS and base_score > 0 else 0
+                bonus = _IMPORTANT_STAR_BONUS if star in _IMPORTANT_STARS and base_score > 0 else 0
                 score = base_score + bonus
                 matched = (aspect_name, score, target)
                 break
@@ -274,9 +289,10 @@ def compute_square_of_nine_levels(
         raise ValueError("reference_price must be positive")
     root = reference_price ** 0.5
     levels: list[dict] = []
+    # 傳統近似：sqrt 軸每 +2 約對應 360°；因此 angle_step = angle * (1/180)
     for ring in range(max_ring + 1):
         for angle in range(0, 360, 45):
-            step = ring + angle / 360.0
+            step = (2.0 * ring) + (angle * _SQ9_ANGLE_TO_SQRT_STEP)
             target = (root + step) ** 2
             levels.append(
                 {
@@ -290,11 +306,11 @@ def compute_square_of_nine_levels(
 
 
 def _classify_resonance(score: int) -> str:
-    if score >= 8:
+    if score >= _HIGH_RESONANCE_THRESHOLD:
         return "高共振（時間窗 + 星曜守照齊備）"
-    if score >= 4:
+    if score >= _MEDIUM_RESONANCE_THRESHOLD:
         return "中度共振（可觀察，等待確認）"
-    if score >= 1:
+    if score >= _WEAK_RESONANCE_THRESHOLD:
         return "弱共振（僅作輔助）"
     return "低共振（不建議單獨採信）"
 
@@ -332,7 +348,7 @@ def build_gann_macro_timing(
     transit_map = transit_longitudes or get_transit_longitudes(as_of_datetime, timezone=timezone)
     qizheng_hits = evaluate_qizheng_resonance(natal_map, transit_map, orb=3.0)
 
-    cycle_score = 2 * len(near_hits)
+    cycle_score = _CYCLE_SCORE_WEIGHT * len(near_hits)
     astro_score = sum(x["score"] for x in qizheng_hits)
     total_score = cycle_score + astro_score
 
@@ -417,4 +433,3 @@ def build_gann_macro_with_dasha_context(
         "flow_year_palace": d.flow_year_palace,
     }
     return payload
-

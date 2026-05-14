@@ -13,7 +13,7 @@ from astro.qizheng.financial.gann_macro_stock import (
 
 def test_scale_cycle_to_days_basic():
     days = scale_cycle_to_days(3.5, scale=1.0, year_basis_days=360.0)
-    assert days == 1260
+    assert days == int(round(3.5 * 360.0 * 1.0))  # 3.5 年 × 360 天 = 1260
 
 
 def test_compute_biblical_cycle_dates_includes_scaled_day_for_year():
@@ -38,9 +38,9 @@ def test_evaluate_qizheng_resonance_scores():
     jupiter = next(r for r in rows if r["star"] == "木星")
     saturn = next(r for r in rows if r["star"] == "土星")
     assert jupiter["aspect"] == "合"
-    assert jupiter["score"] >= 3
+    assert jupiter["score"] == 3
     assert saturn["aspect"] == "刑"
-    assert saturn["score"] <= -2
+    assert saturn["score"] == -2
 
 
 def test_build_gann_macro_timing_with_injected_maps():

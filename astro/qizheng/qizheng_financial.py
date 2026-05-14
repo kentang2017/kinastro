@@ -30,7 +30,9 @@ from .calculator import (
 from .qizheng_transit import compute_transit
 from .constants import FIVE_ELEMENTS, TWELVE_SIGNS_WESTERN
 from .financial.gann_macro_stock import (
+    GANN_NATAL_DEFAULT,
     GANN_NATAL_PRESETS,
+    GANN_NATAL_REFERENCE_PRICES,
     build_gann_macro_timing,
     compute_square_of_nine_levels,
 )
@@ -1352,7 +1354,7 @@ def _render_macro_market(input_tz: float = 8.0):
     st.caption("時間優先 + 周期縮放 + 星曜守照共振，用於宏觀指數時窗判讀。")
 
     preset_names = list(GANN_NATAL_PRESETS.keys())
-    default_idx = preset_names.index("Hang Seng（1969-11-24）") if "Hang Seng（1969-11-24）" in preset_names else 0
+    default_idx = preset_names.index(GANN_NATAL_DEFAULT) if GANN_NATAL_DEFAULT in preset_names else 0
     selected_preset = st.selectbox(
         "指數出生圖建議 / Market Natal Preset",
         options=preset_names,
@@ -1390,7 +1392,7 @@ def _render_macro_market(input_tz: float = 8.0):
     with st.spinner("🧭 計算江恩周期共振… / Computing Gann timing resonance…"):
         gann = build_gann_macro_timing(
             market_natal_date=natal_date,
-            as_of_datetime=local_now.replace(tzinfo=None),
+            as_of_datetime=local_now,
             timezone=input_tz,
             cycle_scale=float(gann_scale),
             use_trading_days=bool(use_trading_days),
@@ -1434,7 +1436,7 @@ def _render_macro_market(input_tz: float = 8.0):
         st.write(f"- {cond}")
 
     st.markdown("**🔢 Gann Square of 9（輪中輪）參考價位**")
-    default_price = 20000.0 if "Hang Seng" in selected_preset else 5000.0
+    default_price = GANN_NATAL_REFERENCE_PRICES.get(selected_preset, 5000.0)
     ref_price = st.number_input(
         "參考價格 / Reference Price",
         min_value=0.01,
