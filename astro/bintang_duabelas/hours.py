@@ -54,6 +54,9 @@ class PlanetaryHours:
         "sabtu": [("zuhal", NAHS), ("al-mushtari", BAIK), ("al-mirrikh", NAHS), ("al-shams", BAIK), ("al-zuhrah", BAIK), ("al-utarid", CAMPUR), ("al-qamar", BAIK), ("zuhal", NAHS), ("al-mushtari", BAIK), ("al-mirrikh", NAHS), ("al-shams", BAIK), ("al-utarid", CAMPUR)],
     }
 
+    # 夜間表保留原始專案與 1957 手冊轉錄內容；
+    # 即使個別序列看似不符合一般七曜輪轉，也不主動「修正」，
+    # 以確保 KinAstro 版本忠於來源文本。
     NIGHTTIME_HOURS: dict[str, list[tuple[str, str]]] = {
         "malam_ahad": [("al-utarid", CAMPUR), ("al-utarid", CAMPUR), ("al-qamar", BAIK), ("zuhal", NAHS), ("al-mushtari", BAIK), ("al-mirrikh", NAHS), ("al-shams", BAIK), ("al-zuhrah", BAIK), ("al-utarid", CAMPUR), ("al-qamar", BAIK), ("zuhal", NAHS), ("al-mushtari", BAIK)],
         "malam_isnin": [("al-mushtari", BAIK), ("al-mirrikh", NAHS), ("al-shams", BAIK), ("al-zuhrah", BAIK), ("al-utarid", CAMPUR), ("al-qamar", BAIK), ("zuhal", NAHS), ("al-mushtari", BAIK), ("al-mirrikh", NAHS), ("al-shams", BAIK), ("al-zuhrah", BAIK), ("al-utarid", CAMPUR)],
