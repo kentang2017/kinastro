@@ -20,7 +20,7 @@ frontend/vastu_renderer.py — Vastu Purusha Mandala 互動式渲染器 + Stream
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 import streamlit as st
 
@@ -358,7 +358,7 @@ def render_vastu_mandala_html(
 
 def render_vastu_tab(
     v_chart: Optional[object] = None,
-    after_chart_hook: Optional[callable] = None,
+    after_chart_hook: Optional[Callable[[], None]] = None,
 ) -> None:
     """Streamlit Vastu 盤頁面主函數。
 

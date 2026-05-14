@@ -128,6 +128,9 @@ class VastuResult:
 # ─────────────────────────────────────────────────────────────────────────────
 
 # 吉星（benefic）與凶星（malefic）分類
+# 注意：此為簡化分類，傳統吠陀占星中水星（Mercury）為中性行星（與吉星同宮時為吉，
+# 與凶星同宮時為凶）。此處將水星歸為吉星，以取其最通用的 Vastu 分類慣例，
+# 即水星代表智慧、財務能力，對北方（財神方位）有正面影響。
 _BENEFIC_PLANETS = {"Jupiter", "Venus", "Moon", "Mercury"}
 _MALEFIC_PLANETS = {"Mars", "Saturn", "Rahu", "Ketu", "Sun"}
 

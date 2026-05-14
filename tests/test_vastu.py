@@ -128,7 +128,9 @@ class TestConstants:
         from astro.vastu.constants import ZONE_COLORS_OUTER
         valid_zones = set(ZONE_COLORS_OUTER.keys())
         for row, col, sk, zh, zone in OUTER_PADAS:
-            assert zone in valid_zones, f"外環格 {sk} 的方位 {zone} 無效"
+            assert zone in valid_zones, (
+                f"外環格 {sk}（row={row}, col={col}）的方位 {zone} 無效"
+            )
 
     def test_inner_zones_count(self) -> None:
         """INNER_ZONES 應有恰好 9 個（8 方位 + Center）。"""
