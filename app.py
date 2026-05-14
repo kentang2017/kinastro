@@ -235,9 +235,9 @@ def render_homepage():
          ["Jyotish", "紅皮書 Lal Kitab", "納迪占星", "Jaimini", "KP 占星"],
          "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
         ("🌏", "亞洲體系", "Asian Systems",
-         ["土亭數", "宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "祖爾海", "藏傳時輪金剛",
-          "九星氣學", "高棉占星", "波利尼西亞"],
-         "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
+         ["土亭數", "宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "馬來伊斯蘭占星（十二星）", "祖爾海", "藏傳時輪金剛",
+           "九星氣學", "高棉占星", "波利尼西亞"],
+          "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
         ("🕌", "中東 · 北非體系", "Middle East & North Africa",
          ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法", "柏柏爾占星", "地占占星"],
          "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
@@ -309,12 +309,12 @@ def render_homepage():
           <span class="hp-title-line2">KinAstro</span>
           <span class="hp-title-sub">{_total_systems} 體系占星排盤平台</span>
         </h1>
-        <p class="hp-desc">
-          從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
-          從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
-          紅皮書 Lal Kitab、薩珊波斯占星、<strong style="color:#A78BFA;">柏柏爾占星</strong>、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>
-          傳統卜卦占星、擇日占星、蠢子數、<strong style="color:#A78BFA;">地占占星</strong>到<strong style="color:#A78BFA;">伊特魯里亞占星</strong>——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
-        </p>
+         <p class="hp-desc">
+           從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>
+           從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>
+           紅皮書 Lal Kitab、薩珊波斯占星、<strong style="color:#A78BFA;">馬來伊斯蘭占星（Bintang Duabelas）</strong>、<strong style="color:#A78BFA;">柏柏爾占星</strong>、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>
+           傳統卜卦占星、擇日占星、蠢子數、<strong style="color:#A78BFA;">地占占星</strong>到<strong style="color:#A78BFA;">伊特魯里亞占星</strong>——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。
+         </p>
         <div class="hp-stats">
           <div class="hp-stat">
             <div class="hp-stat-num">{_total_systems}</div>
