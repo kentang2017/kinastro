@@ -79,12 +79,17 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
     engine = BintangDuabelasEngine()
 
     st.markdown(
-        "<h2 style='text-align:center;'>⭐ Bintang Duabelas ⭐</h2>",
+        "<h2 style='text-align:center;'>⭐ 馬來伊斯蘭占星 · Bintang Duabelas（十二星）⭐</h2>",
         unsafe_allow_html=True,
     )
     st.caption(
         auto_cn(
-            "馬來－阿拉伯傳統數理與十二宮工具：Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat。"
+            "馬來－伊斯蘭傳統數理與十二宮工具：Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat。"
+        )
+    )
+    st.info(
+        auto_cn(
+            "可先從 Abjad / Hisab 輸入姓名開始，再切換到十二星宮、相合占、行星時辰與 Azimat 分頁；支援 Jawi、阿拉伯字與 Romanized 名稱。"
         )
     )
 

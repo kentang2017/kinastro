@@ -317,8 +317,8 @@ TRANSLATIONS = {
         "en": "🏺 Javanese Weton / Primbon",
     },
     "tab_bintang_duabelas": {
-        "zh": "⭐ 馬來十二星宮",
-        "en": "⭐ Bintang Duabelas",
+        "zh": "⭐ 馬來伊斯蘭占星（十二星）",
+        "en": "⭐ Bintang Duabelas (Twelve Stars)",
     },
     "tab_polynesian": {
         "zh": "🌺 波利尼西亞／夏威夷星辰知識",
@@ -474,8 +474,8 @@ TRANSLATIONS = {
         "en": "Calculating Javanese Weton chart...",
     },
     "spinner_bintang_duabelas": {
-        "zh": "正在整理 Bintang Duabelas 工具...",
-        "en": "Preparing Bintang Duabelas tools...",
+        "zh": "正在整理馬來伊斯蘭占星（Bintang Duabelas）工具...",
+        "en": "Preparing Malay Islamic astrology (Bintang Duabelas) tools...",
     },
     "spinner_polynesian": {
         "zh": "正在計算夏威夷星辰排盤...",
@@ -1152,7 +1152,7 @@ a combination of Saptawara (7-day week) × Pancawara (5-day market week) = 35 de
         "zh": """
 ### 什麼是 Bintang Duabelas？
 
-**Bintang Duabelas** 是馬來－阿拉伯傳統的數理與十二宮工具箱，結合 **Abjad** 字母數值、
+**Bintang Duabelas（十二星）** 是馬來－伊斯蘭傳統的數理與十二宮工具箱，結合 **Abjad** 字母數值、
 **Hisab Nama** 姓名餘數法、**十二星宮**、**行星時辰** 與 **Azimat** 實務。
 
 - **Abjad / Jawi 姓名數值**：把阿拉伯字母或 Jawi 姓名換算成數值
@@ -1164,7 +1164,7 @@ a combination of Saptawara (7-day week) × Pancawara (5-day market week) = 35 de
         "en": """
 ### What is Bintang Duabelas?
 
-**Bintang Duabelas** is a Malay-Arabic practical toolkit combining **Abjad** letter values,
+**Bintang Duabelas (Twelve Stars)** is a Malay-Islamic practical toolkit combining **Abjad** letter values,
 **Hisab Nama** remainder divination, the **twelve star houses**, **planetary hours**, and
 recommended **Azimat** talisman recipes.
 
@@ -2056,8 +2056,8 @@ transmitted by **Chen Xiyi**.
     "sys_hint_wariga": {"zh": "巴厘島傳統 Wuku 吉凶日曆", "en": "Balinese traditional Wuku auspiciousness calendar"},
     "sys_hint_jawa_weton": {"zh": "爪哇 Weton 命理 + 合婚計算", "en": "Javanese Weton destiny & marriage compatibility"},
     "sys_hint_bintang_duabelas": {
-        "zh": "馬來 Jawi Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat",
-        "en": "Malay Jawi Abjad, Hisab Nama, twelve houses, planetary hours, and Azimat",
+        "zh": "馬來伊斯蘭占星：Jawi Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat",
+        "en": "Malay Islamic astrology: Jawi Abjad, Hisab Nama, twelve houses, planetary hours, and Azimat",
     },
     "sys_hint_polynesian": {"zh": "夏威夷 / 玻里尼西亞星辰知識與航海星羅盤", "en": "Hawaiian / Polynesian Star Lore & Navigation Compass"},
     "sys_hint_andean": {
@@ -4184,8 +4184,8 @@ Enter your birth information to look up your tree month and its poetic attribute
         "en": "👈 Enter your birth data on the left and click 'Calculate Chart' to see your Andean Mayu sky map, dark-cloud constellation guardians, and birth animal spirit.",
     },
     "info_bintang_duabelas_prompt": {
-        "zh": "👈 直接在頁面內輸入姓名、星期或時間，即可使用 Bintang Duabelas 的 Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat 工具。",
-        "en": "👈 Enter names, weekday, or time directly on the page to use the Bintang Duabelas Abjad, Hisab Nama, twelve-house, planetary-hour, and Azimat tools.",
+        "zh": "👈 直接在頁面內輸入姓名、星期或時間，即可使用馬來伊斯蘭占星 Bintang Duabelas（十二星）的 Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat 工具。",
+        "en": "👈 Enter names, weekday, or time directly on the page to use the Malay Islamic astrology Bintang Duabelas (Twelve Stars) Abjad, Hisab Nama, twelve-house, planetary-hour, and Azimat tools.",
     },
     # ── Astronomical Geomancy (地占占星) ───────────────────────────────────
     "tab_astro_geomancy": {

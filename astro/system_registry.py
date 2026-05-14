@@ -1169,8 +1169,8 @@ _reg(System(
 
 _reg(System(
     id="tab_bintang_duabelas",
-    name_zh="馬來十二星宮",
-    name_en="Bintang Duabelas",
+    name_zh="馬來伊斯蘭占星（十二星）",
+    name_en="Bintang Duabelas (Twelve Stars)",
     category="cat_asian",
     icon="⭐",
     tab_key="tab_bintang_duabelas",
@@ -1179,6 +1179,10 @@ _reg(System(
     hint_key="sys_hint_bintang_duabelas",
     tags=[
         "bintang duabelas",
+        "twelve stars",
+        "十二星",
+        "十二星宮",
+        "馬來伊斯蘭占星",
         "malay",
         "jawi",
         "abjad",
