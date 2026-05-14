@@ -29,6 +29,11 @@ from .calculator import (
 )
 from .qizheng_transit import compute_transit
 from .constants import FIVE_ELEMENTS, TWELVE_SIGNS_WESTERN
+from .financial.gann_macro_stock import (
+    GANN_NATAL_PRESETS,
+    build_gann_macro_timing,
+    compute_square_of_nine_levels,
+)
 
 
 # ============================================================
@@ -1341,6 +1346,104 @@ def _render_macro_market(input_tz: float = 8.0):
         st.dataframe(pd.DataFrame(conjs), width="stretch", hide_index=True)
     else:
         st.info("本季節圖未偵測到主要會合。")
+
+    st.divider()
+    st.markdown("## 🌀 江恩占星（Gann Astrology）x 七政四餘")
+    st.caption("時間優先 + 周期縮放 + 星曜守照共振，用於宏觀指數時窗判讀。")
+
+    preset_names = list(GANN_NATAL_PRESETS.keys())
+    default_idx = preset_names.index("Hang Seng（1969-11-24）") if "Hang Seng（1969-11-24）" in preset_names else 0
+    selected_preset = st.selectbox(
+        "指數出生圖建議 / Market Natal Preset",
+        options=preset_names,
+        index=default_idx,
+        key="gann_macro_natal_preset",
+    )
+    natal_date = GANN_NATAL_PRESETS[selected_preset]
+
+    col_g1, col_g2, col_g3 = st.columns(3)
+    with col_g1:
+        gann_scale = st.slider(
+            "周期縮放倍率 / Cycle Scale",
+            min_value=0.01,
+            max_value=1.0,
+            value=0.1,
+            step=0.01,
+            key="gann_macro_scale",
+        )
+    with col_g2:
+        cycle_orb_days = st.slider(
+            "周期容差（日） / Cycle Orb",
+            min_value=3,
+            max_value=45,
+            value=12,
+            step=1,
+            key="gann_macro_orb_days",
+        )
+    with col_g3:
+        use_trading_days = st.checkbox(
+            "以交易日縮放 / Trading-day scale",
+            value=False,
+            key="gann_macro_trading_days",
+        )
+
+    with st.spinner("🧭 計算江恩周期共振… / Computing Gann timing resonance…"):
+        gann = build_gann_macro_timing(
+            market_natal_date=natal_date,
+            as_of_datetime=local_now.replace(tzinfo=None),
+            timezone=input_tz,
+            cycle_scale=float(gann_scale),
+            use_trading_days=bool(use_trading_days),
+            cycle_orb_days=int(cycle_orb_days),
+        )
+
+    s = gann.get("scores", {})
+    st.markdown(
+        f"""
+        <div style="background:rgba(51,65,85,0.35);border:1px solid rgba(148,163,184,0.35);
+        border-radius:12px;padding:14px 16px;margin:8px 0 12px 0;">
+        <strong style="color:#c4b5fd;">共振總分 / Resonance Score：</strong>
+        <span style="color:#e2e8f0;">{s.get('total_score', 0):+d}</span>
+        &nbsp;|&nbsp;
+        <strong style="color:#c4b5fd;">分級 / Class：</strong>
+        <span style="color:#fde68a;">{s.get('classification', '—')}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    near_hits = gann.get("near_cycle_hits", [])
+    st.markdown("**⏳ 周期到期窗 / Active Biblical Timing Windows**")
+    if near_hits:
+        st.dataframe(pd.DataFrame(near_hits), width="stretch", hide_index=True)
+    else:
+        st.info("目前容差窗內無主要週期到期點。")
+
+    hits = gann.get("qizheng_resonance_hits", [])
+    st.markdown("**🪐 七政四餘守照共振 / Qizheng Resonance**")
+    if hits:
+        st.dataframe(pd.DataFrame(hits), width="stretch", hide_index=True)
+    else:
+        st.info("目前未偵測到明顯守照共振。")
+
+    st.markdown("**✅ 建議進場條件 / Suggested Entry Conditions**")
+    for cond in gann.get("entry_conditions", []):
+        st.write(f"- {cond}")
+    st.markdown("**🛑 建議出場條件 / Suggested Exit Conditions**")
+    for cond in gann.get("exit_conditions", []):
+        st.write(f"- {cond}")
+
+    st.markdown("**🔢 Gann Square of 9（輪中輪）參考價位**")
+    default_price = 20000.0 if "Hang Seng" in selected_preset else 5000.0
+    ref_price = st.number_input(
+        "參考價格 / Reference Price",
+        min_value=0.01,
+        value=float(default_price),
+        step=10.0,
+        key="gann_square_reference_price",
+    )
+    sq9 = compute_square_of_nine_levels(float(ref_price), max_ring=1)
+    st.dataframe(pd.DataFrame(sq9), width="stretch", hide_index=True)
 
 
 def _build_wealth_signals(fin: FinancialData) -> list:
