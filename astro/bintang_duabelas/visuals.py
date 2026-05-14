@@ -96,16 +96,21 @@ def build_house_wheel_segments(
         house_number = int(house["house_number"])
         is_highlighted = house_number == highlight_house
         theta_deg = 90 - idx * 30
+        name_zh = str(house.get("name_zh", "—"))
+        name_en = str(house.get("name_en", "—"))
+        name_ar = str(house.get("name_ar", "—"))
+        planet = str(house.get("planet", "—"))
+        domain_zh = str(house.get("domain_zh", "—"))
         label = f"R{house_number}"
         subtitle = _house_title(house, script)
         fill_color = "rgba(212, 175, 119, 0.88)" if is_highlighted else "rgba(0, 100, 0, 0.54)"
         border_color = "#F6D88A" if is_highlighted else "#D4AF77"
         hover_html = (
             f"<b>Rumah {house_number}</b><br>"
-            f"{house.get('name_zh', '')} / {house.get('name_en', '')}<br>"
-            f"{house.get('name_ar', '')}<br>"
-            f"Planet: {house.get('planet', '—')}<br>"
-            f"Domain: {house.get('domain_zh', '')}"
+            f"{name_zh} / {name_en}<br>"
+            f"{name_ar}<br>"
+            f"Planet: {planet}<br>"
+            f"Domain: {domain_zh}"
         )
         segments.append(
             HouseWheelSegment(

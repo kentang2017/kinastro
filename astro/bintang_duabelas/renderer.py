@@ -232,11 +232,12 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> None:
             script=house_script,
             chart_key="bd_house_wheel_chart",
         )
-        if clicked_house is not None and clicked_house != int(st.session_state["bd_house_number"]):
+        current_house_number = int(st.session_state.get("bd_house_number", house_number))
+        if clicked_house is not None and clicked_house != current_house_number:
             st.session_state["bd_house_number"] = clicked_house
             st.rerun()
 
-        selected_house = engine.get_house(int(st.session_state["bd_house_number"]))
+        selected_house = engine.get_house(int(st.session_state.get("bd_house_number", house_number)))
         st.markdown(
             auto_cn(
                 f"**{auto_cn('當前宮位')}**：Rumah {selected_house.get('house_number')} · "

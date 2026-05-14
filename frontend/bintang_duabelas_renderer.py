@@ -177,8 +177,28 @@ def _build_planetary_hours_figure(segments: list[PlanetaryHourSegment]) -> go.Fi
         margin=dict(l=12, r=12, t=22, b=12),
         showlegend=False,
     )
-    fig.add_shape(type="circle", xref="paper", yref="paper", x0=0.22, y0=0.22, x1=0.78, y1=0.78, fillcolor=_RING_DAY, line=dict(color=_GREEN_DEEP, width=1))
-    fig.add_shape(type="circle", xref="paper", yref="paper", x0=0.10, y0=0.10, x1=0.90, y1=0.90, fillcolor=_RING_NIGHT, line=dict(color=_GOLD, width=1))
+    fig.add_shape(
+        type="circle",
+        xref="paper",
+        yref="paper",
+        x0=0.22,
+        y0=0.22,
+        x1=0.78,
+        y1=0.78,
+        fillcolor=_RING_DAY,
+        line=dict(color=_GREEN_DEEP, width=1),
+    )
+    fig.add_shape(
+        type="circle",
+        xref="paper",
+        yref="paper",
+        x0=0.10,
+        y0=0.10,
+        x1=0.90,
+        y1=0.90,
+        fillcolor=_RING_NIGHT,
+        line=dict(color=_GOLD, width=1),
+    )
     fig.add_annotation(
         x=0.5,
         y=0.5,
