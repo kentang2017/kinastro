@@ -149,3 +149,84 @@ def test_weak_fire_profile_rewards_wood_fire_setup(financial_modules):
 
     assert grade["grade"] in {"A", "S"}
     assert "偏買進" in grade["advice_zh"]
+
+
+def test_price_forecast_profile_detects_bullish_regime(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    forecast = stock_renderer._build_price_forecast_profile(
+        current=120.0,
+        high=150.0,
+        low=90.0,
+        ratio=78.0,
+        total_score=8,
+        gann_context={
+            "near_cycle_hits": [{}, {}],
+            "scores": {
+                "total_score": 7,
+                "classification": "高共振",
+                "positive_aspect_count": 3,
+                "negative_aspect_count": 0,
+            },
+        },
+    )
+
+    prices = [row["price"] for row in forecast["targets"]]
+    assert forecast["regime_key"] == "bullish"
+    assert forecast["regime_zh"] == "上行趨勢"
+    assert prices == sorted(prices)
+    assert prices[-1] > 120.0
+
+
+def test_price_forecast_profile_detects_bearish_regime(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    forecast = stock_renderer._build_price_forecast_profile(
+        current=80.0,
+        high=110.0,
+        low=70.0,
+        ratio=22.0,
+        total_score=-9,
+        gann_context={
+            "near_cycle_hits": [{}],
+            "scores": {
+                "total_score": -6,
+                "classification": "低共振",
+                "positive_aspect_count": 0,
+                "negative_aspect_count": 3,
+            },
+        },
+    )
+
+    prices = [row["price"] for row in forecast["targets"]]
+    assert forecast["regime_key"] == "bearish"
+    assert forecast["regime_zh"] == "下行趨勢"
+    assert prices == sorted(prices, reverse=True)
+    assert prices[-1] < 80.0
+
+
+def test_price_forecast_profile_detects_sideways_regime(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    forecast = stock_renderer._build_price_forecast_profile(
+        current=100.0,
+        high=108.0,
+        low=92.0,
+        ratio=51.0,
+        total_score=1,
+        gann_context={
+            "near_cycle_hits": [],
+            "scores": {
+                "total_score": 0,
+                "classification": "弱共振",
+                "positive_aspect_count": 1,
+                "negative_aspect_count": 1,
+            },
+        },
+    )
+
+    prices = [row["price"] for row in forecast["targets"]]
+    assert forecast["regime_key"] == "sideways"
+    assert forecast["regime_zh"] == "橫行整理"
+    assert any(price > 100.0 for price in prices)
+    assert any(price < 100.0 for price in prices)
