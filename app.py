@@ -780,6 +780,10 @@ if "_system_select" in st.session_state:
 _CITY_DATA_DIR = Path(__file__).resolve().parent / "tools" / "cities"
 _CITY_WORLD_LIMIT = 3000
 _CHINA_REGION_TZ = 8.0
+_DEFAULT_LAT = 22.3193
+_DEFAULT_LON = 114.1694
+_DEFAULT_TZ = 8.0
+_CITY_CUSTOM_LABEL = "自訂"
 
 
 def _normalize_tz_from_lon(lon: float) -> float:
@@ -862,9 +866,9 @@ def _build_city_presets() -> tuple[
             _add_city(city_label, lat, lon, tz)
 
     # Custom fallback
-    city_presets["自訂"] = (0.0, 0.0, 0.0)
+    city_presets[_CITY_CUSTOM_LABEL] = (0.0, 0.0, 0.0)
 
-    city_options = sorted([c for c in city_presets if c != "自訂"]) + ["自訂"]
+    city_options = sorted([c for c in city_presets if c != _CITY_CUSTOM_LABEL]) + [_CITY_CUSTOM_LABEL]
     return city_presets, city_options
 
 
@@ -907,10 +911,10 @@ with st.sidebar:
     )
 
     _prev_city = st.session_state.get("_prev_city_sel")
-    if _prev_city == "自訂" and city != "自訂":
-        st.session_state["_custom_lat"] = float(st.session_state.get("_lat_input", 22.3193))
-        st.session_state["_custom_lon"] = float(st.session_state.get("_lon_input", 114.1694))
-        st.session_state["_custom_tz"] = float(st.session_state.get("_tz_input", 8.0))
+    if _prev_city == _CITY_CUSTOM_LABEL and city != _CITY_CUSTOM_LABEL:
+        st.session_state["_custom_lat"] = st.session_state.get("_lat_input", _DEFAULT_LAT)
+        st.session_state["_custom_lon"] = st.session_state.get("_lon_input", _DEFAULT_LON)
+        st.session_state["_custom_tz"] = st.session_state.get("_tz_input", _DEFAULT_TZ)
     st.session_state["_prev_city_sel"] = city
 
     with st.form("birth_data_form", border=False):
@@ -928,20 +932,20 @@ with st.sidebar:
         # Always show lat/lon/tz so values are visible inside the form.
         # When a preset city is selected the fields are pre-populated and
         # disabled; for 自訂 (custom) they are editable.
-        _is_custom = city == "自訂"
+        _is_custom = city == _CITY_CUSTOM_LABEL
         if not _is_custom:
             _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
-            st.session_state["_lat_input"] = float(_preset_lat)
-            st.session_state["_lon_input"] = float(_preset_lon)
-            st.session_state["_tz_input"] = float(_preset_tz)
+            st.session_state["_lat_input"] = _preset_lat
+            st.session_state["_lon_input"] = _preset_lon
+            st.session_state["_tz_input"] = _preset_tz
         else:
-            _preset_lat = st.session_state.get("_custom_lat", 22.3193)
-            _preset_lon = st.session_state.get("_custom_lon", 114.1694)
-            _preset_tz  = st.session_state.get("_custom_tz",  8.0)
-            if _prev_city != "自訂":
-                st.session_state["_lat_input"] = float(_preset_lat)
-                st.session_state["_lon_input"] = float(_preset_lon)
-                st.session_state["_tz_input"] = float(_preset_tz)
+            _preset_lat = st.session_state.get("_custom_lat", _DEFAULT_LAT)
+            _preset_lon = st.session_state.get("_custom_lon", _DEFAULT_LON)
+            _preset_tz  = st.session_state.get("_custom_tz",  _DEFAULT_TZ)
+            if _prev_city != _CITY_CUSTOM_LABEL:
+                st.session_state["_lat_input"] = _preset_lat
+                st.session_state["_lon_input"] = _preset_lon
+                st.session_state["_tz_input"] = _preset_tz
 
         _coord_col1, _coord_col2 = st.columns(2)
         with _coord_col1:
