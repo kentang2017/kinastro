@@ -780,6 +780,7 @@ if "_system_select" in st.session_state:
 _CITY_DATA_DIR = Path(__file__).resolve().parent / "tools" / "cities"
 _CITY_WORLD_LIMIT = 3000
 _CHINA_REGION_TZ = 8.0
+# Default custom coordinates/timezone start from Hong Kong.
 _DEFAULT_LAT = 22.3193
 _DEFAULT_LON = 114.1694
 _DEFAULT_TZ = 8.0
@@ -912,6 +913,8 @@ with st.sidebar:
 
     _prev_city = st.session_state.get("_prev_city_sel")
     if _prev_city == _CITY_CUSTOM_LABEL and city != _CITY_CUSTOM_LABEL:
+        # Persist current custom edits before switching to a preset city;
+        # they will be restored when user switches back to custom mode.
         st.session_state["_custom_lat"] = st.session_state.get("_lat_input", _DEFAULT_LAT)
         st.session_state["_custom_lon"] = st.session_state.get("_lon_input", _DEFAULT_LON)
         st.session_state["_custom_tz"] = st.session_state.get("_tz_input", _DEFAULT_TZ)
