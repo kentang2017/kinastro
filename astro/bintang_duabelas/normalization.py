@@ -154,8 +154,6 @@ class NameNormalization:
     method: str
     used_override: bool = False
 
-
-
 def detect_name_script(name: str) -> str:
     """偵測姓名腳本類型。"""
     if not name or not name.strip():
@@ -172,14 +170,10 @@ def detect_name_script(name: str) -> str:
         return _SCRIPT_ROMAN
     return _SCRIPT_EMPTY
 
-
-
 def _strip_combining_marks(text: str) -> str:
     """移除 Unicode 組合附標。"""
     normalized = unicodedata.normalize("NFKD", text)
     return "".join(char for char in normalized if not unicodedata.combining(char))
-
-
 
 def normalize_arabic_jawi_name(name: str) -> str:
     """將阿拉伯 / Jawi 姓名收斂至 Abjad 可計算形式。"""
@@ -191,8 +185,6 @@ def normalize_arabic_jawi_name(name: str) -> str:
         mapped = _ARABIC_NORMALIZATION_MAP.get(char, char)
         pieces.append(mapped)
     return "".join(pieces)
-
-
 
 def roman_to_jawi(name: str) -> NameNormalization:
     """將常見馬來 / 阿拉伯羅馬拼音保守轉寫為 Jawi。"""
@@ -244,8 +236,6 @@ def roman_to_jawi(name: str) -> NameNormalization:
         method="roman-transliteration",
         used_override=False,
     )
-
-
 
 def normalize_name(name: str, script_hint: str = "auto") -> NameNormalization:
     """依腳本提示或自動偵測結果正規化姓名。"""
