@@ -4263,6 +4263,42 @@ Enter your birth information to look up your tree month and its poetic attribute
             "This system requires no birth data — it casts the chart via traditional random point counting."
         ),
     },
+    "tab_european_geomancy": {
+        "zh": "🜃 歐洲地占",
+        "en": "🜃 European Geomancy",
+    },
+    "desc_european_geomancy": {
+        "zh": (
+            "### 歐洲地占（European Geomancy）\n\n"
+            "以文藝復興時期的歐洲地占傳統為核心：\n"
+            "- 完整 16 圖形（拉丁名、元素、行星、星座對應）\n"
+            "- 盾形圖（Shield Chart）完整鏈條：母親、女兒、姪輩、見證、判官、調解者\n"
+            "- 十二宮圖（House Chart）結合占星宮位主題\n"
+            "- 支援傳統點數、硬幣、隨機數與手動輸入起卦\n"
+            "- 提供結構化解讀與占星連結解讀，可直接餵給 AI 進行深度報告"
+        ),
+        "en": (
+            "### European Geomancy\n\n"
+            "A Renaissance-oriented implementation of classical European geomancy:\n"
+            "- Full 16 figures with Latin names and astrological correspondences\n"
+            "- Complete Shield Chart chain (mothers, daughters, nieces, witnesses, judge, reconciler)\n"
+            "- 12-house chart with astrological house topics\n"
+            "- Casting modes: traditional dots, coins, random numbers, and manual input\n"
+            "- Structured interpretation plus astrology bridge, ready for AI deep analysis"
+        ),
+    },
+    "spinner_european_geomancy": {
+        "zh": "正在生成歐洲地占圖表...",
+        "en": "Generating European Geomancy charts...",
+    },
+    "sys_hint_european_geomancy": {
+        "zh": "文藝復興歐洲地占：16圖形 × 盾形圖 × 十二宮圖",
+        "en": "Renaissance European geomancy: 16 figures × Shield Chart × House Chart",
+    },
+    "info_european_geomancy_prompt": {
+        "zh": "🜃 進入後可直接輸入問題起卦，不需要出生資料。",
+        "en": "🜃 Enter your question directly to cast; no birth data required.",
+    },
     "tab_electional": {
         "zh": "⏳ 擇日占星（Electional / Muhurta）",
         "en": "⏳ Electional Astrology / Muhurta",

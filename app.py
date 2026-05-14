@@ -213,6 +213,7 @@ from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
 from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
+from frontend.european_geomancy_renderer import render_european_geomancy
 
 
 # ============================================================
@@ -250,8 +251,8 @@ def render_homepage():
          ["醫學占星", "傷寒鈐法"],
          "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
         ("📜", "傳統卜卦占星", "Traditional Horary",
-         ["傳統卜卦占星", "擇日占星"],
-         "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
+         ["傳統卜卦占星", "擇日占星", "歐洲地占"],
+          "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
     ]
     _total_systems = sum(len(systems) for _, _, _, systems, *_ in _categories)
 
@@ -5976,6 +5977,20 @@ if not _engine_handled:
             else:
                 st.info(t("info_astro_geomancy_prompt"))
                 st.markdown(t("desc_astro_geomancy"))
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    elif _selected_system == "tab_european_geomancy":
+        try:
+            with st.spinner(t("spinner_european_geomancy")):
+                render_european_geomancy(
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_european_geomancy",
+                        st.session_state.get("_eg_reading"),
+                        btn_key="european_geomancy",
+                    )
+                )
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
