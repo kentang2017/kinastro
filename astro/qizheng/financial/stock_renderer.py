@@ -12,6 +12,7 @@ Streamlit UI，包含：
 from __future__ import annotations
 
 import math
+from html import escape
 from datetime import date, datetime, timezone as tz_cls, timedelta
 from typing import Optional
 
@@ -41,6 +42,15 @@ _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171
 _DEFAULT_IPO_DATE = date(2000, 1, 1)
 _MIXED_DOMINANCE_THRESHOLD = 0.4
 _STRONG_DOMINANCE_THRESHOLD = 0.5
+_GRADE_ICONS = {
+    "S": "👑",
+    "A": "🌟",
+    "B": "✅",
+    "C": "🔵",
+    "D": "🟡",
+    "E": "⚠️",
+    "F": "🔴",
+}
 
 
 # ============================================================
@@ -1120,6 +1130,68 @@ def _compatibility_grade(
     }
 
 
+def _merge_wuxing_distributions(*distributions: dict[str, int]) -> dict[str, int]:
+    """合併多個五行分佈，用於綜合評級。"""
+    from .name_wuxing import WUXING_ELEMENTS
+
+    merged = {element: 0 for element in WUXING_ELEMENTS}
+    for distribution in distributions:
+        for element, count in distribution.items():
+            merged[element] = merged.get(element, 0) + count
+    return merged
+
+
+def _render_compatibility_card(
+    cmp: dict,
+    grade_info: dict[str, str],
+    label_b: str,
+    *,
+    title_prefix: str = "契合評級",
+    source_text: str | None = None,
+) -> None:
+    """渲染契合評級卡片。"""
+    score_icon = _GRADE_ICONS.get(grade_info["grade"], "🔵")
+    source_html = ""
+    if source_text:
+        escaped_source_text = escape(source_text)
+        source_html = (
+            f'<div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">'
+            f'綜合來源：{escaped_source_text}'
+            f'<span style="color:#7f8ea6;"> / Combined sources: {escaped_source_text}</span>'
+            f'</div>'
+        )
+
+    st.markdown(
+        f"""
+        <div style="
+            background:rgba(20,12,40,0.55);
+            border-left:4px solid {cmp['color']};
+            border-radius:0 10px 10px 0;
+            padding:12px 16px;
+            margin-bottom:10px;
+        ">
+        <div style="font-weight:700;color:{cmp['color']};font-size:1.0em;">
+            {score_icon} {title_prefix} {grade_info['grade']} 級 · {grade_info['title_zh']}
+            <span style="font-size:0.85em;color:#9090b8;">({grade_info['title_en']})</span>
+        </div>
+        <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
+            五行關係：{cmp['relationship']}
+            <span style="color:#7f8ea6;">({cmp['relationship_en']})</span>
+        </div>
+        {source_html}
+        <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
+            命主主元素：<span style="color:{cmp['color']};">{cmp['dominant_a']}</span>
+            &nbsp;⟷&nbsp;
+            {label_b}主元素：<span style="color:{cmp['color']};">{cmp['dominant_b']}</span>
+        </div>
+        <div style="color:#d4b860;font-size:0.91em;margin-bottom:6px;">{cmp['summary_zh']}</div>
+        <div style="color:#8090a8;font-size:0.82em;">{cmp['summary_en']}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def _render_name_wuxing(stock):
     """
     渲染「名學五行分析」分頁：
@@ -1365,44 +1437,33 @@ def _render_name_wuxing(stock):
             (ticker_result["distribution"], f"股票代碼「{ticker}」數字")
         )
 
+    if comparisons:
+        combined_stock_distribution = _merge_wuxing_distributions(
+            *(dist_b for dist_b, _ in comparisons)
+        )
+        combined_source_text = " ＋ ".join(label_b for _, label_b in comparisons)
+        overall_cmp = compare_wuxing(
+            bazi_result["distribution"], "命主",
+            combined_stock_distribution, "股票綜合能量",
+        )
+        overall_grade = _compatibility_grade(
+            overall_cmp, bazi_result["distribution"], combined_stock_distribution
+        )
+        _render_compatibility_card(
+            overall_cmp,
+            overall_grade,
+            "股票綜合能量",
+            title_prefix="綜合評級",
+            source_text=combined_source_text,
+        )
+
     for dist_b, label_b in comparisons:
         cmp = compare_wuxing(
             bazi_result["distribution"], "命主",
             dist_b, label_b,
         )
         grade_info = _compatibility_grade(cmp, bazi_result["distribution"], dist_b)
-
-        score_icon = {"S": "👑", "A": "🌟", "B": "✅", "C": "🔵", "D": "🟡", "E": "⚠️", "F": "🔴"}.get(
-            grade_info["grade"], "🔵"
-        )
-        st.markdown(
-            f"""
-            <div style="
-                background:rgba(20,12,40,0.55);
-                border-left:4px solid {cmp['color']};
-                border-radius:0 10px 10px 0;
-                padding:12px 16px;
-                margin-bottom:10px;
-            ">
-            <div style="font-weight:700;color:{cmp['color']};font-size:1.0em;">
-                {score_icon} 契合評級 {grade_info['grade']} 級 · {grade_info['title_zh']}
-                <span style="font-size:0.85em;color:#9090b8;">({grade_info['title_en']})</span>
-            </div>
-            <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
-                五行關係：{cmp['relationship']}
-                <span style="color:#7f8ea6;">({cmp['relationship_en']})</span>
-            </div>
-            <div style="font-size:0.78em;color:#9090b8;margin:2px 0 8px 0;">
-                命主主元素：<span style="color:{cmp['color']};">{cmp['dominant_a']}</span>
-                &nbsp;⟷&nbsp;
-                {label_b}主元素：<span style="color:{cmp['color']};">{cmp['dominant_b']}</span>
-            </div>
-            <div style="color:#d4b860;font-size:0.91em;margin-bottom:6px;">{cmp['summary_zh']}</div>
-            <div style="color:#8090a8;font-size:0.82em;">{cmp['summary_en']}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        _render_compatibility_card(cmp, grade_info, label_b)
 
     st.caption(
         "⚠️ 契合評級僅供參考，不構成投資建議。"
