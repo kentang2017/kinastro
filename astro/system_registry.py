@@ -1044,6 +1044,25 @@ _reg(System(
     ai_persona_key="info_kp_prompt",
 ))
 
+_reg(System(
+    id="tab_vastu",
+    name_zh="吠陀風水",
+    name_en="Vastu Shastra",
+    category="cat_indian",
+    icon="🪔",
+    tab_key="tab_vastu",
+    desc_key="desc_vastu",
+    spinner_key="spinner_vastu",
+    hint_key="sys_hint_vastu",
+    tags=["vastu", "vedic", "indian", "architecture", "directional", "mandala", "popular"],
+    maturity="core",
+    accent_color="#FF9F1C",  # 橘金——Vastu 曼荼羅主題色
+    default_ayanamsa="Lahiri",
+    origin_culture="Indian",
+    tradition_period="Vedic (Mayamata, Manasara, Bṛhat Saṃhitā)",
+    ai_persona_key="info_vastu_prompt",
+))
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_asian — 亞洲體系 🌏

@@ -276,6 +276,10 @@ TRANSLATIONS = {
         "zh": "🙏 印度占星",
         "en": "🙏 Indian Astrology",
     },
+    "tab_vastu": {
+        "zh": "🪔 吠陀風水",
+        "en": "🪔 Vastu Shastra",
+    },
     "tab_sukkayodo": {
         "zh": "🈳 日本宿曜道",
         "en": "🈳 Sukkayodo",
@@ -4548,6 +4552,52 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_mundane_prompt": {
         "zh": "👈 世俗占星不需出生資料，直接點擊左側頁面進行分析。",
         "en": "👈 Mundane Astrology does not require birth data. Use the controls within each tab.",
+    },
+    # ── 吠陀風水（Vastu Shastra）──────────────────────────────────────────────
+    "spinner_vastu": {
+        "zh": "正在計算個人化 Vastu Purusha Mandala…",
+        "en": "Computing personalized Vastu Purusha Mandala…",
+    },
+    "desc_vastu": {
+        "zh": (
+            "### 🪔 吠陀風水（Vastu Shastra）\n\n"
+            "**Vastu Shastra**（梵文：वास्तु शास्त्र）是源自印度吠陀時代的古典建築風水學，"
+            "與吠陀占星（Jyotish）並列為「吠陀輔學（Vedāngas）」的重要支柱。\n\n"
+            "**KinAstro Astro-Vastu 整合特色：**\n"
+            "- **個人化 Vastu Purusha Mandala**：結合命盤 Lagna（上升星座）與九曜行星位置，"
+            "高亮顯示最受影響的方位能量場\n"
+            "- **9 宮格內部方位** + **32 外環天神位（Pada）**：完整 Paramasayika 9×9 曼荼羅\n"
+            "- **房屋朝向診斷**：支援 8 方位選擇，分析居所朝向與命盤的相容性\n"
+            "- **Vastu Compliance Score**：量化個人化吉祥指數（0–100）\n"
+            "- **八大方位完整解讀**：含主宰神祇、五大元素、推薦顏色、房間配置與 Dosha 補救\n\n"
+            "| 核心典籍 | 年代 | 內容 |\n"
+            "|:---------|:-----|:-----|\n"
+            "| Mayamata | 5–15 世紀 | 建築比例、方位能量、Pada 天神 |\n"
+            "| Manasara | 梵文古典 | 建築規範、空間配置 |\n"
+            "| Bṛhat Saṃhitā | Varāhamihira, 5 世紀 | 天文占星與建築結合 |\n\n"
+            "🕉️ **Om Vastu Devaya Namah** — 願 Vastu 之神保佑您的居所平安吉祥"
+        ),
+        "en": (
+            "### 🪔 Vastu Shastra — Vedic Architectural Science\n\n"
+            "**Vastu Shastra** (Sanskrit: वास्तु शास्त्र) is the ancient Indian science of "
+            "space, architecture, and environmental harmony — a sister discipline to Jyotish (Vedic Astrology).\n\n"
+            "**KinAstro Astro-Vastu Integration Features:**\n"
+            "- **Personalized Vastu Purusha Mandala**: Combines Lagna (Ascendant) and planetary "
+            "positions to highlight key directional energy zones\n"
+            "- **9 Inner Zones** + **32 Outer Padas (Guardian Deities)**\n"
+            "- **House Facing Analysis**: 8-direction selector with natal chart compatibility\n"
+            "- **Vastu Compliance Score**: Personalized auspiciousness index (0–100)\n"
+            "- **Full 8-Direction Interpretations**: Deity, element, colors, rooms, Dosha remedies\n\n"
+            "🕉️ **Om Vastu Devaya Namah** — May the Vastu Devata bless your dwelling"
+        ),
+    },
+    "sys_hint_vastu": {
+        "zh": "吠陀風水 Vastu Purusha Mandala · 個人化方位分析 · Compliance Score · 房間配置",
+        "en": "Vastu Purusha Mandala · Personalized directional analysis · Compliance Score · Room placement",
+    },
+    "info_vastu_prompt": {
+        "zh": "👈 請在左側輸入出生資料並點擊「開始排盤」，再選擇居所朝向，即可生成個人化 Vastu Purusha Mandala。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart', then select your house facing direction to generate a personalized Vastu Purusha Mandala.",
     },
 }
 

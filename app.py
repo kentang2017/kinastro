@@ -3886,6 +3886,25 @@ if not _engine_handled:
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_indian"))
 
+    # --- 吠陀風水（Vastu Shastra）---
+    elif _selected_system == "tab_vastu":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_vastu")):
+                    _vastu_vchart = compute_vedic_chart(**_p)
+                from frontend.vastu_renderer import render_vastu_tab
+                render_vastu_tab(
+                    v_chart=_vastu_vchart,
+                    after_chart_hook=lambda: _render_ai_button("tab_vastu", _vastu_vchart, btn_key="vastu"),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_vastu_prompt"))
+            st.markdown(t("desc_vastu"))
+
     # --- 宿曜道 ---
     elif _selected_system == "tab_lal_kitab":
         if _is_calculated:
