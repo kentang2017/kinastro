@@ -45,6 +45,7 @@ _STRONG_DOMINANCE_THRESHOLD = 0.5
 _GRADE_ICONS = {
     "S": "👑",
     "A": "🌟",
+    "B+": "✅",
     "B": "✅",
     "C": "🔵",
     "D": "🟡",
@@ -1077,56 +1078,90 @@ def _wuxing_bar(dist: dict, total: int, title: str):
 
 
 def _compatibility_grade(
-    cmp: dict, bazi_distribution: dict[str, int], stock_distribution: dict[str, int]
+    cmp: dict,
+    bazi_distribution: dict[str, int],
+    stock_distribution: dict[str, float],
+    *,
+    day_master_element: str = "火",
+    numerology_score: float = 0.0,
+    user_profile_note: str = "",
 ) -> dict[str, str]:
-    """將五行關係分數轉為契合評級（S~F）。"""
+    """將五行關係分數轉為契合評級（S~F），加入身強弱與用忌神邏輯。"""
+    from .name_wuxing import WUXING_KE, WUXING_KEME, WUXING_SHENGME
+
     total_a = sum(bazi_distribution.values()) or 1
     total_b = sum(stock_distribution.values()) or 1
     dominance_a = max(bazi_distribution.values(), default=0) / total_a
-    dominance_b = max(stock_distribution.values(), default=0) / total_b
-    score = cmp.get("score", 0)
-    relationship_code = cmp.get("relationship_code")
 
-    if score >= 2:
-        if (
-            relationship_code == "stock_feeds_you"
-            and dominance_a >= _STRONG_DOMINANCE_THRESHOLD
-            and dominance_b >= _STRONG_DOMINANCE_THRESHOLD
-        ):
-            grade = "S"
-            title_zh = "絕對配合"
-            title_en = "Absolute Match"
-        else:
-            grade = "A"
-            title_zh = "高度契合"
-            title_en = "High Compatibility"
-    elif score == 1:
-        grade = "B"
-        title_zh = "良好契合"
-        title_en = "Good Compatibility"
-    elif score == 0:
-        # Dominance below _MIXED_DOMINANCE_THRESHOLD means no single element dominates.
-        if dominance_a < _MIXED_DOMINANCE_THRESHOLD and dominance_b < _MIXED_DOMINANCE_THRESHOLD:
-            grade = "C"
-            title_zh = "中度契合"
-            title_en = "Moderate Compatibility"
-        else:
-            grade = "D"
-            title_zh = "偏低契合"
-            title_en = "Low Compatibility"
-    elif score == -1:
-        grade = "E"
-        title_zh = "嚴重不合"
-        title_en = "Severely Incompatible"
+    stock_ratio = {k: (stock_distribution.get(k, 0) / total_b) for k in stock_distribution}
+    support_el = WUXING_SHENGME.get(day_master_element, "木")
+    wealth_el = WUXING_KE.get(day_master_element, "金")
+    pressure_el = WUXING_KEME.get(day_master_element, "水")
+    support_ratio = stock_ratio.get(day_master_element, 0.0) + stock_ratio.get(support_el, 0.0)
+    pressure_ratio = stock_ratio.get(pressure_el, 0.0)
+    wealth_ratio = stock_ratio.get(wealth_el, 0.0)
+    drain_ratio = stock_ratio.get(WUXING_SHENGME.get(wealth_el, "土"), 0.0)
+
+    score = 50.0
+    score += cmp.get("score", 0) * 11.5
+    score += support_ratio * 36.0
+    score -= pressure_ratio * 34.0
+    score -= wealth_ratio * 18.0
+    score -= drain_ratio * 10.0
+    score += numerology_score * 4.0
+
+    is_weak_profile = "身弱" in user_profile_note
+    if is_weak_profile:
+        # 身弱遇忌：忌神與財星同時偏重時，顯著降分
+        score -= (pressure_ratio + wealth_ratio) * 18.0
+        if pressure_ratio + wealth_ratio >= 0.55:
+            score -= 8.0
     else:
-        grade = "F"
-        title_zh = "完全不合"
-        title_en = "Totally Incompatible"
+        # 身旺能制財：身旺時可承受財星，給予適度加分
+        if dominance_a >= _STRONG_DOMINANCE_THRESHOLD and wealth_ratio >= 0.24:
+            score += 9.0
+
+    score = max(0.0, min(100.0, score))
+
+    if score >= 88:
+        grade, title_zh, title_en = "S", "絕對配合", "Absolute Match"
+    elif score >= 78:
+        grade, title_zh, title_en = "A", "高度契合", "High Compatibility"
+    elif score >= 68:
+        grade, title_zh, title_en = "B+", "中高契合", "Above-average Compatibility"
+    elif score >= 60:
+        grade, title_zh, title_en = "B", "良好契合", "Good Compatibility"
+    elif score >= 50:
+        grade, title_zh, title_en = "C", "中度契合", "Moderate Compatibility"
+    elif score >= 40:
+        grade, title_zh, title_en = "D", "偏低契合", "Low Compatibility"
+    elif score >= 30:
+        grade, title_zh, title_en = "E", "嚴重不合", "Severely Incompatible"
+    else:
+        grade, title_zh, title_en = "F", "完全不合", "Totally Incompatible"
+
+    action_hint = "觀望"
+    if grade in {"S", "A"}:
+        action_hint = "可分批布局／偏買進"
+    elif grade in {"B+", "B"}:
+        action_hint = "可小倉位跟蹤"
+    elif grade == "C":
+        action_hint = "中性，等待訊號"
+    elif grade in {"D", "E"}:
+        action_hint = "降低倉位／偏賣出"
+    else:
+        action_hint = "迴避或嚴格止損"
 
     return {
         "grade": grade,
         "title_zh": title_zh,
         "title_en": title_en,
+        "score_value": f"{score:.1f}",
+        "fit_note_zh": (
+            f"對用戶{day_master_element}日元{user_profile_note or '中性'}："
+            f"喜用比重 {support_ratio:.0%}，忌神壓力 {pressure_ratio + wealth_ratio:.0%}。"
+        ),
+        "advice_zh": f"推薦買賣建議：{action_hint}。",
     }
 
 
@@ -1139,6 +1174,38 @@ def _merge_wuxing_distributions(*distributions: dict[str, int]) -> dict[str, int
         for element, count in distribution.items():
             merged[element] = merged.get(element, 0) + count
     return merged
+
+
+def _merge_weighted_wuxing_distributions(
+    *distribution_with_weight: tuple[dict[str, float], float]
+) -> dict[str, float]:
+    """依來源權重合併五行分佈，用於綜合評分。"""
+    from .name_wuxing import WUXING_ELEMENTS
+
+    merged = {element: 0.0 for element in WUXING_ELEMENTS}
+    for distribution, weight in distribution_with_weight:
+        if not distribution:
+            continue
+        for element, value in distribution.items():
+            merged[element] = merged.get(element, 0.0) + float(value) * float(weight)
+    return merged
+
+
+def _get_day_master_profile(bazi_result: dict) -> tuple[str, str]:
+    """回傳日主五行與簡化身強弱描述。"""
+    from .name_wuxing import WUXING_SHENGME
+
+    day_master = "火"
+    for pillar in bazi_result.get("pillars", []):
+        if pillar.get("label") == "日柱":
+            day_master = pillar.get("wuxing_stem") or day_master
+            break
+
+    dist = bazi_result.get("distribution", {})
+    support = dist.get(day_master, 0) + dist.get(WUXING_SHENGME.get(day_master, "木"), 0)
+    pressure = dist.get("金", 0) + dist.get("水", 0) if day_master == "火" else 0
+    profile = "身弱" if support <= 2 or pressure >= 3 else "身旺"
+    return day_master, profile
 
 
 def _render_compatibility_card(
@@ -1184,7 +1251,12 @@ def _render_compatibility_card(
             &nbsp;⟷&nbsp;
             {label_b}主元素：<span style="color:{cmp['color']};">{cmp['dominant_b']}</span>
         </div>
+        <div style="font-size:0.78em;color:#b6c1d3;margin:2px 0 8px 0;">
+            綜合分數：{grade_info.get('score_value', 'N/A')}
+        </div>
         <div style="color:#d4b860;font-size:0.91em;margin-bottom:6px;">{cmp['summary_zh']}</div>
+        <div style="color:#cbd5e1;font-size:0.84em;margin-bottom:4px;">{grade_info.get('fit_note_zh', '')}</div>
+        <div style="color:#fcd34d;font-size:0.84em;margin-bottom:6px;">{grade_info.get('advice_zh', '')}</div>
         <div style="color:#8090a8;font-size:0.82em;">{cmp['summary_en']}</div>
         </div>
         """,
@@ -1203,6 +1275,7 @@ def _render_name_wuxing(stock):
         analyze_name_wuxing,
         analyze_english_name_wuxing,
         analyze_ticker_wuxing,
+        analyze_industry_wuxing,
         get_bazi_wuxing,
         compare_wuxing,
         WUXING_COLORS,
@@ -1221,10 +1294,12 @@ def _render_name_wuxing(stock):
     ticker = stock.normalized_ticker
     name_zh = stock.name_zh or ""
     name_en = stock.name_en or ""
+    industry = stock.sector or ""
 
     # Pre-compute name analysis results so comparison section can reference them
     name_result = analyze_name_wuxing(name_zh) if name_zh else None
     en_result = analyze_english_name_wuxing(name_en) if (not name_zh and name_en) else None
+    industry_result = analyze_industry_wuxing(industry)
 
     # ── 公司中文名稱五行 ──────────────────────────────
     st.markdown("---")
@@ -1333,8 +1408,21 @@ def _render_name_wuxing(stock):
 
         _wuxing_bar(ticker_result["distribution"], total_ticker,
                     f"{ticker} 代碼數字五行比重")
+        st.caption(
+            "🔎 數字加權重點：3/5/9（火）與4/8（木）加權，"
+            f"吉數強度 {ticker_result.get('lucky_digit_count', 0)}，"
+            f"忌數壓力 {ticker_result.get('suppressive_digit_count', 0)}。"
+        )
     else:
         st.info("股票代碼中無數字，無法分析五行。/ No digits found in ticker.")
+
+    if industry:
+        st.caption(f"🏭 行業五行加權：{industry}")
+        _wuxing_bar(
+            industry_result["distribution"],
+            industry_result["total"] or 1,
+            "公司主要業務五行（行業關鍵字）",
+        )
 
     # ── 命主八字五行（若有出生日期）────────────────────
     st.markdown("---")
@@ -1418,6 +1506,7 @@ def _render_name_wuxing(stock):
 
     _wuxing_bar(bazi_result["distribution"], sum(bazi_result["distribution"].values()) or 1,
                 "命主三柱五行比重（年月日）")
+    day_master, user_profile_note = _get_day_master_profile(bazi_result)
 
     # ── 對比分析 ──────────────────────────────────────
     st.markdown("---")
@@ -1437,17 +1526,33 @@ def _render_name_wuxing(stock):
             (ticker_result["distribution"], f"股票代碼「{ticker}」數字")
         )
 
+    if industry_result and industry:
+        comparisons.append((industry_result["distribution"], f"行業「{industry}」"))
+
     if comparisons:
-        combined_stock_distribution = _merge_wuxing_distributions(
-            *(dist_b for dist_b, _ in comparisons)
-        )
+        weighted_parts: list[tuple[dict[str, float], float]] = []
+        if name_result is not None and name_result["total"] > 0:
+            weighted_parts.append((name_result.get("weighted_distribution", name_result["distribution"]), 0.35))
+        elif en_result is not None and en_result["total"] > 0:
+            weighted_parts.append((en_result.get("weighted_distribution", en_result["distribution"]), 0.35))
+        if ticker_result["total"] > 0:
+            weighted_parts.append((ticker_result.get("weighted_distribution", ticker_result["distribution"]), 0.40))
+        if industry:
+            weighted_parts.append((industry_result.get("weighted_distribution", industry_result["distribution"]), 0.45))
+
+        combined_stock_distribution = _merge_weighted_wuxing_distributions(*weighted_parts)
         combined_source_text = " ＋ ".join(label_b for _, label_b in comparisons)
         overall_cmp = compare_wuxing(
             bazi_result["distribution"], "命主",
             combined_stock_distribution, "股票綜合能量",
         )
         overall_grade = _compatibility_grade(
-            overall_cmp, bazi_result["distribution"], combined_stock_distribution
+            overall_cmp,
+            bazi_result["distribution"],
+            combined_stock_distribution,
+            day_master_element=day_master,
+            numerology_score=float(ticker_result.get("numerology_score", 0.0)),
+            user_profile_note=user_profile_note,
         )
         _render_compatibility_card(
             overall_cmp,
@@ -1462,7 +1567,14 @@ def _render_name_wuxing(stock):
             bazi_result["distribution"], "命主",
             dist_b, label_b,
         )
-        grade_info = _compatibility_grade(cmp, bazi_result["distribution"], dist_b)
+        grade_info = _compatibility_grade(
+            cmp,
+            bazi_result["distribution"],
+            dist_b,
+            day_master_element=day_master,
+            numerology_score=float(ticker_result.get("numerology_score", 0.0)) if "代碼" in label_b else 0.0,
+            user_profile_note=user_profile_note,
+        )
         _render_compatibility_card(cmp, grade_info, label_b)
 
     st.caption(
