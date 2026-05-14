@@ -796,21 +796,15 @@ def _safe_pop(value: Any) -> int:
 
 
 @st.cache_data(show_spinner=False)
-def _build_city_sidebar_data() -> tuple[
+def _build_city_presets() -> tuple[
     dict[str, tuple[float, float, float]],
-    dict[str, dict[str, tuple[float, float, float]]],
     list[str],
 ]:
     city_presets: dict[str, tuple[float, float, float]] = {}
-    city_regions: dict[str, dict[str, tuple[float, float, float]]] = {}
 
     def _add_city(city_name: str, lat: float, lon: float, tz: float) -> None:
         if city_name not in city_presets:
             city_presets[city_name] = (lat, lon, tz)
-        city_regions.setdefault(city_name, {})
-
-    def _add_region(city_name: str, region_name: str, lat: float, lon: float, tz: float) -> None:
-        city_regions.setdefault(city_name, {})[region_name] = (lat, lon, tz)
 
     # China hierarchical dataset: province/city -> district
     china_file = _CITY_DATA_DIR / "china_cities.json"
@@ -827,18 +821,6 @@ def _build_city_sidebar_data() -> tuple[
             lon = float(center["longitude"])
             tz = _CHINA_REGION_TZ
             _add_city(city_name, lat, lon, tz)
-
-            for area in city_node.get("districts", []) or []:
-                area_name = (area.get("name") or "").strip()
-                area_center = area.get("center") or {}
-                if area_name and "latitude" in area_center and "longitude" in area_center:
-                    _add_region(
-                        city_name,
-                        area_name,
-                        float(area_center["latitude"]),
-                        float(area_center["longitude"]),
-                        tz,
-                    )
 
         for province in china_data.get("districts", []) or []:
             province_name = province.get("name")
@@ -860,17 +842,6 @@ def _build_city_sidebar_data() -> tuple[
                     float(province_center["longitude"]),
                     province_tz,
                 )
-                for area in province.get("districts", []) or []:
-                    area_name = (area.get("name") or "").strip()
-                    area_center = area.get("center") or {}
-                    if area_name and "latitude" in area_center and "longitude" in area_center:
-                        _add_region(
-                            province_name,
-                            area_name,
-                            float(area_center["latitude"]),
-                            float(area_center["longitude"]),
-                            province_tz,
-                        )
 
     # World flat dataset: city + admin fields
     world_file = _CITY_DATA_DIR / "cities.json"
@@ -890,20 +861,14 @@ def _build_city_sidebar_data() -> tuple[
             tz = _CHINA_REGION_TZ if country in {"CN", "HK", "MO", "TW"} else _normalize_tz_from_lon(lon)
             _add_city(city_label, lat, lon, tz)
 
-            for region_name in [row.get("admin2"), row.get("admin1")]:
-                region = (region_name or "").strip()
-                if region:
-                    _add_region(city_label, region, lat, lon, tz)
-
     # Custom fallback
     city_presets["自訂"] = (0.0, 0.0, 0.0)
-    city_regions["自訂"] = {}
 
     city_options = sorted([c for c in city_presets if c != "自訂"]) + ["自訂"]
-    return city_presets, city_regions, city_options
+    return city_presets, city_options
 
 
-CITY_PRESETS, _, CITY_OPTIONS = _build_city_sidebar_data()
+CITY_PRESETS, CITY_OPTIONS = _build_city_presets()
 
 
 # ============================================================
