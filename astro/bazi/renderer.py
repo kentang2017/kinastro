@@ -777,7 +777,97 @@ def render_streamlit(chart: BaziChart) -> None:
             st.caption(auto_cn("以病取用", "Use-God Recommendation"))
             st.write(use_god.get("總結", "—"))
         with st.expander(auto_cn("查看完整盲派結構化報告", "View Full Blind-School Structured Report")):
-            st.json(blind_report)
+            tab_vis, tab_struct, tab_raw = st.tabs([
+                auto_cn("視覺總覽", "Visual Overview"),
+                auto_cn("分項結構", "Structured Sections"),
+                auto_cn("原始 JSON", "Raw JSON"),
+            ])
+
+            with tab_vis:
+                def _list_count(key: str) -> int:
+                    value = illness.get(key, [])
+                    return len(value) if isinstance(value, list) else 0
+
+                risk_counts = {
+                    auto_cn("穿破", "Pierce/Break"): _list_count("穿破"),
+                    auto_cn("入墓", "Tomb"): _list_count("入墓"),
+                    auto_cn("偏枯", "Element Bias"): _list_count("五行偏枯"),
+                    auto_cn("三刑", "Punishment"): _list_count("三刑"),
+                }
+                col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                with col_m1:
+                    st.metric(auto_cn("穿破", "Pierce/Break"), risk_counts[auto_cn("穿破", "Pierce/Break")])
+                with col_m2:
+                    st.metric(auto_cn("入墓", "Tomb"), risk_counts[auto_cn("入墓", "Tomb")])
+                with col_m3:
+                    st.metric(auto_cn("偏枯", "Element Bias"), risk_counts[auto_cn("偏枯", "Element Bias")])
+                with col_m4:
+                    st.metric(auto_cn("三刑", "Punishment"), risk_counts[auto_cn("三刑", "Punishment")])
+
+                risks_df = pd.DataFrame(
+                    [{auto_cn("項目", "Category"): k, auto_cn("數量", "Count"): v} for k, v in risk_counts.items()]
+                )
+                st.bar_chart(risks_df.set_index(auto_cn("項目", "Category"))[auto_cn("數量", "Count")])
+
+                st.caption(auto_cn("病情分級", "Severity"))
+                st.write(illness.get("病情輕重", "—"))
+
+            with tab_struct:
+                pb_details = blind_report.get("pierce_break_detail", [])
+                if isinstance(pb_details, list) and pb_details:
+                    st.markdown(f"**{auto_cn('穿破明細', 'Pierce/Break Details')}**")
+                    st.dataframe(pd.DataFrame(pb_details), width="stretch")
+
+                limits = blind_report.get("limits", [])
+                if isinstance(limits, list) and limits:
+                    st.markdown(f"**{auto_cn('盲派大限', 'Blind-School Limits')}**")
+                    limits_df = pd.DataFrame(limits)
+                    desired_cols = [
+                        auto_cn("限段", "Segment"),
+                        auto_cn("虛歲", "Age"),
+                        auto_cn("限干支", "Pillar"),
+                        auto_cn("十神", "Ten God"),
+                        auto_cn("運勢初判", "Preliminary Fortune"),
+                    ]
+                    show_cols = [c for c in desired_cols if c in limits_df.columns]
+                    st.dataframe(limits_df[show_cols] if show_cols else limits_df, width="stretch")
+
+                marriage = blind_report.get("marriage", {})
+                wealth = blind_report.get("wealth", {})
+                liunian = blind_report.get("liunian_framework", {})
+                six_qin = blind_report.get("six_qin_palaces", {})
+
+                col_s1, col_s2 = st.columns(2)
+                with col_s1:
+                    st.markdown(f"**{auto_cn('婚姻總評', 'Marriage Summary')}**")
+                    st.write(marriage.get("總評", "—") if isinstance(marriage, dict) else "—")
+                with col_s2:
+                    st.markdown(f"**{auto_cn('財運總評', 'Wealth Summary')}**")
+                    st.write(wealth.get("總評", "—") if isinstance(wealth, dict) else "—")
+
+                if isinstance(liunian, dict):
+                    rules = liunian.get("應期規則", [])
+                    if isinstance(rules, list) and rules:
+                        st.markdown(f"**{auto_cn('流年應期規則', 'Annual Timing Rules')}**")
+                        for r in rules:
+                            st.write(f"• {r}")
+
+                if isinstance(six_qin, dict) and six_qin:
+                    st.markdown(f"**{auto_cn('六親宮位重點', 'Six-Kin Palace Highlights')}**")
+                    for palace, detail in six_qin.items():
+                        with st.expander(str(palace)):
+                            if isinstance(detail, dict):
+                                st.write(f"{auto_cn('宮位職司', 'Role')}: {detail.get('宮位職司', '—')}")
+                                st.write(f"{auto_cn('干支', 'Pillar')}: {detail.get('干支', '—')}")
+                                notes = detail.get("注意事項", [])
+                                if isinstance(notes, list):
+                                    for note in notes:
+                                        st.write(f"• {note}")
+                            else:
+                                st.write(detail)
+
+            with tab_raw:
+                st.json(blind_report)
 
     # ── 文字解讀
     st.subheader(auto_cn("📖 古典命盤解讀", "Classical Bazi Interpretation"))
