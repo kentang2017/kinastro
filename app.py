@@ -1051,6 +1051,18 @@ with st.sidebar:
         current_system=_selected_system,
     )
 
+    # ── Fludd Rota quick link ──────────────────────────────────
+    _is_fludd_active = _selected_system == "tab_fludd_rota"
+    if st.button(
+        t("tab_fludd_rota"),
+        key="_btn_sidebar_fludd_rota",
+        width="stretch",
+        type="primary" if _is_fludd_active else "secondary",
+        help=t("sys_hint_fludd_rota"),
+    ):
+        st.session_state[SessionKeys.SYSTEM_SELECT] = "tab_fludd_rota"
+        st.rerun()
+
     # ── History of Astrology link ─────────────────────────────
     if st.button(
         t("tab_history"),
