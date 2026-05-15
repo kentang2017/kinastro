@@ -51,6 +51,8 @@ except ImportError:
 
 # Maximum characters to preview for Ring 4 text in the compact reading panel
 _RING4_PREVIEW_LEN = 80
+# Base canvas drawing size; CSS scales it down responsively on narrow screens.
+_FLUDD_CANVAS_BASE_WIDTH = 520
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -769,6 +771,10 @@ def render_fludd_rota(
         st.session_state[_key] = reading
         st.session_state[_src_key] = "manual_input"
 
+    if _key in st.session_state and _src_key not in st.session_state:
+        # Backward compatibility: historical readings in session came from this form.
+        st.session_state[_src_key] = "manual_input"
+
     reading: Optional[RotaReading] = None
     if st.session_state.get(_src_key) == "manual_input":
         reading = st.session_state.get(_key)
@@ -783,7 +789,7 @@ def render_fludd_rota(
         r1_off = r2_off = r3_off = r4_off = 0.0
 
     # ── 渲染輪盤 ─────────────────────────────────────────────
-    canvas_width = 520
+    canvas_width = _FLUDD_CANVAS_BASE_WIDTH
     html_content = render_fludd_rota_html(
         ring1_offset=r1_off,
         ring2_offset=r2_off,
