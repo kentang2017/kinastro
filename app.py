@@ -290,8 +290,10 @@ def render_homepage():
     _hp_sec_features = auto_cn("核心特色", "Key Features")
     _hp_cta_title = auto_cn("開始您的星象之旅", "Begin Your Stellar Journey")
     _hp_cta_body = auto_cn(
-        "在左側側邊欄輸入出生日期、時間與地點，<br/>\n        然後選擇您想探索的占星體系，即可立即排盤。",
-        "Enter your birth date, time and location in the left sidebar,<br/>\n        then select the astrology system you'd like to explore — your chart will be generated instantly.",
+        "在左側側邊欄輸入出生日期、時間與地點，<br/>"
+        "然後選擇您想探索的占星體系，即可立即排盤。",
+        "Enter your birth date, time and location in the left sidebar,<br/>"
+        "then select the astrology system you'd like to explore — your chart will be generated instantly.",
     )
     _hp_cta_tip = auto_cn(
         "💡 初學者推薦從「西洋占星」或「紫微斗數」開始",
@@ -387,7 +389,7 @@ def render_homepage():
         if len(systems) > 4:
             _pills += f'<span class="hp-sys-pill hp-sys-pill-more">+{len(systems) - 4}</span>'
         _cat_main = title_en if _lang == "en" else auto_cn(title_zh)
-        _cat_sub = auto_cn(title_zh) if _lang == "en" else title_en
+        _cat_sub = title_zh if _lang == "en" else title_en
         _cat_html += (
             f'<div class="hp-cat-card" style="'
             f'--cat-accent:{accent};--cat-bg:{bg};--cat-border:{border_col};">'
