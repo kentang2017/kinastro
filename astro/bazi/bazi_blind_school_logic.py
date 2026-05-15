@@ -240,7 +240,9 @@ PALACE_ROLES = {
 
 def get_element(item: str) -> str:
     """獲取天干或地支的五行。"""
-    return STEM_ELEMENT.get(item) or BRANCH_ELEMENT.get(item, '')
+    if item in STEM_ELEMENT:
+        return STEM_ELEMENT[item]
+    return BRANCH_ELEMENT.get(item, '')
 
 
 def get_yin_yang(stem: str) -> bool:
@@ -377,10 +379,10 @@ class Bazi:
 
     # ---------- 地支作用關係 ----------
 
-    def analyze_interactions(self) -> Dict[Tuple[str, str], List[str]]:
+    def analyze_interactions(self) -> Dict[Tuple[str, ...], List[str]]:
         """分析全盤地支兩兩作用關係（穿破合沖刑）。"""
         branches = self.get_branches()
-        result: Dict[Tuple[str, str], List[str]] = {}
+        result: Dict[Tuple[str, ...], List[str]] = {}
         for i in range(4):
             for j in range(i + 1, 4):
                 acts = _branch_interactions(branches[i], branches[j])
@@ -389,11 +391,11 @@ class Bazi:
         # 三合局
         for members, elem in THREE_COMBINE:
             if all(b in branches for b in members):
-                result[tuple(members)] = [f"三合{elem}局"]  # type: ignore[assignment]
+                result[tuple(members)] = [f"三合{elem}局"]
         # 三會方
         for members, elem in THREE_ASSEMBLY:
             if all(b in branches for b in members):
-                result[tuple(members)] = [f"三會{elem}局"]  # type: ignore[assignment]
+                result[tuple(members)] = [f"三會{elem}局"]
         return result
 
     def find_pierce_break(self) -> List[str]:
@@ -1135,7 +1137,11 @@ class BlindSchoolBazi:
         """
         def _p(gz: str) -> Pillar:
             if len(gz) != 2 or gz[0] not in STEMS or gz[1] not in BRANCHES:
-                raise ValueError(f"無效干支：{gz}")
+                raise ValueError(
+                    f"無效干支：{gz!r}。"
+                    f"干支必須為兩字，第一字為天干（{''.join(STEMS)}），"
+                    f"第二字為地支（{''.join(BRANCHES)}）。"
+                )
             return Pillar(gz[0], gz[1])
 
         return cls(Bazi(_p(year_gz), _p(month_gz), _p(day_gz), _p(hour_gz)))
@@ -1145,16 +1151,23 @@ class BlindSchoolBazi:
         """
         從 kinastro 原有 BaziChart 物件創建，保持完整整合。
         chart 須含 year_pillar / month_pillar / day_pillar / hour_pillar 屬性，
-        各屬性須含 stem / branch 字段。
+        各屬性須含 stem / branch 字段（str，天干/地支各一字）。
         """
-        def _adapt(p: object) -> Pillar:
-            return Pillar(getattr(p, 'stem'), getattr(p, 'branch'))  # type: ignore[arg-type]
+        def _adapt(p: object, name: str) -> Pillar:
+            stem = getattr(p, 'stem', None)
+            branch = getattr(p, 'branch', None)
+            if not isinstance(stem, str) or not isinstance(branch, str):
+                raise ValueError(
+                    f"{name}柱必須具備 stem（天干）和 branch（地支）屬性，"
+                    f"實際得到 stem={stem!r}, branch={branch!r}"
+                )
+            return Pillar(stem, branch)
 
         bazi = Bazi(
-            year=_adapt(getattr(chart, 'year_pillar')),
-            month=_adapt(getattr(chart, 'month_pillar')),
-            day=_adapt(getattr(chart, 'day_pillar')),
-            hour=_adapt(getattr(chart, 'hour_pillar')),
+            year=_adapt(getattr(chart, 'year_pillar', None), '年'),
+            month=_adapt(getattr(chart, 'month_pillar', None), '月'),
+            day=_adapt(getattr(chart, 'day_pillar', None), '日'),
+            hour=_adapt(getattr(chart, 'hour_pillar', None), '時'),
         )
         return cls(bazi)
 
