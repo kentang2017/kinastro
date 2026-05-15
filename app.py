@@ -508,12 +508,23 @@ if st.session_state.get("_star_particles", True):
 # Language switcher uses a dropdown (selectbox). We check for the
 # "_lang_select" session_state key that is set by the dropdown.
 _LANG_MAP = {"繁體中文": "zh", "简体中文": "zh_cn", "English": "en"}
+_LANG_LABEL_MAP = {v: k for k, v in _LANG_MAP.items()}
+_DEFAULT_LANG_LABEL = "繁體中文"
+
+
+def _sync_lang_from_selectbox() -> None:
+    _sel = st.session_state.get("_lang_select", _DEFAULT_LANG_LABEL)
+    st.session_state["lang"] = _LANG_MAP.get(_sel, "zh")
 
 if "_lang_select" in st.session_state:
-    _sel = st.session_state["_lang_select"]
-    st.session_state["lang"] = _LANG_MAP.get(_sel, "zh")
-elif "lang" not in st.session_state:
-    st.session_state["lang"] = "zh"
+    _sync_lang_from_selectbox()
+else:
+    if "lang" not in st.session_state:
+        st.session_state["lang"] = "zh"
+    st.session_state["_lang_select"] = _LANG_LABEL_MAP.get(
+        st.session_state.get("lang", "zh"),
+        _DEFAULT_LANG_LABEL,
+    )
 
 
 # ── Restore birth data + system from URL query params (share feature) ─────────
@@ -757,7 +768,6 @@ def _render_bphs_result(bphs_result):
 _cur_lang = st.session_state.get("lang", "zh")
 _lang_labels = ["繁體中文", "简体中文", "English"]
 _lang_codes = ["zh", "zh_cn", "en"]
-_cur_lang_idx = _lang_codes.index(_cur_lang) if _cur_lang in _lang_codes else 0
 
 _lang_spacer, _lang_col = st.columns([4, 1])
 with _lang_col:
@@ -765,8 +775,8 @@ with _lang_col:
     _sel_lang = st.selectbox(
         t("lang_switcher_label"),
         options=_lang_labels,
-        index=_cur_lang_idx,
         key="_lang_select",
+        on_change=_sync_lang_from_selectbox,
         label_visibility="collapsed",
     )
 
