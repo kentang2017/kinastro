@@ -232,8 +232,9 @@ def render_figure_svg(figure: GeomanticFigure, width: int = 120, with_title: boo
     line = "#7A5A2A"
     bg = "#0F1118"
 
+    h = width + (26 if with_title else 0)
     parts = [
-        f'<svg viewBox="0 0 {width} {width + (26 if with_title else 0)}" xmlns="http://www.w3.org/2000/svg">',
+        f'<svg viewBox="0 0 {width} {h}" width="{width}" height="{h}" xmlns="http://www.w3.org/2000/svg">',
         f'<rect x="1" y="1" width="{width-2}" height="{width-2}" rx="10" fill="{bg}" stroke="{line}" stroke-width="1.5"/>',
         f'<rect x="8" y="8" width="{width-16}" height="{width-16}" rx="8" fill="none" stroke="{line}" stroke-dasharray="5 3" opacity="0.7"/>',
     ]
