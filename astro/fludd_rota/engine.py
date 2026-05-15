@@ -47,6 +47,11 @@ from .constants import (
 # Ecliptic arc (in degrees) within which a lunar node is considered
 # conjunct the Sun and thus actively modifies the reading direction.
 _NODE_INFLUENCE_THRESHOLD_DEG: float = 30.0
+_LIFESPAN_NODE_BONUS: dict[str, int] = {
+    "north_node": 5,
+    "south_node": -5,
+    "neutral": 0,
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -291,7 +296,7 @@ def _estimate_lifespan(
         "♃": 4,
         "♄": 0,
     }
-    node_bonus = {"north_node": 5, "south_node": -5, "neutral": 0}.get(node_key, 0)
+    node_bonus = _LIFESPAN_NODE_BONUS.get(node_key, 0)
     raw_score = zone_base.get(ring4_zn, 58) + planet_bonus.get(ring3_plt, 0) + node_bonus
     score = max(35, min(90, raw_score))
 

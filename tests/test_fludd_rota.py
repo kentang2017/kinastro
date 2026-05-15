@@ -44,4 +44,3 @@ def test_fludd_rota_node_modifier_impacts_lifespan_score() -> None:
     assert south_reading.node_modifier_key == "south_node"
     assert north_reading.lifespan_score == 59
     assert south_reading.lifespan_score == 49
-    assert north_reading.lifespan_score > south_reading.lifespan_score
