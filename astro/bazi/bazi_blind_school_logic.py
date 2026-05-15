@@ -465,6 +465,61 @@ def recommend_use_god(bazi: Bazi, illnesses: List[Dict]) -> Dict:
         'summary': f"日主{day_stem}，病處：{len(illnesses)}處，用神以{use_gods[0]['god'] if use_gods else default_use}為主"
     }
 
+
+def find_pierce_and_break(bazi: Bazi) -> List[Dict]:
+    """檢測穿破（盲派重點）"""
+    branches = [p.branch for p in bazi.pillars()]
+    results = []
+    for i, b1 in enumerate(branches):
+        for j, b2 in enumerate(branches):
+            if i >= j: continue
+            # 穿
+            if PIERCE.get(b1) == b2 or PIERCE.get(b2) == b1:
+                results.append({"type":"穿", "branches":f"{b1}{b2}", "position":f"{i}-{j}"})
+            # 破
+            if BREAK.get(b1) == b2 or BREAK.get(b2) == b1:
+                results.append({"type":"破", "branches":f"{b1}{b2}", "position":f"{i}-{j}"})
+    return results
+
+def detect_illness(bazi: Bazi) -> Dict:
+    """以病取用 - 檢測命局病處"""
+    illnesses = {
+        "pierce_break": find_pierce_and_break(bazi),
+        "tombs": [],  # 可後續擴展
+        "description": "命局病處主要為穿破關係，需重點制化"
+    }
+    return illnesses
+
+def recommend_use_god(bazi: Bazi, illness: Dict) -> Dict:
+    """盲派以病取用"""
+    day_stem = bazi.day.stem
+    return {
+        "day_stem": day_stem,
+        "recommend": "制穿破 + 扶身 + 調候",
+        "reason": f"日干{day_stem}見穿破，宜用神制化，兼顧宮位平衡",
+        "key_use": "視具體穿破位置而定（年月父母、月兄弟、日夫妻等）"
+    }
+
+
+def analyze_six_qin(bazi: Bazi) -> Dict:
+    """六親宮位分析（盲派核心）"""
+    return {
+        "父母宮": f"年月柱 {bazi.year.stem}{bazi.year.branch} {bazi.month.stem}{bazi.month.branch}",
+        "兄弟宮": f"月柱 {bazi.month.stem}{bazi.month.branch}",
+        "夫妻宮": f"日支 {bazi.day.branch}",
+        "子女宮": f"時柱 {bazi.hour.stem}{bazi.hour.branch}",
+        "note": "重點看宮位穿破與墓庫"
+    }
+
+def analyze_marriage(bazi: Bazi) -> Dict:
+    """婚姻專斷"""
+    day_branch = bazi.day.branch
+    return {
+        "夫妻宮": day_branch,
+        "risk": "注意日支是否被穿破或入墓",
+        "conclusion": f"日支{day_branch}為夫妻宮，需結合穿破與大限判斷婚姻吉凶",
+        "late_marriage_risk": "若財官入墓，注意終生未婚可能"
+    }
 # ==================== 大限計算 (盲派特色限運) ====================
 
 def calculate_limits(bazi: Bazi) -> List[Dict]:
