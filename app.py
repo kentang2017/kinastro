@@ -1050,16 +1050,6 @@ with st.sidebar:
         current_system=_selected_system,
     )
 
-    # ── Quick entry: European Geomancy ─────────────────────────
-    if st.button(
-        t("tab_european_geomancy"),
-        key="_btn_sidebar_european_geomancy",
-        width="stretch",
-        type="secondary",
-    ):
-        st.session_state[SessionKeys.SYSTEM_SELECT] = "tab_european_geomancy"
-        st.rerun()
-
     # ── History of Astrology link ─────────────────────────────
     if st.button(
         t("tab_history"),
