@@ -6,6 +6,7 @@
 ![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.7.0-00C853?style=for-the-badge)
 ![Systems](https://img.shields.io/badge/Systems-76-FFD700?style=for-the-badge)
+[![Repo Size](https://img.shields.io/github/repo-size/kentang2017/kinastro?label=Project%20Size)](https://github.com/kentang2017/kinastro)
 [![Python](https://img.shields.io/badge/Python-3.9+-00D4FF?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -166,6 +167,7 @@
 - **二十八宿 / 28 Mansions**：東方青龍、北方玄武、西方白虎、南方朱雀 — Azure Dragon, Black Tortoise, White Tiger, Vermilion Bird
 - **十二星次 / Twelve Jupiter Stations**：星紀、玄枵、娵訾、降婁、大梁、實沈 etc.
 - **相位 / Aspects**：合、沖、刑、三合、六合 — Conjunction, Opposition, Square, Trine, Sextile
+- **金融占星 / Financial Astrology**：新增七政四餘金融占星，整合江恩理論（Gann Theory）用於宏觀股市週期與共振分析 — Added Seven-Luminaries financial astrology with Gann Theory for macro stock-cycle and resonance analysis
 
 <details>
 <summary>📂 六個子分頁 | 6 Sub-tabs</summary>
