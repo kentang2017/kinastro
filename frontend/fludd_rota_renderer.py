@@ -706,7 +706,7 @@ def render_fludd_rota(
     )
 
     # ── 行星度數輸入表單 ──────────────────────────────────────
-    with st.expander("✦ 輸入行星黃道度數（0–360°）", expanded=True):
+    with st.expander("✦ 輸入行星黃道度數（0–360°）", expanded=False):
         st.caption(
             "請輸入出生星盤各行星的黃道度數（熱帶黃道，0° = 牡羊0°）。"
             "也可直接使用預設值探索輪盤。"
