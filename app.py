@@ -904,6 +904,12 @@ with st.sidebar:
         st.session_state["birth_date_input"] = date(1990, 1, 1)
     if "birth_time_input" not in st.session_state:
         st.session_state["birth_time_input"] = time(12, 0)
+    if "_lat_input" not in st.session_state:
+        st.session_state["_lat_input"] = _DEFAULT_LAT
+    if "_lon_input" not in st.session_state:
+        st.session_state["_lon_input"] = _DEFAULT_LON
+    if "_tz_input" not in st.session_state:
+        st.session_state["_tz_input"] = _DEFAULT_TZ
     # Place city selector outside the form so switching city reruns immediately
     # and can sync lat/lon/timezone fields.
     st.subheader(t("birth_location"))
@@ -956,7 +962,6 @@ with st.sidebar:
         with _coord_col1:
             input_lat = st.number_input(
                 t("latitude"),
-                value=float(_preset_lat),
                 format="%.4f",
                 min_value=-90.0,
                 max_value=90.0,
@@ -966,7 +971,6 @@ with st.sidebar:
         with _coord_col2:
             input_lon = st.number_input(
                 t("longitude"),
-                value=float(_preset_lon),
                 format="%.4f",
                 min_value=-180.0,
                 max_value=180.0,
@@ -975,7 +979,6 @@ with st.sidebar:
             )
         input_tz = st.number_input(
             t("timezone"),
-            value=float(_preset_tz),
             format="%.1f",
             min_value=-12.0,
             max_value=14.0,
