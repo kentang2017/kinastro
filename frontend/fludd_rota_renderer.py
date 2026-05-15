@@ -672,6 +672,14 @@ def _render_reading_panel(reading: RotaReading) -> None:
             unsafe_allow_html=True,
         )
 
+    st.markdown('<hr class="fr-divider">', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="fr-ring-label">壽命趨勢（靈性參考）</div>'
+        f'<div class="fr-ring-sym">{reading.lifespan_level} · {reading.lifespan_score}/100</div>'
+        f'<div class="fr-ring-text">{reading.lifespan_text}</div>',
+        unsafe_allow_html=True,
+    )
+
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 綜合解讀
