@@ -36,6 +36,7 @@ from .picatrix_data import (
     PICATRIX_TALISMANS,
     PICATRIX_CORRESPONDENCES,
 )
+from .talisman_generator import generate_talisman_recipe
 
 
 # ============================================================
@@ -983,6 +984,23 @@ def render_talisman_generator() -> None:
     st.markdown("---")
     st.markdown(f"**施作指引（中文）:** {rec.description_cn}")
     st.markdown(f"**Instructions (English):** {rec.description_en}")
+
+    ritual = generate_talisman_recipe(
+        {
+            "planet": rec.planet,
+            "purpose": rec.intent_cn,
+            "timing": rec.description_cn,
+            "materials": rec.metal,
+            "procedure": rec.description_cn,
+        },
+        spirit_invocation=True,
+        language="zh",
+    )
+    ritual_steps = ritual.get("ritual_steps", [])
+    if ritual_steps:
+        st.markdown("#### 🙏 靈體祈請儀式步驟（spirit_invocation=True）")
+        for i, step in enumerate(ritual_steps, start=1):
+            st.write(f"{i}. {step}")
 
     # Show mansion images for recommended mansions
     st.markdown("#### 月宿魔法圖像 (Magic Images for Recommended Mansions)")

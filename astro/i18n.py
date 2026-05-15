@@ -369,6 +369,10 @@ TRANSLATIONS = {
         "zh": "📜 Picatrix 星體魔法",
         "en": "📜 Picatrix Stellar Magic",
     },
+    "arabic_subtab_invocation": {
+        "zh": "🕯️ 靈體召喚（Picatrix）",
+        "en": "🕯️ Spirit Invocation (Picatrix)",
+    },
     "arabic_subtab_shams": {
         "zh": "☪ 太陽知識大全",
         "en": "☪ Shams al-Maʻārif",

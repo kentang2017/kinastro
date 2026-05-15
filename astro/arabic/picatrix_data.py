@@ -16,6 +16,7 @@ import json
 import streamlit as st
 from pathlib import Path
 from typing import Any
+from html import escape
 
 
 # ====================== 資料載入函式 ======================
@@ -626,12 +627,77 @@ GREER_MANSIONS = _load_json("picatrix_mansions_greer.json")["mansions"]
 TALISMANS = _load_json("picatrix_talismans.json")["talismans"]
 CORRESPONDENCES = _load_json("picatrix_planetary_correspondences.json")["planets"]
 NATURAL_RECIPES = _load_json("picatrix_natural_recipes.json")["recipes"]
+SPIRITS_LIBRARY = _load_json("picatrix_spirits.json")
 INCENSES = _load_json("picatrix_incenses.json")
 PICATRIX_INCENSES = {
     "planets": INCENSES["planets"],
     "special_ointments": INCENSES["special_ointments"],
     "general_rules": INCENSES["general_rules"]
 }
+
+
+def _figure_svg_template(planet_zh: str, tradition: str) -> str:
+    safe_planet = escape(planet_zh)
+    safe_tradition = escape(tradition)
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">'
+        '<rect width="320" height="180" fill="#111"/>'
+        f'<text x="160" y="72" text-anchor="middle" fill="#f4d06f" font-size="20">{safe_planet}</text>'
+        f'<text x="160" y="108" text-anchor="middle" fill="#d0d0d0" font-size="14">{safe_tradition}</text>'
+        '</svg>'
+    )
+
+
+def _build_spirits_map() -> dict[str, dict[str, str]]:
+    mapped: dict[str, dict[str, str]] = {}
+    for planet_key, spirit in SPIRITS_LIBRARY.get("spirits", {}).items():
+        mapped[planet_key] = {
+            "name": spirit.get("chinese_name", planet_key),
+            "arabic": spirit.get("arabic_name", ""),
+            "latin": spirit.get("latin_name", ""),
+        }
+    return mapped
+
+
+def _build_figures() -> list[dict[str, str]]:
+    data: list[dict[str, str]] = []
+    for planet_key, spirit in SPIRITS_LIBRARY.get("spirits", {}).items():
+        for fig in spirit.get("figures", []):
+            tradition = fig.get("tradition", "傳統")
+            data.append(
+                {
+                    "planet": planet_key,
+                    "tradition": tradition,
+                    "description": fig.get("desc", ""),
+                    "svg_template": _figure_svg_template(planet_key, tradition),
+                }
+            )
+    return data
+
+
+def _expand_correspondences() -> list[dict[str, Any]]:
+    spirit_by_en = {
+        spirit.get("planet", ""): spirit
+        for spirit in SPIRITS_LIBRARY.get("spirits", {}).values()
+    }
+    expanded: list[dict[str, Any]] = []
+    for item in CORRESPONDENCES:
+        spirit = spirit_by_en.get(item.get("planet", ""), {})
+        merged = dict(item)
+        merged["direction"] = spirit.get("direction", "")
+        merged["stones"] = spirit.get("stones", [])
+        merged["colors"] = spirit.get("colors", [])
+        merged["suffumigation"] = spirit.get("suffumigation", item.get("incense", ""))
+        if not merged.get("stone") and merged["stones"]:
+            merged["stone"] = "、".join(merged["stones"])
+        expanded.append(merged)
+    return expanded
+
+
+spirits = _build_spirits_map()
+figures = _build_figures()
+correspondences = _expand_correspondences()
+
 # ====================== 自動合併 Greer 詳細資料 ======================
 def enrich_mansions():
     """把 Greer 版的詳細用途、圖像、注意事項合併到原有 Mansions"""
@@ -657,7 +723,9 @@ PICATRIX_MANSIONS = enrich_mansions()
 
 # ====================== 公開變數（直接 import 使用）======================
 PICATRIX_TALISMANS = TALISMANS
-PICATRIX_CORRESPONDENCES = CORRESPONDENCES
+PICATRIX_SPIRITS = spirits
+PICATRIX_FIGURES = figures
+PICATRIX_CORRESPONDENCES = correspondences
 PICATRIX_NATURAL_RECIPES = NATURAL_RECIPES
 
 # ====================== 輔助函式 ======================
