@@ -93,7 +93,7 @@ def _get_planetary_hour_score(query_date: date, query_hour: int) -> int:
     return _DAILY_PLANET_FORTUNE.get(hour_ruler, {}).get("score", 0)
 
 
-def _moon_aspect_score(moon_lon: float, planets: list) -> int:
+def _moon_aspect_score(moon_lon: float, planets: list[PlanetPosition]) -> int:
     """依月亮與各行星的精確守照角度，計算時辰吉凶附加分。"""
     score = 0.0
     for p in planets:

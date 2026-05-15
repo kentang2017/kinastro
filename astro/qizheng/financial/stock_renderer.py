@@ -779,7 +779,7 @@ def _build_price_forecast_profile(
         _SIDEWAYS_BAND_MAX,
     )
 
-    _sideways_short_osc = (0.12, -0.08, 0.05)
+    sideways_short_osc = (0.12, -0.08, 0.05)
 
     def _calc_targets(steps, horizons, sideways_osc):
         tgts = []
@@ -801,7 +801,7 @@ def _build_price_forecast_profile(
             tgts.append({"horizon": horizon, "step": step, "price": max(_MIN_PRICE_FLOOR, target_price)})
         return tgts
 
-    short_targets = _calc_targets(_SHORT_TERM_STEPS, _SHORT_TERM_HORIZONS, _sideways_short_osc)
+    short_targets = _calc_targets(_SHORT_TERM_STEPS, _SHORT_TERM_HORIZONS, sideways_short_osc)
     targets = _calc_targets(_GOLDEN_RATIO_STEPS, _FORECAST_HORIZONS, _SIDEWAYS_OSCILLATION)
 
     if regime_key == "bullish":
@@ -1060,7 +1060,6 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
     targets = forecast["targets"]
     short_targets = forecast["short_targets"]
 
-    regime_color = forecast["line_color"]
     st.markdown(
         f"""
         <div style="
@@ -1076,7 +1075,7 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
             <div style="color:#d6c8ff;font-size:0.86em;margin-top:5px;">
                 {display_name} 以現價 <span style="color:#FFD700;">{current:.2f}</span> 為基準，
                 結合 52 週振幅、流時星曜分數（{total_score:+d}）與江恩周期共振，
-                先判斷 <span style="color:{regime_color};">{forecast["regime_zh"]}</span>，
+                先判斷 <span style="color:{forecast["line_color"]};">{forecast["regime_zh"]}</span>，
                 再推演未來目標價。
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
