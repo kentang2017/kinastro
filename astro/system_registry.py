@@ -1786,7 +1786,7 @@ _reg(System(
     id="tab_fludd_rota",
     name_zh="弗拉德命運輪盤",
     name_en="Fludd Rota Simulator",
-    category="cat_horary",
+    category="cat_western",
     icon="⚙",
     tab_key="tab_fludd_rota",
     desc_key="desc_fludd_rota",

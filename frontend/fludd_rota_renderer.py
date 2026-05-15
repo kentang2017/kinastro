@@ -175,6 +175,14 @@ def render_fludd_rota_html(
     align-items: center;
     padding: 10px;
     font-family: "Palatino Linotype", Georgia, serif;
+    width: 100%;
+    overflow-x: hidden;
+  }}
+  .rota-wrap {{
+    width: 100%;
+    max-width: {width}px;
+    display: flex;
+    justify-content: center;
   }}
   #rotaCanvas {{
     cursor: grab;
@@ -184,6 +192,9 @@ def render_fludd_rota_html(
       0 0 80px rgba(212,168,67,0.05),
       inset 0 0 30px rgba(0,0,0,0.8);
     display: block;
+    width: 100%;
+    max-width: {width}px;
+    height: auto;
   }}
   #rotaCanvas:active {{ cursor: grabbing; }}
   .ring-info {{
@@ -197,7 +208,9 @@ def render_fludd_rota_html(
 </style>
 </head>
 <body>
-<canvas id="rotaCanvas" width="{width}" height="{width}"></canvas>
+<div class="rota-wrap">
+  <canvas id="rotaCanvas" width="{width}" height="{width}"></canvas>
+</div>
 <div class="ring-info">✦ ROTA FORTUNAE · FLUDD 1617 · 拖曳各層以旋轉 ✦</div>
 
 <script>
@@ -697,37 +710,33 @@ def render_fludd_rota(
             "也可直接使用預設值探索輪盤。"
         )
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            sun_deg = st.number_input(
-                "☉ 太陽（Ring 1 主控）", 0.0, 360.0, 0.0, 1.0, key="fr_sun"
-            )
-            moon_deg = st.number_input(
-                "☽ 月亮（Ring 2 主控）", 0.0, 360.0, 45.0, 1.0, key="fr_moon"
-            )
-            mercury_deg = st.number_input(
-                "☿ 水星（Ring 3 共控）", 0.0, 360.0, 90.0, 1.0, key="fr_mercury"
-            )
-        with col2:
-            venus_deg = st.number_input(
-                "♀ 金星（Ring 3 共控）", 0.0, 360.0, 120.0, 1.0, key="fr_venus"
-            )
-            mars_deg = st.number_input(
-                "♂ 火星（Ring 4 共控）", 0.0, 360.0, 180.0, 1.0, key="fr_mars"
-            )
-            jupiter_deg = st.number_input(
-                "♃ 木星（Ring 4 共控）", 0.0, 360.0, 240.0, 1.0, key="fr_jupiter"
-            )
-        with col3:
-            saturn_deg = st.number_input(
-                "♄ 土星（Ring 4 共控）", 0.0, 360.0, 300.0, 1.0, key="fr_saturn"
-            )
-            asc_deg = st.number_input(
-                "ASC 上升點（Ring 1 次控）", 0.0, 360.0, 30.0, 1.0, key="fr_asc"
-            )
-            north_node_deg = st.number_input(
-                "☊ 北交點（解讀調節）", 0.0, 360.0, 60.0, 1.0, key="fr_nn"
-            )
+        sun_deg = st.number_input(
+            "☉ 太陽（Ring 1 主控）", 0.0, 360.0, 0.0, 1.0, key="fr_sun"
+        )
+        moon_deg = st.number_input(
+            "☽ 月亮（Ring 2 主控）", 0.0, 360.0, 45.0, 1.0, key="fr_moon"
+        )
+        mercury_deg = st.number_input(
+            "☿ 水星（Ring 3 共控）", 0.0, 360.0, 90.0, 1.0, key="fr_mercury"
+        )
+        venus_deg = st.number_input(
+            "♀ 金星（Ring 3 共控）", 0.0, 360.0, 120.0, 1.0, key="fr_venus"
+        )
+        mars_deg = st.number_input(
+            "♂ 火星（Ring 4 共控）", 0.0, 360.0, 180.0, 1.0, key="fr_mars"
+        )
+        jupiter_deg = st.number_input(
+            "♃ 木星（Ring 4 共控）", 0.0, 360.0, 240.0, 1.0, key="fr_jupiter"
+        )
+        saturn_deg = st.number_input(
+            "♄ 土星（Ring 4 共控）", 0.0, 360.0, 300.0, 1.0, key="fr_saturn"
+        )
+        asc_deg = st.number_input(
+            "ASC 上升點（Ring 1 次控）", 0.0, 360.0, 30.0, 1.0, key="fr_asc"
+        )
+        north_node_deg = st.number_input(
+            "☊ 北交點（解讀調節）", 0.0, 360.0, 60.0, 1.0, key="fr_nn"
+        )
 
         south_node_deg = (north_node_deg + 180.0) % 360.0
         st.caption(f"☋ 南交點（自動計算）：{south_node_deg:.1f}°")
@@ -741,6 +750,7 @@ def render_fludd_rota(
 
     # ── 計算與狀態管理 ────────────────────────────────────────
     _key = "fludd_rota_reading"
+    _src_key = "fludd_rota_source"
 
     if submitted:
         cfg = RotaConfig(
@@ -757,8 +767,11 @@ def render_fludd_rota(
         )
         reading: RotaReading = compute_reading(cfg)
         st.session_state[_key] = reading
+        st.session_state[_src_key] = "manual_input"
 
-    reading: Optional[RotaReading] = st.session_state.get(_key)
+    reading: Optional[RotaReading] = None
+    if st.session_state.get(_src_key) == "manual_input":
+        reading = st.session_state.get(_key)
 
     # ── 決定輪盤偏移 ─────────────────────────────────────────
     if reading is not None:
@@ -770,7 +783,7 @@ def render_fludd_rota(
         r1_off = r2_off = r3_off = r4_off = 0.0
 
     # ── 渲染輪盤 ─────────────────────────────────────────────
-    canvas_width = 500
+    canvas_width = 520
     html_content = render_fludd_rota_html(
         ring1_offset=r1_off,
         ring2_offset=r2_off,
