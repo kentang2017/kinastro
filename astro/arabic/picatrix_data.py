@@ -16,6 +16,7 @@ import json
 import streamlit as st
 from pathlib import Path
 from typing import Any
+from html import escape
 
 
 # ====================== 資料載入函式 ======================
@@ -636,20 +637,22 @@ PICATRIX_INCENSES = {
 
 
 def _figure_svg_template(planet_zh: str, tradition: str) -> str:
+    safe_planet = escape(planet_zh)
+    safe_tradition = escape(tradition)
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">'
         '<rect width="320" height="180" fill="#111"/>'
-        f'<text x="160" y="72" text-anchor="middle" fill="#f4d06f" font-size="20">{planet_zh}</text>'
-        f'<text x="160" y="108" text-anchor="middle" fill="#d0d0d0" font-size="14">{tradition}</text>'
+        f'<text x="160" y="72" text-anchor="middle" fill="#f4d06f" font-size="20">{safe_planet}</text>'
+        f'<text x="160" y="108" text-anchor="middle" fill="#d0d0d0" font-size="14">{safe_tradition}</text>'
         '</svg>'
     )
 
 
 def _build_spirits_map() -> dict[str, dict[str, str]]:
     mapped: dict[str, dict[str, str]] = {}
-    for planet_zh, spirit in SPIRITS_LIBRARY.get("spirits", {}).items():
-        mapped[planet_zh] = {
-            "name": spirit.get("chinese_name", planet_zh),
+    for planet_key, spirit in SPIRITS_LIBRARY.get("spirits", {}).items():
+        mapped[planet_key] = {
+            "name": spirit.get("chinese_name", planet_key),
             "arabic": spirit.get("arabic_name", ""),
             "latin": spirit.get("latin_name", ""),
         }
@@ -658,15 +661,15 @@ def _build_spirits_map() -> dict[str, dict[str, str]]:
 
 def _build_figures() -> list[dict[str, str]]:
     data: list[dict[str, str]] = []
-    for planet_zh, spirit in SPIRITS_LIBRARY.get("spirits", {}).items():
+    for planet_key, spirit in SPIRITS_LIBRARY.get("spirits", {}).items():
         for fig in spirit.get("figures", []):
             tradition = fig.get("tradition", "傳統")
             data.append(
                 {
-                    "planet": planet_zh,
+                    "planet": planet_key,
                     "tradition": tradition,
                     "description": fig.get("desc", ""),
-                    "svg_template": _figure_svg_template(planet_zh, tradition),
+                    "svg_template": _figure_svg_template(planet_key, tradition),
                 }
             )
     return data

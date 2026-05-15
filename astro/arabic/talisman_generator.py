@@ -5,6 +5,7 @@ Picatrix Talisman utility helpers.
 from __future__ import annotations
 
 from typing import Any
+import re
 
 from .picatrix_invocations import Planet, build_spirit_invocation_steps
 
@@ -26,6 +27,16 @@ PLANET_ALIASES = {
     "月亮": Planet.MOON,
 }
 
+PLANET_SCAN_ORDER = [
+    (re.compile(r"\bsaturn\b"), "土星", Planet.SATURN),
+    (re.compile(r"\bjupiter\b"), "木星", Planet.JUPITER),
+    (re.compile(r"\bmars\b"), "火星", Planet.MARS),
+    (re.compile(r"\bsun\b"), "太陽", Planet.SUN),
+    (re.compile(r"\bvenus\b"), "金星", Planet.VENUS),
+    (re.compile(r"\bmercury\b"), "水星", Planet.MERCURY),
+    (re.compile(r"\bmoon\b"), "月亮", Planet.MOON),
+]
+
 
 def _infer_planet_from_talisman(talisman: dict[str, Any]) -> Planet | None:
     if talisman.get("planet"):
@@ -35,8 +46,8 @@ def _infer_planet_from_talisman(talisman: dict[str, Any]) -> Planet | None:
     timing = str(talisman.get("timing", ""))
     purpose = str(talisman.get("purpose", ""))
     payload = f"{timing} {purpose}".lower()
-    for alias, planet in PLANET_ALIASES.items():
-        if alias in payload:
+    for en_pattern, zh_token, planet in PLANET_SCAN_ORDER:
+        if en_pattern.search(payload) or zh_token in payload:
             return planet
     return None
 

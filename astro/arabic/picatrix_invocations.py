@@ -142,11 +142,16 @@ def _planet_from_key(key: str) -> Planet:
 
 
 def _build_spirit(planet_key: str, raw: dict[str, Any]) -> PlanetarySpirit:
+    planet_name = raw.get("planet", planet_key)
+    chinese_name = raw.get("chinese_name")
+    if not chinese_name:
+        chinese_name = PLANET_NAME_ZH.get(planet_name, planet_key)
+
     return PlanetarySpirit(
-        planet=_planet_from_key(raw.get("planet", planet_key)),
+        planet=_planet_from_key(planet_name),
         arabic_name=raw.get("arabic_name", ""),
         latin_name=raw.get("latin_name", ""),
-        chinese_name=raw.get("chinese_name", PLANET_NAME_ZH.get(raw.get("planet", planet_key), planet_key)),
+        chinese_name=chinese_name,
         metal=raw.get("metal", ""),
         stones=raw.get("stones", []),
         colors=raw.get("colors", []),
