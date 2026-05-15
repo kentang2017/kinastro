@@ -6006,26 +6006,34 @@ if not _engine_handled:
                     _p = st.session_state["_calc_params"]
                     with st.spinner(t("spinner_fludd_rota")):
                         _fw = compute_western_chart(**_p)
-                    def _planet_lon(_name_prefix: str) -> float:
+                    def _planet_lon(_name_prefix: str) -> float | None:
                         for _pl in _fw.planets:
                             if _pl.name.startswith(_name_prefix):
                                 return _pl.longitude
-                        return 0.0
+                        return None
+                    _lons = {
+                        k: _planet_lon(v)
+                        for k, v in [
+                            ("sun", "Sun"), ("moon", "Moon"),
+                            ("mercury", "Mercury"), ("venus", "Venus"),
+                            ("mars", "Mars"), ("jupiter", "Jupiter"),
+                            ("saturn", "Saturn"),
+                        ]
+                    }
                     _nn_lon = _planet_lon("North Node")
-                    _fludd_auto_cfg = _fludd_config_from_dict({
-                        "sun": _planet_lon("Sun"),
-                        "moon": _planet_lon("Moon"),
-                        "mercury": _planet_lon("Mercury"),
-                        "venus": _planet_lon("Venus"),
-                        "mars": _planet_lon("Mars"),
-                        "jupiter": _planet_lon("Jupiter"),
-                        "saturn": _planet_lon("Saturn"),
-                        "ascendant": _fw.ascendant,
-                        "north_node": _nn_lon,
-                        "south_node": (_nn_lon + 180.0) % 360.0,
-                    })
-                except Exception:
-                    pass
+                    # Only build auto_config when all required planets are present
+                    if all(v is not None for v in _lons.values()) and _nn_lon is not None:
+                        _fludd_auto_cfg = _fludd_config_from_dict({
+                            **_lons,
+                            "ascendant": _fw.ascendant,
+                            "north_node": _nn_lon,
+                            "south_node": (_nn_lon + 180.0) % 360.0,
+                        })
+                except Exception as _fludd_err:
+                    import logging as _logging
+                    _logging.getLogger(__name__).warning(
+                        "Fludd Rota auto-config failed: %s", _fludd_err
+                    )
             render_fludd_rota(
                 auto_config=_fludd_auto_cfg,
                 after_chart_hook=lambda: _render_ai_button(
