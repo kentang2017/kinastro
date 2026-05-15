@@ -509,22 +509,22 @@ if st.session_state.get("_star_particles", True):
 # "_lang_select" session_state key that is set by the dropdown.
 _LANG_MAP = {"繁體中文": "zh", "简体中文": "zh_cn", "English": "en"}
 _LANG_LABEL_MAP = {v: k for k, v in _LANG_MAP.items()}
+_DEFAULT_LANG_LABEL = "繁體中文"
 
 
 def _sync_lang_from_selectbox() -> None:
-    _sel = st.session_state.get("_lang_select", "繁體中文")
+    _sel = st.session_state.get("_lang_select", _DEFAULT_LANG_LABEL)
     st.session_state["lang"] = _LANG_MAP.get(_sel, "zh")
 
 if "_lang_select" in st.session_state:
     _sync_lang_from_selectbox()
-elif "lang" not in st.session_state:
-    st.session_state["lang"] = "zh"
-
-# Keep the language dropdown and lang code in sync both ways.
-_cur_lang_code = st.session_state.get("lang", "zh")
-_target_lang_label = _LANG_LABEL_MAP.get(_cur_lang_code, "繁體中文")
-if st.session_state.get("_lang_select") != _target_lang_label:
-    st.session_state["_lang_select"] = _target_lang_label
+else:
+    if "lang" not in st.session_state:
+        st.session_state["lang"] = "zh"
+    st.session_state["_lang_select"] = _LANG_LABEL_MAP.get(
+        st.session_state.get("lang", "zh"),
+        _DEFAULT_LANG_LABEL,
+    )
 
 
 # ── Restore birth data + system from URL query params (share feature) ─────────
