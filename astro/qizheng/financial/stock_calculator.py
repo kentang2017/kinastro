@@ -61,6 +61,57 @@ _SIGN_DIGNITY = {
     "太陰": {"巨蟹": 2, "金牛": 1, "摩羯": -2, "天蠍": -1},
 }
 
+# ============================================================
+# 時辰吉凶：傳統七政行星時（Chaldean Planetary Hours）
+# ============================================================
+
+# 迦勒底順序（由慢至快）：土星 木星 火星 太陽 金星 水星 太陰
+_CHALDEAN_ORDER = ["土星", "木星", "火星", "太陽", "金星", "水星", "太陰"]
+# 各星曜迦勒底索引（由 weekday 推日主）
+# weekday: 0=Mon(太陰=6), 1=Tue(火星=2), 2=Wed(水星=5), 3=Thu(木星=1),
+#          4=Fri(金星=4), 5=Sat(土星=0), 6=Sun(太陽=3)
+_WEEKDAY_DAY_RULER_IDX = {0: 6, 1: 2, 2: 5, 3: 1, 4: 4, 5: 0, 6: 3}
+# 日出大約 06:00，故午夜00:00對應 offset = 0 - 6 = -6 ≡ +1 (mod 7)
+_MIDNIGHT_OFFSET = -6
+
+# 月亮守照相位分數（positive = benefic side, negative = malefic）
+_MOON_ASPECT_ORBS: dict[int, float] = {0: 8.0, 60: 6.0, 90: 8.0, 120: 8.0, 180: 9.0}
+_MOON_ASPECT_WEIGHTS: dict[int, float] = {0: 2.0, 60: 1.0, 90: -1.5, 120: 1.5, 180: -2.0}
+_MOON_PLANET_MODIFIER: dict[str, float] = {
+    "太陽": 1.0, "木星": 1.0, "金星": 1.0, "紫氣": 0.8, "水星": 0.4,
+    "火星": -1.0, "土星": -1.0, "計都": -0.8, "月孛": -0.7, "羅睺": -0.3,
+}
+
+
+def _get_planetary_hour_score(query_date: date, query_hour: int) -> int:
+    """計算當前時辰的行星時星曜吉凶分數（傳統迦勒底行星時）。"""
+    weekday = query_date.weekday()
+    day_ruler_idx = _WEEKDAY_DAY_RULER_IDX[weekday]
+    # 午夜00:00 = 日出(06:00)前 6 小時，序列向前移 6 位
+    hour_idx = (day_ruler_idx + _MIDNIGHT_OFFSET + query_hour) % 7
+    hour_ruler = _CHALDEAN_ORDER[hour_idx]
+    return _DAILY_PLANET_FORTUNE.get(hour_ruler, {}).get("score", 0)
+
+
+def _moon_aspect_score(moon_lon: float, planets: list) -> int:
+    """依月亮與各行星的精確守照角度，計算時辰吉凶附加分。"""
+    score = 0.0
+    for p in planets:
+        if p.name in ("太陰",):
+            continue
+        diff = abs(moon_lon - p.longitude) % 360
+        if diff > 180:
+            diff = 360 - diff
+        modifier = _MOON_PLANET_MODIFIER.get(p.name, 0.0)
+        if modifier == 0.0:
+            continue
+        for aspect_deg, orb in _MOON_ASPECT_ORBS.items():
+            angle_diff = abs(diff - aspect_deg)
+            if angle_diff <= orb:
+                proximity = 1.0 - angle_diff / orb
+                score += _MOON_ASPECT_WEIGHTS[aspect_deg] * modifier * proximity
+    return round(score)
+
 
 @dataclass
 class DailyFortuneEntry:
@@ -237,9 +288,12 @@ def compute_daily_fortune(
 
     entries = []
     total = 0
+    moon_lon: float = 0.0
     for p in planets:
         score, j_zh, j_en = _planet_score(p)
         total += score
+        if p.name == "太陰":
+            moon_lon = p.longitude
         if score >= 2:
             color = "#FFD700"
         elif score == 1:
@@ -261,6 +315,12 @@ def compute_daily_fortune(
             judgment_en=j_en,
             color=color,
         ))
+
+    # 行星時吉凶（傳統迦勒底行星時，逐時輪替）
+    total += _get_planetary_hour_score(date(query_year, query_month, query_day), query_hour)
+
+    # 月亮守照附加分（依月亮精確度數計算對各星的相位）
+    total += _moon_aspect_score(moon_lon, planets)
 
     # 整體斷語
     if total >= 8:
