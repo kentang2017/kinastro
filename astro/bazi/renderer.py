@@ -751,6 +751,34 @@ def render_streamlit(chart: BaziChart) -> None:
                 inter.tiangan_he]):
         st.caption(auto_cn("四柱間無顯著沖合刑害"))
 
+    # ── 盲派八字
+    st.subheader(auto_cn("🕯️ 盲派八字分析", "Blind School Bazi Analysis"))
+    blind_report = getattr(chart, "blind_school_report", None) or {}
+    if not blind_report:
+        # 後備路徑：兼容由舊版快取或外部程式建立、尚未附帶 blind_school_report 的 chart。
+        try:
+            from .bazi_blind_school_logic import BlindSchoolBazi
+            blind_report = BlindSchoolBazi.from_bazi_chart(chart).full_report()
+        except (ImportError, ValueError, AttributeError, TypeError, KeyError) as e:
+            blind_report = {}
+            st.caption(auto_cn(f"盲派分析暫不可用：{e}", f"Blind-school analysis unavailable: {e}"))
+
+    if blind_report:
+        st.markdown(f"**{auto_cn('命局總述')}：** {blind_report.get('summary', '—')}")
+        illness_raw = blind_report.get("illness", {})
+        use_god_raw = blind_report.get("use_god", {})
+        illness = illness_raw if isinstance(illness_raw, dict) else {}
+        use_god = use_god_raw if isinstance(use_god_raw, dict) else {}
+        col_bs1, col_bs2 = st.columns(2)
+        with col_bs1:
+            st.caption(auto_cn("病處", "Illness"))
+            st.write(illness.get("總述", "—"))
+        with col_bs2:
+            st.caption(auto_cn("以病取用", "Use-God Recommendation"))
+            st.write(use_god.get("總結", "—"))
+        with st.expander(auto_cn("查看完整盲派結構化報告", "View Full Blind-School Structured Report")):
+            st.json(blind_report)
+
     # ── 文字解讀
     st.subheader(auto_cn("📖 古典命盤解讀", "Classical Bazi Interpretation"))
     tab_zh, tab_en = st.tabs([auto_cn("中文古典解讀"), "English Reading"])

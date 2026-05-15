@@ -221,6 +221,7 @@ class BaziChart:
 
     # 輔助
     birth_datetime_str: str
+    blind_school_report: Dict[str, object] = field(default_factory=dict)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1396,6 +1397,15 @@ def compute_bazi(
     reading_zh, reading_en = _generate_reading(chart)
     chart.reading_zh = reading_zh
     chart.reading_en = reading_en
+
+    # 盲派分析整合（不阻斷主流程）
+    try:
+        from .bazi_blind_school_logic import BlindSchoolBazi
+        chart.blind_school_report = BlindSchoolBazi.from_bazi_chart(chart).full_report()
+    except (ImportError, ValueError, AttributeError, TypeError, KeyError) as e:
+        chart.blind_school_report = {
+            "error": f"blind_school_analysis_failed: {e}",
+        }
 
     return chart
 
