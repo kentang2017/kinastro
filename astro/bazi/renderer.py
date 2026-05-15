@@ -788,6 +788,12 @@ def render_streamlit(chart: BaziChart) -> None:
                 tomb_count = len(illness.get("入墓", [])) if isinstance(illness.get("入墓"), list) else 0
                 bias_count = len(illness.get("五行偏枯", [])) if isinstance(illness.get("五行偏枯"), list) else 0
                 punish_count = len(illness.get("三刑", [])) if isinstance(illness.get("三刑"), list) else 0
+                risk_items = [
+                    (auto_cn("穿破", "Pierce/Break"), pb_count),
+                    (auto_cn("入墓", "Tomb"), tomb_count),
+                    (auto_cn("偏枯", "Element Bias"), bias_count),
+                    (auto_cn("三刑", "Punishment"), punish_count),
+                ]
                 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
                 with col_m1:
                     st.metric(auto_cn("穿破", "Pierce/Break"), pb_count)
@@ -799,10 +805,8 @@ def render_streamlit(chart: BaziChart) -> None:
                     st.metric(auto_cn("三刑", "Punishment"), punish_count)
 
                 risks_df = pd.DataFrame([
-                    {auto_cn("項目", "Category"): auto_cn("穿破", "Pierce/Break"), auto_cn("數量", "Count"): pb_count},
-                    {auto_cn("項目", "Category"): auto_cn("入墓", "Tomb"), auto_cn("數量", "Count"): tomb_count},
-                    {auto_cn("項目", "Category"): auto_cn("偏枯", "Element Bias"), auto_cn("數量", "Count"): bias_count},
-                    {auto_cn("項目", "Category"): auto_cn("三刑", "Punishment"), auto_cn("數量", "Count"): punish_count},
+                    {auto_cn("項目", "Category"): category, auto_cn("數量", "Count"): count}
+                    for category, count in risk_items
                 ])
                 st.bar_chart(risks_df.set_index(auto_cn("項目", "Category"))[auto_cn("數量", "Count")])
 
@@ -819,11 +823,14 @@ def render_streamlit(chart: BaziChart) -> None:
                 if isinstance(limits, list) and limits:
                     st.markdown(f"**{auto_cn('盲派大限', 'Blind-School Limits')}**")
                     limits_df = pd.DataFrame(limits)
-                    show_cols = [
-                        c for c in [auto_cn("限段", "Segment"), auto_cn("虛歲", "Age"), auto_cn("限干支", "Pillar"),
-                                    auto_cn("十神", "Ten God"), auto_cn("運勢初判", "Preliminary Fortune")]
-                        if c in limits_df.columns
+                    desired_cols = [
+                        auto_cn("限段", "Segment"),
+                        auto_cn("虛歲", "Age"),
+                        auto_cn("限干支", "Pillar"),
+                        auto_cn("十神", "Ten God"),
+                        auto_cn("運勢初判", "Preliminary Fortune"),
                     ]
+                    show_cols = [c for c in desired_cols if c in limits_df.columns]
                     st.dataframe(limits_df[show_cols] if show_cols else limits_df, width="stretch")
 
                 marriage = blind_report.get("marriage", {})
