@@ -44,6 +44,10 @@ from .constants import (
     RING4_ZONES,
 )
 
+# Ecliptic arc (in degrees) within which a lunar node is considered
+# conjunct the Sun and thus actively modifies the reading direction.
+_NODE_INFLUENCE_THRESHOLD_DEG: float = 30.0
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 資料結構
@@ -171,9 +175,9 @@ def _node_modifier_key(config: RotaConfig) -> str:
     north_arc = arc(config.north_node, config.sun)
     south_arc = arc(config.south_node, config.sun)
 
-    if north_arc < 30:
+    if north_arc < _NODE_INFLUENCE_THRESHOLD_DEG:
         return "north_node"
-    if south_arc < 30:
+    if south_arc < _NODE_INFLUENCE_THRESHOLD_DEG:
         return "south_node"
     return "neutral"
 

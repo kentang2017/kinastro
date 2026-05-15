@@ -49,6 +49,10 @@ except ImportError:
         return text
 
 
+# Maximum characters to preview for Ring 4 text in the compact reading panel
+_RING4_PREVIEW_LEN = 80
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CSS 主題
 # ─────────────────────────────────────────────────────────────────────────────
@@ -649,7 +653,7 @@ def _render_reading_panel(reading: RotaReading) -> None:
         st.markdown(
             f'<div class="fr-ring-label">第四層 · 命運區域（火星+木星+土星）</div>'
             f'<div class="fr-ring-sym">{reading.ring4_zone} {reading.ring4_zone_name}</div>'
-            f'<div class="fr-ring-text">{reading.ring4_text[:80]}…</div>',
+            f'<div class="fr-ring-text">{reading.ring4_text[:_RING4_PREVIEW_LEN]}…</div>',
             unsafe_allow_html=True,
         )
 
