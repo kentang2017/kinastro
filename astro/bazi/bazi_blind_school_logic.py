@@ -390,6 +390,126 @@ class Bazi:
             '時宮 (子女宮)': f"{self.hour} - 子女"
         }
 
+# ==================== 十神系統 ====================
+
+def calculate_ten_gods(bazi: Bazi) -> Dict[str, Dict[str, str]]:
+    """完整十神計算 - 對每個柱相對於日干"""
+    day_stem = bazi.day.stem
+    gods = {}
+    for name, pillar in zip(['year', 'month', 'day', 'hour'], bazi.all_pillars()):
+        gods[name] = {
+            'stem_god': get_ten_god(day_stem, pillar.stem),
+            'branch_gods': [get_ten_god(day_stem, h) for h in BRANCH_HIDDEN.get(pillar.branch, [])]
+        }
+    return gods
+
+# ==================== 以病取用 (核心盲派邏輯) ====================
+
+def detect_illness(bazi: Bazi) -> List[Dict]:
+    """檢測八字之病 (盲派以病取用基礎)"""
+    illnesses = []
+    all_stems = [p.stem for p in bazi.all_pillars()]
+    all_branches = [p.branch for p in bazi.all_pillars()]
+    
+    # 1. 穿破檢測 (盲派最重視)
+    for i, b1 in enumerate(all_branches):
+        if b1 in PIERCE_MAP:
+            pierced = PIERCE_MAP[b1]
+            if pierced in all_branches:
+                illnesses.append({
+                    'type': '穿破',
+                    'description': f"{b1}穿{pierced} - 盲派殺傷力最強",
+                    'severity': 'high'
+                })
+    
+    # 2. 沖墓入墓
+    for b in all_branches:
+        if b in CHONG_MAP.values() or any(b in TOMB_MAP.get(el, []) for el in FIVE_ELEMENTS.values()):
+            illnesses.append({'type': '墓沖', 'description': f"{b}入墓或沖", 'severity': 'medium'})
+    
+    # 3. 簡單旺衰 (過旺過弱)
+    elem_count = {'木':0, '火':0, '土':0, '金':0, '水':0}
+    for s in all_stems:
+        elem_count[FIVE_ELEMENTS[s]] += 1
+    for e, cnt in elem_count.items():
+        if cnt >= 3:
+            illnesses.append({'type': '過旺', 'element': e, 'count': cnt, 'description': f"{e}過旺為病"})
+        if cnt == 0:
+            illnesses.append({'type': '過弱', 'element': e, 'description': f"{e}極弱為病"})
+    
+    return illnesses
+
+def recommend_use_god(bazi: Bazi, illnesses: List[Dict]) -> Dict:
+    """以病取用 - 盲派核心技法"""
+    day_stem = bazi.day.stem
+    day_elem = FIVE_ELEMENTS[day_stem]
+    
+    use_gods = []
+    for illness in illnesses:
+        if illness['type'] == '穿破':
+            # 穿破多用合、印、比肩化解
+            use_gods.append({'god': '正印或比肩', 'reason': '制穿破，通關或合住'})
+        elif illness['type'] == '過旺':
+            weak_elem = {'木':'火', '火':'土', '土':'金', '金':'水', '水':'木'}[illness['element']]
+            use_gods.append({'god': f"洩旺{illness['element']}的{weak_elem}神", 'reason': '洩秀制旺'})
+        elif illness['type'] == '過弱':
+            use_gods.append({'god': f"生扶{illness['element']}的印或比劫", 'reason': '補弱'})
+    
+    # 默認用神 (以日干為主)
+    default_use = {'甲乙': '水木', '丙丁': '木火', '戊己': '火土', '庚辛': '土金', '壬癸': '金水'}.get(day_stem[0]+'類', '印比')
+    
+    return {
+        'day_stem': day_stem,
+        'illnesses': illnesses,
+        'recommended_use': use_gods or [{'god': default_use, 'reason': '默認調候'}],
+        'summary': f"日主{day_stem}，病處：{len(illnesses)}處，用神以{use_gods[0]['god'] if use_gods else default_use}為主"
+    }
+
+# ==================== 大限計算 (盲派特色限運) ====================
+
+def calculate_limits(bazi: Bazi) -> List[Dict]:
+    """盲派大限計算 - 以日柱為基點起限 (依書中示例)"""
+    day_stem = bazi.day.stem
+    # 盲派常見限運模式 (簡化版，依夏仲奇風格)
+    # 例如：丙限主8歲前、庚限8-16歲等，結合虛歲
+    limit_patterns = {
+        '甲': [{'start': 0, 'end': 8, 'name': '甲限', 'desc': '頭部/父母宮主事'}],
+        '乙': [{'start': 8, 'end': 16, 'name': '乙限', 'desc': '兄弟/財帛'}],
+        '丙': [{'start': 0, 'end': 8, 'name': '丙限', 'desc': '8歲前主事'}],
+        '丁': [{'start': 8, 'end': 16, 'name': '丁限', 'desc': '16歲前'}],
+        # 可擴展更多...
+    }
+    
+    base_limits = limit_patterns.get(day_stem, [{'start': 0, 'end': 10, 'name': f"{day_stem}限", 'desc': '基礎限運'}])
+    
+    # 加入大運交替提示
+    limits = []
+    for lim in base_limits:
+        limits.append({
+            'age_range': f"{lim['start']}-{lim['end']}歲",
+            'limit_name': lim['name'],
+            'description': lim['desc'],
+            'note': '盲派以日柱起限，重點看限干引動宮位'
+        })
+    return limits
+
+# ==================== 主分析函數 ====================
+
+def analyze_bazi_full(bazi: Bazi) -> Dict:
+    """完整盲派分析：十神 + 以病取用 + 大限"""
+    ten_gods = calculate_ten_gods(bazi)
+    illnesses = detect_illness(bazi)
+    use_info = recommend_use_god(bazi, illnesses)
+    limits = calculate_limits(bazi)
+    
+    return {
+        'bazi': bazi.to_dict(),
+        'ten_gods': ten_gods,
+        'illness_analysis': use_info,
+        'great_limits': limits,
+        'summary': f"盲派完整分析完成 - 日主 {bazi.day.stem}{bazi.day.branch}，病處 {len(illnesses)} 處，大限 {len(limits)} 段"
+    }
+
 # ==================== 輔助：漂亮輸出 ====================
 
 def print_bazi_analysis(bazi: Bazi):
