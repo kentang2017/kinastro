@@ -885,7 +885,11 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     font-family: 'Cinzel', serif;
     font-size: clamp(1rem, 2.5vw, 1.6rem);
     font-weight: 400;
-    color: var(--ka-cosmic-violet);
+    background: linear-gradient(135deg, #ffffff 0%, #ffe87a 45%, #c4b5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% auto;
     letter-spacing: 0.45em;
     text-transform: uppercase;
     opacity: 0.85;
