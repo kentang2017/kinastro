@@ -40,6 +40,12 @@ _FORECAST_HORIZONS = ("1個月", "3個月", "6個月", "1年", "3年以上")
 _BULLISH_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#86efac", "#facc15", "#FFD700")
 _BEARISH_FORECAST_COLORS = ("#fb923c", "#f87171", "#f87171", "#fb7185", "#f87171")
 _SIDEWAYS_FORECAST_COLORS = ("#60a5fa", "#38bdf8", "#a78bfa", "#c084fc", "#d8b4fe")
+# 短期 Gann √時間比例步幅：step(n_days) ≈ 0.236 × √(n_days/30)
+_SHORT_TERM_STEPS = (0.043, 0.075, 0.114)
+_SHORT_TERM_HORIZONS = ("1天", "3天", "7天")
+_SHORT_TERM_BULLISH_COLORS = ("#818cf8", "#a78bfa", "#c084fc")
+_SHORT_TERM_BEARISH_COLORS = ("#fda4af", "#fb7185", "#f87171")
+_SHORT_TERM_SIDEWAYS_COLORS = ("#67e8f9", "#38bdf8", "#60a5fa")
 _SIDEWAYS_OSCILLATION = (-0.22, 0.14, -0.08, 0.17, 0.05)
 _BULLISH_COMPOSITE_THRESHOLD = 2.4
 _BEARISH_COMPOSITE_THRESHOLD = -2.4
@@ -773,23 +779,37 @@ def _build_price_forecast_profile(
         _SIDEWAYS_BAND_MAX,
     )
 
-    targets = []
-    for idx, (step, horizon) in enumerate(zip(_GOLDEN_RATIO_STEPS, _FORECAST_HORIZONS)):
-        if regime_key == "bullish":
-            move = price_range * step * trend_factor * directional_strength
-            target_price = current + move
-        elif regime_key == "bearish":
-            move = price_range * step * trend_factor * directional_strength
-            target_price = current - move
-        else:
-            oscillation = sideways_band * _SIDEWAYS_OSCILLATION[idx]
-            target_price = current + reversion_strength * (_SIDEWAYS_BASE_REVERSION + step * _SIDEWAYS_STEP_MULTIPLIER) + oscillation
-            target_price = _clamp(
-                target_price,
-                max(_MIN_PRICE_FLOOR, low - price_range * 0.08),
-                high + price_range * 0.08,
-            )
-        targets.append({"horizon": horizon, "step": step, "price": max(_MIN_PRICE_FLOOR, target_price)})
+    sideways_short_osc = (0.12, -0.08, 0.05)
+
+    def _calc_targets(steps, horizons, sideways_osc):
+        tgts = []
+        for idx, (step, horizon) in enumerate(zip(steps, horizons)):
+            if regime_key == "bullish":
+                move = price_range * step * trend_factor * directional_strength
+                target_price = current + move
+            elif regime_key == "bearish":
+                move = price_range * step * trend_factor * directional_strength
+                target_price = current - move
+            else:
+                oscillation = sideways_band * sideways_osc[idx]
+                target_price = current + reversion_strength * (_SIDEWAYS_BASE_REVERSION + step * _SIDEWAYS_STEP_MULTIPLIER) + oscillation
+                target_price = _clamp(
+                    target_price,
+                    max(_MIN_PRICE_FLOOR, low - price_range * 0.08),
+                    high + price_range * 0.08,
+                )
+            tgts.append({"horizon": horizon, "step": step, "price": max(_MIN_PRICE_FLOOR, target_price)})
+        return tgts
+
+    short_targets = _calc_targets(_SHORT_TERM_STEPS, _SHORT_TERM_HORIZONS, sideways_short_osc)
+    targets = _calc_targets(_GOLDEN_RATIO_STEPS, _FORECAST_HORIZONS, _SIDEWAYS_OSCILLATION)
+
+    if regime_key == "bullish":
+        short_marker_colors = _SHORT_TERM_BULLISH_COLORS
+    elif regime_key == "bearish":
+        short_marker_colors = _SHORT_TERM_BEARISH_COLORS
+    else:
+        short_marker_colors = _SHORT_TERM_SIDEWAYS_COLORS
 
     return {
         "price_range": price_range,
@@ -801,11 +821,13 @@ def _build_price_forecast_profile(
         "regime_en": regime_en,
         "line_color": line_color,
         "marker_tail": marker_tail,
+        "short_marker_colors": short_marker_colors,
         "gann_total": gann_total,
         "gann_classification": gann_scores.get("classification", "未啟用"),
         "positive_aspects": positive_aspects,
         "negative_aspects": negative_aspects,
         "cycle_alignment": cycle_alignment,
+        "short_targets": short_targets,
         "targets": targets,
     }
 
@@ -1036,6 +1058,7 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
         gann_context=gann_context,
     )
     targets = forecast["targets"]
+    short_targets = forecast["short_targets"]
 
     st.markdown(
         f"""
@@ -1068,16 +1091,51 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
               <span style="background:rgba(248,113,113,0.15);border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:0.8em;">
                 負向守照 {forecast["negative_aspects"]}
               </span>
-              {(
-                  f'<span style="background:rgba(251,146,60,0.14);border-radius:6px;padding:4px 10px;color:#fdba74;font-size:0.8em;">'
-                  f'江恩模組回退：{escape(gann_error[:48])}'
-                  f'</span>'
-              ) if gann_error else ""}
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    # 短期預測卡片（1天、3天、7天）
+    st.markdown(
+        "<div style='color:#c084fc;font-size:0.82em;font-weight:600;margin-bottom:4px;'>🗓 短期目標價 / Short-Term Targets（Gann √時間比例）</div>",
+        unsafe_allow_html=True,
+    )
+    short_card_colors = [
+        "rgba(129,140,248,0.16)",
+        "rgba(167,139,250,0.18)",
+        "rgba(192,132,252,0.20)",
+    ]
+    short_cols = st.columns(3, gap="small")
+    for idx, target in enumerate(short_targets):
+        delta_pct = ((target["price"] - current) / current * 100.0) if current else 0.0
+        with short_cols[idx]:
+            st.markdown(
+                f"""
+                <div style="
+                    background:{short_card_colors[idx]};
+                    border:1px solid rgba(192,132,252,0.35);
+                    border-radius:12px;
+                    padding:10px 10px 9px 10px;
+                    min-height:96px;
+                ">
+                    <div style="font-size:0.78em;color:#e9d5ff;">{target["horizon"]} 目標價</div>
+                    <div style="font-size:1.06em;font-weight:700;color:#c084fc;margin:4px 0 3px 0;">
+                        {target["price"]:.2f}
+                    </div>
+                    <div style="font-size:0.78em;color:{'#86efac' if delta_pct >= 0 else '#f87171'};">
+                        {delta_pct:+.2f}% vs 現價
+                    </div>
+                    <div style="font-size:0.72em;color:#a8b4d8;margin-top:4px;">
+                        φ {target["step"]:.3f}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
     cols = st.columns(5, gap="small")
     card_colors = [
@@ -1115,10 +1173,14 @@ def _render_price_forecast(stock, stock_data, go, *, ipo_date: date, query_date:
             )
 
     fig = go.Figure()
-    x_points = ["現價"] + list(_FORECAST_HORIZONS)
-    y_points = [current] + [t["price"] for t in targets]
+    x_points = ["現價"] + list(_SHORT_TERM_HORIZONS) + list(_FORECAST_HORIZONS)
+    y_points = [current] + [t["price"] for t in short_targets] + [t["price"] for t in targets]
     line_color = forecast["line_color"]
-    marker_color = ["#FFD700", *list(forecast["marker_tail"][:len(targets)])]
+    marker_color = [
+        "#FFD700",
+        *list(forecast["short_marker_colors"]),
+        *list(forecast["marker_tail"][:len(targets)]),
+    ]
 
     fig.add_trace(go.Scatter(
         x=x_points,
