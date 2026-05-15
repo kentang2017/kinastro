@@ -784,30 +784,29 @@ def render_streamlit(chart: BaziChart) -> None:
             ])
 
             with tab_vis:
-                pb_count = len(illness.get("穿破", [])) if isinstance(illness.get("穿破"), list) else 0
-                tomb_count = len(illness.get("入墓", [])) if isinstance(illness.get("入墓"), list) else 0
-                bias_count = len(illness.get("五行偏枯", [])) if isinstance(illness.get("五行偏枯"), list) else 0
-                punish_count = len(illness.get("三刑", [])) if isinstance(illness.get("三刑"), list) else 0
-                risk_items = [
-                    (auto_cn("穿破", "Pierce/Break"), pb_count),
-                    (auto_cn("入墓", "Tomb"), tomb_count),
-                    (auto_cn("偏枯", "Element Bias"), bias_count),
-                    (auto_cn("三刑", "Punishment"), punish_count),
-                ]
+                def _list_count(key: str) -> int:
+                    value = illness.get(key, [])
+                    return len(value) if isinstance(value, list) else 0
+
+                risk_counts = {
+                    auto_cn("穿破", "Pierce/Break"): _list_count("穿破"),
+                    auto_cn("入墓", "Tomb"): _list_count("入墓"),
+                    auto_cn("偏枯", "Element Bias"): _list_count("五行偏枯"),
+                    auto_cn("三刑", "Punishment"): _list_count("三刑"),
+                }
                 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
                 with col_m1:
-                    st.metric(auto_cn("穿破", "Pierce/Break"), pb_count)
+                    st.metric(auto_cn("穿破", "Pierce/Break"), risk_counts[auto_cn("穿破", "Pierce/Break")])
                 with col_m2:
-                    st.metric(auto_cn("入墓", "Tomb"), tomb_count)
+                    st.metric(auto_cn("入墓", "Tomb"), risk_counts[auto_cn("入墓", "Tomb")])
                 with col_m3:
-                    st.metric(auto_cn("偏枯", "Element Bias"), bias_count)
+                    st.metric(auto_cn("偏枯", "Element Bias"), risk_counts[auto_cn("偏枯", "Element Bias")])
                 with col_m4:
-                    st.metric(auto_cn("三刑", "Punishment"), punish_count)
+                    st.metric(auto_cn("三刑", "Punishment"), risk_counts[auto_cn("三刑", "Punishment")])
 
-                risks_df = pd.DataFrame([
-                    {auto_cn("項目", "Category"): category, auto_cn("數量", "Count"): count}
-                    for category, count in risk_items
-                ])
+                risks_df = pd.DataFrame(
+                    [{auto_cn("項目", "Category"): k, auto_cn("數量", "Count"): v} for k, v in risk_counts.items()]
+                )
                 st.bar_chart(risks_df.set_index(auto_cn("項目", "Category"))[auto_cn("數量", "Count")])
 
                 st.caption(auto_cn("病情分級", "Severity"))
