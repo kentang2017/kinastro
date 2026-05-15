@@ -175,6 +175,7 @@ from astro.arabic.picatrix_mansions import (
     get_mansion_index,
     compute_moon_longitude,
 )
+from astro.arabic.picatrix_invocations import render_picatrix_invocations
 from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
 from astro.picatrix_behenian import render_streamlit as render_picatrix_behenian
@@ -3813,10 +3814,11 @@ if not _engine_handled:
         if _is_calculated:
             try:
                 _p = st.session_state["_calc_params"]
-                arabic_subtab_chart, arabic_subtab_lots, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
+                arabic_subtab_chart, arabic_subtab_lots, arabic_subtab_picatrix, arabic_subtab_invocation, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
                     t("arabic_subtab_chart"),
                     t("arabic_subtab_lots"),
                     t("arabic_subtab_picatrix"),
+                    t("arabic_subtab_invocation"),
                     t("arabic_subtab_shams"),
                     t("arabic_subtab_reference"),
                     t("arabic_subtab_ms164"),
@@ -3894,6 +3896,9 @@ if not _engine_handled:
                     with ptab_talisman:
                         render_talisman_generator()
 
+                with arabic_subtab_invocation:
+                    render_picatrix_invocations()
+
                 # --- 太陽知識大全 (Shams al-Maʻārif) ---
                 with arabic_subtab_shams:
                     st.subheader(t("shams_subheader"))
@@ -3928,10 +3933,11 @@ if not _engine_handled:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
         else:
-            arabic_subtab_chart, arabic_subtab_lots, arabic_subtab_picatrix, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
+            arabic_subtab_chart, arabic_subtab_lots, arabic_subtab_picatrix, arabic_subtab_invocation, arabic_subtab_shams, arabic_subtab_ref, arabic_subtab_ms164 = st.tabs([
                 t("arabic_subtab_chart"),
                 t("arabic_subtab_lots"),
                 t("arabic_subtab_picatrix"),
+                t("arabic_subtab_invocation"),
                 t("arabic_subtab_shams"),
                 t("arabic_subtab_reference"),
                 t("arabic_subtab_ms164"),
@@ -3971,6 +3977,9 @@ if not _engine_handled:
 
                 with ptab_talisman:
                     render_talisman_generator()
+
+            with arabic_subtab_invocation:
+                render_picatrix_invocations()
 
             with arabic_subtab_shams:
                 st.subheader(t("shams_subheader"))
