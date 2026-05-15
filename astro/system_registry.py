@@ -1779,6 +1779,31 @@ _reg(System(
     ai_persona_key="info_electional_prompt",
 ))
 
+# ── 弗拉德命運輪盤（Fludd Rota Simulator）────────────────────────────────────
+# 靈感來自 Robert Fludd《Utriusque Cosmi Historia》(1617)
+# 四層同心圓輪盤，由出生星盤行星度數驅動旋轉
+_reg(System(
+    id="tab_fludd_rota",
+    name_zh="弗拉德命運輪盤",
+    name_en="Fludd Rota Simulator",
+    category="cat_horary",
+    icon="⚙",
+    tab_key="tab_fludd_rota",
+    desc_key="desc_fludd_rota",
+    spinner_key="spinner_fludd_rota",
+    hint_key="sys_hint_fludd_rota",
+    tags=[
+        "fludd", "rota", "divination wheel", "robert fludd", "renaissance",
+        "rosicrucian", "hermetic", "utriusque cosmi", "occult", "mystery",
+        "弗拉德", "命運輪盤", "神秘學", "文藝復興占卜", "宇宙輪",
+    ],
+    maturity="beta",
+    accent_color="#8C6E2A",   # 古金色——弗拉德銅版雕刻風格
+    origin_culture="European (Renaissance)",
+    tradition_period="Renaissance (Robert Fludd, 1617)",
+    ai_persona_key="info_fludd_rota_prompt",
+))
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_western — Mundane Astrology 世俗占星 🌍

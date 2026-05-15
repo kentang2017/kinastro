@@ -214,6 +214,7 @@ from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
 from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 from frontend.european_geomancy_renderer import render_european_geomancy
+from frontend.fludd_rota_renderer import render_fludd_rota
 
 
 # ============================================================
@@ -251,7 +252,7 @@ def render_homepage():
          ["醫學占星", "傷寒鈐法"],
          "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
         ("📜", "傳統卜卦占星", "Traditional Horary",
-         ["傳統卜卦占星", "擇日占星", "歐洲地占"],
+         ["傳統卜卦占星", "擇日占星", "歐洲地占", "弗拉德命運輪盤"],
           "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
     ]
     _total_systems = sum(len(systems) for _, _, _, systems, *_ in _categories)
@@ -6001,6 +6002,20 @@ if not _engine_handled:
                         btn_key="european_geomancy",
                     )
                 )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    # ── 弗拉德命運輪盤 ──
+    elif _selected_system == "tab_fludd_rota":
+        try:
+            render_fludd_rota(
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_fludd_rota",
+                    st.session_state.get("fludd_rota_reading"),
+                    btn_key="fludd_rota",
+                )
+            )
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)

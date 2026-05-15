@@ -4635,6 +4635,58 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入出生資料並點擊「開始排盤」，再選擇居所朝向，即可生成個人化 Vastu Purusha Mandala。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart', then select your house facing direction to generate a personalized Vastu Purusha Mandala.",
     },
+
+    # ── 弗拉德命運輪盤（Fludd Rota Simulator）────────────────────────────────
+    "tab_fludd_rota": {
+        "zh": "⚙ 弗拉德命運輪盤",
+        "en": "⚙ Fludd Rota Simulator",
+    },
+    "desc_fludd_rota": {
+        "zh": (
+            "### ⚙ 弗拉德命運輪盤（Fludd Rota Simulator）\n\n"
+            "靈感來自 Robert Fludd（1574–1637）1617 年著作《Utriusque Cosmi Historia》"
+            "（宇宙兩界史）中的占卜輪盤（Rota）。\n\n"
+            "**四層輪盤結構：**\n\n"
+            "| 層級 | 內容 | 控制行星 | 象徵 |\n"
+            "|------|------|----------|------|\n"
+            "| 第一層（最外）| 古典字母 + 符號 | ☉ 太陽 + ASC 上升點 | 宇宙語言、意識表達 |\n"
+            "| 第二層 | 羅馬數字 I–XII | ☽ 月亮 | 命運之宮、情感週期 |\n"
+            "| 第三層 | 七古典行星符號 | ☿ 水星 + ♀ 金星 | 溝通、美感、智識 |\n"
+            "| 第四層（最內）| 十二星座命運區域 | ♂ 火星 + ♃ 木星 + ♄ 土星 | 宏觀命運走向 |\n\n"
+            "月交點（☊ 北交點 / ☋ 南交點）作為解讀調節因子，影響吉凶傾向。\n\n"
+            "輸入出生星盤行星度數後，系統自動旋轉各層輪盤至對應位置，並生成古典弗拉德風格解讀。"
+            "各層亦支援滑鼠拖曳自由旋轉。"
+        ),
+        "en": (
+            "### ⚙ Fludd Rota Simulator\n\n"
+            "Inspired by Robert Fludd's (1574–1637) divination wheel (Rota) from "
+            "*Utriusque Cosmi Historia* (1617).\n\n"
+            "**Four-layer concentric wheel:**\n\n"
+            "| Ring | Content | Controlling Planets | Symbolism |\n"
+            "|------|---------|---------------------|-----------|\n"
+            "| Ring 1 (outermost) | Classical letters + symbols | ☉ Sun + ASC | Cosmic language, consciousness |\n"
+            "| Ring 2 | Roman numerals I–XII | ☽ Moon | Fate houses, emotional cycles |\n"
+            "| Ring 3 | Seven classical planet glyphs | ☿ Mercury + ♀ Venus | Communication, beauty, intellect |\n"
+            "| Ring 4 (innermost) | Twelve zodiac fate zones | ♂ ♃ ♄ | Macro destiny direction |\n\n"
+            "Lunar Nodes (☊ North Node / ☋ South Node) act as interpretation modifiers "
+            "affecting auspiciousness without directly controlling rotation.\n\n"
+            "Enter natal chart planetary degrees; the system auto-rotates each ring to "
+            "its chart-determined position and generates a classical Fludd-style reading. "
+            "Each ring also supports free mouse-drag rotation."
+        ),
+    },
+    "spinner_fludd_rota": {
+        "zh": "正在旋轉弗拉德命運輪盤…",
+        "en": "Spinning the Fludd Rota…",
+    },
+    "sys_hint_fludd_rota": {
+        "zh": "Fludd 1617 · 四層輪盤 · 行星度數驅動 · 可拖曳旋轉 · 古典銅版雕刻風格",
+        "en": "Fludd 1617 · 4-layer wheel · planet-driven rotation · drag-to-spin · classical engraving style",
+    },
+    "info_fludd_rota_prompt": {
+        "zh": "✦ 輸入出生星盤行星度數，點擊「根據星盤設定輪盤並解讀」以啟動弗拉德命運輪盤占卜。",
+        "en": "✦ Enter natal chart planetary degrees and click 'Set Wheel from Chart & Interpret' to activate the Fludd Rota divination.",
+    },
 }
 
 def get_ui_lang() -> str:
