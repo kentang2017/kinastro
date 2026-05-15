@@ -685,11 +685,14 @@ def _render_reading_panel(reading: RotaReading) -> None:
 
 def render_fludd_rota(
     after_chart_hook: Optional[Callable[[], None]] = None,
+    auto_config: Optional[RotaConfig] = None,
 ) -> None:
     """渲染弗拉德命運輪盤完整頁面（Streamlit 入口）。
 
     Args:
         after_chart_hook: 可選回調，在輪盤下方插入額外 UI（如 AI 按鈕）。
+        auto_config: 可選的行星配置，由外部星盤自動傳入。
+            若提供且使用者尚未手動提交表單，則自動根據此配置計算並顯示解讀。
     """
     st.markdown(_theme_css(), unsafe_allow_html=True)
 
@@ -775,8 +778,15 @@ def render_fludd_rota(
         # Backward compatibility: historical readings in session came from this form.
         st.session_state[_src_key] = "manual_input"
 
+    # Auto-compute from chart data when provided and no manual reading exists.
+    # Always refresh the chart-based reading so it stays in sync with the
+    # sidebar date / location selection.
+    if auto_config is not None and st.session_state.get(_src_key) != "manual_input":
+        st.session_state[_key] = compute_reading(auto_config)
+        st.session_state[_src_key] = "chart"
+
     reading: Optional[RotaReading] = None
-    if st.session_state.get(_src_key) == "manual_input":
+    if st.session_state.get(_src_key) in ("manual_input", "chart"):
         reading = st.session_state.get(_key)
 
     # ── 決定輪盤偏移 ─────────────────────────────────────────

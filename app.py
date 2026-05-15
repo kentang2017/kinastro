@@ -215,6 +215,7 @@ from ui.system_handlers.phase1_handlers import build_ziwei_handler
 from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 from frontend.european_geomancy_renderer import render_european_geomancy
 from frontend.fludd_rota_renderer import render_fludd_rota
+from astro.fludd_rota import config_from_dict as _fludd_config_from_dict
 
 
 # ============================================================
@@ -5999,7 +6000,34 @@ if not _engine_handled:
     # ── 弗拉德命運輪盤 ──
     elif _selected_system == "tab_fludd_rota":
         try:
+            _fludd_auto_cfg = None
+            if _is_calculated:
+                try:
+                    _p = st.session_state["_calc_params"]
+                    with st.spinner(t("spinner_fludd_rota")):
+                        _fw = compute_western_chart(**_p)
+                    def _planet_lon(_name_prefix: str) -> float:
+                        for _pl in _fw.planets:
+                            if _pl.name.startswith(_name_prefix):
+                                return _pl.longitude
+                        return 0.0
+                    _nn_lon = _planet_lon("North Node")
+                    _fludd_auto_cfg = _fludd_config_from_dict({
+                        "sun": _planet_lon("Sun"),
+                        "moon": _planet_lon("Moon"),
+                        "mercury": _planet_lon("Mercury"),
+                        "venus": _planet_lon("Venus"),
+                        "mars": _planet_lon("Mars"),
+                        "jupiter": _planet_lon("Jupiter"),
+                        "saturn": _planet_lon("Saturn"),
+                        "ascendant": _fw.ascendant,
+                        "north_node": _nn_lon,
+                        "south_node": (_nn_lon + 180.0) % 360.0,
+                    })
+                except Exception:
+                    pass
             render_fludd_rota(
+                auto_config=_fludd_auto_cfg,
                 after_chart_hook=lambda: _render_ai_button(
                     "tab_fludd_rota",
                     st.session_state.get("fludd_rota_reading"),
