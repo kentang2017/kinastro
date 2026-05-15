@@ -111,6 +111,11 @@ class RotaReading:
     # 綜合解讀
     summary: str = ""
 
+    # 壽命趨勢（靈性參考）
+    lifespan_score: int = 0
+    lifespan_level: str = ""
+    lifespan_text: str = ""
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 核心計算
@@ -209,6 +214,11 @@ def compute_reading(config: RotaConfig) -> RotaReading:
     r4_text = RING4_ZONE_MEANINGS.get(ring4_zn, ring4_zn)
     node_text = NODE_MODIFIER.get(node_key, "")
     zone_name = RING4_ZONE_NAMES.get(ring4_zn, ring4_zn)
+    lifespan_score, lifespan_level, lifespan_text = _estimate_lifespan(
+        ring4_zn=ring4_zn,
+        ring3_plt=ring3_plt,
+        node_key=node_key,
+    )
 
     # ── 綜合解讀 ─────────────────────────────────────────────
     summary = _build_summary(
@@ -223,6 +233,9 @@ def compute_reading(config: RotaConfig) -> RotaReading:
         r4_text=r4_text,
         node_key=node_key,
         node_text=node_text,
+        lifespan_level=lifespan_level,
+        lifespan_score=lifespan_score,
+        lifespan_text=lifespan_text,
         config=config,
     )
 
@@ -242,8 +255,61 @@ def compute_reading(config: RotaConfig) -> RotaReading:
         ring3_text=r3_text,
         ring4_text=r4_text,
         node_text=node_text,
+        lifespan_score=lifespan_score,
+        lifespan_level=lifespan_level,
+        lifespan_text=lifespan_text,
         summary=summary,
     )
+
+
+def _estimate_lifespan(
+    ring4_zn: str,
+    ring3_plt: str,
+    node_key: str,
+) -> tuple[int, str, str]:
+    """根據輪盤結果估計壽命趨勢（僅供靈性參考）。"""
+    zone_base: dict[str, int] = {
+        "♈": 52,
+        "♉": 68,
+        "♊": 56,
+        "♋": 62,
+        "♌": 60,
+        "♍": 65,
+        "♎": 58,
+        "♏": 54,
+        "♐": 57,
+        "♑": 66,
+        "♒": 59,
+        "♓": 61,
+    }
+    planet_bonus: dict[str, int] = {
+        "☽": 2,
+        "☿": 1,
+        "♀": 3,
+        "☉": 2,
+        "♂": -2,
+        "♃": 4,
+        "♄": 0,
+    }
+    node_bonus = {"north_node": 5, "south_node": -5, "neutral": 0}.get(node_key, 0)
+    raw_score = zone_base.get(ring4_zn, 58) + planet_bonus.get(ring3_plt, 0) + node_bonus
+    score = max(35, min(90, raw_score))
+
+    if score >= 75:
+        level = "偏長壽"
+        detail = "命盤顯示生命韌性較高，宜持續規律作息與長期養生。"
+    elif score >= 65:
+        level = "中上壽"
+        detail = "整體壽元趨勢平穩偏佳，重點在節律與壓力管理。"
+    elif score >= 55:
+        level = "中壽"
+        detail = "壽命走勢屬中段，保持運動、飲食與情緒平衡可穩步提升。"
+    else:
+        level = "需重視養生"
+        detail = "此期顯示耗損偏高，建議更積極地調整生活習慣與休養節奏。"
+
+    text = f"{level}（壽命趨勢分數：{score}/100）。{detail}（僅供靈性探索參考）"
+    return score, level, text
 
 
 def _build_summary(
@@ -258,6 +324,9 @@ def _build_summary(
     r4_text: str,
     node_key: str,
     node_text: str,
+    lifespan_score: int,
+    lifespan_level: str,
+    lifespan_text: str,
     config: RotaConfig,
 ) -> str:
     """組合四層解讀成綜合占卜文本（弗拉德古典風格）。"""
@@ -280,6 +349,8 @@ def _build_summary(
         f"**第三層（{planet_name} {ring3_plt}）**：{r3_text}\n\n"
         f"**第四層（{zone_name} {ring4_zn}）**：{r4_text}"
         f"{node_line}\n\n"
+        f"✦ **壽命趨勢**：{lifespan_level}（{lifespan_score}/100）\n\n"
+        f"{lifespan_text}\n\n"
         f"---\n"
         f"**綜合天機**：字母「{ring1_sym}」象徵的宇宙原力，"
         f"與月亮第 {ring2_num} 宮的命運潮汐相遇，"
