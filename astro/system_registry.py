@@ -1474,6 +1474,24 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_bahre_hasab",
+    name_zh="衣索比亞 Bahre Hasab",
+    name_en="Ethiopian Bahre Hasab",
+    category="cat_africa",
+    icon="⛪",
+    tab_key="tab_bahre_hasab",
+    desc_key="desc_bahre_hasab",
+    spinner_key="spinner_bahre_hasab",
+    hint_key="sys_hint_bahre_hasab",
+    tags=["ethiopian", "bahre hasab", "fasika", "orthodox", "calendar", "geez", "africa"],
+    maturity="beta",
+    accent_color=_a("cat_africa"),
+    origin_culture="Ethiopian Orthodox",
+    tradition_period="Medieval to Contemporary Church Computus",
+    ai_persona_key="info_bahre_hasab_prompt",
+))
+
+_reg(System(
     id="tab_picatrix_behenian",
     name_zh="Picatrix 占星魔法",
     name_en="Picatrix Star Magic",
