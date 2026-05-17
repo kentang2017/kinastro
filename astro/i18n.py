@@ -4691,6 +4691,68 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "✦ 輸入出生星盤行星度數，點擊「根據星盤設定輪盤並解讀」以啟動弗拉德命運輪盤占卜。",
         "en": "✦ Enter natal chart planetary degrees and click 'Set Wheel from Chart & Interpret' to activate the Fludd Rota divination.",
     },
+
+    # ── 煉金占星 Alchemical Astrology ──────────────────────────────────────────
+    "tab_alchemical_astrology": {
+        "zh": "⚗️ 煉金占星",
+        "en": "⚗️ Alchemical Astrology",
+    },
+    "desc_alchemical_astrology": {
+        "zh": (
+            "### ⚗️ 煉金占星（Alchemical Astrology）\n\n"
+            "嚴格以 **帕拉塞爾蘇斯（Paracelsus, 1493–1541）** 傳統為基礎的煉金占星系統，"
+            "涵蓋行星–金屬–草藥–礦物–人體對應關係（Signatures 符號論）及煉金過程與占星能量的整合。\n\n"
+            "**主要文獻來源：**\n"
+            "- Paracelsus《Coelum Philosophorum》\n"
+            "- Paracelsus《Concerning the Spirits of the Planets》\n"
+            "- Paracelsus《Astronomia Magna》\n"
+            "- Cornelius Agrippa《Three Books of Occult Philosophy》\n\n"
+            "**七大行星對應系統：**\n\n"
+            "| 行星 | 金屬 | 代表草藥 | 人體部位 | 煉金階段 |\n"
+            "|------|------|----------|----------|----------|\n"
+            "| ☉ 太陽 Sol | 黃金 Gold | 聖約翰草、番紅花 | 心臟 | Citrinitas |\n"
+            "| ☽ 月亮 Luna | 白銀 Silver | 艾草、月草 | 腦、體液 | Albedo |\n"
+            "| ♂ 火星 Mars | 鐵 Iron | 苦艾草、大蒜 | 膽囊 | Nigredo |\n"
+            "| ☿ 水星 Mercury | 汞 Quicksilver | 茴香、薰衣草 | 肺、神經 | — |\n"
+            "| ♃ 木星 Jupiter | 錫 Tin | 龍牙草、鼠尾草 | 肝臟 | Rubedo |\n"
+            "| ♀ 金星 Venus | 銅 Copper | 鐵線蕨、馬鞭草 | 腎臟 | Albedo |\n"
+            "| ♄ 土星 Saturn | 鉛 Lead | 聚合草、問荊 | 脾臟、骨骼 | Nigredo |"
+        ),
+        "en": (
+            "### ⚗️ Alchemical Astrology\n\n"
+            "A rigorously document-based alchemical astrology system grounded in the "
+            "**Paracelsian (1493–1541)** tradition, covering planet–metal–herb–mineral–body "
+            "correspondences (Doctrine of Signatures) and the integration of alchemical "
+            "processes with planetary energies.\n\n"
+            "**Primary Sources:**\n"
+            "- Paracelsus *Coelum Philosophorum*\n"
+            "- Paracelsus *Concerning the Spirits of the Planets*\n"
+            "- Paracelsus *Astronomia Magna*\n"
+            "- Cornelius Agrippa *Three Books of Occult Philosophy*\n\n"
+            "**Seven Planets Correspondence System:**\n\n"
+            "| Planet | Metal | Key Herb | Body Part | Alch. Stage |\n"
+            "|--------|-------|----------|-----------|-------------|\n"
+            "| ☉ Sun Sol | Gold | St John's Wort, Saffron | Heart | Citrinitas |\n"
+            "| ☽ Moon Luna | Silver | Mugwort, Moonwort | Brain, Humours | Albedo |\n"
+            "| ♂ Mars | Iron | Wormwood, Garlic | Gallbladder | Nigredo |\n"
+            "| ☿ Mercury | Quicksilver | Fennel, Lavender | Lungs, Nerves | — |\n"
+            "| ♃ Jupiter | Tin | Agrimony, Sage | Liver | Rubedo |\n"
+            "| ♀ Venus | Copper | Maidenhair Fern, Vervain | Kidneys | Albedo |\n"
+            "| ♄ Saturn | Lead | Comfrey, Horsetail | Spleen, Bones | Nigredo |"
+        ),
+    },
+    "spinner_alchemical_astrology": {
+        "zh": "正在計算煉金行星對應…",
+        "en": "Computing alchemical planetary correspondences…",
+    },
+    "sys_hint_alchemical_astrology": {
+        "zh": "Paracelsus 傳統 · 行星–金屬–草藥對應 · Signatures 符號論 · 四大煉金階段 · 100% 文獻依據",
+        "en": "Paracelsian tradition · Planet–Metal–Herb · Doctrine of Signatures · 4 Alchemical Stages · 100% documented",
+    },
+    "info_alchemical_astrology_prompt": {
+        "zh": "✦ 輸入出生資料並計算星盤，系統將根據帕拉塞爾蘇斯傳統顯示你的行星煉金對應與個人化解讀。",
+        "en": "✦ Enter birth data and compute the chart; the system will display your personal planetary alchemical correspondences based on the Paracelsian tradition.",
+    },
 }
 
 def get_ui_lang() -> str:

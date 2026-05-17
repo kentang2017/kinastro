@@ -1805,6 +1805,34 @@ _reg(System(
 ))
 
 
+# ── 煉金占星（Alchemical Astrology / Paracelsus 傳統）────────────────────────
+# 嚴格以 Paracelsus《Coelum Philosophorum》《Astronomia Magna》等著作為基礎
+# 行星–金屬–草藥–礦物–人體對應，Signatures 符號論，四大煉金階段
+_reg(System(
+    id="tab_alchemical_astrology",
+    name_zh="煉金占星",
+    name_en="Alchemical Astrology",
+    category="cat_western",
+    icon="⚗️",
+    tab_key="tab_alchemical_astrology",
+    desc_key="desc_alchemical_astrology",
+    spinner_key="spinner_alchemical_astrology",
+    hint_key="sys_hint_alchemical_astrology",
+    tags=[
+        "alchemy", "alchemical astrology", "paracelsus", "signatures", "doctrine of signatures",
+        "signatura rerum", "coelum philosophorum", "astronomia magna", "agrippa",
+        "seven metals", "seven planets", "herbs", "minerals", "nigredo", "albedo",
+        "rubedo", "citrinitas", "opus magnum", "renaissance", "hermetic",
+        "煉金術", "煉金占星", "帕拉塞爾蘇斯", "符號論", "七大行星", "草藥對應",
+        "礦物對應", "金屬對應", "文藝復興", "鍊金術", "赫密士",
+    ],
+    maturity="beta",
+    accent_color="#8B5C10",   # 古銅金色——煉金術文藝復興風格
+    origin_culture="European (Renaissance)",
+    tradition_period="Renaissance (Paracelsus, 1493–1541)",
+    ai_persona_key="info_alchemical_astrology_prompt",
+))
+
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_western — Mundane Astrology 世俗占星 🌍
 # ═════════════════════════════════════════════════════════════════════════════
