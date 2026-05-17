@@ -6128,6 +6128,8 @@ if not _engine_handled:
             if _is_calculated:
                 with st.spinner(t("spinner_alchemical_astrology")):
                     _alch_fw = compute_western_chart(**st.session_state["_calc_params"])
+                # pl.name format in WesternChart is "<PlanetName> [retrograde]"
+                # split()[0] extracts the planet name reliably (e.g. "Sun", "Moon")
                 _alch_lons = {
                     pl.name.split()[0].lower(): pl.longitude
                     for pl in _alch_fw.planets

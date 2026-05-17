@@ -151,11 +151,16 @@ def _find_dominant_planet(scores: dict[str, int]) -> str:
     同分時依 Chaldean 行星順序（土星最高）決定優先級。
 
     Args:
-        scores: {planet_key: dignity_score}
+        scores: {planet_key: dignity_score}，必須非空（由 compute_reading 保證）
 
     Returns:
         主導行星的 planet_key
+
+    Raises:
+        ValueError: 若 scores 為空字典
     """
+    if not scores:
+        raise ValueError("scores 字典不可為空；compute_reading 應傳入至少一顆行星的評分。")
     # 先按評分降序，再按 Chaldean 優先級降序
     return max(
         scores.keys(),

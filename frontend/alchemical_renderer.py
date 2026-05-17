@@ -40,9 +40,16 @@ from astro.alchemical_astrology import (
 try:
     from astro.i18n import auto_cn, t
 except ImportError:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "astro.i18n not available; falling back to identity i18n stubs."
+    )
+
     def t(key: str) -> str:  # type: ignore[misc]
         return key
+
     def auto_cn(text: str, en_text: str = "") -> str:  # type: ignore[misc]
+        # fallback: return Chinese text when en_text not requested
         return text
 
 
