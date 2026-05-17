@@ -766,7 +766,7 @@ def render_alchemical_tab(
         try:
             reading = compute_reading(planet_longitudes)
             active_stage = reading.alchemical_stage_key
-        except Exception as e:  # noqa: BLE001
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
             st.warning(f"計算煉金解讀時出現錯誤：{e}")
             reading = None
 
