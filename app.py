@@ -217,6 +217,7 @@ from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 from frontend.european_geomancy_renderer import render_european_geomancy
 from frontend.fludd_rota_renderer import render_fludd_rota
 from astro.fludd_rota import config_from_dict as _fludd_config_from_dict
+from frontend.alchemical_renderer import render_alchemical_tab
 
 
 # ============================================================
@@ -236,7 +237,7 @@ def render_homepage():
           "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
         ("🏛️", "西洋占星", "Western Astrology",
          ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "宇宙生物學", "和諧占星",
-          "古典主限推運", "凱爾特樹", "出生時間校正", "赫密士前世盤", "靈性占星", "拜占庭占星", "人間圖", "世俗占星", "弗拉德命運輪盤"],
+          "古典主限推運", "凱爾特樹", "出生時間校正", "赫密士前世盤", "靈性占星", "拜占庭占星", "人間圖", "世俗占星", "弗拉德命運輪盤", "煉金占星"],
          "#7B9ED9", "rgba(123,158,217,0.1)", "rgba(123,158,217,0.22)"),
         ("🪷", "印度占星", "Vedic Jyotish",
          ["Jyotish", "紅皮書 Lal Kitab", "納迪占星", "Jaimini", "KP 占星", "吠陀風水"],
@@ -6114,6 +6115,35 @@ if not _engine_handled:
                     st.session_state.get("fludd_rota_reading"),
                     btn_key="fludd_rota",
                 )
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    # ============================================================
+    # --- 煉金占星 Alchemical Astrology (Paracelsus tradition) ---
+    elif _selected_system == "tab_alchemical_astrology":
+        try:
+            _alch_lons: dict | None = None
+            if _is_calculated:
+                with st.spinner(t("spinner_alchemical_astrology")):
+                    _alch_fw = compute_western_chart(**st.session_state["_calc_params"])
+                # pl.name format in WesternChart is "<PlanetName> [retrograde]"
+                # split()[0] extracts the planet name reliably (e.g. "Sun", "Moon")
+                _alch_lons = {
+                    pl.name.split()[0].lower(): pl.longitude
+                    for pl in _alch_fw.planets
+                    if pl.name.split()[0] in {
+                        "Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"
+                    }
+                }
+            render_alchemical_tab(
+                planet_longitudes=_alch_lons,
+                after_chart_hook=lambda: _render_ai_button(
+                    "tab_alchemical_astrology",
+                    st.session_state.get("alchemical_reading"),
+                    btn_key="alchemical_astrology",
+                ) if _is_calculated else None,
             )
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
