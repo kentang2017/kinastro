@@ -275,12 +275,12 @@ def render_homepage():
     _hp_desc = auto_cn(
         f'從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>'
         f'從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>'
-        f'紅皮書 Lal Kitab、薩珊波斯占星、<strong style="color:#A78BFA;">馬來伊斯蘭占星（Bintang Duabelas）</strong>、<strong style="color:#A78BFA;">柏柏爾占星</strong>、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>'
-        f'傳統卜卦占星、擇日占星、蠢子數、<strong style="color:#A78BFA;">地占占星</strong>到<strong style="color:#A78BFA;">伊特魯里亞占星</strong>——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。',
+        f'紅皮書 Lal Kitab、薩珊波斯占星、<strong style="color:#A78BFA;">馬來伊斯蘭占星（Bintang Duabelas）</strong>、<strong style="color:#A78BFA;">柏柏爾占星</strong>、<strong style="color:#A78BFA;">衣索比亞 Bahre Hasab</strong>、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>'
+        f'傳統卜卦占星、擇日占星、蠢子數、<strong style="color:#A78BFA;">地占占星</strong>、<strong style="color:#A78BFA;">伊特魯里亞占星</strong>、<strong style="color:#A78BFA;">煉金占星</strong>——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。',
         f'From Seven Luminaries to Western Astrology, from Zi Wei Dou Shu to Indian Jyotish,<br/>'
         f'from San Shi (Liu Ren, Tai Yi, Qi Men) to Astrocartography, Celtic Tree Calendar, Tai Xuan Shu,<br/>'
-        f'Lal Kitab, Sassanid Persian Astrology, <strong style="color:#A78BFA;">Malay Islamic Astrology (Bintang Duabelas)</strong>, <strong style="color:#A78BFA;">Berber Astrology</strong>, Mayan Calendar to Babylonian Star Catalogue, <strong style="color:#A78BFA;">Mundane Astrology</strong>, <strong style="color:#A78BFA;">Byzantine Astrology</strong>, Medical Astrology, Shang Han Method,<br/>'
-        f'Traditional Horary, Electional Astrology, Chun Zi Shu, <strong style="color:#A78BFA;">Geomantic Astrology</strong> to <strong style="color:#A78BFA;">Etruscan Astrology</strong> — KinAstro unifies <strong style="color:#EAB308;font-weight:600;">{_total_systems} astrology systems</strong> worldwide, bringing millennia of stellar wisdom to your fingertips.',
+        f'Lal Kitab, Sassanid Persian Astrology, <strong style="color:#A78BFA;">Malay Islamic Astrology (Bintang Duabelas)</strong>, <strong style="color:#A78BFA;">Berber Astrology</strong>, <strong style="color:#A78BFA;">Ethiopian Bahre Hasab</strong>, Mayan Calendar to Babylonian Star Catalogue, <strong style="color:#A78BFA;">Mundane Astrology</strong>, <strong style="color:#A78BFA;">Byzantine Astrology</strong>, Medical Astrology, Shang Han Method,<br/>'
+        f'Traditional Horary, Electional Astrology, Chun Zi Shu, <strong style="color:#A78BFA;">Geomantic Astrology</strong>, <strong style="color:#A78BFA;">Etruscan Astrology</strong>, <strong style="color:#A78BFA;">Alchemical Astrology</strong> — KinAstro unifies <strong style="color:#EAB308;font-weight:600;">{_total_systems} astrology systems</strong> worldwide, bringing millennia of stellar wisdom to your fingertips.',
     )
     _hp_stat_systems = auto_cn("占星體系 Systems", "Astrology Systems")
     _hp_stat_subtabs = auto_cn("子功能分頁 Sub-tabs", "Sub-tabs")
