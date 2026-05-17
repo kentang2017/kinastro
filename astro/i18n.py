@@ -3877,6 +3877,43 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入排盤資料，然後點擊「開始排盤」查看柏柏爾占星。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view Amazigh astrology.",
     },
+    "tab_bahre_hasab": {
+        "zh": "⛪ 衣索比亞 Bahre Hasab",
+        "en": "⛪ Ethiopian Bahre Hasab",
+    },
+    "desc_bahre_hasab": {
+        "zh": (
+            "⛪ **Bahre Hasab（ባሕረ ሐሳብ）** — 衣索比亞正教會傳統曆法與可移動節日推算系統。\\n\\n"
+            "本模組以教會計算傳統為核心，呈現：\\n"
+            "- Ethiopian ↔ Gregorian 日期轉換\\n"
+            "- Fasika（ፋሲካ）與禁食週期（如 ዐቢይ ጾም）\\n"
+            "- Amete Alem、Wenber、Abekte、Metqi 傳統年度指標\\n"
+            "- Hasabe Kewakibit（ሐሳበ ከዋክብት）週期欄位\\n\\n"
+            "所有結果均標註：依據傳統 Bahre Hasab 方法。"
+        ),
+        "en": (
+            "⛪ **Bahre Hasab (ባሕረ ሐሳብ)** — Ethiopian Orthodox traditional computus for "
+            "calendar conversion and movable feasts.\\n\\n"
+            "This module presents:\\n"
+            "- Ethiopian ↔ Gregorian conversion\\n"
+            "- Fasika and major fasting cycles\\n"
+            "- Amete Alem, Wenber, Abekte, and Metqi indicators\\n"
+            "- Hasabe Kewakibit cycle fields\\n\\n"
+            "All outputs are explicitly marked as based on traditional Bahre Hasab method."
+        ),
+    },
+    "spinner_bahre_hasab": {
+        "zh": "正在計算 Bahre Hasab 傳統曆法...",
+        "en": "Computing traditional Bahre Hasab calendar...",
+    },
+    "sys_hint_bahre_hasab": {
+        "zh": "衣索比亞正教 Bahre Hasab：Fasika、禁食週期、Ge'ez 曆法推算",
+        "en": "Ethiopian Orthodox Bahre Hasab: Fasika, fasting cycles, and Ge'ez calendrics",
+    },
+    "info_bahre_hasab_prompt": {
+        "zh": "👈 請在左側輸入出生資料並點擊「開始排盤」，即可進入 Bahre Hasab 曆法與節日推算。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to open Bahre Hasab calendrical and feast computation.",
+    },
     "tab_shanghan_qianfa": {
         "zh": "🌿 傷寒鈐法",
         "en": "🌿 Shanghan Qianfa",

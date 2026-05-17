@@ -81,6 +81,7 @@ from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.dogon import compute_dogon_sirius_chart, render_dogon_sirius_chart
 from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_amazigh_sky_svg
+from astro.bahre_hasab import analyze_bahre_hasab_date
 from astro.aztec import compute_aztec_chart, render_aztec_chart
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
@@ -218,6 +219,7 @@ from frontend.european_geomancy_renderer import render_european_geomancy
 from frontend.fludd_rota_renderer import render_fludd_rota
 from astro.fludd_rota import config_from_dict as _fludd_config_from_dict
 from frontend.alchemical_renderer import render_alchemical_tab
+from frontend.bahre_hasab_renderer import render_bahre_hasab_tab
 
 
 # ============================================================
@@ -247,8 +249,8 @@ def render_homepage():
            "九星氣學", "高棉占星", "波利尼西亞"],
           "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
         ("🕌", "中東 · 北非體系", "Middle East & North Africa",
-         ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法", "柏柏爾占星", "地占占星"],
-         "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
+         ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法", "柏柏爾占星", "衣索比亞 Bahre Hasab", "地占占星"],
+          "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
         ("🏺", "古代文明", "Ancient Civilizations",
          ["瑪雅占星", "印加／安地斯占星", "多貢天狼星宇宙學", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞", "伊特魯里亞占星"],
           "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
@@ -4272,6 +4274,24 @@ if not _engine_handled:
         else:
             st.info(t("info_amazigh_prompt"))
             st.markdown(t("desc_amazigh"))
+
+    # --- Ethiopian Bahre Hasab ---
+    elif _selected_system == "tab_bahre_hasab":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                _probe = analyze_bahre_hasab_date(date(_p["year"], _p["month"], _p["day"]))
+                with st.spinner(t("spinner_bahre_hasab")):
+                    render_bahre_hasab_tab(
+                        calc_params=_p,
+                        after_chart_hook=lambda: _render_ai_button("tab_bahre_hasab", _probe, btn_key="bahre_hasab"),
+                    )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_bahre_hasab_prompt"))
+            st.markdown(t("desc_bahre_hasab"))
 
     # --- 阿茲特克占星 ---
     elif _selected_system == "tab_aztec":
