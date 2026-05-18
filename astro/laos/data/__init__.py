@@ -1,9 +1,6 @@
 # astro/lao/data/__init__.py
 """
 老撾占星術 (ໄທຣາສາດລາວ) 數據模組
-資料來源：《ໄທຣາສາດລາວ ພາກຕົ້ນ》（Thairasat Lao Phak Ton）
-完整提取自 173 頁 PDF，100% 忠於原文表格與規則
-
 使用方式：
     from astro.lao.data import (
         LAO_WEEKDAYS,
@@ -59,7 +56,6 @@ __all__ = [
 ]
 
 __version__ = "1.0.0"
-__author__ = "KinAstro Team + 術數大師 (extracted from ໄທຣາສາດລາວ ພາກຕົ້ນ)"
 __description__ = "老撾傳統婆羅門占星完整數據表與規則"
 
 # 方便一次性載入所有資料
