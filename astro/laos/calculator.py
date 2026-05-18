@@ -9,8 +9,10 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta
+from threading import Lock
 from typing import Any, Dict, List, Literal
 
 import swisseph as swe
@@ -86,15 +88,30 @@ class LaoChart:
     planets: List[LaoPlanet] = field(default_factory=list)
 
 
-def _init_swe() -> None:
-    """初始化 Swiss Ephemeris，若專案初始化失敗則使用預設路徑。"""
+_SWE_READY = False
+_SWE_INIT_LOCK = Lock()
 
-    try:
-        from astro.swe_init import init_swe
 
-        init_swe()
-    except Exception:
-        swe.set_ephe_path("")
+def _ensure_swe_ready() -> None:
+    """Lazy singleton 初始化 Swiss Ephemeris 與 sidereal mode。"""
+
+    global _SWE_READY
+    if _SWE_READY:
+        return
+
+    with _SWE_INIT_LOCK:
+        if _SWE_READY:
+            return
+
+        try:
+            from astro.swe_init import init_swisseph
+
+            init_swisseph()
+        except Exception:
+            swe.set_ephe_path("")
+
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        _SWE_READY = True
 
 
 def _norm(deg: float) -> float:
@@ -149,6 +166,7 @@ def _validate_datetime(
         raise ValueError("timezone 必須介於 -12 到 +14")
 
 
+@lru_cache(maxsize=1024)
 def compute_lao_chart(
     *,
     year: int,
@@ -183,8 +201,7 @@ def compute_lao_chart(
     if house_system != "whole_sign":
         raise ValueError(f"目前僅支援 whole_sign，收到：{house_system}")
 
-    _init_swe()
-    swe.set_sid_mode(swe.SIDM_LAHIRI)
+    _ensure_swe_ready()
 
     # UTC 小時：與專案既有星盤計算邏輯一致
     decimal_hour_ut = hour + minute / 60.0 - timezone
@@ -310,6 +327,7 @@ def get_lao_auspicious_time(
     }
 
 
+@lru_cache(maxsize=1024)
 def find_best_dates(
     start_dt: datetime,
     *,
@@ -341,6 +359,7 @@ def find_best_dates(
     return result
 
 
+@lru_cache(maxsize=1024)
 def get_monthly_fortune(
     year: int,
     month: int,
