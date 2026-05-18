@@ -232,18 +232,30 @@ def _build_mansion_ranges() -> List[Dict[str, Any]]:
 def _build_twelve_palace_ranges() -> List[Dict[str, Any]]:
     ranges: List[Dict[str, Any]] = []
     for idx, palace in enumerate(TWELVE_SIGNS_CHINESE):
-        start = _ecl_to_chart_angle((idx + 1) * 30.0)
-        short_name, _, station_name = palace.partition("(")
+        start_lon = idx * 30.0
+        end_lon = (idx + 1) * 30.0
+        start = _ecl_to_chart_angle(end_lon)
+        end = _ecl_to_chart_angle(start_lon)
+        if end <= start:
+            end += 360.0
+        short_name, station_name = _split_palace_label(palace)
         ranges.append(
             {
                 "name": short_name,
-                "station": station_name.rstrip(")"),
+                "station": station_name,
                 "start": start,
-                "end": start + 30.0,
-                "mid": start + 15.0,
+                "end": end,
+                "mid": (start + end) / 2.0,
             }
         )
     return ranges
+
+
+def _split_palace_label(label: str) -> tuple[str, str]:
+    short_name, separator, station_name = label.partition("(")
+    if not separator:
+        return label, ""
+    return short_name, station_name.rstrip(")")
 
 
 def _ecl_to_chart_angle(ecl_deg: float) -> float:
