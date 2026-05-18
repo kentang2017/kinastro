@@ -288,6 +288,10 @@ TRANSLATIONS = {
         "zh": "🐘 泰國占星",
         "en": "🐘 Thai Astrology",
     },
+    "tab_laos": {
+        "zh": "🇱🇦 老撾占星（ໄທຣາສາດລາວ）",
+        "en": "🇱🇦 Laos Horasat",
+    },
     "tab_kabbalistic": {
         "zh": "✡ 卡巴拉占星",
         "en": "✡ Kabbalistic Astrology",
@@ -444,6 +448,10 @@ TRANSLATIONS = {
     "spinner_thai": {
         "zh": "正在計算泰國占星排盤...",
         "en": "Calculating Thai astrology chart...",
+    },
+    "spinner_laos": {
+        "zh": "正在計算老撾占星排盤...",
+        "en": "Calculating Laos Horasat chart...",
     },
     "spinner_kabbalistic": {
         "zh": "正在計算卡巴拉占星排盤...",
@@ -831,6 +839,31 @@ Sukkayodo is used for date selection and divination of auspiciousness in daily l
 - **12 Signs (ราศี)**: Sidereal zodiac signs named in Thai
 - **Day Ruler (ดาวประจำวัน)**: Guardian planet determined by day of birth
 - **Thai Chart (ผังดวงชาตา)**
+""",
+    },
+    "desc_laos": {
+        "zh": """
+### 什麼是老撾占星（ໄທຣາສາດລາວ）？
+
+**老撾占星**承接南傳婆羅門—佛教曆法傳統，重視日期、時段與日常擇事：
+
+- **老撾曆日期（ວັນ・ເດືອນ・ປີ）**
+- **特殊年份（ປີອະທິກະ）**
+- **ສັງຄົມ 吉凶擇日**
+- **ສີກາດ 時段吉凶**
+- **婆羅門占星輪（🌀）**
+""",
+        "en": """
+### What is Laos Horasat (ໄທຣາສາດລາວ)?
+
+**Laos Horasat** follows traditional Lao Brahmanic-Buddhist calendar astrology,
+with emphasis on daily timing and practical electional guidance:
+
+- Lao date system (day/month/year)
+- Special year cycle analysis
+- ສັງຄົມ auspiciousness tables
+- ສີກາດ time-slot selection
+- Brahman cosmic wheel (🌀)
 """,
     },
     "desc_kabbalistic": {
@@ -2055,6 +2088,7 @@ transmitted by **Chen Xiyi**.
     "sys_hint_chinese": {"zh": "中國古代天文星象占卜", "en": "Ancient Chinese astronomical divination"},
     "sys_hint_indian": {"zh": "印度古老吠陀占星", "en": "Ancient Vedic astrology from India"},
     "sys_hint_thai": {"zh": "泰國傳統命理解讀", "en": "Traditional Thai fate reading"},
+    "sys_hint_laos": {"zh": "老撾婆羅門占星與擇日", "en": "Traditional Lao Horasat and electional timing"},
     "sys_hint_kabbalistic": {"zh": "猶太神祕主義占星", "en": "Jewish mystical astrology"},
     "sys_hint_arabic": {"zh": "伊斯蘭黃金時代占星術", "en": "Islamic Golden Age astrology"},
     "sys_hint_maya": {"zh": "瑪雅 Tzolk'in 神聖曆、Long Count 長紀年、Calendar Round 52年循環", "en": "Maya Tzolk'in sacred calendar, Long Count, Calendar Round 52-year cycle"},
@@ -2188,6 +2222,10 @@ transmitted by **Chen Xiyi**.
     "info_calc_prompt": {
         "zh": "👈 請在左邊欄填寫你的出生資料，然後點選你想了解的占星類型。",
         "en": "👈 Enter your birth info on the left, then pick the astrology system you want.",
+    },
+    "info_lao_prompt": {
+        "zh": "👈 請先在左側輸入出生資料並點擊「開始排盤」，即可查看老撾曆、ສັງຄົມ、ສີກາດ與婆羅門占星輪。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view Lao date info, ສັງຄົມ, ສີກາດ, and the Brahman wheel.",
     },
 
     # ── Babylonian Astrology (古巴比倫占星) ─────────────────

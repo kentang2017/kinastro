@@ -1,110 +1,152 @@
-# astro/lao/lao_horasat.py
-"""
-老撾占星系統統一介面 (Lao Horasat / ໄທຣາສາດລາວ)
-基於《ໄທຣາສາດລາວ ພາກຕົ້ນ》完整實現
-這是對外唯一公開的介面，與專案中 thai.py、chinese.py 等其他體系風格完全一致
-供 Streamlit、API、CLI 直接呼叫
+"""Unified public interface for Laos Horasat.
+
+此檔案是老撾占星模組對外唯一主入口，
+提供與現有體系一致的「計算 + 查詢 + 渲染」API。
 """
 
-from datetime import datetime
-from typing import Dict, Any, Optional
+from __future__ import annotations
 
-from .calculator import LaoCalculator
-from .renderer import render_brahma_wheel
+from datetime import datetime, timezone as dt_timezone
+from typing import Any, Dict, List
+
+from .calculator import (
+    LaoChart,
+    chart_to_dict,
+    compute_lao_chart,
+    find_best_dates as calc_find_best_dates,
+    get_lao_auspicious_time,
+    get_monthly_fortune,
+)
+from .renderer import build_lao_brahma_wheel_svg, render_lao_horasat
 
 
 class LaoHorasat:
-    """老撾占星術主類別 - 統一入口"""
+    """老撾占星統一入口。"""
 
-    def __init__(self):
-        self.calculator = LaoCalculator()
+    def get_chart(
+        self,
+        *,
+        year: int,
+        month: int,
+        day: int,
+        hour: int,
+        minute: int,
+        timezone: float,
+        latitude: float,
+        longitude: float,
+        location_name: str = "",
+        sangkhom_activity: str = "ການແຕ່ງງານ",
+        sikarat_type: str = "ສີກາດລາວ",
+    ) -> Dict[str, Any]:
+        """計算完整老撾出生盤並回傳 dict。"""
 
-    def get_chart(self, 
-                  birth_date: str, 
-                  lat: Optional[float] = None, 
-                  lon: Optional[float] = None) -> Dict[str, Any]:
-        """
-        生成完整老撾出生盤（最常用方法）
-        
-        Parameters:
-            birth_date (str): ISO 格式日期時間，例如 "1995-03-15T08:30:00"
-            lat, lon: 可選經緯度（預設萬象）
-        
-        Returns:
-            包含 lao_date、planets、sangkhom、SVG 婆羅門占星輪的完整字典
-        """
-        chart = self.calculator.get_chart(birth_date, lat, lon)
-        
-        # 渲染婆羅門占星輪 SVG
-        svg = render_brahma_wheel(chart)
-        
-        # 最終輸出格式與專案其他體系一致
-        return {
-            "system": "lao_horasat",
-            "system_name": "ໄທຣາສາດລາວ (老撾占星術)",
-            "chart": chart,
-            "svg": svg,
-            "interpretation": chart.get("interpretation", "")
-        }
+        chart = compute_lao_chart(
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            timezone=timezone,
+            latitude=latitude,
+            longitude=longitude,
+            location_name=location_name,
+            sangkhom_activity=sangkhom_activity,
+            sikarat_type=sikarat_type,
+        )
+        return chart_to_dict(chart)
 
-    def get_sangkhom(self, 
-                     target_date: str, 
-                     activity: str = "general") -> Dict[str, Any]:
-        """
-        單日 ສັງຄົມ 吉凶擇日（結婚、建房、出行、開業等）
-        """
-        dt = datetime.fromisoformat(target_date.replace("Z", "+00:00"))
-        result = self.calculator.get_auspicious_time(dt, activity)
-        return {
-            "system": "lao_horasat",
-            "lao_date": result["lao_date"],
-            "fortune": result["fortune"],
-            "time_slot": result["time_slot"],
-            "recommendation": result["recommendation"]
-        }
+    def get_chart_from_iso(
+        self,
+        iso_datetime: str,
+        *,
+        timezone: float,
+        latitude: float,
+        longitude: float,
+        location_name: str = "",
+        sangkhom_activity: str = "ການແຕ່ງງານ",
+        sikarat_type: str = "ສີກາດລາວ",
+    ) -> Dict[str, Any]:
+        """由 ISO 時間字串建立盤（便於 API 呼叫）。"""
 
-    def find_best_dates(self, 
-                        start_date: str, 
-                        days: int = 30, 
-                        activity: str = "general") -> list:
-        """
-        批量尋找未來最適合某活動的吉日
-        """
-        dt = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
-        return self.calculator.find_best_dates(dt, days, activity)
+        dt = _parse_iso_datetime(iso_datetime)
 
-    def get_monthly_fortune(self, year: int, month: int) -> list:
-        """
-        取得該月完整 ປະຕິທິນ 吉凶曆
-        """
-        from .sangkhom import Sangkhom
-        sangkhom = Sangkhom()
-        return sangkhom.get_monthly_fortune(year, month)
+        return self.get_chart(
+            year=dt.year,
+            month=dt.month,
+            day=dt.day,
+            hour=dt.hour,
+            minute=dt.minute,
+            timezone=timezone,
+            latitude=latitude,
+            longitude=longitude,
+            location_name=location_name,
+            sangkhom_activity=sangkhom_activity,
+            sikarat_type=sikarat_type,
+        )
 
-    def render_wheel(self, chart_data: Dict[str, Any]) -> str:
-        """單獨生成婆羅門占星輪 SVG（供 UI 彈性使用）"""
-        return render_brahma_wheel(chart_data)
+    def get_sangkhom(
+        self,
+        target_dt: datetime,
+        *,
+        activity: str = "ການແຕ່ງງານ",
+        sikarat_type: str = "ສີກາດລາວ",
+    ) -> Dict[str, Any]:
+        """查詢單一時刻的 ສັງຄົມ / ສີກາດ。"""
+
+        return get_lao_auspicious_time(target_dt, activity=activity, sikarat_type=sikarat_type)
+
+    def find_best_dates(
+        self,
+        start_dt: datetime,
+        *,
+        days: int = 30,
+        activity: str = "ການແຕ່ງງານ",
+    ) -> List[Dict[str, Any]]:
+        """搜尋近期吉日。"""
+
+        return calc_find_best_dates(start_dt, days=days, activity=activity)
+
+    def get_monthly_fortune(
+        self,
+        year: int,
+        month: int,
+        *,
+        activity: str = "ການແຕ່ງງານ",
+    ) -> List[Dict[str, Any]]:
+        """取得月度吉凶摘要。"""
+
+        return get_monthly_fortune(year, month, activity=activity)
+
+    def render_wheel(self, chart: LaoChart | Dict[str, Any], *, size: int = 700) -> str:
+        """單獨渲染婆羅門輪 SVG。"""
+
+        return build_lao_brahma_wheel_svg(chart, size=size)
+
+    def render_panel(self, chart: LaoChart | Dict[str, Any], *, lang: str = "zh") -> None:
+        """在 Streamlit 渲染 Laos 專屬頁面。"""
+
+        render_lao_horasat(chart, lang=lang)
 
 
-# ==================== 便捷工廠方法（供 app.py 快速註冊） ====================
+# 便捷函式（與專案其他模組風格一致）
 def create_lao_horasat() -> LaoHorasat:
-    """供 Streamlit 或其他模組快速建立實例"""
+    """建立 LaoHorasat 實例。"""
+
     return LaoHorasat()
 
 
-# ==================== 測試用（直接執行本檔案可驗證） ====================
-if __name__ == "__main__":
-    print("🚀 正在測試 LaoHorasat 完整功能...")
-    hor = LaoHorasat()
-    
-    # 測試出生盤
-    test_birth = "2026-05-18T11:32:00"
-    chart = hor.get_chart(test_birth)
-    print(f"✅ 出生盤生成成功 | 年份: {chart['chart']['lao_date']['lao_year']} | 吉凶: {chart['chart']['sangkhom']['fortune_level']}")
-    print(f"SVG 長度: {len(chart['svg'])} 字符（已包含婆羅門占星輪）")
-    
-    # 測試擇日
-    sang = hor.get_sangkhom(test_birth, activity="結婚")
-    print(f"✅ 結婚擇日: {sang['fortune']['fortune_level']} - {sang['recommendation']}")
-    
-    print("🎉 LaoHorasat 模組全部測試通過，可直接整合到 kinastro 主程式！")
+def compute_lao_horasat_chart(**kwargs: Any) -> Dict[str, Any]:
+    """函式風格入口：計算並回傳 dict。"""
+
+    return LaoHorasat().get_chart(**kwargs)
+
+
+def _parse_iso_datetime(value: str) -> datetime:
+    """穩健解析 ISO-8601 日期字串，兼容 Z 與偏移格式。"""
+
+    try:
+        if value.endswith("Z"):
+            return datetime.fromisoformat(value[:-1]).replace(tzinfo=dt_timezone.utc)
+        return datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError("iso_datetime 格式錯誤，請使用 ISO-8601") from exc

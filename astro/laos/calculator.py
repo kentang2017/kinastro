@@ -1,157 +1,370 @@
-# astro/lao/calculator.py
-"""
-老撾占星主計算器 (Lao Horasat Calculator)
-基於《ໄທຣາສາດລາວ ພາກຕົ້ນ》完整實現
-整合：
-- calendar.py（老撾曆轉換 + 特殊年份）
-- sangkhom.py（ສັງຄົມ 吉凶擇日）
-- pyswisseph（精準行星位置）
-與專案其他體系 (thai.py 等) 風格完全一致
+"""Laos Horasat calculator.
+
+此模組提供老撾占星（ໄທຣາສາດລາວ）的純計算能力：
+- 出生盤（七曜 + 羅睺 / 計都）
+- 老撾曆日期資訊與特殊年份分析
+- ສັງຄົມ 擇日吉凶
+- ສີກາດ 時段建議
 """
 
-from datetime import datetime
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass, field
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Literal
+
 import swisseph as swe
-from typing import Dict, Any, Optional
-from .calendar import LaoCalendar
-from .sangkhom import Sangkhom
-from ..base import BaseCalculator  # 專案共用基礎計算器（若無可移除繼承）
 
-class LaoCalculator(BaseCalculator):
-    """老撾占星核心計算器"""
+from .data.calendar_rules import get_lao_date_info
+from .data.sangkhom_tables import SUPPORTED_SANGKHOM_ACTIVITIES, get_sangkhom_for_date
+from .data.sikarat import get_best_sikarat_hours, get_sikarat_for_datetime
+from .data.special_years import analyze_special_year
 
-    def __init__(self):
-        super().__init__()
-        self.calendar = LaoCalendar()
-        self.sangkhom = Sangkhom()
-        
-        # 預設萬象座標（老撾首都，書中常見基準）
-        self.DEFAULT_LAT = 17.9667
-        self.DEFAULT_LON = 102.6000
-        self.DEFAULT_TZ = 7  # UTC+7（老撾時區）
+HouseSystem = Literal["whole_sign"]
 
-    def get_birth_chart(self, birth_dt: datetime, 
-                       lat: Optional[float] = None, 
-                       lon: Optional[float] = None) -> Dict[str, Any]:
-        """
-        生成老撾出生盤（完整出生圖 + ສັງຄົມ 解讀）
-        嚴格依照書中第1-4章時間系統 + 第5章 ປະຕິທິນ
-        """
-        if lat is None:
-            lat = self.DEFAULT_LAT
-        if lon is None:
-            lon = self.DEFAULT_LON
+# 主要行星映射（依專案 Thai 模組風格，採用簡潔 key）
+_LAO_GRAHA_IDS: Dict[str, int] = {
+    "sun": swe.SUN,
+    "moon": swe.MOON,
+    "mars": swe.MARS,
+    "mercury": swe.MERCURY,
+    "jupiter": swe.JUPITER,
+    "venus": swe.VENUS,
+    "saturn": swe.SATURN,
+}
 
-        # 1. 轉換老撾曆（書中第1-4章核心）
-        lao_date = self.calendar.gregorian_to_lao(birth_dt)
+# 行星符號（含羅睺 / 計都）
+_PLANET_SYMBOLS: Dict[str, str] = {
+    "sun": "☉",
+    "moon": "☾",
+    "mars": "♂",
+    "mercury": "☿",
+    "jupiter": "♃",
+    "venus": "♀",
+    "saturn": "♄",
+    "rahu": "☊",
+    "ketu": "☋",
+}
 
-        # 2. 計算儒略日（供 pyswisseph 使用）
-        jd = swe.julday(
-            birth_dt.year, birth_dt.month, birth_dt.day,
-            birth_dt.hour + birth_dt.minute / 60.0 + birth_dt.second / 3600.0
+
+@dataclass
+class LaoPlanet:
+    """單一星曜資料。"""
+
+    key: str
+    symbol: str
+    longitude: float
+    latitude: float
+    speed: float
+    sign_index: int
+    sign_degree: float
+    house: int
+    retrograde: bool
+
+
+@dataclass
+class LaoChart:
+    """老撾出生盤資料模型。"""
+
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    timezone: float
+    latitude: float
+    longitude: float
+    location_name: str
+    house_system: HouseSystem
+    julian_day_ut: float
+    ayanamsa: float
+    ascendant: float
+    lao_date: Dict[str, Any]
+    special_year: Dict[str, Any]
+    sangkhom: Dict[str, Any]
+    sikarat: Dict[str, Any]
+    planets: List[LaoPlanet] = field(default_factory=list)
+
+
+def _init_swe() -> None:
+    """初始化 Swiss Ephemeris，若專案初始化失敗則使用預設路徑。"""
+
+    try:
+        from astro.swe_init import init_swe
+
+        init_swe()
+    except Exception:
+        swe.set_ephe_path("")
+
+
+def _norm(deg: float) -> float:
+    """角度正規化到 0~360。"""
+
+    return deg % 360.0
+
+
+def _sign_index(longitude: float) -> int:
+    """回傳黃道宮位索引（0~11）。"""
+
+    return int(_norm(longitude) // 30.0)
+
+
+def _sign_degree(longitude: float) -> float:
+    """回傳宮內度數（0~30）。"""
+
+    return _norm(longitude) % 30.0
+
+
+def _resolve_activity(activity: str | None) -> str:
+    """標準化活動名稱，避免傳入未知活動造成表格查詢失敗。"""
+
+    if activity and activity in SUPPORTED_SANGKHOM_ACTIVITIES:
+        return activity
+    return SUPPORTED_SANGKHOM_ACTIVITIES[0] if SUPPORTED_SANGKHOM_ACTIVITIES else "ການແຕ່ງງານ"
+
+
+def _planet_house_whole_sign(lon: float, ascendant: float) -> int:
+    """Whole-sign 宮位計算。"""
+
+    return ((_sign_index(lon) - _sign_index(ascendant)) % 12) + 1
+
+
+def _validate_datetime(
+    *,
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    timezone: float,
+) -> None:
+    """輸入驗證，統一在入口處檢查，避免下游錯誤難以追查。"""
+
+    try:
+        datetime(year, month, day, hour, minute)
+    except ValueError as exc:
+        raise ValueError(f"出生日期時間不合法：{exc}") from exc
+
+    if not -12.0 <= timezone <= 14.0:
+        raise ValueError("timezone 必須介於 -12 到 +14")
+
+
+def compute_lao_chart(
+    *,
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    timezone: float,
+    latitude: float,
+    longitude: float,
+    location_name: str = "",
+    house_system: HouseSystem = "whole_sign",
+    sangkhom_activity: str = "ການແຕ່ງງານ",
+    sikarat_type: str = "ສີກາດລາວ",
+) -> LaoChart:
+    """計算老撾占星出生盤。
+
+    與 Thai 模組相同：
+    - 純計算函式（不依賴 Streamlit）
+    - 回傳結構化 dataclass，方便 UI 與 API 重用
+    """
+
+    _validate_datetime(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+    )
+
+    if house_system != "whole_sign":
+        raise ValueError(f"目前僅支援 whole_sign，收到：{house_system}")
+
+    _init_swe()
+    swe.set_sid_mode(swe.SIDM_LAHIRI)
+
+    # UTC 小時：與專案既有星盤計算邏輯一致
+    decimal_hour_ut = hour + minute / 60.0 - timezone
+    jd_ut = swe.julday(year, month, day, decimal_hour_ut)
+    ayanamsa = swe.get_ayanamsa_ut(jd_ut)
+
+    # 先取 Asc（sidereal）
+    _, ascmc = swe.houses_ex(jd_ut, latitude, longitude, b"W", swe.FLG_SIDEREAL)
+    ascendant = _norm(ascmc[0])
+
+    planets: List[LaoPlanet] = []
+    for key, pid in _LAO_GRAHA_IDS.items():
+        result, _ = swe.calc_ut(jd_ut, pid, swe.FLG_SIDEREAL)
+        lon = _norm(result[0])
+        speed = result[3]
+        planets.append(
+            LaoPlanet(
+                key=key,
+                symbol=_PLANET_SYMBOLS[key],
+                longitude=lon,
+                latitude=result[1],
+                speed=speed,
+                sign_index=_sign_index(lon),
+                sign_degree=_sign_degree(lon),
+                house=_planet_house_whole_sign(lon, ascendant),
+                retrograde=speed < 0,
+            )
         )
 
-        # 3. 計算行星位置（與專案 thai.py / 其他體系一致）
-        planets = self._calculate_planets(jd, lat, lon)
+    # 羅睺 / 計都
+    rahu_raw, _ = swe.calc_ut(jd_ut, swe.MEAN_NODE, swe.FLG_SIDEREAL)
+    rahu_lon = _norm(rahu_raw[0])
+    ketu_lon = _norm(rahu_lon + 180.0)
 
-        # 4. ສັງຄົມ 吉凶解讀
-        sangkhom_data = self.sangkhom.get_daily_fortune(birth_dt, activity="birth")
+    planets.extend(
+        [
+            LaoPlanet(
+                key="rahu",
+                symbol=_PLANET_SYMBOLS["rahu"],
+                longitude=rahu_lon,
+                latitude=rahu_raw[1],
+                speed=rahu_raw[3],
+                sign_index=_sign_index(rahu_lon),
+                sign_degree=_sign_degree(rahu_lon),
+                house=_planet_house_whole_sign(rahu_lon, ascendant),
+                retrograde=True,
+            ),
+            LaoPlanet(
+                key="ketu",
+                symbol=_PLANET_SYMBOLS["ketu"],
+                longitude=ketu_lon,
+                latitude=-rahu_raw[1],
+                speed=rahu_raw[3],
+                sign_index=_sign_index(ketu_lon),
+                sign_degree=_sign_degree(ketu_lon),
+                house=_planet_house_whole_sign(ketu_lon, ascendant),
+                retrograde=True,
+            ),
+        ]
+    )
 
-        # 5. 組合成完整出生盤
-        chart = {
-            "system": "lao_horasat",
-            "system_name": "ໄທຣາສາດລາວ (老撾占星術)",
-            "birth_datetime": birth_dt.isoformat(),
-            "lao_date": lao_date,
-            "planets": planets,
-            "sangkhom": sangkhom_data,
-            "ascendant": self._calculate_ascendant(jd, lat, lon),  # 上升點
-            "house_system": "brahma_wheel",  # 婆羅門占星輪
-            "interpretation": self._generate_interpretation(lao_date, planets, sangkhom_data)
-        }
+    local_dt = datetime(year, month, day, hour, minute)
+    local_day = local_dt.date()
 
-        return chart
+    lao_date = get_lao_date_info(local_day)
+    special_year = analyze_special_year(year, era="gregorian")
+    activity = _resolve_activity(sangkhom_activity)
+    sangkhom = get_sangkhom_for_date(activity, local_day)
 
-    def _calculate_planets(self, jd: float, lat: float, lon: float) -> Dict[str, Dict]:
-        """使用 pyswisseph 計算主要行星位置（書中第4章 行星系統）"""
-        swe.set_ephe_path()  # 使用專案預設星曆
-        planets_data = {}
+    # ສີກາດ：保留當下時段 + 推薦吉時列表
+    sikarat = get_sikarat_for_datetime(local_dt, sikarat_type=sikarat_type)
+    sikarat["best_hours"] = get_best_sikarat_hours(activity)
 
-        # 書中常用行星（日、月、火、水、木、金、土 + 羅睺/計都）
-        planet_list = {
-            "sun": swe.SUN,
-            "moon": swe.MOON,
-            "mercury": swe.MERCURY,
-            "venus": swe.VENUS,
-            "mars": swe.MARS,
-            "jupiter": swe.JUPITER,
-            "saturn": swe.SATURN,
-            "rahu": swe.MEAN_NODE,      # 羅睺
-            "ketu": swe.MEAN_NODE + 1   # 計都
-        }
+    return LaoChart(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        location_name=location_name,
+        house_system=house_system,
+        julian_day_ut=jd_ut,
+        ayanamsa=ayanamsa,
+        ascendant=ascendant,
+        lao_date=lao_date,
+        special_year=special_year,
+        sangkhom=sangkhom,
+        sikarat=sikarat,
+        planets=planets,
+    )
 
-        for name, planet_id in planet_list.items():
-            try:
-                pos, _ = swe.calc_ut(jd, planet_id)
-                planets_data[name] = {
-                    "longitude": pos[0] % 360,   # 黃道經度
-                    "latitude": pos[1],
-                    "speed": pos[3],
-                    "house": int(pos[0] // 30) + 1  # 簡單 12 宮位
+
+def chart_to_dict(chart: LaoChart) -> Dict[str, Any]:
+    """序列化 LaoChart，供 API / AI / 前端存取。"""
+
+    data = asdict(chart)
+    data["system"] = "lao_horasat"
+    data["system_name"] = "ໄທຣາສາດລາວ"
+    return data
+
+
+def get_lao_auspicious_time(
+    target_dt: datetime,
+    *,
+    activity: str = "ການແຕ່ງງານ",
+    sikarat_type: str = "ສີກາດລາວ",
+) -> Dict[str, Any]:
+    """查詢單一時間點的 ສັງຄົມ + ສີກາດ 建議。"""
+
+    resolved = _resolve_activity(activity)
+    sangkhom = get_sangkhom_for_date(resolved, target_dt.date())
+    sikarat = get_sikarat_for_datetime(target_dt, sikarat_type=sikarat_type)
+    sikarat["best_hours"] = get_best_sikarat_hours(resolved)
+
+    return {
+        "activity": resolved,
+        "lao_date": sangkhom.get("lao_date"),
+        "sangkhom": sangkhom,
+        "sikarat": sikarat,
+    }
+
+
+def find_best_dates(
+    start_dt: datetime,
+    *,
+    days: int = 30,
+    activity: str = "ການແຕ່ງງານ",
+) -> List[Dict[str, Any]]:
+    """尋找未來 N 天較吉利的日期（基於 ສັງຄົມ 表格）。"""
+
+    if days <= 0:
+        raise ValueError("days 必須大於 0")
+
+    resolved = _resolve_activity(activity)
+    result: List[Dict[str, Any]] = []
+
+    for i in range(days):
+        current_day = (start_dt + timedelta(days=i)).date()
+        daily = get_sangkhom_for_date(resolved, current_day)
+        status = str(daily.get("status", ""))
+        if "✅" in status:
+            result.append(
+                {
+                    "date": current_day.isoformat(),
+                    "status": daily.get("status", ""),
+                    "recommendation": daily.get("recommendation", ""),
+                    "lao_date": daily.get("lao_date", ""),
                 }
-            except:
-                planets_data[name] = {"longitude": 0, "latitude": 0, "speed": 0, "house": 1}
+            )
 
-        return planets_data
-
-    def _calculate_ascendant(self, jd: float, lat: float, lon: float) -> float:
-        """計算上升點（Ascendant）"""
-        try:
-            # 簡單版上升點計算（實際專案可使用更精確方法）
-            asc = swe.houses(jd, lat, lon, b'P')[0][0] % 360
-            return asc
-        except:
-            return 0.0
-
-    def _generate_interpretation(self, lao_date: Dict, planets: Dict, sangkhom: Dict) -> str:
-        """簡單 AI 風格解讀（可後續接 Cerebras）"""
-        year_type = lao_date.get("year_type", "ປົກກະຕິ")
-        fortune = sangkhom.get("fortune_level", "中")
-        return f"出生於{year_type}年，{sangkhom['weekday_lao']}，整體{fortune}。適合參考婆羅門占星輪進行詳細解讀。"
-
-    def get_auspicious_time(self, target_dt: datetime, activity: str = "general") -> Dict:
-        """
-        擇吉時（書中第137-156頁 ຖອຍມະຫາສັງຄົມ）
-        包含日期 + 時辰建議
-        """
-        sangkhom_data = self.sangkhom.get_daily_fortune(target_dt, activity)
-        time_slot = self.sangkhom.get_time_slot(target_dt)
-        
-        return {
-            "lao_date": sangkhom_data["lao_date"],
-            "fortune": sangkhom_data,
-            "time_slot": time_slot,
-            "best_hours": time_slot["best_hours"],
-            "recommendation": f"今日適合{activity}：{sangkhom_data['suitable_activities']}"
-        }
-
-    def find_best_dates(self, start_dt: datetime, days: int = 30, activity: str = "general") -> list:
-        """批量尋找最佳吉日（實務常用）"""
-        return self.sangkhom.find_auspicious_dates(start_dt, days, activity)
-
-    # ==================== 供 Streamlit / API 統一呼叫 ====================
-    def get_chart(self, birth_date_str: str, lat: float = None, lon: float = None) -> Dict:
-        """對外統一介面（與 lao_horasat.py 配合）"""
-        dt = datetime.fromisoformat(birth_date_str.replace("Z", "+00:00"))
-        chart = self.get_birth_chart(dt, lat, lon)
-        return chart
+    return result
 
 
-# ==================== 測試用（直接執行此檔案可驗證） ====================
-if __name__ == "__main__":
-    calc = LaoCalculator()
-    test_dt = datetime(2026, 5, 18, 11, 27)  # 當前時間
-    chart = calc.get_birth_chart(test_dt)
-    print("✅ 老撾出生盤生成成功")
-    print("老撾日期:", chart["lao_date"]["lao_year"], "年")
-    print("吉凶:", chart["sangkhom"]["fortune_level"])
-    print("行星數量:", len(chart["planets"]))
+def get_monthly_fortune(
+    year: int,
+    month: int,
+    *,
+    activity: str = "ການແຕ່ງງານ",
+) -> List[Dict[str, Any]]:
+    """回傳指定月份的每日 ສັງຄົມ 吉凶摘要。"""
+
+    first_day = date(year, month, 1)
+    next_month = date(year + (month // 12), ((month % 12) + 1), 1)
+    total_days = (next_month - first_day).days
+    resolved = _resolve_activity(activity)
+
+    rows: List[Dict[str, Any]] = []
+    for d in range(1, total_days + 1):
+        g_date = date(year, month, d)
+        daily = get_sangkhom_for_date(resolved, g_date)
+        rows.append(
+            {
+                "day": d,
+                "date": g_date.isoformat(),
+                "status": daily.get("status", ""),
+                "recommendation": daily.get("recommendation", ""),
+            }
+        )
+
+    return rows

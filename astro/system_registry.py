@@ -1123,6 +1123,24 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_laos",
+    name_zh="老撾占星",
+    name_en="Laos Horasat",
+    category="cat_asian",
+    icon="🇱🇦",
+    tab_key="tab_laos",
+    desc_key="desc_laos",
+    spinner_key="spinner_laos",
+    hint_key="sys_hint_laos",
+    tags=["laos", "lao", "horasat", "sangkhom", "sikarat", "asian"],
+    maturity="beta",
+    accent_color=_a("cat_asian"),
+    origin_culture="Lao",
+    tradition_period="Traditional Lao Horasat",
+    ai_persona_key="info_lao_prompt",
+))
+
+_reg(System(
     id="tab_mahabote",
     name_zh="緬甸 Mahabote",
     name_en="Burmese Mahabote",

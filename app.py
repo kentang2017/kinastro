@@ -70,6 +70,7 @@ from astro.thai import (
     calculate_nine_palace_divination, render_nine_palace_divination,
     build_thai_mandala_svg, THAI_NAKSHATRAS,
 )
+from astro.laos import compute_lao_chart, render_lao_horasat
 from astro.brahma_jati import (
     compute_brahma_jati, render_brahma_jati, render_brahma_jati_browse,
 )
@@ -245,9 +246,9 @@ def render_homepage():
          ["Jyotish", "紅皮書 Lal Kitab", "納迪占星", "Jaimini", "KP 占星", "吠陀風水"],
          "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
         ("🌏", "亞洲體系", "Asian Systems",
-         ["土亭數", "宿曜道", "泰國占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "馬來伊斯蘭占星（十二星）", "祖爾海", "藏傳時輪金剛",
-           "九星氣學", "高棉占星", "波利尼西亞"],
-          "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
+         ["土亭數", "宿曜道", "泰國占星", "老撾占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "馬來伊斯蘭占星（十二星）", "祖爾海", "藏傳時輪金剛",
+            "九星氣學", "高棉占星", "波利尼西亞"],
+           "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
         ("🕌", "中東 · 北非體系", "Middle East & North Africa",
          ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法", "柏柏爾占星", "衣索比亞 Bahre Hasab", "地占占星"],
           "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
@@ -3802,6 +3803,25 @@ if not _engine_handled:
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_thai"))
             render_brahma_jati_browse()
+
+    # --- 老撾占星 ---
+    elif _selected_system == "tab_laos":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_laos")):
+                    lao_chart = compute_lao_chart(**_p)
+                render_lao_horasat(
+                    lao_chart,
+                    lang=get_lang(),
+                    after_chart_hook=lambda: _render_ai_button("tab_laos", lao_chart, btn_key="tab_laos"),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_lao_prompt"))
+            st.markdown(t("desc_laos"))
 
     # --- 卡巴拉占星 ---
     elif _selected_system == "tab_kabbalistic":
