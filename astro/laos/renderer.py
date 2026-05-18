@@ -97,6 +97,8 @@ _SIGN_NAMES_LAO: List[str] = [
     "ຕຸລາ", "ພະຈິກ", "ທະນູ", "ມັງກອນ", "ກຸມພາ", "ມີນ",
 ]
 
+_NUM_ZODIAC_SIGNS = len(_SIGN_NAMES_LAO)
+
 
 def _zh(lao_text: str, mapping: Dict[str, str], fallback: str = "") -> str:
     """查詢 Lao→中文對照，找不到則回傳 fallback 或原文。"""
@@ -332,7 +334,11 @@ def render_lao_horasat(
         if month_note:
             st.caption(f"🌙 月份備注：{month_note}")
         if overall:
-            st.success(f"**整體評估**：{overall}") if "✅" in overall else st.warning(f"**整體評估**：{overall}")
+            is_positive = overall.startswith("✅")
+            if is_positive:
+                st.success(f"**整體評估**：{overall}")
+            else:
+                st.warning(f"**整體評估**：{overall}")
 
     with tab_sikarat:
         sikarat_type = sikarat.get("sikarat_type", "ສີກາດລາວ")
@@ -381,7 +387,7 @@ def render_lao_horasat(
         for p in data.get("planets", []):
             key = p.get("key", "")
             sign_idx = p.get("sign_index", 0)
-            sign_lao = _SIGN_NAMES_LAO[sign_idx] if 0 <= sign_idx < 12 else "—"
+            sign_lao = _SIGN_NAMES_LAO[sign_idx] if 0 <= sign_idx < _NUM_ZODIAC_SIGNS else "—"
             sign_zh = _zh(sign_lao, _LAO_SIGNS_ZH)
             rows.append(
                 {
