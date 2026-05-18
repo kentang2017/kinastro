@@ -8,10 +8,11 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
 from .calculator import LaoChart, chart_to_dict
 from .data.symbols import BRAHMAN_WHEEL_SYMBOLS
+from .data.sikarat import get_sikarat_by_hour
 
 # BRAHMAN_WHEEL_SYMBOLS 中 0~6 分別代表七曜順序鍵值。
 _WHEEL_SYMBOL_KEYS: Dict[str, str] = {
@@ -24,7 +25,82 @@ _WHEEL_SYMBOL_KEYS: Dict[str, str] = {
     "saturn": "6",
 }
 
-_SPECIAL_YEAR_DISPLAY_LIMIT = 6
+# ==================== 中文翻譯對照表 ====================
+
+_WEEKDAY_ZH: Dict[str, str] = {
+    "ວັນອາທິດ": "星期日",
+    "ວັນຈັນ": "星期一",
+    "ວັນອັງຄານ": "星期二",
+    "ວັນພຸດ": "星期三",
+    "ວັນພະຫັດ": "星期四",
+    "ວັນສຸກ": "星期五",
+    "ວັນສົບ": "星期六",
+}
+
+_SEASON_ZH: Dict[str, str] = {
+    "ລະດູໜາວ": "冷季（11–2月）",
+    "ລະດູຝົນ": "雨季（5–10月）",
+    "ລະດູແຫ້ງ": "旱季（3–4月）",
+}
+
+_SIKARAT_ZH: Dict[str, str] = {
+    "ສີກາດລາວ": "老撾色嘎",
+    "ສີກາດຝຣັ່ງ": "法國色嘎",
+    "ສີກາດຈູລະ": "小色嘎",
+    "ສີກາດມະຫາ": "大色嘎",
+}
+
+_SIKARAT_DESC_ZH: Dict[str, str] = {
+    "ສີກາດລາວ": "老撾傳統時段，凌晨最吉，適合祈福供奉。",
+    "ສີກາດຝຣັ່ງ": "法式色嘎，上午時段最旺，適合婚禮與求財。",
+    "ສີກາດຈູລະ": "小色嘎，中午時段最吉，適合學業與祭祀。",
+    "ສີກາດມະຫາ": "大色嘎，下午為佳，需避開凌晨危險時段。",
+}
+
+_ACTIVITY_ZH: Dict[str, str] = {
+    "ການແຕ່ງງານ": "婚禮",
+    "ການສ້າງເຮືອນ": "建房／動土",
+    "ການເດີນທາງ": "出行",
+    "ການເປີດກິຈະການ": "開業",
+    "ການບູຊາບູຊາ": "祭祀／做功德",
+}
+
+_PLANET_ZH: Dict[str, str] = {
+    "sun": "太陽",
+    "moon": "月亮",
+    "mars": "火星",
+    "mercury": "水星",
+    "jupiter": "木星",
+    "venus": "金星",
+    "saturn": "土星",
+    "rahu": "羅睺",
+    "ketu": "計都",
+}
+
+_LAO_SIGNS_ZH: Dict[str, str] = {
+    "ເມສ": "白羊座",
+    "ພຶດສະພາ": "金牛座",
+    "ມິຖຸນ": "雙子座",
+    "ກະກົດ": "巨蟹座",
+    "ສິງ": "獅子座",
+    "ກັນຍາ": "處女座",
+    "ຕຸລາ": "天秤座",
+    "ພະຈິກ": "天蠍座",
+    "ທະນູ": "射手座",
+    "ມັງກອນ": "摩羯座",
+    "ກຸມພາ": "水瓶座",
+    "ມີນ": "雙魚座",
+}
+
+_SIGN_NAMES_LAO: List[str] = [
+    "ເມສ", "ພຶດສະພາ", "ມິຖຸນ", "ກະກົດ", "ສິງ", "ກັນຍາ",
+    "ຕຸລາ", "ພະຈິກ", "ທະນູ", "ມັງກອນ", "ກຸມພາ", "ມີນ",
+]
+
+
+def _zh(lao_text: str, mapping: Dict[str, str], fallback: str = "") -> str:
+    """查詢 Lao→中文對照，找不到則回傳 fallback 或原文。"""
+    return mapping.get(lao_text, fallback or lao_text)
 
 
 def _polar(cx: float, cy: float, r: float, angle_deg: float) -> tuple[float, float]:
@@ -185,42 +261,138 @@ def render_lao_horasat(
     )
 
     with tab_date:
-        st.write(f"**老撾日期**：{lao_date.get('full_lao_date_with_weekday', '—')}")
-        st.write(f"**季節**：{lao_date.get('season', '—')}")
-        st.write(f"**特殊年份**：{special_year.get('description', '普通年份')}")
-        st.json(limited_dict(special_year, _SPECIAL_YEAR_DISPLAY_LIMIT), expanded=False)
+        weekday_lao = lao_date.get("weekday_lao", "")
+        weekday_zh = _zh(weekday_lao, _WEEKDAY_ZH)
+        season_lao = lao_date.get("season", "—")
+        season_zh = _zh(season_lao, _SEASON_ZH)
+        lao_year = special_year.get("lao_year", "—")
+        greg_year = special_year.get("gregorian_year", "—")
+        year_desc = special_year.get("description", "普通年份")
+        is_special = special_year.get("is_special", False)
+
+        st.markdown(
+            f"""
+            <div class="lao-cosmic-panel" style="padding:12px 16px;">
+              <p style="margin:4px 0;font-size:15px;">
+                📅 <b>老撾日期</b>：{lao_date.get('full_lao_date_with_weekday', '—')}
+              </p>
+              <p style="margin:4px 0;font-size:14px;color:#d7c080;">
+                &nbsp;&nbsp;&nbsp;&nbsp;（{weekday_zh}）
+              </p>
+              <p style="margin:4px 0;font-size:14px;">
+                🗓️ <b>老撾佛曆年</b>：ພ.ສ. {lao_year}　|　<b>西元年</b>：{greg_year}
+              </p>
+              <p style="margin:4px 0;font-size:14px;">
+                🌿 <b>季節</b>：{season_lao}（{season_zh}）
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown("#### 🔖 特殊年份資訊")
+        col_a, col_b = st.columns(2)
+        col_a.metric("老撾佛曆年", f"ພ.ສ. {lao_year}")
+        col_b.metric("西元年", str(greg_year))
+        is_special_label = "⚠️ 特殊年份" if is_special else "✅ 普通年份"
+        st.info(f"**年份類型**：{is_special_label}　{year_desc}")
+        if is_special and special_year.get("special_types"):
+            st.markdown("**特殊年份說明：**")
+            for name, rule in special_year["special_types"].items():
+                desc = rule.get("description", name)
+                st.markdown(f"- **{name}**：{desc}")
 
     with tab_sangkhom:
-        st.write(f"**活動**：{sangkhom.get('activity', '—')}")
-        st.write(f"**吉凶**：{sangkhom.get('status', '—')}")
-        st.write(f"**建議**：{sangkhom.get('recommendation', '—')}")
-        st.caption(sangkhom.get("month_note", ""))
+        activity_lao = sangkhom.get("activity", "—")
+        activity_zh = _zh(activity_lao, _ACTIVITY_ZH)
+        status = sangkhom.get("status", "—")
+        note = sangkhom.get("note", "")
+        recommendation = sangkhom.get("recommendation", "—")
+        month_note = sangkhom.get("month_note", "")
+        overall = sangkhom.get("overall", "")
+
+        st.markdown(
+            f"""
+            <div class="lao-cosmic-panel" style="padding:12px 16px;">
+              <p style="margin:4px 0;font-size:15px;">
+                🎯 <b>活動</b>：{activity_lao}（{activity_zh}）
+              </p>
+              <p style="margin:6px 0;font-size:20px;font-weight:bold;">
+                {status}
+              </p>
+              <p style="margin:4px 0;font-size:14px;">
+                💬 <b>詳細說明</b>：{note}
+              </p>
+              <p style="margin:4px 0;font-size:14px;">
+                📋 <b>建議</b>：{recommendation}
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if month_note:
+            st.caption(f"🌙 月份備注：{month_note}")
+        if overall:
+            st.success(f"**整體評估**：{overall}") if "✅" in overall else st.warning(f"**整體評估**：{overall}")
 
     with tab_sikarat:
-        st.write(f"**時段體系**：{sikarat.get('sikarat_type', '—')}")
-        st.write(f"**當前時段**：{sikarat.get('period_name', '—')} · {sikarat.get('status', '—')}")
-        for hour_text in sikarat.get("best_hours", []):
-            st.markdown(f"- {hour_text}")
+        sikarat_type = sikarat.get("sikarat_type", "ສີກາດລາວ")
+        sikarat_zh = _zh(sikarat_type, _SIKARAT_ZH)
+        sikarat_desc = _SIKARAT_DESC_ZH.get(sikarat_type, "")
+        current_period = sikarat.get("period_name", "—")
+        current_period_zh = _zh(current_period, _SIKARAT_ZH)
+        current_status = sikarat.get("status", "—")
+        current_hour = sikarat.get("hour", 0)
+
+        st.markdown(
+            f"""
+            <div class="lao-cosmic-panel" style="padding:12px 16px;">
+              <p style="margin:4px 0;font-size:15px;">
+                ⏰ <b>時段體系</b>：{sikarat_type}（{sikarat_zh}）
+              </p>
+              <p style="margin:4px 0;font-size:13px;color:#c9b86c;">{sikarat_desc}</p>
+              <p style="margin:6px 0;font-size:15px;">
+                🕐 <b>當前時段</b>（{current_hour:02d}:xx）：
+                {current_period}（{current_period_zh}）· {current_status}
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("#### 🕰️ 全日 24 小時吉凶一覽")
+        rows_s = []
+        for h in range(24):
+            info = get_sikarat_by_hour(h, sikarat_type)
+            period_lao = info["period_name"]
+            period_zh = _zh(period_lao, _SIKARAT_ZH)
+            s = info["status"]
+            is_current = (h == current_hour)
+            rows_s.append(
+                {
+                    "時刻": f"{'▶ ' if is_current else ''}{h:02d}:00",
+                    "色嘎時段": f"{period_lao}（{period_zh}）",
+                    "吉凶": s,
+                }
+            )
+        st.dataframe(rows_s, use_container_width=True)
 
     with tab_planets:
         rows = []
         for p in data.get("planets", []):
+            key = p.get("key", "")
+            sign_idx = p.get("sign_index", 0)
+            sign_lao = _SIGN_NAMES_LAO[sign_idx] if 0 <= sign_idx < 12 else "—"
+            sign_zh = _zh(sign_lao, _LAO_SIGNS_ZH)
             rows.append(
                 {
-                    "星曜": f"{p.get('symbol', '')} {p.get('key', '').upper()}",
+                    "星曜": f"{p.get('symbol', '')} {_PLANET_ZH.get(key, key.upper())}",
                     "黃經": f"{float(p.get('longitude', 0.0)):.2f}°",
+                    "星座": f"{sign_lao}（{sign_zh}）",
                     "宮位": p.get("house", "-"),
-                    "逆行": "是" if p.get("retrograde") else "否",
+                    "逆行": "是 ℞" if p.get("retrograde") else "否",
                 }
             )
-        st.dataframe(rows, width="stretch")
-
-
-def limited_dict(data: Dict[str, Any], max_items: int) -> Dict[str, Any]:
-    """避免 UI 一次輸出過大 dict。"""
-
-    items = list(data.items())
-    return dict(items[:max_items])
+        st.dataframe(rows, use_container_width=True)
 
 
 def render_streamlit(
