@@ -339,7 +339,8 @@ def _render_sun_eclipse_tab() -> None:
         gz_data = _load_sun_eclipse_gz()
         # First entry may be general notes
         gz_keys = list(gz_data.keys())
-        general_key = "甘氏总论" if "甘氏总论" in gz_data else None
+        _GZ_GENERAL_KEY = "甘氏总论"
+        general_key = _GZ_GENERAL_KEY if _GZ_GENERAL_KEY in gz_data else None
         if general_key:
             with st.expander(auto_cn("📖 甘氏總論"), expanded=False):
                 _render_dict_omens(gz_data[general_key])
