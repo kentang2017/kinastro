@@ -631,6 +631,24 @@ _reg(System(
     ai_persona_key="info_chunzi_prompt",
 ))
 
+_reg(System(
+    id="tab_kaiyuan",
+    name_zh="開元占經",
+    name_en="Kaiyuan Zhanjing",
+    category="cat_chinese",
+    icon="📜",
+    tab_key="tab_kaiyuan",
+    desc_key="desc_kaiyuan",
+    spinner_key="spinner_kaiyuan",
+    hint_key="sys_hint_kaiyuan",
+    tags=["開元占經", "五星", "二十八宿", "月占", "日食", "五音", "kaiyuan", "tang dynasty", "chinese", "omen"],
+    maturity="core",
+    accent_color=_a("cat_chinese"),
+    origin_culture="Chinese",
+    tradition_period="Tang Dynasty (開元年間)",
+    ai_persona_key="info_kaiyuan_prompt",
+))
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_western — 西方體系 🏛️

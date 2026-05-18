@@ -105,6 +105,7 @@ from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_q
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
 from astro.nanji.renderer import render_streamlit as render_nanji_chart
 from astro.chunzi.renderer import render_streamlit as render_chunzi_chart
+from astro.kaiyuan.renderer import render_streamlit as render_kaiyuan_chart
 from astro.sumerian.calculator import compute_sumerian_chart
 from wiki_renderer import render_wiki
 from astro.sumerian.renderer import render_streamlit as render_sumerian_chart
@@ -5963,6 +5964,15 @@ if not _engine_handled:
         try:
             with st.spinner(t("spinner_chunzi")):
                 render_chunzi_chart()
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    # --- 開元占經 Kaiyuan Zhanjing ---
+    elif _selected_system == "tab_kaiyuan":
+        try:
+            with st.spinner(t("spinner_kaiyuan")):
+                render_kaiyuan_chart()
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)

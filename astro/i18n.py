@@ -4072,6 +4072,36 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 蠢子數為詩詞查詢工具，可直接在右側輸入代碼或關鍵字查詢，無需先排盤。",
         "en": "👈 ChunZiShu is a verse lookup tool. Enter a code or keyword on the right to search directly.",
     },
+    # ── 開元占經 (Kaiyuan Zhanjing) ───────────────────────────────────────────
+    "tab_kaiyuan": {
+        "zh": "📜 開元占經",
+        "en": "📜 Kaiyuan Zhanjing",
+    },
+    "desc_kaiyuan": {
+        "zh": (
+            "📜 **開元占經（Kaiyuan Zhanjing）** — 唐代瞿曇悉達奉詔編撰，成書於開元年間（713–741 年），"
+            "是中國現存規模最大的古代星占學百科全書。全書 120 卷，系統整理甘德、石申、巫咸三家及歷代天文占驗資料，"
+            "涵蓋五星入二十八宿占、月犯五星、月犯二十八宿、日月食占、五音法等核心內容。"
+        ),
+        "en": (
+            "📜 **Kaiyuan Zhanjing** — Compiled by Qutan Xida (瞿曇悉達) by imperial order during the Kaiyuan era "
+            "(713–741 CE) of the Tang Dynasty. The largest surviving Chinese encyclopaedia of astral omen divination, "
+            "comprising 120 volumes. Covers five-planet mansion omens, Moon vs. five planets, Moon vs. 28 lunar mansions, "
+            "solar/lunar eclipse omens, and the Five-Sounds (Wu Yin) method."
+        ),
+    },
+    "spinner_kaiyuan": {
+        "zh": "載入開元占經資料庫…",
+        "en": "Loading Kaiyuan Zhanjing database…",
+    },
+    "sys_hint_kaiyuan": {
+        "zh": "開元占經，五星入宿，月占，日食占，五音法，唐代星占",
+        "en": "Kaiyuan Zhanjing, five-planet mansion omens, moon omens, solar eclipse, Five Sounds, Tang Dynasty",
+    },
+    "info_kaiyuan_prompt": {
+        "zh": "👈 開元占經為古典星占查詢工具，可直接在右側選擇查詢項目，無需先排盤。",
+        "en": "👈 Kaiyuan Zhanjing is a classical omen lookup tool. Select a category on the right to search directly.",
+    },
     # ── Sumerian / Mesopotamian Astrology (蘇美/美索不達米亞占星) ──────────────
     "tab_sumerian": {
         "zh": "𒀭 蘇美/美索不達米亞占星",
