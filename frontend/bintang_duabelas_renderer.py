@@ -64,7 +64,6 @@ def _house_ring_trace(segments: list[HouseWheelSegment]) -> go.Barpolar:
         text=[f"{segment.label}<br>{segment.subtitle}" for segment in segments],
         hovertext=[segment.hover_html for segment in segments],
         hovertemplate="%{hovertext}<extra></extra>",
-        textfont=dict(color="#F6E8C3", size=11),
         opacity=0.95,
     )
 
