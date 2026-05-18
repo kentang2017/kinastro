@@ -821,11 +821,16 @@ def _render_five_star_general_tab() -> None:
 def render_streamlit() -> None:
     """開元占經 Streamlit 主渲染函式（不需出生資料，為查詢工具）"""
     _inject_kaiyuan_theme()
+    hero_title = auto_cn("開元占經", "Kaiyuan Zhanjing")
+    hero_description = auto_cn(
+        "唐·瞿曇悉達奉詔編纂的星占巨典，現以更精緻的 Streamlit 介面整合即時星盤、宿度定位與原典占文。",
+        "A refined Streamlit reading room for Kaiyuan Zhanjing, combining a live astrolabe, mansion tracking, and classical omen texts.",
+    )
     st.markdown(
         f"""
         <div class="kaiyuan-hero">
-            <h2>📜 {auto_cn("開元占經", "Kaiyuan Zhanjing")}</h2>
-            <p>{auto_cn("唐·瞿曇悉達奉詔編纂的星占巨典，現以更精緻的 Streamlit 介面整合即時星盤、宿度定位與原典占文。", "A refined Streamlit reading room for Kaiyuan Zhanjing, combining a live astrolabe, mansion tracking, and classical omen texts.")}</p>
+            <h2>📜 {hero_title}</h2>
+            <p>{hero_description}</p>
         </div>
         """,
         unsafe_allow_html=True,
