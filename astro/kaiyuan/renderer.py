@@ -447,7 +447,7 @@ def _render_live_chart_overview() -> Dict[str, KaiyuanObservation]:
                     <div class="eyebrow">{obs.icon} {obs.label}</div>
                     <div class="headline">{obs.mansion_name}宿 · {obs.mansion_degree:.1f}°</div>
                     <div class="meta">
-                        黃經 {_normalize_degree(obs.longitude):.1f}° {'℞' if obs.retrograde else ''}<br>
+                        黃經 {obs.longitude:.1f}° {'℞' if obs.retrograde else ''}<br>
                         {auto_cn('可直接對照本頁對應占文分頁', 'Use this to jump into the matching omen sections')}
                     </div>
                 </div>
