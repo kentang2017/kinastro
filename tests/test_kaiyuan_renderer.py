@@ -30,6 +30,15 @@ def test_build_mansion_ranges_cover_full_circle() -> None:
     assert total_width == pytest.approx(360.0)
 
 
+def test_build_twelve_palace_ranges_cover_full_circle() -> None:
+    ranges = kaiyuan_renderer._build_twelve_palace_ranges()
+    assert len(ranges) == 12
+    assert ranges[0]["name"] == "戌宮"
+    assert ranges[0]["station"] == "降婁"
+    total_width = sum((entry["end"] - entry["start"]) % 360.0 for entry in ranges)
+    assert total_width == pytest.approx(360.0)
+
+
 def test_has_live_chart_params_requires_date_fields() -> None:
     assert kaiyuan_renderer._has_live_chart_params({"year": 2026, "month": 5, "day": 18})
     assert not kaiyuan_renderer._has_live_chart_params({"year": 2026, "month": 5, "day": 0})
@@ -105,3 +114,5 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
     assert "Hong Kong" in svg
     assert "☽ 月・角" in svg
     assert "♃ 歲星（木）・房" in svg
+    assert "戌宮" in svg
+    assert "玄枵" in svg

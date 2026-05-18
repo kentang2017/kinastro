@@ -23,7 +23,7 @@ import streamlit as st
 
 from astro.i18n import auto_cn
 from astro.qizheng.calculator import _get_mansion_info, _normalize_degree
-from astro.qizheng.constants import TWENTY_EIGHT_MANSIONS
+from astro.qizheng.constants import TWELVE_SIGNS_CHINESE, TWENTY_EIGHT_MANSIONS
 from astro.swe_init import init_swisseph
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -229,6 +229,23 @@ def _build_mansion_ranges() -> List[Dict[str, Any]]:
     return ranges
 
 
+def _build_twelve_palace_ranges() -> List[Dict[str, Any]]:
+    ranges: List[Dict[str, Any]] = []
+    for idx, palace in enumerate(TWELVE_SIGNS_CHINESE):
+        start = _ecl_to_chart_angle((idx + 1) * 30.0)
+        short_name, _, station_name = palace.partition("(")
+        ranges.append(
+            {
+                "name": short_name,
+                "station": station_name.rstrip(")"),
+                "start": start,
+                "end": start + 30.0,
+                "mid": start + 15.0,
+            }
+        )
+    return ranges
+
+
 def _ecl_to_chart_angle(ecl_deg: float) -> float:
     return (45.0 - float(ecl_deg)) % 360.0
 
@@ -268,9 +285,13 @@ def _build_astrolabe_svg(
     size = width
     center = size / 2.0
     outer_radius = size * 0.42
-    inner_radius = size * 0.27
+    mansion_inner_radius = size * 0.30
+    palace_outer_radius = mansion_inner_radius - 10.0
+    palace_inner_radius = palace_outer_radius - size * 0.08
+    inner_radius = palace_inner_radius - 14.0
     marker_base_radius = size * 0.33
     mansion_ranges = _build_mansion_ranges()
+    palace_ranges = _build_twelve_palace_ranges()
     location_name = params.get("location_name") or auto_cn("未命名地點", "Unknown location")
     date_line = (
         f"{params['year']:04d}-{params['month']:02d}-{params['day']:02d} "
@@ -298,12 +319,12 @@ def _build_astrolabe_svg(
         path = _ring_arc_path(
             center,
             center,
-            inner_radius,
+            mansion_inner_radius,
             outer_radius,
             mansion["start"],
             mansion["end"],
         )
-        lx, ly = _polar_to_cartesian(center, center, (inner_radius + outer_radius) / 2.0, mansion["mid"])
+        lx, ly = _polar_to_cartesian(center, center, (mansion_inner_radius + outer_radius) / 2.0, mansion["mid"])
         parts.append(
             f'<path d="{path}" fill="{fill}" fill-opacity="0.14" stroke="#f8f1e3" stroke-width="1.3"/>'
         )
@@ -311,6 +332,41 @@ def _build_astrolabe_svg(
             f'<text x="{lx:.2f}" y="{ly:.2f}" fill="{_INK_DARK}" font-size="{size * 0.022:.1f}" '
             'font-family="Noto Serif SC, serif" text-anchor="middle" dominant-baseline="middle">'
             f'{mansion["name"]}</text>'
+        )
+
+    for palace in palace_ranges:
+        path = _ring_arc_path(
+            center,
+            center,
+            palace_inner_radius,
+            palace_outer_radius,
+            palace["start"],
+            palace["end"],
+        )
+        title_x, title_y = _polar_to_cartesian(
+            center,
+            center,
+            (palace_inner_radius + palace_outer_radius) / 2.0 + 7.0,
+            palace["mid"],
+        )
+        subtitle_x, subtitle_y = _polar_to_cartesian(
+            center,
+            center,
+            (palace_inner_radius + palace_outer_radius) / 2.0 - 8.0,
+            palace["mid"],
+        )
+        parts.append(
+            f'<path d="{path}" fill="#fff8e8" fill-opacity="0.92" stroke="{_BORDER}" stroke-width="1.1"/>'
+        )
+        parts.append(
+            f'<text x="{title_x:.2f}" y="{title_y:.2f}" fill="{_SEAL_RED}" font-size="{size * 0.017:.1f}" '
+            'font-family="Noto Serif SC, serif" text-anchor="middle" dominant-baseline="middle">'
+            f'{palace["name"]}</text>'
+        )
+        parts.append(
+            f'<text x="{subtitle_x:.2f}" y="{subtitle_y:.2f}" fill="{_SUBTITLE}" font-size="{size * 0.014:.1f}" '
+            'font-family="Noto Serif SC, serif" text-anchor="middle" dominant-baseline="middle">'
+            f'{palace["station"]}</text>'
         )
 
     parts.extend(
