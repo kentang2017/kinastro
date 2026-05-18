@@ -3814,7 +3814,7 @@ if not _engine_handled:
                 render_lao_horasat(
                     lao_chart,
                     lang=get_lang(),
-                    after_chart_hook=lambda: _render_ai_button("tab_laos", lao_chart, btn_key="laos"),
+                    after_chart_hook=lambda: _render_ai_button("tab_laos", lao_chart, btn_key="tab_laos"),
                 )
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")

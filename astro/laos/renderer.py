@@ -13,6 +13,19 @@ from typing import Any, Callable, Dict
 from .calculator import LaoChart, chart_to_dict
 from .data.symbols import BRAHMAN_WHEEL_SYMBOLS
 
+# BRAHMAN_WHEEL_SYMBOLS 中 0~6 分別代表七曜順序鍵值。
+_WHEEL_SYMBOL_KEYS: Dict[str, str] = {
+    "sun": "0",
+    "moon": "1",
+    "mercury": "2",
+    "venus": "3",
+    "mars": "4",
+    "jupiter": "5",
+    "saturn": "6",
+}
+
+_SPECIAL_YEAR_DISPLAY_LIMIT = 6
+
 
 def _polar(cx: float, cy: float, r: float, angle_deg: float) -> tuple[float, float]:
     """極座標轉平面座標。"""
@@ -24,18 +37,9 @@ def _polar(cx: float, cy: float, r: float, angle_deg: float) -> tuple[float, flo
 def _planet_symbol(key: str) -> str:
     """回傳行星符號，優先使用 symbols.py。"""
 
-    lookup = {
-        "sun": "0",
-        "moon": "1",
-        "mercury": "2",
-        "venus": "3",
-        "mars": "4",
-        "jupiter": "5",
-        "saturn": "6",
-    }
     if key in ("rahu", "ketu"):
         return "☊" if key == "rahu" else "☋"
-    mapped = BRAHMAN_WHEEL_SYMBOLS.get(lookup.get(key, ""), {})
+    mapped = BRAHMAN_WHEEL_SYMBOLS.get(_WHEEL_SYMBOL_KEYS.get(key, ""), {})
     return mapped.get("unicode", "✶")
 
 
@@ -184,7 +188,7 @@ def render_lao_horasat(
         st.write(f"**老撾日期**：{lao_date.get('full_lao_date_with_weekday', '—')}")
         st.write(f"**季節**：{lao_date.get('season', '—')}")
         st.write(f"**特殊年份**：{special_year.get('description', '普通年份')}")
-        st.json(limited_dict(special_year, 6), expanded=False)
+        st.json(limited_dict(special_year, _SPECIAL_YEAR_DISPLAY_LIMIT), expanded=False)
 
     with tab_sangkhom:
         st.write(f"**活動**：{sangkhom.get('activity', '—')}")

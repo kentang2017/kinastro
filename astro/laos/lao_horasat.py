@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone as dt_timezone
 from typing import Any, Dict, List
 
 from .calculator import (
@@ -68,10 +68,7 @@ class LaoHorasat:
     ) -> Dict[str, Any]:
         """由 ISO 時間字串建立盤（便於 API 呼叫）。"""
 
-        try:
-            dt = datetime.fromisoformat(iso_datetime.replace("Z", "+00:00"))
-        except ValueError as exc:
-            raise ValueError("iso_datetime 格式錯誤，請使用 ISO-8601") from exc
+        dt = _parse_iso_datetime(iso_datetime)
 
         return self.get_chart(
             year=dt.year,
@@ -142,3 +139,14 @@ def compute_lao_horasat_chart(**kwargs: Any) -> Dict[str, Any]:
     """函式風格入口：計算並回傳 dict。"""
 
     return LaoHorasat().get_chart(**kwargs)
+
+
+def _parse_iso_datetime(value: str) -> datetime:
+    """穩健解析 ISO-8601 日期字串，兼容 Z 與偏移格式。"""
+
+    try:
+        if value.endswith("Z"):
+            return datetime.fromisoformat(value[:-1]).replace(tzinfo=dt_timezone.utc)
+        return datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError("iso_datetime 格式錯誤，請使用 ISO-8601") from exc
