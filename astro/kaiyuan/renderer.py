@@ -14,12 +14,17 @@ astro/kaiyuan/renderer.py — 開元占經 Streamlit 渲染模組
 from __future__ import annotations
 
 import json
+import math
 import pathlib
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
 
 from astro.i18n import auto_cn
+from astro.qizheng.calculator import _get_mansion_info, _normalize_degree
+from astro.qizheng.constants import TWENTY_EIGHT_MANSIONS
+from astro.swe_init import init_swisseph
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 色彩常數
@@ -32,6 +37,38 @@ _BORDER = "#c4a882"
 _GOLD = "#b8860b"
 
 _DATA_DIR = pathlib.Path(__file__).parent
+
+
+@dataclass(frozen=True)
+class KaiyuanObservation:
+    """即時星盤中的單一星曜觀測資料。"""
+
+    key: str
+    label: str
+    short_label: str
+    icon: str
+    color: str
+    longitude: float
+    mansion_name: str
+    mansion_degree: float
+    retrograde: bool = False
+
+
+_LIVE_BODIES = (
+    ("moon", "月", "月", "☽", "#f6d365", 1),
+    ("歲星（木）", "歲星（木）", "歲", "♃", "#4caf50", 5),
+    ("熒惑（火）", "熒惑（火）", "熒", "♂", "#ef5350", 4),
+    ("填星（土）", "填星（土）", "填", "♄", "#c0a36e", 6),
+    ("太白（金）", "太白（金）", "太", "♀", "#ffd166", 3),
+    ("辰星（水）", "辰星（水）", "辰", "☿", "#4fc3f7", 2),
+)
+
+_FOUR_SYMBOL_COLORS = {
+    "東方青龍": "#2e8b57",
+    "北方玄武": "#355c7d",
+    "西方白虎": "#8d6e63",
+    "南方朱雀": "#b83b5e",
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 資料載入
@@ -113,6 +150,315 @@ def _load_jiazi_five_sounds() -> Dict[str, Any]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 即時星盤輔助
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _resolve_calc_params() -> Dict[str, Any]:
+    """從 session state 取得可用的排盤參數。"""
+    params = st.session_state.get("_calc_params") or st.session_state.get("_confirmed_params") or {}
+    return {
+        "year": int(params.get("year", 0) or 0),
+        "month": int(params.get("month", 0) or 0),
+        "day": int(params.get("day", 0) or 0),
+        "hour": int(params.get("hour", 0) or 0),
+        "minute": int(params.get("minute", 0) or 0),
+        "timezone": float(params.get("timezone", params.get("tz", 8.0)) or 0.0),
+        "latitude": float(params.get("latitude", params.get("lat", 22.3193)) or 0.0),
+        "longitude": float(params.get("longitude", params.get("lon", 114.1694)) or 0.0),
+        "location_name": str(params.get("location_name", "") or ""),
+    }
+
+
+def _has_live_chart_params(params: Dict[str, Any]) -> bool:
+    return all(params.get(k) for k in ("year", "month", "day"))
+
+
+def _compute_live_observations(params: Dict[str, Any]) -> List[KaiyuanObservation]:
+    """依據當前輸入資料計算月亮與五星所在宿度。"""
+    if not _has_live_chart_params(params):
+        return []
+
+    swe = init_swisseph()
+    decimal_hour = params["hour"] + params["minute"] / 60.0 - params["timezone"]
+    jd = swe.julday(
+        params["year"],
+        params["month"],
+        params["day"],
+        decimal_hour,
+    )
+
+    observations: List[KaiyuanObservation] = []
+    for key, label, short_label, icon, color, body_id in _LIVE_BODIES:
+        result, _ = swe.calc_ut(jd, body_id)
+        lon = _normalize_degree(result[0])
+        speed = result[3] if len(result) > 3 else 0.0
+        mansion_name, mansion_degree, _, _ = _get_mansion_info(lon)
+        observations.append(
+            KaiyuanObservation(
+                key=key,
+                label=label,
+                short_label=short_label,
+                icon=icon,
+                color=color,
+                longitude=lon,
+                mansion_name=mansion_name,
+                mansion_degree=mansion_degree,
+                retrograde=speed < 0,
+            )
+        )
+    return observations
+
+
+def _build_mansion_ranges() -> List[Dict[str, Any]]:
+    ranges: List[Dict[str, Any]] = []
+    total = len(TWENTY_EIGHT_MANSIONS)
+    for idx, mansion in enumerate(TWENTY_EIGHT_MANSIONS):
+        start = float(mansion["start_lon"])
+        end = float(TWENTY_EIGHT_MANSIONS[(idx + 1) % total]["start_lon"])
+        width = (end - start) % 360.0
+        ranges.append(
+            {
+                "name": mansion["name"],
+                "group": mansion["group"],
+                "start": start,
+                "end": start + width,
+                "mid": start + width / 2.0,
+            }
+        )
+    return ranges
+
+
+def _polar_to_cartesian(cx: float, cy: float, radius: float, angle_deg: float) -> tuple[float, float]:
+    angle_rad = math.radians(angle_deg - 90.0)
+    return cx + radius * math.cos(angle_rad), cy + radius * math.sin(angle_rad)
+
+
+def _ring_arc_path(
+    cx: float,
+    cy: float,
+    inner_radius: float,
+    outer_radius: float,
+    start_angle: float,
+    end_angle: float,
+) -> str:
+    start_outer = _polar_to_cartesian(cx, cy, outer_radius, start_angle)
+    end_outer = _polar_to_cartesian(cx, cy, outer_radius, end_angle)
+    end_inner = _polar_to_cartesian(cx, cy, inner_radius, end_angle)
+    start_inner = _polar_to_cartesian(cx, cy, inner_radius, start_angle)
+    large_arc = 1 if ((end_angle - start_angle) % 360.0) > 180.0 else 0
+    return (
+        f"M {start_outer[0]:.2f} {start_outer[1]:.2f} "
+        f"A {outer_radius:.2f} {outer_radius:.2f} 0 {large_arc} 1 {end_outer[0]:.2f} {end_outer[1]:.2f} "
+        f"L {end_inner[0]:.2f} {end_inner[1]:.2f} "
+        f"A {inner_radius:.2f} {inner_radius:.2f} 0 {large_arc} 0 {start_inner[0]:.2f} {start_inner[1]:.2f} Z"
+    )
+
+
+def _build_astrolabe_svg(
+    observations: List[KaiyuanObservation],
+    params: Dict[str, Any],
+    width: int = 760,
+) -> str:
+    """生成開元星盤 SVG。"""
+    size = width
+    center = size / 2.0
+    outer_radius = size * 0.42
+    inner_radius = size * 0.27
+    marker_base_radius = size * 0.33
+    mansion_ranges = _build_mansion_ranges()
+    location_name = params.get("location_name") or auto_cn("未命名地點", "Unknown location")
+    date_line = (
+        f"{params['year']:04d}-{params['month']:02d}-{params['day']:02d} "
+        f"{params['hour']:02d}:{params['minute']:02d} UTC{params['timezone']:+.1f}"
+    )
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 {size} {size}">',
+        "<defs>",
+        '<radialGradient id="kaiyuanBg" cx="50%" cy="45%" r="65%">',
+        f'<stop offset="0%" stop-color="{_PAPER_BG}"/>',
+        '<stop offset="70%" stop-color="#f3ead7"/>',
+        '<stop offset="100%" stop-color="#e7d5b4"/>',
+        "</radialGradient>",
+        '<filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">',
+        '<feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#5b4630" flood-opacity="0.18"/>',
+        "</filter>",
+        "</defs>",
+        f'<rect x="0" y="0" width="{size}" height="{size}" rx="28" fill="url(#kaiyuanBg)"/>',
+        f'<circle cx="{center:.2f}" cy="{center:.2f}" r="{outer_radius + 18:.2f}" fill="none" stroke="{_BORDER}" stroke-width="2" opacity="0.8"/>',
+    ]
+
+    for mansion in mansion_ranges:
+        fill = _FOUR_SYMBOL_COLORS.get(mansion["group"], "#7a6a58")
+        path = _ring_arc_path(
+            center,
+            center,
+            inner_radius,
+            outer_radius,
+            mansion["start"],
+            mansion["end"],
+        )
+        lx, ly = _polar_to_cartesian(center, center, (inner_radius + outer_radius) / 2.0, mansion["mid"])
+        parts.append(
+            f'<path d="{path}" fill="{fill}" fill-opacity="0.14" stroke="#f8f1e3" stroke-width="1.3"/>'
+        )
+        parts.append(
+            f'<text x="{lx:.2f}" y="{ly:.2f}" fill="{_INK_DARK}" font-size="{size * 0.022:.1f}" '
+            'font-family="Noto Serif SC, serif" text-anchor="middle" dominant-baseline="middle">'
+            f'{mansion["name"]}</text>'
+        )
+
+    parts.extend(
+        [
+            f'<circle cx="{center:.2f}" cy="{center:.2f}" r="{inner_radius - 18:.2f}" fill="#fffaf0" stroke="{_BORDER}" stroke-width="1.5" filter="url(#softShadow)"/>',
+            f'<text x="{center:.2f}" y="{center - 24:.2f}" fill="{_SEAL_RED}" font-size="{size * 0.04:.1f}" font-family="Noto Serif SC, serif" text-anchor="middle">開元星盤</text>',
+            f'<text x="{center:.2f}" y="{center + 6:.2f}" fill="{_SUBTITLE}" font-size="{size * 0.019:.1f}" font-family="Noto Serif SC, serif" text-anchor="middle">{location_name}</text>',
+            f'<text x="{center:.2f}" y="{center + 34:.2f}" fill="{_SUBTITLE}" font-size="{size * 0.015:.1f}" font-family="Noto Serif SC, serif" text-anchor="middle">{date_line}</text>',
+        ]
+    )
+
+    for idx, obs in enumerate(observations):
+        radius = marker_base_radius + (idx % 2) * 18.0
+        x, y = _polar_to_cartesian(center, center, radius, obs.longitude)
+        lx, ly = _polar_to_cartesian(center, center, outer_radius + 26.0 + (idx % 2) * 10.0, obs.longitude)
+        anchor = "start" if math.cos(math.radians(obs.longitude - 90.0)) >= 0 else "end"
+        parts.append(
+            f'<line x1="{center:.2f}" y1="{center:.2f}" x2="{x:.2f}" y2="{y:.2f}" '
+            f'stroke="{obs.color}" stroke-width="2.2" stroke-opacity="0.65"/>'
+        )
+        parts.append(
+            f'<circle cx="{x:.2f}" cy="{y:.2f}" r="10" fill="{obs.color}" stroke="#fffaf0" stroke-width="2"/>'
+        )
+        parts.append(
+            f'<text x="{x:.2f}" y="{y + 0.5:.2f}" fill="#1f1a17" font-size="{size * 0.017:.1f}" '
+            'font-family="Noto Serif SC, serif" text-anchor="middle" dominant-baseline="middle">'
+            f"{obs.short_label}</text>"
+        )
+        parts.append(
+            f'<text x="{lx:.2f}" y="{ly:.2f}" fill="{_INK_DARK}" font-size="{size * 0.016:.1f}" '
+            f'font-family="Noto Serif SC, serif" text-anchor="{anchor}" dominant-baseline="middle">'
+            f"{obs.icon} {obs.label}・{obs.mansion_name}</text>"
+        )
+
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def _inject_kaiyuan_theme() -> None:
+    st.markdown(
+        f"""
+        <style>
+        .kaiyuan-hero {{
+            background: linear-gradient(135deg, rgba(139,26,26,0.95), rgba(88,55,33,0.92));
+            border: 1px solid rgba(196,168,130,0.45);
+            border-radius: 22px;
+            padding: 1.25rem 1.35rem;
+            color: #fff7ea;
+            box-shadow: 0 20px 48px rgba(69, 45, 22, 0.18);
+            margin-bottom: 1rem;
+        }}
+        .kaiyuan-hero h2 {{
+            margin: 0 0 0.35rem 0;
+            font-family: "Noto Serif SC", serif;
+            letter-spacing: 0.18em;
+            color: #fff4df;
+        }}
+        .kaiyuan-hero p {{
+            margin: 0;
+            color: rgba(255, 247, 234, 0.86);
+            line-height: 1.65;
+        }}
+        .kaiyuan-card {{
+            background: linear-gradient(180deg, rgba(253,248,240,0.98), rgba(245,235,218,0.95));
+            border: 1px solid rgba(196,168,130,0.55);
+            border-radius: 18px;
+            padding: 0.95rem 1rem;
+            min-height: 128px;
+            box-shadow: 0 12px 32px rgba(88,55,33,0.08);
+        }}
+        .kaiyuan-card .eyebrow {{
+            color: {_SEAL_RED};
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            margin-bottom: 0.35rem;
+        }}
+        .kaiyuan-card .headline {{
+            color: {_INK_DARK};
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }}
+        .kaiyuan-card .meta {{
+            color: {_SUBTITLE};
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }}
+        .kaiyuan-chart-shell {{
+            background: radial-gradient(circle at top, rgba(255,250,240,0.95), rgba(243,234,215,0.94));
+            border: 1px solid rgba(196,168,130,0.55);
+            border-radius: 24px;
+            padding: 1rem;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 16px 38px rgba(88,55,33,0.08);
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_live_chart_overview() -> Dict[str, KaiyuanObservation]:
+    """渲染開元星盤總覽，並回傳即時定位結果供子頁使用。"""
+    params = _resolve_calc_params()
+    _section_header(auto_cn("✨ 開元星盤總覽", "✨ Kaiyuan Astrolabe"))
+    st.caption(
+        auto_cn(
+            "依目前輸入的時間與地點，自動定位月亮與五星所在宿度，讓查詢占文不再只是資料庫，而是真正的觀測入口。",
+            "Uses the current chart inputs to place the Moon and five planets into the 28 mansions for a more visual lookup experience.",
+        )
+    )
+
+    if not _has_live_chart_params(params):
+        st.info(
+            auto_cn(
+                "先在左側輸入日期、時間與地點後再返回此頁，即可看到即時開元星盤與對應宿度。",
+                "Enter date, time, and location on the left to generate the live Kaiyuan astrolabe.",
+            )
+        )
+        return {}
+
+    observations = _compute_live_observations(params)
+    if not observations:
+        st.warning(auto_cn("暫時無法計算星盤。", "Unable to compute the live chart right now."))
+        return {}
+
+    st.markdown('<div class="kaiyuan-chart-shell">', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="display:flex;justify-content:center;">{_build_astrolabe_svg(observations, params)}</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    summary_cols = st.columns(3)
+    for idx, obs in enumerate(observations):
+        with summary_cols[idx % 3]:
+            st.markdown(
+                f"""
+                <div class="kaiyuan-card">
+                    <div class="eyebrow">{obs.icon} {obs.label}</div>
+                    <div class="headline">{obs.mansion_name}宿 · {obs.mansion_degree:.1f}°</div>
+                    <div class="meta">
+                        黃經 {_normalize_degree(obs.longitude):.1f}° {'℞' if obs.retrograde else ''}<br>
+                        {auto_cn('可直接對照本頁對應占文分頁', 'Use this to jump into the matching omen sections')}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    return {obs.key: obs for obs in observations}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 通用渲染輔助
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -172,26 +518,39 @@ def _render_dict_omens(data: Dict[str, Any]) -> None:
 # 子頁面渲染
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _render_five_planets_tab() -> None:
+def _render_five_planets_tab(live_obs: Optional[Dict[str, KaiyuanObservation]] = None) -> None:
     """五星入宿占文查詢"""
     _section_header("🪐 五星入二十八宿占")
     st.caption(auto_cn("選擇行星與宿名，查閱《開元占經》原文占辭"))
 
     planet_data = _load_five_planet_data()
     planet_names = list(planet_data.keys())
+    live_obs = live_obs or {}
+    default_planet = next(
+        (obs.label for obs in live_obs.values() if obs.label in planet_names and obs.key != "moon"),
+        planet_names[0] if planet_names else "",
+    )
+    default_planet_index = planet_names.index(default_planet) if default_planet in planet_names else 0
 
     col1, col2 = st.columns(2)
     with col1:
         selected_planet = st.selectbox(
             auto_cn("行星"),
             planet_names,
+            index=default_planet_index,
             key="kaiyuan_planet_select",
         )
     with col2:
         mansions = list(planet_data.get(selected_planet, {}).keys())
+        live_mansion = next(
+            (obs.mansion_name for obs in live_obs.values() if obs.label == selected_planet),
+            mansions[0] if mansions else "（無資料）",
+        )
+        default_mansion_index = mansions.index(live_mansion) if live_mansion in mansions else 0
         selected_mansion = st.selectbox(
             auto_cn("宿名"),
             mansions if mansions else ["（無資料）"],
+            index=default_mansion_index,
             key="kaiyuan_mansion_select",
         )
 
@@ -216,7 +575,7 @@ def _render_five_planets_tab() -> None:
             st.warning(auto_cn("暫無此條目資料"))
 
 
-def _render_moon_28_tab() -> None:
+def _render_moon_28_tab(live_obs: Optional[Dict[str, KaiyuanObservation]] = None) -> None:
     """月犯二十八宿占（簡表）"""
     _section_header("🌙 月犯二十八宿占")
     st.caption(auto_cn("月亮經過二十八宿時的傳統占驗"))
@@ -227,9 +586,12 @@ def _render_moon_28_tab() -> None:
         st.info(auto_cn("暫無資料"))
         return
 
+    live_mansion = (live_obs or {}).get("moon")
+    default_index = mansions.index(live_mansion.mansion_name) if live_mansion and live_mansion.mansion_name in mansions else 0
     selected = st.selectbox(
         auto_cn("宿名"),
         mansions,
+        index=default_index,
         key="kaiyuan_moon28_select",
     )
     if st.button(auto_cn("查詢"), key="kaiyuan_moon28_btn"):
@@ -458,13 +820,19 @@ def _render_five_star_general_tab() -> None:
 
 def render_streamlit() -> None:
     """開元占經 Streamlit 主渲染函式（不需出生資料，為查詢工具）"""
-    # 標題
+    _inject_kaiyuan_theme()
     st.markdown(
-        f"<h2 style='color:{_SEAL_RED};font-family:Noto Serif SC,serif;"
-        f"letter-spacing:4px;text-align:center;'>📜 開元占經 📜</h2>",
+        f"""
+        <div class="kaiyuan-hero">
+            <h2>📜 {auto_cn("開元占經", "Kaiyuan Zhanjing")}</h2>
+            <p>{auto_cn("唐·瞿曇悉達奉詔編纂的星占巨典，現以更精緻的 Streamlit 介面整合即時星盤、宿度定位與原典占文。", "A refined Streamlit reading room for Kaiyuan Zhanjing, combining a live astrolabe, mansion tracking, and classical omen texts.")}</p>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
     st.caption(auto_cn("唐·瞿曇悉達 撰 · 五星入宿 · 月占 · 日食占 · 五音法"))
+    st.markdown("---")
+    live_obs = _render_live_chart_overview()
     st.markdown("---")
 
     tabs = st.tabs([
@@ -478,11 +846,11 @@ def render_streamlit() -> None:
     ])
 
     with tabs[0]:
-        _render_five_planets_tab()
+        _render_five_planets_tab(live_obs)
     with tabs[1]:
         _render_moon_five_stars_tab()
     with tabs[2]:
-        _render_moon_28_tab()
+        _render_moon_28_tab(live_obs)
     with tabs[3]:
         _render_moon_attack_tab()
     with tabs[4]:
