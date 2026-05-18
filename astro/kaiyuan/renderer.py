@@ -216,16 +216,21 @@ def _build_mansion_ranges() -> List[Dict[str, Any]]:
         start = float(mansion["start_lon"])
         end = float(TWENTY_EIGHT_MANSIONS[(idx + 1) % total]["start_lon"])
         width = (end - start) % 360.0
+        start_angle = _ecl_to_chart_angle(end)
         ranges.append(
             {
                 "name": mansion["name"],
                 "group": mansion["group"],
-                "start": start,
-                "end": start + width,
-                "mid": start + width / 2.0,
+                "start": start_angle,
+                "end": start_angle + width,
+                "mid": start_angle + width / 2.0,
             }
         )
     return ranges
+
+
+def _ecl_to_chart_angle(ecl_deg: float) -> float:
+    return (45.0 - float(ecl_deg)) % 360.0
 
 
 def _polar_to_cartesian(cx: float, cy: float, radius: float, angle_deg: float) -> tuple[float, float]:
@@ -318,10 +323,11 @@ def _build_astrolabe_svg(
     )
 
     for idx, obs in enumerate(observations):
+        obs_angle = _ecl_to_chart_angle(obs.longitude)
         radius = marker_base_radius + (idx % 2) * 18.0
-        x, y = _polar_to_cartesian(center, center, radius, obs.longitude)
-        lx, ly = _polar_to_cartesian(center, center, outer_radius + 26.0 + (idx % 2) * 10.0, obs.longitude)
-        anchor = "start" if math.cos(math.radians(obs.longitude - 90.0)) >= 0 else "end"
+        x, y = _polar_to_cartesian(center, center, radius, obs_angle)
+        lx, ly = _polar_to_cartesian(center, center, outer_radius + 26.0 + (idx % 2) * 10.0, obs_angle)
+        anchor = "start" if math.cos(math.radians(obs_angle - 90.0)) >= 0 else "end"
         parts.append(
             f'<line x1="{center:.2f}" y1="{center:.2f}" x2="{x:.2f}" y2="{y:.2f}" '
             f'stroke="{obs.color}" stroke-width="2.2" stroke-opacity="0.65"/>'
