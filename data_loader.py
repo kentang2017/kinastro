@@ -59,6 +59,16 @@ class KaiyuanDataLoader:
         self._cache = merged
         return merged
 
+    def close(self) -> None:
+        """Close underlying HTTP session."""
+        self.session.close()
+
+    def __enter__(self) -> "KaiyuanDataLoader":
+        return self
+
+    def __exit__(self, exc_type, exc, exc_tb) -> None:
+        self.close()
+
     def load_planet_data(self, planet: str, force_reload: bool = False) -> Dict[str, str]:
         """Load one planet's mansion omen map from GitHub raw."""
         canonical = self.normalize_planet_name(planet)
@@ -74,7 +84,7 @@ class KaiyuanDataLoader:
                 if mansion_map:
                     self._cache[canonical] = mansion_map
                     return mansion_map
-            except Exception as exc:  # pragma: no cover - network/path fallback
+            except (requests.RequestException, ValueError) as exc:  # pragma: no cover - network/path fallback
                 last_error = exc
 
         raise RuntimeError(

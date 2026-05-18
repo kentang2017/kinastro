@@ -61,7 +61,10 @@ class ChineseAstrologyEngine:
     def parse_datetime(dt_input: str | datetime) -> datetime:
         if isinstance(dt_input, datetime):
             return dt_input
-        return datetime.strptime(dt_input, "%Y-%m-%d %H:%M")
+        try:
+            return datetime.strptime(dt_input, "%Y-%m-%d %H:%M")
+        except ValueError as exc:
+            raise ValueError("日期時間格式錯誤，請使用 'YYYY-MM-DD HH:MM'。") from exc
 
     def compute_positions(
         self,
@@ -116,8 +119,9 @@ class ChineseAstrologyEngine:
         patterns: List[Dict[str, str]] = []
 
         five_planets = ["填星", "歲星", "熒惑", "太白", "辰星"]
-        five_mansions = {positions[p].mansion for p in five_planets if p in positions}
-        if len(five_mansions) == 1 and len([p for p in five_planets if p in positions]) == 5:
+        present_five_planets = [p for p in five_planets if p in positions]
+        five_mansions = {positions[p].mansion for p in present_five_planets}
+        if len(five_mansions) == 1 and len(present_five_planets) == 5:
             same_mansion = next(iter(five_mansions))
             patterns.append(
                 {
@@ -270,7 +274,7 @@ class ChineseAstrologyEngine:
 
         tone_count = {"偏吉": 0, "偏凶": 0, "中性": 0}
         for item in per_planet:
-            tone_count[item["tone"]] = tone_count.get(item["tone"], 0) + 1
+            tone_count[item["tone"]] += 1
 
         if tone_count["偏凶"] > tone_count["偏吉"]:
             trend = "整體訊號偏向風險管理，宜保守決策、分散壓力。"
