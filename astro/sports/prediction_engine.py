@@ -10,7 +10,7 @@
 4. 輸出勝率、比分趨勢、投注建議
 """
 
-from .models import MatchInput, PredictionResult
+from .models import MatchInput, PredictionResult, SportsPrediction
 from .chart_calculator import (
     compute_western_chart, compute_vedic_chart,
     format_longitude, format_vedic_longitude,
@@ -84,10 +84,14 @@ def predict_match(match: MatchInput) -> PredictionResult:
     v_home_pct = vedic_result["home_points"] / v_total
     v_away_pct = vedic_result["away_points"] / v_total
 
-    # Weighted combination: Frawley 50%, Vedic 50%
-    # (Adjustable — Vedic Tier 3 evidence is very strong)
-    frawley_weight = 0.5
-    vedic_weight = 0.5
+    # Weighted combination: keep Frawley as dominant, with mode-specific tuning.
+    mode = match.analysis_mode
+    if mode == "event":
+        frawley_weight = 0.55
+        vedic_weight = 0.45
+    else:
+        frawley_weight = 0.60
+        vedic_weight = 0.40
 
     combined_home = f_home_pct * frawley_weight + v_home_pct * vedic_weight
     combined_away = f_away_pct * frawley_weight + v_away_pct * vedic_weight
@@ -139,6 +143,7 @@ def predict_match(match: MatchInput) -> PredictionResult:
         confidence = "medium"
     else:
         confidence = "low"
+    confidence_score = round(min(0.99, max(0.10, 0.5 + margin * 0.9)), 3)
 
     # Score trend (Frawley: most games losers score ≤1, winners score 1-2)
     score_trend = _estimate_score_trend(
@@ -163,6 +168,30 @@ def predict_match(match: MatchInput) -> PredictionResult:
             home_team=match.home_team,
             away_team=match.away_team,
         )
+
+    injury_risk = frawley_result.get("injury_risk", {"home": 0.15, "away": 0.15})
+    reversal_indicator = float(frawley_result.get("reversal_indicator", 0.5))
+    key_factors = _extract_key_factors(
+        frawley_result["evidences"], frawley_result.get("testimonies", {})
+    )
+
+    sports_prediction = SportsPrediction(
+        mode=mode,
+        winner_prob={
+            match.home_team: round(home_win_pct / 100.0, 4),
+            match.away_team: round(away_win_pct / 100.0, 4),
+            "draw": round(draw_pct / 100.0, 4),
+        },
+        confidence=confidence_score,
+        key_factors=key_factors,
+        score_estimate=score_trend,
+        injury_risk=injury_risk,
+        reversal_indicator=reversal_indicator,
+        disclaimers=[
+            "Probabilistic astrology guidance only; not deterministic.",
+            "Bet responsibly and combine with injuries, tactics, and market data.",
+        ],
+    )
 
     # Build summaries
     frawley_summary = frawley_result["summary"]
@@ -189,10 +218,16 @@ def predict_match(match: MatchInput) -> PredictionResult:
         western_chart=western_chart,
         vedic_chart=vedic_chart,
         handicap_analysis=handicap_result,
+        sports_prediction=sports_prediction,
     )
 
 
-def _estimate_score_trend(home_pct, away_pct, draw_pct, winner):
+def _estimate_score_trend(
+    home_pct: float,
+    away_pct: float,
+    draw_pct: float,
+    winner: str,
+) -> str:
     """估算比分趨勢
 
     Frawley 觀察: 大多數比賽中輸方 ≤1 球，勝方多 1-2 球
@@ -210,7 +245,12 @@ def _estimate_score_trend(home_pct, away_pct, draw_pct, winner):
     return "1-0 或 1-1 (接近的比賽)"
 
 
-def _bet_recommendation(home_pct, away_pct, draw_pct, confidence):
+def _bet_recommendation(
+    home_pct: float,
+    away_pct: float,
+    draw_pct: float,
+    confidence: str,
+) -> str:
     """投注建議"""
     if confidence == "low":
         return "⚠️ 信心不足，建議觀望。雙方實力接近，風險較高。"
@@ -268,6 +308,17 @@ def _build_combined_summary(match, home_pct, away_pct, draw_pct,
     ])
 
     return "\n".join(lines)
+
+
+def _extract_key_factors(evidences: list, testimonies: dict) -> list[str]:
+    """抽取關鍵證據，優先輸出高權重 testimony。"""
+    sorted_ev = sorted(evidences, key=lambda x: x.weight, reverse=True)
+    factors = [f"[{ev.category}] {ev.description}" for ev in sorted_ev[:6]]
+    leader = testimonies.get("leader")
+    margin = testimonies.get("margin")
+    if leader and margin is not None:
+        factors.insert(0, f"Lord 1 vs Lord 7 leader={leader}, margin={margin:+.2f}")
+    return factors
 
 
 def format_prediction_report(result: PredictionResult) -> str:
@@ -351,6 +402,23 @@ def format_prediction_report(result: PredictionResult) -> str:
             lines.append(f"  💎 價值投注: {ha.value_bet}")
         else:
             lines.append("  📌 暫無明顯價值投注機會")
+        lines.append("")
+
+    if result.sports_prediction:
+        sp = result.sports_prediction
+        lines.append("=" * 60)
+        lines.append("🧭 Structured SportsPrediction")
+        lines.append("=" * 60)
+        lines.append(f"  Mode: {sp.mode}")
+        lines.append(f"  Confidence: {sp.confidence:.2f}")
+        lines.append(
+            f"  Injury risk: home {sp.injury_risk.get('home', 0.0):.2%} / "
+            f"away {sp.injury_risk.get('away', 0.0):.2%}"
+        )
+        lines.append(f"  Reversal indicator: {sp.reversal_indicator:.2%}")
+        lines.append("  Key factors:")
+        for factor in sp.key_factors[:6]:
+            lines.append(f"    - {factor}")
         lines.append("")
 
     # Betting
