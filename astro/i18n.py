@@ -3085,12 +3085,12 @@ transmitted by **Chen Xiyi**.
 
     # ── Hellenistic sub-sections ──────────────────────────────
     "hellen_profections_header": {
-        "zh": "年限推進 (Annual Profections)",
-        "en": "Annual Profections",
+        "zh": "🗓 年度守護星 (Annual Profections)",
+        "en": "🗓 Annual Profections",
     },
     "hellen_zr_header": {
-        "zh": "黃道釋放 Zodiacal Releasing (L1)",
-        "en": "Zodiacal Releasing (L1)",
+        "zh": "⚙ 黃道釋放 Zodiacal Releasing (L1/L2/L3)",
+        "en": "⚙ Zodiacal Releasing (L1/L2/L3)",
     },
     "hellen_lots_header": {
         "zh": "希臘點 (Greek Lots)",
