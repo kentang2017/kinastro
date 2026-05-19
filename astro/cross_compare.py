@@ -336,7 +336,8 @@ def render_celtic_tree_comparison(celtic_chart) -> None:
 
 
 
-
+# TODO: Call this helper from the multi-system UI pipeline when Armenian chart
+# data is included in a comparison payload.
 def add_armenian_to_comparison(result, armenian_chart):
     """Augment CrossCompareResult with Armenian sign labels from ArmenianChart."""
     if armenian_chart is None:
