@@ -1845,6 +1845,25 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_sports_astrology",
+    name_zh="運動占星",
+    name_en="Sports Astrology",
+    category="cat_horary",
+    icon="🏟️",
+    tab_key="tab_sports_astrology",
+    desc_key="desc_sports_astrology",
+    spinner_key="spinner_sports_astrology",
+    hint_key="sys_hint_sports_astrology",
+    tags=["sports", "horary", "frawley", "event_chart", "prediction"],
+    maturity="beta",
+    accent_color=_a("cat_horary"),
+    recommended_house_system="Regiomontanus",
+    origin_culture="Western (Traditional Horary)",
+    tradition_period="Contemporary Traditional (Frawley lineage)",
+    ai_persona_key="info_sports_astrology_prompt",
+))
+
+_reg(System(
     id="tab_european_geomancy",
     name_zh="歐洲地占",
     name_en="European Geomancy",

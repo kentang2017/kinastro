@@ -52,6 +52,7 @@ from astro.sanshi.liuren import compute_liuren_chart
 from astro.sanshi.taiyi import compute_taiyi_chart
 from astro.bazi import compute_bazi
 from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
+from astro.sports import analyze_sports_horary
 from astro.esoteric import compute_esoteric_chart
 from astro.harmonic import compute_multi_harmonic
 from astro.primary_directions import compute_primary_directions
@@ -964,6 +965,48 @@ async def horary_chart(params: HoraryParams) -> ChartResponse:
         return ChartResponse(system=f"horary_{params.tradition}", data=_chart_to_dict(chart))
     except Exception as exc:
         logger.exception("Horary chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+class SportsHoraryParams(BirthParams):
+    """Parameters for Sports Astrology horary analysis."""
+
+    match_name: str = Field(default="Sports Match", description="Match title")
+    team1: str = Field(..., description="Home team / team 1")
+    team2: str = Field(..., description="Away team / team 2")
+    preferred_team: Optional[str] = Field(
+        default=None,
+        description="Preferred side mapped to querent side (optional)",
+    )
+    question_text: Optional[str] = Field(
+        default=None,
+        description="Optional explicit horary question",
+    )
+
+
+@app.post("/api/sports-horary", response_model=ChartResponse, tags=["Systems"])
+async def sports_horary_chart(params: SportsHoraryParams) -> ChartResponse:
+    """Compute Frawley-style sports horary analysis with probabilistic output."""
+    try:
+        result = analyze_sports_horary(
+            match_name=params.match_name,
+            team1=params.team1,
+            team2=params.team2,
+            year=params.year,
+            month=params.month,
+            day=params.day,
+            hour=params.hour,
+            minute=params.minute,
+            timezone=params.timezone,
+            latitude=params.latitude,
+            longitude=params.longitude,
+            location_name=params.location_name,
+            preferred_team=params.preferred_team,
+            question_text=params.question_text,
+        )
+        return ChartResponse(system="sports_astrology", data=_chart_to_dict(result))
+    except Exception as exc:
+        logger.exception("Sports horary computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 

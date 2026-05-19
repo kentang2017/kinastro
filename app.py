@@ -111,6 +111,7 @@ from astro.sumerian.calculator import compute_sumerian_chart
 from wiki_renderer import render_wiki
 from astro.sumerian.renderer import render_streamlit as render_sumerian_chart
 from astro.horary import render_streamlit as render_horary_chart
+from astro.sports import render_streamlit as render_sports_astrology_chart
 from astro.electional import render_streamlit as render_electional_chart
 from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
 from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart, render_wuyunliuqi_intro
@@ -270,8 +271,8 @@ def render_homepage():
          ["醫學占星", "傷寒鈐法"],
          "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
         ("📜", "傳統卜卦占星", "Traditional Horary",
-         ["傳統卜卦占星", "擇日占星", "歐洲地占"],
-          "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
+         ["傳統卜卦占星", "運動占星", "擇日占星", "歐洲地占"],
+           "#7B4EBE", "rgba(123,78,190,0.1)", "rgba(123,78,190,0.25)"),
     ]
     _total_systems = sum(len(systems) for _, _, _, systems, *_ in _categories)
 
@@ -6097,6 +6098,23 @@ if not _engine_handled:
         _p = st.session_state.get("_calc_params", {})
         try:
             render_horary_chart(
+                year=_p.get("year", 2024),
+                month=_p.get("month", 1),
+                day=_p.get("day", 1),
+                hour=_p.get("hour", 12),
+                minute=_p.get("minute", 0),
+                timezone=_p.get("tz", 0.0),
+                latitude=_p.get("lat", 25.033),
+                longitude=_p.get("lon", 121.565),
+                location_name=_p.get("location_name", ""),
+            )
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+    elif _selected_system == "tab_sports_astrology":
+        _p = st.session_state.get("_calc_params", {})
+        try:
+            render_sports_astrology_chart(
                 year=_p.get("year", 2024),
                 month=_p.get("month", 1),
                 day=_p.get("day", 1),
