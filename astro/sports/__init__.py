@@ -1,27 +1,9 @@
-from .sports_horary import (
-    SportsHoraryResult,
-    MatchAnalysis,
-    SportsTestimony,
-    AdvancedPrediction,
-    TeamNatalInput,
-    EventNatalComparison,
-    analyze_sports_horary,
-    analyze_event_chart_with_team_natal,
-    build_ai_interpretation_prompt,
-    top_lots_for_sports,
-)
-from .renderer import render_streamlit
+"""
+kinastro_vs — 足球比賽占星預測工具
+Football Match Astrology Prediction Tool
 
-__all__ = [
-    "SportsHoraryResult",
-    "MatchAnalysis",
-    "SportsTestimony",
-    "AdvancedPrediction",
-    "TeamNatalInput",
-    "EventNatalComparison",
-    "analyze_sports_horary",
-    "analyze_event_chart_with_team_natal",
-    "build_ai_interpretation_prompt",
-    "top_lots_for_sports",
-    "render_streamlit",
-]
+融合 John Frawley 的《Sports Astrology》(西洋卜卦占星)
+與 Simon Chokoisky 的《Gambler's Dharma》(Vedic 吠陀占星)。
+"""
+
+__version__ = "0.1.0"
