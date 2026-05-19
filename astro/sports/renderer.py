@@ -183,13 +183,13 @@ def render_streamlit(
     st.markdown('<div class="sports-card">', unsafe_allow_html=True)
     st.subheader(auto_cn("Event + Team Natal 對照（Dashboard）", "Event + Team Natal Comparison"))
     with st.expander(auto_cn("快速示例：比較兩隊本命", "Quick example: compare two natal teams"), expanded=False):
-        d = datetime(year, month, day, hour, minute)
+        event_datetime = datetime(year, month, day, hour, minute)
         demo = analyze_event_chart_with_team_natal(
-            event_year=d.year,
-            event_month=d.month,
-            event_day=d.day,
-            event_hour=d.hour,
-            event_minute=d.minute,
+            event_year=event_datetime.year,
+            event_month=event_datetime.month,
+            event_day=event_datetime.day,
+            event_hour=event_datetime.hour,
+            event_minute=event_datetime.minute,
             timezone=timezone,
             latitude=latitude,
             longitude=longitude,

@@ -92,6 +92,10 @@ def _probabilities(score1: float, score2: float) -> tuple[float, float]:
     return p1, 1.0 - p1
 
 
+def _angular_separation(a: float, b: float) -> float:
+    return abs((_norm(a - b) + 180.0) % 360.0 - 180.0)
+
+
 def _team_significators(chart: WesternHoraryChart) -> tuple[str, str, int]:
     lord1 = chart.asc_lord
     seventh_cusp = chart.house_cusps[6]
@@ -205,11 +209,14 @@ def _injury_risk(chart: WesternHoraryChart, lord1: str, lord7: str) -> tuple[flo
 
 def _upset_indicator(jd_ut: float) -> float:
     init_swisseph()
-    uranus = swe.calc_ut(jd_ut, swe.URANUS)[0][0]
-    node = swe.calc_ut(jd_ut, swe.TRUE_NODE)[0][0]
-    # 簡化：天王星與交點角距越小，越偏向爆冷/逆轉
-    diff = abs((_norm(uranus - node) + 180.0) % 360.0 - 180.0)
-    return max(0.05, min(0.95, 1.0 - (diff / 180.0)))
+    try:
+        uranus = swe.calc_ut(jd_ut, swe.URANUS)[0][0]
+        node = swe.calc_ut(jd_ut, swe.TRUE_NODE)[0][0]
+        # Smaller Uranus-Node separation implies higher disruption/upset potential.
+        diff = _angular_separation(uranus, node)
+        return max(0.05, min(0.95, 1.0 - (diff / 180.0)))
+    except Exception:
+        return 0.5
 
 
 def _season_hint(jd_ut: float) -> str:
@@ -217,7 +224,7 @@ def _season_hint(jd_ut: float) -> str:
         init_swisseph()
         jup = swe.calc_ut(jd_ut, swe.JUPITER)[0][0]
         sat = swe.calc_ut(jd_ut, swe.SATURN)[0][0]
-        phase = abs((_norm(jup - sat) + 180.0) % 360.0 - 180.0)
+        phase = _angular_separation(jup, sat)
         if phase < 45:
             return "Jupiter-Saturn phase is tight: season trend favors disciplined teams."
         if phase < 90:
@@ -256,8 +263,8 @@ def _event_synastry_score(event_chart: WesternChart, natal_chart: WesternChart) 
         for np in natal_chart.planets:
             if np.name not in natal_focus:
                 continue
-            diff = abs((_norm(ep.longitude - np.longitude) + 180.0) % 360.0 - 180.0)
-            if abs(diff - 0) <= 5:
+            diff = _angular_separation(ep.longitude, np.longitude)
+            if diff <= 5:
                 score += 1.0
                 aspects.append(f"{ep.name} conjunct natal {np.name}")
             elif abs(diff - 120) <= 4 or abs(diff - 60) <= 3:
@@ -332,7 +339,7 @@ def analyze_sports_horary(
     testimonies.extend(moon_notes)
     testimonies.extend(v_notes)
 
-    # 喜好隊作為1宮映射偏好（僅輕度加權）
+    # Preferred team mapped to 1st-house side (light weighting only).
     if preferred_team and preferred_team.strip() in {team1, team2}:
         if preferred_team.strip() == team1:
             s1 += 0.4
@@ -440,14 +447,14 @@ def analyze_event_chart_with_team_natal(
 
 def build_ai_interpretation_prompt(result: SportsHoraryResult, lang: str = "zh") -> str:
     """Template for ai_analysis.py richer interpretation call."""
-    # 初始化共用解讀引擎（若檔案不存在將自動回傳空）
-    _ = JsonInterpretationEngine("/tmp/nonexistent_sports_interpretations.json")
+    engine = JsonInterpretationEngine("interpretations/sports_horary.json")
+    extra = engine.get_reading("sports_horary_summary", lang=lang)
 
     top_team = max(result.match_analysis.winner_probability, key=result.match_analysis.winner_probability.get)
     top_prob = result.match_analysis.winner_probability[top_team]
 
     if lang == "zh":
-        return (
+        base = (
             "你是傳統運動占星顧問，請嚴格依 John Frawley 與 William Lilly 規則解讀。\n"
             f"比賽：{result.match_name} ({result.team1} vs {result.team2})\n"
             f"勝率傾向：{top_team} {top_prob:.1%}\n"
@@ -456,8 +463,9 @@ def build_ai_interpretation_prompt(result: SportsHoraryResult, lang: str = "zh")
             f"逆轉指標 {result.advanced.upset_indicator:.1%}\n"
             "請輸出：1) 勝負傾向 2) 比分區間 3) 盤中時間點提醒 4) 風險與免責聲明。"
         )
+        return f"{base}\n補充素材：{extra}" if extra else base
 
-    return (
+    base = (
         "You are a traditional sports astrology consultant. Follow John Frawley and William Lilly strictly.\n"
         f"Match: {result.match_name} ({result.team1} vs {result.team2})\n"
         f"Win edge: {top_team} {top_prob:.1%}\n"
@@ -466,6 +474,7 @@ def build_ai_interpretation_prompt(result: SportsHoraryResult, lang: str = "zh")
         f"upset index {result.advanced.upset_indicator:.1%}\n"
         "Output: 1) winner tendency 2) score band 3) live timing notes 4) risk disclaimer."
     )
+    return f"{base}\nExtra context: {extra}" if extra else base
 
 
 def top_lots_for_sports(

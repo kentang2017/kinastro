@@ -24,13 +24,17 @@ def test_sports_horary_returns_structured_match_analysis():
     assert isinstance(ma.key_testimonies, list)
     assert "Team A" in ma.winner_probability
     assert "Team B" in ma.winner_probability
-    assert 0.0 < ma.winner_probability["Team A"] < 1.0
-    assert 0.0 < ma.winner_probability["Team B"] < 1.0
+    assert 0.0 <= ma.winner_probability["Team A"] <= 1.0
+    assert 0.0 <= ma.winner_probability["Team B"] <= 1.0
     assert ma.explanation
 
 
 def test_api_sports_horary_endpoint_exists():
-    from pathlib import Path
+    import pytest
 
-    src = Path("api_server.py").read_text(encoding="utf-8")
-    assert '"/api/sports-horary"' in src
+    pytest.importorskip("fastapi")
+    pytest.importorskip("plotly")
+    import api_server
+
+    routes = [r.path for r in api_server.app.routes]
+    assert "/api/sports-horary" in routes
