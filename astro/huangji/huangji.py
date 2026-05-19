@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
+import os
+import random
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime
 from typing import Any
@@ -11,7 +14,31 @@ import swisseph as swe
 
 from astro.swe_init import init_swisseph
 
+_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "wangji", "data")
+
+_LIFETIME_CYCLE_COUNT = 5  # Number of 30-year 世 periods to show
+
 logger = logging.getLogger(__name__)
+
+
+def _load_classics_json(filename: str) -> dict[str, Any]:
+    """Load a classics JSON file from the wangji data directory."""
+    path = os.path.join(_DATA_DIR, filename)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.debug("Classics JSON not found: %s", path)
+        return {}
+    except json.JSONDecodeError as exc:
+        logger.warning("Classics JSON decode error in %s: %s", path, exc)
+        return {}
+
+
+# Cached classics data loaded once at import time
+_XINYI_FAWEI: dict[str, Any] = _load_classics_json("xinyi_fawei.json")
+_HUANGJI_JINGSHI_SHU: dict[str, Any] = _load_classics_json("huangji_jingshi_shu.json")
+_GUANWU_YANYI: dict[str, Any] = _load_classics_json("guanwu_yanyi.json")
 
 _SOLAR_TERMS_BY_LON = [
     (315.0, "立春", "Start of Spring"),
@@ -82,6 +109,10 @@ class HuangjiPan:
     jieqi_swiss: str = ""
     historical_context: list[HistoricalContext] = field(default_factory=list)
     major_cycle_milestones: list[dict[str, Any]] = field(default_factory=list)
+    lifetime_cycles: list[dict[str, Any]] = field(default_factory=list)
+    bagua_xiang: dict[str, Any] = field(default_factory=dict)
+    philosophy_quote: dict[str, str] = field(default_factory=dict)
+    hui_gua: str = ""
 
 
 @dataclass
@@ -146,6 +177,92 @@ def _build_milestones(adjusted_year: int, year_in_shi: int, year_in_yun: int, ye
         {"label": "下個運起點", "year": adjusted_year + (361 - year_in_yun)},
         {"label": "下個會起點", "year": adjusted_year + (10801 - year_in_hui)},
     ]
+
+
+def _build_lifetime_cycles(birth_year: int, current_year: int) -> list[dict[str, Any]]:
+    """Build personal lifetime positioning in 30-year 世 cycles.
+
+    Divides a person's life into ``_LIFETIME_CYCLE_COUNT`` 30-year 世 periods
+    from birth onward, marking the current period and providing a macro-cycle
+    life view akin to the Huangji 大限 concept.
+
+    Args:
+        birth_year: The person's birth year.
+        current_year: The reference year to determine the current cycle.
+
+    Returns:
+        List of dicts with ``period``, ``age_range``, ``year_range``,
+        ``is_current``, ``current_age``, and ``shi_num`` keys.
+    """
+    cycles: list[dict[str, Any]] = []
+    age = max(0, current_year - birth_year)
+    for i in range(_LIFETIME_CYCLE_COUNT):
+        start_age = i * 30
+        end_age = start_age + 29
+        start_year = birth_year + start_age
+        end_year = birth_year + end_age
+        is_current = start_age <= age <= end_age
+        _, _, _, _, shi_num, _, _, _ = _calc_cycle_hierarchy(start_year)
+        cycles.append({
+            "period": i + 1,
+            "age_range": f"{start_age}–{end_age}歲",
+            "year_range": f"{start_year}–{end_year}",
+            "is_current": is_current,
+            "current_age": age if is_current else None,
+            "shi_num": shi_num,
+        })
+    return cycles
+
+
+def _get_hui_gua(hui: int) -> str:
+    """Return the hexagram associated with the given 會 number (1–12)."""
+    hui_gua_map = _XINYI_FAWEI.get("yuan_hui_yun_shi", {}).get("hui_gua", {})
+    entry = hui_gua_map.get(str(hui), {})
+    return entry.get("gua", "")
+
+
+def _get_bagua_xiang_for_gua(gua_name: str) -> dict[str, Any]:
+    """Return the 八卦取象 description for a given trigram name.
+
+    The ``bagua_xiang`` table in xinyi_fawei.json is keyed by trigram name
+    (乾, 兌, 離, …), so this directly matches when the caller supplies a
+    trigram name, or returns an empty dict for compound hexagrams.
+
+    Args:
+        gua_name: Trigram or hexagram name.
+
+    Returns:
+        Attribute dict from 八卦取象, or an empty dict if not found.
+    """
+    bagua = _XINYI_FAWEI.get("bagua_xiang", {})
+    return bagua.get(gua_name, {})
+
+
+def _random_philosophy_quote() -> dict[str, str]:
+    """Return a random philosophy quote from the three classics JSON files.
+
+    Draws from xinyi_fawei, huangji_jingshi_shu, and guanwu_yanyi.
+    Returns a dict with ``source``, ``text``, and ``theme`` keys.
+    """
+    quotes: list[dict[str, Any]] = []
+    quotes.extend(_XINYI_FAWEI.get("philosophy_quotes", []))
+    quotes.extend(_HUANGJI_JINGSHI_SHU.get("philosophy_quotes", []))
+    for vol in _GUANWU_YANYI.get("volumes", []):
+        for passage in vol.get("passages", [])[:3]:
+            quotes.append({
+                "id": passage.get("id", ""),
+                "source": "觀物外篇衍義",
+                "text": passage.get("text", "")[:120],
+                "theme": "象數",
+            })
+    if not quotes:
+        return {"source": "", "text": "", "theme": ""}
+    chosen = random.choice(quotes)
+    return {
+        "source": chosen.get("source", ""),
+        "text": chosen.get("text", ""),
+        "theme": chosen.get("theme", ""),
+    }
 
 
 def _build_cross_system_snapshot(
@@ -283,6 +400,9 @@ def compute_huangji_pan(
     swiss_jq_zh, _, _ = _solar_term_from_swiss(jd_ut)
 
     history_rows = [HistoricalContext(**row) for row in history_for_year(reference_year or year)]
+    ref_year = reference_year or datetime.now().year
+    hui_gua_name = _get_hui_gua(hui)
+    shi_gua_name = pan.get("世卦", "")
     huangji_pan = HuangjiPan(
         yuan=yuan,
         hui=hui,
@@ -307,9 +427,11 @@ def compute_huangji_pan(
         jieqi_swiss=swiss_jq_zh,
         historical_context=history_rows,
         major_cycle_milestones=_build_milestones(adjusted_year, year_in_shi, year_in_yun, year_in_hui),
+        lifetime_cycles=_build_lifetime_cycles(year, ref_year),
+        bagua_xiang=_get_bagua_xiang_for_gua(shi_gua_name),
+        philosophy_quote=_random_philosophy_quote(),
+        hui_gua=hui_gua_name,
     )
-
-    ref_year = reference_year or datetime.now().year
     cross = CrossSystemSnapshot()
     if include_cross_system:
         cross = _build_cross_system_snapshot(

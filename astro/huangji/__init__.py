@@ -20,4 +20,20 @@ def render_streamlit(*args, **kwargs) -> None:
     return _fn(*args, **kwargs)
 
 
-__all__ = ["compute_huangji_pan", "render_streamlit"]
+def get_classics_data(key: str = "xinyi_fawei") -> dict:
+    """Return loaded classics JSON data.
+
+    Args:
+        key: One of 'xinyi_fawei', 'huangji_jingshi_shu', 'guanwu_yanyi'.
+    """
+    from .huangji import _GUANWU_YANYI, _HUANGJI_JINGSHI_SHU, _XINYI_FAWEI
+
+    mapping = {
+        "xinyi_fawei": _XINYI_FAWEI,
+        "huangji_jingshi_shu": _HUANGJI_JINGSHI_SHU,
+        "guanwu_yanyi": _GUANWU_YANYI,
+    }
+    return mapping.get(key, {})
+
+
+__all__ = ["compute_huangji_pan", "render_streamlit", "get_classics_data"]
