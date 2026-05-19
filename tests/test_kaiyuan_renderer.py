@@ -142,15 +142,15 @@ def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
         ),
     ]
     five_planet_data = {
-        "歲星（木）": {"房": {"測試來源": "測試占文"}}
+        "歲星（木）": {"房": {"開元占經": "歲星入房，主德令行。"}}
     }
-    moon_data = {"角": {"月占來源": "月占文"}}
+    moon_data = {"角": {"開元占經": "月犯角，主朝廷有憂。"}}
 
     rows = kaiyuan_renderer._collect_live_omens(observations, five_planet_data, moon_data)
 
     assert len(rows) == 2
     assert rows[0]["is_moon"] is True
     assert rows[0]["mansion"] == "角"
-    assert rows[0]["omen"] == {"月占來源": "月占文"}
+    assert rows[0]["omen"] == {"開元占經": "月犯角，主朝廷有憂。"}
     assert rows[1]["label"] == "歲星（木）"
-    assert rows[1]["omen"] == {"測試來源": "測試占文"}
+    assert rows[1]["omen"] == {"開元占經": "歲星入房，主德令行。"}

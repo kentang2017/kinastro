@@ -488,6 +488,7 @@ def _collect_live_omens(
     """收集即時星盤可直接對照的入宿占文。"""
     rows: List[Dict[str, Any]] = []
     for obs in observations:
+        # moon_28_data is a flat mapping {宿名: 占文}; five_planet_data is nested {星曜: {宿名: 占文}}
         if obs.key == "moon":
             omen = moon_28_data.get(obs.mansion_name)
         else:
