@@ -681,12 +681,12 @@ def _weekday_variant(weekday_name_en: str, thai_year_name: str) -> Optional[Brah
     return BrahmaJatiVariant(
         key=weekday_name_en,
         title={
-            "th": variant.get("type_en", ""),
+            "th": variant.get("type_thai", variant.get("type_en", "")),
             "zh": variant.get("type_zh", ""),
             "en": variant.get("type_en", ""),
         },
         meaning={
-            "th": variant.get("meaning_en", ""),
+            "th": variant.get("meaning_thai", variant.get("meaning_en", "")),
             "zh": variant.get("meaning_zh", ""),
             "en": variant.get("meaning_en", ""),
         },
@@ -1187,7 +1187,6 @@ if __name__ == "__main__":
                 "fortune_number": payload["fortune_number"],
                 "house_system": payload["meta"]["house_system"],
                 "brahma_jati_activation_palace": payload["nine_palace_grid"]["brahma_jati_activation_palace"],
-                "first_palace": payload["nine_palace_grid"]["palaces"][0],
             },
             ensure_ascii=False,
             indent=2,

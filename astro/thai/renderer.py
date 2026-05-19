@@ -193,8 +193,7 @@ def build_nine_palace_svg(grid: Any, *, lang: str = "zh", size: int = 540) -> st
                 f'<text x="{x + cell / 2:.1f}" y="{y + 52}" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="bold">{title}</text>'
             )
             parts.append(
-                f'<text x="{x + cell / 2:.1f}" y="{y + 78}" text-anchor="middle" fill="{guardian_color}" font-size="24" font-weight="bold">{influence_symbols}</text>'
-                f'<title>{influence_title}</title>'
+                f'<text x="{x + cell / 2:.1f}" y="{y + 78}" text-anchor="middle" fill="{guardian_color}" font-size="24" font-weight="bold">{influence_symbols}<title>{influence_title}</title></text>'
             )
             parts.append(
                 f'<text x="{x + cell / 2:.1f}" y="{y + 103}" text-anchor="middle" fill="#c7c2da" font-size="11">{keyword_text}</text>'
@@ -208,8 +207,7 @@ def build_nine_palace_svg(grid: Any, *, lang: str = "zh", size: int = 540) -> st
             if palace.activation_note:
                 note = html.escape(palace.activation_note.get(lang) or palace.activation_note.get("zh") or "")
                 parts.append(
-                    f'<text x="{x + cell / 2:.1f}" y="{y + cell - 14}" text-anchor="middle" fill="#9bd1ff" font-size="9">★</text>'
-                    f'<title>{note}</title>'
+                    f'<text x="{x + cell / 2:.1f}" y="{y + cell - 14}" text-anchor="middle" fill="#9bd1ff" font-size="9">★<title>{note}</title></text>'
                 )
 
     parts.append("</svg></div>")
