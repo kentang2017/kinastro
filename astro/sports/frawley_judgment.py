@@ -770,6 +770,90 @@ def evaluate_moon_light(chart: WesternChartData) -> list:
     return evidences
 
 
+def _lord_testimonies_summary(
+    evidences: list[FrawleyEvidence],
+    home_score: float,
+    away_score: float,
+) -> dict:
+    """彙整 Lord 1 vs Lord 7 證據分布。"""
+    categories: dict[str, dict[str, float]] = {}
+    for ev in evidences:
+        bucket = categories.setdefault(
+            ev.category,
+            {"home": 0.0, "away": 0.0, "draw": 0.0, "neutral": 0.0},
+        )
+        if ev.favors in bucket:
+            bucket[ev.favors] += ev.weight
+        else:
+            bucket["neutral"] += ev.weight
+
+    margin = home_score - away_score
+    return {
+        "leader": "home" if margin > 0 else "away" if margin < 0 else "draw",
+        "home_score": round(home_score, 3),
+        "away_score": round(away_score, 3),
+        "margin": round(margin, 3),
+        "categories": categories,
+    }
+
+
+def _injury_risk_indicator(
+    home_lord: PlanetInfo,
+    away_lord: PlanetInfo,
+    home_house: int,
+    away_house: int,
+) -> dict[str, float]:
+    """以 6/12 宮與落陷條件生成傷病風險。"""
+    home_risk = 0.14
+    away_risk = 0.14
+
+    if home_lord.house in (6, 12):
+        home_risk += 0.18
+    if away_lord.house in (6, 12):
+        away_risk += 0.18
+    if home_lord.essential_dignity in ("fall", "detriment"):
+        home_risk += 0.10
+    if away_lord.essential_dignity in ("fall", "detriment"):
+        away_risk += 0.10
+    if home_house in (6, 12):
+        home_risk += 0.07
+    if away_house in (6, 12):
+        away_risk += 0.07
+
+    return {
+        "home": round(min(home_risk, 0.95), 4),
+        "away": round(min(away_risk, 0.95), 4),
+    }
+
+
+def _reversal_indicator(
+    chart: WesternChartData,
+    home_lord: PlanetInfo,
+    away_lord: PlanetInfo,
+) -> float:
+    """以天王星/交點/恆星生成逆轉指標。"""
+    uranus_dist = 90.0
+    uranus = get_planet_by_name(chart.planets, "Uranus")
+    if uranus:
+        uranus_dist = min(
+            _angle_diff(uranus.longitude, home_lord.longitude),
+            _angle_diff(uranus.longitude, away_lord.longitude),
+        )
+
+    node_dist = min(
+        _angle_diff(home_lord.longitude, chart.north_node_lon),
+        _angle_diff(away_lord.longitude, chart.north_node_lon),
+        _angle_diff(home_lord.longitude, chart.south_node_lon),
+        _angle_diff(away_lord.longitude, chart.south_node_lon),
+    )
+    star_hits = len(evaluate_fixed_stars(home_lord, away_lord))
+
+    uranus_score = max(0.0, 1.0 - min(uranus_dist, 90.0) / 90.0) * 0.35
+    node_score = max(0.0, 1.0 - min(node_dist, 15.0) / 15.0) * 0.45
+    star_score = min(star_hits, 2) / 2.0 * 0.20
+    return round(min(0.99, uranus_score + node_score + star_score), 4)
+
+
 # ============================================================
 # 綜合 Frawley 判斷
 # ============================================================
@@ -1087,6 +1171,15 @@ def frawley_judgment(chart: WesternChartData,
     else:
         summary = f"Frawley 判斷: {away_team} 略佔優勢 ({away_pct:.0f}% vs {home_pct:.0f}%)"
 
+    testimonies = _lord_testimonies_summary(evidences, home_score, away_score)
+    injury_risk = _injury_risk_indicator(
+        home_lord=home_lord,
+        away_lord=away_lord,
+        home_house=home_assign.primary_house,
+        away_house=away_assign.primary_house,
+    )
+    reversal_indicator = _reversal_indicator(chart, home_lord, away_lord)
+
     return {
         "evidences": evidences,
         "home_score": home_score,
@@ -1094,4 +1187,7 @@ def frawley_judgment(chart: WesternChartData,
         "summary": summary,
         "home_assign": home_assign,
         "away_assign": away_assign,
+        "testimonies": testimonies,
+        "injury_risk": injury_risk,
+        "reversal_indicator": reversal_indicator,
     }

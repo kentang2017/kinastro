@@ -5,8 +5,8 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
-from kinastro_vs.asian_handicap import HandicapAnalysis
+from typing import Literal, Optional
+from .asian_handicap import HandicapAnalysis
 
 
 @dataclass
@@ -25,6 +25,7 @@ class MatchInput:
     location_name: str = ""
     favorite: Optional[str] = None  # "home" or "away" or None
     notes: str = ""
+    analysis_mode: Literal["horary", "event"] = "horary"
 
     # 歐賠 (1X2 decimal odds) — 如輸入則啟用亞盤分析
     home_odds: Optional[float] = None
@@ -149,3 +150,28 @@ class PredictionResult:
     western_chart: Optional[WesternChartData] = None
     vedic_chart: Optional[VedicChartData] = None
     handicap_analysis: Optional[HandicapAnalysis] = None
+    sports_prediction: Optional["SportsPrediction"] = None
+
+
+@dataclass
+class SportsPrediction:
+    """結構化運動占星輸出。"""
+    mode: Literal["horary", "event"]
+    winner_prob: dict[str, float]
+    confidence: float  # 0~1
+    key_factors: list[str] = field(default_factory=list)
+    score_estimate: str = ""
+    injury_risk: dict[str, float] = field(default_factory=dict)
+    reversal_indicator: float = 0.0
+    disclaimers: list[str] = field(default_factory=list)
+
+
+@dataclass
+class TeamProfile:
+    """球隊/選手基礎資料。"""
+    name: str
+    sport: str
+    country: str = ""
+    founded_year: Optional[int] = None
+    home_stadium: str = ""
+    tags: list[str] = field(default_factory=list)
