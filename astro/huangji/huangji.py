@@ -135,7 +135,7 @@ class HuangjiPanResult:
         }
 
 
-def _get_kinwangji_exports() -> tuple[Any, Any, Any, Any]:
+def _get_wangji_exports() -> tuple[Any, Any, Any, Any]:
     from astro.wangji.history import history_for_year
     from astro.wangji.jieqi import jq
     from astro.wangji.wanji import display_pan, wanji_four_gua
@@ -384,7 +384,7 @@ def compute_huangji_pan(
 ) -> HuangjiPanResult:
     """Compute Huangji Jingshi cycle position and cross-system snapshots."""
     init_swisseph()
-    wanji_four_gua, display_pan, jq, history_for_year = _get_kinwangji_exports()
+    wanji_four_gua, display_pan, jq, history_for_year = _get_wangji_exports()
 
     pan = wanji_four_gua(year, month, day, hour, minute)
     board_text = display_pan(year, month, day, hour, minute)
