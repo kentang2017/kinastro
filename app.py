@@ -94,6 +94,7 @@ from astro.wariga.renderer import render_streamlit as render_wariga_chart
 from astro.jawa_weton.calculator import WetonCalculator, compute_weton
 from astro.jawa_weton.renderer import render_streamlit as render_jawa_weton_chart
 from astro.bintang_duabelas.renderer import render_streamlit as render_bintang_duabelas_chart
+from astro.kinketika import render_streamlit as render_kinketika_chart
 from astro.liuyao_lifetime.calculator import compute_lifetime_hexagram
 from astro.liuyao_lifetime.renderer import render_streamlit as render_liuyao_lifetime_chart
 from astro.medical_astrology.calculator import compute_medical_chart
@@ -247,9 +248,9 @@ def render_homepage():
          ["Jyotish", "紅皮書 Lal Kitab", "納迪占星", "Jaimini", "KP 占星", "吠陀風水"],
          "#FF9933", "rgba(255,153,51,0.1)", "rgba(255,153,51,0.22)"),
         ("🌏", "亞洲體系", "Asian Systems",
-         ["土亭數", "宿曜道", "泰國占星", "老撾占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "馬來伊斯蘭占星（十二星）", "祖爾海", "藏傳時輪金剛",
-            "九星氣學", "高棉占星", "波利尼西亞"],
-           "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
+         ["土亭數", "宿曜道", "泰國占星", "老撾占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "馬來伊斯蘭占星（十二星）", "馬來七星五刻占卜", "祖爾海", "藏傳時輪金剛",
+             "九星氣學", "高棉占星", "波利尼西亞"],
+            "#E0A526", "rgba(224,165,38,0.1)", "rgba(224,165,38,0.22)"),
         ("🕌", "中東體系", "Middle East Systems",
          ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法", "柏柏爾占星", "地占占星"],
            "#3AB09E", "rgba(58,176,158,0.1)", "rgba(58,176,158,0.22)"),
@@ -280,11 +281,11 @@ def render_homepage():
     _hp_desc = auto_cn(
         f'從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>'
         f'從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>'
-        f'紅皮書 Lal Kitab、薩珊波斯占星、<strong style="color:#A78BFA;">馬來伊斯蘭占星（Bintang Duabelas）</strong>、<strong style="color:#A78BFA;">柏柏爾占星</strong>、<strong style="color:#A78BFA;">衣索比亞 Bahre Hasab</strong>、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>'
+        f'紅皮書 Lal Kitab、薩珊波斯占星、<strong style="color:#A78BFA;">馬來伊斯蘭占星（Bintang Duabelas）</strong>、<strong style="color:#A78BFA;">馬來七星五刻占卜（Kinketika）</strong>、<strong style="color:#A78BFA;">柏柏爾占星</strong>、<strong style="color:#A78BFA;">衣索比亞 Bahre Hasab</strong>、瑪雅曆法到巴比倫星表、<strong style="color:#A78BFA;">世俗占星</strong>、<strong style="color:#A78BFA;">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>'
         f'傳統卜卦占星、擇日占星、蠢子數、<strong style="color:#A78BFA;">地占占星</strong>、<strong style="color:#A78BFA;">伊特魯里亞占星</strong>、<strong style="color:#A78BFA;">煉金占星</strong>——堅占星將<strong style="color:#EAB308;font-weight:600;">全球 {_total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。',
         f'From Seven Luminaries to Western Astrology, from Zi Wei Dou Shu to Indian Jyotish,<br/>'
         f'from San Shi (Liu Ren, Tai Yi, Qi Men) to Astrocartography, Celtic Tree Calendar, Tai Xuan Shu,<br/>'
-        f'Lal Kitab, Sassanid Persian Astrology, <strong style="color:#A78BFA;">Malay Islamic Astrology (Bintang Duabelas)</strong>, <strong style="color:#A78BFA;">Berber Astrology</strong>, <strong style="color:#A78BFA;">Ethiopian Bahre Hasab</strong>, Mayan Calendar to Babylonian Star Catalogue, <strong style="color:#A78BFA;">Mundane Astrology</strong>, <strong style="color:#A78BFA;">Byzantine Astrology</strong>, Medical Astrology, Shang Han Method,<br/>'
+        f'Lal Kitab, Sassanid Persian Astrology, <strong style="color:#A78BFA;">Malay Islamic Astrology (Bintang Duabelas)</strong>, <strong style="color:#A78BFA;">Malay Time Divination (Kinketika)</strong>, <strong style="color:#A78BFA;">Berber Astrology</strong>, <strong style="color:#A78BFA;">Ethiopian Bahre Hasab</strong>, Mayan Calendar to Babylonian Star Catalogue, <strong style="color:#A78BFA;">Mundane Astrology</strong>, <strong style="color:#A78BFA;">Byzantine Astrology</strong>, Medical Astrology, Shang Han Method,<br/>'
         f'Traditional Horary, Electional Astrology, Chun Zi Shu, <strong style="color:#A78BFA;">Geomantic Astrology</strong>, <strong style="color:#A78BFA;">Etruscan Astrology</strong>, <strong style="color:#A78BFA;">Alchemical Astrology</strong> — KinAstro unifies <strong style="color:#EAB308;font-weight:600;">{_total_systems} astrology systems</strong> worldwide, bringing millennia of stellar wisdom to your fingertips.',
     )
     _hp_stat_systems = auto_cn("占星體系 Systems", "Astrology Systems")
@@ -5751,6 +5752,26 @@ if not _engine_handled:
             st.info(t("info_bintang_duabelas_prompt"))
             with st.spinner(t("spinner_bintang_duabelas")):
                 render_bintang_duabelas_chart(_default_birth_datetime)
+        except Exception as _e:
+            st.error(f"{t('error_tab_compute')}：{_e}")
+            st.exception(_e)
+
+    elif _selected_system == "tab_kinketika":
+        try:
+            _default_birth_datetime = None
+            if _is_calculated:
+                _p = st.session_state["_calc_params"]
+                _default_birth_datetime = datetime(
+                    _p["year"],
+                    _p["month"],
+                    _p["day"],
+                    _p["hour"],
+                    _p["minute"],
+                )
+            st.info(t("info_kinketika_prompt"))
+            with st.spinner(t("spinner_kinketika")):
+                _kinketika_report = render_kinketika_chart(_default_birth_datetime)
+            _render_ai_button("tab_kinketika", _kinketika_report, btn_key="kinketika")
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)

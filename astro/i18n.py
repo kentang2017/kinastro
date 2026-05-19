@@ -328,6 +328,10 @@ TRANSLATIONS = {
         "zh": "⭐ 馬來伊斯蘭占星（十二星）",
         "en": "⭐ Bintang Duabelas (Twelve Stars)",
     },
+    "tab_kinketika": {
+        "zh": "🌙 馬來七星五刻占卜",
+        "en": "🌙 Kinketika (Malay Time Divination)",
+    },
     "tab_polynesian": {
         "zh": "🌺 波利尼西亞／夏威夷星辰知識",
         "en": "🌺 Polynesian / Hawaiian Star Lore",
@@ -492,6 +496,10 @@ TRANSLATIONS = {
     "spinner_bintang_duabelas": {
         "zh": "正在整理馬來伊斯蘭占星（Bintang Duabelas）工具...",
         "en": "Preparing Malay Islamic astrology (Bintang Duabelas) tools...",
+    },
+    "spinner_kinketika": {
+        "zh": "正在計算馬來七星五刻占卜（Kinketika）...",
+        "en": "Computing Kinketika (Malay Time Divination)...",
     },
     "spinner_polynesian": {
         "zh": "正在計算夏威夷星辰排盤...",
@@ -1214,6 +1222,32 @@ recommended **Azimat** talisman recipes.
 - **Twelve star houses**: Map the querent and mother-name total to a star sign and house
 - **Planetary hours**: Read auspicious and difficult hours from weekday day/night sequences
 - **Azimat**: Browse talisman texts, timing, and practical preparation notes
+""",
+    },
+    "desc_kinketika": {
+        "zh": """
+### 什麼是 Kinketika（馬來七星五刻占卜）？
+
+**Kinketika** 來自馬來群島（Nusantara）傳統時間占卜，整合兩種核心方法：
+
+- **Ketika Lima（五時刻）**：依五時禮拜（Subuh、Zohor、Asar、Maghrib、Isyak）分時
+- **Bintang Tujuh（七星時刻）**：依七曜（太陽、月亮、火星、水星、木星、金星、土星）分時
+- **三類判斷**：Baik（吉）、Nahas（凶）、Sederhana（中平）
+- **活動規劃器**：可依航海、婚姻、開業、動土等活動篩出推薦與禁忌時段
+
+此工具用於文化學習與參考，重要決定請結合理性判斷，並尊重 Bomoh 與 Panrita 傳承。
+""",
+        "en": """
+### What is Kinketika (Malay Time Divination)?
+
+**Kinketika** is a Nusantara time-divination module that combines:
+
+- **Ketika Lima**: five periods aligned with Islamic prayer-time structure
+- **Bintang Tujuh**: seven periods mapped to the classical seven celestial bodies
+- **Three judgments**: Baik (auspicious), Nahas (inauspicious), Sederhana (neutral)
+- **Activity planner**: recommends or discourages periods for sailing, marriage, trade, building, and rituals
+
+This tool is for cultural learning/reference. Important life decisions should be combined with rational judgement and respect for Bomoh/Panrita traditions.
 """,
     },
     "desc_polynesian": {
@@ -2100,6 +2134,10 @@ transmitted by **Chen Xiyi**.
     "sys_hint_bintang_duabelas": {
         "zh": "馬來伊斯蘭占星：Jawi Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat",
         "en": "Malay Islamic astrology: Jawi Abjad, Hisab Nama, twelve houses, planetary hours, and Azimat",
+    },
+    "sys_hint_kinketika": {
+        "zh": "馬來群島時間占卜：Ketika Lima 五時刻 + Bintang Tujuh 七星時刻",
+        "en": "Nusantara time divination: Ketika Lima + Bintang Tujuh with activity planning",
     },
     "sys_hint_polynesian": {"zh": "夏威夷 / 玻里尼西亞星辰知識與航海星羅盤", "en": "Hawaiian / Polynesian Star Lore & Navigation Compass"},
     "sys_hint_andean": {
@@ -4299,6 +4337,10 @@ Enter your birth information to look up your tree month and its poetic attribute
     "info_bintang_duabelas_prompt": {
         "zh": "👈 直接在頁面內輸入姓名、星期或時間，即可使用馬來伊斯蘭占星 Bintang Duabelas（十二星）的 Abjad、Hisab Nama、十二星宮、行星時辰與 Azimat 工具。",
         "en": "👈 Enter names, weekday, or time directly on the page to use the Malay Islamic astrology Bintang Duabelas (Twelve Stars) Abjad, Hisab Nama, twelve-house, planetary-hour, and Azimat tools.",
+    },
+    "info_kinketika_prompt": {
+        "zh": "👈 可直接輸入日期時間，切換 Ketika Lima（五時刻）或 Bintang Tujuh（七星時刻），查看吉凶輪盤、活動規劃與每日吉凶總覽。",
+        "en": "👈 Enter date/time, switch between Ketika Lima and Bintang Tujuh, and view the wheel, activity planner, and daily fortune overview.",
     },
     # ── Astronomical Geomancy (地占占星) ───────────────────────────────────
     "tab_astro_geomancy": {
