@@ -11,7 +11,7 @@ KinAstro 占星體系統一 Registry（Unified System Registry）
   • 計算技術參數（house system、ayanamsa 等）
   • 標籤、成熟度、特性旗標
 
-Central catalogue for all ~64 astrology systems in KinAstro.
+Central catalogue for all 84 astrology systems in KinAstro.
 Each System instance fully describes one astrology system, including:
   • Multi-language names (via i18n keys)
   • Category / icon / accent colour
