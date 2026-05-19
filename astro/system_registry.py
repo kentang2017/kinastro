@@ -460,6 +460,33 @@ _reg(System(
     ai_persona_key="info_shaozi_prompt",
 ))
 
+_reg(System(
+    id="tab_huangji",
+    name_zh="皇極經世",
+    name_en="Huangji Jingshi",
+    category="cat_chinese",
+    icon="🏮",
+    tab_key="tab_huangji",
+    desc_key="desc_huangji",
+    spinner_key="spinner_huangji",
+    hint_key="sys_hint_huangji",
+    sub_tabs=[
+        SubTab("huangji_tab_basic", "basic"),
+        SubTab("huangji_tab_cycles", "cycles"),
+        SubTab("huangji_tab_cross", "cross"),
+        SubTab("huangji_tab_history", "history"),
+    ],
+    tags=[
+        "皇極經世", "邵雍", "先天易數", "元會運世", "huangji", "wangji",
+        "kinwangji", "四卦", "歷史周期", "cross-system",
+    ],
+    maturity="beta",
+    accent_color="#8E6B3D",
+    origin_culture="Chinese",
+    tradition_period="Song Dynasty (Shao Yong)",
+    ai_persona_key="info_huangji_prompt",
+))
+
 
 _reg(System(
     id="tab_diqiyijue",

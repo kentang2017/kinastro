@@ -87,6 +87,8 @@ SYSTEM_ACCENT_COLORS: dict[str, str] = {
     "tab_tieban":       "#C9A84C",
     # ── Ghost Valley Fen Ding Jing → traditional red-gold ──
     "tab_fendjing":     "#C9A84C",
+    # ── Huangji Jingshi → classical earth-gold ──
+    "tab_huangji":      "#8E6B3D",
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -99,6 +101,7 @@ SYSTEM_CSS_CLASS: dict[str, str] = {
     "tab_ziwei":        "chinese-chart",
     "tab_damo":         "chinese-chart",
     "tab_diqiyijue":   "chinese-chart",
+    "tab_huangji":      "chinese-chart",
     "tab_western":      "western-chart",
     "tab_hellenistic":  "western-chart",
     "tab_kabbalistic":  "western-chart",

@@ -240,9 +240,9 @@ def render_homepage():
          ["大六壬", "太乙神數", "奇門祿命"],
          "#C9A84C", "rgba(201,168,76,0.12)", "rgba(201,168,76,0.28)"),
         ("🏮", "中式占星", "Chinese Systems",
-         ["紫微斗數", "七政四餘", "萬化仙禽", "十二星次", "策天飛星", "達摩一掌經", "鐵板神數", "邵子神數",
-          "鬼谷分定經", "滌器遺訣", "太玄數占星", "開元占經", "五運六氣", "六爻終身卦", "北極神數", "南極神數", "子平八字", "蠢子數"],
-          "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
+         ["紫微斗數", "七政四餘", "萬化仙禽", "十二星次", "策天飛星", "達摩一掌經", "鐵板神數", "邵子神數", "皇極經世",
+           "鬼谷分定經", "滌器遺訣", "太玄數占星", "開元占經", "五運六氣", "六爻終身卦", "北極神數", "南極神數", "子平八字", "蠢子數"],
+           "#C9A84C", "rgba(201,168,76,0.10)", "rgba(201,168,76,0.22)"),
         ("🏛️", "西洋占星", "Western Astrology",
          ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "宇宙生物學", "和諧占星",
           "古典主限推運", "凱爾特樹", "出生時間校正", "赫密士前世盤", "靈性占星", "拜占庭占星", "人間圖", "世俗占星", "弗拉德命運輪盤", "煉金占星"],
@@ -3515,6 +3515,36 @@ if not _engine_handled:
         with _sz_tab_tiaowen:
             from astro.shaozi.renderer import render_shaozi_tiaowen_browser
             render_shaozi_tiaowen_browser()
+
+    # --- 皇極經世 ---
+    elif _selected_system == "tab_huangji":
+        if _is_calculated:
+            try:
+                from astro.huangji import compute_huangji_pan, render_streamlit as render_huangji_chart
+
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_huangji")):
+                    _huangji_chart = compute_huangji_pan(
+                        **_p,
+                        reference_year=datetime.now().year,
+                        include_cross_system=True,
+                        gender=st.session_state.get("_calc_gender", "男"),
+                    )
+                render_huangji_chart(
+                    _huangji_chart,
+                    lang=get_lang(),
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_huangji",
+                        _huangji_chart,
+                        btn_key="huangji",
+                    ),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_calc_prompt"))
+            st.markdown(t("desc_huangji"))
 
     # --- 太玄數占星 ---
     elif _selected_system == "tab_taixuan":

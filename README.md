@@ -13,7 +13,7 @@
 [![Swiss Ephemeris](https://img.shields.io/badge/Swiss%20Ephemeris-pyswisseph-FF8C00)](https://github.com/astrorigin/pyswisseph)
 [![License](https://img.shields.io/badge/License-MIT-8B5CF6)](LICENSE)
 
-**八十一體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・五運六氣・萬化仙禽・六壬祿命・太乙命法・奇門祿命・六爻終身卦・鐵板神數・邵子神數・鬼谷分定經・滌器遺訣・北極神數・南極神數・子平八字・蠢子數・開元占經・韓國・土亭數・高棉・Reamker 占星・西洋・宇宙生物學・出生時間校正・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・和諧占星・古典主限推運・赫密士前世盤・靈性占星・人間圖・世俗占星・弗拉德命運輪盤・煉金占星・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・吠陀風水・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・馬來伊斯蘭占星（Bintang Duabelas／十二星）・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・Picatrix 占星魔法・也門・薩珊波斯・薩珊波斯進階版・柏柏爾占星・衣索比亞 Bahre Hasab・地占占星・瑪雅・安地斯・多貢天狼星宇宙學・阿茲特克・古埃及十度區間・巴比倫・蘇美/美索不達米亞・伊特魯里亞占星・亞美尼亞占星・波利尼西亞／夏威夷・拜占庭占星・醫學占星・傷寒鈐法・傳統卜卦占星・歐洲地占・擇日占星**
+**八十一體系占星排盤系統 — 中國・紫微斗數・策天飛星・十二星次・達摩一掌經・太玄數・五運六氣・萬化仙禽・六壬祿命・太乙命法・奇門祿命・六爻終身卦・鐵板神數・邵子神數・皇極經世・鬼谷分定經・滌器遺訣・北極神數・南極神數・子平八字・蠢子數・開元占經・韓國・土亭數・高棉・Reamker 占星・西洋・宇宙生物學・出生時間校正・天王星漢堡學派・Sabian 符號・Astrocartography・凱爾特樹木曆・希臘・和諧占星・古典主限推運・赫密士前世盤・靈性占星・人間圖・世俗占星・弗拉德命運輪盤・煉金占星・印度・Jaimini・納迪・KP 克里希納穆提・紅皮書 Lal Kitab・吠陀風水・宿曜道・泰國・緬甸・巴厘 Wariga・爪哇 Weton・馬來伊斯蘭占星（Bintang Duabelas／十二星）・蒙古祖爾海・藏傳時輪金剛・九星氣學・卡巴拉・猶太 Mazzalot・阿拉伯・Picatrix 占星魔法・也門・薩珊波斯・薩珊波斯進階版・柏柏爾占星・衣索比亞 Bahre Hasab・地占占星・瑪雅・安地斯・多貢天狼星宇宙學・阿茲特克・古埃及十度區間・巴比倫・蘇美/美索不達米亞・伊特魯里亞占星・亞美尼亞占星・波利尼西亞／夏威夷・拜占庭占星・醫學占星・傷寒鈐法・傳統卜卦占星・歐洲地占・擇日占星**
 *81-System Astrology Platform — Chinese, Zi Wei, Ce Tian Flying Stars, Twelve Ci (Jupiter Stations), Damo One Palm Scripture, Tai Xuan Shu, Wu Yun Liu Qi, WanHua XianQin, Da Liu Ren, Taiyi Life Method, Qimen Destiny, Lifetime Liu Yao, Tie Ban Shen Shu, Shao Zi Shen Shu, Ghost Valley Fen Ding Jing, Diqiyijue, Beiji Shenshu, Nanji Shenshu, Ziping Bazi, ChunZiShu, Kaiyuan Zhanjing, Korean Tojeong, Khmer Reamker, Western, Cosmobiology (Ebertin), Rectification, Uranian (Hamburg School), Sabian Symbols, Astrocartography, Celtic Tree Calendar, Hellenistic, Harmonic Astrology, Primary Directions, Trutine of Hermes, Esoteric Astrology (Seven Rays), Human Design, Mundane Astrology, Fludd Rota Simulator, Alchemical Astrology, Vedic, Jaimini, Nadi, KP Krishnamurti Paddhati, Lal Kitab, Vastu Shastra, Sukkayodo, Thai, Myanmar, Balinese Wariga, Javanese Weton, Bintang Duabelas (Twelve Stars), Mongolian Zurkhai, Tibetan Kalachakra, Nine Star Ki, Kabbalah, Jewish Mazzalot, Arabic (incl. Picatrix & Shams al-Maʻrif), Picatrix Star Magic, Yemeni Rasulid, Sassanian Persian, Sassanian Persia (Advanced), Amazigh (Berber) Astrology, Ethiopian Bahre Hasab, Astronomical Geomancy, Maya, Andean Cosmology, Dogon Sirius Cosmology, Aztec, Egyptian Decans, Babylonian, Sumerian / Mesopotamian, Etruscan Astrology, Armenian Astrology, Polynesian / Hawaiian Star Lore, Byzantine Astrology, Medical Astrology (Iatromathematics), Shanghan Qianfa, Traditional Horary Astrology, European Geomancy, Electional Astrology / Muhurta*
 
 </div>
@@ -1141,6 +1141,7 @@ uvicorn api_server:app --reload
 |---|---|
 | `POST /api/chinese` | 七政四餘 Chinese |
 | `POST /api/ziwei` | 紫微斗數 Zi Wei |
+| `POST /api/huangji` | 皇極經世 Huangji Jingshi |
 | `POST /api/western` | 西洋占星 Western |
 | `POST /api/vedic` | 印度占星 Vedic |
 | `POST /api/kp` | KP 占星 Krishnamurti Paddhati |

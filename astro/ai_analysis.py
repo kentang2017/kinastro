@@ -872,6 +872,37 @@ def format_hellenistic_chart(chart) -> str:
     return "\n".join(sections)
 
 
+def format_huangji_chart(chart) -> str:
+    """Format a Huangji Jingshi chart for the AI prompt."""
+    sections = ["【皇極經世排盤 Huangji Jingshi】"]
+    pan = getattr(chart, "huangji_pan", None)
+    if pan is not None:
+        sections.append(
+            f"元會運世: 元{_safe_getattr(pan, 'yuan')} / 會{_safe_getattr(pan, 'hui')} / "
+            f"運{_safe_getattr(pan, 'yun')} / 世{_safe_getattr(pan, 'shi')}"
+        )
+        sections.append(
+            f"定位: 世內第{_safe_getattr(pan, 'year_in_shi')}年, "
+            f"運內第{_safe_getattr(pan, 'year_in_yun')}年, "
+            f"會內第{_safe_getattr(pan, 'year_in_hui')}年"
+        )
+        sections.append(
+            f"節氣: kinwangji={_safe_getattr(pan, 'jieqi_kinwangji')} / "
+            f"swiss={_safe_getattr(pan, 'jieqi_swiss')}"
+        )
+        gua = getattr(pan, "gua", {})
+        if isinstance(gua, dict) and gua:
+            sections.append("四卦/時序卦: " + "、".join([f"{k}:{v}" for k, v in gua.items()]))
+    cross = getattr(chart, "cross_system", None)
+    if cross is not None:
+        sections.append("\n--- 跨體系對照 ---")
+        sections.append(f"Zodiacal Releasing: {_safe_getattr(cross, 'zodiacal_releasing_l1')}")
+        sections.append(f"Annual Profection: {_safe_getattr(cross, 'annual_profection')}")
+        sections.append(f"Vedic Dasha: {_safe_getattr(cross, 'vedic_dasha')}")
+        sections.append(f"Ziwei Daxian: {_safe_getattr(cross, 'ziwei_daxian')}")
+    return "\n".join(sections)
+
+
 def format_sukkayodo_chart(chart) -> str:
     """Format a Sukkayodo chart for the AI prompt."""
     sections = ["【宿曜道排盤 Sukkayodo Chart】"]
@@ -1027,6 +1058,7 @@ SYSTEM_FORMATTERS = {
     "tab_nadi": format_nadi_chart,
     "tab_zurkhai": format_zurkhai_chart,
     "tab_hellenistic": format_hellenistic_chart,
+    "tab_huangji": format_huangji_chart,
     "tab_chinstar": format_chinstar_chart,
     "tab_twelve_ci": _format_twelve_ci_chart,
     "tab_acg": _format_acg_chart,
