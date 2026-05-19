@@ -19,6 +19,7 @@ from astro.hellenistic.profections import (
     compute_profections_table,
     SIGN_GLYPHS,
     PLANET_GLYPHS,
+    ZODIAC_SIGNS,
 )
 from astro.hellenistic.zodiacal_releasing import (
     ZRPeriod,
@@ -29,6 +30,9 @@ from astro.hellenistic.zodiacal_releasing import (
 
 if TYPE_CHECKING:
     pass
+
+# How many extra years to show ahead of the current age (one full 12-year cycle)
+_PROFECTION_CYCLE_BUFFER = 13
 
 # ─────────────────────────────────────────────────────────────
 # Colour palette
@@ -92,7 +96,7 @@ def render_annual_profections(
     current_age = today.year - birth_year
 
     # Ensure num_years covers current age plus at least one 12-year cycle ahead
-    num_years = max(num_years, current_age + 13)
+    num_years = max(num_years, current_age + _PROFECTION_CYCLE_BUFFER)
     # Round up to next multiple of 12 for clean display
     num_years = ((num_years + 11) // 12) * 12
 
@@ -356,8 +360,7 @@ def render_zodiacal_releasing(
     use_fortune = "Fortune" in source
     lot_lon = fortune_lon if use_fortune else spirit_lon
     lot_label = "Lot of Fortune (幸運點)" if use_fortune else "Lot of Spirit (精神點)"
-    lot_sign = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo",
-                "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"][int(lot_lon/30)%12]
+    lot_sign = ZODIAC_SIGNS[int(lot_lon / 30) % 12]
 
     st.caption(f"📍 {lot_label}: **{SIGN_GLYPHS.get(lot_sign, '')} {lot_sign}** {lot_lon % 30:.1f}°")
 

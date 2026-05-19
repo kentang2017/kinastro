@@ -74,14 +74,19 @@ SIGN_MINOR_YEARS: dict[str, int] = {
     "Libra": 8,         # Venus
     "Scorpio": 15,      # Mars
     "Sagittarius": 12,  # Jupiter
-    "Capricorn": 27,    # Saturn (Valens uses 27, not 30)
-    "Aquarius": 30,     # Saturn
+    "Capricorn": 27,    # Saturn — Valens uses 27 for Capricorn (vs 30 for Aquarius;
+                        # traditional distinction: Capricorn gets "lesser" Saturn years)
+    "Aquarius": 30,     # Saturn — 30 "greater" years assigned to Saturn's airy domicile
     "Pisces": 12,       # Jupiter
 }
 
 _JD_PER_YEAR = 365.25
 _JD_PER_MONTH = _JD_PER_YEAR / 12.0
 _JD_PER_DAY = 1.0
+
+# How many JD days around target_jd to expand sub-periods in detail.
+# Periods outside this window only compute L1; those inside get L2 and L3.
+_NEAR_TARGET_WINDOW_DAYS = 365 * 10
 
 
 # ─────────────────────────────────────────────────────────────
@@ -222,7 +227,7 @@ def _compute_periods(
             sub_jd_unit = _JD_PER_MONTH if level == 1 else _JD_PER_DAY
             sub_max = 200
             # Only expand sub-periods near target to avoid combinatorial explosion
-            near_target = abs(target_jd - cur_jd) < 365 * 10
+            near_target = abs(target_jd - cur_jd) < _NEAR_TARGET_WINDOW_DAYS
             if near_target or is_current:
                 sub_periods = _compute_periods(
                     start_sign_idx=sign_idx,
