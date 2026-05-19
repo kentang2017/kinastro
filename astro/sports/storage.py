@@ -11,8 +11,7 @@ import json
 import sqlite3
 import os
 from datetime import datetime
-from dataclasses import asdict
-from .models import MatchInput, PredictionResult
+from .models import MatchInput, PredictionResult, TeamProfile
 
 
 # ============================================================
@@ -113,6 +112,18 @@ def _get_db():
             full_json TEXT
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS team_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            sport TEXT NOT NULL,
+            country TEXT,
+            founded_year INTEGER,
+            home_stadium TEXT,
+            tags_json TEXT NOT NULL DEFAULT '[]',
+            updated_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     return conn
 
@@ -183,3 +194,96 @@ def get_prediction_db(prediction_id: int) -> dict:
     if row:
         return json.loads(row[0])
     return {}
+
+
+def save_team_profile(profile: TeamProfile) -> int:
+    """儲存或更新球隊/選手資料。"""
+    conn = _get_db()
+    now = datetime.now().isoformat()
+    found = conn.execute(
+        "SELECT id FROM team_profiles WHERE name = ? AND sport = ?",
+        (profile.name, profile.sport),
+    ).fetchone()
+    tags_json = json.dumps(profile.tags, ensure_ascii=False)
+
+    if found:
+        row_id = int(found[0])
+        conn.execute(
+            """
+            UPDATE team_profiles
+            SET country=?, founded_year=?, home_stadium=?, tags_json=?, updated_at=?
+            WHERE id=?
+            """,
+            (
+                profile.country,
+                profile.founded_year,
+                profile.home_stadium,
+                tags_json,
+                now,
+                row_id,
+            ),
+        )
+    else:
+        cursor = conn.execute(
+            """
+            INSERT INTO team_profiles
+            (name, sport, country, founded_year, home_stadium, tags_json, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                profile.name,
+                profile.sport,
+                profile.country,
+                profile.founded_year,
+                profile.home_stadium,
+                tags_json,
+                now,
+            ),
+        )
+        row_id = int(cursor.lastrowid)
+
+    conn.commit()
+    conn.close()
+    return row_id
+
+
+def list_team_profiles(sport: str = "", limit: int = 50) -> list[dict]:
+    """列出球隊/選手資料。"""
+    conn = _get_db()
+    if sport:
+        rows = conn.execute(
+            """
+            SELECT id, name, sport, country, founded_year, home_stadium, tags_json, updated_at
+            FROM team_profiles
+            WHERE sport = ?
+            ORDER BY updated_at DESC
+            LIMIT ?
+            """,
+            (sport, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT id, name, sport, country, founded_year, home_stadium, tags_json, updated_at
+            FROM team_profiles
+            ORDER BY updated_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    conn.close()
+    out = []
+    for r in rows:
+        out.append(
+            {
+                "id": r[0],
+                "name": r[1],
+                "sport": r[2],
+                "country": r[3] or "",
+                "founded_year": r[4],
+                "home_stadium": r[5] or "",
+                "tags": json.loads(r[6] or "[]"),
+                "updated_at": r[7],
+            }
+        )
+    return out
