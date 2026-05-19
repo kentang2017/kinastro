@@ -87,7 +87,7 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
             mansion_degree=6.4,
         ),
         kaiyuan_renderer.KaiyuanObservation(
-            key="歲星（木）",
+            key="jupiter",
             label="歲星（木）",
             short_label="歲",
             icon="♃",

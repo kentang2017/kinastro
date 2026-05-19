@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import math
 import pathlib
+from functools import lru_cache
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -80,6 +81,7 @@ def _load_json(filename: str) -> Any:
         return json.load(f)
 
 
+@lru_cache(maxsize=1)
 def _load_five_planet_data() -> Dict[str, Dict[str, Any]]:
     """載入五星入宿占文，返回 {planet_name: {mansion: text}}"""
     file_map = {
@@ -99,6 +101,7 @@ def _load_five_planet_data() -> Dict[str, Dict[str, Any]]:
     return result
 
 
+@lru_cache(maxsize=1)
 def _load_moon_28_mansion() -> Dict[str, Any]:
     raw = _load_json("moon_28_mansion.json")
     if isinstance(raw, dict):
@@ -488,7 +491,7 @@ def _collect_live_omens(
     """收集即時星盤可直接對照的入宿占文。"""
     rows: List[Dict[str, Any]] = []
     for obs in observations:
-        # moon_28_data is a flat mapping {宿名: 占文}; five_planet_data is nested {星曜: {宿名: 占文}}
+        # moon_28_data is {宿名: 占文}; five_planet_data is {星曜: {宿名: 占文文本}}
         if obs.key == "moon":
             omen = moon_28_data.get(obs.mansion_name)
         else:
