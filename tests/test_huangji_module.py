@@ -1,4 +1,5 @@
 from astro.huangji import compute_huangji_pan
+from astro.huangji.huangji import EXPECTED_GUA_KEYS
 from astro.i18n import TRANSLATIONS
 from astro.system_registry import get_system, search_systems
 
@@ -24,7 +25,7 @@ def test_huangji_compute_basic_structure() -> None:
     assert 1 <= pan.hui <= 12
     assert 1 <= pan.yun <= 30
     assert 1 <= pan.shi <= 12
-    assert set(["正卦", "運卦", "世卦", "旬卦", "年卦", "月卦", "日卦", "時卦", "分卦"]).issubset(set(pan.gua.keys()))
+    assert set(EXPECTED_GUA_KEYS).issubset(set(pan.gua.keys()))
     payload = chart.to_dict()
     assert "huangji_pan" in payload
 

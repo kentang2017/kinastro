@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime
 from typing import Any
@@ -9,6 +10,8 @@ from typing import Any
 import swisseph as swe
 
 from astro.swe_init import init_swisseph
+
+logger = logging.getLogger(__name__)
 
 _SOLAR_TERMS_BY_LON = [
     (315.0, "立春", "Start of Spring"),
@@ -36,6 +39,8 @@ _SOLAR_TERMS_BY_LON = [
     (285.0, "小寒", "Lesser Cold"),
     (300.0, "大寒", "Greater Cold"),
 ]
+
+EXPECTED_GUA_KEYS = ("正卦", "運卦", "世卦", "旬卦", "年卦", "月卦", "日卦", "時卦", "分卦")
 
 
 @dataclass
@@ -102,7 +107,7 @@ class HuangjiPanResult:
 def _get_kinwangji_exports() -> tuple[Any, Any, Any, Any]:
     try:
         from kinwangji import display_pan, history_for_year, jq, wanji_four_gua
-    except Exception as exc:  # pragma: no cover
+    except (ImportError, ModuleNotFoundError) as exc:  # pragma: no cover
         raise ImportError(
             "kinwangji is required. Install via: pip install git+https://github.com/kentang2017/kinwangji.git"
         ) from exc
@@ -185,8 +190,8 @@ def _build_cross_system_snapshot(
         l1 = zr.get("spirit", {}).get("L1")
         if l1:
             out.zodiacal_releasing_l1 = f"Spirit L1：{l1.sign}（{l1.start_year}-{l1.end_year}）"
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Huangji cross-system western/hellenistic snapshot skipped: %s", exc)
 
     try:
         from astro.vedic.indian import compute_vedic_chart
@@ -212,8 +217,8 @@ def _build_cross_system_snapshot(
             )
             if current:
                 out.vedic_dasha = f"{current.lord_cn}大運（{current.start_date}～{current.end_date}）"
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Huangji cross-system vedic snapshot skipped: %s", exc)
 
     try:
         from astro.ziwei import compute_ziwei_chart
@@ -237,8 +242,8 @@ def _build_cross_system_snapshot(
         )
         if palace:
             out.ziwei_daxian = f"{age}歲｜{palace.name}（{palace.da_xian}）"
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Huangji cross-system ziwei snapshot skipped: %s", exc)
 
     return out
 
@@ -286,17 +291,7 @@ def compute_huangji_pan(
         hui_global=int(pan.get("會", 0)),
         yun_global=int(pan.get("運", 0)),
         shi_global=int(pan.get("世", 0)),
-        gua={
-            "正卦": pan.get("正卦", ""),
-            "運卦": pan.get("運卦", ""),
-            "世卦": pan.get("世卦", ""),
-            "旬卦": pan.get("旬卦", ""),
-            "年卦": pan.get("年卦", ""),
-            "月卦": pan.get("月卦", ""),
-            "日卦": pan.get("日卦", ""),
-            "時卦": pan.get("時卦", ""),
-            "分卦": pan.get("分卦", ""),
-        },
+        gua={k: pan.get(k, "") for k in EXPECTED_GUA_KEYS},
         moving_lines={
             "運卦動爻": int(pan.get("運卦動爻", 0) or 0),
             "世卦動爻": int(pan.get("世卦動爻", 0) or 0),

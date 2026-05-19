@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Callable
 
 from astro.chart_renderer_v2 import build_cultural_svg
@@ -23,8 +24,8 @@ def _build_huangji_wheel_svg(gua: dict[str, str]) -> str:
     nodes = []
     for i, (k, v) in enumerate(labels):
         ang = i * 45 - 90
-        x = cx + base_r * __import__("math").cos(__import__("math").radians(ang))
-        y = cy + base_r * __import__("math").sin(__import__("math").radians(ang))
+        x = cx + base_r * math.cos(math.radians(ang))
+        y = cy + base_r * math.sin(math.radians(ang))
         nodes.append(
             f'<g><circle cx="{x:.1f}" cy="{y:.1f}" r="33" fill="#1f1b2e" stroke="#b89a5a" stroke-width="1.2" />'
             f'<text x="{x:.1f}" y="{y-5:.1f}" text-anchor="middle" fill="#e6d4a1" font-size="16">{k}</text>'
