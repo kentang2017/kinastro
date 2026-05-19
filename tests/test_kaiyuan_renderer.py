@@ -131,7 +131,7 @@ def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
             mansion_degree=6.4,
         ),
         kaiyuan_renderer.KaiyuanObservation(
-            key="歲星（木）",
+            key="jupiter",
             label="歲星（木）",
             short_label="歲",
             icon="♃",
