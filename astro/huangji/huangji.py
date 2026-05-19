@@ -211,8 +211,13 @@ def _build_cross_system_snapshot(
         moon = next((p for p in vedic_chart.planets if "Chandra" in p.name), None)
         if moon:
             vim = compute_vimshottari(moon.longitude, vedic_chart.julian_day)
+            ref_y = int(reference_year)
             current = next(
-                (p for p in vim.mahadasha_periods if p.start_date[:4] <= str(reference_year) <= p.end_date[:4]),
+                (
+                    p
+                    for p in vim.mahadasha_periods
+                    if int(p.start_date.split("-", 1)[0]) <= ref_y <= int(p.end_date.split("-", 1)[0])
+                ),
                 vim.mahadasha_periods[0] if vim.mahadasha_periods else None,
             )
             if current:

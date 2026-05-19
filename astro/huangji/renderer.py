@@ -50,11 +50,17 @@ def render_streamlit(chart, *, lang: str = "zh", after_chart_hook: Callable[[], 
     t_cycles = "大週期" if lang == "zh" else "Macro Cycles"
     t_cross = "跨體系對照" if lang == "zh" else "Cross-System"
     t_history = "歷史年表" if lang == "zh" else "Historical Timeline"
+    t_title = "### 🏮 皇極經世（邵雍先天易數）" if lang == "zh" else "### 🏮 Huangji Jingshi (Shao Yong's Prenatal Number Doctrine)"
+    t_caption = (
+        "宋代書卷氣 × 現代極簡神秘風，觀物取象，推宇宙大數。"
+        if lang == "zh"
+        else "Song literati aesthetics × modern minimal mystery, observing macro-cycles through symbols."
+    )
 
     p = chart.huangji_pan
 
-    st.markdown("### 🏮 皇極經世（邵雍先天易數）")
-    st.caption("宋代書卷氣 × 現代極簡神秘風，觀物取象，推宇宙大數。")
+    st.markdown(t_title)
+    st.caption(t_caption)
 
     tab1, tab2, tab3, tab4 = st.tabs([t_basic, t_cycles, t_cross, t_history])
 
@@ -94,7 +100,18 @@ def render_streamlit(chart, *, lang: str = "zh", after_chart_hook: Callable[[], 
             {"系統": "紫微大限", "當前定位": chart.cross_system.ziwei_daxian or "—"},
         ]
         st.dataframe(rows, width="stretch", hide_index=True)
-        st.info("AI 交叉解讀模板：你當前位於皇極第 X 運 Y 世（某卦），與西方釋放期 / 紫微大限 / Vedic 大運形成同頻共振。")
+        current_gua = p.gua.get("世卦") or p.gua.get("運卦") or "—"
+        if lang == "zh":
+            ai_hint = (
+                f"AI 交叉解讀模板：你當前位於皇極第{p.yun}運第{p.shi}世（{current_gua}卦），"
+                "可與西方釋放期、紫微大限、Vedic 大運形成同頻綜合判讀。"
+            )
+        else:
+            ai_hint = (
+                f"AI synthesis template: you are currently in Huangji Yun {p.yun}, Shi {p.shi} "
+                f"({current_gua} hexagram), aligned with Zodiacal Releasing, Ziwei Daxian, and Vedic Dasha."
+            )
+        st.info(ai_hint)
 
     with tab4:
         if p.historical_context:
