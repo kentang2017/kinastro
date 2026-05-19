@@ -1062,24 +1062,26 @@ with st.sidebar:
                 st.session_state["_lon_input"] = _preset_lon
                 st.session_state["_tz_input"] = _preset_tz
 
-        st.session_state["_lat_input"] = _coerce_float_in_range(
-            st.session_state.get("_lat_input", _DEFAULT_LAT),
-            default=_DEFAULT_LAT,
-            min_value=-90.0,
-            max_value=90.0,
-        )
-        st.session_state["_lon_input"] = _coerce_float_in_range(
-            st.session_state.get("_lon_input", _DEFAULT_LON),
-            default=_DEFAULT_LON,
-            min_value=-180.0,
-            max_value=180.0,
-        )
-        st.session_state["_tz_input"] = _coerce_float_in_range(
-            st.session_state.get("_tz_input", _DEFAULT_TZ),
-            default=_DEFAULT_TZ,
-            min_value=-12.0,
-            max_value=14.0,
-        )
+        # Keep custom-mode state resilient against stale / out-of-range values.
+        if _is_custom and _prev_city == _CITY_CUSTOM_LABEL:
+            st.session_state["_lat_input"] = _coerce_float_in_range(
+                st.session_state.get("_lat_input", _DEFAULT_LAT),
+                default=_DEFAULT_LAT,
+                min_value=-90.0,
+                max_value=90.0,
+            )
+            st.session_state["_lon_input"] = _coerce_float_in_range(
+                st.session_state.get("_lon_input", _DEFAULT_LON),
+                default=_DEFAULT_LON,
+                min_value=-180.0,
+                max_value=180.0,
+            )
+            st.session_state["_tz_input"] = _coerce_float_in_range(
+                st.session_state.get("_tz_input", _DEFAULT_TZ),
+                default=_DEFAULT_TZ,
+                min_value=-12.0,
+                max_value=14.0,
+            )
 
         _coord_col1, _coord_col2 = st.columns(2)
         with _coord_col1:
