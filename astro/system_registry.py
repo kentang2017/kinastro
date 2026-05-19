@@ -147,6 +147,7 @@ _ACCENT = {
     "cat_middle_east":"#B8860B",  # 古金——中東體系
     "cat_africa":     "#8B4513",  # 赭紅——非洲體系
     "cat_ancient":    "#6B4226",  # 古銅——古文明
+    "cat_obscure":    "#5A3B2E",  # 深赭——隱祕與原民傳統
     "cat_yi_zhan":    "#1B5E20",  # 醫綠——醫占
     "cat_horary":     "#6A0DAD",  # 深紫——卜卦
 }
@@ -164,6 +165,7 @@ CATEGORY_ORDER: List[str] = [
     "cat_middle_east",
     "cat_africa",
     "cat_ancient",
+    "cat_obscure",
     "cat_yi_zhan",
     "cat_horary",
 ]
@@ -181,6 +183,7 @@ CATEGORY_ICONS: Dict[str, str] = {
     "cat_middle_east":"🕌",
     "cat_africa":     "🌍",
     "cat_ancient":    "🏺",
+    "cat_obscure":    "🜁",
     "cat_yi_zhan":    "⚕️",
     "cat_horary":     "📜",
 }
@@ -1571,6 +1574,25 @@ _reg(System(
     origin_culture="Arabic / Medieval European",
     tradition_period="Medieval (Picatrix, 10th–11th c.)",
     ai_persona_key="info_picatrix_behenian_prompt",
+))
+
+
+_reg(System(
+    id="tab_armenian",
+    name_zh="亞美尼亞占星",
+    name_en="Armenian Astrology",
+    category="cat_obscure",
+    icon="✶",
+    tab_key="tab_armenian",
+    desc_key="desc_armenian",
+    spinner_key="spinner_armenian",
+    hint_key="sys_hint_armenian",
+    tags=["armenian", "haykian", "arevakhach", "obscure", "indigenous", "zodiac"],
+    maturity="beta",
+    accent_color=_a("cat_obscure"),
+    origin_culture="Armenian Highlands",
+    tradition_period="Ancient to Medieval Armenian Traditions",
+    ai_persona_key="info_armenian_prompt",
 ))
 
 

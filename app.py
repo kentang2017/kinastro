@@ -118,6 +118,8 @@ from astro.polynesian_hawaiian.calculator import compute_polynesian_chart
 from astro.polynesian_hawaiian.renderer import render_streamlit as render_polynesian_chart_ui
 from astro.andean import compute_andean_chart as _compute_andean_chart_fn
 from astro.andean import render_streamlit as render_andean_chart_ui
+from astro.systems.obscure import compute_armenian_chart as _compute_armenian_chart_fn
+from astro.systems.obscure import render_streamlit as render_armenian_chart_ui
 from astro.etruscan import compute_etruscan_chart as _compute_etruscan_chart_fn
 from astro.etruscan import render_streamlit as render_etruscan_chart_ui
 from astro.astronomical_geomancy import (
@@ -258,9 +260,12 @@ def render_homepage():
         ("🌍", "非洲體系", "African Systems",
          ["衣索比亞 Bahre Hasab", "多貢天狼星宇宙學"],
          "#B07D42", "rgba(176,125,66,0.1)", "rgba(176,125,66,0.22)"),
+        ("🜁", "隱祕與原民傳統", "Obscure & Indigenous",
+         ["亞美尼亞占星"],
+         "#A06C3B", "rgba(160,108,59,0.1)", "rgba(160,108,59,0.22)"),
         ("🏺", "古代文明", "Ancient Civilizations",
          ["瑪雅占星", "印加／安地斯占星", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞", "伊特魯里亞占星"],
-           "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
+            "#D4A04A", "rgba(212,160,74,0.1)", "rgba(212,160,74,0.22)"),
         ("⚕️", "醫占", "Medical Astrology",
          ["醫學占星", "傷寒鈐法"],
          "#2ECC71", "rgba(46,204,113,0.1)", "rgba(46,204,113,0.22)"),
@@ -4233,6 +4238,34 @@ if not _engine_handled:
         else:
             st.info(t("info_maya_prompt"))
             st.markdown(t("desc_maya"))
+
+    # --- Armenian Astrology ---
+    elif _selected_system == "tab_armenian":
+        if _is_calculated:
+            try:
+                _p = st.session_state["_calc_params"]
+                with st.spinner(t("spinner_armenian")):
+                    _armenian_chart = _compute_armenian_chart_fn(
+                        year=_p["year"],
+                        month=_p["month"],
+                        day=_p["day"],
+                        hour=_p["hour"],
+                        minute=_p["minute"],
+                        timezone=_p["timezone"],
+                        latitude=_p["latitude"],
+                        longitude=_p["longitude"],
+                        location_name=_p.get("location_name", ""),
+                    )
+                render_armenian_chart_ui(
+                    _armenian_chart,
+                    after_chart_hook=lambda: _render_ai_button("tab_armenian", _armenian_chart, btn_key="armenian"),
+                )
+            except Exception as _e:
+                st.error(f"{t('error_tab_compute')}：{_e}")
+                st.exception(_e)
+        else:
+            st.info(t("info_armenian_prompt"))
+            st.markdown(t("desc_armenian"))
 
     # --- 印加 / 安地斯占星 ---
     elif _selected_system == "tab_andean":
