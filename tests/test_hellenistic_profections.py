@@ -135,7 +135,31 @@ class TestMonthlyProfections:
             expected = ZODIAC_SIGNS[(0 + i) % 12]
             assert months[i].sign == expected
 
-    def test_birthday_helper_leap_year(self) -> None:
+    def test_monthly_house_relative_to_asc(self) -> None:
+        """Monthly profection house numbers are relative to natal Ascendant."""
+        # ASC at 15° Aries (idx 0)
+        months = compute_monthly_profections(
+            asc_lon=15.0, birth_year=1990, birth_month=1, birth_day=1, num_years=1,
+        )
+        # Age 0, month 0: house 1 (annual sign = Aries = ASC sign)
+        assert months[0].house == 1
+        # Age 0, month 1: house 2 (Taurus)
+        assert months[1].house == 2
+        # Age 0, month 11: house 12 (Pisces)
+        assert months[11].house == 12
+
+    def test_monthly_house_non_aries_asc(self) -> None:
+        """Monthly house numbers work correctly for non-Aries ASC."""
+        # ASC at 75° = 15° Gemini (idx 2)
+        months = compute_monthly_profections(
+            asc_lon=75.0, birth_year=1990, birth_month=1, birth_day=1, num_years=1,
+        )
+        # Age 0, month 0: annual sign = Gemini → house 1
+        assert months[0].house == 1
+        assert months[0].sign == "Gemini"
+        # Age 0, month 1: Cancer → house 2
+        assert months[1].house == 2
+        assert months[1].sign == "Cancer"
         """Feb 29 birth handled gracefully for non-leap years."""
         d = _birthday_for_age(2000, 2, 29, 1)   # 2001 is not a leap year
         assert d == date(2001, 3, 1)

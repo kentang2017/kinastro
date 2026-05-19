@@ -272,7 +272,8 @@ def compute_monthly_profections(
             monthly_sign_idx = (annual_sign_idx + month_offset) % 12
             sign = ZODIAC_SIGNS[monthly_sign_idx]
             lord = SIGN_RULERS[sign]
-            house = monthly_sign_idx % 12 + 1
+            # House is the position of the monthly sign relative to the natal Ascendant
+            house = (monthly_sign_idx - asc_sign_idx) % 12 + 1
 
             # Approximate start date: birthday + ~30 days per month
             approx_start = birthday + timedelta(days=month_offset * 30)
