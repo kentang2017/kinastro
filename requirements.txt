@@ -17,4 +17,3 @@ numpy>=1.24.0
 taixuanshifa>=1.0.8
 yfinance>=0.2.36
 akshare>=1.18.60
-ephem>=4.1.3
