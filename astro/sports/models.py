@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass, field
 from typing import Literal, Optional
-from kinastro_vs.asian_handicap import HandicapAnalysis
+from .asian_handicap import HandicapAnalysis
 
 
 @dataclass
