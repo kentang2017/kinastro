@@ -4658,7 +4658,7 @@ if not _engine_handled:
                         asc_lon=_hellen_chart.ascendant,
                         birth_year=birth_date.year,
                         num_years=24,
-                        lang=lang,
+                        lang=get_lang(),
                     )
                 with _h_tab_zr:
                     # Retrieve Lot of Fortune and Lot of Spirit longitudes
@@ -4673,7 +4673,7 @@ if not _engine_handled:
                         spirit_lon=_zr_spirit_lon,
                         birth_jd=_hellen_w.julian_day,
                         target_jd=_hellen_w.julian_day + (datetime.now().year - birth_date.year) * 365.25,
-                        lang=lang,
+                        lang=get_lang(),
                     )
                 with _h_tab_lots:
                     if _hellen_chart.lots:
