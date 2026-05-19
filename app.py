@@ -133,6 +133,7 @@ from astro.zurkhai import compute_zurkhai_chart, render_zurkhai_chart
 from astro.tibetan import compute_tibetan_chart, render_tibetan_chart, build_kalachakra_mandala_svg
 from astro.western.hellenistic import (compute_hellenistic_chart, render_hellenistic_chart, build_greek_horoscope_svg,
                                       compute_hellenistic_extended, render_extended_lots, render_valens_combinations)
+from frontend.hellenistic_enhanced_renderer import (render_annual_profections, render_zodiacal_releasing)
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg, build_k8538_planisphere_svg
 from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni_manzil_mandala_svg
 from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
@@ -4620,21 +4621,27 @@ if not _engine_handled:
                 with _h_tab_natal:
                     render_hellenistic_chart(_hellen_chart)
                 with _h_tab_prof:
-                    if _hellen_chart.profection:
-                        pf = _hellen_chart.profection
-                        st.subheader(t("hellen_profections_header"))
-                        st.metric("Age", pf.current_age)
-                        st.metric("Profected Sign", f"{pf.profected_sign} ({auto_cn(pf.profected_sign_cn)})")
-                        st.metric("Time Lord", f"{pf.time_lord} ({auto_cn(pf.time_lord_cn)})")
-                        st.info(f"House from Ascendant: {pf.house_from_asc}")
+                    render_annual_profections(
+                        asc_lon=_hellen_chart.ascendant,
+                        birth_year=birth_date.year,
+                        num_years=24,
+                        lang=lang,
+                    )
                 with _h_tab_zr:
-                    if _hellen_chart.zodiacal_releasing:
-                        st.subheader(t("hellen_zr_header"))
-                        st.dataframe([{"Sign": p.sign, "CN": auto_cn(p.sign_cn),
-                                       "Ruler": p.ruler, "Years": p.years,
-                                       "Start": p.start_date, "End": p.end_date}
-                                      for p in _hellen_chart.zodiacal_releasing],
-                                     width="stretch")
+                    # Retrieve Lot of Fortune and Lot of Spirit longitudes
+                    _zr_fortune_lon = next(
+                        (l.longitude for l in _hellen_chart.lots if "Fortune" in l.name), 0.0
+                    )
+                    _zr_spirit_lon = next(
+                        (l.longitude for l in _hellen_chart.lots if "Spirit" in l.name), 0.0
+                    )
+                    render_zodiacal_releasing(
+                        fortune_lon=_zr_fortune_lon,
+                        spirit_lon=_zr_spirit_lon,
+                        birth_jd=_hellen_w.julian_day,
+                        target_jd=_hellen_w.julian_day + (datetime.now().year - birth_date.year) * 365.25,
+                        lang=lang,
+                    )
                 with _h_tab_lots:
                     if _hellen_chart.lots:
                         st.subheader(t("hellen_lots_header"))
