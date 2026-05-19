@@ -124,6 +124,10 @@ def render_armenian_page(chart: Any, after_chart_hook=None):
     with tabs[2]:
         chips = " ".join([f'<span class="arm-chip">{k}</span>' for k in chart.ancestral_keywords])
         st.markdown(chips or "—", unsafe_allow_html=True)
+        st.caption(
+            "These keys are the recommended structured fields to pass into Cerebras/Ollama "
+            "for Armenian-style readings and cross-system comparison."
+        )
         st.caption("Prompt payload keys: natal_summary, transit_hits, progression_hits, solar_return, haykian_date, ancestral_keywords, comparison_targets")
 
     with tabs[3]:

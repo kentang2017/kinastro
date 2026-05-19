@@ -65,6 +65,10 @@ class ArmenianChart(BaseChart):
 
     @staticmethod
     def _to_haykian_date(year: int, month: int, day: int, latitude: float) -> Dict[str, Any]:
+        # MVP approximation:
+        # - Converts Gregorian day-of-year into 30-day blocks (1..13)
+        # - Intended for interpretive UI context only, not strict historical chronology
+        # - Replace with a full Haykian epoch/overflow-day model in a future revision
         day_of_year = date(year, month, day).timetuple().tm_yday
         hayk_year = year + 551
         hayk_month = ((day_of_year - 1) // 30) + 1
