@@ -13,6 +13,8 @@ try:
 except Exception:  # pragma: no cover
     MANUSCRIPT_THEMES = {}
 
+INACTIVE_PERIOD_OPACITY = 0.42
+
 
 def _period_span_degrees(period: KetikaPeriod) -> Tuple[float, float]:
     """24 小時映射為 360 度。"""
@@ -52,7 +54,7 @@ def make_wheel(
         theta_center = start_deg + span_deg / 2
         period_name = period.name_zh if lang == "zh" else period.name_en
         fortune_label = FORTUNE_LABELS[period.fortune][lang]
-        opacity = 1.0 if current_index in (None, period.index) else 0.42
+        opacity = 1.0 if current_index in (None, period.index) else INACTIVE_PERIOD_OPACITY
         fig.add_trace(
             go.Barpolar(
                 r=[1],

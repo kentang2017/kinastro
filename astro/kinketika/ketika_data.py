@@ -35,7 +35,7 @@ class KetikaPeriod:
     """單一時段資料。"""
 
     index: int
-    name_malay: str
+    name_malay: str  # 保留原始傳統命名，必要時可附帶祈禱時段註記（如 Subuh）
     name_en: str
     name_zh: str
     time_start: str

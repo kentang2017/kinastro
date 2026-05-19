@@ -34,14 +34,15 @@ class KinketikaEngine:
     def get_current_period(self, system: SystemKey, moment: datetime) -> KetikaPeriod:
         """依輸入時間取得當前時段。"""
         now_min = moment.hour * 60 + moment.minute
-        for period in self.get_periods(system):
+        periods = self.get_periods(system)
+        for period in periods:
             start_min = time_to_minutes(period.time_start)
             end_min = time_to_minutes(period.time_end)
             if start_min < end_min and start_min <= now_min < end_min:
                 return period
             if start_min >= end_min and (now_min >= start_min or now_min < end_min):
                 return period
-        return self.get_periods(system)[0]
+        raise ValueError(f"No matching period for system={system}, minute={now_min}, periods={len(periods)}")
 
     def get_activity_plan(self, system: SystemKey, activity_key: str) -> Dict[str, List[KetikaPeriod]]:
         """回傳指定活動的推薦與禁忌時段。"""
