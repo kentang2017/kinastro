@@ -2155,6 +2155,9 @@ transmitted by **Chen Xiyi**.
     "sys_hint_jaimini": {"zh": "Jaimini Sutras 古法占星", "en": "Jaimini Sutras ancient Vedic astrology"},
     "sys_hint_twelve_ci": {"zh": "中國古代木星分野系統", "en": "Ancient Chinese Jupiter-station system"},
     "sys_hint_tojeong": {"zh": "朝鮮時代土亭子占數系統", "en": "Joseon Dynasty Tojeong numerology system"},
+    "sys_hint_huangji_short": {"zh": "邵雍皇極經世・元會運世宏觀週期", "en": "Shao Yong's macro cosmic cycles (Yuan-Hui-Yun-Shi)"},
+    "sys_hint_armenian_short": {"zh": "亞美尼亞黃道・Haykian 古曆・Arevakhach 象徵", "en": "Armenian zodiac, Haykian calendar & Arevakhach symbolism"},
+    "sys_hint_sports_astrology_short": {"zh": "Frawley 運動卜卦・1/7宮勝負判斷", "en": "Frawley sports horary & event-chart win judgment"},
 
     # ── 十二星次 (Twelve Ci) ────────────────────────────────────
     "tab_twelve_ci": {"zh": "🌌 十二星次", "en": "🌌 Twelve Ci"},
