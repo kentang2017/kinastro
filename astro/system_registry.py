@@ -1253,6 +1253,34 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_kinketika",
+    name_zh="馬來七星五刻占卜",
+    name_en="Kinketika (Malay Time Divination)",
+    category="cat_asian",
+    icon="🌙",
+    tab_key="tab_kinketika",
+    desc_key="desc_kinketika",
+    spinner_key="spinner_kinketika",
+    hint_key="sys_hint_kinketika",
+    tags=[
+        "kinketika",
+        "ketika lima",
+        "bintang tujuh",
+        "malay time divination",
+        "nusantara",
+        "bugis",
+        "makassar",
+        "electional",
+        "asian",
+    ],
+    maturity="beta",
+    accent_color=_a("cat_asian"),
+    origin_culture="Malay / Nusantara / Bugis-Makassar",
+    tradition_period="Malay Islamic manuscripts & Bugis-Makassar practice",
+    ai_persona_key="info_kinketika_prompt",
+))
+
+_reg(System(
     id="tab_zurkhai",
     name_zh="蒙古祖爾海",
     name_en="Mongolian Zurkhai",

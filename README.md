@@ -54,9 +54,9 @@
 
 ## 🧭 體系總覽 | Systems at a Glance
 
-> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 → 非洲 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；目前清單已與側邊欄同步，納入馬來伊斯蘭占星 Bintang Duabelas（十二星）、地占占星（Astronomical Geomancy）、伊特魯里亞占星（Etruscan Astrology）、吠陀風水（Vastu Shastra）、歐洲地占（European Geomancy）、弗拉德命運輪盤（Fludd Rota Simulator）、煉金占星（Alchemical Astrology）與衣索比亞 Bahre Hasab（Ethiopian Bahre Hasab）
+> 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 → 非洲 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；目前清單已與側邊欄同步，納入馬來伊斯蘭占星 Bintang Duabelas（十二星）、馬來七星五刻占卜 Kinketika、地占占星（Astronomical Geomancy）、伊特魯里亞占星（Etruscan Astrology）、吠陀風水（Vastu Shastra）、歐洲地占（European Geomancy）、弗拉德命運輪盤（Fludd Rota Simulator）、煉金占星（Alchemical Astrology）與衣索比亞 Bahre Hasab（Ethiopian Bahre Hasab）
 >
-> *Systems displayed by category: Popular → Three Formulae → Chinese → Western → Indian → Asian → Middle East → Africa → Ancient → Medical Astrology (incl. Byzantine Astrology) → Traditional Horary → Electional; the list is now aligned with the sidebar and includes Bintang Duabelas (Twelve Stars), Astronomical Geomancy, Etruscan Astrology, Vastu Shastra, European Geomancy, Fludd Rota Simulator, Alchemical Astrology, and Ethiopian Bahre Hasab*
+> *Systems displayed by category: Popular → Three Formulae → Chinese → Western → Indian → Asian → Middle East → Africa → Ancient → Medical Astrology (incl. Byzantine Astrology) → Traditional Horary → Electional; the list is now aligned with the sidebar and includes Bintang Duabelas (Twelve Stars), Kinketika (Malay Time Divination), Astronomical Geomancy, Etruscan Astrology, Vastu Shastra, European Geomancy, Fludd Rota Simulator, Alchemical Astrology, and Ethiopian Bahre Hasab*
 
 | # | 體系 System | 黃道 Zodiac | 子功能 Sub-features |
 |:-:|---|---|---|
