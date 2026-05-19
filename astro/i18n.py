@@ -4319,6 +4319,37 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "👈 請在左側輸入問卦時間與地點，點擊「開始排盤」後在卜卦占星頁面輸入問題進行判斷。",
         "en": "👈 Enter the time and location of the question on the left, then click 'Calculate Chart' and enter your question in the Horary tab.",
     },
+    "tab_sports_astrology": {
+        "zh": "🏟️ 運動占星",
+        "en": "🏟️ Sports Astrology",
+    },
+    "desc_sports_astrology": {
+        "zh": (
+            "🏟️ **運動占星（Sports Astrology）** — 以 John Frawley 傳統問卜法為主軸，"
+            "結合比賽開賽 Event Chart 與球隊/選手本命對照。"
+            "核心判準含 1宮/7宮主星、尊貴、入相/離相、Reception、10宮勝利、"
+            "6/12宮傷病風險、月亮流程與爆冷指標，輸出概率化勝負傾向。"
+        ),
+        "en": (
+            "🏟️ **Sports Astrology** — centered on John Frawley's traditional horary method, "
+            "combined with event-chart kickoff timing and team/player natal comparison. "
+            "Core testimonies include 1st/7th lords, dignities, applying/separating aspects, "
+            "reception, 10th-house victory indications, 6th/12th injury risk, lunar flow, "
+            "and upset indicators with probabilistic output."
+        ),
+    },
+    "spinner_sports_astrology": {
+        "zh": "正在計算運動占星分析…",
+        "en": "Computing sports astrology analysis…",
+    },
+    "sys_hint_sports_astrology": {
+        "zh": "Frawley 運動占星、1/7宮勝負、Event Chart、球隊本命對照、爆冷指標",
+        "en": "Frawley sports horary, 1st/7th win judgment, event chart, team natal comparison, upset indicators",
+    },
+    "info_sports_astrology_prompt": {
+        "zh": "👈 請先輸入比賽與隊伍資訊，再執行運動占星分析以取得勝率傾向與關鍵證據。",
+        "en": "👈 Enter match and team details, then run sports astrology analysis for win probabilities and key testimonies.",
+    },
     "tab_esoteric": {
         "zh": "✨ 靈性占星（七道光線）",
         "en": "✨ Esoteric Astrology (Seven Rays)",
