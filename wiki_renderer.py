@@ -202,6 +202,7 @@ _CATEGORY_LABELS: dict[str, tuple[str, str]] = {
     "asian":      ("🌏 亞洲體系", "🌏 Asian"),
     "african":    ("🌍 非洲體系", "🌍 African"),
     "indigenous": ("🌿 原住民體系", "🌿 Indigenous"),
+    "obscure":   ("🜁 隱祕與原民傳統", "🜁 Obscure & Indigenous"),
     "middle_east":("🕌 中東體系", "🕌 Middle Eastern"),
 }
 
@@ -250,6 +251,7 @@ _CAT_COLORS = {
     "asian":      "#6ee8c5",
     "african":    "#a8e86e",
     "indigenous": "#c56ee8",
+    "obscure":   "#a67c52",
     "middle_east":"#e8a86e",
 }
 

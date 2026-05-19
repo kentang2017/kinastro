@@ -31,6 +31,13 @@ WESTERN_SIGNS_CN = {
     "Capricorn": "摩羯座", "Aquarius": "水瓶座", "Pisces": "雙魚座",
 }
 
+ARMENIAN_SIGNS_HY = {
+    "Aries": "Խոյ", "Taurus": "Ցուլ", "Gemini": "Երկվորյակ",
+    "Cancer": "Խեցգետին", "Leo": "Առյուծ", "Virgo": "Կույս",
+    "Libra": "Կշեռք", "Scorpio": "Կարիճ", "Sagittarius": "Աղեղնավոր",
+    "Capricorn": "Այծեղջյուր", "Aquarius": "Ջրհոս", "Pisces": "Ձկներ",
+}
+
 
 @dataclass
 class UnifiedPlanetPosition:
@@ -41,6 +48,7 @@ class UnifiedPlanetPosition:
     western_sign: str = ""
     western_sign_cn: str = ""
     western_degree: float = 0.0
+    armenian_sign_hy: str = ""
     vedic_rashi: str = ""
     vedic_rashi_cn: str = ""
     nakshatra: str = ""
@@ -109,6 +117,7 @@ def compute_cross_comparison(chinese_chart, western_chart, vedic_chart, include_
             up.western_sign = getattr(w_planet, 'sign', '')
             up.western_sign_cn = WESTERN_SIGNS_CN.get(up.western_sign, '')
             up.western_degree = round(w_planet.longitude % 30, 2)
+            up.armenian_sign_hy = ARMENIAN_SIGNS_HY.get(up.western_sign, "")
             
             # Add Sabian Symbol
             if include_sabian and SABIAN_AVAILABLE:
@@ -155,6 +164,7 @@ def render_cross_comparison(result):
             "Vedic": p.vedic_rashi or "—",
             "Nakshatra": p.nakshatra or "—",
             "Chinese": p.chinese_sign or "—",
+            "Armenian": p.armenian_sign_hy or "—",
         })
     if data:
         st.dataframe(data, width="stretch")
@@ -324,3 +334,22 @@ def render_celtic_tree_comparison(celtic_chart) -> None:
     }
     st.table(pd.DataFrame.from_dict(data, orient="index", columns=["值" if is_zh else "Value"]))
 
+
+
+# TODO: Call this helper from the multi-system UI pipeline when Armenian chart
+# data is included in a comparison payload.
+def add_armenian_to_comparison(result, armenian_chart):
+    """Augment CrossCompareResult with Armenian sign labels from ArmenianChart."""
+    if armenian_chart is None:
+        return result
+
+    planet_map = {}
+    for p in getattr(armenian_chart, "planets", []):
+        k = p.name.split(" ")[0]
+        planet_map[k] = p
+
+    for up in result.planets:
+        ap = planet_map.get(up.canonical_name)
+        if ap:
+            up.armenian_sign_hy = getattr(ap, "sign_hy", up.armenian_sign_hy)
+    return result

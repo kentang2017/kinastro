@@ -2111,6 +2111,7 @@ transmitted by **Chen Xiyi**.
     "cat_middle_east": {"zh": "中東體系", "en": "Middle Eastern Systems"},
     "cat_africa": {"zh": "非洲體系", "en": "African Systems"},
     "cat_ancient": {"zh": "古文明", "en": "Ancient Civilizations"},
+    "cat_obscure": {"zh": "隱祕與原民傳統", "en": "Obscure & Indigenous Traditions"},
     "cat_yi_zhan": {"zh": "醫占", "en": "Medical Astrology"},
     "cat_horary": {"zh": "傳統卜卦占星", "en": "Traditional Horary Astrology"},
     "cat_korean": {"zh": "韓國體系", "en": "Korean Systems"},
@@ -4242,9 +4243,47 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "皮亞琴察青銅肝臟，天宮16區，廷尼亞九雷，haruspicy，閃電占卜",
         "en": "Piacenza Bronze Liver, Templum XVI, Tinia's nine thunderbolts, haruspicy, lightning divination",
     },
+    "sys_hint_armenian": {
+        "zh": "亞美尼亞黃道、Haykian 古曆、Orion(Hayk) 連結、Arevakhach 象徵與古手稿美學",
+        "en": "Armenian zodiac names, Haykian calendar mapping, Orion/Hayk linkage, Arevakhach symbolism and manuscript aesthetics",
+    },
     "info_etruscan_prompt": {
         "zh": "👈 請在左側輸入排盤資料，點擊「開始排盤」以查看你的伊特魯里亞天宮排盤、皮亞琴察肝臟視覺化，以及閃電神諭解讀。",
         "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view your Etruscan Templum chart, the interactive Piacenza Liver, and the lightning oracle reading.",
+    },
+    "tab_armenian": {
+        "zh": "✶ 亞美尼亞占星",
+        "en": "✶ Armenian Astrology",
+    },
+    "desc_armenian": {
+        "zh": (
+            "### Armenian Astrology（亞美尼亞占星）\n\n"
+            "以 **Swiss Ephemeris** 為計算核心（預設 Tropical，可選 Sidereal），"
+            "並將十二宮星座名稱完整映射為亞美尼亞語符號系統。\n\n"
+            "- Armenian Zodiac 名稱（英語 + Հայերեն + transliteration）\n"
+            "- Haykian Calendar 近似換算（MVP）\n"
+            "- Orion / Hayk 可見度旗標\n"
+            "- 祖靈／命運關鍵詞（luminary + angular house）\n"
+            "- 支援 Natal、Transit、Secondary Progression、Solar Return"
+        ),
+        "en": (
+            "### Armenian Astrology\n\n"
+            "MVP built on Swiss Ephemeris computations (Tropical by default, optional Sidereal), "
+            "with sign metadata remapped to Armenian naming and symbolic context.\n\n"
+            "- Armenian zodiac names (EN + Armenian + transliteration)\n"
+            "- Haykian calendar approximation\n"
+            "- Orion/Hayk visibility marker\n"
+            "- Ancestral keywords (luminaries + angular houses)\n"
+            "- Natal, Transit, Secondary Progression, Solar Return"
+        ),
+    },
+    "spinner_armenian": {
+        "zh": "正在計算亞美尼亞星盤…",
+        "en": "Computing Armenian chart…",
+    },
+    "info_armenian_prompt": {
+        "zh": "👈 請在左側輸入出生資料，點擊「開始排盤」以查看 Armenian Zodiac 映射、Haykian 古曆與文化註記。",
+        "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view Armenian zodiac mapping, Haykian calendar markers, and cultural notes.",
     },
     "tab_horary": {
         "zh": "📜 傳統卜卦占星",
