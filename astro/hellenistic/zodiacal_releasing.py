@@ -81,7 +81,7 @@ SIGN_MINOR_YEARS: dict[str, int] = {
 }
 
 _JD_PER_YEAR = 365.25
-_JD_PER_MONTH = _JD_PER_YEAR / 12.0
+_JD_PER_MONTH = 30.0          # 360-day year / 30-day month (Valens standard)
 _JD_PER_DAY = 1.0
 
 # How many JD days around target_jd to expand sub-periods in detail.
@@ -364,3 +364,100 @@ def get_current_periods(periods: list[ZRPeriod]) -> dict[str, ZRPeriod | None]:
                     break
             break
     return result
+
+
+# ─────────────────────────────────────────────────────────────
+# Valens Spirit-Fortune Same-Sign Rule
+# ─────────────────────────────────────────────────────────────
+
+def apply_spirit_fortune_rule(fortune_lon: float, spirit_lon: float) -> tuple[float, float]:
+    """Apply Valens' same-sign rule for Fortune and Spirit.
+
+    若幸運點與精神點同宮（同一星座），精神點往前移動一宮（+30°）。
+    幸運點不動。
+
+    Per Vettius Valens *Anthologies*: when Lot of Fortune and Lot of Spirit
+    fall in the same sign, Spirit is moved forward by one whole sign so that
+    the two Lots are separated.  Fortune remains unchanged.
+
+    Parameters
+    ----------
+    fortune_lon:
+        Longitude of the Lot of Fortune (0–360°).
+    spirit_lon:
+        Longitude of the Lot of Spirit (0–360°).
+
+    Returns
+    -------
+    tuple[float, float]
+        ``(fortune_lon, adjusted_spirit_lon)``
+    """
+    fortune_sign_idx = int(fortune_lon / 30) % 12
+    spirit_sign_idx = int(spirit_lon / 30) % 12
+
+    if fortune_sign_idx == spirit_sign_idx:
+        # Advance Spirit to next sign — keep degree-within-sign the same
+        adjusted = (spirit_lon + 30.0) % 360.0
+        return fortune_lon, adjusted
+
+    return fortune_lon, spirit_lon
+
+
+# ─────────────────────────────────────────────────────────────
+# High-Level Convenience Wrapper
+# ─────────────────────────────────────────────────────────────
+
+def get_current_periods_for_natal(
+    fortune_lon: float,
+    spirit_lon: float,
+    birth_jd: float,
+    target_jd: float,
+    apply_same_sign_rule: bool = True,
+    max_l1: int = 25,
+) -> dict[str, dict[str, ZRPeriod | None]]:
+    """Compute current L1/L2/L3 periods for both Fortune and Spirit lots.
+
+    方便日常使用的高階包裝函數：一次返回 Fortune 和 Spirit 的當前時主。
+
+    Parameters
+    ----------
+    fortune_lon:
+        Longitude of the Lot of Fortune.
+    spirit_lon:
+        Longitude of the Lot of Spirit.
+    birth_jd:
+        Julian Day of birth.
+    target_jd:
+        Target Julian Day (usually today).
+    apply_same_sign_rule:
+        Whether to apply Valens' Spirit-Fortune same-sign adjustment.
+    max_l1:
+        Maximum number of L1 periods to generate per lot.
+
+    Returns
+    -------
+    dict with keys ``"fortune"`` and ``"spirit"``, each containing a
+    ``{"L1": ZRPeriod|None, "L2": ZRPeriod|None, "L3": ZRPeriod|None}`` dict.
+    """
+    if apply_same_sign_rule:
+        fortune_lon, spirit_lon = apply_spirit_fortune_rule(fortune_lon, spirit_lon)
+
+    fortune_periods = compute_zodiacal_releasing_full(
+        lot_lon=fortune_lon,
+        birth_jd=birth_jd,
+        target_jd=target_jd,
+        source="fortune",
+        max_l1=max_l1,
+    )
+    spirit_periods = compute_zodiacal_releasing_full(
+        lot_lon=spirit_lon,
+        birth_jd=birth_jd,
+        target_jd=target_jd,
+        source="spirit",
+        max_l1=max_l1,
+    )
+
+    return {
+        "fortune": get_current_periods(fortune_periods),
+        "spirit": get_current_periods(spirit_periods),
+    }

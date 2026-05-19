@@ -38,6 +38,15 @@ from astro.egyptian.decans import compute_decan_chart
 from astro.vedic.nadi import compute_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart
 from astro.western.hellenistic import compute_hellenistic_chart
+from astro.hellenistic import (
+    compute_profections_table,
+    compute_monthly_profections,
+    get_current_profection,
+    compute_zodiacal_releasing_full,
+    get_current_periods,
+    apply_spirit_fortune_rule,
+    get_current_periods_for_natal,
+)
 from astro.damo import compute_damo_chart
 from astro.sanshi.liuren import compute_liuren_chart
 from astro.sanshi.taiyi import compute_taiyi_chart
@@ -148,6 +157,54 @@ class HellenisticParams(BirthParams):
         default=None,
         description="Current year for profections (defaults to now)",
     )
+
+
+class ProfectionsParams(BaseModel):
+    """Parameters for the Annual Profections endpoint."""
+
+    asc_lon: float = Field(
+        description="Natal Ascendant longitude in degrees (0–360).",
+        ge=0.0, lt=360.0,
+    )
+    birth_year: int = Field(description="Birth year (e.g. 1990).")
+    birth_month: int = Field(default=1, description="Birth month (1–12).", ge=1, le=12)
+    birth_day: int = Field(default=1, description="Birth day (1–31).", ge=1, le=31)
+    num_years: int = Field(default=48, description="Number of years to compute.", ge=1, le=120)
+    include_monthly: bool = Field(
+        default=False,
+        description="Also compute monthly profections for the current annual year.",
+    )
+    target_date: Optional[str] = Field(
+        default=None,
+        description="ISO date string 'YYYY-MM-DD' to evaluate (defaults to today).",
+    )
+
+
+class ZodiacalReleasingParams(BaseModel):
+    """Parameters for the Zodiacal Releasing endpoint."""
+
+    fortune_lon: float = Field(
+        description="Longitude of the Lot of Fortune (0–360).",
+        ge=0.0, lt=360.0,
+    )
+    spirit_lon: float = Field(
+        description="Longitude of the Lot of Spirit (0–360).",
+        ge=0.0, lt=360.0,
+    )
+    birth_jd: float = Field(description="Julian Day of birth.")
+    target_jd: Optional[float] = Field(
+        default=None,
+        description="Target Julian Day (defaults to today's JD).",
+    )
+    source: str = Field(
+        default="fortune",
+        description="Which lot to release from: 'fortune' or 'spirit'.",
+    )
+    apply_same_sign_rule: bool = Field(
+        default=True,
+        description="Apply Valens' Spirit-Fortune same-sign adjustment.",
+    )
+    max_l1: int = Field(default=25, description="Maximum L1 periods to generate.", ge=1, le=100)
 
 
 class ComputeAllParams(BirthParams):
@@ -642,6 +699,111 @@ async def hellenistic_chart(params: HellenisticParams) -> ChartResponse:
         return ChartResponse(system="hellenistic", data=data)
     except Exception as exc:
         logger.exception("Hellenistic chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/hellenistic/profections", response_model=ChartResponse, tags=["Hellenistic"])
+async def hellenistic_profections(params: ProfectionsParams) -> ChartResponse:
+    """Compute Annual (and optionally Monthly) Profections.
+
+    年度守護星（Annual Profections）API。
+
+    Returns a full profection table from birth up to *num_years*, plus an
+    optional monthly breakdown for the current year.  All periods include
+    house-from-ASC, Lord of the Year, element colour, and bilingual themes.
+    """
+    try:
+        from datetime import date as _date
+
+        target = _date.fromisoformat(params.target_date) if params.target_date else _date.today()
+        current_age = target.year - params.birth_year
+
+        annual = compute_profections_table(
+            asc_lon=params.asc_lon,
+            birth_year=params.birth_year,
+            num_years=params.num_years,
+            current_age=current_age,
+        )
+
+        result: dict[str, Any] = {
+            "annual": [r.to_dict() for r in annual],
+            "current": next((r.to_dict() for r in annual if r.is_current), None),
+        }
+
+        if params.include_monthly:
+            monthly = compute_monthly_profections(
+                asc_lon=params.asc_lon,
+                birth_year=params.birth_year,
+                birth_month=params.birth_month,
+                birth_day=params.birth_day,
+                target_date=target,
+                num_years=max(3, current_age + 1),
+            )
+            result["monthly"] = [m.to_dict() for m in monthly]
+            result["current_month"] = next((m.to_dict() for m in monthly if m.is_current), None)
+
+        return ChartResponse(system="hellenistic_profections", data=result)
+    except Exception as exc:
+        logger.exception("Profections computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/hellenistic/zodiacal-releasing", response_model=ChartResponse, tags=["Hellenistic"])
+async def hellenistic_zodiacal_releasing(params: ZodiacalReleasingParams) -> ChartResponse:
+    """Compute Zodiacal Releasing (L1 / L2 / L3) from a Lot longitude.
+
+    黃道釋放（Zodiacal Releasing）API，支援 L1/L2/L3 層級，
+    可從幸運點（Fortune）或精神點（Spirit）起算。
+
+    - Automatically applies the Valens Spirit-Fortune same-sign rule when
+      ``apply_same_sign_rule=true`` and ``source="spirit"``.
+    - Returns nested period data with ``is_current``, ``is_peak`` (angular
+      houses 1, 4, 7, 10 from the Lot), and ``is_loosening`` flags.
+    """
+    try:
+        import swisseph as _swe
+
+        target_jd = params.target_jd
+        if target_jd is None:
+            from datetime import date as _date
+            td = _date.today()
+            target_jd = _swe.julday(td.year, td.month, td.day)
+
+        fortune_lon = params.fortune_lon
+        spirit_lon = params.spirit_lon
+
+        if params.apply_same_sign_rule:
+            fortune_lon, spirit_lon = apply_spirit_fortune_rule(fortune_lon, spirit_lon)
+
+        lot_lon = fortune_lon if params.source == "fortune" else spirit_lon
+
+        l1_periods = compute_zodiacal_releasing_full(
+            lot_lon=lot_lon,
+            birth_jd=params.birth_jd,
+            target_jd=target_jd,
+            source=params.source,
+            max_l1=params.max_l1,
+        )
+
+        current = get_current_periods(l1_periods)
+
+        return ChartResponse(
+            system="hellenistic_zodiacal_releasing",
+            data={
+                "source": params.source,
+                "lot_lon": lot_lon,
+                "fortune_lon_used": fortune_lon,
+                "spirit_lon_used": spirit_lon,
+                "same_sign_rule_applied": params.apply_same_sign_rule,
+                "periods": [p.to_dict(include_subs=True) for p in l1_periods],
+                "current": {
+                    k: v.to_dict(include_subs=False) if v else None
+                    for k, v in current.items()
+                },
+            },
+        )
+    except Exception as exc:
+        logger.exception("Zodiacal Releasing computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
