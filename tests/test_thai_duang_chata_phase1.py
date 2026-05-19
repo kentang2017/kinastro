@@ -1,4 +1,4 @@
-"""Regression tests for astro/thai/duang_chata.py and astro/thai/renderer.py."""
+"""Phase-1 regression tests for astro/thai/duang_chata.py and astro/thai/renderer.py."""
 
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ def test_house_system_switch_and_serialization():
     assert len(payload["houses"]) == 12
     assert len(payload["planets"]) == 9
     assert payload["brahma_jati_profile"]["annual_position"]["position_number"] >= 1
-    assert payload["nine_palace_grid"]["brahma_jati_activation_palace"] in range(1, 10)
+    assert 1 <= payload["nine_palace_grid"]["brahma_jati_activation_palace"] <= 9
 
 
 def test_nine_palace_grid_and_brahma_jati_linkage():

@@ -1,7 +1,7 @@
 """Thai Duang Chata SVG renderers.
 
 Renderer helpers are isolated from computation and can be used by Streamlit or API
-output layers.
+output layers. Includes renderers for both Duang Chata wheels and Nine Palace grids.
 """
 
 from __future__ import annotations

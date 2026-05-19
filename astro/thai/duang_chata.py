@@ -893,7 +893,7 @@ def compute_nine_palace_grid(
                         f"{profile.annual_position.position_number} ({profile.annual_position.title['en']})."
                     ),
                     "zh": (
-                        f"พรหมชาติ流年輪今年落在第 {profile.annual_position.position_number} 位"
+                        f"婆羅門命輪今年落在第 {profile.annual_position.position_number} 位"
                         f"（{profile.annual_position.title['zh']}），因此啟動此宮。"
                     ),
                     "th": (
@@ -904,7 +904,7 @@ def compute_nine_palace_grid(
             elif palace_number == fortune_activation_palace:
                 activation_note = {
                     "en": f"Fortune number {chart.fortune_number} resonates directly with this palace.",
-                    "zh": f"เลขชะตา {chart.fortune_number} 與此宮共振，因此此宮更容易顯化。",
+                    "zh": f"命數 {chart.fortune_number} 與此宮共振，因此此宮更容易顯化。",
                     "th": f"เลขชะตา {chart.fortune_number} สัมพันธ์กับภพนี้โดยตรง จึงเป็นภพที่ออกผลไว",
                 }
 
