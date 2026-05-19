@@ -7,7 +7,6 @@ from astro.system_registry import get_system, search_systems
 
 
 def test_huangji_compute_basic_structure() -> None:
-    pytest.importorskip("kinwangji")
     chart = compute_huangji_pan(
         year=1990,
         month=1,

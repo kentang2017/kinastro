@@ -136,12 +136,10 @@ class HuangjiPanResult:
 
 
 def _get_kinwangji_exports() -> tuple[Any, Any, Any, Any]:
-    try:
-        from kinwangji import display_pan, history_for_year, jq, wanji_four_gua
-    except (ImportError, ModuleNotFoundError) as exc:  # pragma: no cover
-        raise ImportError(
-            "kinwangji is required. Install via: pip install git+https://github.com/kentang2017/kinwangji.git"
-        ) from exc
+    from astro.wangji.history import history_for_year
+    from astro.wangji.jieqi import jq
+    from astro.wangji.wanji import display_pan, wanji_four_gua
+
     return wanji_four_gua, display_pan, jq, history_for_year
 
 
