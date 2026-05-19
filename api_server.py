@@ -61,6 +61,7 @@ from astro.electional.calculator import (
     find_western_elections,
     find_vedic_muhurtas,
 )
+from astro.picatrix import generate_picatrix_talisman
 from astro.astronomical_geomancy.calculator import (
     compute_geomancy_chart,
     format_geomancy_for_prompt,
@@ -222,6 +223,25 @@ class ComputeAllParams(BirthParams):
     current_year: Optional[int] = Field(
         default=None,
         description="Current year for Hellenistic profections",
+    )
+
+
+class PicatrixTalismanParams(BirthParams):
+    """Parameters for Picatrix talismanic blueprint generation."""
+
+    purpose: str = Field(
+        default="wealth",
+        description="Intent such as love, wealth, protection, healing, success, harm.",
+    )
+    days_ahead: int = Field(
+        default=60,
+        ge=1,
+        le=90,
+        description="Election search window in days.",
+    )
+    include_harmful: bool = Field(
+        default=False,
+        description="Allow harm-related intents in research mode only.",
     )
 
 
@@ -602,6 +622,30 @@ async def arabic_chart(params: BirthParams) -> ChartResponse:
         return ChartResponse(system="arabic", data=data)
     except Exception as exc:
         logger.exception("Arabic chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/picatrix/talisman", response_model=ChartResponse, tags=["Systems"])
+async def picatrix_talisman_chart(params: PicatrixTalismanParams) -> ChartResponse:
+    """Generate a Picatrix talismanic election + blueprint payload."""
+    try:
+        data = generate_picatrix_talisman(
+            purpose=params.purpose,
+            year=params.year,
+            month=params.month,
+            day=params.day,
+            hour=params.hour,
+            minute=params.minute,
+            timezone_offset=params.timezone,
+            latitude=params.latitude,
+            longitude=params.longitude,
+            location_name=params.location_name,
+            days_ahead=params.days_ahead,
+            include_harmful=params.include_harmful,
+        )
+        return ChartResponse(system="picatrix_talisman", data=_chart_to_dict(data))
+    except Exception as exc:
+        logger.exception("Picatrix talisman computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
