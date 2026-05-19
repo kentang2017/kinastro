@@ -3640,6 +3640,43 @@ Enter your birth information to look up your tree month and its poetic attribute
         "zh": "邵康節洛陽派，洛書九宮配天干，四位數條文系統",
         "en": "Luoyang school, Lo Shu Nine Palaces, 4-digit verse system",
     },
+    "tab_huangji": {
+        "zh": "🏮 皇極經世",
+        "en": "🏮 Huangji Jingshi",
+    },
+    "desc_huangji": {
+        "zh": (
+            "🏮 **皇極經世（Huangji Jingshi）**\n\n"
+            "依邵雍《皇極經世》元會運世體系計算：\n"
+            "- 一元 = 129,600 年（12會 × 30運 × 12世 × 30年）\n"
+            "- 出生時間定位於 元/會/運/世 與先天四卦\n"
+            "- 對照歷史朝代年表，並提供與西洋/紫微/吠陀的跨系統時間主對照\n"
+            "- 節氣同時顯示 kinwangji 與 Swiss Ephemeris 驗證結果"
+        ),
+        "en": (
+            "🏮 **Huangji Jingshi** based on Shao Yong's Yuan–Hui–Yun–Shi doctrine:\n"
+            "- 1 Yuan = 129,600 years (12 Hui × 30 Yun × 12 Shi × 30 years)\n"
+            "- Locates natal time in cosmic cycles and mapped hexagrams\n"
+            "- Includes historical timeline context and cross-system time-lord comparison\n"
+            "- Shows both kinwangji and Swiss Ephemeris solar-term references"
+        ),
+    },
+    "spinner_huangji": {
+        "zh": "推演皇極經世元會運世中…",
+        "en": "Computing Huangji Yuan-Hui-Yun-Shi cycles…",
+    },
+    "sys_hint_huangji": {
+        "zh": "邵雍《皇極經世》・元會運世・先天四卦・歷史年表・跨體系時間主",
+        "en": "Shao Yong Huangji Jingshi · Yuan-Hui-Yun-Shi · four hexagrams · historical context · cross-system lords",
+    },
+    "info_huangji_prompt": {
+        "zh": "✦ 輸入出生資料後，系統將顯示你的皇極元會運世定位、四卦、歷史對照與跨體系時間主解讀。",
+        "en": "✦ Enter birth data to get Huangji cycle placement, four-hexagram mapping, historical context, and cross-system time-lord synthesis.",
+    },
+    "huangji_tab_basic": {"zh": "基本盤", "en": "Core Pan"},
+    "huangji_tab_cycles": {"zh": "大週期", "en": "Macro Cycles"},
+    "huangji_tab_cross": {"zh": "跨體系對照", "en": "Cross-System"},
+    "huangji_tab_history": {"zh": "歷史年表", "en": "Historical Timeline"},
     "tieban_ming_palace": {
         "zh": "命宮",
         "en": "Life Palace",

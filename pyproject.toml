@@ -17,6 +17,7 @@ dependencies = [
     "fpdf2>=2.7.6",
     "cerebras-cloud-sdk>=1.67.0",
     "kinqimen>=0.0.6.6",
+    "kinwangji @ git+https://github.com/kentang2017/kinwangji.git",
     "kintaiyi @ git+https://github.com/kentang2017/kintaiyi.git",
     "sxtwl>=2.0.6",
     "ichingshifa>=3.1.9",

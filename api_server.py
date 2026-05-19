@@ -37,6 +37,7 @@ from astro.mahabote import compute_mahabote_chart
 from astro.egyptian.decans import compute_decan_chart
 from astro.vedic.nadi import compute_nadi_chart
 from astro.zurkhai import compute_zurkhai_chart
+from astro.huangji import compute_huangji_pan
 from astro.western.hellenistic import compute_hellenistic_chart
 from astro.hellenistic import (
     compute_profections_table,
@@ -158,6 +159,15 @@ class HellenisticParams(BirthParams):
     current_year: Optional[int] = Field(
         default=None,
         description="Current year for profections (defaults to now)",
+    )
+
+
+class HuangjiParams(BirthParams):
+    """Huangji system optional reference year for timeline/cross-system view."""
+
+    reference_year: Optional[int] = Field(
+        default=None,
+        description="Reference year for timeline and cross-system snapshot (defaults to now)",
     )
 
 
@@ -479,6 +489,38 @@ def _cached_damo(key: str, year: int, month: int, day: int, hour: int,
 
 
 @lru_cache(maxsize=256)
+def _cached_huangji(
+    key: str,
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    timezone: float,
+    latitude: float,
+    longitude: float,
+    location_name: str,
+    reference_year: Optional[int] = None,
+) -> dict:
+    chart = compute_huangji_pan(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        location_name=location_name,
+        reference_year=reference_year,
+        include_cross_system=True,
+    )
+    if hasattr(chart, "to_dict"):
+        return _make_serializable(chart.to_dict())
+    return _chart_to_dict(chart)
+
+
+@lru_cache(maxsize=256)
 def _cached_liuren(key: str, year: int, month: int, day: int, hour: int,
                    minute: int, timezone: float, latitude: float,
                    longitude: float, location_name: str) -> dict:
@@ -733,6 +775,22 @@ async def damo_chart(params: ChineseParams) -> ChartResponse:
         return ChartResponse(system="damo", data=data)
     except Exception as exc:
         logger.exception("Damo One Palm chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/huangji", response_model=ChartResponse, tags=["Systems"])
+async def huangji_chart(params: HuangjiParams) -> ChartResponse:
+    """Compute a Huangji Jingshi chart (皇極經世)."""
+    try:
+        key = _cache_key(params, reference_year=params.reference_year)
+        data = _cached_huangji(
+            key,
+            **_base_kwargs(params),
+            reference_year=params.reference_year,
+        )
+        return ChartResponse(system="huangji", data=data)
+    except Exception as exc:
+        logger.exception("Huangji chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -1301,6 +1359,7 @@ async def primary_directions_chart(params: PrimaryDirectionsParams) -> ChartResp
 
 # Map of system name → (cached_fn, extra_params_builder)
 _SYSTEMS_BASIC: list[tuple[str, Any]] = [
+    ("huangji", _cached_huangji),
     ("vedic", _cached_vedic),
     ("thai", _cached_thai),
     ("kabbalistic", _cached_kabbalistic),
@@ -1405,6 +1464,7 @@ async def list_systems() -> dict[str, list[str]]:
         "systems": [
             "chinese",
             "western",
+            "huangji",
             "vedic",
             "thai",
             "kabbalistic",
