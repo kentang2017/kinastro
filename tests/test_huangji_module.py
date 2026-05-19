@@ -1,3 +1,5 @@
+import pytest
+
 from astro.huangji import compute_huangji_pan
 from astro.huangji.huangji import EXPECTED_GUA_KEYS
 from astro.i18n import TRANSLATIONS
@@ -5,6 +7,7 @@ from astro.system_registry import get_system, search_systems
 
 
 def test_huangji_compute_basic_structure() -> None:
+    pytest.importorskip("kinwangji")
     chart = compute_huangji_pan(
         year=1990,
         month=1,
