@@ -33,6 +33,16 @@ def _gua_svg(name: str, width: int = 60, height: int = 80) -> str:
 
     Yang (1) → solid bar; Yin (0) → broken bar.
     Lines are read from bottom (line 1) to top (line 6).
+
+    Args:
+        name: Hexagram name, e.g. ``'乾'``, ``'坤'``.  If not in the
+              :data:`_GUA_BINARY` table a fallback text element is returned.
+        width: Width of the SVG viewport in pixels (default 60).
+        height: Height of the SVG viewport in pixels (default 80).
+
+    Returns:
+        SVG fragment (without ``<svg>`` wrapper) containing ``<rect>`` and
+        ``<text>`` elements.
     """
     binary = _GUA_BINARY.get(name, "")
     if not binary:
@@ -207,7 +217,19 @@ def _build_lifetime_timeline_svg(lifetime_cycles: list[dict], width: int = 540, 
 
 
 def _gua_panel_html(gua_name: str, bagua_xiang: dict) -> str:
-    """Build an HTML card for a hexagram with its attributes."""
+    """Build an HTML card for a hexagram with its attributes.
+
+    Args:
+        gua_name: Hexagram name used in the fallback message.
+        bagua_xiang: Attribute dict from xinyi_fawei.json ``bagua_xiang``.
+            Expected keys (all optional): ``definition``, ``seasons``,
+            ``body``, ``human_events``, ``nature``, ``geography``,
+            ``people``, ``animals``, ``plants``, ``wuxing_element``,
+            ``wuyin``, ``color``, ``numbers``, ``tiangan``, ``dizhi``.
+
+    Returns:
+        HTML string with a styled table of attributes.
+    """
     if not bagua_xiang:
         return f'<p style="color:#a89050">（{gua_name}卦無詳細取象資料）</p>'
 
