@@ -867,6 +867,20 @@ def _normalize_tz_from_lon(lon: float) -> float:
     return max(-12.0, min(14.0, tz))
 
 
+def _coerce_float_in_range(
+    value: Any,
+    *,
+    default: float,
+    min_value: float,
+    max_value: float,
+) -> float:
+    try:
+        _num = float(value)
+    except (TypeError, ValueError):
+        _num = default
+    return max(min_value, min(max_value, _num))
+
+
 def _safe_pop(value: Any) -> int:
     try:
         return int(value)
@@ -1017,18 +1031,55 @@ with st.sidebar:
         # disabled; for 自訂 (custom) they are editable.
         _is_custom = city == _CITY_CUSTOM_LABEL
         if not _is_custom:
-            _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS[city]
+            _preset_lat, _preset_lon, _preset_tz = CITY_PRESETS.get(
+                city,
+                (_DEFAULT_LAT, _DEFAULT_LON, _DEFAULT_TZ),
+            )
             st.session_state["_lat_input"] = _preset_lat
             st.session_state["_lon_input"] = _preset_lon
             st.session_state["_tz_input"] = _preset_tz
         else:
-            _preset_lat = st.session_state.get("_custom_lat", _DEFAULT_LAT)
-            _preset_lon = st.session_state.get("_custom_lon", _DEFAULT_LON)
-            _preset_tz  = st.session_state.get("_custom_tz",  _DEFAULT_TZ)
+            _preset_lat = _coerce_float_in_range(
+                st.session_state.get("_custom_lat", _DEFAULT_LAT),
+                default=_DEFAULT_LAT,
+                min_value=-90.0,
+                max_value=90.0,
+            )
+            _preset_lon = _coerce_float_in_range(
+                st.session_state.get("_custom_lon", _DEFAULT_LON),
+                default=_DEFAULT_LON,
+                min_value=-180.0,
+                max_value=180.0,
+            )
+            _preset_tz = _coerce_float_in_range(
+                st.session_state.get("_custom_tz", _DEFAULT_TZ),
+                default=_DEFAULT_TZ,
+                min_value=-12.0,
+                max_value=14.0,
+            )
             if _prev_city != _CITY_CUSTOM_LABEL:
                 st.session_state["_lat_input"] = _preset_lat
                 st.session_state["_lon_input"] = _preset_lon
                 st.session_state["_tz_input"] = _preset_tz
+
+        st.session_state["_lat_input"] = _coerce_float_in_range(
+            st.session_state.get("_lat_input", _DEFAULT_LAT),
+            default=_DEFAULT_LAT,
+            min_value=-90.0,
+            max_value=90.0,
+        )
+        st.session_state["_lon_input"] = _coerce_float_in_range(
+            st.session_state.get("_lon_input", _DEFAULT_LON),
+            default=_DEFAULT_LON,
+            min_value=-180.0,
+            max_value=180.0,
+        )
+        st.session_state["_tz_input"] = _coerce_float_in_range(
+            st.session_state.get("_tz_input", _DEFAULT_TZ),
+            default=_DEFAULT_TZ,
+            min_value=-12.0,
+            max_value=14.0,
+        )
 
         _coord_col1, _coord_col2 = st.columns(2)
         with _coord_col1:
