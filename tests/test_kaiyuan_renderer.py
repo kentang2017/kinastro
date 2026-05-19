@@ -87,7 +87,7 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
             mansion_degree=6.4,
         ),
         kaiyuan_renderer.KaiyuanObservation(
-            key="歲星（木）",
+            key="jupiter",
             label="歲星（木）",
             short_label="歲",
             icon="♃",
@@ -116,3 +116,41 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
     assert "♃ 歲星（木）・房" in svg
     assert "戌宮" in svg
     assert "玄枵" in svg
+
+
+def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
+    observations = [
+        kaiyuan_renderer.KaiyuanObservation(
+            key="moon",
+            label="月",
+            short_label="月",
+            icon="☽",
+            color="#f6d365",
+            longitude=210.2,
+            mansion_name="角",
+            mansion_degree=6.4,
+        ),
+        kaiyuan_renderer.KaiyuanObservation(
+            key="jupiter",
+            label="歲星（木）",
+            short_label="歲",
+            icon="♃",
+            color="#4caf50",
+            longitude=244.1,
+            mansion_name="房",
+            mansion_degree=1.2,
+        ),
+    ]
+    five_planet_data = {
+        "歲星（木）": {"房": {"開元占經": "歲星入房，主德令行。"}}
+    }
+    moon_data = {"角": {"開元占經": "月犯角，主朝廷有憂。"}}
+
+    rows = kaiyuan_renderer._collect_live_omens(observations, five_planet_data, moon_data)
+
+    assert len(rows) == 2
+    assert rows[0]["is_moon"] is True
+    assert rows[0]["mansion"] == "角"
+    assert rows[0]["omen"] == {"開元占經": "月犯角，主朝廷有憂。"}
+    assert rows[1]["label"] == "歲星（木）"
+    assert rows[1]["omen"] == {"開元占經": "歲星入房，主德令行。"}

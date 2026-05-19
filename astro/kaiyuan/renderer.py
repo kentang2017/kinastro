@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import math
 import pathlib
+from functools import lru_cache
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -80,6 +81,7 @@ def _load_json(filename: str) -> Any:
         return json.load(f)
 
 
+@lru_cache(maxsize=1)
 def _load_five_planet_data() -> Dict[str, Dict[str, Any]]:
     """載入五星入宿占文，返回 {planet_name: {mansion: text}}"""
     file_map = {
@@ -99,6 +101,7 @@ def _load_five_planet_data() -> Dict[str, Dict[str, Any]]:
     return result
 
 
+@lru_cache(maxsize=1)
 def _load_moon_28_mansion() -> Dict[str, Any]:
     raw = _load_json("moon_28_mansion.json")
     if isinstance(raw, dict):
@@ -480,6 +483,32 @@ def _inject_kaiyuan_theme() -> None:
     )
 
 
+def _collect_live_omens(
+    observations: List[KaiyuanObservation],
+    five_planet_data: Dict[str, Dict[str, Any]],
+    moon_28_data: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """收集即時星盤可直接對照的入宿占文。"""
+    rows: List[Dict[str, Any]] = []
+    for obs in observations:
+        # moon_28_data is {宿名: 占文}; five_planet_data is {星曜: {宿名: 占文文本}}
+        if obs.key == "moon":
+            omen = moon_28_data.get(obs.mansion_name)
+        else:
+            omen = five_planet_data.get(obs.label, {}).get(obs.mansion_name)
+        if not omen:
+            continue
+        rows.append(
+            {
+                "label": obs.label,
+                "mansion": obs.mansion_name,
+                "is_moon": obs.key == "moon",
+                "omen": omen,
+            }
+        )
+    return rows
+
+
 def _render_live_chart_overview() -> Dict[str, KaiyuanObservation]:
     """渲染開元星盤總覽，並回傳即時定位結果供子頁使用。"""
     params = _resolve_calc_params()
@@ -505,12 +534,14 @@ def _render_live_chart_overview() -> Dict[str, KaiyuanObservation]:
         st.warning(auto_cn("暫時無法計算星盤。", "Unable to compute the live chart right now."))
         return {}
 
-    st.markdown('<div class="kaiyuan-chart-shell">', unsafe_allow_html=True)
     st.markdown(
-        f'<div style="display:flex;justify-content:center;">{_build_astrolabe_svg(observations, params)}</div>',
+        (
+            '<div class="kaiyuan-chart-shell">'
+            f'<div style="display:flex;justify-content:center;">{_build_astrolabe_svg(observations, params)}</div>'
+            "</div>"
+        ),
         unsafe_allow_html=True,
     )
-    st.markdown("</div>", unsafe_allow_html=True)
 
     summary_cols = st.columns(3)
     for idx, obs in enumerate(observations):
@@ -528,6 +559,29 @@ def _render_live_chart_overview() -> Dict[str, KaiyuanObservation]:
                 """,
                 unsafe_allow_html=True,
             )
+
+    live_omens = _collect_live_omens(
+        observations=observations,
+        five_planet_data=_load_five_planet_data(),
+        moon_28_data=_load_moon_28_mansion(),
+    )
+    if live_omens:
+        st.markdown("#### " + auto_cn("📜 即時入宿占文", "📜 Live Mansion Omens"))
+        st.caption(
+            auto_cn(
+                "依當前月亮與五星位置，自動讀取《開元占經》對應條文。",
+                "Automatically loaded from Kaiyuan JSON entries based on current Moon and five-planet mansion placements.",
+            )
+        )
+        for row in live_omens:
+            with st.expander(
+                auto_cn(f"{row['label']} 入 {row['mansion']} 宿", f"{row['label']} in {row['mansion']} mansion"),
+                expanded=row["is_moon"],
+            ):
+                if isinstance(row["omen"], dict):
+                    _render_dict_omens(row["omen"])
+                else:
+                    st.markdown(str(row["omen"]))
 
     return {obs.key: obs for obs in observations}
 
