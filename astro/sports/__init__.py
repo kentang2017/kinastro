@@ -7,3 +7,12 @@ Football Match Astrology Prediction Tool
 """
 
 __version__ = "0.1.0"
+
+
+def render_streamlit(*args, **kwargs):
+    """Lazy-load Streamlit renderer to keep package import lightweight."""
+    from .renderer import render_streamlit as _fn
+    return _fn(*args, **kwargs)
+
+
+__all__ = ["render_streamlit", "__version__"]
