@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from html import escape
 from typing import Any
 
 import swisseph as swe
@@ -39,6 +40,8 @@ _PURPOSE_AR = {
 }
 
 _HARMFUL_PURPOSES = {"harm", "enmity", "separation", "curse"}
+REALTIME_WINDOW_SECONDS = 12 * 3600
+DEFAULT_MIN_SCORE = 62.0
 
 _ACTIVITY_BY_PURPOSE = {
     "love": "marriage",
@@ -389,7 +392,7 @@ def evaluate_picatrix_election(
     quality = "Excellent" if score >= 80 else "Good" if score >= 65 else "Usable" if score >= 50 else "Weak"
 
     now_utc = datetime.now(timezone.utc)
-    realtime = 0 <= (dt_utc - now_utc).total_seconds() <= 12 * 3600 and score >= 70
+    realtime = 0 <= (dt_utc - now_utc).total_seconds() <= REALTIME_WINDOW_SECONDS and score >= 70
 
     return PicatrixElectionDetails(
         dt_utc=dt_utc,
@@ -461,25 +464,44 @@ def find_picatrix_elections(
     return results[:18]
 
 
+def _svg_line(text: str, limit: int) -> str:
+    safe = escape(text or "")
+    if len(safe) <= limit:
+        return safe
+    clip = safe[: limit - 1].rstrip()
+    if " " in clip:
+        clip = clip.rsplit(" ", 1)[0]
+    return f"{clip}…"
+
+
 def _build_chart_snapshot_svg(detail: PicatrixElectionDetails, image: PicatrixImageCandidate) -> str:
     p_color = PLANET_COLORS.get(detail.target_planet, PRIMARY_COLOR)
     tz_offset = (detail.dt_local - detail.dt_utc.replace(tzinfo=None)).total_seconds() / 3600
+    purpose_text = _svg_line(detail.purpose, 64)
+    planet_text = _svg_line(detail.target_planet, 48)
+    mansion_en = _svg_line(detail.lunar_mansion_name_en, 64)
+    mansion_zh = _svg_line(detail.lunar_mansion_name_zh, 64)
+    img_en = _svg_line(image.image_description.get("en", ""), 110)
+    img_zh = _svg_line(image.image_description.get("zh", ""), 110)
+    matched_text = _svg_line("; ".join(detail.matched_rules[:4]), 120)
+    warnings_text = _svg_line("; ".join(detail.warnings[:3]) or "None", 120)
+    decan_ruler = _svg_line(detail.decan_ruler, 40)
     svg = f"""
 <svg width="980" height="620" viewBox="0 0 980 620" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="980" height="620" fill="{CHART_BG}"/>
   <rect x="24" y="24" width="932" height="572" rx="20" fill="rgba(20,16,36,0.92)" stroke="{SECONDARY_COLOR}" stroke-width="1.5"/>
   <text x="58" y="78" fill="{SECONDARY_COLOR}" font-size="30" font-family="serif">Picatrix Talisman Blueprint</text>
-  <text x="58" y="118" fill="#d2c5a5" font-size="20">Purpose: {detail.purpose} · Planet: {detail.target_planet} · Score: {detail.score:.1f}</text>
+  <text x="58" y="118" fill="#d2c5a5" font-size="20">Purpose: {purpose_text} · Planet: {planet_text} · Score: {detail.score:.1f}</text>
   <text x="58" y="160" fill="#c8bddf" font-size="17">Election: {detail.dt_local.strftime('%Y-%m-%d %H:%M')} (UTC{tz_offset:+.1f})</text>
-  <circle cx="768" cy="190" r="88" fill="none" stroke="{p_color}" stroke-width="2"/>
-  <text x="768" y="196" text-anchor="middle" fill="{p_color}" font-size="42">{detail.target_planet[:2].upper()}</text>
-  <text x="58" y="228" fill="#e4ddcc" font-size="18">Lunar Mansion {detail.lunar_mansion_index}: {detail.lunar_mansion_name_en} / {detail.lunar_mansion_name_zh}</text>
-  <text x="58" y="264" fill="#e4ddcc" font-size="18">Decan {detail.decan_number} ({detail.decan_ruler}) · Moon applying: {detail.moon_applying_to_target}</text>
+  <circle cx="768" cy="190" r="88" fill="none" stroke="{escape(p_color)}" stroke-width="2"/>
+  <text x="768" y="196" text-anchor="middle" fill="{escape(p_color)}" font-size="42">{escape(detail.target_planet[:2].upper())}</text>
+  <text x="58" y="228" fill="#e4ddcc" font-size="18">Lunar Mansion {detail.lunar_mansion_index}: {mansion_en} / {mansion_zh}</text>
+  <text x="58" y="264" fill="#e4ddcc" font-size="18">Decan {detail.decan_number} ({decan_ruler}) · Moon applying: {detail.moon_applying_to_target}</text>
   <text x="58" y="300" fill="#e4ddcc" font-size="18">Asc: {detail.ascendant:.2f}° · MC: {detail.mc:.2f}° · Part of Fortune: {detail.part_of_fortune:.2f}°</text>
-  <text x="58" y="352" fill="#d8ceb8" font-size="19">Image (EN): {image.image_description.get('en', '')[:110]}</text>
-  <text x="58" y="384" fill="#d8ceb8" font-size="19">Image (ZH): {image.image_description.get('zh', '')[:110]}</text>
-  <text x="58" y="430" fill="#ab9dd0" font-size="17">Matched rules: {'; '.join(detail.matched_rules[:4])}</text>
-  <text x="58" y="468" fill="#bcaecc" font-size="16">Warnings: {'; '.join(detail.warnings[:3]) or 'None'}</text>
+  <text x="58" y="352" fill="#d8ceb8" font-size="19">Image (EN): {img_en}</text>
+  <text x="58" y="384" fill="#d8ceb8" font-size="19">Image (ZH): {img_zh}</text>
+  <text x="58" y="430" fill="#ab9dd0" font-size="17">Matched rules: {matched_text}</text>
+  <text x="58" y="468" fill="#bcaecc" font-size="16">Warnings: {warnings_text}</text>
 </svg>
 """.strip()
     return inject_svg_enhancements(svg)
@@ -592,7 +614,7 @@ def generate_picatrix_talisman(
         location_name=location_name,
         days_ahead=max(1, min(days_ahead, 90)),
         step_hours=2,
-        min_score=62.0,
+        min_score=DEFAULT_MIN_SCORE,
     )
 
     if elections:
