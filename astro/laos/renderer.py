@@ -134,6 +134,14 @@ _PLANET_TRAD_MEANING: Dict[str, str] = {
     "ketu": "代表出離與業力（待補完整傳統詮釋）",
 }
 
+_LAO_SVG_FONT_FAMILY = "Noto Sans Lao, Phetsarath OT, sans-serif"
+_HOUSE_LABEL_Y_OFFSETS = (-8, 4, 16)
+_PLANET_STAR_LABEL_OFFSET = 21
+_CENTER_DEFAULT_STATUS = "ສະຖານະປະຈຸບັນ: ປົກກະຕິ"
+_CENTER_SPECIAL_YEAR_TAG = "⚑ ປີພິເສດ"
+_CENTER_NORMAL_YEAR_TAG = "◉ ປີປົກກະຕິ"
+_TRADITIONAL_MEANING_PLACEHOLDER = "傳統義理待補"
+
 
 def _zh(lao_text: str, mapping: Dict[str, str], fallback: str = "") -> str:
     """查詢 Lao→中文對照，找不到則回傳 fallback 或原文。"""
@@ -196,8 +204,8 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
 
     center_special = str(special_year.get("description", "")).strip()
     center_sangkhom = str(sangkhom.get("status", "")).strip()
-    center_status = center_special or center_sangkhom or "ສະຖານະປະຈຸບັນ: ປົກກະຕິ"
-    center_year_tag = "⚑ ປີພິເສດ" if special_year.get("is_special") else "◉ ປີປົກກະຕິ"
+    center_status = center_special or center_sangkhom or _CENTER_DEFAULT_STATUS
+    center_year_tag = _CENTER_SPECIAL_YEAR_TAG if special_year.get("is_special") else _CENTER_NORMAL_YEAR_TAG
 
     parts = [
         '<div style="width:100%;max-width:820px;margin:0 auto;overflow-x:auto;">',
@@ -226,13 +234,14 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         x2, y2 = _polar(cx, cy, r_outer, angle)
         lx, ly = _polar(cx, cy, r_house_label, angle + 15)
         animal = _LAO_ZODIAC_ANIMALS[i]
+        offset_top, offset_mid, offset_bottom = _HOUSE_LABEL_Y_OFFSETS
         parts.append(
             f"<line x1='{x1:.2f}' y1='{y1:.2f}' x2='{x2:.2f}' y2='{y2:.2f}' stroke='#caa24b' stroke-width='1.25' opacity='0.9'/>"
         )
         parts.append(
-            f"<text x='{lx:.2f}' y='{ly - 8:.2f}' text-anchor='middle' fill='#f6df9e' font-size='10' font-weight='bold' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>ຮືອນ {i + 1}</text>"
-            f"<text x='{lx:.2f}' y='{ly + 4:.2f}' text-anchor='middle' fill='#f0d187' font-size='11' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>{lao_houses[i]}</text>"
-            f"<text x='{lx:.2f}' y='{ly + 16:.2f}' text-anchor='middle' fill='#d7c7a0' font-size='9.5' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>{animal}</text>"
+            f"<text x='{lx:.2f}' y='{ly + offset_top:.2f}' text-anchor='middle' fill='#f6df9e' font-size='10' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>ຮືອນ {i + 1}</text>"
+            f"<text x='{lx:.2f}' y='{ly + offset_mid:.2f}' text-anchor='middle' fill='#f0d187' font-size='11' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_houses[i]}</text>"
+            f"<text x='{lx:.2f}' y='{ly + offset_bottom:.2f}' text-anchor='middle' fill='#d7c7a0' font-size='9.5' font-family='{_LAO_SVG_FONT_FAMILY}'>{animal}</text>"
         )
 
     # 行星標記
@@ -249,12 +258,12 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         star_lord_lao = _PLANET_LAO.get(star_lord, star_lord.upper())
         symbol = _planet_symbol(key)
         px, py = _polar(cx, cy, r_planet, lon)
-        label_dx = 21 if px < cx else -21
+        label_dx = _PLANET_STAR_LABEL_OFFSET if px < cx else -_PLANET_STAR_LABEL_OFFSET
         label_anchor = "start" if px < cx else "end"
         planet_name_zh = _PLANET_ZH.get(key, key.upper())
         planet_name_lao = _PLANET_LAO.get(key, key.upper())
         retro_text = "是 ℞" if retrograde else "否"
-        meaning = _PLANET_TRAD_MEANING.get(key, "傳統義理待補")
+        meaning = _PLANET_TRAD_MEANING.get(key, _TRADITIONAL_MEANING_PLACEHOLDER)
         tooltip_title = html_escape(f"{planet_name_zh} · {planet_name_lao}")
         tooltip_desc = html_escape(
             f"度數/星座：{lon:.2f}° {sign_lao}\n"
@@ -278,14 +287,14 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
             f"<text x='{px:.2f}' y='{py:.2f}' text-anchor='middle' dominant-baseline='middle' fill='#ffe8ad' font-size='16'>{symbol}</text>"
         )
         parts.append(
-            f"<text x='{px + label_dx:.2f}' y='{py + 3:.2f}' text-anchor='{label_anchor}' fill='#f3d88f' font-size='9.4' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>ນາຍດາວ {star_lord_symbol} {star_lord_lao}</text>"
+            f"<text x='{px + label_dx:.2f}' y='{py + 3:.2f}' text-anchor='{label_anchor}' fill='#f3d88f' font-size='9.4' font-family='{_LAO_SVG_FONT_FAMILY}'>ນາຍດາວ {star_lord_symbol} {star_lord_lao}</text>"
         )
         if retrograde:
             parts.append(
                 f"<text x='{px + (12 if px < cx else -12):.2f}' y='{py - 12:.2f}' text-anchor='middle' fill='#ff9b90' font-size='10' font-weight='bold'>℞</text>"
             )
         parts.append(
-            f"<text x='{px:.2f}' y='{py + 24:.2f}' text-anchor='middle' fill='#cdb784' font-size='8.8' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>{sign_animal}</text>"
+            f"<text x='{px:.2f}' y='{py + 24:.2f}' text-anchor='middle' fill='#cdb784' font-size='8.8' font-family='{_LAO_SVG_FONT_FAMILY}'>{sign_animal}</text>"
         )
         parts.append("</g>")
 
@@ -293,10 +302,10 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
     parts.extend(
         [
             f"<text x='{cx}' y='{cy - 32}' text-anchor='middle' fill='#f4de9a' font-size='24' font-family='Noto Sans Lao, sans-serif'>🌀</text>",
-            f"<text x='{cx}' y='{cy - 10}' text-anchor='middle' fill='#f0d080' font-size='15' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>ໄທຣາສາດລາວ</text>",
-            f"<text x='{cx}' y='{cy + 10}' text-anchor='middle' fill='#d9bc76' font-size='11.2' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>{lao_date.get('full_lao_date', '')}</text>",
-            f"<text x='{cx}' y='{cy + 27}' text-anchor='middle' fill='#ffdf8d' font-size='12.2' font-weight='bold' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>{html_escape(center_year_tag)}</text>",
-            f"<text x='{cx}' y='{cy + 44}' text-anchor='middle' fill='#f5ce80' font-size='9.6' font-family='Noto Sans Lao, Phetsarath OT, sans-serif'>{html_escape(center_status)}</text>",
+            f"<text x='{cx}' y='{cy - 10}' text-anchor='middle' fill='#f0d080' font-size='15' font-family='{_LAO_SVG_FONT_FAMILY}'>ໄທຣາສາດລາວ</text>",
+            f"<text x='{cx}' y='{cy + 10}' text-anchor='middle' fill='#d9bc76' font-size='11.2' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_date.get('full_lao_date', '')}</text>",
+            f"<text x='{cx}' y='{cy + 27}' text-anchor='middle' fill='#ffdf8d' font-size='12.2' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_year_tag)}</text>",
+            f"<text x='{cx}' y='{cy + 44}' text-anchor='middle' fill='#f5ce80' font-size='9.6' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_status)}</text>",
         ]
     )
 
