@@ -228,13 +228,15 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         f"<circle cx='{cx}' cy='{cy}' r='{r_inner}' fill='#14193a' stroke='#e0bc66' stroke-width='2.0'/>",
     ]
 
-    # 12 宮分割
+    # 12 宮分割（雙語：Lao + 中文）
     for i in range(12):
         angle = i * 30
         x1, y1 = _polar(cx, cy, r_inner, angle)
         x2, y2 = _polar(cx, cy, r_outer, angle)
         lx, ly = _polar(cx, cy, r_house_label, angle + 15)
         animal = _LAO_ZODIAC_ANIMALS[i]
+        sign_lao = lao_houses[i]
+        sign_zh = _LAO_SIGNS_ZH.get(sign_lao, "")
         offset_top, offset_mid, offset_bottom = _HOUSE_LABEL_Y_OFFSETS
         parts.append(
             f"<line x1='{x1:.2f}' y1='{y1:.2f}' x2='{x2:.2f}' y2='{y2:.2f}' stroke='#caa24b' stroke-width='1.25' opacity='0.9'/>"
@@ -243,10 +245,13 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
             f"<text x='{lx:.2f}' y='{ly + offset_top:.2f}' text-anchor='middle' fill='#f6df9e' font-size='10' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>ຮືອນ {i + 1}</text>"
         )
         parts.append(
-            f"<text x='{lx:.2f}' y='{ly + offset_mid:.2f}' text-anchor='middle' fill='#f0d187' font-size='11' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_houses[i]}</text>"
+            f"<text x='{lx:.2f}' y='{ly + offset_mid:.2f}' text-anchor='middle' fill='#f0d187' font-size='10' font-family='{_LAO_SVG_FONT_FAMILY}'>{sign_lao}</text>"
         )
         parts.append(
-            f"<text x='{lx:.2f}' y='{ly + offset_bottom:.2f}' text-anchor='middle' fill='#d7c7a0' font-size='9.5' font-family='{_LAO_SVG_FONT_FAMILY}'>{animal}</text>"
+            f"<text x='{lx:.2f}' y='{ly + offset_mid + 12:.2f}' text-anchor='middle' fill='#d0e8ff' font-size='9' font-family='sans-serif'>{sign_zh}</text>"
+        )
+        parts.append(
+            f"<text x='{lx:.2f}' y='{ly + offset_bottom + 4:.2f}' text-anchor='middle' fill='#d7c7a0' font-size='9' font-family='{_LAO_SVG_FONT_FAMILY}'>{animal}</text>"
         )
 
     # 行星標記
@@ -303,14 +308,15 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         )
         parts.append("</g>")
 
-    # 中心資訊
+    # 中心資訊（雙語）
     parts.extend(
         [
             f"<text x='{cx}' y='{cy - 32}' text-anchor='middle' fill='#f4de9a' font-size='24' font-family='Noto Sans Lao, sans-serif'>🌀</text>",
-            f"<text x='{cx}' y='{cy - 10}' text-anchor='middle' fill='#f0d080' font-size='15' font-family='{_LAO_SVG_FONT_FAMILY}'>ໄທຣາສາດລາວ</text>",
-            f"<text x='{cx}' y='{cy + 10}' text-anchor='middle' fill='#d9bc76' font-size='11.2' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_date.get('full_lao_date', '')}</text>",
-            f"<text x='{cx}' y='{cy + 27}' text-anchor='middle' fill='#ffdf8d' font-size='12.2' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_year_tag)}</text>",
-            f"<text x='{cx}' y='{cy + 44}' text-anchor='middle' fill='#f5ce80' font-size='9.6' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_status)}</text>",
+            f"<text x='{cx}' y='{cy - 10}' text-anchor='middle' fill='#f0d080' font-size='14' font-family='{_LAO_SVG_FONT_FAMILY}'>ໄທຣາສາດລາວ</text>",
+            f"<text x='{cx}' y='{cy + 7}' text-anchor='middle' fill='#a8d4f5' font-size='11' font-family='sans-serif'>老撾占星</text>",
+            f"<text x='{cx}' y='{cy + 23}' text-anchor='middle' fill='#d9bc76' font-size='10' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_date.get('full_lao_date', '')}</text>",
+            f"<text x='{cx}' y='{cy + 38}' text-anchor='middle' fill='#ffdf8d' font-size='11' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_year_tag)}</text>",
+            f"<text x='{cx}' y='{cy + 53}' text-anchor='middle' fill='#f5ce80' font-size='9' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_status)}</text>",
         ]
     )
 
@@ -367,15 +373,15 @@ def render_lao_horasat(
     if after_chart_hook:
         after_chart_hook()
 
-    tab_date, tab_sangkhom, tab_sikarat, tab_planets = st.tabs(
-        ["📅 Laos 日期", "🧿 ສັງຄົມ", "⏰ ສີກາດ", "🪐 星曜"]
+    tab_date, tab_sangkhom, tab_sikarat, tab_planets, tab_interp = st.tabs(
+        ["📅 Laos 日期", "🧿 ສັງຄົມ", "⏰ ສີກາດ", "🪐 星曜", "📖 傳統解讀"]
     )
 
     with tab_date:
         weekday_lao = lao_date.get("weekday_lao", "")
-        weekday_zh = _zh(weekday_lao, _WEEKDAY_ZH)
+        weekday_zh = lao_date.get("weekday_zh") or _zh(weekday_lao, _WEEKDAY_ZH)
         season_lao = lao_date.get("season", "—")
-        season_zh = _zh(season_lao, _SEASON_ZH)
+        season_zh = lao_date.get("season_zh") or _zh(season_lao, _SEASON_ZH)
         lao_year = special_year.get("lao_year", "—")
         greg_year = special_year.get("gregorian_year", "—")
         year_desc = special_year.get("description", "普通年份")
@@ -388,7 +394,7 @@ def render_lao_horasat(
                 📅 <b>老撾日期</b>：{lao_date.get('full_lao_date_with_weekday', '—')}
               </p>
               <p style="margin:4px 0;font-size:14px;color:#d7c080;">
-                &nbsp;&nbsp;&nbsp;&nbsp;（{weekday_zh}）
+                &nbsp;&nbsp;&nbsp;&nbsp;（{weekday_zh}）{lao_date.get('full_lao_date_with_weekday_zh', '')}
               </p>
               <p style="margin:4px 0;font-size:14px;">
                 🗓️ <b>老撾佛曆年</b>：ພ.ສ. {lao_year}　|　<b>西元年</b>：{greg_year}
@@ -417,8 +423,8 @@ def render_lao_horasat(
         activity_zh = _zh(activity_lao, _ACTIVITY_ZH)
         status = sangkhom.get("status", "—")
         note = sangkhom.get("note", "")
-        recommendation = sangkhom.get("recommendation", "—")
-        month_note = sangkhom.get("month_note", "")
+        recommendation = sangkhom.get("recommendation_zh") or sangkhom.get("recommendation", "—")
+        month_note = sangkhom.get("month_note_zh") or sangkhom.get("month_note", "")
         overall = sangkhom.get("overall", "")
 
         st.markdown(
@@ -431,7 +437,7 @@ def render_lao_horasat(
                 {status}
               </p>
               <p style="margin:4px 0;font-size:14px;">
-                💬 <b>詳細說明</b>：{note}
+                💬 <b>詳細說明</b>：{note}　{sangkhom.get('note_zh', '')}
               </p>
               <p style="margin:4px 0;font-size:14px;">
                 📋 <b>建議</b>：{recommendation}
@@ -487,9 +493,10 @@ def render_lao_horasat(
                     "時刻": f"{'▶ ' if is_current else ''}{h:02d}:00",
                     "色嘎時段": f"{period_lao}（{period_zh}）",
                     "吉凶": s,
+                    "中文說明": info.get("note_zh", ""),
                 }
             )
-        st.dataframe(rows_s, use_container_width=True)
+        st.dataframe(rows_s, width="stretch")
 
     with tab_planets:
         rows = []
@@ -502,12 +509,55 @@ def render_lao_horasat(
                 {
                     "星曜": f"{p.get('symbol', '')} {_PLANET_ZH.get(key, key.upper())}",
                     "黃經": f"{float(p.get('longitude', 0.0)):.2f}°",
-                    "星座": f"{sign_lao}（{sign_zh}）",
+                    "星座（Lao）": sign_lao,
+                    "星座（中）": sign_zh,
                     "宮位": p.get("house", "-"),
                     "逆行": "是 ℞" if p.get("retrograde") else "否",
                 }
             )
-        st.dataframe(rows, use_container_width=True)
+        st.dataframe(rows, width="stretch")
+
+    with tab_interp:
+        from .interpreter import interpret_chart
+
+        interp = interpret_chart(data)
+
+        asc_sign_zh = interp.get("ascendant_sign_zh", "—")
+        asc_trait_zh = interp.get("ascendant_sign_trait_zh", "")
+        summary_zh = interp.get("summary_zh", "")
+
+        st.markdown(
+            f"""
+            <div class="lao-cosmic-panel" style="padding:12px 16px;">
+              <p style="margin:4px 0;font-size:15px;">
+                🌅 <b>上升星座</b>：{asc_sign_zh}
+                （{interp.get('ascendant_sign_lao', '')}）
+              </p>
+              <p style="margin:4px 0;font-size:13px;color:#d4be80;">{asc_trait_zh}</p>
+              <p style="margin:8px 0 4px 0;font-size:14px;">{summary_zh}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("#### 🪐 逐星曜傳統解讀")
+        for reading in interp.get("planet_readings", []):
+            planet_zh = reading.get("planet_zh", "")
+            house_note_zh = reading.get("house_note_zh", "")
+            planet_note_zh = reading.get("planet_note_zh", "")
+            retro_note = reading.get("retrograde_note_zh", "")
+            retrograde = reading.get("retrograde", False)
+            sign_zh = reading.get("sign_zh", "")
+            house = reading.get("house", "")
+            retro_label = " ℞" if retrograde else ""
+
+            with st.expander(
+                f"{planet_zh}{retro_label}　第 {house} 宮　{sign_zh}"
+            ):
+                st.markdown(f"**傳統義理**：{planet_note_zh}")
+                st.markdown(f"**宮位詮釋**：{house_note_zh}")
+                if retro_note:
+                    st.warning(retro_note)
 
 
 def render_streamlit(

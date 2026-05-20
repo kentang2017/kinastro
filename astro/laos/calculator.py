@@ -5,21 +5,25 @@
 - 老撾曆日期資訊與特殊年份分析
 - ສັງຄົມ 擇日吉凶
 - ສີກາດ 時段建議
+
+雙語設計：所有回傳 dict 的關鍵欄位均有對應 ``_zh`` 中文欄位。
+透過 ``data_loader`` 統一載入資料；``reload_all_data()`` 可在開發中重置快取。
 """
 
 from __future__ import annotations
 
-from functools import lru_cache
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta
+from functools import lru_cache
 from threading import Lock
 from typing import Any, Dict, List, Literal
 
 import swisseph as swe
 
 from .data.calendar_rules import get_lao_date_info
+from .data.data_loader import reload_all_data  # noqa: F401  (re-exported for convenience)
 from .data.sangkhom_tables import SUPPORTED_SANGKHOM_ACTIVITIES, get_sangkhom_for_date
-from .data.sikarat import get_best_sikarat_hours, get_sikarat_for_datetime
+from .data.sikarat import get_best_sikarat_hours, get_sikarat_for_datetime, get_sikarat_summary
 from .data.special_years import analyze_special_year
 
 HouseSystem = Literal["whole_sign"]
@@ -47,6 +51,19 @@ _PLANET_SYMBOLS: Dict[str, str] = {
     "saturn": "♄",
     "rahu": "☊",
     "ketu": "☋",
+}
+
+# 行星中文名稱（供 chart_to_dict _zh 欄位使用）
+_PLANET_ZH: Dict[str, str] = {
+    "sun": "太陽",
+    "moon": "月亮",
+    "mars": "火星",
+    "mercury": "水星",
+    "jupiter": "木星",
+    "venus": "金星",
+    "saturn": "土星",
+    "rahu": "羅睺",
+    "ketu": "計都",
 }
 
 # 老撾傳統在不同師承下會用不同 sidereal 基準，故需支援可配置 ayanamsa。
@@ -380,11 +397,22 @@ def compute_lao_chart(
 
 
 def chart_to_dict(chart: LaoChart) -> Dict[str, Any]:
-    """序列化 LaoChart，供 API / AI / 前端存取。"""
+    """序列化 LaoChart，供 API / AI / 前端存取。
+
+    所有關鍵欄位均包含 ``_zh`` 中文版本，方便直接渲染。
+    """
 
     data = asdict(chart)
     data["system"] = "lao_horasat"
     data["system_name"] = "ໄທຣາສາດລາວ"
+    data["system_name_zh"] = "老撾占星"
+
+    # 為每顆星曜補充中文名稱
+    for planet in data.get("planets", []):
+        key = planet.get("key", "")
+        planet["name_zh"] = _PLANET_ZH.get(key, key.upper())
+        planet["symbol"] = _PLANET_SYMBOLS.get(key, "✶")
+
     return data
 
 
@@ -394,19 +422,73 @@ def get_lao_auspicious_time(
     activity: str = "ການແຕ່ງງານ",
     sikarat_type: str = "ສີກາດລາວ",
 ) -> Dict[str, Any]:
-    """查詢單一時間點的 ສັງຄົມ + ສີກາດ 建議。"""
+    """查詢單一時間點的 ສັງຄົມ + ສີກາດ 建議，並給出綜合評分。
+
+    回傳 dict 包含：
+    - ``sangkhom``：星期宜忌評估（ສັງຄົມ）
+    - ``sikarat``：時辰色嘎評估（ສີກາດ）
+    - ``sikarat_all``：四種體系比較摘要
+    - ``combined_score``：0–10 綜合吉凶分數
+    - ``combined_recommendation`` / ``combined_recommendation_zh``：綜合建議
+    """
 
     resolved = _resolve_activity(activity)
     sangkhom = get_sangkhom_for_date(resolved, target_dt.date())
     sikarat = get_sikarat_for_datetime(target_dt, sikarat_type=sikarat_type)
     sikarat["best_hours"] = get_best_sikarat_hours(resolved)
+    sikarat_all = get_sikarat_summary(target_dt)
+
+    # ---- 綜合評分（簡單規則）----
+    san_status = sangkhom.get("status", "")
+    sik_status = sikarat.get("status", "")
+
+    def _score(status: str) -> float:
+        if "✅ ດີຫຼາຍ" in status:
+            return 10.0
+        if "✅ ດີ" in status:
+            return 7.5
+        if "⚠️" in status:
+            return 4.5
+        if "❌" in status:
+            return 1.5
+        return 5.0
+
+    combined_score = round((_score(san_status) + _score(sik_status)) / 2, 1)
+
+    if combined_score >= 8.0:
+        combined_rec = "✅ ດີຫຼາຍ - ເໝາະສົມທີ່ສຸດ"
+        combined_rec_zh = "✅ 非常吉利，最為適合"
+    elif combined_score >= 6.0:
+        combined_rec = "✅ ດີ - ເໝາະສົມ"
+        combined_rec_zh = "✅ 吉利，適合進行"
+    elif combined_score >= 4.0:
+        combined_rec = "⚠️ ປານກາງ - ຕ້ອງລະມັດລະວັງ"
+        combined_rec_zh = "⚠️ 一般，需謹慎"
+    else:
+        combined_rec = "❌ ບໍ່ແນະນຳ - ອາດເກີດບັນຫາ"
+        combined_rec_zh = "❌ 不宜，可能有阻礙"
 
     return {
         "activity": resolved,
+        "activity_zh": _ACTIVITY_ZH_MAP.get(resolved, resolved),
         "lao_date": sangkhom.get("lao_date"),
         "sangkhom": sangkhom,
         "sikarat": sikarat,
+        "sikarat_all": sikarat_all,
+        "combined_score": combined_score,
+        "combined_recommendation": combined_rec,
+        "combined_recommendation_zh": combined_rec_zh,
     }
+
+
+# 活動中文對照（calculator 內部使用）
+_ACTIVITY_ZH_MAP: Dict[str, str] = {
+    "ການແຕ່ງງານ": "婚禮",
+    "ການສ້າງເຮືອນ": "建房／動土",
+    "ການເດີນທາງ": "出行",
+    "ການເປີດກິຈະການ": "開業",
+    "ການບູຊາບູຊາ": "祭祀／做功德",
+}
 
 
 @lru_cache(maxsize=1024)
