@@ -75,6 +75,13 @@ _GRADE_ICONS = {
 }
 
 
+def _safe_float(value: object) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 # ============================================================
 # 主要渲染入口
 # ============================================================
@@ -1304,12 +1311,6 @@ def _wuxing_bar(dist: dict, total: int, title: str):
     import streamlit as st
     from .name_wuxing import WUXING_ELEMENTS, WUXING_COLORS
 
-    def _safe_float(value: object) -> float:
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return 0.0
-
     total_value = _safe_float(total)
     bars_html = ""
     for el in WUXING_ELEMENTS:
@@ -1348,12 +1349,6 @@ def _compatibility_grade(
 ) -> dict[str, str]:
     """將五行關係分數轉為契合評級（S~F），加入身強弱與用忌神邏輯。"""
     from .name_wuxing import WUXING_KE, WUXING_KEME, WUXING_SHENG, WUXING_SHENGME
-
-    def _safe_float(value: object) -> float:
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return 0.0
 
     bazi_numeric = {k: _safe_float(v) for k, v in bazi_distribution.items()}
     stock_numeric = {k: _safe_float(v) for k, v in stock_distribution.items()}
@@ -1469,12 +1464,6 @@ def _get_day_master_profile(bazi_result: dict) -> tuple[str, str]:
         if pillar.get("label") == "日柱":
             day_master = pillar.get("wuxing_stem") or day_master
             break
-
-    def _safe_float(value: object) -> float:
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return 0.0
 
     dist = {k: _safe_float(v) for k, v in bazi_result.get("distribution", {}).items()}
     support = dist.get(day_master, 0) + dist.get(WUXING_SHENGME.get(day_master, "木"), 0)
