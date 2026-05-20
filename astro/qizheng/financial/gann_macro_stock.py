@@ -651,6 +651,13 @@ def _classify_resonance(score: int) -> str:
     return "低共振（不建議單獨採信）"
 
 
+def _coerce_score_int(value: object, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def build_gann_macro_timing(
     *,
     market_natal_date: date | datetime,
@@ -694,11 +701,11 @@ def build_gann_macro_timing(
 
     cycle_score = _CYCLE_SCORE_WEIGHT * len(near_hits)
     anniversary_score = len(near_anniversaries)
-    astro_score = sum(x["score"] for x in qizheng_hits)
+    astro_score = sum(_coerce_score_int(x.get("score", 0)) for x in qizheng_hits)
     total_score = cycle_score + anniversary_score + astro_score
 
-    positive_aspects = [x for x in qizheng_hits if x["score"] > 0]
-    negative_aspects = [x for x in qizheng_hits if x["score"] < 0]
+    positive_aspects = [x for x in qizheng_hits if _coerce_score_int(x.get("score", 0)) > 0]
+    negative_aspects = [x for x in qizheng_hits if _coerce_score_int(x.get("score", 0)) < 0]
     entry_conditions = [
         "至少 1 個聖經周期在容差窗內",
         "七政四餘關鍵星曜（木星/土星/羅睺/計都/月孛/紫氣）出現至少 1 個正向守照",
@@ -1413,8 +1420,9 @@ def build_gann_full_confluence(
     angle_score = _CONFLUENCE_GANN_ANGLE_WEIGHT * len(angle_hits)
 
     # ── 彙總分數 ─────────────────────────────────────────────
+    base_total_score = _coerce_score_int(base_scores.get("total_score", 0))
     total_confluence = (
-        base_scores.get("total_score", 0)
+        base_total_score
         + tp_score
         + ingress_score
         + nat_sq_score
@@ -1422,9 +1430,9 @@ def build_gann_full_confluence(
     )
 
     confluence_layers = {
-        "biblical_cycle_score": base_scores.get("cycle_score", 0),
-        "anniversary_score": base_scores.get("anniversary_score", 0),
-        "qizheng_astro_score": base_scores.get("astro_score", 0),
+        "biblical_cycle_score": _coerce_score_int(base_scores.get("cycle_score", 0)),
+        "anniversary_score": _coerce_score_int(base_scores.get("anniversary_score", 0)),
+        "qizheng_astro_score": _coerce_score_int(base_scores.get("astro_score", 0)),
         "time_price_squaring_score": tp_score,
         "solar_ingress_score": ingress_score,
         "natural_square_score": nat_sq_score,
