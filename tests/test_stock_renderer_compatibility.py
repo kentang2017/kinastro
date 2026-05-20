@@ -151,6 +151,33 @@ def test_weak_fire_profile_rewards_wood_fire_setup(financial_modules):
     assert "偏買進" in grade["advice_zh"]
 
 
+def test_compare_wuxing_accepts_string_distribution_values(financial_modules):
+    name_wuxing = financial_modules["astro.qizheng.financial.name_wuxing"]
+
+    comparison = name_wuxing.compare_wuxing(
+        {"木": "3", "火": "0", "土": "0", "金": "0", "水": "0"},
+        "命主",
+        {"木": "0", "火": "0", "土": "0", "金": "0", "水": "2"},
+        "股票綜合能量",
+    )
+
+    assert comparison["relationship_code"] == "stock_feeds_you"
+
+
+def test_compatibility_grade_accepts_string_distribution_values(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    grade = stock_renderer._compatibility_grade(
+        {"score": "2", "relationship_code": "stock_feeds_you"},
+        {"木": "3", "火": "0", "土": "0", "金": "0", "水": "0"},
+        {"木": "0.0", "火": "0.0", "土": "0.0", "金": "0.0", "水": "2.0"},
+        day_master_element="木",
+        user_profile_note="身旺",
+    )
+
+    assert grade["grade"] in {"A", "S"}
+
+
 def test_price_forecast_profile_detects_bullish_regime(financial_modules):
     stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
 

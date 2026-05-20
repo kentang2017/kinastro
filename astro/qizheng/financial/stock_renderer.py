@@ -75,6 +75,13 @@ _GRADE_ICONS = {
 }
 
 
+def _safe_float(value: object) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 # ============================================================
 # 主要渲染入口
 # ============================================================
@@ -1304,10 +1311,11 @@ def _wuxing_bar(dist: dict, total: int, title: str):
     import streamlit as st
     from .name_wuxing import WUXING_ELEMENTS, WUXING_COLORS
 
+    total_value = _safe_float(total)
     bars_html = ""
     for el in WUXING_ELEMENTS:
-        count = dist.get(el, 0)
-        pct = (count / total * 100) if total > 0 else 0
+        count = _safe_float(dist.get(el, 0))
+        pct = (count / total_value * 100) if total_value > 0 else 0
         color = WUXING_COLORS[el]
         bars_html += (
             f'<div style="display:flex;align-items:center;margin:4px 0;">'
@@ -1316,7 +1324,7 @@ def _wuxing_bar(dist: dict, total: int, title: str):
             f'<div style="width:{pct:.1f}%;background:{color};border-radius:6px;height:100%;'
             f'transition:width 0.4s;"></div></div>'
             f'<span style="color:{color};font-size:0.85em;min-width:60px;">'
-            f'{count}次 {pct:.0f}%</span>'
+            f'{count:g}次 {pct:.0f}%</span>'
             f'</div>'
         )
 
@@ -1342,11 +1350,14 @@ def _compatibility_grade(
     """將五行關係分數轉為契合評級（S~F），加入身強弱與用忌神邏輯。"""
     from .name_wuxing import WUXING_KE, WUXING_KEME, WUXING_SHENG, WUXING_SHENGME
 
-    total_a = sum(bazi_distribution.values()) or 1
-    total_b = sum(stock_distribution.values()) or 1
-    dominance_a = max(bazi_distribution.values(), default=0) / total_a
+    bazi_numeric = {k: _safe_float(v) for k, v in bazi_distribution.items()}
+    stock_numeric = {k: _safe_float(v) for k, v in stock_distribution.items()}
 
-    stock_ratio = {k: (stock_distribution.get(k, 0) / total_b) for k in stock_distribution}
+    total_a = sum(bazi_numeric.values()) or 1.0
+    total_b = sum(stock_numeric.values()) or 1.0
+    dominance_a = max(bazi_numeric.values(), default=0.0) / total_a
+
+    stock_ratio = {k: (stock_numeric.get(k, 0.0) / total_b) for k in stock_numeric}
     support_el = WUXING_SHENGME.get(day_master_element, "木")
     wealth_el = WUXING_KE.get(day_master_element, "金")
     pressure_el = WUXING_KEME.get(day_master_element, "水")
@@ -1356,7 +1367,7 @@ def _compatibility_grade(
     drain_ratio = stock_ratio.get(WUXING_SHENG.get(day_master_element, "土"), 0.0)
 
     score = 50.0
-    score += cmp.get("score", 0) * 11.5
+    score += _safe_float(cmp.get("score", 0)) * 11.5
     score += support_ratio * 36.0
     score -= pressure_ratio * 34.0
     score -= wealth_ratio * 18.0
@@ -1454,7 +1465,7 @@ def _get_day_master_profile(bazi_result: dict) -> tuple[str, str]:
             day_master = pillar.get("wuxing_stem") or day_master
             break
 
-    dist = bazi_result.get("distribution", {})
+    dist = {k: _safe_float(v) for k, v in bazi_result.get("distribution", {}).items()}
     support = dist.get(day_master, 0) + dist.get(WUXING_SHENGME.get(day_master, "木"), 0)
     pressure = dist.get(WUXING_KEME.get(day_master, "金"), 0) + dist.get(WUXING_KE.get(day_master, "土"), 0)
     profile = "身弱" if support + 1 < pressure or support <= 2 else "身旺"

@@ -720,12 +720,21 @@ def compare_wuxing(dist_a: dict[str, int], label_a: str,
           "score": int,  # +2=大吉, +1=吉, 0=中性, -1=凶, -2=大凶
         }
     """
-    total_a = sum(dist_a.values()) or 1
-    total_b = sum(dist_b.values()) or 1
+    def _safe_float(value: object) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    normalized_a = {element: _safe_float(dist_a.get(element, 0)) for element in WUXING_ELEMENTS}
+    normalized_b = {element: _safe_float(dist_b.get(element, 0)) for element in WUXING_ELEMENTS}
+
+    total_a = sum(normalized_a.values()) or 1.0
+    total_b = sum(normalized_b.values()) or 1.0
 
     # 主要五行：佔比最高
-    dom_a = max(dist_a, key=lambda k: dist_a.get(k, 0))
-    dom_b = max(dist_b, key=lambda k: dist_b.get(k, 0))
+    dom_a = max(WUXING_ELEMENTS, key=lambda k: normalized_a.get(k, 0.0))
+    dom_b = max(WUXING_ELEMENTS, key=lambda k: normalized_b.get(k, 0.0))
 
     # 關係判斷：以 A（命主）視角
     if dom_a == dom_b:
