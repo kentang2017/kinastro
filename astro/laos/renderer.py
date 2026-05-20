@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import math
+from html import escape as html_escape
 from typing import Any, Callable, Dict, List
 
 from .calculator import LaoChart, chart_to_dict
@@ -77,6 +78,18 @@ _PLANET_ZH: Dict[str, str] = {
     "ketu": "計都",
 }
 
+_PLANET_LAO: Dict[str, str] = {
+    "sun": "ພຣະອາທິດ",
+    "moon": "ພຣະຈັນ",
+    "mars": "ພຣະອັງຄານ",
+    "mercury": "ພຣະພຸດ",
+    "jupiter": "ພຣະພະຫັດ",
+    "venus": "ພຣະສຸກ",
+    "saturn": "ພຣະເສົາ",
+    "rahu": "ຣາຫູ",
+    "ketu": "ເກດຸ",
+}
+
 _LAO_SIGNS_ZH: Dict[str, str] = {
     "ເມສ": "白羊座",
     "ພຶດສະພາ": "金牛座",
@@ -99,6 +112,37 @@ _SIGN_NAMES_LAO: List[str] = [
 
 _NUM_ZODIAC_SIGNS = len(_SIGN_NAMES_LAO)
 
+_SIGN_STAR_LORD_KEYS: List[str] = [
+    "mars", "venus", "mercury", "moon", "sun", "mercury",
+    "venus", "mars", "jupiter", "saturn", "saturn", "jupiter",
+]
+
+_LAO_ZODIAC_ANIMALS: List[str] = [
+    "🐀 ໜູ", "🐂 ງົວ", "🐅 ເສືອ", "🐇 ກະຕ່າຍ", "🐉 ພະຍານາກ", "🐍 ງູ",
+    "🐎 ມ້າ", "🐐 ແບ້", "🐒 ລີງ", "🐓 ໄກ່", "🐕 ໝາ", "🐖 ໝູ",
+]
+
+_PLANET_TRAD_MEANING: Dict[str, str] = {
+    "sun": "代表權威與生命力（待補完整傳統詮釋）",
+    "moon": "代表情感與心性（待補完整傳統詮釋）",
+    "mars": "代表行動與競爭（待補完整傳統詮釋）",
+    "mercury": "代表學習與溝通（待補完整傳統詮釋）",
+    "jupiter": "代表福德與智慧（待補完整傳統詮釋）",
+    "venus": "代表人緣與財喜（待補完整傳統詮釋）",
+    "saturn": "代表責任與考驗（待補完整傳統詮釋）",
+    "rahu": "代表突變與執著（待補完整傳統詮釋）",
+    "ketu": "代表出離與業力（待補完整傳統詮釋）",
+}
+
+_LAO_SVG_FONT_FAMILY = "Noto Sans Lao, Phetsarath OT, sans-serif"
+_HOUSE_LABEL_Y_OFFSETS = (-8, 4, 16)
+_PLANET_STAR_LABEL_OFFSET = 21
+_CENTER_DEFAULT_STATUS = "ສະຖານະປະຈຸບັນ: ປົກກະຕິ"
+_CENTER_SPECIAL_YEAR_TAG = "⚑ ປີພິເສດ"
+_CENTER_NORMAL_YEAR_TAG = "◉ ປີປົກກະຕິ"
+_TRADITIONAL_MEANING_PLACEHOLDER = "傳統義理待補"
+_DEGREES_PER_SIGN = 30
+
 
 def _zh(lao_text: str, mapping: Dict[str, str], fallback: str = "") -> str:
     """查詢 Lao→中文對照，找不到則回傳 fallback 或原文。"""
@@ -110,6 +154,14 @@ def _polar(cx: float, cy: float, r: float, angle_deg: float) -> tuple[float, flo
 
     rad = math.radians(angle_deg - 90)
     return cx + r * math.cos(rad), cy + r * math.sin(rad)
+
+
+def _star_lord_key(sign_index: int) -> str:
+    """回傳星座對應星主（Star Lord）鍵值。"""
+
+    if 0 <= sign_index < len(_SIGN_STAR_LORD_KEYS):
+        return _SIGN_STAR_LORD_KEYS[sign_index]
+    return "sun"
 
 
 def _planet_symbol(key: str) -> str:
@@ -138,35 +190,42 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
     planets = data.get("planets", [])
     lao_date = data.get("lao_date", {})
     sangkhom = data.get("sangkhom", {})
+    special_year = data.get("special_year", {})
 
     cx = cy = size / 2
     r_outer = size * 0.43
     r_inner = size * 0.18
     r_planet = size * 0.34
-    r_house_label = size * 0.395
+    r_house_label = size * 0.382
 
     lao_houses = [
         "ເມສ", "ພຶດສະພາ", "ມິຖຸນ", "ກະກົດ", "ສິງ", "ກັນຍາ",
         "ຕຸລາ", "ພະຈິກ", "ທະນູ", "ມັງກອນ", "ກຸມພາ", "ມີນ",
     ]
 
+    center_special = str(special_year.get("description", "")).strip()
+    center_sangkhom = str(sangkhom.get("status", "")).strip()
+    center_status = center_special or center_sangkhom or _CENTER_DEFAULT_STATUS
+    center_year_tag = _CENTER_SPECIAL_YEAR_TAG if special_year.get("is_special") else _CENTER_NORMAL_YEAR_TAG
+
     parts = [
         '<div style="width:100%;max-width:820px;margin:0 auto;overflow-x:auto;">',
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}" style="width:100%;height:auto;display:block;">',
         "<defs>",
         "<radialGradient id='laoCosmic' cx='50%' cy='50%' r='60%'>",
-        "<stop offset='0%' stop-color='#101d44'/>",
-        "<stop offset='100%' stop-color='#070d23'/>",
+        "<stop offset='0%' stop-color='#2b1b3f'/>",
+        "<stop offset='100%' stop-color='#0c1025'/>",
         "</radialGradient>",
         "<linearGradient id='laoGold' x1='0%' y1='0%' x2='100%' y2='100%'>",
-        "<stop offset='0%' stop-color='#f5dd93'/>",
-        "<stop offset='100%' stop-color='#b8860b'/>",
+        "<stop offset='0%' stop-color='#f8e8b8'/>",
+        "<stop offset='100%' stop-color='#be8e2d'/>",
         "</linearGradient>",
         "</defs>",
         f"<rect x='0' y='0' width='{size}' height='{size}' fill='url(#laoCosmic)' rx='20'/>",
-        f"<circle cx='{cx}' cy='{cy}' r='{r_outer + 14}' fill='none' stroke='url(#laoGold)' stroke-width='2.6' opacity='0.95'/>",
-        f"<circle cx='{cx}' cy='{cy}' r='{r_outer}' fill='none' stroke='#c79b31' stroke-width='1.6' opacity='0.9'/>",
-        f"<circle cx='{cx}' cy='{cy}' r='{r_inner}' fill='#0e1638' stroke='#d4af37' stroke-width='1.8'/>",
+        f"<circle cx='{cx}' cy='{cy}' r='{r_outer + 14}' fill='none' stroke='url(#laoGold)' stroke-width='3.0' opacity='0.95'/>",
+        f"<circle cx='{cx}' cy='{cy}' r='{r_outer + 6}' fill='none' stroke='#9f7828' stroke-width='1.2' stroke-dasharray='2 6' opacity='0.8'/>",
+        f"<circle cx='{cx}' cy='{cy}' r='{r_outer}' fill='none' stroke='#d6ac53' stroke-width='1.8' opacity='0.93'/>",
+        f"<circle cx='{cx}' cy='{cy}' r='{r_inner}' fill='#14193a' stroke='#e0bc66' stroke-width='2.0'/>",
     ]
 
     # 12 宮分割
@@ -175,33 +234,83 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         x1, y1 = _polar(cx, cy, r_inner, angle)
         x2, y2 = _polar(cx, cy, r_outer, angle)
         lx, ly = _polar(cx, cy, r_house_label, angle + 15)
+        animal = _LAO_ZODIAC_ANIMALS[i]
+        offset_top, offset_mid, offset_bottom = _HOUSE_LABEL_Y_OFFSETS
         parts.append(
-            f"<line x1='{x1:.2f}' y1='{y1:.2f}' x2='{x2:.2f}' y2='{y2:.2f}' stroke='#b8902e' stroke-width='1.1' opacity='0.88'/>"
+            f"<line x1='{x1:.2f}' y1='{y1:.2f}' x2='{x2:.2f}' y2='{y2:.2f}' stroke='#caa24b' stroke-width='1.25' opacity='0.9'/>"
         )
         parts.append(
-            f"<text x='{lx:.2f}' y='{ly:.2f}' text-anchor='middle' dominant-baseline='middle' fill='#f2d48a' font-size='12' font-family='Noto Sans Lao, sans-serif'>{lao_houses[i]}</text>"
+            f"<text x='{lx:.2f}' y='{ly + offset_top:.2f}' text-anchor='middle' fill='#f6df9e' font-size='10' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>ຮືອນ {i + 1}</text>"
+        )
+        parts.append(
+            f"<text x='{lx:.2f}' y='{ly + offset_mid:.2f}' text-anchor='middle' fill='#f0d187' font-size='11' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_houses[i]}</text>"
+        )
+        parts.append(
+            f"<text x='{lx:.2f}' y='{ly + offset_bottom:.2f}' text-anchor='middle' fill='#d7c7a0' font-size='9.5' font-family='{_LAO_SVG_FONT_FAMILY}'>{animal}</text>"
         )
 
     # 行星標記
     for p in planets:
         key = str(p.get("key", "")).lower()
         lon = float(p.get("longitude", 0.0))
+        sign_idx = int(p.get("sign_index", int(lon // _DEGREES_PER_SIGN) % 12))
+        house_no = int(p.get("house", 0))
+        retrograde = bool(p.get("retrograde"))
+        sign_lao = _SIGN_NAMES_LAO[sign_idx] if 0 <= sign_idx < _NUM_ZODIAC_SIGNS else "—"
+        sign_animal = _LAO_ZODIAC_ANIMALS[sign_idx] if 0 <= sign_idx < _NUM_ZODIAC_SIGNS else "—"
+        star_lord = _star_lord_key(sign_idx)
+        star_lord_symbol = _planet_symbol(star_lord)
+        star_lord_lao = _PLANET_LAO.get(star_lord, star_lord.upper())
         symbol = _planet_symbol(key)
         px, py = _polar(cx, cy, r_planet, lon)
+        label_dx = _PLANET_STAR_LABEL_OFFSET if px < cx else -_PLANET_STAR_LABEL_OFFSET
+        label_anchor = "start" if px < cx else "end"
+        planet_name_zh = _PLANET_ZH.get(key, key.upper())
+        planet_name_lao = _PLANET_LAO.get(key, key.upper())
+        retro_text = "是 ℞" if retrograde else "否"
+        meaning = _PLANET_TRAD_MEANING.get(key, _TRADITIONAL_MEANING_PLACEHOLDER)
+        tooltip_title = html_escape(f"{planet_name_zh} · {planet_name_lao}")
+        tooltip_desc = html_escape(
+            f"度數/星座：{lon:.2f}° {sign_lao}；"
+            f"宮位：第 {house_no} 宮；"
+            f"逆行：{retro_text}；"
+            f"星主：{star_lord_symbol} {_PLANET_ZH.get(star_lord, star_lord.upper())}；"
+            f"生肖：{sign_animal}；"
+            f"傳統意義：{meaning}"
+        )
+        parts.append("<g>")
+        parts.append(f"<title>{tooltip_title}</title>")
+        parts.append(f"<desc>{tooltip_desc}</desc>")
         parts.append(
-            f"<circle cx='{px:.2f}' cy='{py:.2f}' r='13' fill='#0a1026' stroke='#e4be59' stroke-width='1.2'/>"
+            f"<circle cx='{px:.2f}' cy='{py:.2f}' r='13.2' fill='#120f2c' stroke='#efd18a' stroke-width='1.35'/>"
+        )
+        if retrograde:
+            parts.append(
+                f"<circle cx='{px:.2f}' cy='{py:.2f}' r='16.5' fill='none' stroke='#ff8173' stroke-width='1.8' opacity='0.95'/>"
+            )
+        parts.append(
+            f"<text x='{px:.2f}' y='{py:.2f}' text-anchor='middle' dominant-baseline='middle' fill='#ffe8ad' font-size='16'>{symbol}</text>"
         )
         parts.append(
-            f"<text x='{px:.2f}' y='{py:.2f}' text-anchor='middle' dominant-baseline='middle' fill='#f4de9a' font-size='16'>{symbol}</text>"
+            f"<text x='{px + label_dx:.2f}' y='{py + 3:.2f}' text-anchor='{label_anchor}' fill='#f3d88f' font-size='9.4' font-family='{_LAO_SVG_FONT_FAMILY}'>ນາຍດາວ {star_lord_symbol} {star_lord_lao}</text>"
         )
+        if retrograde:
+            parts.append(
+                f"<text x='{px + (12 if px < cx else -12):.2f}' y='{py - 12:.2f}' text-anchor='middle' fill='#ff9b90' font-size='10' font-weight='bold'>℞</text>"
+            )
+        parts.append(
+            f"<text x='{px:.2f}' y='{py + 24:.2f}' text-anchor='middle' fill='#cdb784' font-size='8.8' font-family='{_LAO_SVG_FONT_FAMILY}'>{sign_animal}</text>"
+        )
+        parts.append("</g>")
 
     # 中心資訊
     parts.extend(
         [
             f"<text x='{cx}' y='{cy - 32}' text-anchor='middle' fill='#f4de9a' font-size='24' font-family='Noto Sans Lao, sans-serif'>🌀</text>",
-            f"<text x='{cx}' y='{cy - 10}' text-anchor='middle' fill='#f0d080' font-size='15' font-family='Noto Sans Lao, sans-serif'>ໄທຣາສາດລາວ</text>",
-            f"<text x='{cx}' y='{cy + 10}' text-anchor='middle' fill='#d9bc76' font-size='12'>{lao_date.get('full_lao_date', '')}</text>",
-            f"<text x='{cx}' y='{cy + 30}' text-anchor='middle' fill='#ffdf8d' font-size='13' font-weight='bold'>{sangkhom.get('status', '')}</text>",
+            f"<text x='{cx}' y='{cy - 10}' text-anchor='middle' fill='#f0d080' font-size='15' font-family='{_LAO_SVG_FONT_FAMILY}'>ໄທຣາສາດລາວ</text>",
+            f"<text x='{cx}' y='{cy + 10}' text-anchor='middle' fill='#d9bc76' font-size='11.2' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_date.get('full_lao_date', '')}</text>",
+            f"<text x='{cx}' y='{cy + 27}' text-anchor='middle' fill='#ffdf8d' font-size='12.2' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_year_tag)}</text>",
+            f"<text x='{cx}' y='{cy + 44}' text-anchor='middle' fill='#f5ce80' font-size='9.6' font-family='{_LAO_SVG_FONT_FAMILY}'>{html_escape(center_status)}</text>",
         ]
     )
 
