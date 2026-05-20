@@ -104,12 +104,9 @@ def get_all_data() -> Dict[str, Any]:
 
 
 def reload_all_data() -> None:
-    """清除快取並重新載入所有資料（開發或更新資料時使用）"""
+    """清除快取並重新載入所有資料（開發或更新資料時使用）。"""
     get_all_data.cache_clear()
-    get_sangkhom_data.cache_clear()
-    get_sikarat_data.cache_clear()
-    get_special_years_data.cache_clear()
-    get_calendar_constants.cache_clear()
+    load_json.cache_clear()
     print("✅ 所有老撾占星資料已重新載入")
 
 

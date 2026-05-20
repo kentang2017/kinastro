@@ -2,44 +2,81 @@
 """
 老撾占星術 (ໄທຣາສາດລາວ) 基礎常數表
 嚴格對應書中 ວັນ・ເດືອນ・ປີ・ສີກາດ 章節
+
+雙語設計：所有公開常數同時提供寮國文（Lao script）與中文對照。
+- LAO_WEEKDAYS / LAO_WEEKDAYS_ZH
+- LAO_MONTHS   / LAO_MONTHS_ZH
+- LAO_SEASONS  / LAO_SEASONS_ZH
 """
 
 # ==================== 1. 星期 (ວັນ) ====================
-LAO_WEEKDAYS = {
+# 書中第1章 ວັນ，0=週日（依 Python weekday() 約定，週日為 0）
+LAO_WEEKDAYS: dict[int, str] = {
     0: "ວັນອາທິດ",      # Sunday
     1: "ວັນຈັນ",        # Monday
-    2: "ວັນອັງຄານ",      # Tuesday
-    3: "ວັນພຸດ",         # Wednesday
-    4: "ວັນພະຫັດ",       # Thursday
-    5: "ວັນສຸກ",         # Friday
-    6: "ວັນສົບ",         # Saturday
+    2: "ວັນອັງຄານ",     # Tuesday
+    3: "ວັນພຸດ",        # Wednesday
+    4: "ວັນພະຫັດ",      # Thursday
+    5: "ວັນສຸກ",        # Friday
+    6: "ວັນສົບ",        # Saturday
 }
 
-LAO_WEEKDAYS_SHORT = {
+# 中文星期對照（與 LAO_WEEKDAYS 索引相同）
+LAO_WEEKDAYS_ZH: dict[int, str] = {
+    0: "星期日",
+    1: "星期一",
+    2: "星期二",
+    3: "星期三",
+    4: "星期四",
+    5: "星期五",
+    6: "星期六",
+}
+
+LAO_WEEKDAYS_SHORT: dict[int, str] = {
     0: "ອາ.", 1: "ຈ.", 2: "ອ.", 3: "ພ.", 4: "ພຫ.", 5: "ສຸ.", 6: "ສົບ."
 }
 
 # ==================== 2. 月份 (ເດືອນ) ====================
-LAO_MONTHS = {
-    1: "ເດືອນມັງກອນ",      # January
-    2: "ເດືອນກຸມພາ",       # February
-    3: "ເດືອນມີນາ",        # March
-    4: "ເດືອນເມສາ",        # April
-    5: "ເດືອນພຶດສະພາ",     # May
-    6: "ເດືອນມິຖຸນາ",      # June
-    7: "ເດືອນກໍລະກົດ",     # July
-    8: "ເດືອນສິງຫາ",       # August
-    9: "ເດືອນກັນຍາ",       # September
-    10: "ເດືອນຕຸລາ",       # October
-    11: "ເດືອນພະຈິກ",      # November
-    12: "ເດືອນທັນວາ",      # December
+LAO_MONTHS: dict[int, str] = {
+    1:  "ເດືອນມັງກອນ",    # January
+    2:  "ເດືອນກຸມພາ",     # February
+    3:  "ເດືອນມີນາ",      # March
+    4:  "ເດືອນເມສາ",      # April
+    5:  "ເດືອນພຶດສະພາ",   # May
+    6:  "ເດືອນມິຖຸນາ",    # June
+    7:  "ເດືອນກໍລະກົດ",   # July
+    8:  "ເດືອນສິງຫາ",     # August
+    9:  "ເດືອນກັນຍາ",     # September
+    10: "ເດືອນຕຸລາ",      # October
+    11: "ເດືອນພະຈິກ",     # November
+    12: "ເດືອນທັນວາ",     # December
+}
+
+# 中文月份對照
+LAO_MONTHS_ZH: dict[int, str] = {
+    1: "一月", 2: "二月", 3: "三月", 4: "四月",
+    5: "五月", 6: "六月", 7: "七月", 8: "八月",
+    9: "九月", 10: "十月", 11: "十一月", 12: "十二月",
 }
 
 # ==================== 3. 季節 (ລະດູ) ====================
-LAO_SEASONS = {
-    1: "ລະດູໜາວ",    # 冷季 (11-2月)
-    2: "ລະດູຝົນ",     # 雨季 (5-10月)
-    3: "ລະດູແຫ້ງ",    # 旱季 (3-4月)
+# 書中三季：冷季（ລະດູໜາວ）、雨季（ລະດູຝົນ）、旱季（ລະດູແຫ້ງ）
+LAO_SEASONS: dict[int, str] = {
+    1: "ລະດູໜາວ",    # 冷季 (11–2月)
+    2: "ລະດູຝົນ",    # 雨季 (5–10月)
+    3: "ລະດູແຫ້ງ",   # 旱季 (3–4月)
+}
+
+# 中文季節對照（key 與 LAO_SEASONS 相同）
+LAO_SEASONS_ZH: dict[int, str] = {
+    1: "冷季（11–2月）",
+    2: "雨季（5–10月）",
+    3: "旱季（3–4月）",
+}
+
+# Lao 文字 → 中文反查（供 renderer 快速翻譯）
+LAO_SEASON_NAME_ZH: dict[str, str] = {
+    v: LAO_SEASONS_ZH[k] for k, v in LAO_SEASONS.items()
 }
 
 # ==================== 4. 特殊年份規則 (ປີອະທິກະ...) ====================
@@ -95,18 +132,49 @@ LAO_ASTRO_EMOJIS = {
 }
 
 # ==================== 工具函數 ====================
-def get_weekday_name(day: int, short: bool = False) -> str:
-    """取得老撾星期名稱"""
-    if short:
-        return LAO_WEEKDAYS_SHORT.get(day % 7, "未知")
-    return LAO_WEEKDAYS.get(day % 7, "未知")
+def get_weekday_name(day: int, short: bool = False, lang: str = "lao") -> str:
+    """取得星期名稱。
 
-def get_month_name(month: int) -> str:
-    """取得老撾月份名稱"""
+    Args:
+        day:   Python weekday() 值（0=週日 … 6=週六）。
+        short: 是否使用縮寫（僅 Lao 文）。
+        lang:  ``"lao"``（預設）或 ``"zh"``。
+    """
+    idx = day % 7
+    if lang == "zh":
+        return LAO_WEEKDAYS_ZH.get(idx, "未知")
+    if short:
+        return LAO_WEEKDAYS_SHORT.get(idx, "未知")
+    return LAO_WEEKDAYS.get(idx, "未知")
+
+
+def get_month_name(month: int, lang: str = "lao") -> str:
+    """取得月份名稱。
+
+    Args:
+        month: 1–12。
+        lang:  ``"lao"``（預設）或 ``"zh"``。
+    """
+    if lang == "zh":
+        return LAO_MONTHS_ZH.get(month, f"{month}月")
     return LAO_MONTHS.get(month, f"ເດືອນ{month}")
 
+
+def get_season(month: int, lang: str = "lao") -> str:
+    """依格里曆月份回傳季節名稱。"""
+    if month in (11, 12, 1, 2):
+        key = 1
+    elif month in (5, 6, 7, 8, 9, 10):
+        key = 2
+    else:
+        key = 3
+    if lang == "zh":
+        return LAO_SEASONS_ZH.get(key, "未知季節")
+    return LAO_SEASONS.get(key, "未知")
+
+
 def is_special_year(year: int) -> dict:
-    """判斷是否為特殊年份"""
+    """判斷是否為特殊年份（傳入老撾佛曆年）。"""
     results = {}
     for name, rule in SPECIAL_YEAR_CYCLES.items():
         if (year - rule["offset"]) % rule["cycle"] == 0:
@@ -114,12 +182,13 @@ def is_special_year(year: int) -> dict:
     return results
 
 
-# 讓 from .constants import * 可以正常運作
+# ==================== 公開介面 ====================
 __all__ = [
-    "LAO_WEEKDAYS", "LAO_WEEKDAYS_SHORT",
-    "LAO_MONTHS", "LAO_SEASONS",
+    "LAO_WEEKDAYS", "LAO_WEEKDAYS_ZH", "LAO_WEEKDAYS_SHORT",
+    "LAO_MONTHS",   "LAO_MONTHS_ZH",
+    "LAO_SEASONS",  "LAO_SEASONS_ZH",  "LAO_SEASON_NAME_ZH",
     "SPECIAL_YEAR_CYCLES", "BUDDHIST_ERA_OFFSET",
     "SIKARAT_CYCLE", "SIKARAT_NAMES",
     "LAO_CALENDAR_RULES", "LAO_ASTRO_EMOJIS",
-    "get_weekday_name", "get_month_name", "is_special_year",
+    "get_weekday_name", "get_month_name", "get_season", "is_special_year",
 ]
