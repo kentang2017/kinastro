@@ -56,9 +56,11 @@ _AYANAMSA_MODE_MAP: Dict[str, int] = {
     "KRISHNAMURTI": swe.SIDM_KRISHNAMURTI,
     "CUSTOM": swe.SIDM_USER,
 }
-if hasattr(swe, "SIDM_TRUE_CITRA"):
+_TRUE_CITRA_SUPPORTED = hasattr(swe, "SIDM_TRUE_CITRA")
+if _TRUE_CITRA_SUPPORTED:
     _AYANAMSA_MODE_MAP["TRUE_CITRA"] = swe.SIDM_TRUE_CITRA
 
+# 自訂偏移只允許小範圍微調，避免偏離常見老撾/印度 sidereal 傳統過大。
 _CUSTOM_AYANAMSA_MIN = -5.0
 _CUSTOM_AYANAMSA_MAX = 5.0
 
@@ -134,6 +136,8 @@ def get_ayanamsa_mode(ayanamsa: str) -> int:
     """回傳 ayanamsa 字串對應的 Swiss Ephemeris SIDM 常數。"""
 
     key = ayanamsa.strip().upper()
+    if key == "TRUE_CITRA" and not _TRUE_CITRA_SUPPORTED:
+        raise ValueError("目前 swisseph 版本不支援 TRUE_CITRA（SIDM_TRUE_CITRA）")
     if key in _AYANAMSA_MODE_MAP:
         return _AYANAMSA_MODE_MAP[key]
     supported = ", ".join(sorted(_AYANAMSA_MODE_MAP.keys()))
@@ -144,6 +148,8 @@ def validate_ayanamsa(ayanamsa: str, offset: float = 0.0) -> bool:
     """驗證 ayanamsa 與自訂偏移是否合法。"""
 
     key = ayanamsa.strip().upper()
+    if key == "TRUE_CITRA" and not _TRUE_CITRA_SUPPORTED:
+        return False
     if key not in _AYANAMSA_MODE_MAP:
         return False
     if key == "CUSTOM":
@@ -254,8 +260,9 @@ def compute_lao_chart(
     - `ayanamsa` 支援 `LAHIRI`、`RAMAN`、`KRISHNAMURTI`、`TRUE_CITRA`、`CUSTOM`
     - 預設 `LAHIRI`，與舊行為完全一致
     - 當 `ayanamsa="CUSTOM"` 時，會使用 `custom_ayanamsa_offset`（度）
-      並透過 `swe.set_sid_mode(swe.SIDM_USER, t0=0, ayan_t0=offset)` 套用
-    - 自訂 offset 合理範圍為 -5.0 ~ +5.0 度
+      並透過 `swe.set_sid_mode(swe.SIDM_USER, t0=0, ayan_t0=offset)` 套用，
+      其中 `t0=0` 代表以 J2000.0 基準 epoch 設定偏移
+    - 自訂 offset 合理範圍為 -5.0 ~ +5.0 度（供傳統流派小幅校準）
     """
 
     _validate_datetime(
