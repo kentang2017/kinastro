@@ -34,7 +34,12 @@ from .financial.gann_macro_stock import (
     GANN_NATAL_PRESETS,
     GANN_NATAL_REFERENCE_PRICES,
     build_gann_macro_timing,
+    build_gann_full_confluence,
     compute_square_of_nine_levels,
+    compute_time_price_squaring,
+    compute_gann_angles,
+    compute_natural_squares_vibration,
+    compute_solar_ingress_gann_confluence,
 )
 from .financial.backtesting import run_backtest_mvp
 from .financial.data_loader import load_great_conjunctions, load_historical_events
@@ -1168,6 +1173,295 @@ def _render_current_outlook(fin: FinancialData, chart: ChartData):
     _render_financial_ai_button(fin, chart)
 
 
+# ============================================================
+# 江恩視覺化強化：輔助渲染函數
+# ============================================================
+
+def _render_gann_fan_chart(go, pivot_price: float, pivot_date, as_of_date, trend: str = "up"):
+    """Render Gann Fan chart with nine angle lines projected from a pivot point.
+
+    Args:
+        go: Plotly graph_objects module.
+        pivot_price: Pivot point price.
+        pivot_date: Pivot point date.
+        as_of_date: Current evaluation date.
+        trend: Direction of trend (``"up"`` or ``"down"``).
+    """
+    angles_data = compute_gann_angles(
+        pivot_price=float(pivot_price),
+        pivot_date=pivot_date,
+        as_of_date=as_of_date,
+        lookahead_days=360,
+        trend=trend,
+    )
+    if not angles_data:
+        st.info("無法計算江恩扇形角度。")
+        return
+
+    fig = go.Figure()
+
+    # 各角度線顏色對照
+    angle_colors = {
+        "1×1": "#fbbf24",    # 金色：最重要
+        "2×1": "#34d399",
+        "3×1": "#60a5fa",
+        "4×1": "#a78bfa",
+        "8×1": "#f472b6",
+        "1×2": "#fb923c",
+        "1×3": "#4ade80",
+        "1×4": "#93c5fd",
+        "1×8": "#c4b5fd",
+    }
+
+    angle_names_flat = ["8×1", "4×1", "3×1", "2×1", "1×1", "1×2", "1×3", "1×4", "1×8"]
+
+    for angle_name in angle_names_flat:
+        pts = [r for r in angles_data if r["angle"] == angle_name]
+        if not pts:
+            continue
+        pts_sorted = sorted(pts, key=lambda x: x["days_from_now"])
+        xs = [r["date"] for r in pts_sorted]
+        ys = [r["price_target"] for r in pts_sorted]
+        color = angle_colors.get(angle_name, "#94a3b8")
+        dash = "dot" if angle_name == "1×1" else "solid"
+        width = 2.5 if angle_name == "1×1" else 1.5
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys,
+            mode="lines",
+            name=angle_name,
+            line=dict(color=color, dash=dash, width=width),
+            hovertemplate=f"{angle_name}: %{{y:.2f}}<extra></extra>",
+        ))
+
+    # 標注樞紐點
+    pivot_dt = pivot_date.isoformat() if hasattr(pivot_date, "isoformat") else str(pivot_date)
+    fig.add_trace(go.Scatter(
+        x=[pivot_dt], y=[pivot_price],
+        mode="markers+text",
+        text=["樞紐 Pivot"],
+        textposition="top center",
+        marker=dict(size=12, color="#f87171", symbol="diamond"),
+        name="樞紐 Pivot",
+        textfont=dict(color="#fca5a5", size=10),
+    ))
+
+    fig.update_layout(
+        height=380,
+        margin=dict(l=20, r=20, t=40, b=20),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(10,15,35,0.55)",
+        xaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="日期 Date"),
+        yaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="價格 Price"),
+        title=dict(
+            text=f"江恩扇形 Gann Fan（{trend}方向，樞紐 {pivot_price:.2f}）",
+            font=dict(color="#fbbf24", size=13),
+        ),
+        legend=dict(font=dict(color="#c8aaff", size=10), bgcolor="rgba(0,0,0,0)"),
+        font=dict(color="#c8aaff"),
+    )
+    st.plotly_chart(fig, width="stretch")
+
+
+def _render_time_price_squaring_chart(go, tp_data: list[dict], as_of_date):
+    """Render Time-Price Squaring resonance timeline chart.
+
+    Args:
+        go: Plotly graph_objects module.
+        tp_data: List of time-price resonance data points.
+        as_of_date: Current evaluation date.
+    """
+    if not tp_data:
+        st.info("未發現時間＝價格共振點。")
+        return
+
+    primary = [r for r in tp_data if r["strength"] == "主要共振"]
+    secondary = [r for r in tp_data if r["strength"] != "主要共振"]
+
+    fig = go.Figure()
+
+    if primary:
+        fig.add_trace(go.Scatter(
+            x=[r["resonant_date"] for r in primary],
+            y=[r["resonant_price"] for r in primary],
+            mode="markers+text",
+            text=[f"T={r['distance_days']}d\nP={r['resonant_price']:.1f}" for r in primary],
+            textposition="top center",
+            marker=dict(size=14, color="#fbbf24", symbol="star"),
+            name="主要共振 Primary",
+            textfont=dict(size=9, color="#fde68a"),
+        ))
+
+    if secondary:
+        fig.add_trace(go.Scatter(
+            x=[r["resonant_date"] for r in secondary],
+            y=[r["resonant_price"] for r in secondary],
+            mode="markers",
+            marker=dict(size=8, color="#94a3b8", symbol="circle-open"),
+            name="次要共振 Secondary",
+        ))
+
+    # 標示「今日」
+    today_str = as_of_date.isoformat() if hasattr(as_of_date, "isoformat") else str(as_of_date)
+    fig.add_vline(
+        x=today_str,
+        line_dash="dot",
+        line_color="rgba(251,191,36,0.6)",
+        annotation_text="今日 Now",
+        annotation_font_color="#fbbf24",
+    )
+
+    fig.update_layout(
+        height=300,
+        margin=dict(l=20, r=20, t=40, b=20),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(10,15,35,0.55)",
+        xaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="日期 Date"),
+        yaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="共振價格 Resonant Price"),
+        title=dict(
+            text="時間＝價格共振（T=P Squaring）",
+            font=dict(color="#fbbf24", size=13),
+        ),
+        legend=dict(font=dict(color="#c8aaff", size=10), bgcolor="rgba(0,0,0,0)"),
+        font=dict(color="#c8aaff"),
+    )
+    st.plotly_chart(fig, width="stretch")
+
+
+def _render_natural_squares_chart(go, nat_sq_data: dict, current_price: float):
+    """Render Gann Natural Squares vibration chart.
+
+    Args:
+        go: Plotly graph_objects module.
+        nat_sq_data: Natural squares data dictionary from ``compute_natural_squares_vibration``.
+        current_price: Current market price for reference line.
+    """
+    squares = nat_sq_data.get("natural_squares", [])
+    octagon = nat_sq_data.get("octagon_levels", [])
+    vib = nat_sq_data.get("vibration_level", {})
+
+    if not squares:
+        st.info("無自然方格資料。")
+        return
+
+    # 只取前20個方格（控制圖表密度）
+    sq_vals = [s["square"] for s in squares[:20]]
+    sq_ns = [str(s["n"]) + "²" for s in squares[:20]]
+
+    # 找出接近 current_price 的節點（±5%）
+    nearby = [s for s in squares if abs(s["square"] - current_price) / current_price <= 0.05]
+    octagon_near = [o for o in octagon if abs(o["price"] - current_price) / current_price <= 0.03]
+
+    fig = go.Figure()
+
+    # 自然方格水平線
+    for sq in squares[:20]:
+        fig.add_hline(
+            y=sq["square"],
+            line_dash="dot",
+            line_color="rgba(148,163,184,0.25)",
+            line_width=0.8,
+        )
+
+    # 八卦延伸節點（散點）
+    oct_prices_near = [o["price"] for o in octagon_near]
+    if oct_prices_near:
+        fig.add_trace(go.Scatter(
+            x=list(range(len(oct_prices_near))),
+            y=oct_prices_near,
+            mode="markers",
+            marker=dict(size=8, color="#a78bfa", symbol="hexagon"),
+            name="八卦延伸節點 Octagon",
+        ))
+
+    # 自然方格點
+    fig.add_trace(go.Scatter(
+        x=list(range(len(sq_vals))),
+        y=sq_vals,
+        mode="markers+text",
+        text=sq_ns,
+        textposition="middle right",
+        marker=dict(size=10, color="#fbbf24", symbol="square"),
+        name="自然方格 Natural Squares",
+        textfont=dict(size=9, color="#fde68a"),
+    ))
+
+    # 當前價格水平線
+    fig.add_hline(
+        y=current_price,
+        line_dash="dash",
+        line_color="#f87171",
+        line_width=2,
+        annotation_text=f"當前 {current_price:.2f}",
+        annotation_font_color="#f87171",
+    )
+
+    fig.update_layout(
+        height=360,
+        margin=dict(l=20, r=20, t=40, b=20),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(10,15,35,0.55)",
+        xaxis=dict(showticklabels=False, color="#9090b8"),
+        yaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="價格 Price"),
+        title=dict(
+            text=(
+                f"江恩自然方格振動（第{vib.get('vibration_n', '?')}圈，"
+                f"角度 {vib.get('vibration_angle_deg', '?')}°）"
+            ),
+            font=dict(color="#fbbf24", size=13),
+        ),
+        legend=dict(font=dict(color="#c8aaff", size=10), bgcolor="rgba(0,0,0,0)"),
+        font=dict(color="#c8aaff"),
+    )
+    st.plotly_chart(fig, width="stretch")
+
+
+def _render_solar_ingress_gann_chart(go, ingress_data: list[dict]):
+    """Render Solar Ingress × Gann confluence bar chart.
+
+    Args:
+        go: Plotly graph_objects module.
+        ingress_data: List of solar ingress confluence data points.
+    """
+    if not ingress_data:
+        st.info("無節氣共振資料。")
+        return
+
+    names = [r["ingress_name"].split()[0] for r in ingress_data]
+    dates = [r["ingress_date"] for r in ingress_data]
+    scores = [r["total_score"] for r in ingress_data]
+    labels = [r["confluence"] for r in ingress_data]
+
+    bar_colors = []
+    for s in scores:
+        if s >= 8:
+            bar_colors.append("#22c55e")
+        elif s >= 4:
+            bar_colors.append("#fbbf24")
+        else:
+            bar_colors.append("#64748b")
+
+    fig = go.Figure(go.Bar(
+        x=names,
+        y=scores,
+        text=[f"{d}<br>{lb}" for d, lb in zip(dates, labels)],
+        textposition="outside",
+        marker_color=bar_colors,
+        hovertemplate="%{x}<br>%{text}<br>共振分：%{y}<extra></extra>",
+    ))
+
+    fig.update_layout(
+        height=280,
+        margin=dict(l=20, r=20, t=40, b=40),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(10,15,35,0.55)",
+        xaxis=dict(color="#9090b8"),
+        yaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="共振分 Confluence Score"),
+        title=dict(text="節氣入境 x 江恩周期共振 / Solar Ingress × Gann Confluence", font=dict(color="#fbbf24", size=13)),
+        font=dict(color="#c8aaff"),
+    )
+    st.plotly_chart(fig, width="stretch")
+
+
 def _render_macro_market(input_tz: float = 8.0):
     """宏觀股市分頁：地區板塊看多看空與股票靈運。"""
     from .stock_lingyun import REGION_PRESETS
@@ -1421,6 +1715,254 @@ def _render_macro_market(input_tz: float = 8.0):
         include_descending=bool(sq_desc),
     )
     st.dataframe(pd.DataFrame(sq9), width="stretch", hide_index=True)
+
+    # ────────────────────────────────────────────────────────
+    # 新增：時間＝價格共振（Time-Price Squaring）
+    # ────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("### ⏱️💰 時間＝價格共振（Time-Price Squaring）")
+    st.caption(
+        "江恩核心理論：當天數（從出生日計算）在平方根螺旋上與價格落於同一角度，"
+        "市場出現共振轉折窗口。"
+    )
+    tp_col1, tp_col2 = st.columns(2)
+    with tp_col1:
+        tp_price = st.number_input(
+            "基準價格 / Anchor Price",
+            min_value=0.01,
+            value=float(default_price),
+            step=10.0,
+            key="gann_tp_anchor_price",
+        )
+    with tp_col2:
+        tp_orb = st.slider("容差（日） / T=P Orb Days", min_value=1, max_value=21, value=7, step=1, key="gann_tp_orb")
+
+    with st.spinner("計算時間＝價格共振…"):
+        tp_data = compute_time_price_squaring(
+            anchor_price=float(tp_price),
+            anchor_date=natal_date,
+            as_of_date=local_now,
+            lookahead_days=365,
+            orb_days=int(tp_orb),
+        )
+
+    import plotly.graph_objects as _go
+    _render_time_price_squaring_chart(_go, tp_data, local_now)
+
+    tp_in_orb = [r for r in tp_data if r["in_orb"]]
+    if tp_in_orb:
+        st.markdown(f"**🎯 容差窗內共振點（±{tp_orb}日）：**")
+        st.dataframe(pd.DataFrame(tp_in_orb), width="stretch", hide_index=True)
+
+    # ────────────────────────────────────────────────────────
+    # 新增：江恩自然方格 + 振動（Natural Squares + Vibration）
+    # ────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("### 🔲 江恩自然方格 + 振動（Gann Natural Squares + Vibration）")
+    st.caption("自然方格（1², 2², 3²…）是江恩最核心的支撐壓力計算體系，搭配十字/八卦延伸。")
+
+    with st.spinner("計算自然方格振動…"):
+        nat_sq_data = compute_natural_squares_vibration(
+            float(ref_price),
+            num_squares=25,
+            current_price=float(ref_price),
+            proximity_pct=0.05,
+        )
+
+    vib = nat_sq_data.get("vibration_level", {})
+    st.markdown(
+        f"""
+        <div style="background:rgba(30,20,60,0.45);border:1px solid rgba(167,139,250,0.35);
+        border-radius:10px;padding:12px 16px;margin:6px 0 12px 0;">
+        <strong style="color:#a78bfa;">振動層級 / Vibration Level：</strong>
+        <span style="color:#e2e8f0;">{vib.get('description', '—')}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    _render_natural_squares_chart(_go, nat_sq_data, float(ref_price))
+
+    nearest_sq = nat_sq_data.get("nearest_natural_square")
+    if nearest_sq:
+        st.caption(
+            f"最近自然方格：{nearest_sq['n']}² = {nearest_sq['square']}，"
+            f"距參考價 {nearest_sq['pct_from_ref']:.2f}%"
+        )
+
+    # ────────────────────────────────────────────────────────
+    # 新增：江恩扇形角度（Gann Fan）
+    # ────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("### 📐 江恩扇形角度（Gann Fan / Gann Angles）")
+    st.caption("從關鍵樞紐點出發的九條角度線（1×8 至 8×1），形成扇形支撐壓力網。")
+
+    fan_col1, fan_col2, fan_col3 = st.columns(3)
+    with fan_col1:
+        pivot_price_input = st.number_input(
+            "樞紐價格 / Pivot Price",
+            min_value=0.01,
+            value=float(default_price) * 0.8,
+            step=10.0,
+            key="gann_fan_pivot_price",
+        )
+    with fan_col2:
+        pivot_days_ago = st.slider(
+            "樞紐距今（日） / Pivot Days Ago",
+            min_value=30,
+            max_value=730,
+            value=180,
+            step=10,
+            key="gann_fan_pivot_days",
+        )
+    with fan_col3:
+        fan_trend = st.selectbox(
+            "趨勢方向 / Trend",
+            options=["up", "down"],
+            index=0,
+            key="gann_fan_trend",
+        )
+
+    from datetime import date as _date_cls
+    pivot_date_computed = (local_now - timedelta(days=int(pivot_days_ago))).date()
+
+    with st.spinner("計算江恩扇形…"):
+        _render_gann_fan_chart(
+            _go,
+            float(pivot_price_input),
+            pivot_date_computed,
+            local_now.date(),
+            trend=str(fan_trend),
+        )
+
+    # ────────────────────────────────────────────────────────
+    # 新增：Solar Ingress x 江恩共振
+    # ────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("### ☀️ 節氣入境 × 江恩共振（Solar Ingress × Gann Confluence）")
+    st.caption(
+        "春分、夏至、秋分、冬至四個太陽入境點若與江恩周期重疊，"
+        "是歷史上常見的市場轉折確認信號。"
+    )
+
+    with st.spinner("計算節氣江恩共振…"):
+        try:
+            ingress_data = compute_solar_ingress_gann_confluence(
+                natal_date,
+                year=int(local_now.year),
+                cycle_scale=float(gann_scale),
+                use_trading_days=bool(use_trading_days),
+                cycle_orb_days=int(cycle_orb_days),
+            )
+            _render_solar_ingress_gann_chart(_go, ingress_data)
+            if ingress_data:
+                st.dataframe(
+                    pd.DataFrame([
+                        {
+                            "節氣 Ingress": r["ingress_name"],
+                            "日期 Date": r["ingress_date"],
+                            "周期命中 Cycle Hits": r["near_cycle_hits"],
+                            "週年命中 Ann. Hits": r["near_anniversary_hits"],
+                            "共振分 Score": r["total_score"],
+                            "評級 Level": r["confluence"],
+                        }
+                        for r in ingress_data
+                    ]),
+                    width="stretch",
+                    hide_index=True,
+                )
+        except Exception as _ing_err:
+            st.warning(f"節氣計算暫時不可用：{_ing_err}")
+
+    # ────────────────────────────────────────────────────────
+    # 新增：多重共振 Confluence 評分彙總
+    # ────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("### 🎯 多重共振 Confluence 評分彙總")
+    st.caption("整合六層共振：聖經周期 + 週年窗 + 七政守照 + T=P + 節氣 + 自然方格 + 角度線。")
+
+    with st.spinner("計算全維度 Confluence…"):
+        try:
+            confluence = build_gann_full_confluence(
+                market_natal_date=natal_date,
+                as_of_datetime=local_now,
+                current_price=float(ref_price),
+                reference_price=float(ref_price),
+                timezone=input_tz,
+                cycle_scale=float(gann_scale),
+                use_trading_days=bool(use_trading_days),
+                cycle_orb_days=int(cycle_orb_days),
+            )
+            cs = confluence.get("confluence_scores", {})
+            total_c = cs.get("total_confluence_score", 0)
+            cls_c = cs.get("classification", "—")
+
+            # 彙總評分卡片
+            st.markdown(
+                f"""
+                <div style="background:linear-gradient(135deg,rgba(88,28,220,0.25),rgba(20,80,60,0.3));
+                border:1.5px solid rgba(167,139,250,0.5);border-radius:14px;
+                padding:16px 20px;margin:8px 0 16px 0;">
+                <div style="font-size:1.1em;font-weight:700;color:#fbbf24;margin-bottom:8px;">
+                🎯 全維度共振評分：{total_c:+d} → {cls_c}
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.88em;">
+                <span style="color:#93c5fd;">聖經周期：{cs.get('biblical_cycle_score', 0):+d}</span>
+                <span style="color:#93c5fd;">週年窗：{cs.get('anniversary_score', 0):+d}</span>
+                <span style="color:#a78bfa;">七政守照：{cs.get('qizheng_astro_score', 0):+d}</span>
+                <span style="color:#fbbf24;">T=P共振：{cs.get('time_price_squaring_score', 0):+d}</span>
+                <span style="color:#34d399;">節氣入境：{cs.get('solar_ingress_score', 0):+d}</span>
+                <span style="color:#f472b6;">自然方格：{cs.get('natural_square_score', 0):+d}</span>
+                <span style="color:#60a5fa;">角度線：{cs.get('gann_angle_score', 0):+d}</span>
+                </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # 視覺化評分條形圖
+            layer_names = [
+                "聖經周期", "週年窗", "七政守照",
+                "T=P共振", "節氣入境", "自然方格", "角度線",
+            ]
+            layer_scores = [
+                cs.get("biblical_cycle_score", 0),
+                cs.get("anniversary_score", 0),
+                cs.get("qizheng_astro_score", 0),
+                cs.get("time_price_squaring_score", 0),
+                cs.get("solar_ingress_score", 0),
+                cs.get("natural_square_score", 0),
+                cs.get("gann_angle_score", 0),
+            ]
+            bar_cols = ["#34d399" if v >= 0 else "#f87171" for v in layer_scores]
+            fig_conf = _go.Figure(_go.Bar(
+                x=layer_names,
+                y=layer_scores,
+                marker_color=bar_cols,
+                text=[f"{v:+d}" for v in layer_scores],
+                textposition="outside",
+            ))
+            fig_conf.update_layout(
+                height=260,
+                margin=dict(l=20, r=20, t=30, b=20),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(10,15,35,0.55)",
+                xaxis=dict(color="#9090b8"),
+                yaxis=dict(color="#9090b8", gridcolor="rgba(100,130,200,0.12)", title="分數 Score"),
+                title=dict(text="各層共振分數 / Layer Confluence Scores", font=dict(color="#fbbf24", size=12)),
+                font=dict(color="#c8aaff"),
+            )
+            st.plotly_chart(fig_conf, width="stretch")
+
+            # 進出場條件
+            st.markdown("**✅ 建議進場條件 / Entry Conditions**")
+            for cond in confluence.get("entry_conditions", []):
+                st.write(f"- {cond}")
+            st.markdown("**🛑 建議出場條件 / Exit Conditions**")
+            for cond in confluence.get("exit_conditions", []):
+                st.write(f"- {cond}")
+
+        except Exception as _conf_err:
+            st.warning(f"Confluence 計算暫時不可用：{_conf_err}")
 
     st.markdown("**🧪 Astro Backtesting（MVP）**")
     bt_col1, bt_col2 = st.columns(2)
