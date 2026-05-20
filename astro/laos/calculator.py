@@ -23,6 +23,7 @@ from .data.sikarat import get_best_sikarat_hours, get_sikarat_for_datetime
 from .data.special_years import analyze_special_year
 
 HouseSystem = Literal["whole_sign"]
+AyanamsaType = Literal["LAHIRI", "RAMAN", "KRISHNAMURTI", "TRUE_CITRA", "CUSTOM"]
 
 # 主要行星映射（依專案 Thai 模組風格，採用簡潔 key）
 _LAO_GRAHA_IDS: Dict[str, int] = {
@@ -47,6 +48,21 @@ _PLANET_SYMBOLS: Dict[str, str] = {
     "rahu": "☊",
     "ketu": "☋",
 }
+
+# 老撾傳統在不同師承下會用不同 sidereal 基準，故需支援可配置 ayanamsa。
+_AYANAMSA_MODE_MAP: Dict[str, int] = {
+    "LAHIRI": swe.SIDM_LAHIRI,
+    "RAMAN": swe.SIDM_RAMAN,
+    "KRISHNAMURTI": swe.SIDM_KRISHNAMURTI,
+    "CUSTOM": swe.SIDM_USER,
+}
+_TRUE_CITRA_SUPPORTED = hasattr(swe, "SIDM_TRUE_CITRA")
+if _TRUE_CITRA_SUPPORTED:
+    _AYANAMSA_MODE_MAP["TRUE_CITRA"] = swe.SIDM_TRUE_CITRA
+
+# 自訂偏移只允許小範圍微調，避免偏離常見老撾/印度 sidereal 傳統過大。
+_CUSTOM_AYANAMSA_MIN = -5.0
+_CUSTOM_AYANAMSA_MAX = 5.0
 
 
 @dataclass
@@ -79,7 +95,9 @@ class LaoChart:
     location_name: str
     house_system: HouseSystem
     julian_day_ut: float
-    ayanamsa: float
+    ayanamsa: str
+    ayanamsa_offset: float
+    ayanamsa_value: float
     ascendant: float
     lao_date: Dict[str, Any]
     special_year: Dict[str, Any]
@@ -90,10 +108,11 @@ class LaoChart:
 
 _SWE_READY = False
 _SWE_INIT_LOCK = Lock()
+_SWE_CALC_LOCK = Lock()
 
 
 def _ensure_swe_ready() -> None:
-    """Lazy singleton 初始化 Swiss Ephemeris 與 sidereal mode。"""
+    """Lazy singleton 初始化 Swiss Ephemeris。"""
 
     global _SWE_READY
     if _SWE_READY:
@@ -110,8 +129,55 @@ def _ensure_swe_ready() -> None:
         except Exception:
             swe.set_ephe_path("")
 
-        swe.set_sid_mode(swe.SIDM_LAHIRI)
         _SWE_READY = True
+
+
+def get_ayanamsa_mode(ayanamsa: str) -> int:
+    """回傳 ayanamsa 字串對應的 Swiss Ephemeris SIDM 常數。"""
+
+    key = ayanamsa.strip().upper()
+    if key == "TRUE_CITRA" and not _TRUE_CITRA_SUPPORTED:
+        raise ValueError("目前 swisseph 版本不支援 TRUE_CITRA（SIDM_TRUE_CITRA）")
+    if key in _AYANAMSA_MODE_MAP:
+        return _AYANAMSA_MODE_MAP[key]
+    supported = ", ".join(sorted(_AYANAMSA_MODE_MAP.keys()))
+    raise ValueError(f"ayanamsa 不支援：{ayanamsa}。可用值：{supported}")
+
+
+def validate_ayanamsa(ayanamsa: str, offset: float = 0.0) -> bool:
+    """驗證 ayanamsa 與自訂偏移是否合法。"""
+
+    key = ayanamsa.strip().upper()
+    if key == "TRUE_CITRA" and not _TRUE_CITRA_SUPPORTED:
+        return False
+    if key not in _AYANAMSA_MODE_MAP:
+        return False
+    if key == "CUSTOM":
+        return _CUSTOM_AYANAMSA_MIN <= offset <= _CUSTOM_AYANAMSA_MAX
+    return True
+
+
+def init_laos_ayanamsa(ayanamsa: str, offset: float = 0.0) -> tuple[str, float]:
+    """初始化 Swiss Ephemeris 與 ayanamsa 設定，回傳標準化名稱與實際 offset。"""
+
+    key = ayanamsa.strip().upper()
+    if not validate_ayanamsa(key, offset):
+        supported = ", ".join(sorted(_AYANAMSA_MODE_MAP.keys()))
+        if key == "CUSTOM":
+            raise ValueError(
+                f"custom_ayanamsa_offset 必須介於 {_CUSTOM_AYANAMSA_MIN} 到 {_CUSTOM_AYANAMSA_MAX} 度"
+            )
+        raise ValueError(f"ayanamsa 不支援：{ayanamsa}。可用值：{supported}")
+
+    _ensure_swe_ready()
+    mode = get_ayanamsa_mode(key)
+    if key == "CUSTOM":
+        # t0=0 代表以 Swiss Ephemeris 既定基準 epoch（J2000.0）套用 ayan_t0 偏移。
+        swe.set_sid_mode(mode, t0=0, ayan_t0=float(offset))
+        return key, float(offset)
+
+    swe.set_sid_mode(mode)
+    return key, 0.0
 
 
 def _norm(deg: float) -> float:
@@ -181,12 +247,22 @@ def compute_lao_chart(
     house_system: HouseSystem = "whole_sign",
     sangkhom_activity: str = "ການແຕ່ງງານ",
     sikarat_type: str = "ສີກາດລາວ",
+    ayanamsa: AyanamsaType = "LAHIRI",
+    custom_ayanamsa_offset: float = 0.0,
 ) -> LaoChart:
     """計算老撾占星出生盤。
 
     與 Thai 模組相同：
     - 純計算函式（不依賴 Streamlit）
     - 回傳結構化 dataclass，方便 UI 與 API 重用
+
+    Ayanamsa 設定：
+    - `ayanamsa` 支援 `LAHIRI`、`RAMAN`、`KRISHNAMURTI`、`TRUE_CITRA`、`CUSTOM`
+    - 預設 `LAHIRI`，與舊行為完全一致
+    - 當 `ayanamsa="CUSTOM"` 時，會使用 `custom_ayanamsa_offset`（度）
+      並透過 `swe.set_sid_mode(swe.SIDM_USER, t0=0, ayan_t0=offset)` 套用，
+      其中 `t0=0` 代表以 J2000.0 基準 epoch 設定偏移
+    - 自訂 offset 合理範圍為 -5.0 ~ +5.0 度（供傳統流派小幅校準）
     """
 
     _validate_datetime(
@@ -201,67 +277,71 @@ def compute_lao_chart(
     if house_system != "whole_sign":
         raise ValueError(f"目前僅支援 whole_sign，收到：{house_system}")
 
-    _ensure_swe_ready()
-
-    # UTC 小時：與專案既有星盤計算邏輯一致
-    decimal_hour_ut = hour + minute / 60.0 - timezone
-    jd_ut = swe.julday(year, month, day, decimal_hour_ut)
-    ayanamsa = swe.get_ayanamsa_ut(jd_ut)
-
-    # 先取 Asc（sidereal）
-    _, ascmc = swe.houses_ex(jd_ut, latitude, longitude, b"W", swe.FLG_SIDEREAL)
-    ascendant = _norm(ascmc[0])
-
-    planets: List[LaoPlanet] = []
-    for key, pid in _LAO_GRAHA_IDS.items():
-        result, _ = swe.calc_ut(jd_ut, pid, swe.FLG_SIDEREAL)
-        lon = _norm(result[0])
-        speed = result[3]
-        planets.append(
-            LaoPlanet(
-                key=key,
-                symbol=_PLANET_SYMBOLS[key],
-                longitude=lon,
-                latitude=result[1],
-                speed=speed,
-                sign_index=_sign_index(lon),
-                sign_degree=_sign_degree(lon),
-                house=_planet_house_whole_sign(lon, ascendant),
-                retrograde=speed < 0,
-            )
+    with _SWE_CALC_LOCK:
+        resolved_ayanamsa, resolved_offset = init_laos_ayanamsa(
+            ayanamsa=ayanamsa,
+            offset=custom_ayanamsa_offset,
         )
 
-    # 羅睺 / 計都
-    rahu_raw, _ = swe.calc_ut(jd_ut, swe.MEAN_NODE, swe.FLG_SIDEREAL)
-    rahu_lon = _norm(rahu_raw[0])
-    ketu_lon = _norm(rahu_lon + 180.0)
+        # UTC 小時：與專案既有星盤計算邏輯一致
+        decimal_hour_ut = hour + minute / 60.0 - timezone
+        jd_ut = swe.julday(year, month, day, decimal_hour_ut)
+        ayanamsa_value = swe.get_ayanamsa_ut(jd_ut)
 
-    planets.extend(
-        [
-            LaoPlanet(
-                key="rahu",
-                symbol=_PLANET_SYMBOLS["rahu"],
-                longitude=rahu_lon,
-                latitude=rahu_raw[1],
-                speed=rahu_raw[3],
-                sign_index=_sign_index(rahu_lon),
-                sign_degree=_sign_degree(rahu_lon),
-                house=_planet_house_whole_sign(rahu_lon, ascendant),
-                retrograde=True,
-            ),
-            LaoPlanet(
-                key="ketu",
-                symbol=_PLANET_SYMBOLS["ketu"],
-                longitude=ketu_lon,
-                latitude=-rahu_raw[1],
-                speed=rahu_raw[3],
-                sign_index=_sign_index(ketu_lon),
-                sign_degree=_sign_degree(ketu_lon),
-                house=_planet_house_whole_sign(ketu_lon, ascendant),
-                retrograde=True,
-            ),
-        ]
-    )
+        # 先取 Asc（sidereal）
+        _, ascmc = swe.houses_ex(jd_ut, latitude, longitude, b"W", swe.FLG_SIDEREAL)
+        ascendant = _norm(ascmc[0])
+
+        planets: List[LaoPlanet] = []
+        for key, pid in _LAO_GRAHA_IDS.items():
+            result, _ = swe.calc_ut(jd_ut, pid, swe.FLG_SIDEREAL)
+            lon = _norm(result[0])
+            speed = result[3]
+            planets.append(
+                LaoPlanet(
+                    key=key,
+                    symbol=_PLANET_SYMBOLS[key],
+                    longitude=lon,
+                    latitude=result[1],
+                    speed=speed,
+                    sign_index=_sign_index(lon),
+                    sign_degree=_sign_degree(lon),
+                    house=_planet_house_whole_sign(lon, ascendant),
+                    retrograde=speed < 0,
+                )
+            )
+
+        # 羅睺 / 計都
+        rahu_raw, _ = swe.calc_ut(jd_ut, swe.MEAN_NODE, swe.FLG_SIDEREAL)
+        rahu_lon = _norm(rahu_raw[0])
+        ketu_lon = _norm(rahu_lon + 180.0)
+
+        planets.extend(
+            [
+                LaoPlanet(
+                    key="rahu",
+                    symbol=_PLANET_SYMBOLS["rahu"],
+                    longitude=rahu_lon,
+                    latitude=rahu_raw[1],
+                    speed=rahu_raw[3],
+                    sign_index=_sign_index(rahu_lon),
+                    sign_degree=_sign_degree(rahu_lon),
+                    house=_planet_house_whole_sign(rahu_lon, ascendant),
+                    retrograde=True,
+                ),
+                LaoPlanet(
+                    key="ketu",
+                    symbol=_PLANET_SYMBOLS["ketu"],
+                    longitude=ketu_lon,
+                    latitude=-rahu_raw[1],
+                    speed=rahu_raw[3],
+                    sign_index=_sign_index(ketu_lon),
+                    sign_degree=_sign_degree(ketu_lon),
+                    house=_planet_house_whole_sign(ketu_lon, ascendant),
+                    retrograde=True,
+                ),
+            ]
+        )
 
     local_dt = datetime(year, month, day, hour, minute)
     local_day = local_dt.date()
@@ -287,7 +367,9 @@ def compute_lao_chart(
         location_name=location_name,
         house_system=house_system,
         julian_day_ut=jd_ut,
-        ayanamsa=ayanamsa,
+        ayanamsa=resolved_ayanamsa,
+        ayanamsa_offset=resolved_offset,
+        ayanamsa_value=ayanamsa_value,
         ascendant=ascendant,
         lao_date=lao_date,
         special_year=special_year,
