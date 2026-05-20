@@ -192,6 +192,7 @@ def find_all_aspect_hits(
         return []
 
     candidates.sort(key=lambda x: x.jd)
+    # 儒略日差值單位即「日」，因此 merge_gap_days 直接使用 JD 差值比較。
     merged: list[SearchResult] = [candidates[0]]
     for item in candidates[1:]:
         prev = merged[-1]

@@ -44,7 +44,7 @@ def _load_json(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8") as f:
         payload = json.load(f)
     if not isinstance(payload, list):
-        raise ValueError(f"Invalid JSON schema (expected list): {path}")
+        raise ValueError(f"Invalid JSON schema in {path}: expected list, got {type(payload).__name__}")
     rows = [x for x in payload if isinstance(x, dict)]
     if not rows:
         raise ValueError(f"No valid dict rows in {path}")

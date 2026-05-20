@@ -292,7 +292,10 @@ def compute_square_of_nine_levels(
     if reference_price <= 0:
         raise ValueError("reference_price must be positive")
     if angle_step <= 0 or 360 % angle_step != 0:
-        raise ValueError("angle_step must be a positive divisor of 360")
+        raise ValueError(
+            "angle_step must be a positive divisor of 360 "
+            "(e.g., 1,2,3,4,5,6,8,9,10,12,15,18,20,24,30,36,40,45,60,72,90,120,180,360)"
+        )
     root = reference_price ** 0.5
     levels: list[dict] = []
     # 傳統近似：sqrt 軸每 +2 約對應 360°；step = angle * (1/180)

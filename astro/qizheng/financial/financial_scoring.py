@@ -137,8 +137,10 @@ def compute_wealth_score_breakdown(
                 d = abs(diff - target)
                 if d <= orb:
                     influence = _orb_decay(d, orb)
-                    q = (abs(WEALTH_BASE_SCORES.get(p1.name, 0.0)) + abs(WEALTH_BASE_SCORES.get(p2.name, 0.0))) / 4.0
-                    aspect_score += w * influence * max(0.6, q)
+                    planet_strength_factor = (
+                        abs(WEALTH_BASE_SCORES.get(p1.name, 0.0)) + abs(WEALTH_BASE_SCORES.get(p2.name, 0.0))
+                    ) / 4.0
+                    aspect_score += w * influence * max(0.6, planet_strength_factor)
                     break
 
     house_lord_score = 0.0

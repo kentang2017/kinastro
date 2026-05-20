@@ -634,7 +634,7 @@ def _render_overview(fin: FinancialData, go):
                 "度數 Deg": f"{p.longitude:.1f}°",
                 "財星意義 Meaning": entry["zh"],
                 "Meaning (EN)": entry["en"],
-                "能量 Score": f"{entry['score']:+d}",
+                "能量 Score": f"{float(entry['score']):+.1f}",
             })
         df = pd.DataFrame(rows)
         st.dataframe(df, width="stretch", hide_index=True)
@@ -1429,7 +1429,11 @@ def _render_macro_market(input_tz: float = 8.0):
         bt_years = st.slider("回測年數 / Years", min_value=1, max_value=12, value=5, step=1, key="gann_bt_years")
     if st.button("執行回測 / Run Backtest", key="gann_run_backtest"):
         try:
-            import yfinance as yf
+            try:
+                import yfinance as yf
+            except Exception as import_error:
+                st.error(f"缺少 yfinance 套件，無法執行回測：{import_error}")
+                return
             end_dt = datetime.now()
             start_dt = end_dt - timedelta(days=365 * int(bt_years))
             px = yf.download(bt_ticker.strip(), start=start_dt.date(), end=end_dt.date(), progress=False, auto_adjust=False)

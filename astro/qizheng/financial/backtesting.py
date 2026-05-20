@@ -50,9 +50,7 @@ def build_feature_frame(
     rows: list[dict] = []
     indexed = price_df.copy()
     indexed = indexed.sort_index()
-    for i, ts in enumerate(indexed.index):
-        if i % min_step != 0:
-            continue
+    for ts in indexed.index[::min_step]:
         when = ts.to_pydatetime() if hasattr(ts, "to_pydatetime") else ts
         features = feature_fn(when)
         if not isinstance(features, dict):
