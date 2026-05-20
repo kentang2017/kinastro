@@ -154,7 +154,6 @@ def validate_ayanamsa(ayanamsa: str, offset: float = 0.0) -> bool:
 def init_laos_ayanamsa(ayanamsa: str, offset: float = 0.0) -> tuple[str, float]:
     """初始化 Swiss Ephemeris 與 ayanamsa 設定，回傳標準化名稱與實際 offset。"""
 
-    _ensure_swe_ready()
     key = ayanamsa.strip().upper()
     if not validate_ayanamsa(key, offset):
         supported = ", ".join(sorted(_AYANAMSA_MODE_MAP.keys()))
@@ -164,8 +163,10 @@ def init_laos_ayanamsa(ayanamsa: str, offset: float = 0.0) -> tuple[str, float]:
             )
         raise ValueError(f"ayanamsa 不支援：{ayanamsa}。可用值：{supported}")
 
+    _ensure_swe_ready()
     mode = get_ayanamsa_mode(key)
     if key == "CUSTOM":
+        # t0=0 代表以 Swiss Ephemeris 既定基準 epoch（J2000.0）套用 ayan_t0 偏移。
         swe.set_sid_mode(mode, t0=0, ayan_t0=float(offset))
         return key, float(offset)
 
