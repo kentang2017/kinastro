@@ -281,28 +281,115 @@ def compute_square_of_nine_levels(
     reference_price: float,
     *,
     max_ring: int = 2,
+    angle_step: int = 45,
+    include_descending: bool = False,
 ) -> list[dict]:
     """
-    Gann Square of 9 價格振動層級（輪中輪簡化）。
+    Gann Square of 9 價格振動層級。
+
+    預設保持相容（僅輸出上行層級），可用 include_descending 取得完整上下行價位。
     """
     if reference_price <= 0:
         raise ValueError("reference_price must be positive")
+    if angle_step <= 0 or 360 % angle_step != 0:
+        raise ValueError("angle_step must be a positive divisor of 360")
     root = reference_price ** 0.5
     levels: list[dict] = []
-    # 傳統近似：sqrt 軸每 +2 約對應 360°；因此 angle_step = angle * (1/180)
+    # 傳統近似：sqrt 軸每 +2 約對應 360°；step = angle * (1/180)
     for ring in range(max_ring + 1):
-        for angle in range(0, 360, 45):
-            step = (2.0 * ring) + (angle * _SQ9_ANGLE_TO_SQRT_STEP)
-            target = (root + step) ** 2
+        for angle in range(0, 360, angle_step):
+            phase_step = angle * _SQ9_ANGLE_TO_SQRT_STEP
+            upward_step = (2.0 * ring) + phase_step
+            target = (root + upward_step) ** 2
             levels.append(
                 {
                     "ring": ring,
                     "angle": angle,
+                    "direction": "up",
                     "target_price": round(target, 4),
                 }
             )
+            if include_descending:
+                downward_step = -(2.0 * ring + phase_step)
+                down_price = (root + downward_step) ** 2 if (root + downward_step) > 0 else 0.0
+                levels.append(
+                    {
+                        "ring": ring,
+                        "angle": angle,
+                        "direction": "down",
+                        "target_price": round(down_price, 4),
+                    }
+                )
     levels.sort(key=lambda r: r["target_price"])
     return levels
+
+
+def compute_anniversary_dates(
+    anchor_date: date | datetime,
+    *,
+    as_of_date: date | datetime,
+    use_trading_days: bool = False,
+    lookback_years: float = 2.0,
+    lookahead_years: float = 2.0,
+    monthly_step: int = 3,
+) -> list[dict]:
+    """
+    計算江恩 Anniversary Dates（年週年 + 月週年）。
+    """
+    anchor = _to_date(anchor_date)
+    as_of = _to_date(as_of_date)
+    window_start = as_of - timedelta(days=int(lookback_years * 365.2425))
+    window_end = as_of + timedelta(days=int(lookahead_years * 365.2425))
+
+    rows: list[dict] = []
+
+    # 年週年
+    start_year = max(anchor.year, window_start.year - 1)
+    end_year = window_end.year + 1
+    for year in range(start_year, end_year + 1):
+        try:
+            ann = date(year, anchor.month, anchor.day)
+        except ValueError:
+            # 2/29 對齊到 2/28
+            ann = date(year, anchor.month, 28)
+        if window_start <= ann <= window_end:
+            rows.append(
+                {
+                    "type": "yearly_anniversary",
+                    "due_date": ann.isoformat(),
+                    "distance_days": (ann - as_of).days,
+                    "multiple": year - anchor.year,
+                    "note": "年度週年時間窗",
+                }
+            )
+
+    # 月週年（固定每 N 個月）
+    cursor = date(anchor.year, anchor.month, min(anchor.day, 28))
+    step_count = 0
+    max_steps = int((lookback_years + lookahead_years + 2) * 12 / max(monthly_step, 1)) + 12
+    for _ in range(max_steps):
+        step_count += 1
+        month = cursor.month + monthly_step
+        year = cursor.year + (month - 1) // 12
+        month = (month - 1) % 12 + 1
+        day = min(anchor.day, 28)
+        cursor = date(year, month, day)
+        if cursor < window_start:
+            continue
+        if cursor > window_end:
+            break
+        due = _add_business_days(cursor, 0) if use_trading_days else cursor
+        rows.append(
+            {
+                "type": "monthly_anniversary",
+                "due_date": due.isoformat(),
+                "distance_days": (due - as_of).days,
+                "multiple": step_count,
+                "note": f"每 {monthly_step} 個月週年窗",
+            }
+        )
+    rows.sort(key=lambda r: abs(r["distance_days"]))
+    return rows
 
 
 def _classify_resonance(score: int) -> str:
@@ -342,15 +429,24 @@ def build_gann_macro_timing(
         lookback_years=2.0,
         lookahead_years=2.0,
     )
+    anniversary_hits = compute_anniversary_dates(
+        market_natal_date,
+        as_of_date=as_of_datetime,
+        use_trading_days=use_trading_days,
+        lookback_years=2.0,
+        lookahead_years=2.0,
+    )
     near_hits = [x for x in cycle_hits if abs(x["distance_days"]) <= cycle_orb_days]
+    near_anniversaries = [x for x in anniversary_hits if abs(x["distance_days"]) <= cycle_orb_days]
 
     natal_map = natal_longitudes or build_market_natal_longitudes(market_natal_date, timezone=timezone)
     transit_map = transit_longitudes or get_transit_longitudes(as_of_datetime, timezone=timezone)
     qizheng_hits = evaluate_qizheng_resonance(natal_map, transit_map, orb=3.0)
 
     cycle_score = _CYCLE_SCORE_WEIGHT * len(near_hits)
+    anniversary_score = len(near_anniversaries)
     astro_score = sum(x["score"] for x in qizheng_hits)
-    total_score = cycle_score + astro_score
+    total_score = cycle_score + anniversary_score + astro_score
 
     positive_aspects = [x for x in qizheng_hits if x["score"] > 0]
     negative_aspects = [x for x in qizheng_hits if x["score"] < 0]
@@ -373,9 +469,12 @@ def build_gann_macro_timing(
         "cycle_orb_days": cycle_orb_days,
         "cycle_hits": cycle_hits,
         "near_cycle_hits": near_hits,
+        "anniversary_hits": anniversary_hits,
+        "near_anniversaries": near_anniversaries,
         "qizheng_resonance_hits": qizheng_hits,
         "scores": {
             "cycle_score": cycle_score,
+            "anniversary_score": anniversary_score,
             "astro_score": astro_score,
             "total_score": total_score,
             "classification": _classify_resonance(total_score),

@@ -11,6 +11,7 @@ from typing import Optional
 import swisseph as swe
 
 from .constants import FOUR_REMAINDERS, SEVEN_GOVERNORS, TWELVE_PALACES
+from .financial.transit_search import find_closest_event
 
 
 REGION_PRESETS = {
@@ -119,27 +120,14 @@ def _moon_sun_phase(jd: float) -> float:
 
 
 def _search_minimum(start_jd: float, end_jd: float, eval_func) -> float:
-    best_jd = start_jd
-    best_val = abs(eval_func(start_jd))
-    jd = start_jd
-    while jd <= end_jd:
-        val = abs(eval_func(jd))
-        if val < best_val:
-            best_jd, best_val = jd, val
-        jd += 0.05
-
-    step = 0.125
-    for _ in range(20):
-        left = best_jd - step
-        right = best_jd + step
-        left_val = abs(eval_func(left))
-        right_val = abs(eval_func(right))
-        if left_val < best_val:
-            best_jd, best_val = left, left_val
-        if right_val < best_val:
-            best_jd, best_val = right, right_val
-        step *= 0.5
-    return best_jd
+    result = find_closest_event(
+        eval_func,
+        start_jd=start_jd,
+        end_jd=end_jd,
+        coarse_step=0.5,
+        tolerance=1e-5,
+    )
+    return result.jd
 
 
 def _find_ingress_jd(year: int, target_lon: float, window_start: tuple, window_end: tuple) -> float:
