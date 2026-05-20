@@ -447,13 +447,13 @@ def render_financial_tab(
         try:
             return float(value)
         except (TypeError, ValueError):
-            return float(default)
+            return default
 
     def _safe_int(value, default: int) -> int:
         try:
             return int(value)
         except (TypeError, ValueError):
-            return int(default)
+            return default
 
     safe_input_tz = _safe_float(input_tz, getattr(chart, "timezone", 8.0))
 
