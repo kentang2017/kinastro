@@ -56,6 +56,7 @@ SIGN_RULER = {
 }
 
 KEY_HOUSES = (2, 8, 10, 11)
+PLANET_STRENGTH_NORMALIZER = 4.0
 
 
 @dataclass
@@ -137,9 +138,10 @@ def compute_wealth_score_breakdown(
                 d = abs(diff - target)
                 if d <= orb:
                     influence = _orb_decay(d, orb)
+                    # 以 4.0 正規化雙星本質強度，使相位權重落在穩定可比區間。
                     planet_strength_factor = (
                         abs(WEALTH_BASE_SCORES.get(p1.name, 0.0)) + abs(WEALTH_BASE_SCORES.get(p2.name, 0.0))
-                    ) / 4.0
+                    ) / PLANET_STRENGTH_NORMALIZER
                     aspect_score += w * influence * max(0.6, planet_strength_factor)
                     break
 

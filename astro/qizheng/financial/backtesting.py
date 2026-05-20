@@ -9,6 +9,8 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
+MIN_SAMPLE_SIZE_FOR_CORR = 3
+
 
 @dataclass
 class BacktestSummary:
@@ -20,7 +22,7 @@ class BacktestSummary:
 
 
 def _safe_corr(a: pd.Series, b: pd.Series, method: str = "pearson") -> float:
-    if len(a) < 3 or len(b) < 3:
+    if len(a) < MIN_SAMPLE_SIZE_FOR_CORR or len(b) < MIN_SAMPLE_SIZE_FOR_CORR:
         return 0.0
     try:
         corr = a.corr(b, method=method)

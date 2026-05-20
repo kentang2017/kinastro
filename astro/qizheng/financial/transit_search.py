@@ -26,7 +26,7 @@ def normalize_degree(value: float) -> float:
 
 
 def signed_angle_to_target(value: float, target: float) -> float:
-    """回傳 value 對 target 的有號角差（-180, 180]。"""
+    """回傳 value 對 target 的有號角差（[-180, 180)）。"""
     return ((normalize_degree(value - target) + 180.0) % 360.0) - 180.0
 
 

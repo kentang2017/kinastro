@@ -634,7 +634,7 @@ def _render_overview(fin: FinancialData, go):
                 "度數 Deg": f"{p.longitude:.1f}°",
                 "財星意義 Meaning": entry["zh"],
                 "Meaning (EN)": entry["en"],
-                "能量 Score": f"{float(entry['score']):+.1f}",
+                "能量 Score": f"{entry['score']:+g}",
             })
         df = pd.DataFrame(rows)
         st.dataframe(df, width="stretch", hide_index=True)
@@ -1434,9 +1434,10 @@ def _render_macro_market(input_tz: float = 8.0):
             except Exception as import_error:
                 st.error(f"缺少 yfinance 套件，無法執行回測：{import_error}")
                 return
-            end_dt = datetime.now()
-            start_dt = end_dt - timedelta(days=365 * int(bt_years))
-            px = yf.download(bt_ticker.strip(), start=start_dt.date(), end=end_dt.date(), progress=False, auto_adjust=False)
+            with st.spinner("下載價格並計算回測中…"):
+                end_dt = datetime.now()
+                start_dt = end_dt - timedelta(days=365 * int(bt_years))
+                px = yf.download(bt_ticker.strip(), start=start_dt.date(), end=end_dt.date(), progress=False, auto_adjust=False)
             if px is None or px.empty:
                 st.warning("無法取得歷史價格資料。")
             else:
