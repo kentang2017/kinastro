@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 # ──────────────────────────────────────────────────────────
 # 1. 行星雙語名稱
@@ -30,7 +30,7 @@ _PLANET_NAMES: Dict[str, Dict[str, str]] = {
 # 2. 行星宮位傳統義理（書中第3–5章）
 # ──────────────────────────────────────────────────────────
 # 格式：(lao, zh)  — 其中 {planet_lao}/{planet_zh} 為行星名佔位符
-_HOUSE_MEANINGS: Dict[str, Dict[int, tuple[str, str]]] = {
+_HOUSE_MEANINGS: Dict[str, Dict[int, Tuple[str, str]]] = {
     "sun": {
         1:  ("ພຣະອາທິດຢູ່ຮືອນ 1: ລາສີ / ບຸກຄະລິກ — ມີຄວາມເປັນຜູ້ນຳ, ແສງສີທອງ",
              "太陽在第1宮：強烈的領導力與自信，外表氣宇不凡"),

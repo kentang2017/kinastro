@@ -9,9 +9,11 @@
 - LAO_SEASONS  / LAO_SEASONS_ZH
 """
 
+from typing import Dict
+
 # ==================== 1. 星期 (ວັນ) ====================
 # 書中第1章 ວັນ，0=週日（依 Python weekday() 約定，週日為 0）
-LAO_WEEKDAYS: dict[int, str] = {
+LAO_WEEKDAYS: Dict[int, str] = {
     0: "ວັນອາທິດ",      # Sunday
     1: "ວັນຈັນ",        # Monday
     2: "ວັນອັງຄານ",     # Tuesday
@@ -22,7 +24,7 @@ LAO_WEEKDAYS: dict[int, str] = {
 }
 
 # 中文星期對照（與 LAO_WEEKDAYS 索引相同）
-LAO_WEEKDAYS_ZH: dict[int, str] = {
+LAO_WEEKDAYS_ZH: Dict[int, str] = {
     0: "星期日",
     1: "星期一",
     2: "星期二",
@@ -32,12 +34,12 @@ LAO_WEEKDAYS_ZH: dict[int, str] = {
     6: "星期六",
 }
 
-LAO_WEEKDAYS_SHORT: dict[int, str] = {
+LAO_WEEKDAYS_SHORT: Dict[int, str] = {
     0: "ອາ.", 1: "ຈ.", 2: "ອ.", 3: "ພ.", 4: "ພຫ.", 5: "ສຸ.", 6: "ສົບ."
 }
 
 # ==================== 2. 月份 (ເດືອນ) ====================
-LAO_MONTHS: dict[int, str] = {
+LAO_MONTHS: Dict[int, str] = {
     1:  "ເດືອນມັງກອນ",    # January
     2:  "ເດືອນກຸມພາ",     # February
     3:  "ເດືອນມີນາ",      # March
@@ -53,7 +55,7 @@ LAO_MONTHS: dict[int, str] = {
 }
 
 # 中文月份對照
-LAO_MONTHS_ZH: dict[int, str] = {
+LAO_MONTHS_ZH: Dict[int, str] = {
     1: "一月", 2: "二月", 3: "三月", 4: "四月",
     5: "五月", 6: "六月", 7: "七月", 8: "八月",
     9: "九月", 10: "十月", 11: "十一月", 12: "十二月",
@@ -61,21 +63,21 @@ LAO_MONTHS_ZH: dict[int, str] = {
 
 # ==================== 3. 季節 (ລະດູ) ====================
 # 書中三季：冷季（ລະດູໜາວ）、雨季（ລະດູຝົນ）、旱季（ລະດູແຫ້ງ）
-LAO_SEASONS: dict[int, str] = {
+LAO_SEASONS: Dict[int, str] = {
     1: "ລະດູໜາວ",    # 冷季 (11–2月)
     2: "ລະດູຝົນ",    # 雨季 (5–10月)
     3: "ລະດູແຫ້ງ",   # 旱季 (3–4月)
 }
 
 # 中文季節對照（key 與 LAO_SEASONS 相同）
-LAO_SEASONS_ZH: dict[int, str] = {
+LAO_SEASONS_ZH: Dict[int, str] = {
     1: "冷季（11–2月）",
     2: "雨季（5–10月）",
     3: "旱季（3–4月）",
 }
 
 # Lao 文字 → 中文反查（供 renderer 快速翻譯）
-LAO_SEASON_NAME_ZH: dict[str, str] = {
+LAO_SEASON_NAME_ZH: Dict[str, str] = {
     v: LAO_SEASONS_ZH[k] for k, v in LAO_SEASONS.items()
 }
 
