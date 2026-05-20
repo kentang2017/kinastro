@@ -19,6 +19,7 @@ from .gann_macro_stock import (
     build_gann_macro_timing,
     build_gann_macro_with_dasha_context,
     compute_biblical_cycle_dates,
+    find_nearest_square_of_nine_levels,
     compute_square_of_nine_levels,
 )
 
@@ -34,5 +35,6 @@ __all__ = [
     "build_gann_macro_timing",
     "build_gann_macro_with_dasha_context",
     "compute_biblical_cycle_dates",
+    "find_nearest_square_of_nine_levels",
     "compute_square_of_nine_levels",
 ]

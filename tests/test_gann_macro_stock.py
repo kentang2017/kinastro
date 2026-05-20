@@ -6,6 +6,7 @@ from astro.qizheng.financial.gann_macro_stock import (
     build_gann_macro_timing,
     compute_anniversary_dates,
     compute_biblical_cycle_dates,
+    find_nearest_square_of_nine_levels,
     compute_square_of_nine_levels,
     evaluate_qizheng_resonance,
     scale_cycle_to_days,
@@ -83,6 +84,30 @@ def test_compute_square_of_nine_levels_descending_and_step():
     assert any(row["angle"] == 270 for row in levels)
 
 
+def test_compute_square_of_nine_levels_cardinal_current_price():
+    levels = compute_square_of_nine_levels(
+        reference_price=100.0,
+        current_price=121.0,
+        max_ring=1,
+        angle_step=45,
+        angle_system="cardinal",
+        include_descending=True,
+    )
+    assert levels
+    assert all(row["angle"] in {0, 90, 180, 270} for row in levels)
+    assert any(row["direction"] == "up" for row in levels)
+    assert any(row["direction"] == "down" for row in levels)
+    assert all("turn" in row for row in levels)
+
+
+def test_find_nearest_square_of_nine_levels():
+    result = find_nearest_square_of_nine_levels(current_price=123.0, reference_price=100.0, max_ring=2)
+    assert result["nearest_level"] is not None
+    assert result["support_level"]["target_price"] <= 123.0
+    assert result["resistance_level"]["target_price"] >= 123.0
+    assert result["distance_to_nearest"] >= 0
+
+
 def test_compute_anniversary_dates_basic():
     rows = compute_anniversary_dates(
         anchor_date=date(2020, 1, 1),
@@ -94,6 +119,35 @@ def test_compute_anniversary_dates_basic():
     assert rows
     assert any(x["type"] == "yearly_anniversary" for x in rows)
     assert any(x["type"] == "monthly_anniversary" for x in rows)
+
+
+def test_compute_anniversary_dates_supports_multiple_anchors_and_day_windows():
+    rows = compute_anniversary_dates(
+        anchor_date=date(2020, 1, 1),
+        anchor_dates=[date(2020, 1, 1), date(2020, 3, 1)],
+        as_of_date=date(2020, 5, 30),
+        lookback_years=0.5,
+        lookahead_years=0.5,
+        monthly_step=3,
+    )
+    assert any(row["type"] == "gann_day_window" and row["base_days"] == 45 for row in rows)
+    assert any(row["anchor_date"] == "2020-03-01" for row in rows)
+    assert any(row["gann_harmonic"] == "1/4年" for row in rows if row["base_days"] in {90, 91, 92})
+
+
+def test_compute_anniversary_dates_trading_day_alignment():
+    rows = compute_anniversary_dates(
+        anchor_date=date(2020, 1, 31),
+        as_of_date=date(2020, 4, 30),
+        lookback_years=0.5,
+        lookahead_years=0.5,
+        monthly_step=1,
+        use_trading_days=True,
+        include_day_windows=False,
+    )
+    monthly = next(row for row in rows if row["type"] == "monthly_anniversary")
+    assert monthly["use_trading_days"] is True
+    assert date.fromisoformat(monthly["due_date"]).weekday() < 5
 
 
 def test_build_gann_macro_timing_contains_anniversary_scores():
