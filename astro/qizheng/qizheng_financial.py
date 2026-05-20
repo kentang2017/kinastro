@@ -460,14 +460,6 @@ def render_financial_tab(
         """,
         unsafe_allow_html=True,
     )
-    if fin.wealth_score_breakdown:
-        b = fin.wealth_score_breakdown
-        st.caption(
-            f"分層評分：本質 {b.get('base_score', 0):+.2f} / "
-            f"廟旺 {b.get('dignity_score', 0):+.2f} / "
-            f"相位 {b.get('aspect_score', 0):+.2f} / "
-            f"宮主 {b.get('house_lord_score', 0):+.2f}"
-        )
 
     # ── 模式切換：出生盤 / 當下時刻 ─────────────────────
     _use_now = st.toggle(
@@ -513,6 +505,15 @@ def render_financial_tab(
             st.error(f"計算錯誤 / Computation error: {e}")
             st.exception(e)
             return
+
+    if fin.wealth_score_breakdown:
+        b = fin.wealth_score_breakdown
+        st.caption(
+            f"分層評分：本質 {b.get('base_score', 0):+.2f} / "
+            f"廟旺 {b.get('dignity_score', 0):+.2f} / "
+            f"相位 {b.get('aspect_score', 0):+.2f} / "
+            f"宮主 {b.get('house_lord_score', 0):+.2f}"
+        )
 
     # ── 六個子分頁 ────────────────────────────────────────
     (
