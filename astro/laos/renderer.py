@@ -141,6 +141,7 @@ _CENTER_DEFAULT_STATUS = "ສະຖານະປະຈຸບັນ: ປົກກ�
 _CENTER_SPECIAL_YEAR_TAG = "⚑ ປີພິເສດ"
 _CENTER_NORMAL_YEAR_TAG = "◉ ປີປົກກະຕິ"
 _TRADITIONAL_MEANING_PLACEHOLDER = "傳統義理待補"
+_DEGREES_PER_SIGN = 30
 
 
 def _zh(lao_text: str, mapping: Dict[str, str], fallback: str = "") -> str:
@@ -240,7 +241,11 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         )
         parts.append(
             f"<text x='{lx:.2f}' y='{ly + offset_top:.2f}' text-anchor='middle' fill='#f6df9e' font-size='10' font-weight='bold' font-family='{_LAO_SVG_FONT_FAMILY}'>ຮືອນ {i + 1}</text>"
+        )
+        parts.append(
             f"<text x='{lx:.2f}' y='{ly + offset_mid:.2f}' text-anchor='middle' fill='#f0d187' font-size='11' font-family='{_LAO_SVG_FONT_FAMILY}'>{lao_houses[i]}</text>"
+        )
+        parts.append(
             f"<text x='{lx:.2f}' y='{ly + offset_bottom:.2f}' text-anchor='middle' fill='#d7c7a0' font-size='9.5' font-family='{_LAO_SVG_FONT_FAMILY}'>{animal}</text>"
         )
 
@@ -248,7 +253,7 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
     for p in planets:
         key = str(p.get("key", "")).lower()
         lon = float(p.get("longitude", 0.0))
-        sign_idx = int(p.get("sign_index", int(lon // 30) % 12))
+        sign_idx = int(p.get("sign_index", int(lon // _DEGREES_PER_SIGN) % 12))
         house_no = int(p.get("house", 0))
         retrograde = bool(p.get("retrograde"))
         sign_lao = _SIGN_NAMES_LAO[sign_idx] if 0 <= sign_idx < _NUM_ZODIAC_SIGNS else "—"
@@ -266,11 +271,11 @@ def build_lao_brahma_wheel_svg(chart: LaoChart | Dict[str, Any], *, size: int = 
         meaning = _PLANET_TRAD_MEANING.get(key, _TRADITIONAL_MEANING_PLACEHOLDER)
         tooltip_title = html_escape(f"{planet_name_zh} · {planet_name_lao}")
         tooltip_desc = html_escape(
-            f"度數/星座：{lon:.2f}° {sign_lao}\n"
-            f"宮位：第 {house_no} 宮\n"
-            f"逆行：{retro_text}\n"
-            f"星主：{star_lord_symbol} {_PLANET_ZH.get(star_lord, star_lord.upper())}\n"
-            f"生肖：{sign_animal}\n"
+            f"度數/星座：{lon:.2f}° {sign_lao}；"
+            f"宮位：第 {house_no} 宮；"
+            f"逆行：{retro_text}；"
+            f"星主：{star_lord_symbol} {_PLANET_ZH.get(star_lord, star_lord.upper())}；"
+            f"生肖：{sign_animal}；"
             f"傳統意義：{meaning}"
         )
         parts.append("<g>")
