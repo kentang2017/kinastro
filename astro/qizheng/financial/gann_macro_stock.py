@@ -163,7 +163,7 @@ def _add_months(anchor: date, months: int) -> date:
             return date(year, month, min(anchor.day, last_day))
         except ValueError:
             last_day -= 1
-            if last_day <= 27:
+            if last_day < 28:
                 raise ValueError(
                     f"unable to add months for anchor day {anchor.day} in target {year:04d}-{month:02d}"
                 ) from None
@@ -177,6 +177,9 @@ def _coerce_anchor_dates(anchor_date: date | datetime | Sequence[date | datetime
 
 def _gann_harmonic_label(days: int | None = None, months: int | None = None, years: int | None = None) -> str:
     """將常見 Gann 週期轉為容易閱讀的 harmonic 標籤。"""
+    supplied_units = sum(value is not None for value in (days, months, years))
+    if supplied_units > 1:
+        raise ValueError("only one of days, months, or years may be specified")
     if years is not None:
         return "1年" if years == 1 else f"{years}年"
     if months is not None:
@@ -546,8 +549,8 @@ def compute_anniversary_dates(
                     )
 
         if include_day_windows:
-            max_multiple = max(1, int(math.ceil((lookback_years + lookahead_years + 2) * 365.2425 / min(day_windows))))
             for base_days in day_windows:
+                max_multiple = max(1, int(math.ceil((lookback_years + lookahead_years + 2) * 365.2425 / base_days)))
                 for multiple in range(1, max_multiple + 1):
                     total_days = base_days * multiple
                     due = _add_business_days(anchor, total_days) if use_trading_days else anchor + timedelta(days=total_days)
