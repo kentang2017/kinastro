@@ -170,6 +170,36 @@ def test_build_gann_macro_timing_contains_anniversary_scores():
     assert "anniversary_score" in result["scores"]
 
 
+def test_build_gann_macro_timing_coerces_mixed_score_types(monkeypatch):
+    from astro.qizheng.financial import gann_macro_stock as gms
+
+    monkeypatch.setattr(gms, "compute_biblical_cycle_dates", lambda *args, **kwargs: [])
+    monkeypatch.setattr(gms, "compute_anniversary_dates", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        gms,
+        "evaluate_qizheng_resonance",
+        lambda *args, **kwargs: [
+            {"score": "3"},
+            {"score": -1},
+            {"score": "-2"},
+            {"score": "invalid"},
+            {"score": 0},
+        ],
+    )
+
+    result = build_gann_macro_timing(
+        market_natal_date=date(2020, 1, 1),
+        as_of_datetime=datetime(2020, 2, 10, 12, 0),
+        natal_longitudes={"木星": 10.0},
+        transit_longitudes={"木星": 10.2},
+    )
+
+    assert result["scores"]["astro_score"] == 0
+    assert result["scores"]["total_score"] == 0
+    assert result["scores"]["positive_aspect_count"] == 1
+    assert result["scores"]["negative_aspect_count"] == 2
+
+
 # ============================================================
 # 新增函數測試（Time-Price Squaring, Gann Fan, Natural Squares,
 # Solar Ingress, Full Confluence）
