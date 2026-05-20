@@ -714,7 +714,23 @@ def _render_overview(fin: FinancialData, go):
 def _render_jupiter_saturn(fin: FinancialData, go):
     """木星-土星週期分頁 / Jupiter-Saturn cycle panel"""
     st.subheader("♃♄ 木星-土星大合相週期 / Jupiter-Saturn Great Conjunction Cycles")
-    great_conjunctions = _get_great_conjunctions()
+    great_conjunctions_raw = _get_great_conjunctions()
+    great_conjunctions: list[dict] = []
+    for gc in great_conjunctions_raw:
+        try:
+            great_conjunctions.append({
+                **gc,
+                "year": int(gc.get("year", 0)),
+                "month": int(gc.get("month", 1)),
+                "day": int(gc.get("day", 1)),
+                "lon": float(gc.get("lon", 0.0)),
+            })
+        except (TypeError, ValueError):
+            continue
+
+    if not great_conjunctions:
+        st.warning("木土合相資料格式異常，無法顯示週期圖。")
+        return
 
     col_l, col_r = st.columns([1, 1])
     with col_l:
