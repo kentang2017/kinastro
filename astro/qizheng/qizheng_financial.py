@@ -443,6 +443,20 @@ def render_financial_tab(
     # ── 延遲匯入 plotly（避免啟動時不必要載入）──────────
     import plotly.graph_objects as go
 
+    def _safe_float(value, default: float) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return float(default)
+
+    def _safe_int(value, default: int) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return int(default)
+
+    safe_input_tz = _safe_float(input_tz, getattr(chart, "timezone", 8.0))
+
     # ── 頂部說明文字 ─────────────────────────────────────
     st.markdown(
         """
@@ -476,29 +490,29 @@ def render_financial_tab(
 
     if _use_now:
         utc_now = datetime.now(tz=tz_cls.utc)
-        local_now = utc_now + timedelta(hours=input_tz)
+        local_now = utc_now + timedelta(hours=safe_input_tz)
         fin_params = {
             "year": local_now.year, "month": local_now.month, "day": local_now.day,
             "hour": local_now.hour, "minute": local_now.minute,
-            "timezone": input_tz,
-            "latitude": params.get("latitude", 22.3),
-            "longitude": params.get("longitude", 114.2),
+            "timezone": safe_input_tz,
+            "latitude": _safe_float(params.get("latitude", 22.3), 22.3),
+            "longitude": _safe_float(params.get("longitude", 114.2), 114.2),
             "gender": params.get("gender", "male"),
         }
         st.caption(
-            f"📅 當前時刻：{local_now.strftime('%Y-%m-%d %H:%M')} (UTC+{input_tz:g}) / "
+            f"📅 當前時刻：{local_now.strftime('%Y-%m-%d %H:%M')} (UTC+{safe_input_tz:g}) / "
             f"Current time: {local_now.strftime('%Y-%m-%d %H:%M')}"
         )
     else:
         fin_params = {
-            "year": params.get("year", chart.year),
-            "month": params.get("month", chart.month),
-            "day": params.get("day", chart.day),
-            "hour": params.get("hour", chart.hour),
-            "minute": params.get("minute", chart.minute),
-            "timezone": params.get("timezone", chart.timezone),
-            "latitude": params.get("latitude", chart.latitude),
-            "longitude": params.get("longitude", chart.longitude),
+            "year": _safe_int(params.get("year", chart.year), chart.year),
+            "month": _safe_int(params.get("month", chart.month), chart.month),
+            "day": _safe_int(params.get("day", chart.day), chart.day),
+            "hour": _safe_int(params.get("hour", chart.hour), chart.hour),
+            "minute": _safe_int(params.get("minute", chart.minute), chart.minute),
+            "timezone": _safe_float(params.get("timezone", chart.timezone), chart.timezone),
+            "latitude": _safe_float(params.get("latitude", chart.latitude), chart.latitude),
+            "longitude": _safe_float(params.get("longitude", chart.longitude), chart.longitude),
             "gender": params.get("gender", "male"),
         }
 
@@ -561,7 +575,7 @@ def render_financial_tab(
     # 分頁 4：歷史相關性 / Historical Correlations
     # ════════════════════════════════════════════════════
     with _tab_history:
-        _render_historical_correlations(go, fin_params, input_tz)
+        _render_historical_correlations(go, fin_params, safe_input_tz)
 
     # ════════════════════════════════════════════════════
     # 分頁 5：當前金融展望 / Current Outlook
@@ -573,7 +587,7 @@ def render_financial_tab(
     # 分頁 6：宏觀股市 / Macro Market
     # ════════════════════════════════════════════════════
     with _tab_macro:
-        _render_macro_market(input_tz=input_tz)
+        _render_macro_market(input_tz=safe_input_tz)
 
     # ════════════════════════════════════════════════════
     # 分頁 7：股票靈運占星儀 / Stock Fortune Astrologer
@@ -581,7 +595,7 @@ def render_financial_tab(
     with _tab_stock:
         try:
             from .financial import render_stock_fortune_tab
-            render_stock_fortune_tab(input_tz=input_tz)
+            render_stock_fortune_tab(input_tz=safe_input_tz)
         except ImportError as _ie:
             st.error(f"股票靈運模組載入失敗 / Stock fortune module failed to load: {_ie}")
         except Exception as _se:
