@@ -1162,7 +1162,15 @@ _YEAR_BASIS_DAYS: float = 365.2425
 
 
 def _find_solar_ingress_jd(year: int, target_lon: float) -> float:
-    """計算太陽進入指定黃道經度的儒略日。"""
+    """Calculate the Julian Day when the Sun enters the specified ecliptic longitude.
+
+    Args:
+        year: Year to calculate the ingress for.
+        target_lon: Target ecliptic longitude in degrees (0=Aries, 90=Cancer, 180=Libra, 270=Capricorn).
+
+    Returns:
+        Julian Day number of the solar ingress.
+    """
     # 估算初始時刻（以春分為基準）
     # 春分約在 3 月 20 日
     approx_day = {0.0: (3, 20), 90.0: (6, 21), 180.0: (9, 23), 270.0: (12, 21)}.get(

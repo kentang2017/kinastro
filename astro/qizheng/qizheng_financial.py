@@ -1178,7 +1178,15 @@ def _render_current_outlook(fin: FinancialData, chart: ChartData):
 # ============================================================
 
 def _render_gann_fan_chart(go, pivot_price: float, pivot_date, as_of_date, trend: str = "up"):
-    """繪製江恩扇形角度圖（Gann Fan）。"""
+    """Render Gann Fan chart with nine angle lines projected from a pivot point.
+
+    Args:
+        go: Plotly graph_objects module.
+        pivot_price: Pivot point price.
+        pivot_date: Pivot point date.
+        as_of_date: Current evaluation date.
+        trend: Direction of trend (``"up"`` or ``"down"``).
+    """
     angles_data = compute_gann_angles(
         pivot_price=float(pivot_price),
         pivot_date=pivot_date,
@@ -1189,9 +1197,6 @@ def _render_gann_fan_chart(go, pivot_price: float, pivot_date, as_of_date, trend
     if not angles_data:
         st.info("無法計算江恩扇形角度。")
         return
-
-    import pandas as pd
-    from datetime import date as _date
 
     fig = go.Figure()
 
@@ -1208,16 +1213,8 @@ def _render_gann_fan_chart(go, pivot_price: float, pivot_date, as_of_date, trend
         "1×8": "#c4b5fd",
     }
 
-    # 每個角度一條線
-    angle_names = [r[0] for r in (
-        ("8×1",), ("4×1",), ("3×1",), ("2×1",), ("1×1",),
-        ("1×2",), ("1×3",), ("1×4",), ("1×8",),
-    )]
-    angle_names_flat = [x[0] for x in [("8×1",), ("4×1",), ("3×1",), ("2×1",), ("1×1",),
-                                         ("1×2",), ("1×3",), ("1×4",), ("1×8",)]]
+    angle_names_flat = ["8×1", "4×1", "3×1", "2×1", "1×1", "1×2", "1×3", "1×4", "1×8"]
 
-    from itertools import groupby
-    from operator import itemgetter
     for angle_name in angle_names_flat:
         pts = [r for r in angles_data if r["angle"] == angle_name]
         if not pts:
@@ -1266,7 +1263,13 @@ def _render_gann_fan_chart(go, pivot_price: float, pivot_date, as_of_date, trend
 
 
 def _render_time_price_squaring_chart(go, tp_data: list[dict], as_of_date):
-    """繪製時間=價格共振時間軸圖。"""
+    """Render Time-Price Squaring resonance timeline chart.
+
+    Args:
+        go: Plotly graph_objects module.
+        tp_data: List of time-price resonance data points.
+        as_of_date: Current evaluation date.
+    """
     if not tp_data:
         st.info("未發現時間＝價格共振點。")
         return
@@ -1325,7 +1328,13 @@ def _render_time_price_squaring_chart(go, tp_data: list[dict], as_of_date):
 
 
 def _render_natural_squares_chart(go, nat_sq_data: dict, current_price: float):
-    """繪製江恩自然方格振動圖。"""
+    """Render Gann Natural Squares vibration chart.
+
+    Args:
+        go: Plotly graph_objects module.
+        nat_sq_data: Natural squares data dictionary from ``compute_natural_squares_vibration``.
+        current_price: Current market price for reference line.
+    """
     squares = nat_sq_data.get("natural_squares", [])
     octagon = nat_sq_data.get("octagon_levels", [])
     vib = nat_sq_data.get("vibration_level", {})
@@ -1407,7 +1416,12 @@ def _render_natural_squares_chart(go, nat_sq_data: dict, current_price: float):
 
 
 def _render_solar_ingress_gann_chart(go, ingress_data: list[dict]):
-    """繪製節氣入境 x 江恩共振圖。"""
+    """Render Solar Ingress × Gann confluence bar chart.
+
+    Args:
+        go: Plotly graph_objects module.
+        ingress_data: List of solar ingress confluence data points.
+    """
     if not ingress_data:
         st.info("無節氣共振資料。")
         return
