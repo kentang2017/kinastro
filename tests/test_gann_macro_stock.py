@@ -4,6 +4,7 @@ import pytest
 
 from astro.qizheng.financial.gann_macro_stock import (
     build_gann_macro_timing,
+    compute_anniversary_dates,
     compute_biblical_cycle_dates,
     compute_square_of_nine_levels,
     evaluate_qizheng_resonance,
@@ -68,3 +69,42 @@ def test_compute_square_of_nine_levels():
 def test_compute_square_of_nine_levels_invalid():
     with pytest.raises(ValueError):
         compute_square_of_nine_levels(reference_price=0.0)
+
+
+def test_compute_square_of_nine_levels_descending_and_step():
+    levels = compute_square_of_nine_levels(
+        reference_price=100.0,
+        max_ring=1,
+        angle_step=90,
+        include_descending=True,
+    )
+    assert levels
+    assert any(row["direction"] == "down" for row in levels)
+    assert any(row["angle"] == 270 for row in levels)
+
+
+def test_compute_anniversary_dates_basic():
+    rows = compute_anniversary_dates(
+        anchor_date=date(2020, 1, 1),
+        as_of_date=date(2022, 1, 1),
+        lookback_years=1.0,
+        lookahead_years=1.0,
+        monthly_step=6,
+    )
+    assert rows
+    assert any(x["type"] == "yearly_anniversary" for x in rows)
+    assert any(x["type"] == "monthly_anniversary" for x in rows)
+
+
+def test_build_gann_macro_timing_contains_anniversary_scores():
+    result = build_gann_macro_timing(
+        market_natal_date=date(2020, 1, 1),
+        as_of_datetime=datetime(2020, 2, 10, 12, 0),
+        timezone=8.0,
+        cycle_scale=0.1,
+        cycle_orb_days=30,
+        natal_longitudes={"木星": 10.0, "土星": 20.0},
+        transit_longitudes={"木星": 10.2, "土星": 20.0},
+    )
+    assert "anniversary_hits" in result
+    assert "anniversary_score" in result["scores"]

@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone as tz_cls
 from typing import Optional
 
+import pandas as pd
 import streamlit as st
 import swisseph as swe
 
@@ -27,7 +28,6 @@ from .calculator import (
     _degree_to_sign_degree,
     get_stock_lingyun_chart,
 )
-from .qizheng_transit import compute_transit
 from .constants import FIVE_ELEMENTS, TWELVE_SIGNS_WESTERN
 from .financial.gann_macro_stock import (
     GANN_NATAL_DEFAULT,
@@ -36,6 +36,10 @@ from .financial.gann_macro_stock import (
     build_gann_macro_timing,
     compute_square_of_nine_levels,
 )
+from .financial.backtesting import run_backtest_mvp
+from .financial.data_loader import load_great_conjunctions, load_historical_events
+from .financial.financial_scoring import classify_wealth_score, compute_wealth_score_breakdown
+from .financial.transit_search import angle_diff, find_all_aspect_hits, find_closest_event, signed_angle_to_target
 
 
 # ============================================================
@@ -62,71 +66,16 @@ _WEALTH_PLANET_ENERGY = {
 # 財帛宮索引（七政四餘第二宮）
 _CAIBO_HOUSE_INDEX = 1
 
-# ============================================================
-# 歷史金融事件（硬編）
-# Historical Financial Events (hard-coded reference data)
-# ============================================================
-_HISTORICAL_EVENTS = [
-    {
-        "year": 1929, "month": 10, "day": 24,
-        "label_zh": "1929 大蕭條（黑色星期四）",
-        "label_en": "1929 Great Depression (Black Thursday)",
-        "jup_lon_approx": 60.0,   # 金牛座（近似）
-        "sat_lon_approx": 240.0,  # 射手座（近似）
-        "note_zh": "木土呈120度，但景氣後期泡沫破裂",
-        "note_en": "Jupiter-Saturn trine, but late-cycle bubble burst",
-        "market_impact": "crash",
-    },
-    {
-        "year": 2000, "month": 3, "day": 10,
-        "label_zh": "2000 科技泡沫破裂（納斯達克高點）",
-        "label_en": "2000 Dot-com Bubble Peak (NASDAQ High)",
-        "jup_lon_approx": 25.0,
-        "sat_lon_approx": 60.0,
-        "note_zh": "木土合相（雙魚→金牛）後不久，科技股崩潰",
-        "note_en": "Shortly after Jupiter-Saturn conjunction, tech stocks crashed",
-        "market_impact": "crash",
-    },
-    {
-        "year": 2008, "month": 9, "day": 15,
-        "label_zh": "2008 金融海嘯（雷曼兄弟倒閉）",
-        "label_en": "2008 Financial Crisis (Lehman Brothers Collapse)",
-        "jup_lon_approx": 290.0,
-        "sat_lon_approx": 150.0,
-        "note_zh": "土星天秤，木星摩羯，呈90度壓力",
-        "note_en": "Saturn in Libra, Jupiter in Capricorn, forming square",
-        "market_impact": "crash",
-    },
-    {
-        "year": 2020, "month": 3, "day": 23,
-        "label_zh": "2020 疫情崩盤（市場低點）",
-        "label_en": "2020 COVID Crash (Market Bottom)",
-        "jup_lon_approx": 295.0,
-        "sat_lon_approx": 300.0,
-        "note_zh": "木土緊密合相（摩羯），疫情引爆崩盤",
-        "note_en": "Jupiter-Saturn tight conjunction in Capricorn, pandemic triggered crash",
-        "market_impact": "crash",
-    },
-    {
-        "year": 2020, "month": 12, "day": 21,
-        "label_zh": "2020 木星土星合相（水瓶座）",
-        "label_en": "2020 Great Conjunction (Aquarius) — New Cycle",
-        "jup_lon_approx": 300.1,
-        "sat_lon_approx": 300.1,
-        "note_zh": "進入風象時代，科技股、加密貨幣大牛市",
-        "note_en": "Air Age begins: Tech & Crypto bull market surge",
-        "market_impact": "expansion",
-    },
-]
+@st.cache_data(ttl=3600, show_spinner=False)
+def _get_historical_events() -> list[dict]:
+    """快取歷史金融事件資料。"""
+    return load_historical_events()
 
-# 木土合相歷史資料（近代重大合相）
-_GREAT_CONJUNCTIONS = [
-    {"year": 1940, "month": 8, "day": 8,   "lon": 117.0, "sign": "巨蟹/Cancer",  "note_zh": "二戰戰時經濟", "note_en": "WWII War Economy"},
-    {"year": 1961, "month": 2, "day": 18,  "lon": 301.0, "sign": "摩羯/Capricorn","note_zh": "冷戰軍備擴張", "note_en": "Cold War Arms Expansion"},
-    {"year": 1981, "month": 12, "day": 31, "lon": 195.0, "sign": "天秤/Libra",   "note_zh": "雷根經濟學牛市", "note_en": "Reagan Bull Market"},
-    {"year": 2000, "month": 5, "day": 28,  "lon": 23.0,  "sign": "金牛/Taurus",  "note_zh": "科技泡沫頂峰", "note_en": "Dot-com Peak"},
-    {"year": 2020, "month": 12, "day": 21, "lon": 300.1, "sign": "水瓶/Aquarius","note_zh": "風象時代新週期", "note_en": "Air Age New Cycle"},
-]
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _get_great_conjunctions() -> list[dict]:
+    """快取木土大合相資料。"""
+    return load_great_conjunctions()
 
 
 # ============================================================
@@ -150,6 +99,8 @@ class FinancialData:
     upcoming_transits: list = field(default_factory=list)
     # 整體財富能量分數
     total_wealth_score: int = 0
+    # 分層評分細節
+    wealth_score_breakdown: dict = field(default_factory=dict)
     # 財富運勢摘要文字
     summary_zh: str = ""
     summary_en: str = ""
@@ -236,17 +187,6 @@ def compute_financial_aspects(
             element=FIVE_ELEMENTS.get(name, ""), retrograde=False,
         ))
 
-    # ── 財星評分 ──────────────────────────────────────────
-    wealth_planets = []
-    total_score = 0
-    for p in planets:
-        info = _WEALTH_PLANET_ENERGY.get(p.name)
-        if info:
-            entry = dict(info)
-            entry["planet"] = p
-            wealth_planets.append(entry)
-            total_score += info["score"]
-
     # ── 宮位計算（取得財帛宮行星）────────────────────────
     cusps, ascmc = swe.houses(jd, latitude, longitude, b"P")
     caibo_cusp = cusps[_CAIBO_HOUSE_INDEX]    # 第二宮宮頭
@@ -258,6 +198,17 @@ def compute_financial_aspects(
         return lon >= start or lon < end  # 跨越0°
 
     caibo_planets = [p for p in planets if _in_house(p.longitude, caibo_cusp, caibo_end)]
+
+    # ── 財富能量評分（分層模型）───────────────────────────
+    wealth_planets = []
+    for p in planets:
+        info = _WEALTH_PLANET_ENERGY.get(p.name)
+        if info:
+            entry = dict(info)
+            entry["planet"] = p
+            wealth_planets.append(entry)
+    score_breakdown = compute_wealth_score_breakdown(planets, tuple(cusps))
+    total_score = int(round(score_breakdown.total_score))
 
     # ── 取得木星與土星的位置物件 ────────────────────────
     jupiter_pos = next((p for p in planets if p.name == "木星"), None)
@@ -285,6 +236,13 @@ def compute_financial_aspects(
         next_conjunction=next_conjunction,
         upcoming_transits=upcoming_transits,
         total_wealth_score=total_score,
+        wealth_score_breakdown={
+            "base_score": round(score_breakdown.base_score, 2),
+            "dignity_score": round(score_breakdown.dignity_score, 2),
+            "aspect_score": round(score_breakdown.aspect_score, 2),
+            "house_lord_score": round(score_breakdown.house_lord_score, 2),
+            "total_score": round(score_breakdown.total_score, 2),
+        },
         summary_zh=summary_zh,
         summary_en=summary_en,
     )
@@ -297,46 +255,38 @@ def _estimate_next_conjunction(from_jd: float) -> dict:
     Search for the next Jupiter-Saturn conjunction (longitude diff < 1°) after from_jd.
     """
     try:
-        step = 30.0
-        jd = from_jd
-        prev_diff = None
-        for _ in range(500):   # 最多搜尋 ~41 年 / search up to ~41 years
+        end_jd = from_jd + 365.2425 * 45.0
+
+        def _func(jd: float) -> float:
             jup, _ = swe.calc_ut(jd, swe.JUPITER)
             sat, _ = swe.calc_ut(jd, swe.SATURN)
-            diff = abs(_normalize_degree(jup[0] - sat[0]))
-            if diff > 180:
-                diff = 360 - diff
-            if prev_diff is not None and prev_diff > diff and diff < 2.0:
-                # 找到合相附近，細化
-                fine_jd = jd - step
-                for _ in range(60):
-                    jup2, _ = swe.calc_ut(fine_jd, swe.JUPITER)
-                    sat2, _ = swe.calc_ut(fine_jd, swe.SATURN)
-                    d2 = abs(_normalize_degree(jup2[0] - sat2[0]))
-                    if d2 > 180:
-                        d2 = 360 - d2
-                    if d2 < 0.5:
-                        # 轉換 JD → 日期
-                        yr, mo, dy, hr = swe.revjul(fine_jd)
-                        lon = _normalize_degree(jup2[0])
-                        return {
-                            "year": yr, "month": mo, "day": int(dy),
-                            "longitude": lon,
-                            "sign": TWELVE_SIGNS_WESTERN[int(lon / 30)],
-                            "sign_degree": lon % 30,
-                        }
-                    fine_jd += 1.0
-                # 返回粗估結果
-                yr, mo, dy, hr = swe.revjul(jd)
-                lon = _normalize_degree(jup[0])
-                return {
-                    "year": yr, "month": mo, "day": int(dy),
-                    "longitude": lon,
-                    "sign": TWELVE_SIGNS_WESTERN[int(lon / 30)],
-                    "sign_degree": lon % 30,
-                }
-            prev_diff = diff
-            jd += step
+            return signed_angle_to_target(jup[0], sat[0])
+
+        result = find_closest_event(
+            _func,
+            start_jd=from_jd,
+            end_jd=end_jd,
+            coarse_step=10.0,
+            tolerance=1e-5,
+        )
+        jup, _ = swe.calc_ut(result.jd, swe.JUPITER)
+        sat, _ = swe.calc_ut(result.jd, swe.SATURN)
+        orb = angle_diff(jup[0], sat[0])
+        if orb > 2.0:
+            return {}
+        yr, mo, dy, hr = swe.revjul(result.jd)
+        lon = _normalize_degree(jup[0])
+        return {
+            "year": yr,
+            "month": mo,
+            "day": int(dy),
+            "longitude": lon,
+            "sign": TWELVE_SIGNS_WESTERN[int(lon / 30)],
+            "sign_degree": lon % 30,
+            "orb": round(orb, 4),
+            "converged": result.converged,
+            "solver": result.method,
+        }
     except Exception:
         pass
     return {}
@@ -385,38 +335,42 @@ def _compute_upcoming_wealth_transits(
         local_now.hour + local_now.minute / 60.0,
     )
 
-    step = 7.0   # 每7天掃描一次
     end_jd = now_jd + 365.0
 
-    jd = now_jd
-    while jd < end_jd:
-        for t_name, t_id in transit_planets.items():
-            try:
-                result, _ = swe.calc_ut(jd, t_id)
-                t_lon = _normalize_degree(result[0])
-            except Exception:
-                continue
+    for t_name, t_id in transit_planets.items():
+        def _transit_lon(jd: float, _pid=t_id) -> float:
+            result, _ = swe.calc_ut(jd, _pid)
+            return _normalize_degree(result[0])
 
-            for n_name, n_lon in natal_points:
-                for aspect_name, angle in aspect_angles.items():
-                    diff = abs(_normalize_degree(t_lon - n_lon - angle))
-                    if diff > 180:
-                        diff = 360 - diff
-                    if diff <= orb:
-                        yr, mo, dy, hr = swe.revjul(jd)
-                        results.append({
-                            "jd": jd,
-                            "date": f"{yr}/{mo:02d}/{int(dy):02d}",
-                            "transit_planet": t_name,
-                            "natal_point": n_name,
-                            "aspect": aspect_name,
-                            "favorable": angle in (0, 60, 120),
-                            "t_lon": t_lon,
-                            "n_lon": n_lon,
-                        })
-        jd += step
+        for n_name, n_lon in natal_points:
+            for aspect_name, angle in aspect_angles.items():
+                hits = find_all_aspect_hits(
+                    lambda jd, _n=n_lon, _f=_transit_lon: _normalize_degree(_f(jd) - _n),
+                    target_angle=float(angle),
+                    start_jd=now_jd,
+                    end_jd=end_jd,
+                    orb=orb,
+                    coarse_step=2.0,
+                    precision=1e-4,
+                    merge_gap_days=0.75,
+                )
+                for hit in hits:
+                    t_lon = _transit_lon(hit.jd)
+                    yr, mo, dy, hr = swe.revjul(hit.jd)
+                    results.append({
+                        "jd": hit.jd,
+                        "date": f"{yr}/{mo:02d}/{int(dy):02d}",
+                        "transit_planet": t_name,
+                        "natal_point": n_name,
+                        "aspect": aspect_name,
+                        "favorable": angle in (0, 60, 120),
+                        "t_lon": t_lon,
+                        "n_lon": n_lon,
+                        "orb": round(abs(hit.value), 4),
+                        "converged": hit.converged,
+                    })
 
-    # 去重（相同 transit+natal+aspect 相鄰條目只保留第一次）
+    # 去重（保留同組合最早事件）
     seen = set()
     unique = []
     for r in results:
@@ -448,14 +402,7 @@ def _generate_summary(
     caibo_names_zh = "、".join(p.name for p in caibo_planets) if caibo_planets else "無主星居財帛宮"
     caibo_names_en = ", ".join(p.name for p in caibo_planets) if caibo_planets else "No planet in 2nd house"
 
-    if total_score >= 6:
-        level_zh, level_en = "財星旺盛，財富擴張期", "Strong wealth energy — expansion phase"
-    elif total_score >= 3:
-        level_zh, level_en = "財運平穩，有穩定收益", "Moderate wealth energy — steady gains"
-    elif total_score >= 0:
-        level_zh, level_en = "財運普通，需謹慎規劃", "Average wealth energy — careful planning needed"
-    else:
-        level_zh, level_en = "財星受壓，宜守不宜進", "Suppressed wealth energy — conservative approach advised"
+    level_zh, level_en = classify_wealth_score(float(total_score))
 
     zh = (
         f"木星位於{jup_sign_zh}{jup_retro_zh}，土星位於{sat_sign_zh}。"
@@ -513,6 +460,14 @@ def render_financial_tab(
         """,
         unsafe_allow_html=True,
     )
+    if fin.wealth_score_breakdown:
+        b = fin.wealth_score_breakdown
+        st.caption(
+            f"分層評分：本質 {b.get('base_score', 0):+.2f} / "
+            f"廟旺 {b.get('dignity_score', 0):+.2f} / "
+            f"相位 {b.get('aspect_score', 0):+.2f} / "
+            f"宮主 {b.get('house_lord_score', 0):+.2f}"
+        )
 
     # ── 模式切換：出生盤 / 當下時刻 ─────────────────────
     _use_now = st.toggle(
@@ -679,9 +634,8 @@ def _render_overview(fin: FinancialData, go):
                 "度數 Deg": f"{p.longitude:.1f}°",
                 "財星意義 Meaning": entry["zh"],
                 "Meaning (EN)": entry["en"],
-                "能量 Score": f"{entry['score']:+d}",
+                "能量 Score": f"{entry['score']:+g}",
             })
-        import pandas as pd
         df = pd.DataFrame(rows)
         st.dataframe(df, width="stretch", hide_index=True)
 
@@ -740,6 +694,7 @@ def _render_overview(fin: FinancialData, go):
 def _render_jupiter_saturn(fin: FinancialData, go):
     """木星-土星週期分頁 / Jupiter-Saturn cycle panel"""
     st.subheader("♃♄ 木星-土星大合相週期 / Jupiter-Saturn Great Conjunction Cycles")
+    great_conjunctions = _get_great_conjunctions()
 
     col_l, col_r = st.columns([1, 1])
     with col_l:
@@ -807,7 +762,7 @@ def _render_jupiter_saturn(fin: FinancialData, go):
 
     # 時間軸圖
     labels, x_vals, colors, hover_texts = [], [], [], []
-    for gc in _GREAT_CONJUNCTIONS:
+    for gc in great_conjunctions:
         dt_str = f"{gc['year']}-{gc['month']:02d}-{gc['day']:02d}"
         labels.append(f"{gc['year']} {gc['sign']}")
         x_vals.append(gc["year"] + gc["month"] / 12.0)
@@ -841,12 +796,12 @@ def _render_jupiter_saturn(fin: FinancialData, go):
     st.plotly_chart(fig, width="stretch")
 
     # 擴張/收縮週期示意圖
-    _render_expansion_contraction_chart(go)
+    _render_expansion_contraction_chart(go, great_conjunctions)
 
     # 表格
     import pandas as pd
     gc_rows = []
-    for gc in _GREAT_CONJUNCTIONS:
+    for gc in great_conjunctions:
         gc_rows.append({
             "年份 Year": gc["year"],
             "日期 Date": f"{gc['year']}/{gc['month']:02d}/{gc['day']:02d}",
@@ -859,11 +814,11 @@ def _render_jupiter_saturn(fin: FinancialData, go):
     st.dataframe(df_gc, width="stretch", hide_index=True)
 
 
-def _render_expansion_contraction_chart(go):
+def _render_expansion_contraction_chart(go, great_conjunctions: list[dict]):
     """渲染市場擴張/收縮週期圖 / Market expansion/contraction cycle chart"""
     # 簡化版：以木土合相為分界，每合相後 ~10年擴張，~10年收縮
     periods = []
-    conj_years = [gc["year"] for gc in _GREAT_CONJUNCTIONS]
+    conj_years = [gc["year"] for gc in great_conjunctions]
     for i, yr in enumerate(conj_years):
         end_yr = conj_years[i + 1] if i + 1 < len(conj_years) else yr + 20
         mid = (yr + end_yr) / 2
@@ -895,7 +850,7 @@ def _render_expansion_contraction_chart(go):
         mode="markers",
         marker=dict(size=12, color="#c8aaff", symbol="diamond"),
         name="合相 Conjunction",
-        hovertext=[f"{gc['year']}: {gc['sign']}" for gc in _GREAT_CONJUNCTIONS],
+        hovertext=[f"{gc['year']}: {gc['sign']}" for gc in great_conjunctions],
         hoverinfo="text",
     ))
     fig.update_layout(
@@ -1012,10 +967,11 @@ def _render_wealth_transits(fin: FinancialData, go):
 def _render_historical_correlations(go, fin_params: dict, input_tz: float):
     """歷史相關性分頁 / Historical correlations panel"""
     st.subheader("📜 歷史金融事件相關性 / Historical Financial Event Correlations")
+    historical_events = _get_historical_events()
 
     # 歷史事件卡片
     col1, col2 = st.columns(2)
-    for i, evt in enumerate(_HISTORICAL_EVENTS):
+    for i, evt in enumerate(historical_events):
         target_col = col1 if i % 2 == 0 else col2
         border_color = "#f87171" if evt["market_impact"] == "crash" else "#86efac"
         bg_color = "rgba(239,68,68,0.1)" if evt["market_impact"] == "crash" else "rgba(34,197,94,0.1)"
@@ -1097,16 +1053,16 @@ def _render_historical_correlations(go, fin_params: dict, input_tz: float):
     st.divider()
     st.markdown("**📊 歷史事件木土夾角圖 / Jupiter-Saturn Angle at Historical Events**")
 
-    evt_labels = [f"{e['year']}\n{e['label_zh'].split('（')[0]}" for e in _HISTORICAL_EVENTS]
+    evt_labels = [f"{e['year']}\n{e['label_zh'].split('（')[0]}" for e in historical_events]
     jup_sat_angles = []
-    for e in _HISTORICAL_EVENTS:
+    for e in historical_events:
         diff = abs(e["jup_lon_approx"] - e["sat_lon_approx"])
         if diff > 180:
             diff = 360 - diff
         jup_sat_angles.append(diff)
     bar_colors = [
         "#f87171" if e["market_impact"] == "crash" else "#86efac"
-        for e in _HISTORICAL_EVENTS
+        for e in historical_events
     ]
 
     fig = go.Figure(go.Bar(
@@ -1421,6 +1377,13 @@ def _render_macro_market(input_tz: float = 8.0):
     else:
         st.info("目前容差窗內無主要週期到期點。")
 
+    near_ann = gann.get("near_anniversaries", [])
+    st.markdown("**🗓️ Anniversary Dates 週年窗**")
+    if near_ann:
+        st.dataframe(pd.DataFrame(near_ann), width="stretch", hide_index=True)
+    else:
+        st.info("目前容差窗內無明顯週年日期共振。")
+
     hits = gann.get("qizheng_resonance_hits", [])
     st.markdown("**🪐 七政四餘守照共振 / Qizheng Resonance**")
     if hits:
@@ -1437,15 +1400,75 @@ def _render_macro_market(input_tz: float = 8.0):
 
     st.markdown("**🔢 Gann Square of 9（輪中輪）參考價位**")
     default_price = GANN_NATAL_REFERENCE_PRICES.get(selected_preset, 5000.0)
-    ref_price = st.number_input(
-        "參考價格 / Reference Price",
-        min_value=0.01,
-        value=float(default_price),
-        step=10.0,
-        key="gann_square_reference_price",
+    sq_col1, sq_col2, sq_col3 = st.columns(3)
+    with sq_col1:
+        ref_price = st.number_input(
+            "參考價格 / Reference Price",
+            min_value=0.01,
+            value=float(default_price),
+            step=10.0,
+            key="gann_square_reference_price",
+        )
+    with sq_col2:
+        sq_ring = st.slider("Ring", min_value=1, max_value=4, value=2, step=1, key="gann_square_ring")
+    with sq_col3:
+        sq_desc = st.checkbox("含下行價位 / Include descending", value=False, key="gann_square_desc")
+    sq9 = compute_square_of_nine_levels(
+        float(ref_price),
+        max_ring=int(sq_ring),
+        angle_step=45,
+        include_descending=bool(sq_desc),
     )
-    sq9 = compute_square_of_nine_levels(float(ref_price), max_ring=1)
     st.dataframe(pd.DataFrame(sq9), width="stretch", hide_index=True)
+
+    st.markdown("**🧪 Astro Backtesting（MVP）**")
+    bt_col1, bt_col2 = st.columns(2)
+    with bt_col1:
+        bt_ticker = st.text_input("回測標的 / Ticker", value="^HSI", key="gann_bt_ticker")
+    with bt_col2:
+        bt_years = st.slider("回測年數 / Years", min_value=1, max_value=12, value=5, step=1, key="gann_bt_years")
+    if st.button("執行回測 / Run Backtest", key="gann_run_backtest"):
+        try:
+            try:
+                import yfinance as yf
+            except Exception as import_error:
+                st.error(f"缺少 yfinance 套件，無法執行回測：{import_error}")
+                return
+            with st.spinner("下載價格並計算回測中…"):
+                end_dt = datetime.now()
+                start_dt = end_dt - timedelta(days=365 * int(bt_years))
+                px = yf.download(bt_ticker.strip(), start=start_dt.date(), end=end_dt.date(), progress=False, auto_adjust=False)
+            if px is None or px.empty:
+                st.warning("無法取得歷史價格資料。")
+            else:
+                if isinstance(px.columns, pd.MultiIndex):
+                    px.columns = [c[0] for c in px.columns]
+                px = px.rename(columns=str)
+
+                def _feature_fn(ts: datetime) -> dict:
+                    payload = build_gann_macro_timing(
+                        market_natal_date=natal_date,
+                        as_of_datetime=ts,
+                        timezone=input_tz,
+                        cycle_scale=float(gann_scale),
+                        use_trading_days=bool(use_trading_days),
+                        cycle_orb_days=int(cycle_orb_days),
+                    )
+                    s = payload.get("scores", {})
+                    return {
+                        "astro_score": float(s.get("total_score", 0)),
+                        "cycle_score": float(s.get("cycle_score", 0)),
+                        "astro_only_score": float(s.get("astro_score", 0)),
+                    }
+
+                bt = run_backtest_mvp(px, _feature_fn, horizons=(5, 10, 20), feature_col="astro_score")
+                metrics = bt.get("metrics", [])
+                if metrics:
+                    st.dataframe(pd.DataFrame(metrics), width="stretch", hide_index=True)
+                else:
+                    st.info("樣本不足，未產生有效統計。")
+        except Exception as e:
+            st.error(f"Backtest error: {e}")
 
 
 def _build_wealth_signals(fin: FinancialData) -> list:
