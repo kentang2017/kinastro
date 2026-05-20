@@ -178,7 +178,13 @@ def test_build_gann_macro_timing_coerces_mixed_score_types(monkeypatch):
     monkeypatch.setattr(
         gms,
         "evaluate_qizheng_resonance",
-        lambda *args, **kwargs: [{"score": "3"}, {"score": -1}],
+        lambda *args, **kwargs: [
+            {"score": "3"},
+            {"score": -1},
+            {"score": "-2"},
+            {"score": "invalid"},
+            {"score": 0},
+        ],
     )
 
     result = build_gann_macro_timing(
@@ -188,8 +194,10 @@ def test_build_gann_macro_timing_coerces_mixed_score_types(monkeypatch):
         transit_longitudes={"木星": 10.2},
     )
 
-    assert result["scores"]["astro_score"] == 2
-    assert result["scores"]["total_score"] == 2
+    assert result["scores"]["astro_score"] == 0
+    assert result["scores"]["total_score"] == 0
+    assert result["scores"]["positive_aspect_count"] == 1
+    assert result["scores"]["negative_aspect_count"] == 2
 
 
 # ============================================================
