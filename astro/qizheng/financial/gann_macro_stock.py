@@ -164,7 +164,9 @@ def _add_months(anchor: date, months: int) -> date:
         except ValueError:
             last_day -= 1
             if last_day <= 27:
-                raise
+                raise ValueError(
+                    f"unable to add months for anchor day {anchor.day} in target {year:04d}-{month:02d}"
+                ) from None
 
 
 def _coerce_anchor_dates(anchor_date: date | datetime | Sequence[date | datetime]) -> list[date]:
@@ -444,7 +446,13 @@ def compute_square_of_nine_levels(
                 "target_price": target,
             }
             if include_metadata:
-                row["angle_system"] = "cardinal" if angle % 90 == 0 else "ordinal"
+                if angle % 90 == 0:
+                    angle_family = "cardinal"
+                elif angle % 90 == 45:
+                    angle_family = "ordinal"
+                else:
+                    angle_family = "other"
+                row["angle_system"] = angle_family
                 row["turn"] = turn
                 row["reference_price"] = round(reference_price, 4)
                 row["center_price"] = round(center_price, 4)
@@ -602,13 +610,16 @@ def find_nearest_square_of_nine_levels(
         key=lambda row: row["target_price"],
         default=None,
     )
+    if support is None and resistance is None:
+        raise ValueError("no support or resistance levels found near current_price")
 
     def _distance(row: dict | None) -> float:
         if row is None:
             return float("inf")
         return abs(row["target_price"] - current_price)
 
-    nearest = min((row for row in (support, resistance) if row is not None), key=_distance)
+    nearest_candidates = [row for row in (support, resistance) if row is not None]
+    nearest = min(nearest_candidates, key=_distance)
     return {
         "current_price": round(current_price, 4),
         "reference_price": round(reference_price, 4),
