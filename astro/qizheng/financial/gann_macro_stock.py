@@ -9,9 +9,10 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Optional
+from typing import Iterable, Optional, Sequence
 
 import swisseph as swe
 
@@ -24,6 +25,8 @@ _HIGH_RESONANCE_THRESHOLD = 8
 _MEDIUM_RESONANCE_THRESHOLD = 4
 _WEAK_RESONANCE_THRESHOLD = 1
 _SQ9_ANGLE_TO_SQRT_STEP = 1.0 / 180.0
+_TRADING_YEAR_DAYS = 252
+_TRADING_MONTH_DAYS = 21
 _ASPECT_WEIGHTS = {
     0.0: ("合", 2),
     60.0: ("六合", 1),
@@ -138,6 +141,120 @@ def _add_business_days(start_date: date, days: int) -> date:
         if current.weekday() < 5:
             remaining -= step
     return current
+
+
+def _align_to_business_day(target_date: date, *, direction: int = 1) -> date:
+    """將日期對齊至最近的交易日（目前以週一至週五近似）。"""
+    aligned = target_date
+    step = 1 if direction >= 0 else -1
+    while aligned.weekday() >= 5:
+        aligned += timedelta(days=step)
+    return aligned
+
+
+def _add_months(anchor: date, months: int) -> date:
+    """加減月份，月底日期自動壓至該月最後有效日。"""
+    month_index = (anchor.month - 1) + months
+    year = anchor.year + month_index // 12
+    month = month_index % 12 + 1
+    last_day = 31
+    while True:
+        try:
+            return date(year, month, min(anchor.day, last_day))
+        except ValueError:
+            last_day -= 1
+            if last_day < 28:
+                raise ValueError(
+                    f"unable to add months for anchor day {anchor.day} in target {year:04d}-{month:02d}"
+                ) from None
+
+
+def _coerce_anchor_dates(anchor_date: date | datetime | Sequence[date | datetime]) -> list[date]:
+    if isinstance(anchor_date, (date, datetime)):
+        return [_to_date(anchor_date)]
+    return [_to_date(item) for item in anchor_date]
+
+
+def _gann_harmonic_label(days: int | None = None, months: int | None = None, years: int | None = None) -> str:
+    """將常見 Gann 週期轉為容易閱讀的 harmonic 標籤。"""
+    supplied_units = sum(value is not None for value in (days, months, years))
+    if supplied_units > 1:
+        raise ValueError("only one of days, months, or years may be specified")
+    if years is not None:
+        return "1年" if years == 1 else f"{years}年"
+    if months is not None:
+        month_labels = {
+            1: "1/12年",
+            2: "1/6年",
+            3: "1/4年",
+            4: "1/3年",
+            6: "1/2年",
+            9: "3/4年",
+            12: "1年",
+        }
+        return month_labels.get(months, f"{months}個月")
+    if days is None:
+        return "未分類"
+    day_labels = {
+        30: "1/12年",
+        45: "1/8年",
+        52: "52天",
+        60: "1/6年",
+        90: "1/4年",
+        91: "1/4年",
+        92: "1/4年",
+        120: "1/3年",
+        144: "144天",
+        180: "1/2年",
+        182: "1/2年",
+        360: "1年",
+        365: "1年",
+    }
+    return day_labels.get(days, f"{days}天")
+
+
+def _build_anniversary_row(
+    *,
+    anchor: date,
+    as_of: date,
+    due: date,
+    window_type: str,
+    multiple: int,
+    harmonic: str,
+    label: str,
+    base_days: int | None = None,
+    months: int | None = None,
+    years: int | None = None,
+    use_trading_days: bool = False,
+) -> dict:
+    return {
+        "type": window_type,
+        "anchor_date": anchor.isoformat(),
+        "due_date": due.isoformat(),
+        "distance_days": (due - as_of).days,
+        "multiple": multiple,
+        "gann_harmonic": harmonic,
+        "label": label,
+        "base_days": base_days,
+        "months": months,
+        "years": years,
+        "use_trading_days": use_trading_days,
+        "note": f"{label}（{harmonic}）",
+    }
+
+
+def _iter_square_of_nine_angles(angle_step: int, angle_system: str) -> list[int]:
+    if angle_step <= 0 or 360 % angle_step != 0:
+        raise ValueError("angle_step must be a positive divisor of 360")
+    valid_angles = list(range(0, 360, angle_step))
+    angle_system = angle_system.lower()
+    if angle_system == "all":
+        return valid_angles
+    if angle_system == "cardinal":
+        return [angle for angle in valid_angles if angle % 90 == 0]
+    if angle_system == "ordinal":
+        return [angle for angle in valid_angles if angle % 90 == 45]
+    raise ValueError("angle_system must be one of: all, cardinal, ordinal")
 
 
 def scale_cycle_to_days(
@@ -283,44 +400,69 @@ def compute_square_of_nine_levels(
     max_ring: int = 2,
     angle_step: int = 45,
     include_descending: bool = False,
+    current_price: float | None = None,
+    angle_system: str = "all",
+    include_metadata: bool = True,
 ) -> list[dict]:
     """
-    Gann Square of 9 價格振動層級。
+    以標準平方根螺旋計算 Gann Square of 9 價格層級。
 
-    預設保持相容（僅輸出上行層級），可用 include_descending 取得完整上下行價位。
+    - 360° = sqrt 軸 +2
+    - angle_system 支援 all / cardinal / ordinal
+    - current_price 可指定目前價格，回傳相對當前價的上下層級
     """
     if reference_price <= 0:
         raise ValueError("reference_price must be positive")
-    if angle_step <= 0 or 360 % angle_step != 0:
-        raise ValueError("angle_step must be a positive divisor of 360")
-    root = reference_price ** 0.5
+    if current_price is not None and current_price <= 0:
+        raise ValueError("current_price must be positive when provided")
+
+    root = math.sqrt(reference_price)
+    center_price = current_price if current_price is not None else reference_price
+    center_root = math.sqrt(center_price)
+    center_turn = math.floor((center_root - root) / 2.0)
+    angles = _iter_square_of_nine_angles(angle_step, angle_system)
     levels: list[dict] = []
-    # 傳統近似：sqrt 軸每 +2 約對應 360°；step = angle * (1/180)
-    for ring in range(max_ring + 1):
-        for angle in range(0, 360, angle_step):
-            phase_step = angle * _SQ9_ANGLE_TO_SQRT_STEP
-            upward_step = (2.0 * ring) + phase_step
-            target = (root + upward_step) ** 2
-            levels.append(
-                {
-                    "ring": ring,
-                    "angle": angle,
-                    "direction": "up",
-                    "target_price": round(target, 4),
-                }
-            )
-            if include_descending:
-                downward_step = -(2.0 * ring + phase_step)
-                down_price = (root + downward_step) ** 2 if (root + downward_step) > 0 else 0.0
-                levels.append(
-                    {
-                        "ring": ring,
-                        "angle": angle,
-                        "direction": "down",
-                        "target_price": round(down_price, 4),
-                    }
-                )
-    levels.sort(key=lambda r: r["target_price"])
+    seen: set[tuple[int, int]] = set()
+    min_turn = center_turn - max_ring if include_descending else max(0, center_turn)
+    max_turn = center_turn + max_ring
+
+    for turn in range(min_turn, max_turn + 1):
+        ring = abs(turn - center_turn)
+        for angle in angles:
+            key = (turn, angle)
+            if key in seen:
+                continue
+            seen.add(key)
+            sqrt_value = root + (2.0 * turn) + (angle * _SQ9_ANGLE_TO_SQRT_STEP)
+            if sqrt_value <= 0:
+                continue
+            target = round(sqrt_value * sqrt_value, 4)
+            direction = "neutral"
+            if target > center_price:
+                direction = "up"
+            elif target < center_price:
+                direction = "down"
+            row = {
+                "ring": ring,
+                "angle": angle,
+                "direction": direction,
+                "target_price": target,
+            }
+            if include_metadata:
+                if angle % 90 == 0:
+                    angle_family = "cardinal"
+                elif angle % 90 == 45:
+                    angle_family = "ordinal"
+                else:
+                    angle_family = "other"
+                row["angle_system"] = angle_family
+                row["turn"] = turn
+                row["reference_price"] = round(reference_price, 4)
+                row["center_price"] = round(center_price, 4)
+                row["price_delta"] = round(target - center_price, 4)
+            levels.append(row)
+
+    levels.sort(key=lambda r: (r["target_price"], r["angle"], r["ring"]))
     return levels
 
 
@@ -332,64 +474,164 @@ def compute_anniversary_dates(
     lookback_years: float = 2.0,
     lookahead_years: float = 2.0,
     monthly_step: int = 3,
+    anchor_dates: Sequence[date | datetime] | None = None,
+    include_yearly: bool = True,
+    include_monthly: bool = True,
+    include_day_windows: bool = True,
+    extra_day_windows: Sequence[int] | None = None,
 ) -> list[dict]:
     """
-    計算江恩 Anniversary Dates（年週年 + 月週年）。
+    計算強化版江恩 Anniversary Dates。
+
+    支援：
+    - 多個 anchor dates
+    - 年/月份周年窗
+    - Gann 常見日數窗口（45/52/90/120/144/180/360 等）
+    - 自然日或交易日
+    - harmonic 標註
     """
-    anchor = _to_date(anchor_date)
     as_of = _to_date(as_of_date)
     window_start = as_of - timedelta(days=int(lookback_years * 365.2425))
     window_end = as_of + timedelta(days=int(lookahead_years * 365.2425))
+    anchors = _coerce_anchor_dates(anchor_dates if anchor_dates is not None else anchor_date)
+    day_windows = sorted({45, 52, 90, 91, 92, 120, 144, 180, 182, 360, *(extra_day_windows or ())})
 
     rows: list[dict] = []
 
-    # 年週年
-    start_year = max(anchor.year, window_start.year - 1)
-    end_year = window_end.year + 1
-    for year in range(start_year, end_year + 1):
-        try:
-            ann = date(year, anchor.month, anchor.day)
-        except ValueError:
-            # 2/29 對齊到 2/28
-            ann = date(year, anchor.month, 28)
-        if window_start <= ann <= window_end:
-            rows.append(
-                {
-                    "type": "yearly_anniversary",
-                    "due_date": ann.isoformat(),
-                    "distance_days": (ann - as_of).days,
-                    "multiple": year - anchor.year,
-                    "note": "年度週年時間窗",
-                }
-            )
+    for anchor in anchors:
+        if include_yearly:
+            max_year_multiple = max(1, int(math.ceil(lookback_years + lookahead_years)) + 2)
+            for multiple in range(1, max_year_multiple + 1):
+                if use_trading_days:
+                    due = _add_business_days(anchor, multiple * _TRADING_YEAR_DAYS)
+                else:
+                    try:
+                        due = date(anchor.year + multiple, anchor.month, anchor.day)
+                    except ValueError:
+                        due = date(anchor.year + multiple, anchor.month, 28)
+                if window_start <= due <= window_end:
+                    rows.append(
+                        _build_anniversary_row(
+                            anchor=anchor,
+                            as_of=as_of,
+                            due=due,
+                            window_type="yearly_anniversary",
+                            multiple=multiple,
+                            harmonic=_gann_harmonic_label(years=multiple),
+                            label="年度週年時間窗",
+                            years=multiple,
+                            base_days=_TRADING_YEAR_DAYS if use_trading_days else 365,
+                            use_trading_days=use_trading_days,
+                        )
+                    )
 
-    # 月週年（固定每 N 個月）
-    cursor = date(anchor.year, anchor.month, min(anchor.day, 28))
-    step_count = 0
-    max_steps = int((lookback_years + lookahead_years + 2) * 12 / max(monthly_step, 1)) + 12
-    for _ in range(max_steps):
-        step_count += 1
-        month = cursor.month + monthly_step
-        year = cursor.year + (month - 1) // 12
-        month = (month - 1) % 12 + 1
-        day = min(anchor.day, 28)
-        cursor = date(year, month, day)
-        if cursor < window_start:
-            continue
-        if cursor > window_end:
-            break
-        due = _add_business_days(cursor, 0) if use_trading_days else cursor
-        rows.append(
-            {
-                "type": "monthly_anniversary",
-                "due_date": due.isoformat(),
-                "distance_days": (due - as_of).days,
-                "multiple": step_count,
-                "note": f"每 {monthly_step} 個月週年窗",
-            }
+        if include_monthly and monthly_step > 0:
+            max_month_multiple = int(math.ceil((lookback_years + lookahead_years + 2) * 12 / monthly_step))
+            for multiple in range(1, max_month_multiple + 1):
+                total_months = monthly_step * multiple
+                due = _add_months(anchor, total_months)
+                if use_trading_days:
+                    due = _align_to_business_day(due)
+                if window_start <= due <= window_end:
+                    rows.append(
+                        _build_anniversary_row(
+                            anchor=anchor,
+                            as_of=as_of,
+                            due=due,
+                            window_type="monthly_anniversary",
+                            multiple=multiple,
+                            harmonic=_gann_harmonic_label(months=total_months),
+                            label=f"每 {monthly_step} 個月週年窗",
+                            months=total_months,
+                            base_days=total_months * (_TRADING_MONTH_DAYS if use_trading_days else 30),
+                            use_trading_days=use_trading_days,
+                        )
+                    )
+
+        if include_day_windows:
+            for base_days in day_windows:
+                max_multiple = max(1, int(math.ceil((lookback_years + lookahead_years + 2) * 365.2425 / base_days)))
+                for multiple in range(1, max_multiple + 1):
+                    total_days = base_days * multiple
+                    due = _add_business_days(anchor, total_days) if use_trading_days else anchor + timedelta(days=total_days)
+                    if due > window_end:
+                        break
+                    if due < window_start:
+                        continue
+                    rows.append(
+                        _build_anniversary_row(
+                            anchor=anchor,
+                            as_of=as_of,
+                            due=due,
+                            window_type="gann_day_window",
+                            multiple=multiple,
+                            harmonic=_gann_harmonic_label(days=base_days),
+                            label=f"{base_days} 天 Gann 時間窗",
+                            base_days=base_days,
+                            use_trading_days=use_trading_days,
+                        )
+                    )
+
+    rows.sort(
+        key=lambda r: (
+            abs(r["distance_days"]),
+            r["due_date"],
+            r["anchor_date"],
+            r["type"],
+            r["base_days"] or 0,
         )
-    rows.sort(key=lambda r: abs(r["distance_days"]))
+    )
     return rows
+
+
+def find_nearest_square_of_nine_levels(
+    current_price: float,
+    reference_price: float,
+    *,
+    max_ring: int = 3,
+    angle_step: int = 45,
+    angle_system: str = "all",
+) -> dict:
+    """找出最接近當前價格的 Square of 9 支撐/壓力位。"""
+    if current_price <= 0:
+        raise ValueError("current_price must be positive")
+    levels = compute_square_of_nine_levels(
+        reference_price=reference_price,
+        current_price=current_price,
+        max_ring=max_ring,
+        angle_step=angle_step,
+        include_descending=True,
+        angle_system=angle_system,
+        include_metadata=True,
+    )
+    if not levels:
+        raise ValueError("no Square of 9 levels available")
+
+    support = max((row for row in levels if row["target_price"] <= current_price), key=lambda row: row["target_price"], default=None)
+    resistance = min(
+        (row for row in levels if row["target_price"] >= current_price),
+        key=lambda row: row["target_price"],
+        default=None,
+    )
+    if support is None and resistance is None:
+        raise ValueError("no support or resistance levels found near current_price")
+
+    def _distance(row: dict | None) -> float:
+        if row is None:
+            return float("inf")
+        return abs(row["target_price"] - current_price)
+
+    nearest_candidates = [row for row in (support, resistance) if row is not None]
+    nearest = min(nearest_candidates, key=_distance)
+    return {
+        "current_price": round(current_price, 4),
+        "reference_price": round(reference_price, 4),
+        "nearest_level": nearest,
+        "support_level": support,
+        "resistance_level": resistance,
+        "distance_to_nearest": round(abs(nearest["target_price"] - current_price), 4),
+        "distance_percent": round(abs(nearest["target_price"] - current_price) / current_price * 100.0, 4),
+    }
 
 
 def _classify_resonance(score: int) -> str:
