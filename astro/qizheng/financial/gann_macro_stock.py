@@ -5,6 +5,13 @@
 1) 時間先於價格（Time first, then price）
 2) 聖經周期縮放後用於市場時間窗
 3) 聖經周期 + 七政四餘流時守照 + 江恩振動（Square of 9）多重共振才採信
+
+新增模組（v2）：
+4) 時間＝價格共振（Time-Price Squaring）
+5) 江恩角度 / 江恩扇形（Gann Angles / Gann Fan）
+6) 江恩自然方格 + 振動（Gann Natural Squares + Vibration）
+7) 多重共振 Confluence 評分系統
+8) 與 Solar Ingress（節氣入境）結合
 """
 
 from __future__ import annotations
@@ -774,3 +781,677 @@ def build_gann_macro_with_dasha_context(
         "flow_year_palace": d.flow_year_palace,
     }
     return payload
+
+
+# ============================================================
+# 時間＝價格共振（Time-Price Squaring）
+# ============================================================
+
+# Gann 角度比率：(名稱, 時間單位, 價格單位)
+_GANN_ANGLE_RATIOS: tuple[tuple[str, int, int], ...] = (
+    ("8×1", 1, 8),
+    ("4×1", 1, 4),
+    ("3×1", 1, 3),
+    ("2×1", 1, 2),
+    ("1×1", 1, 1),
+    ("1×2", 2, 1),
+    ("1×3", 3, 1),
+    ("1×4", 4, 1),
+    ("1×8", 8, 1),
+)
+
+_SOLAR_INGRESS_LONGITUDES: tuple[tuple[str, float], ...] = (
+    ("春分 Vernal Equinox", 0.0),
+    ("夏至 Summer Solstice", 90.0),
+    ("秋分 Autumnal Equinox", 180.0),
+    ("冬至 Winter Solstice", 270.0),
+)
+
+
+def compute_time_price_squaring(
+    anchor_price: float,
+    anchor_date: date | datetime,
+    *,
+    as_of_date: date | datetime,
+    price_unit: float = 1.0,
+    time_unit_days: int = 1,
+    lookahead_days: int = 365,
+    orb_days: int = 5,
+    orb_price_pct: float = 0.02,
+) -> list[dict]:
+    """
+    計算時間＝價格共振點（Time-Price Squaring）。
+
+    江恩理論核心：當「時間（天數）」在平方根螺旋上與「價格」
+    落在相同角度時，市場出現共振轉折。
+
+    計算方式：
+    - 以 anchor_price 的平方根 root0 為基礎
+    - 每完整旋轉 360° = 2 個平方根單位
+    - 當天數（按 time_unit_days 縮放）的平方根 ≈ 價格的平方根時
+      → 「時間 = 價格」共振窗口
+
+    回傳：各共振節點列表（日期、對應價格、共振強度）。
+    """
+    if anchor_price <= 0:
+        raise ValueError("anchor_price must be positive")
+    if price_unit <= 0:
+        raise ValueError("price_unit must be positive")
+    if time_unit_days <= 0:
+        raise ValueError("time_unit_days must be positive")
+
+    anchor = _to_date(anchor_date)
+    as_of = _to_date(as_of_date)
+    root0 = math.sqrt(anchor_price / price_unit)
+
+    results: list[dict] = []
+    # 掃描各平方根整數 / 半整數節點
+    # 每一「旋轉圈數」n 對應價格 = (root0 + n)² × price_unit
+    max_n = int(root0) + int(math.ceil(math.sqrt(anchor_price + 50 * price_unit) - root0)) + 10
+    for n in range(-4, max_n + 1):
+        # 對應價格共振節點
+        resonant_root = root0 + n
+        if resonant_root <= 0:
+            continue
+        resonant_price = round((resonant_root ** 2) * price_unit, 4)
+
+        # 對應天數：天數縮放後的平方根 = resonant_root
+        # → days / time_unit_days = resonant_root² → days = resonant_root² × time_unit_days
+        resonant_days = int(round((resonant_root ** 2) * time_unit_days))
+        if resonant_days < 0:
+            continue
+        resonant_date = anchor + timedelta(days=resonant_days)
+
+        # 只保留 as_of 附近 ± orb_days 或未來 lookahead_days
+        days_from_now = (resonant_date - as_of).days
+        if days_from_now < -orb_days or days_from_now > lookahead_days:
+            continue
+
+        # 計算強度：半整數節點（n = k/2）為次要，整數節點為主要
+        is_primary = isinstance(n, int)
+        strength = "主要共振" if is_primary else "次要共振"
+        orb_check = abs(days_from_now) <= orb_days
+
+        results.append({
+            "resonant_date": resonant_date.isoformat(),
+            "distance_days": days_from_now,
+            "resonant_price": resonant_price,
+            "resonant_root": round(resonant_root, 4),
+            "n_step": n,
+            "strength": strength,
+            "in_orb": orb_check,
+            "note": f"時間={resonant_days}日，對應價格共振位 {resonant_price}（root={resonant_root:.4f}）",
+        })
+
+    # 也加入半步節點（0.5 旋轉）
+    for n_half in range(-8, (max_n + 1) * 2):
+        resonant_root = root0 + n_half * 0.5
+        if resonant_root <= 0 or n_half % 2 == 0:  # 整數已加，跳過
+            continue
+        resonant_price = round((resonant_root ** 2) * price_unit, 4)
+        resonant_days = int(round((resonant_root ** 2) * time_unit_days))
+        if resonant_days < 0:
+            continue
+        resonant_date = anchor + timedelta(days=resonant_days)
+        days_from_now = (resonant_date - as_of).days
+        if days_from_now < -orb_days or days_from_now > lookahead_days:
+            continue
+
+        results.append({
+            "resonant_date": resonant_date.isoformat(),
+            "distance_days": days_from_now,
+            "resonant_price": resonant_price,
+            "resonant_root": round(resonant_root, 4),
+            "n_step": n_half * 0.5,
+            "strength": "次要共振（180°）",
+            "in_orb": abs(days_from_now) <= orb_days,
+            "note": f"時間={resonant_days}日，對應半步共振位 {resonant_price}",
+        })
+
+    results.sort(key=lambda r: r["distance_days"])
+    return results
+
+
+# ============================================================
+# 江恩角度 / 江恩扇形（Gann Angles / Gann Fan）
+# ============================================================
+
+def compute_gann_angles(
+    pivot_price: float,
+    pivot_date: date | datetime,
+    *,
+    as_of_date: date | datetime,
+    price_unit: float = 1.0,
+    time_unit_days: int = 1,
+    lookahead_days: int = 365,
+    trend: str = "up",
+) -> list[dict]:
+    """
+    計算江恩扇形角度線（Gann Fan Angles）。
+
+    以樞紐高低點為起點，計算各角度線在未來日期的價格目標。
+
+    角度線：
+    - 1×1（45°）：每 time_unit_days 移動 1×price_unit
+    - 2×1、3×1、4×1、8×1（更陡峭）
+    - 1×2、1×3、1×4、1×8（更平緩）
+
+    Parameters:
+        pivot_price: 樞紐價格（支撐高點或低點）
+        pivot_date: 樞紐日期
+        as_of_date: 計算基準日
+        price_unit: 每格價格單位
+        time_unit_days: 每格時間單位（天）
+        lookahead_days: 向前看天數
+        trend: "up"（從低點向上）或 "down"（從高點向下）
+
+    回傳：各角度線在各時間點的價格目標。
+    """
+    if pivot_price <= 0:
+        raise ValueError("pivot_price must be positive")
+    if price_unit <= 0:
+        raise ValueError("price_unit must be positive")
+    if time_unit_days <= 0:
+        raise ValueError("time_unit_days must be positive")
+    if trend not in ("up", "down"):
+        raise ValueError("trend must be 'up' or 'down'")
+
+    pivot = _to_date(pivot_date)
+    as_of = _to_date(as_of_date)
+    direction = 1 if trend == "up" else -1
+
+    # 從樞紐日到 as_of 的天數
+    days_elapsed = (as_of - pivot).days
+
+    results: list[dict] = []
+    # 時間節點：當前 + 每 30 天一個節點到 lookahead
+    time_nodes = sorted({0, 30, 60, 90, 120, 180, 270, 360} |
+                         {d for d in range(0, lookahead_days + 1, 30)})
+
+    for angle_name, t_units, p_units in _GANN_ANGLE_RATIOS:
+        # 斜率：每 time_unit_days 天移動 (p_units/t_units) × price_unit
+        slope = (p_units / t_units) * price_unit / time_unit_days  # price per day
+
+        # as_of 當天的角度線價格
+        current_angle_price = pivot_price + direction * slope * days_elapsed
+
+        for days_ahead in time_nodes:
+            target_days = days_elapsed + days_ahead
+            angle_price = pivot_price + direction * slope * target_days
+            if angle_price <= 0:
+                continue
+            target_date = pivot + timedelta(days=target_days)
+            results.append({
+                "angle": angle_name,
+                "trend": trend,
+                "date": target_date.isoformat(),
+                "days_from_pivot": target_days,
+                "days_from_now": days_ahead,
+                "price_target": round(angle_price, 4),
+                "current_angle_price": round(current_angle_price, 4),
+                "slope_per_day": round(slope, 6),
+                "note": f"{angle_name}角度線（{trend}）在 {target_date.isoformat()} 對應 {angle_price:.2f}",
+            })
+
+    results.sort(key=lambda r: (r["days_from_now"], r["angle"]))
+    return results
+
+
+def get_gann_angle_at_date(
+    pivot_price: float,
+    pivot_date: date | datetime,
+    target_date: date | datetime,
+    *,
+    price_unit: float = 1.0,
+    time_unit_days: int = 1,
+    trend: str = "up",
+) -> dict[str, float]:
+    """
+    取得指定日期各江恩角度線的價格。
+
+    回傳 {angle_name: price} 字典，適合與實際收盤價對照。
+    """
+    pivot = _to_date(pivot_date)
+    target = _to_date(target_date)
+    days_elapsed = (target - pivot).days
+    direction = 1 if trend == "up" else -1
+
+    output: dict[str, float] = {}
+    for angle_name, t_units, p_units in _GANN_ANGLE_RATIOS:
+        slope = (p_units / t_units) * price_unit / time_unit_days
+        price = pivot_price + direction * slope * days_elapsed
+        if price > 0:
+            output[angle_name] = round(price, 4)
+    return output
+
+
+# ============================================================
+# 江恩自然方格 + 振動（Gann Natural Squares + Vibration）
+# ============================================================
+
+def compute_natural_squares_vibration(
+    reference_price: float,
+    *,
+    num_squares: int = 20,
+    include_octagon: bool = True,
+    include_cross: bool = True,
+    current_price: float | None = None,
+    proximity_pct: float = 0.05,
+) -> dict:
+    """
+    計算江恩自然方格（Gann Natural Squares）及振動層級。
+
+    自然方格：n² 序列（1, 4, 9, 16, 25, ...）
+    振動原理：任意價格都可在方格螺旋上找到「共振節點」，
+    即最接近的自然方格或其十字/八卦延伸點。
+
+    Parameters:
+        reference_price: 基準價格（如當前價或歷史高低點）
+        num_squares: 計算至第幾個自然方格
+        include_octagon: 是否包含八卦延伸（每 45° 一個節點）
+        include_cross: 是否包含十字延伸（每 90° 一個節點）
+        current_price: 當前價格（用於計算接近度）
+        proximity_pct: 接近度閾值（百分比）
+
+    回傳：{squares, vibration_level, nearest_square, cross_levels, octagon_levels}
+    """
+    if reference_price <= 0:
+        raise ValueError("reference_price must be positive")
+
+    root_ref = math.sqrt(reference_price)
+
+    # 自然方格序列
+    squares = []
+    for n in range(1, num_squares + 1):
+        val = float(n * n)
+        squares.append({
+            "n": n,
+            "square": val,
+            "root": float(n),
+            "distance_from_ref": round(abs(val - reference_price), 4),
+            "pct_from_ref": round(abs(val - reference_price) / reference_price * 100.0, 4),
+        })
+
+    # 以 reference_price 計算振動層級
+    # 振動層級 = floor(sqrt(reference_price))
+    vibration_n = int(math.floor(root_ref))
+    vibration_remainder = root_ref - vibration_n  # 0 ~ 1 之間的小數部分
+    vibration_angle = round(vibration_remainder * 360.0, 2)  # 轉換為角度（0~360°）
+    vibration_level = {
+        "reference_price": round(reference_price, 4),
+        "sqrt_ref": round(root_ref, 6),
+        "vibration_n": vibration_n,
+        "vibration_remainder": round(vibration_remainder, 6),
+        "vibration_angle_deg": vibration_angle,
+        "lower_square": vibration_n ** 2,
+        "upper_square": (vibration_n + 1) ** 2,
+        "position_in_cycle": f"{vibration_angle:.1f}° / 360°",
+        "description": (
+            f"價格 {reference_price} 位於第 {vibration_n} 圈"
+            f"（{vibration_n}²={vibration_n**2} ～ {vibration_n+1}²={(vibration_n+1)**2}），"
+            f"角度 {vibration_angle:.1f}°"
+        ),
+    }
+
+    # 十字延伸（+0°, +90°, +180°, +270°）
+    cross_levels: list[dict] = []
+    if include_cross:
+        for n in range(1, num_squares + 1):
+            for angle_offset in (0, 90, 180, 270):
+                frac = angle_offset / 360.0
+                extended_root = n + frac
+                val = round(extended_root ** 2, 4)
+                cross_levels.append({
+                    "base_n": n,
+                    "angle_offset": angle_offset,
+                    "extended_root": round(extended_root, 4),
+                    "price": val,
+                    "type": "cross",
+                })
+
+    # 八卦延伸（+0°, +45°, +90°, +135°, +180°, +225°, +270°, +315°）
+    octagon_levels: list[dict] = []
+    if include_octagon:
+        for n in range(1, num_squares + 1):
+            for angle_offset in (0, 45, 90, 135, 180, 225, 270, 315):
+                frac = angle_offset / 360.0
+                extended_root = n + frac
+                val = round(extended_root ** 2, 4)
+                octagon_levels.append({
+                    "base_n": n,
+                    "angle_offset": angle_offset,
+                    "extended_root": round(extended_root, 4),
+                    "price": val,
+                    "type": "octagon",
+                })
+
+    # 尋找最接近當前價格的節點
+    nearest_square: dict | None = None
+    nearest_vibration: dict | None = None
+    if current_price is not None and current_price > 0:
+        all_levels = [{"price": sq["square"], "type": "natural_square", "n": sq["n"]} for sq in squares]
+        all_levels += [{"price": lvl["price"], "type": lvl["type"], "n": lvl["base_n"]} for lvl in octagon_levels]
+
+        near = [
+            lvl for lvl in all_levels
+            if abs(lvl["price"] - current_price) / current_price <= proximity_pct
+        ]
+        near.sort(key=lambda x: abs(x["price"] - current_price))
+        nearest_vibration = near[:5] if near else None
+
+        ns_candidates = [sq for sq in squares if abs(sq["square"] - current_price) / current_price <= proximity_pct * 2]
+        ns_candidates.sort(key=lambda x: abs(x["square"] - current_price))
+        nearest_square = ns_candidates[0] if ns_candidates else None
+
+    return {
+        "reference_price": round(reference_price, 4),
+        "natural_squares": squares,
+        "vibration_level": vibration_level,
+        "cross_levels": cross_levels,
+        "octagon_levels": octagon_levels,
+        "nearest_natural_square": nearest_square,
+        "nearest_vibration_nodes": nearest_vibration,
+    }
+
+
+# ============================================================
+# 與 Solar Ingress（節氣入境）結合
+# ============================================================
+
+_YEAR_BASIS_DAYS: float = 365.2425
+
+
+def _find_solar_ingress_jd(year: int, target_lon: float) -> float:
+    """計算太陽進入指定黃道經度的儒略日。"""
+    # 估算初始時刻（以春分為基準）
+    # 春分約在 3 月 20 日
+    approx_day = {0.0: (3, 20), 90.0: (6, 21), 180.0: (9, 23), 270.0: (12, 21)}.get(
+        target_lon, (3, 20)
+    )
+    jd_start = swe.julday(year, approx_day[0], approx_day[1], 0.0)
+
+    def _sun_lon(jd: float) -> float:
+        result, _ = swe.calc_ut(jd, swe.SUN)
+        return _normalize_degree(result[0])
+
+    # 二分法搜尋
+    jd0 = jd_start - 20.0
+    jd1 = jd_start + 20.0
+    for _ in range(50):
+        jd_mid = (jd0 + jd1) / 2.0
+        lon = _sun_lon(jd_mid)
+        diff = _normalize_degree(lon - target_lon)
+        if diff > 180.0:
+            diff -= 360.0
+        if abs(diff) < 1e-6:
+            break
+        if diff < 0:
+            jd0 = jd_mid
+        else:
+            jd1 = jd_mid
+    return (jd0 + jd1) / 2.0
+
+
+def _jd_to_date(jd: float) -> date:
+    y, m, d, _ = swe.revjul(jd)
+    return date(int(y), int(m), int(d))
+
+
+def compute_solar_ingress_gann_confluence(
+    market_natal_date: date | datetime,
+    *,
+    year: int,
+    cycle_scale: float = 0.1,
+    use_trading_days: bool = False,
+    cycle_orb_days: int = 12,
+    year_basis_days: float = _YEAR_BASIS_DAYS,
+) -> list[dict]:
+    """
+    計算 Solar Ingress（節氣入境）與江恩周期/週年窗的合相（Confluence）。
+
+    四個關鍵節氣入境日（春分、夏至、秋分、冬至）若落在江恩周期容差窗內，
+    視為強力時間共振確認信號。
+
+    Parameters:
+        market_natal_date: 市場出生日期（指數/股票上市日）
+        year: 計算年份
+        cycle_scale: 聖經周期縮放倍率
+        use_trading_days: 是否以交易日計算
+        cycle_orb_days: 周期容差（天）
+        year_basis_days: 年度天數基準
+
+    回傳：各節氣入境日的江恩共振評分與詳情列表。
+    """
+    swe.set_ephe_path("")
+    natal = _to_date(market_natal_date)
+
+    results: list[dict] = []
+    for ingress_name, target_lon in _SOLAR_INGRESS_LONGITUDES:
+        try:
+            jd = _find_solar_ingress_jd(year, target_lon)
+        except Exception:
+            continue
+        ingress_date = _jd_to_date(jd)
+
+        # 計算聖經周期共振
+        cycle_hits = compute_biblical_cycle_dates(
+            natal,
+            as_of_date=ingress_date,
+            scale=cycle_scale,
+            year_basis_days=year_basis_days,
+            use_trading_days=use_trading_days,
+            lookback_years=0.1,
+            lookahead_years=0.1,
+            max_multiple=20,
+        )
+        near_cycles = [h for h in cycle_hits if abs(h["distance_days"]) <= cycle_orb_days]
+
+        # 計算週年窗共振
+        ann_hits = compute_anniversary_dates(
+            natal,
+            as_of_date=ingress_date,
+            use_trading_days=use_trading_days,
+            lookback_years=0.1,
+            lookahead_years=0.1,
+        )
+        near_ann = [h for h in ann_hits if abs(h["distance_days"]) <= cycle_orb_days]
+
+        cycle_score = _CYCLE_SCORE_WEIGHT * len(near_cycles)
+        ann_score = len(near_ann)
+        total_score = cycle_score + ann_score
+
+        confluence_label = _classify_resonance(total_score)
+
+        results.append({
+            "ingress_name": ingress_name,
+            "ingress_date": ingress_date.isoformat(),
+            "solar_longitude": target_lon,
+            "year": year,
+            "near_cycle_hits": len(near_cycles),
+            "near_anniversary_hits": len(near_ann),
+            "cycle_score": cycle_score,
+            "anniversary_score": ann_score,
+            "total_score": total_score,
+            "confluence": confluence_label,
+            "cycle_details": near_cycles[:3],
+            "anniversary_details": near_ann[:3],
+            "note": (
+                f"{ingress_name}（{ingress_date.isoformat()}）"
+                f"周期命中 {len(near_cycles)} 個，週年命中 {len(near_ann)} 個，"
+                f"總共振分 {total_score}→{confluence_label}"
+            ),
+        })
+
+    results.sort(key=lambda r: -r["total_score"])
+    return results
+
+
+# ============================================================
+# 多重共振 Confluence 評分系統（整合版）
+# ============================================================
+
+_CONFLUENCE_TIME_PRICE_WEIGHT: int = 3
+_CONFLUENCE_SOLAR_INGRESS_WEIGHT: int = 2
+_CONFLUENCE_NATURAL_SQUARE_WEIGHT: int = 2
+_CONFLUENCE_GANN_ANGLE_WEIGHT: int = 1
+
+
+def build_gann_full_confluence(
+    *,
+    market_natal_date: date | datetime,
+    as_of_datetime: datetime,
+    current_price: float,
+    reference_price: float | None = None,
+    pivot_price: float | None = None,
+    pivot_date: date | datetime | None = None,
+    timezone: float = 8.0,
+    cycle_scale: float = 0.1,
+    use_trading_days: bool = False,
+    cycle_orb_days: int = 12,
+    year_basis_days: float = _YEAR_BASIS_DAYS,
+    natal_longitudes: dict[str, float] | None = None,
+    transit_longitudes: dict[str, float] | None = None,
+    time_price_orb_days: int = 7,
+    price_proximity_pct: float = 0.03,
+    trend: str = "up",
+) -> dict:
+    """
+    江恩全維度多重共振 Confluence 評分系統。
+
+    整合層次：
+    1. 聖經周期 + 週年窗（時間層）
+    2. 七政四餘守照共振（星象層）
+    3. 時間＝價格共振（T=P 層）
+    4. Solar Ingress 節氣入境（節氣層）
+    5. 江恩自然方格振動（價格振動層）
+    6. 江恩角度線支撐壓力（角度層）
+
+    Parameters:
+        market_natal_date: 市場出生日期
+        as_of_datetime: 評估時刻
+        current_price: 當前價格
+        reference_price: Square of 9 基準價格（預設同 current_price）
+        pivot_price: 江恩扇形基準高低點價格（可選）
+        pivot_date: 江恩扇形基準高低點日期（可選）
+        trend: 當前趨勢方向（"up" 或 "down"）
+
+    回傳：含各層共振分數與彙總的完整評估結果。
+    """
+    ref_price = reference_price if reference_price and reference_price > 0 else current_price
+
+    # ── 層次 1：基礎 Gann 宏觀 timing ────────────────────────
+    base = build_gann_macro_timing(
+        market_natal_date=market_natal_date,
+        as_of_datetime=as_of_datetime,
+        timezone=timezone,
+        cycle_scale=cycle_scale,
+        use_trading_days=use_trading_days,
+        cycle_orb_days=cycle_orb_days,
+        year_basis_days=year_basis_days,
+        natal_longitudes=natal_longitudes,
+        transit_longitudes=transit_longitudes,
+    )
+    base_scores = base.get("scores", {})
+
+    # ── 層次 2：時間＝價格共振 ──────────────────────────────
+    tp_squaring = compute_time_price_squaring(
+        anchor_price=ref_price,
+        anchor_date=market_natal_date,
+        as_of_date=as_of_datetime,
+        lookahead_days=90,
+        orb_days=time_price_orb_days,
+    )
+    tp_hits_in_orb = [r for r in tp_squaring if r["in_orb"]]
+    tp_primary_hits = [r for r in tp_hits_in_orb if r["strength"] == "主要共振"]
+    tp_score = _CONFLUENCE_TIME_PRICE_WEIGHT * len(tp_primary_hits) + len(tp_hits_in_orb) - len(tp_primary_hits)
+
+    # ── 層次 3：Solar Ingress 節氣共振 ──────────────────────
+    ingress_data = compute_solar_ingress_gann_confluence(
+        market_natal_date,
+        year=as_of_datetime.year,
+        cycle_scale=cycle_scale,
+        use_trading_days=use_trading_days,
+        cycle_orb_days=cycle_orb_days,
+        year_basis_days=year_basis_days,
+    )
+    high_ingress = [r for r in ingress_data if r["total_score"] >= _MEDIUM_RESONANCE_THRESHOLD]
+    ingress_score = _CONFLUENCE_SOLAR_INGRESS_WEIGHT * len(high_ingress)
+
+    # ── 層次 4：自然方格振動 ────────────────────────────────
+    nat_sq = compute_natural_squares_vibration(
+        ref_price,
+        num_squares=30,
+        current_price=current_price,
+        proximity_pct=price_proximity_pct,
+    )
+    nat_sq_hits = nat_sq.get("nearest_vibration_nodes") or []
+    nat_sq_score = _CONFLUENCE_NATURAL_SQUARE_WEIGHT * min(len(nat_sq_hits), 3)
+
+    # ── 層次 5：江恩角度線 ───────────────────────────────────
+    angle_hits: list[dict] = []
+    if pivot_price and pivot_price > 0 and pivot_date:
+        angles_data = compute_gann_angles(
+            pivot_price=pivot_price,
+            pivot_date=pivot_date,
+            as_of_date=as_of_datetime,
+            trend=trend,
+            lookahead_days=0,
+        )
+        # 僅取 days_from_now == 0 的當前值
+        current_angles = [a for a in angles_data if a["days_from_now"] == 0]
+        for ang in current_angles:
+            if abs(ang["current_angle_price"] - current_price) / current_price <= price_proximity_pct:
+                angle_hits.append(ang)
+    angle_score = _CONFLUENCE_GANN_ANGLE_WEIGHT * len(angle_hits)
+
+    # ── 彙總分數 ─────────────────────────────────────────────
+    total_confluence = (
+        base_scores.get("total_score", 0)
+        + tp_score
+        + ingress_score
+        + nat_sq_score
+        + angle_score
+    )
+
+    confluence_layers = {
+        "biblical_cycle_score": base_scores.get("cycle_score", 0),
+        "anniversary_score": base_scores.get("anniversary_score", 0),
+        "qizheng_astro_score": base_scores.get("astro_score", 0),
+        "time_price_squaring_score": tp_score,
+        "solar_ingress_score": ingress_score,
+        "natural_square_score": nat_sq_score,
+        "gann_angle_score": angle_score,
+        "total_confluence_score": total_confluence,
+        "classification": _classify_resonance(total_confluence),
+    }
+
+    return {
+        "market_natal_date": _to_date(market_natal_date).isoformat(),
+        "as_of": as_of_datetime.isoformat(),
+        "current_price": current_price,
+        "reference_price": ref_price,
+        "trend": trend,
+        # 各層原始資料
+        "base_timing": base,
+        "time_price_squaring": tp_squaring,
+        "tp_hits_in_orb": tp_hits_in_orb,
+        "solar_ingress_confluence": ingress_data,
+        "natural_squares_vibration": nat_sq,
+        "gann_angle_hits": angle_hits,
+        # 彙總
+        "confluence_scores": confluence_layers,
+        "entry_conditions": base.get("entry_conditions", []) + [
+            "T=P共振窗口：時間=價格共振在 ±7 日內出現",
+            "節氣入境日與江恩周期重疊（春分/夏至/秋分/冬至）",
+            "當前價格接近自然方格振動節點（±3%）",
+        ],
+        "exit_conditions": base.get("exit_conditions", []) + [
+            "T=P共振窗口結束且無新信號",
+            "角度線由支撐轉壓力（跌破 1×1 線）",
+        ],
+        "notes": [
+            "Gann 全維度 Confluence：六層共振同時出現時，信號最強。",
+            "時間=價格共振為最高優先級信號（T=P Squaring）。",
+            "節氣入境日歷史上常為市場轉折窗。",
+        ],
+    }

@@ -10,6 +10,12 @@ from astro.qizheng.financial.gann_macro_stock import (
     compute_square_of_nine_levels,
     evaluate_qizheng_resonance,
     scale_cycle_to_days,
+    compute_time_price_squaring,
+    compute_gann_angles,
+    get_gann_angle_at_date,
+    compute_natural_squares_vibration,
+    compute_solar_ingress_gann_confluence,
+    build_gann_full_confluence,
 )
 
 
@@ -162,3 +168,210 @@ def test_build_gann_macro_timing_contains_anniversary_scores():
     )
     assert "anniversary_hits" in result
     assert "anniversary_score" in result["scores"]
+
+
+# ============================================================
+# 新增函數測試（Time-Price Squaring, Gann Fan, Natural Squares,
+# Solar Ingress, Full Confluence）
+# ============================================================
+
+def test_compute_time_price_squaring_basic():
+    results = compute_time_price_squaring(
+        anchor_price=100.0,
+        anchor_date=date(2020, 1, 1),
+        as_of_date=date(2020, 6, 1),
+        lookahead_days=365,
+        orb_days=10,
+    )
+    assert isinstance(results, list)
+    # 應有未來的共振點
+    future = [r for r in results if r["distance_days"] >= 0]
+    assert future
+    # 每筆都有必要欄位
+    for r in results:
+        assert "resonant_date" in r
+        assert "resonant_price" in r
+        assert "strength" in r
+        assert "in_orb" in r
+        assert r["resonant_price"] > 0
+
+
+def test_compute_time_price_squaring_invalid():
+    with pytest.raises(ValueError):
+        compute_time_price_squaring(
+            anchor_price=0.0,
+            anchor_date=date(2020, 1, 1),
+            as_of_date=date(2020, 6, 1),
+        )
+
+
+def test_compute_time_price_squaring_primary_strength():
+    results = compute_time_price_squaring(
+        anchor_price=100.0,
+        anchor_date=date(2020, 1, 1),
+        as_of_date=date(2020, 6, 1),
+        lookahead_days=730,
+        orb_days=5,
+    )
+    primary = [r for r in results if r["strength"] == "主要共振"]
+    secondary = [r for r in results if "次要" in r["strength"]]
+    assert primary or secondary  # 至少有一種
+
+
+def test_compute_gann_angles_basic():
+    results = compute_gann_angles(
+        pivot_price=100.0,
+        pivot_date=date(2020, 1, 1),
+        as_of_date=date(2020, 6, 1),
+        lookahead_days=180,
+        trend="up",
+    )
+    assert isinstance(results, list)
+    assert results
+    angle_names = {r["angle"] for r in results}
+    assert "1×1" in angle_names
+    assert "2×1" in angle_names
+    # 所有價格都為正
+    for r in results:
+        assert r["price_target"] > 0
+
+
+def test_compute_gann_angles_down_trend():
+    results = compute_gann_angles(
+        pivot_price=200.0,
+        pivot_date=date(2020, 1, 1),
+        as_of_date=date(2020, 3, 1),
+        lookahead_days=180,
+        trend="down",
+    )
+    assert results
+    # 下跌趨勢：未來價格應低於樞紐
+    future_1x1 = [r for r in results if r["angle"] == "1×1" and r["days_from_now"] > 0]
+    if future_1x1:
+        assert future_1x1[0]["price_target"] < 200.0
+
+
+def test_compute_gann_angles_invalid():
+    with pytest.raises(ValueError):
+        compute_gann_angles(
+            pivot_price=-10.0,
+            pivot_date=date(2020, 1, 1),
+            as_of_date=date(2020, 6, 1),
+        )
+    with pytest.raises(ValueError):
+        compute_gann_angles(
+            pivot_price=100.0,
+            pivot_date=date(2020, 1, 1),
+            as_of_date=date(2020, 6, 1),
+            trend="sideways",
+        )
+
+
+def test_get_gann_angle_at_date():
+    angles = get_gann_angle_at_date(
+        pivot_price=100.0,
+        pivot_date=date(2020, 1, 1),
+        target_date=date(2020, 4, 10),
+        trend="up",
+    )
+    assert isinstance(angles, dict)
+    assert "1×1" in angles
+    assert angles["1×1"] > 100.0  # 上升趨勢
+
+
+def test_compute_natural_squares_vibration_basic():
+    result = compute_natural_squares_vibration(
+        reference_price=100.0,
+        num_squares=10,
+    )
+    assert "natural_squares" in result
+    assert "vibration_level" in result
+    assert "cross_levels" in result
+    assert "octagon_levels" in result
+    squares = result["natural_squares"]
+    assert len(squares) == 10
+    assert squares[0]["n"] == 1
+    assert squares[0]["square"] == 1.0
+    assert squares[9]["n"] == 10
+    assert squares[9]["square"] == 100.0
+
+
+def test_compute_natural_squares_vibration_current_price():
+    result = compute_natural_squares_vibration(
+        reference_price=100.0,
+        num_squares=15,
+        current_price=99.5,
+        proximity_pct=0.02,
+    )
+    # 99.5 在 100 附近（10²=100），應找到最近節點
+    nearest = result.get("nearest_natural_square")
+    assert nearest is not None
+    assert nearest["n"] == 10
+
+
+def test_compute_natural_squares_vibration_invalid():
+    with pytest.raises(ValueError):
+        compute_natural_squares_vibration(reference_price=0.0)
+
+
+def test_compute_solar_ingress_gann_confluence_basic():
+    results = compute_solar_ingress_gann_confluence(
+        market_natal_date=date(1969, 11, 24),
+        year=2024,
+        cycle_scale=0.1,
+        cycle_orb_days=15,
+    )
+    assert isinstance(results, list)
+    # 應有 4 個節氣
+    assert len(results) == 4
+    ingress_names = {r["ingress_name"] for r in results}
+    assert any("春分" in n for n in ingress_names)
+    assert any("夏至" in n for n in ingress_names)
+    # 每筆都有評分
+    for r in results:
+        assert "total_score" in r
+        assert "ingress_date" in r
+        assert "confluence" in r
+        assert r["total_score"] >= 0
+
+
+def test_build_gann_full_confluence_basic():
+    result = build_gann_full_confluence(
+        market_natal_date=date(1969, 11, 24),
+        as_of_datetime=datetime(2024, 3, 20, 12, 0),
+        current_price=16000.0,
+        reference_price=16000.0,
+        timezone=8.0,
+        cycle_scale=0.1,
+        use_trading_days=False,
+        cycle_orb_days=15,
+        natal_longitudes={"木星": 10.0, "土星": 20.0},
+        transit_longitudes={"木星": 10.5, "土星": 110.0},
+    )
+    assert "confluence_scores" in result
+    cs = result["confluence_scores"]
+    assert "total_confluence_score" in cs
+    assert "classification" in cs
+    assert "biblical_cycle_score" in cs
+    assert "time_price_squaring_score" in cs
+    assert "solar_ingress_score" in cs
+    assert "natural_square_score" in cs
+    assert "time_price_squaring" in result
+    assert "solar_ingress_confluence" in result
+    assert "natural_squares_vibration" in result
+
+
+def test_build_gann_full_confluence_with_pivot():
+    result = build_gann_full_confluence(
+        market_natal_date=date(1969, 11, 24),
+        as_of_datetime=datetime(2024, 3, 20, 12, 0),
+        current_price=16000.0,
+        pivot_price=14000.0,
+        pivot_date=date(2023, 10, 1),
+        trend="up",
+        cycle_scale=0.1,
+        natal_longitudes={"木星": 10.0},
+        transit_longitudes={"木星": 10.5},
+    )
+    assert "confluence_scores" in result
+    assert result["trend"] == "up"
