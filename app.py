@@ -87,6 +87,7 @@ from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart,
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.arabic_lots import compute_albiruni_lots
 from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
+from astro.fendjing import compute_fendjing_chart, render_fendjing_chart
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.dogon import compute_dogon_sirius_chart, render_dogon_sirius_chart
 from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_amazigh_sky_svg

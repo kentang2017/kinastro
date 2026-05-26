@@ -9,6 +9,8 @@ import streamlit as st
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import SystemHandler
 
+_ACCEPTED_WUYUNLIUQI_KEYS = {"year", "month", "day", "hour", "minute"}
+
 
 def build_wuyunliuqi_handler(
     *,
@@ -23,7 +25,8 @@ def build_wuyunliuqi_handler(
         """Pure compute wrapped for Streamlit caching."""
         # Remove gender parameter - this system doesn\'t use it
         params_payload = {k: v for k, v in params_payload.items() if k != "gender"}
-        return compute_wuyunliuqi(**params_payload, **extra_kwargs)
+        filtered_payload = {k: v for k, v in params_payload.items() if k in _ACCEPTED_WUYUNLIUQI_KEYS}
+        return compute_wuyunliuqi(**filtered_payload, **extra_kwargs)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
@@ -50,7 +53,7 @@ def build_wuyunliuqi_handler(
 
 def register(registry, ai_button_sink):
     """Self-registration for Wuyunliuqi handler."""
-    from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
+    from astro.wuyunliuqi.calculator import compute_wuyunliuqi
     from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart
 
     handler = build_wuyunliuqi_handler(
