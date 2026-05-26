@@ -21,7 +21,7 @@ import textwrap
 from pathlib import Path
 import streamlit as st
 from datetime import datetime, date, time
-from typing import Any
+from typing import Any, Callable
 
 from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
@@ -221,6 +221,7 @@ from ui.components.system_selector import render_system_selector
 from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
+from ui.system_handlers.build_andean_handler import build_andean_handler
 from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 from frontend.european_geomancy_renderer import render_european_geomancy
 from frontend.fludd_rota_renderer import render_fludd_rota
@@ -1536,13 +1537,28 @@ _render_ai_button = _render_ai_chat
 
 
 def _init_execution_registry_once() -> None:
-    """Register Phase 1 executable handlers once per app run."""
+    """Register Phase 1/2 executable handlers once per app run.
+
+    Only the first call actually registers. Subsequent calls are no-ops.
+    This keeps the legacy if-elif dispatch in app.py as a safe fallback.
+    """
     if EXECUTION_REGISTRY.has_handler("tab_ziwei"):
         return
+
+    # Phase 1 example
     EXECUTION_REGISTRY.register(
         build_ziwei_handler(
             compute_ziwei_chart=compute_ziwei_chart,
             render_ziwei_chart=render_ziwei_chart,
+            ai_button_sink=_render_ai_button,
+        )
+    )
+
+    # Phase 2 example — Andean (clean modern package, pure calculator)
+    EXECUTION_REGISTRY.register(
+        build_andean_handler(
+            compute_andean_chart=_compute_andean_chart_fn,
+            render_andean_chart_ui=render_andean_chart_ui,
             ai_button_sink=_render_ai_button,
         )
     )
@@ -1688,6 +1704,50 @@ def _render_interactive_html(*, html: str, height: int, key: str) -> None:
     </script>
     """
     st.components.v1.html(component, height=height, scrolling=False)
+
+
+def _try_render_simple_chart(
+    *,
+    compute_fn: Callable,
+    render_fn: Callable[[Any], None],
+    spinner_text: str,
+    ai_btn_key: str,
+    extra: dict[str, Any] | None = None,
+    after_chart_hook: Callable | None = None,
+) -> bool:
+    """
+    Thin reusable helper for the most common legacy "single chart" pattern.
+
+    Dramatically reduces hundreds of duplicated lines of
+    `if _is_calculated: try: spinner + compute + render + AI + except error`.
+
+    Returns True if it took responsibility for rendering (success or error path).
+    """
+    if not _is_calculated:
+        return False
+
+    try:
+        _p = dict(st.session_state.get("_calc_params", {}))
+        _g = st.session_state.get("_calc_gender")
+        if _g is not None:
+            _p["gender"] = _g
+        if extra:
+            _p.update(extra)
+
+        with st.spinner(spinner_text):
+            chart = compute_fn(**_p)
+
+        if after_chart_hook:
+            render_fn(chart, after_chart_hook=after_chart_hook)
+        else:
+            render_fn(chart)
+            _render_ai_button(_selected_system or ai_btn_key, chart, btn_key=ai_btn_key)
+        return True
+
+    except Exception as _e:
+        st.error(f"{t('error_tab_compute')}：{_e}")
+        st.exception(_e)
+        return True
 
 
 def _render_global_ai_chat():
@@ -3519,31 +3579,27 @@ if not _engine_handled:
 
     # --- 皇極經世 ---
     elif _selected_system == "tab_huangji":
-        if _is_calculated:
-            try:
-                from astro.huangji import compute_huangji_pan, render_streamlit as render_huangji_chart
+        from astro.huangji import compute_huangji_pan, render_streamlit as render_huangji_chart
 
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_huangji")):
-                    _huangji_chart = compute_huangji_pan(
-                        **_p,
-                        reference_year=datetime.now().year,
-                        include_cross_system=True,
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-                render_huangji_chart(
-                    _huangji_chart,
-                    lang=get_lang(),
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_huangji",
-                        _huangji_chart,
-                        btn_key="huangji",
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        def _huangji_compute(**kw):
+            _p = st.session_state["_calc_params"]
+            return compute_huangji_pan(
+                **_p,
+                reference_year=datetime.now().year,
+                include_cross_system=True,
+                gender=st.session_state.get("_calc_gender", "男"),
+            )
+
+        if not _try_render_simple_chart(
+            compute_fn=_huangji_compute,
+            render_fn=render_huangji_chart,
+            spinner_text=t("spinner_huangji"),
+            ai_btn_key="huangji",
+            extra={"lang": get_lang()},
+            after_chart_hook=lambda chart: _render_ai_button(
+                "tab_huangji", chart, btn_key="huangji"
+            ),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_huangji"))
 
@@ -3604,30 +3660,33 @@ if not _engine_handled:
 
     # --- 五運六氣 ---
     elif _selected_system == "tab_wuyunliuqi":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_wuyunliuqi")):
-                    _wylq_result = compute_wuyunliuqi(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p.get("minute", 0),
-                    )
-                render_wuyunliuqi_chart(_wylq_result)
-                _render_ai_button("tab_wuyunliuqi", {
-                    "ganzhi": _wylq_result.ganzhi,
-                    "dayun": _wylq_result.dayun.taishao,
-                    "sitian": _wylq_result.sitian,
-                    "zaiquan": _wylq_result.zaiquan,
-                    "tonghua": _wylq_result.tonghua.categories,
-                }, btn_key="wuyunliuqi")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                import traceback
-                st.code(traceback.format_exc())
-        else:
+        def _wuyunliuqi_compute(**kw):
+            _p = st.session_state["_calc_params"]
+            return compute_wuyunliuqi(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p.get("minute", 0),
+            )
+
+        def _wuyunliuqi_render(result):
+            render_wuyunliuqi_chart(result)
+            _render_ai_button("tab_wuyunliuqi", {
+                "ganzhi": result.ganzhi,
+                "dayun": result.dayun.taishao,
+                "sitian": result.sitian,
+                "zaiquan": result.zaiquan,
+                "tonghua": result.tonghua.categories,
+            }, btn_key="wuyunliuqi")
+
+        if not _try_render_simple_chart(
+            compute_fn=_wuyunliuqi_compute,
+            render_fn=_wuyunliuqi_render,
+            spinner_text=t("spinner_wuyunliuqi"),
+            ai_btn_key="wuyunliuqi",
+            after_chart_hook=lambda r: None,  # AI 已在 render 內自訂
+        ):
             render_wuyunliuqi_intro()
             st.markdown(t("desc_wuyunliuqi"))
 
@@ -3788,40 +3847,27 @@ if not _engine_handled:
 
     # --- 吠陀風水（Vastu Shastra）---
     elif _selected_system == "tab_vastu":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_vastu")):
-                    _vastu_vchart = compute_vedic_chart(**_p)
-                from frontend.vastu_renderer import render_vastu_tab
-                render_vastu_tab(
-                    v_chart=_vastu_vchart,
-                    after_chart_hook=lambda: _render_ai_button("tab_vastu", _vastu_vchart, btn_key="vastu"),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        from frontend.vastu_renderer import render_vastu_tab
+        if not _try_render_simple_chart(
+            compute_fn=compute_vedic_chart,
+            render_fn=lambda chart: render_vastu_tab(v_chart=chart, after_chart_hook=lambda: _render_ai_button("tab_vastu", chart, btn_key="vastu")),
+            spinner_text=t("spinner_vastu"),
+            ai_btn_key="vastu",
+        ):
             st.info(t("info_vastu_prompt"))
             st.markdown(t("desc_vastu"))
 
     # --- 宿曜道 ---
     elif _selected_system == "tab_lal_kitab":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_lal_kitab")):
-                    _lk_chart = compute_lal_kitab_chart(**_p)
-                _lk_lang = st.session_state.get("lang", "zh")
-                render_lal_kitab_1952_page(
-                    _lk_chart,
-                    lang=_lk_lang,
-                    after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", _lk_chart, btn_key="lal_kitab"),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        _lk_lang = st.session_state.get("lang", "zh")
+        if not _try_render_simple_chart(
+            compute_fn=compute_lal_kitab_chart,
+            render_fn=lambda chart: render_lal_kitab_1952_page(
+                chart, lang=_lk_lang, after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", chart, btn_key="lal_kitab")
+            ),
+            spinner_text=t("spinner_lal_kitab"),
+            ai_btn_key="lal_kitab",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_lal_kitab"))
 
@@ -3901,35 +3947,26 @@ if not _engine_handled:
 
     # --- 老撾占星 ---
     elif _selected_system == "tab_laos":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_laos")):
-                    lao_chart = compute_lao_chart(**_p)
-                render_lao_horasat(
-                    lao_chart,
-                    lang=get_lang(),
-                    after_chart_hook=lambda: _render_ai_button("tab_laos", lao_chart, btn_key="tab_laos"),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_lao_chart,
+            render_fn=lambda chart: render_lao_horasat(
+                chart, lang=get_lang(), after_chart_hook=lambda: _render_ai_button("tab_laos", chart, btn_key="tab_laos")
+            ),
+            spinner_text=t("spinner_laos"),
+            ai_btn_key="tab_laos",
+        ):
             st.info(t("info_lao_prompt"))
             st.markdown(t("desc_laos"))
 
     # --- 卡巴拉占星 ---
     elif _selected_system == "tab_kabbalistic":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_kabbalistic")):
-                    k_chart = compute_kabbalistic_chart(**_p)
-                render_kabbalistic_chart(k_chart, after_chart_hook=lambda: _render_ai_button("tab_kabbalistic", k_chart, btn_key="kabbalistic"))
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_kabbalistic_chart,
+            render_fn=render_kabbalistic_chart,
+            spinner_text=t("spinner_kabbalistic"),
+            ai_btn_key="kabbalistic",
+            after_chart_hook=lambda chart: _render_ai_button("tab_kabbalistic", chart, btn_key="kabbalistic"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_kabbalistic"))
 
@@ -4257,44 +4294,25 @@ if not _engine_handled:
 
     # --- 瑪雅占星 ---
     elif _selected_system == "tab_maya":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_maya")):
-                    m_chart = compute_maya_chart(**_p)
-                render_maya_chart(m_chart, after_chart_hook=lambda: _render_ai_button("tab_maya", m_chart, btn_key="maya"))
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_maya_chart,
+            render_fn=render_maya_chart,
+            spinner_text=t("spinner_maya"),
+            ai_btn_key="maya",
+            after_chart_hook=lambda chart: _render_ai_button("tab_maya", chart, btn_key="maya"),
+        ):
             st.info(t("info_maya_prompt"))
             st.markdown(t("desc_maya"))
 
     # --- Armenian Astrology ---
     elif _selected_system == "tab_armenian":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_armenian")):
-                    _armenian_chart = _compute_armenian_chart_fn(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p["minute"],
-                        timezone=_p["timezone"],
-                        latitude=_p["latitude"],
-                        longitude=_p["longitude"],
-                        location_name=_p.get("location_name", ""),
-                    )
-                render_armenian_chart_ui(
-                    _armenian_chart,
-                    after_chart_hook=lambda: _render_ai_button("tab_armenian", _armenian_chart, btn_key="armenian"),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=_compute_armenian_chart_fn,
+            render_fn=render_armenian_chart_ui,
+            spinner_text=t("spinner_armenian"),
+            ai_btn_key="armenian",
+            after_chart_hook=lambda chart: _render_ai_button("tab_armenian", chart, btn_key="armenian"),
+        ):
             st.info(t("info_armenian_prompt"))
             st.markdown(t("desc_armenian"))
 
@@ -4330,49 +4348,27 @@ if not _engine_handled:
 
     # --- 伊特魯里亞占星 (Etruscan Astrology) ---
     elif _selected_system == "tab_etruscan":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_etruscan")):
-                    _etruscan_chart = _compute_etruscan_chart_fn(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p["minute"],
-                        timezone=_p["timezone"],
-                        latitude=_p["latitude"],
-                        longitude=_p["longitude"],
-                        location_name=_p.get("location_name", ""),
-                    )
-                render_etruscan_chart_ui(
-                    _etruscan_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_etruscan", _etruscan_chart, btn_key="etruscan"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=_compute_etruscan_chart_fn,
+            render_fn=render_etruscan_chart_ui,
+            spinner_text=t("spinner_etruscan"),
+            ai_btn_key="etruscan",
+            after_chart_hook=lambda chart: _render_ai_button(
+                "tab_etruscan", chart, btn_key="etruscan"
+            ),
+        ):
             st.info(t("info_etruscan_prompt"))
             st.markdown(t("desc_etruscan"))
 
     # --- Dogon Sirius Cosmology ---
     elif _selected_system == "tab_dogon_sirius":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_dogon_sirius")):
-                    _dogon_chart = compute_dogon_sirius_chart(**_p)
-                render_dogon_sirius_chart(
-                    _dogon_chart,
-                    after_chart_hook=lambda: _render_ai_button("tab_dogon_sirius", _dogon_chart, btn_key="dogon_sirius"),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_dogon_sirius_chart,
+            render_fn=render_dogon_sirius_chart,
+            spinner_text=t("spinner_dogon_sirius"),
+            ai_btn_key="dogon_sirius",
+            after_chart_hook=lambda chart: _render_ai_button("tab_dogon_sirius", chart, btn_key="dogon_sirius"),
+        ):
             st.info(t("info_dogon_sirius_prompt"))
             st.markdown(t("desc_dogon_sirius"))
 
@@ -4421,64 +4417,54 @@ if not _engine_handled:
     # --- Ethiopian Bahre Hasab ---
     elif _selected_system == "tab_bahre_hasab":
         if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                _probe = analyze_bahre_hasab_date(date(_p["year"], _p["month"], _p["day"]))
-                with st.spinner(t("spinner_bahre_hasab")):
-                    render_bahre_hasab_tab(
-                        calc_params=_p,
-                        after_chart_hook=lambda: _render_ai_button("tab_bahre_hasab", _probe, btn_key="bahre_hasab"),
-                    )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
+            _p = st.session_state["_calc_params"]
+            _probe = analyze_bahre_hasab_date(date(_p["year"], _p["month"], _p["day"]))
+            if not _try_render_simple_chart(
+                compute_fn=lambda **kw: _probe,  # already computed above
+                render_fn=lambda chart: render_bahre_hasab_tab(
+                    calc_params=_p,
+                    after_chart_hook=lambda: _render_ai_button("tab_bahre_hasab", chart, btn_key="bahre_hasab"),
+                ),
+                spinner_text=t("spinner_bahre_hasab"),
+                ai_btn_key="bahre_hasab",
+            ):
+                pass
         else:
             st.info(t("info_bahre_hasab_prompt"))
             st.markdown(t("desc_bahre_hasab"))
 
     # --- 阿茲特克占星 ---
     elif _selected_system == "tab_aztec":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_aztec")):
-                    az_chart = compute_aztec_chart(**_p)
-                render_aztec_chart(az_chart, after_chart_hook=lambda: _render_ai_button("tab_aztec", az_chart, btn_key="aztec"))
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_aztec_chart,
+            render_fn=render_aztec_chart,
+            spinner_text=t("spinner_aztec"),
+            ai_btn_key="aztec",
+            after_chart_hook=lambda chart: _render_ai_button("tab_aztec", chart, btn_key="aztec"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_aztec"))
 
     # --- 緬甸占星 (Mahabote) ---
     elif _selected_system == "tab_mahabote":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_mahabote")):
-                    mb_chart = compute_mahabote_chart(**_p)
-                render_mahabote_chart(mb_chart, after_chart_hook=lambda: _render_ai_button("tab_mahabote", mb_chart, btn_key="mahabote"))
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_mahabote_chart,
+            render_fn=render_mahabote_chart,
+            spinner_text=t("spinner_mahabote"),
+            ai_btn_key="mahabote",
+            after_chart_hook=lambda chart: _render_ai_button("tab_mahabote", chart, btn_key="mahabote"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_mahabote"))
 
     # --- 古埃及十度區間 (Decans) ---
     elif _selected_system == "tab_decans":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_decans")):
-                    dc_chart = compute_decan_chart(**_p)
-                render_decan_chart(dc_chart)
-                _render_ai_button("tab_decans", dc_chart, btn_key="decans")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_decan_chart,
+            render_fn=render_decan_chart,
+            spinner_text=t("spinner_decans"),
+            ai_btn_key="decans",
+        ):
             st.info(t("info_decans_prompt"))
             render_decan_browse()
 
@@ -4526,16 +4512,13 @@ if not _engine_handled:
 
     # --- 蒙古祖爾海 (Zurkhai) ---
     elif _selected_system == "tab_zurkhai":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_zurkhai")):
-                    zk_chart = compute_zurkhai_chart(**_p)
-                render_zurkhai_chart(zk_chart, after_chart_hook=lambda: _render_ai_button("tab_zurkhai", zk_chart, btn_key="zurkhai"))
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_zurkhai_chart,
+            render_fn=render_zurkhai_chart,
+            spinner_text=t("spinner_zurkhai"),
+            ai_btn_key="zurkhai",
+            after_chart_hook=lambda chart: _render_ai_button("tab_zurkhai", chart, btn_key="zurkhai"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_zurkhai"))
 
@@ -4597,43 +4580,31 @@ if not _engine_handled:
 
     # --- 日本九星氣學 (Japanese Nine Star Ki) ---
     elif _selected_system == "tab_nine_star_ki":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_nine_star_ki")):
-                    _nsk_chart = compute_nine_star_ki_chart(**_p)
-                render_nine_star_ki_chart(
-                    _nsk_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_nine_star_ki", _nsk_chart, btn_key="nine_star_ki"
-                    ),
-                    lang=get_lang(),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_nine_star_ki_chart,
+            render_fn=lambda chart: render_nine_star_ki_chart(
+                chart,
+                after_chart_hook=lambda: _render_ai_button("tab_nine_star_ki", chart, btn_key="nine_star_ki"),
+                lang=get_lang(),
+            ),
+            spinner_text=t("spinner_nine_star_ki"),
+            ai_btn_key="nine_star_ki",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_nine_star_ki"))
 
     # --- 凱爾特樹木曆法 (Celtic Tree Calendar — Robert Graves 1948) ---
     elif _selected_system == "tab_celtic_tree":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_celtic_tree")):
-                    _celtic_chart = compute_celtic_tree_chart(**_p)
-                render_celtic_tree_chart(
-                    _celtic_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_celtic_tree", _celtic_chart, btn_key="celtic_tree"
-                    ),
-                    lang=get_lang(),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_celtic_tree_chart,
+            render_fn=lambda chart: render_celtic_tree_chart(
+                chart,
+                after_chart_hook=lambda: _render_ai_button("tab_celtic_tree", chart, btn_key="celtic_tree"),
+                lang=get_lang(),
+            ),
+            spinner_text=t("spinner_celtic_tree"),
+            ai_btn_key="celtic_tree",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_celtic_tree"))
 
@@ -4837,45 +4808,27 @@ if not _engine_handled:
 
     # --- 達摩一掌經 (Damo One Palm Scripture) ---
     elif _selected_system == "tab_damo":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                _damo_params = dict(_p)
-                _damo_params["gender"] = gender
-                with st.spinner(t("spinner_damo")):
-                    _damo_chart = compute_damo_chart(**_damo_params)
-                render_damo_chart(
-                    _damo_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_damo", _damo_chart, btn_key="damo"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_damo_chart,
+            render_fn=render_damo_chart,
+            spinner_text=t("spinner_damo"),
+            ai_btn_key="damo",
+            extra={"gender": gender},
+            after_chart_hook=lambda chart: _render_ai_button("tab_damo", chart, btn_key="damo"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_damo"))
 
     # --- 滌器遺訣 Di Qi Yi Jue ---
     elif _selected_system == "tab_diqiyijue":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                _diqiyijue_params = dict(_p)
-                _diqiyijue_params["gender"] = gender
-                with st.spinner(t("spinner_diqiyijue")):
-                    _diqiyijue_chart = compute_diqiyijue_chart(**_diqiyijue_params)
-                render_diqiyijue_chart(
-                    _diqiyijue_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_diqiyijue", _diqiyijue_chart, btn_key="diqiyijue"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_diqiyijue_chart,
+            render_fn=render_diqiyijue_chart,
+            spinner_text=t("spinner_diqiyijue"),
+            ai_btn_key="diqiyijue",
+            extra={"gender": gender},
+            after_chart_hook=lambda chart: _render_ai_button("tab_diqiyijue", chart, btn_key="diqiyijue"),
+        ):
             st.info(t("info_diqiyijue_prompt"))
             st.markdown(t("desc_diqiyijue"))
 
@@ -5259,79 +5212,69 @@ if not _engine_handled:
     # --- 大六壬 (Da Liu Ren) ---
     elif _selected_system == "tab_liuren":
         if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_liuren")):
-                    _liuren_chart = compute_liuren_chart(**_p)
-                # 從生年推算本命地支（年支）
-                import sxtwl as _sxtwl_lr
-                _lr_day = _sxtwl_lr.fromSolar(_p["year"], _p["month"], _p["day"])
-                _lr_year_gz = _lr_day.getYearGZ()
-                _lr_benming = list("子丑寅卯辰巳午未申酉戌亥")[_lr_year_gz.dz]
+            _p = st.session_state["_calc_params"]
+            # 預先計算本命地支，給主圖和論命分析共用
+            import sxtwl as _sxtwl_lr
+            _lr_day = _sxtwl_lr.fromSolar(_p["year"], _p["month"], _p["day"])
+            _lr_year_gz = _lr_day.getYearGZ()
+            _lr_benming = list("子丑寅卯辰巳午未申酉戌亥")[_lr_year_gz.dz]
+
+            def _liuren_compute(**kw):
+                return compute_liuren_chart(**_p)
+
+            def _liuren_render(chart):
                 render_liuren_chart(
-                    _liuren_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_liuren", _liuren_chart, btn_key="liuren"
-                    ),
+                    chart,
+                    after_chart_hook=lambda: _render_ai_button("tab_liuren", chart, btn_key="liuren"),
                     benming_zhi=_lr_benming,
                 )
                 # ── 論命分析 ──
                 st.divider()
-                # 本命與流年均取自排盤年份的年支
                 _lunming_report = compute_lunming(
-                    _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
+                    chart, _lr_benming, liunian_zhi=_lr_benming,
                 )
                 render_lunming_report(_lunming_report)
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
+
+            if not _try_render_simple_chart(
+                compute_fn=_liuren_compute,
+                render_fn=_liuren_render,
+                spinner_text=t("spinner_liuren"),
+                ai_btn_key="liuren",
+            ):
+                st.info(t("info_calc_prompt"))
+                st.markdown(t("desc_liuren"))
         else:
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_liuren"))
 
     # --- 鬼谷分定經 (Ghost Valley Fen Ding Jing) ---
     elif _selected_system == "tab_fendjing":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_fendjing") if hasattr(t, "spinner_fendjing") else "計算鬼谷分定經..."):
-                    from astro.fendjing import compute_fendjing_chart, render_fendjing_chart
-                    _fendjing_chart = compute_fendjing_chart(**_p)
-                render_fendjing_chart(
-                    _fendjing_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_fendjing", _fendjing_chart, btn_key="fendjing"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_fendjing_chart,
+            render_fn=render_fendjing_chart,
+            spinner_text=t("spinner_fendjing"),
+            ai_btn_key="fendjing",
+        ):
             st.info(t("info_calc_prompt"))
-            st.markdown(t("desc_fendjing") if hasattr(t, "desc_fendjing") else "🔮 **鬼谷分定經** — 相傳為戰國時期鬼谷子所創，又名兩頭鉗，以出生年時天干排盤，配合十二宮與星曜，推斷一生命運的古典命理系統。")
+            st.markdown(t("desc_fendjing"))
 
     # --- 土亭數 (Tojeong Shu) ---
     elif _selected_system == "tab_tojeong":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                _g = st.session_state["_calc_gender"]
-                _tojeong_gender = "male" if _g in ("male", "男", "M") else "female"
-                # compute_tojeong_chart only accepts: year, month, day, hour, gender, solar_term
-                _tojeong_params = {k: v for k, v in _p.items() if k in ("year", "month", "day", "hour")}
-                with st.spinner(t("spinner_tojeong") if hasattr(t, "spinner_tojeong") else "計算土亭數..."):
-                    from astro.tojeong import compute_tojeong_chart, render_tojeong_chart
-                    _tojeong_chart = compute_tojeong_chart(**_tojeong_params, gender=_tojeong_gender)
-                render_tojeong_chart(
-                    _tojeong_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_tojeong", _tojeong_chart, btn_key="tojeong"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        from astro.tojeong import compute_tojeong_chart, render_tojeong_chart
+
+        def _tojeong_compute(**kw):
+            _g = st.session_state.get("_calc_gender")
+            _gender = "male" if _g in ("male", "男", "M") else "female"
+            _params = {k: v for k, v in kw.items() if k in ("year", "month", "day", "hour")}
+            return compute_tojeong_chart(**_params, gender=_gender)
+
+        if not _try_render_simple_chart(
+            compute_fn=_tojeong_compute,
+            render_fn=render_tojeong_chart,
+            spinner_text=t("spinner_tojeong"),
+            ai_btn_key="tojeong",
+            after_chart_hook=lambda chart: _render_ai_button("tab_tojeong", chart, btn_key="tojeong"),
+        ):
             st.markdown("""
     <div style="
         background:linear-gradient(135deg,#0f1e35 0%,#1a0d28 100%);
@@ -5363,77 +5306,63 @@ if not _engine_handled:
 
     # --- 高棉占星 (Khmer Astrology / Reamker) ---
     elif _selected_system == "tab_khmer":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                _g = st.session_state["_calc_gender"]
-                _khmer_gender = "male" if _g in ("male", "男", "M") else "female"
-                _age = _p.get("age", 2026 - _p.get("year", 1995))
-                with st.spinner(t("spinner_khmer") if hasattr(t, "spinner_khmer") else "計算高棉占星盤..."):
-                    from astro.khmer import ReamkerAstrology, render_khmer_chart
-                    astro = ReamkerAstrology()
-                    _khmer_chart = astro.full_reading(
-                        birth_year=_p.get("year", 1995),
-                        gender=_khmer_gender,
-                        current_age=_age,
-                        language=st.session_state.get("lang", "zh")
-                    )
-                # Render chart via components.v1.html for full CSS/flexbox support
-                _khmer_lang = st.session_state.get("lang", "zh")
-                _khmer_html = render_khmer_chart(_khmer_chart, language=_khmer_lang)
-                _render_interactive_html(
-                    html=f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_khmer_html}</div>',
-                    height=1050,
-                    key="khmer-main-svg",
-                )
-                # AI interpretation button
-                _render_ai_button("tab_khmer", _khmer_chart, btn_key="khmer")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        from astro.khmer import ReamkerAstrology, render_khmer_chart
+
+        def _khmer_compute(**kw):
+            _g = st.session_state.get("_calc_gender")
+            _gender = "male" if _g in ("male", "男", "M") else "female"
+            _age = kw.get("age", 2026 - kw.get("year", 1995))
+            astro = ReamkerAstrology()
+            return astro.full_reading(
+                birth_year=kw.get("year", 1995),
+                gender=_gender,
+                current_age=_age,
+                language=st.session_state.get("lang", "zh")
+            )
+
+        def _khmer_render(chart, after_chart_hook=None):
+            _lang = st.session_state.get("lang", "zh")
+            _html = render_khmer_chart(chart, language=_lang)
+            _render_interactive_html(
+                html=f'<div style="width:100%;font-family:\'Noto Sans\',\'Khmer OS\',Arial,sans-serif">{_html}</div>',
+                height=1050,
+                key="khmer-main-svg",
+            )
+            if after_chart_hook:
+                after_chart_hook()
+
+        if not _try_render_simple_chart(
+            compute_fn=_khmer_compute,
+            render_fn=_khmer_render,
+            spinner_text=t("spinner_khmer") if hasattr(t, "spinner_khmer") else "計算高棉占星盤...",
+            ai_btn_key="khmer",
+            after_chart_hook=lambda chart: _render_ai_button("tab_khmer", chart, btn_key="khmer"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_khmer") if hasattr(t, "desc_khmer") else "🇰🇭 **高棉占星** — 基於 François Bizot 2013 年論文與 Prochom Horasastra，重建吳哥時期失傳的 Reamker 占星系統。")
 
     # --- 太乙命法 (Taiyi Life Method) ---
     elif _selected_system == "tab_taiyi":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                _g = st.session_state["_calc_gender"]
-                _taiyi_gender = "male" if _g in ("male", "男", "M") else "female"
-                with st.spinner(t("spinner_taiyi")):
-                    _taiyi_chart = compute_taiyi_chart(**_p, gender=_taiyi_gender)
-                render_taiyi_chart(
-                    _taiyi_chart,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_taiyi", _taiyi_chart, btn_key="taiyi"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_taiyi_chart,
+            render_fn=render_taiyi_chart,
+            spinner_text=t("spinner_taiyi"),
+            ai_btn_key="taiyi",
+            extra={"gender": st.session_state.get("_calc_gender")},
+            after_chart_hook=lambda chart: _render_ai_button("tab_taiyi", chart, btn_key="taiyi"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_taiyi"))
 
     # --- 奇門祿命 (Qi Men Destiny Analysis) ---
     elif _selected_system == "tab_qimen_luming":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_qimen_luming")):
-                    _qm_luming = compute_qimen_luming(**_p)
-                render_qimen_luming(
-                    _qm_luming,
-                    after_chart_hook=lambda: _render_ai_button(
-                        "tab_qimen_luming", _qm_luming, btn_key="qimen_luming"
-                    ),
-                )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_qimen_luming,
+            render_fn=render_qimen_luming,
+            spinner_text=t("spinner_qimen_luming"),
+            ai_btn_key="qimen_luming",
+            after_chart_hook=lambda chart: _render_ai_button("tab_qimen_luming", chart, btn_key="qimen_luming"),
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_qimen_luming"))
     elif _selected_system == "tab_acg":
@@ -5767,97 +5696,58 @@ if not _engine_handled:
 
     # --- 天王星派占星 (Uranian / Hamburg School) ---
     elif _selected_system == "tab_uranian":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_uranian")):
-                    _uranian_result = compute_uranian_chart(**_p)
-                render_uranian_chart(_uranian_result)
-                _render_ai_button("tab_uranian", _uranian_result, btn_key="uranian")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_uranian_chart,
+            render_fn=render_uranian_chart,
+            spinner_text=t("spinner_uranian"),
+            ai_btn_key="uranian",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_uranian"))
     elif _selected_system == "tab_cosmobiology":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_cosmobiology")):
-                    _cosmo_result = compute_cosmobiology_chart(**_p)
-                render_cosmobiology(_cosmo_result)
-                _render_ai_button("tab_cosmobiology", _cosmo_result, btn_key="cosmobiology")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_cosmobiology_chart,
+            render_fn=render_cosmobiology,
+            spinner_text=t("spinner_cosmobiology"),
+            ai_btn_key="cosmobiology",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_cosmobiology"))
     elif _selected_system == "tab_harmonic":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_harmonic")):
-                    _harmonic_result = compute_multi_harmonic(**_p)
-                render_harmonic(_harmonic_result)
-                _render_ai_button("tab_harmonic", _harmonic_result, btn_key="harmonic")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_multi_harmonic,
+            render_fn=render_harmonic,
+            spinner_text=t("spinner_harmonic"),
+            ai_btn_key="harmonic",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_harmonic"))
     elif _selected_system == "tab_primary_directions":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_primary_directions")):
-                    _pd_result = compute_primary_directions(**_p)
-                render_primary_directions(_pd_result)
-                _render_ai_button("tab_primary_directions", _pd_result, btn_key="primary_directions")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_primary_directions,
+            render_fn=render_primary_directions,
+            spinner_text=t("spinner_primary_directions"),
+            ai_btn_key="primary_directions",
+        ):
             st.info(t("info_primary_directions_prompt"))
             st.markdown(t("desc_primary_directions"))
     elif _selected_system == "tab_wariga":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_wariga")):
-                    _wariga_result = compute_wariga(
-                        year=_p["year"], month=_p["month"], day=_p["day"],
-                        hour=_p["hour"], minute=_p["minute"],
-                        lat=_p["latitude"], lon=_p["longitude"],
-                    )
-                render_wariga_chart(_wariga_result)
-                _render_ai_button("tab_wariga", _wariga_result, btn_key="wariga")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_wariga,
+            render_fn=render_wariga_chart,
+            spinner_text=t("spinner_wariga"),
+            ai_btn_key="wariga",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_wariga"))
 
     elif _selected_system == "tab_jawa_weton":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_jawa_weton")):
-                    _jawa_result = compute_weton(
-                        year=_p["year"], month=_p["month"], day=_p["day"],
-                        hour=_p["hour"], minute=_p["minute"],
-                        location_name=_p.get("location_name", ""),
-                        timezone=_p.get("timezone", 7.0),
-                    )
-                render_jawa_weton_chart(_jawa_result)
-                _render_ai_button("tab_jawa_weton", _jawa_result, btn_key="jawa_weton")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_weton,
+            render_fn=render_jawa_weton_chart,
+            spinner_text=t("spinner_jawa_weton"),
+            ai_btn_key="jawa_weton",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_jawa_weton"))
 
@@ -5901,24 +5791,12 @@ if not _engine_handled:
             st.exception(_e)
 
     elif _selected_system == "tab_polynesian":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_polynesian")):
-                    _poly_result = compute_polynesian_chart(
-                        year=_p["year"], month=_p["month"], day=_p["day"],
-                        hour=_p["hour"], minute=_p["minute"],
-                        lat=_p.get("latitude", 21.3),
-                        lon=_p.get("longitude", -157.8),
-                        timezone_offset=_p.get("timezone", 0.0),
-                        location_name=_p.get("location_name", ""),
-                    )
-                render_polynesian_chart_ui(_poly_result)
-                _render_ai_button("tab_polynesian", _poly_result, btn_key="polynesian")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_polynesian_chart,
+            render_fn=render_polynesian_chart_ui,
+            spinner_text=t("spinner_polynesian"),
+            ai_btn_key="polynesian",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_polynesian"))
 
@@ -5960,24 +5838,12 @@ if not _engine_handled:
 
     # --- 六爻終身卦 Lifetime Liu Yao Hexagram ---
     elif _selected_system == "tab_liuyao_lifetime":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_liuyao_lifetime")):
-                    _liuyao_result = compute_lifetime_hexagram(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p["minute"],
-                        location_name=_p.get("location_name", ""),
-                    )
-                render_liuyao_lifetime_chart(_liuyao_result)
-                _render_ai_button("tab_liuyao_lifetime", _liuyao_result, btn_key="liuyao_lifetime")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_lifetime_hexagram,
+            render_fn=render_liuyao_lifetime_chart,
+            spinner_text=t("spinner_liuyao_lifetime"),
+            ai_btn_key="liuyao_lifetime",
+        ):
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_liuyao_lifetime"))
 
@@ -6006,121 +5872,110 @@ if not _engine_handled:
 
     # --- 醫學占星 Medical Astrology (Iatromathematics) ---
     elif _selected_system == "tab_medical_astrology":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_medical_astrology")):
-                    _medical_result = compute_medical_chart(**_p)
-                render_medical_astrology_chart(_medical_result)
-                _render_ai_button("tab_medical_astrology", _medical_result, btn_key="medical_astrology")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_medical_chart,
+            render_fn=render_medical_astrology_chart,
+            spinner_text=t("spinner_medical_astrology"),
+            ai_btn_key="medical_astrology",
+        ):
             st.info(t("info_medical_astrology_prompt"))
             st.markdown(t("desc_medical_astrology"))
 
     elif _selected_system == "tab_shanghan_qianfa":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_shanghan_qianfa")):
-                    _shanghan_result = compute_shanghan_qianfa(**_p)
-                render_shanghan_qianfa_chart(_shanghan_result)
-                _render_ai_button("tab_shanghan_qianfa", _shanghan_result, btn_key="shanghan_qianfa")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_shanghan_qianfa,
+            render_fn=render_shanghan_qianfa_chart,
+            spinner_text=t("spinner_shanghan_qianfa"),
+            ai_btn_key="shanghan_qianfa",
+        ):
             st.info(t("info_shanghan_qianfa_prompt"))
             st.markdown(t("desc_shanghan_qianfa"))
 
     # --- 北極神數 (Beiji Shenshu) ---
     elif _selected_system == "tab_beiji":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_beiji")):
-                    render_beiji_chart(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p["minute"],
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        def _beiji_render(_dummy):
+            _p = st.session_state["_calc_params"]
+            render_beiji_chart(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p["minute"],
+                gender=st.session_state.get("_calc_gender", "男"),
+            )
+
+        if not _try_render_simple_chart(
+            compute_fn=lambda **kw: None,
+            render_fn=_beiji_render,
+            spinner_text=t("spinner_beiji"),
+            ai_btn_key="beiji",
+            after_chart_hook=lambda chart: None,  # 這些分支目前無 AI 分析
+        ):
             st.info(t("info_beiji_prompt"))
             st.markdown(t("desc_beiji"))
 
     # --- 南極神數 Nanji Shenshu ---
     elif _selected_system == "tab_nanji":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_nanji")):
-                    render_nanji_chart(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p.get("minute", 0),
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        def _nanji_render(_dummy):
+            _p = st.session_state["_calc_params"]
+            render_nanji_chart(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p.get("minute", 0),
+                gender=st.session_state.get("_calc_gender", "男"),
+            )
+
+        if not _try_render_simple_chart(
+            compute_fn=lambda **kw: None,
+            render_fn=_nanji_render,
+            spinner_text=t("spinner_nanji"),
+            ai_btn_key="nanji",
+            after_chart_hook=lambda chart: None,
+        ):
             st.info(t("info_nanji_prompt"))
             st.markdown(t("desc_nanji"))
 
     # --- 子平八字 Ziping Bazi ---
     elif _selected_system == "tab_bazi":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_bazi")):
-                    _bazi_result = compute_bazi_chart(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p["minute"],
-                        gender=st.session_state.get("_calc_gender", "男"),
-                        timezone=_p.get("timezone", 8.0),
-                        latitude=_p.get("latitude", 25.033),
-                        longitude=_p.get("longitude", 121.565),
-                        location_name=_p.get("location_name", ""),
-                    )
-                render_bazi_chart(_bazi_result)
-                _render_ai_button("tab_bazi", _bazi_result, btn_key="bazi")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_bazi_chart,
+            render_fn=render_bazi_chart,
+            spinner_text=t("spinner_bazi"),
+            ai_btn_key="bazi",
+            extra={"gender": st.session_state.get("_calc_gender", "男")},
+        ):
             st.info(t("info_bazi_prompt"))
             st.markdown(t("desc_bazi"))
 
     # --- 蠢子數纏度 ChunZiShu ---
     elif _selected_system == "tab_chunzi":
-        try:
-            with st.spinner(t("spinner_chunzi")):
-                render_chunzi_chart()
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
+        def _chunzi_render(_dummy):
+            render_chunzi_chart()
+
+        if not _try_render_simple_chart(
+            compute_fn=lambda **kw: None,
+            render_fn=_chunzi_render,
+            spinner_text=t("spinner_chunzi"),
+            ai_btn_key="chunzi",
+            after_chart_hook=lambda chart: None,
+        ):
+            pass
 
     # --- 開元占經 Kaiyuan Zhanjing ---
     elif _selected_system == "tab_kaiyuan":
-        try:
-            with st.spinner(t("spinner_kaiyuan")):
-                render_kaiyuan_chart()
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
+        def _kaiyuan_render(_dummy):
+            render_kaiyuan_chart()
+
+        if not _try_render_simple_chart(
+            compute_fn=lambda **kw: None,
+            render_fn=_kaiyuan_render,
+            spinner_text=t("spinner_kaiyuan"),
+            ai_btn_key="kaiyuan",
+            after_chart_hook=lambda chart: None,
+        ):
+            pass
 
     # ============================================================
     # --- 傳統卜卦占星 Traditional Horary Astrology ---
@@ -6159,44 +6014,24 @@ if not _engine_handled:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)
     elif _selected_system == "tab_esoteric":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_esoteric")):
-                    _esoteric_result = compute_esoteric_chart(**_p)
-                render_esoteric_chart(_esoteric_result)
-                _render_ai_button("tab_esoteric", _esoteric_result, btn_key="esoteric")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_esoteric_chart,
+            render_fn=render_esoteric_chart,
+            spinner_text=t("spinner_esoteric"),
+            ai_btn_key="esoteric",
+        ):
             st.info(t("info_esoteric_prompt"))
             st.markdown(t("desc_esoteric"))
 
     # ============================================================
     # --- 人間圖 Human Design ---
     elif _selected_system == "tab_human_design":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                with st.spinner(t("spinner_human_design")):
-                    _hd_result = compute_human_design_chart(
-                        year=_p["year"],
-                        month=_p["month"],
-                        day=_p["day"],
-                        hour=_p["hour"],
-                        minute=_p["minute"],
-                        timezone=_p.get("timezone", 8.0),
-                        latitude=_p.get("latitude", 25.033),
-                        longitude=_p.get("longitude", 121.565),
-                        location_name=_p.get("location_name", ""),
-                    )
-                render_human_design_chart(_hd_result)
-                _render_ai_button("tab_human_design", _hd_result, btn_key="human_design")
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
-        else:
+        if not _try_render_simple_chart(
+            compute_fn=compute_human_design_chart,
+            render_fn=render_human_design_chart,
+            spinner_text=t("spinner_human_design"),
+            ai_btn_key="human_design",
+        ):
             st.info(t("info_human_design_prompt"))
             st.markdown(t("desc_human_design"))
 
@@ -6223,8 +6058,8 @@ if not _engine_handled:
     # ============================================================
     # --- 世俗占星 Mundane Astrology ---
     elif _selected_system == "tab_mundane":
+        _p = st.session_state.get("_calc_params", {})
         try:
-            _p = st.session_state.get("_calc_params", {})
             render_mundane_chart(
                 year=_p.get("year"),
                 month=_p.get("month"),

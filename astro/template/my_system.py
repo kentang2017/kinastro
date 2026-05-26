@@ -1,18 +1,24 @@
 """
-astro/template/my_system.py — 新占星體系模板 (New Astrology System Template)
+astro/template/my_system.py — 新占星體系模板 (New Astrology System Template) — 2026 版
 
-使用方法：
-  1. 複製此檔案到 astro/ 或 astro/<子目錄>/
-  2. 重新命名並實作 compute_xxx_chart() 和 render_xxx_chart()
-  3. 在 app.py 的 _SYSTEM_KEYS 加入新 tab key
-  4. 在 astro/i18n.py 加入翻譯 key
-  5. 在 tests/test_new_astrology.py 加入測試
+【現代流程】
+1. 在 astro/<slug>/ 建立 package（推薦 calculator.py + renderer.py 分離）。
+2. 計算層 **絕對不可 import streamlit**（純函式 + 可序列化輸出）。
+3. 在 astro/system_registry.py 宣告 System(...)。
+4. （推薦）在 ui/system_handlers/ 建立 build_<slug>_handler.py 回傳 SystemHandler。
+5. 由 EXECUTION_REGISTRY 統一驅動（app.py 仍保留 legacy fallback 相容）。
+6. 使用 i18n.t() + chart_theme 確保一致體驗。
+7. 加入測試 + 更新 wiki/。
+
+參考良好範例：andean/、maya/、bintang_duabelas/、jawa_weton/。
+舊式單檔模板已過時，優先採用 package + handler 模式。
 """
 
 from dataclasses import dataclass, field
 from typing import List
 
-import streamlit as st
+# 計算層永遠不 import streamlit！
+# 渲染層才允許（見下方 render 函式內 lazy import 示範）。
 
 
 # ============================================================
@@ -57,10 +63,9 @@ class MySystemChart:
 
 
 # ============================================================
-# 核心計算 (Core Computation)
+# 核心計算 (Core Computation) — 必須純淨
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
 def compute_my_system_chart(
     year: int,
     month: int,
@@ -72,12 +77,15 @@ def compute_my_system_chart(
     longitude: float,
     location_name: str = "",
 ) -> MySystemChart:
-    """核心計算函式。
+    """核心計算函式（純函式）。
 
-    注意事項：
-    - 必須是純函式（無副作用）以支援 @st.cache_data 快取
-    - 參數必須是基本型別（int, float, str, bool）
-    - 返回值必須是可序列化的 dataclass
+    2026 最佳實踐：
+    - 絕對不依賴 Streamlit、session_state 或任何 UI。
+    - 回傳可 JSON 序列化的 dataclass（供 API + handler 快取）。
+    - 由 ui/system_handlers/ 中的 handler 負責 @st.cache_data 包裝。
+    - 建議繼承或組合 astro.systems.base.BaseChart。
+
+    測試時可直接 import 呼叫，無需 Streamlit 環境。
     """
     chart = MySystemChart(
         year=year, month=month, day=day,
@@ -86,8 +94,8 @@ def compute_my_system_chart(
         location_name=location_name,
     )
 
-    # TODO: 在此實作計算邏輯
-    # 如需使用 pyswisseph:
+    # TODO: 在此實作計算邏輯（使用 pyswisseph、sxtwl 等）
+    # 範例：
     #   import swisseph as swe
     #   decimal_hour = hour + minute / 60.0 - timezone
     #   jd = swe.julday(year, month, day, decimal_hour)
@@ -97,15 +105,20 @@ def compute_my_system_chart(
 
 
 # ============================================================
-# Streamlit 渲染 (UI Rendering)
+# Streamlit 渲染 (UI Rendering) — 僅此處允許 Streamlit
 # ============================================================
 
-def render_my_system_chart(chart: MySystemChart):
+def render_my_system_chart(chart: MySystemChart) -> None:
     """Streamlit 渲染函式。
 
-    此函式負責把計算結果以視覺化的方式呈現在 Streamlit 頁面上。
+    2026 推薦：函式內部 lazy import streamlit，避免計算路徑污染。
+    強烈建議使用：
+      - astro.i18n.t()
+      - astro.chart_theme (svg_header, colors, apply_chart_theme)
     """
-    st.subheader("我的占星體系")
+    import streamlit as st  # lazy import，保持計算層乾淨
+
+    st.subheader("我的占星體系（範例）")
 
     # ── 基本資料 ──
     st.info(
@@ -129,6 +142,8 @@ def render_my_system_chart(chart: MySystemChart):
             width="stretch",
         )
 
-    # ── 匯出按鈕 (可選) ──
+    # ── 匯出按鈕 (可選，使用共享工具) ──
     # from astro.export import render_download_buttons
     # render_download_buttons(my_chart_to_dict(chart), key_prefix="my_system")
+
+    # 真實專案中請盡量重用 frontend/ 既有元件或 ui/components/result_shell。

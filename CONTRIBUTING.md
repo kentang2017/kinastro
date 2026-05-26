@@ -19,84 +19,129 @@ uvicorn api_server:app --reload
 python -m pytest tests/ -q
 ```
 
-## 專案結構
+## 專案結構（2026 最新）
 
 ```
 kinastro/
-├── app.py                  # Streamlit 主應用 (UI 層)
-├── api_server.py           # FastAPI 後端 (計算 API)
-├── astro/
-│   ├── calculator.py       # 核心天文計算 (pyswisseph)
-│   ├── chart_renderer.py   # 中國七政四餘盤面渲染
-│   ├── chart_theme.py      # 統一主題色、CSS、SVG 樣式
-│   ├── export.py           # 匯出功能 (TXT/CSV/PDF/PNG/分享連結)
-│   ├── i18n.py             # 中英雙語翻譯字典
-│   ├── interpretations.py  # 文字解讀 (流年/合盤/大限)
-│   ├── natal_summary.py    # 命盤摘要生成
-│   ├── constants.py        # 七政四餘常量定義
-│   ├── western.py          # 西洋占星
-│   ├── indian.py           # 印度占星 (Vedic/Jyotish)
-│   ├── thai.py             # 泰國占星
-│   ├── ...                 # 其他占星體系
-│   ├── classic/            # 古典文獻 (百論等)
-│   ├── reference/          # 參考資料 (markdown)
-│   └── data/               # JSON 資料檔 (恆星、Picatrix 等)
-├── tests/
-│   ├── test_calculator.py
-│   ├── test_advanced_features.py
-│   └── test_new_astrology.py
-└── requirements.txt
+├── app.py                  # Streamlit 主應用（目前仍含 legacy dispatch，逐步瘦身中）
+├── api_server.py           # FastAPI 後端（純計算 API）
+├── astro/                  # 所有占星計算與資料
+│   ├── system_registry.py  # ★ 84 體系中央元資料（推薦先看）
+│   ├── systems/            # 共享基底（BaseChart 等，擴充中）
+│   ├── <slug>/             # 新體系推薦結構
+│   │   ├── calculator.py   # 純計算（**絕不可 import streamlit**）
+│   │   ├── renderer.py     # Streamlit 渲染（可 lazy import st）
+│   │   ├── constants.py
+│   │   └── __init__.py     # 建議 lazy re-export（參考 andean/、maya/）
+│   ├── qizheng/            # 七政四餘（演進中的大型 package）
+│   ├── western/            # 西洋（多子模組）
+│   ├── vedic/              # 印度
+│   ├── ...                 # 80+ 其他體系（flat 舊檔與 package 混存，遷移中）
+│   ├── i18n.py             # 雙語
+│   ├── chart_theme.py      # 顏色 + SVG 公用
+│   ├── template/           # 新體系模板（已現代化）
+│   └── data/               # JSON 資料
+├── ui/                     # 新 UI 抽象層（逐步接管）
+│   ├── system_engine.py    # EXECUTION_REGISTRY + SystemHandler
+│   ├── system_handlers/    # 各體系 handler（Phase 1+ 進行中）
+│   └── components/         # birth_form, system_selector 等可重用元件
+├── frontend/               # 複雜視覺化 renderer（某些體系專用）
+├── tests/                  # ~40 個測試檔（體系專屬 + 整合）
+├── docs/                   # 包含 ARCHITECTURE.md
+├── scripts/                # 工具（含 audit_st_imports.py）
+└── pyproject.toml          # 單一版本來源 + ruff/mypy 設定（Phase 0 起）
 ```
 
-## 如何新增一個新的占星體系
+**重要原則**：
+- 計算層零 Streamlit（用 `scripts/audit_st_imports.py` 檢查）。
+- 優先 package + calculator/renderer 分離。
+- 透過 `astro/system_registry.py` + `ui/system_engine.py` 註冊，而非狂改 app.py。
 
-以下是新增占星體系的完整步驟模板，以「XX 占星」為例：
+## 如何新增一個新的占星體系（2026 推薦流程）
 
-### 步驟 1：建立計算模組
+**強烈建議**：採用 package + handler 模式，而非舊式單檔 + 直接改 app.py 巨型 if 鏈。
 
-在 `astro/` 目錄下新建 `xx_astro.py`：
+### 步驟 1：建立 package（推薦）
 
+```bash
+mkdir -p astro/mytrad
+touch astro/mytrad/{__init__.py,calculator.py,renderer.py,constants.py}
+```
+
+`calculator.py`（**純淨**）：
 ```python
-"""
-astro/xx_astro.py — XX 占星計算模組
-"""
-from dataclasses import dataclass, field
-from typing import List, Optional
-
+from dataclasses import dataclass
+# 絕對不 import streamlit
 
 @dataclass
-class XXPlanet:
-    """單顆星曜的資料結構"""
-    name: str
-    name_cn: str
-    longitude: float
-    sign: str = ""
-    sign_degree: float = 0.0
-    retrograde: bool = False
-
-
-@dataclass
-class XXChart:
-    """完整排盤結果"""
+class MyTradChart:
+    # 建議共用欄位放前面（或繼承 systems.base.BaseChart）
     year: int
-    month: int
-    day: int
-    hour: int
-    minute: int
-    timezone: float
-    latitude: float
-    longitude: float
-    location_name: str
-    julian_day: float = 0.0
-    planets: List[XXPlanet] = field(default_factory=list)
-    # ... 體系特有欄位
+    # ... 其他出生資訊 + 體系特有結果
 
+def compute_mytrad_chart(params: dict) -> MyTradChart:
+    """純計算函式。"""
+    ...
+    return MyTradChart(...)
+```
 
-def compute_xx_chart(
-    year: int, month: int, day: int,
-    hour: int, minute: int,
-    timezone: float, latitude: float, longitude: float,
-    location_name: str = "",
+`renderer.py`（UI）：
+```python
+def render_mytrad_chart(chart: MyTradChart) -> None:
+    import streamlit as st  # lazy
+    from astro.i18n import t
+    from astro.chart_theme import ...
+    ...
+```
+
+`__init__.py`（lazy）參考 `andean/` 或 `maya/`。
+
+### 步驟 2：宣告到 Registry
+
+編輯 `astro/system_registry.py`，加入：
+```python
+_reg(System(
+    id="tab_mytrad",
+    name_zh="我的傳統",
+    ...
+    sub_tabs=[SubTab("mytrad_sub_natal", "natal")],
+    ai_persona_key=...,
+))
+```
+
+### 步驟 3：建立 Handler（強烈建議）
+
+在 `ui/system_handlers/build_mytrad_handler.py`：
+```python
+from ui.system_engine import SystemHandler
+from ui.components.birth_form import BirthChartParams
+
+def build_mytrad_handler(*, compute_fn, render_fn, **deps) -> SystemHandler:
+    @st.cache_data(...)
+    def _cached(...): ...
+    def _compute(p: BirthChartParams, opts): ...
+    def _render(result, p, opts): ...
+    return SystemHandler("tab_mytrad", _compute, _render)
+```
+
+### 步驟 4：註冊 + 相容
+
+- 在 app.py 的 `_init_execution_registry_once` 附近註冊 handler。
+- 因為有 `if EXECUTION_REGISTRY.run_system(...)` 守衛，舊 legacy 路徑自動跳過。
+- 加入 i18n key、測試、必要時更新 wiki。
+
+### 完整參考
+- 模板：`astro/template/my_system.py`（已更新）。
+- 良好範例：`astro/andean/`、`astro/maya/`。
+- 架構說明：`docs/ARCHITECTURE.md`。
+- Audit 工具：`python scripts/audit_st_imports.py`。
+
+**舊流程（不推薦繼續擴大）**：直接在 app.py 加 if 分支 + flat 檔案。現有 legacy 會繼續支援，但新體系請走 handler 路線。
+
+---
+
+### 舊文件（已過時，僅供歷史參考）
+以下內容為 2024-2025 早期版本，已不再是推薦做法。
 ) -> XXChart:
     """核心計算函式 — 必須是純計算，不可依賴 Streamlit。"""
     import swisseph as swe

@@ -20,9 +20,12 @@
 """
 
 import math
-import streamlit as st
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+
+# NOTE: streamlit is intentionally NOT imported at module level.
+# This keeps the compute layer pure for API, tests, and future handlers.
+# All Streamlit usage is confined to render_zurkhai_chart() (lazy import inside).
 
 # ============================================================
 # 常量 (Constants) — 十二生肖
@@ -596,11 +599,15 @@ def _compute_day_rating(day_animal_idx: int, is_nahas: bool,
 # 主要計算函數 (Main Computation)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
 def compute_zurkhai_chart(year, month, day, hour, minute,
                           timezone, latitude, longitude,
                           location_name="") -> ZurkhaiChart:
-    """計算蒙古祖爾海排盤。
+    """計算蒙古祖爾海排盤（純計算函式）。
+
+    注意（2026+）：
+    - 此函式已移除模組層級的 Streamlit 依賴，保持純淨。
+    - 快取由 ui/system_handlers 中的 handler 負責（@st.cache_data）。
+    - 可安全被 api_server.py 與單元測試直接 import。
 
     Args:
         year, month, day: 出生日期（公曆）
@@ -711,6 +718,7 @@ def compute_zurkhai_chart(year, month, day, hour, minute,
 
 def render_zurkhai_chart(chart: ZurkhaiChart, after_chart_hook=None) -> None:
     """渲染蒙古祖爾海排盤 Streamlit 介面。"""
+    import streamlit as st  # Lazy import：保持計算層 (compute_zurkhai_chart) 純淨
     _render_zurkhai_wheel(chart)
     st.divider()
     _render_element_balance(chart)

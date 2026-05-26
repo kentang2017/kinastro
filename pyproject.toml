@@ -25,3 +25,53 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/kentang2017/kinastro"
+
+# ============================================================
+# Tooling (Phase 0+ architecture quality)
+# ============================================================
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "kintaiyi*",  # vendored git dep
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "T10", # flake8-debugger
+]
+ignore = [
+    "E501",   # line-too-long (ruff-format handles wrapping)
+    "B008",   # do not perform function calls in argument defaults (Streamlit common)
+    "B904",   # within except clauses
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["astro", "ui", "frontend"]
+
+# Run: ruff check . && ruff format --check .
+# Future: add "RUF", "TID", "RET", "SIM" once baseline clean.
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false   # start permissive; tighten in Phase 2+
+disallow_incomplete_defs = false
+ignore_missing_imports = true   # many deps (pyswisseph, streamlit, etc.) lack stubs
+
+# Future strict mode target (after handler migration):
+# disallow_untyped_defs = true
+# disallow_incomplete_defs = true
+# strict_optional = true
