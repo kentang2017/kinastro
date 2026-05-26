@@ -1,0 +1,18 @@
+"""Western system renderer adapter."""
+
+from __future__ import annotations
+
+from typing import Any, Callable
+
+from ui.components.birth_form import BirthChartParams
+
+
+def render(
+    chart: Any,
+    params: BirthChartParams,
+    options: dict[str, Any],
+    ai_hook: Callable[[], None] | None = None,
+) -> None:
+    from astro.western.western import render_western_chart
+
+    render_western_chart(chart, after_chart_hook=ai_hook)
