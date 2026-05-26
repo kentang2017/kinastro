@@ -75,26 +75,31 @@ def build_western_handler(
 
         if result_type == "transit":
             # Transit rendering logic
-            render_western_chart(result["natal"], after_chart_hook=lambda: None)
+            render_western_chart(result["natal"], after_chart_hook=lambda _chart=None: None)
             st.subheader(" Transit Chart")
             # TODO: Add transit-specific rendering
         elif result_type == "synastry":
             # Synastry rendering logic
-            render_western_chart(result["chart_a"], after_chart_hook=lambda: None)
+            render_western_chart(result["chart_a"], after_chart_hook=lambda _chart=None: None)
             st.subheader("Chart B")
-            render_western_chart(result["chart_b"], after_chart_hook=lambda: None)
+            render_western_chart(result["chart_b"], after_chart_hook=lambda _chart=None: None)
             st.subheader("Synastry Analysis")
             # TODO: Add synastry-specific rendering
         elif result_type == "return":
             # Solar return rendering logic
-            render_western_chart(result["natal"], after_chart_hook=lambda: None)
+            render_western_chart(result["natal"], after_chart_hook=lambda _chart=None: None)
             st.subheader("Solar Return Chart")
-            render_western_chart(result["return"], after_chart_hook=lambda: None)
+            render_western_chart(result["return"], after_chart_hook=lambda _chart=None: None)
         else:
             # Natal chart rendering
             render_western_chart(
                 result["natal"],
-                after_chart_hook=lambda: ai_button_sink("tab_western", result["natal"], "western", ""),
+                after_chart_hook=lambda _chart=None: ai_button_sink(
+                    "tab_western",
+                    result["natal"],
+                    "western",
+                    "",
+                ),
             )
 
     return SystemHandler(

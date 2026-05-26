@@ -57,9 +57,13 @@ _T_SPINNER_WESTERN = "spinner_western"
 from astro.western.western import compute_western_chart, render_western_chart
 from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
+from astro.western.uranian import compute_uranian_chart, render_uranian_chart
 from astro.western.harmonic import render_harmonic_chart
 from astro.western.draconic import render_draconic_chart
 from astro.western.western_synastry import compute_synastry
+from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
+from astro.harmonic import compute_multi_harmonic, render_harmonic
+from astro.primary_directions import compute_primary_directions, render_primary_directions
 from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
 from astro.vedic.financial import render_vedic_financial_tab
 from astro.lal_kitab import compute_lal_kitab_chart, render_lal_kitab_chart, render_lal_kitab_1952_page
@@ -4975,43 +4979,30 @@ if not _engine_handled:
             st.info(t("info_calc_prompt"))
             st.markdown(t("desc_acg"))
 
-    # --- 天王星派占星 (Uranian / Hamburg School) ---
-    elif _selected_system == "tab_uranian":
-        if not _try_render_simple_chart(
-            compute_fn=compute_uranian_chart,
-            render_fn=render_uranian_chart,
-            spinner_text=t("spinner_uranian"),
-            ai_btn_key="uranian",
-        ):
-            st.info(t("info_calc_prompt"))
-            st.markdown(t("desc_uranian"))
-    elif _selected_system == "tab_cosmobiology":
-        if not _try_render_simple_chart(
-            compute_fn=compute_cosmobiology_chart,
-            render_fn=render_cosmobiology,
-            spinner_text=t("spinner_cosmobiology"),
-            ai_btn_key="cosmobiology",
-        ):
-            st.info(t("info_calc_prompt"))
-            st.markdown(t("desc_cosmobiology"))
-    elif _selected_system == "tab_harmonic":
-        if not _try_render_simple_chart(
-            compute_fn=compute_multi_harmonic,
-            render_fn=render_harmonic,
-            spinner_text=t("spinner_harmonic"),
-            ai_btn_key="harmonic",
-        ):
-            st.info(t("info_calc_prompt"))
-            st.markdown(t("desc_harmonic"))
-    elif _selected_system == "tab_primary_directions":
-        if not _try_render_simple_chart(
-            compute_fn=compute_primary_directions,
-            render_fn=render_primary_directions,
-            spinner_text=t("spinner_primary_directions"),
-            ai_btn_key="primary_directions",
-        ):
-            st.info(t("info_primary_directions_prompt"))
-            st.markdown(t("desc_primary_directions"))
+    # --- Western simple systems (Uranian/Cosmobiology/Harmonic/Primary Directions) ---
+    elif _selected_system in {
+        "tab_uranian",
+        "tab_cosmobiology",
+        "tab_harmonic",
+        "tab_primary_directions",
+    }:
+        _simple_western_cfg = {
+            "tab_uranian": (compute_uranian_chart, render_uranian_chart, "spinner_uranian", "uranian", "info_calc_prompt", "desc_uranian"),
+            "tab_cosmobiology": (compute_cosmobiology_chart, render_cosmobiology, "spinner_cosmobiology", "cosmobiology", "info_calc_prompt", "desc_cosmobiology"),
+            "tab_harmonic": (compute_multi_harmonic, render_harmonic, "spinner_harmonic", "harmonic", "info_calc_prompt", "desc_harmonic"),
+            "tab_primary_directions": (compute_primary_directions, render_primary_directions, "spinner_primary_directions", "primary_directions", "info_primary_directions_prompt", "desc_primary_directions"),
+        }
+        _compute_fn, _render_fn, _spinner_key, _btn_key, _prompt_key, _desc_key = _simple_western_cfg[_selected_system]
+        if _is_calculated:
+            _try_render_simple_chart(
+                compute_fn=_compute_fn,
+                render_fn=_render_fn,
+                spinner_text=t(_spinner_key),
+                ai_btn_key=_btn_key,
+            )
+        else:
+            st.info(t(_prompt_key))
+            st.markdown(t(_desc_key))
     elif _selected_system == "tab_wariga":
         if not _try_render_simple_chart(
             compute_fn=compute_wariga,
