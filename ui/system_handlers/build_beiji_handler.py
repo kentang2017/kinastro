@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import Any
 
 import streamlit as st
 
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import SystemHandler
+
+
+def _normalize_beiji_gender(gender: str | None) -> str:
+    """Normalize UI gender values to 北極神數 expected labels."""
+    if gender in ("female", "女"):
+        return "女"
+    return "男"
 
 
 def build_beiji_handler(
@@ -21,15 +29,21 @@ def build_beiji_handler(
     @st.cache_data(show_spinner=False)
     def _cached_compute(params_payload: dict[str, Any], **extra_kwargs):
         """Pure compute wrapped for Streamlit caching."""
-        # Remove gender parameter - this system doesn\'t use it
-        params_payload = {k: v for k, v in params_payload.items() if k != "gender"}
+        sig = inspect.signature(compute_beiji_chart)
+        valid_params = set(sig.parameters.keys())
+        params_payload = {
+            k: v for k, v in params_payload.items() if k in valid_params
+        }
+        if "gender" in valid_params:
+            params_payload["gender"] = _normalize_beiji_gender(
+                params_payload.get("gender")
+            )
         return compute_beiji_chart(**params_payload, **extra_kwargs)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
         payload = params.to_dict()
-        # Remove gender parameter - this system doesn\'t use it
-        payload.pop("gender", None)
+        payload["gender"] = params.gender
         # Add system-specific options here if needed
         # e.g., vietnam_mode for ZiWei, ayanamsa for Vedic, etc.
         return _cached_compute(payload)
