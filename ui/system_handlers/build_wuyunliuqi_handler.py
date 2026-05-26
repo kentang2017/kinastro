@@ -52,7 +52,7 @@ def build_wuyunliuqi_handler(
 
 def register(registry, ai_button_sink):
     """Self-registration for Wuyunliuqi handler."""
-    from astro.wuyunliuqi.calculator import WuYunLiuQiCalculator, compute_wuyunliuqi
+    from astro.wuyunliuqi.calculator import compute_wuyunliuqi
     from astro.wuyunliuqi.renderer import render_streamlit as render_wuyunliuqi_chart
 
     handler = build_wuyunliuqi_handler(
