@@ -5,6 +5,7 @@ from astro.tieban.tieban_browser import (
     _paginate_items,
     _slice_page,
     render_palace_verses_paginated,
+    render_palace_verses_subtabs,
 )
 
 
@@ -102,3 +103,55 @@ def test_render_palace_verses_paginated_english_fallback(monkeypatch):
     html = markdown_calls[-1]
     assert "Life" in html
     assert "No verse yet" in html
+
+
+class _DummyTab:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+def test_render_palace_verses_subtabs_renders_all_palace_details(monkeypatch):
+    tab_labels = []
+    markdown_calls = []
+    caption_calls = []
+
+    monkeypatch.setattr(
+        tieban_browser.st,
+        "tabs",
+        lambda labels: tab_labels.extend(labels) or [_DummyTab() for _ in labels],
+    )
+    monkeypatch.setattr(
+        tieban_browser.st,
+        "markdown",
+        lambda text, **kwargs: markdown_calls.append(text),
+    )
+    monkeypatch.setattr(tieban_browser.st, "caption", lambda text: caption_calls.append(text))
+
+    render_palace_verses_subtabs(
+        {
+            "命宮": {
+                "branch": "子",
+                "category": "綜合",
+                "number": "0001",
+                "tags": ["祖業", "福氣"],
+                "verse": "命宮條文",
+            },
+            "兄弟宮": {
+                "branch": "丑",
+                "category": "兄弟",
+                "number": "0002",
+                "verse": "兄弟宮條文",
+            },
+        },
+        language="zh",
+    )
+
+    assert len(tab_labels) == 12
+    assert tab_labels[0] == "命宮 · 子"
+    assert "兄弟宮 · 丑" in tab_labels
+    assert any("命宮條文" in call for call in markdown_calls)
+    assert any("#0001" in call for call in markdown_calls)
+    assert caption_calls[-1] == "標籤：祖業、福氣"
