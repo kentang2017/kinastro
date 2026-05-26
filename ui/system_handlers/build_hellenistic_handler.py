@@ -70,7 +70,9 @@ def build_hellenistic_handler(
         western_chart = result["western_chart"]
         hellen_extended = result["hellenistic_extended"]
 
-        hook = lambda _chart=None: ai_button_sink("tab_hellenistic", hellen_chart, "hellenistic", "")
+        def hook(_chart=None):
+            ai_button_sink("tab_hellenistic", hellen_chart, "hellenistic", "")
+
         render_sig = inspect.signature(render_hellenistic_chart)
         has_after_hook = "after_chart_hook" in render_sig.parameters
         has_varkw = any(
@@ -85,16 +87,18 @@ def build_hellenistic_handler(
             tab_ext_lots,
             tab_synkrasis,
             tab_centiloquy,
-        ) = st.tabs([
-            t("hellen_subtab_chart"),
-            t("hellen_subtab_natal"),
-            t("hellen_subtab_profections"),
-            t("hellen_subtab_zr"),
-            t("hellen_subtab_lots"),
-            auto_cn("📜 Extended Lots / 擴充 Lots", "📜 Extended Lots"),
-            auto_cn("⚗️ Valens Synkrasis / 行星組合", "⚗️ Valens Synkrasis"),
-            t("hellen_subtab_centiloquy"),
-        ])
+        ) = st.tabs(
+            [
+                t("hellen_subtab_chart"),
+                t("hellen_subtab_natal"),
+                t("hellen_subtab_profections"),
+                t("hellen_subtab_zr"),
+                t("hellen_subtab_lots"),
+                auto_cn("📜 Extended Lots / 擴充 Lots", "📜 Extended Lots"),
+                auto_cn("⚗️ Valens Synkrasis / 行星組合", "⚗️ Valens Synkrasis"),
+                t("hellen_subtab_centiloquy"),
+            ]
+        )
 
         with tab_chart:
             greek_svg = build_greek_horoscope_svg(
