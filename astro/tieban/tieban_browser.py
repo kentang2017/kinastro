@@ -53,6 +53,81 @@ def _paginate_items(
     return _slice_page(items, page=page, page_size=page_size), total_pages, page
 
 
+def render_palace_verses_paginated(
+    palace_verses: dict[str, dict[str, Any]],
+    *,
+    language: str = "zh",
+    page_size: int = 4,
+    key_prefix: str = "tieban_palace_verses",
+) -> None:
+    """Render paginated 12-palace verse cards."""
+    palace_order = [
+        "命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
+        "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮",
+    ]
+    palace_names_en = {
+        "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
+        "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
+        "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
+        "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
+    }
+    category_trans = {
+        "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
+        "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
+        "事業": "Career", "健康": "Health", "災厄": "Disaster",
+        "遷移": "Travel",
+    }
+    no_verse_text = "No verse yet" if language == "en" else "暫無條文"
+
+    items = []
+    for palace_name in palace_order:
+        palace_info = palace_verses.get(palace_name, {})
+        verse = palace_info.get("verse", no_verse_text)
+        category = palace_info.get("category", "")
+        branch = palace_info.get("branch", "")
+        display_name = palace_names_en.get(palace_name, palace_name) if language == "en" else palace_name
+        display_category = category_trans.get(category, category) if language == "en" else category
+        items.append({
+            "name": display_name,
+            "branch": branch,
+            "category": display_category,
+            "verse": verse,
+        })
+
+    display_items, total_pages, current_page = _paginate_items(
+        items,
+        page_size=page_size,
+        key_prefix=key_prefix,
+        label="Page" if language == "en" else "頁碼",
+    )
+
+    cards_html = ""
+    for item in display_items:
+        cat_badge = (
+            f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
+            f'【{item["category"]}】</span>'
+        ) if item["category"] else ""
+        cards_html += (
+            '<div style="border-left:3px solid rgba(255,107,53,0.5);'
+            'padding:10px 12px;margin-bottom:10px;'
+            'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+            f'<div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">'
+            f'{item["name"]}'
+            f'<span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({item["branch"]})</span>'
+            f'{cat_badge}'
+            '</div>'
+            f'<div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{item["verse"]}</div>'
+            '</div>'
+        )
+
+    st.markdown(f'<div style="width:100%;">{cards_html}</div>', unsafe_allow_html=True)
+    if total_pages > 1:
+        if language == "en":
+            st.caption(f"Page {current_page}/{total_pages} · {len(items)} verses")
+        else:
+            st.caption(f"第 {current_page}/{total_pages} 頁，共 {len(items)} 條")
+
+
 def render_verse_browser():
     """
     渲染條文瀏覽工具（verses.json，6208 條，含分類標籤）

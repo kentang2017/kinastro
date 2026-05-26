@@ -2694,45 +2694,13 @@ if not _engine_handled:
 
                     expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
                     with st.expander(expander_label, expanded=False):
-                        palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
-                                       "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
-                        palace_names_en = {
-                            "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
-                            "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
-                            "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
-                            "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
-                        }
-                        category_trans = {
-                            "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
-                            "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
-                            "事業": "Career", "健康": "Health", "災厄": "Disaster",
-                            "遷移": "Travel",
-                        }
-                        # 手機友好：以 HTML 卡片列表代替三列
-                        _palace_cards = ""
-                        for palace_name in palace_order:
-                            palace_info = tb_result.palace_verses.get(palace_name, {})
-                            verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else auto_cn("暫無條文"))
-                            category = palace_info.get("category", "")
-                            branch = palace_info.get("branch", "")
-                            display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
-                            display_category = category_trans.get(category, category) if get_lang() == "en" else category
-                            cat_badge = (
-                                f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
-                                f'【{display_category}】</span>'
-                            ) if display_category else ""
-                            _palace_cards += f"""
-        <div style="border-left:3px solid rgba(255,107,53,0.5);
-             padding:10px 12px;margin-bottom:10px;
-             background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">
-          <div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">
-            {display_name}
-            <span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({branch})</span>
-            {cat_badge}
-          </div>
-          <div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{verse}</div>
-        </div>"""
-                        st.markdown(f'<div style="width:100%;">{_palace_cards}</div>', unsafe_allow_html=True)
+                        from astro.tieban.tieban_browser import render_palace_verses_paginated
+                        render_palace_verses_paginated(
+                            tb_result.palace_verses,
+                            language=get_lang(),
+                            page_size=4,
+                            key_prefix="tb_main_palace_verses",
+                        )
 
                     # AI 分析按鈕
                     _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
