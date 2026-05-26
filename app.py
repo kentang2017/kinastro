@@ -27,6 +27,7 @@ SUPPORTED_MODERN_SYSTEMS = {
 
 
 def t(key: str) -> str:
+    """Resolve translation text for the current UI language."""
     lang = st.session_state.get(SessionKeys.LANG, "zh")
     table = TRANSLATIONS.get(key)
     if isinstance(table, dict):
@@ -160,7 +161,10 @@ def _render_global_chatbox() -> None:
 
 def _run_legacy_app() -> None:
     st.warning("This system is still served by legacy runtime. Loading full compatibility mode...")
-    importlib.import_module("legacy_app")
+    try:
+        importlib.import_module("legacy_app")
+    except Exception as exc:  # pragma: no cover - runtime safety in Streamlit UI.
+        st.error(f"Legacy runtime failed to load: {exc}")
     st.stop()
 
 

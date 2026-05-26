@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+DEFAULT_GENDER = "male"
+
 
 def compute(params: dict[str, Any], options: dict[str, Any]) -> Any:
     from astro.ziwei import compute_ziwei_chart
@@ -18,6 +20,6 @@ def compute(params: dict[str, Any], options: dict[str, Any]) -> Any:
         latitude=float(params["latitude"]),
         longitude=float(params["longitude"]),
         location_name=str(params.get("location_name", "")),
-        gender=str(params.get("gender", "male")),
+        gender=str(params.get("gender", DEFAULT_GENDER)),
         vietnam_mode=bool(options.get("vietnam_mode", False)),
     )

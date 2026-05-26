@@ -65,7 +65,7 @@ def _load_runtime(system_name: str) -> tuple[ComputeCallable, RenderCallable]:
 
 
 def _stable_digest(params_payload: dict[str, Any], options: dict[str, Any]) -> str:
-    packed = json.dumps({"params": params_payload, "options": options}, sort_keys=True, default=str)
+    packed = json.dumps({"params": params_payload, "options": options}, sort_keys=True)
     return sha256(packed.encode("utf-8")).hexdigest()
 
 
@@ -79,6 +79,7 @@ def _compute_cached(system_name: str, payload_json: str, options_json: str) -> A
 
 def get_or_compute(system_name: str, birth_params: BirthChartParams, options: dict[str, Any] | None = None) -> dict[str, Any]:
     opts = options or {}
+    # BirthChartParams.to_dict intentionally excludes gender for legacy compatibility.
     payload = {**birth_params.to_dict(), "gender": birth_params.gender}
     signature = _stable_digest(payload, opts)
 
@@ -97,8 +98,8 @@ def get_or_compute(system_name: str, birth_params: BirthChartParams, options: di
     start = time.perf_counter()
     result = _compute_cached(
         system_name,
-        json.dumps(payload, sort_keys=True, default=str),
-        json.dumps(opts, sort_keys=True, default=str),
+        json.dumps(payload, sort_keys=True),
+        json.dumps(opts, sort_keys=True),
     )
     duration = time.perf_counter() - start
     metrics["last_compute_seconds"] = duration
