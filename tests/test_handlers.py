@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import EXECUTION_REGISTRY, SystemHandler
+from ui.system_handlers.build_bazi_handler import build_bazi_handler
 from ui.system_handlers.build_thai_handler import build_thai_handler
 
 
@@ -233,6 +234,49 @@ class TestComputeFunctions(unittest.TestCase):
             # Note: This is a soft check — some modules may not be importable in test context
             with self.subTest(module_name=module_name):
                 pass  # Placeholder for actual purity checks
+
+
+class TestBaziHandler(unittest.TestCase):
+    """Test Bazi handler specific wiring."""
+
+    def test_bazi_handler_passes_gender_and_hook_accepts_chart_arg(self):
+        """Bazi handler should pass gender to compute and support chart hook arg."""
+        calls = {"compute": [], "ai": []}
+
+        def _compute_bazi_chart(**kwargs):
+            calls["compute"].append(kwargs)
+            return {"ok": True, "gender": kwargs.get("gender")}
+
+        def _render_bazi_chart_svg(result, after_chart_hook=None):
+            if after_chart_hook:
+                after_chart_hook(result)
+
+        def _ai_button_sink(*args):
+            calls["ai"].append(args)
+
+        handler = build_bazi_handler(
+            compute_bazi_chart=_compute_bazi_chart,
+            render_bazi_chart_svg=_render_bazi_chart_svg,
+            ai_button_sink=_ai_button_sink,
+        )
+        params = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=8.0,
+            latitude=22.3193,
+            longitude=114.1694,
+            location_name="Hong Kong",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+        handler.render(result, params, {})
+
+        self.assertEqual(calls["compute"][0]["gender"], "female")
+        self.assertEqual(calls["ai"], [("tab_bazi", result, "bazi", "")])
 
 
 if __name__ == "__main__":
