@@ -1755,7 +1755,15 @@ def _try_render_simple_chart(
             chart = compute_fn(**_p)
 
         if after_chart_hook:
-            render_fn(chart, after_chart_hook=after_chart_hook)
+            render_sig = inspect.signature(render_fn)
+            supports_after_chart_hook = "after_chart_hook" in render_sig.parameters or any(
+                p.kind == inspect.Parameter.VAR_KEYWORD for p in render_sig.parameters.values()
+            )
+            if supports_after_chart_hook:
+                render_fn(chart, after_chart_hook=after_chart_hook)
+            else:
+                render_fn(chart)
+                after_chart_hook(chart)
         else:
             render_fn(chart)
             _render_ai_button(_selected_system or ai_btn_key, chart, btn_key=ai_btn_key)
