@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import EXECUTION_REGISTRY, SystemHandler
+from ui.system_handlers.build_andean_handler import build_andean_handler
 from ui.system_handlers.build_bazi_handler import build_bazi_handler
 from ui.system_handlers.build_beiji_handler import build_beiji_handler
 from ui.system_handlers.build_nanji_handler import build_nanji_handler
@@ -66,6 +67,7 @@ class TestSystemEngine(unittest.TestCase):
     def test_registry_singleton(self):
         """Test that EXECUTION_REGISTRY is a singleton."""
         from ui.system_engine import EXECUTION_REGISTRY as registry2
+
         self.assertIs(EXECUTION_REGISTRY, registry2)
 
     def test_has_handler(self):
@@ -80,9 +82,7 @@ class TestSystemEngine(unittest.TestCase):
             "tab_chinese",
         ]
         # Check at least one handler is registered
-        registered_count = sum(
-            1 for h in handlers_to_check if EXECUTION_REGISTRY.has_handler(h)
-        )
+        registered_count = sum(1 for h in handlers_to_check if EXECUTION_REGISTRY.has_handler(h))
         # At minimum, ziwei and andean should be registered
         self.assertGreaterEqual(registered_count, 2)
 
@@ -173,8 +173,14 @@ class TestHandlerStructure(unittest.TestCase):
         result = handler.compute(params, {})
 
         with (
-            patch("ui.system_handlers.build_thai_handler.st.tabs", return_value=[_DummyContext(), _DummyContext(), _DummyContext()]),
-            patch("ui.system_handlers.build_thai_handler.st.columns", return_value=[_DummyContext(), _DummyContext()]),
+            patch(
+                "ui.system_handlers.build_thai_handler.st.tabs",
+                return_value=[_DummyContext(), _DummyContext(), _DummyContext()],
+            ),
+            patch(
+                "ui.system_handlers.build_thai_handler.st.columns",
+                return_value=[_DummyContext(), _DummyContext()],
+            ),
             patch("ui.system_handlers.build_thai_handler.st.number_input", return_value=36),
             patch("ui.system_handlers.build_thai_handler.st.selectbox", return_value="female"),
             patch("ui.system_handlers.build_thai_handler.st.markdown"),
@@ -326,6 +332,45 @@ class TestHandlerStructure(unittest.TestCase):
             },
         )
         self.assertEqual(calls["ai"], ("tab_nanji", {"nanji": "result"}, "nanji", ""))
+
+    def test_andean_handler_hook_accepts_chart_arg(self):
+        """Andean handler should pass a hook that accepts chart argument."""
+        calls = {"compute": None, "ai": []}
+
+        def _compute_andean_chart(**kwargs):
+            calls["compute"] = kwargs
+            return {"andean": "result", "year": kwargs["year"]}
+
+        def _render_andean_chart_ui(result, after_chart_hook=None):
+            if after_chart_hook:
+                after_chart_hook(result)
+
+        def _ai_button_sink(*args):
+            calls["ai"].append(args)
+
+        handler = build_andean_handler(
+            compute_andean_chart=_compute_andean_chart,
+            render_andean_chart_ui=_render_andean_chart_ui,
+            ai_button_sink=_ai_button_sink,
+        )
+        params = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=8.0,
+            latitude=22.3193,
+            longitude=114.1694,
+            location_name="Hong Kong",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+        handler.render(result, params, {})
+
+        self.assertEqual(calls["compute"]["year"], 1990)
+        self.assertEqual(calls["ai"], [("tab_andean", result, "andean", "")])
 
 
 class TestComputeFunctions(unittest.TestCase):
