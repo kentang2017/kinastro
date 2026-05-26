@@ -10,10 +10,47 @@ Tie Ban Shen Shu Verse Browser Tool
     render_verse_browser()
 """
 
-from typing import Dict, List, Optional
+from collections.abc import Sequence
+from math import ceil
+from typing import Any
+
 import streamlit as st
-from astro.tieban.tieban_calculator import VerseDatabase, TiaowenDatabase
+
 from astro.tieban.suanpan_full_structure import SuanpanTiaowenDatabase
+from astro.tieban.tieban_calculator import TiaowenDatabase, VerseDatabase
+
+
+def _slice_page(items: Sequence[Any], *, page: int, page_size: int) -> list[Any]:
+    """Return a single page of items with bounds clamped safely."""
+    if page_size <= 0:
+        raise ValueError("page_size must be positive")
+    total_pages = max(1, ceil(len(items) / page_size))
+    current_page = min(max(page, 1), total_pages)
+    start_idx = (current_page - 1) * page_size
+    end_idx = start_idx + page_size
+    return list(items[start_idx:end_idx])
+
+
+def _paginate_items(
+    items: Sequence[Any],
+    *,
+    page_size: int,
+    key_prefix: str,
+    label: str = "頁碼",
+) -> tuple[list[Any], int, int]:
+    """Return the current page slice and total page count."""
+    total_pages = max(1, ceil(len(items) / page_size))
+    if total_pages == 1:
+        return list(items), total_pages, 1
+
+    selected_page = st.selectbox(
+        label,
+        options=list(range(1, total_pages + 1)),
+        index=0,
+        key=f"{key_prefix}_page",
+    )
+    page = selected_page if selected_page is not None else 1
+    return _slice_page(items, page=page, page_size=page_size), total_pages, page
 
 
 def render_verse_browser():
@@ -66,7 +103,7 @@ def render_verse_browser():
                 all_tags.extend(verse_data['tags'])
         
         # 統計標籤頻率
-        tag_counts: Dict[str, int] = {}
+        tag_counts: dict[str, int] = {}
         for tag in all_tags:
             tag_counts[tag] = tag_counts.get(tag, 0) + 1
         
@@ -182,7 +219,7 @@ def render_verse_browser():
     
     # 分類統計
     st.markdown("##### 分類統計")
-    category_counts: Dict[str, int] = {}
+    category_counts: dict[str, int] = {}
     for verse_data in db.verses.values():
         cat = verse_data.get('category', '未知')
         category_counts[cat] = category_counts.get(cat, 0) + 1
@@ -243,12 +280,17 @@ def render_tiaowen_full_browser():
             if search_kw:
                 results = db.search(search_kw)
                 st.info(f"找到 {len(results)} 條包含「{search_kw}」的條文")
-                for item in results[:50]:  # 最多顯示 50 條
+                display_results, total_pages, current_page = _paginate_items(
+                    results,
+                    page_size=50,
+                    key_prefix="tiaowen_full_search_kw",
+                )
+                for item in display_results:
                     with st.expander(f"條文 {item['number']}：{item['text'][:30]}…", expanded=False):
                         st.markdown(f"**全文**：{item['text']}")
                         st.caption(f"扣入天干：{'  '.join(item.get('tiangan', []))}")
-                if len(results) > 50:
-                    st.caption(f"（只顯示前 50 條，共 {len(results)} 條）")
+                if total_pages > 1:
+                    st.caption(f"第 {current_page}/{total_pages} 頁，共 {len(results)} 條")
     
     with tab_range:
         col_s, col_e = st.columns(2)
@@ -318,12 +360,17 @@ def render_tiaowen_full_browser_inline():
             if search_kw:
                 results = db.search(search_kw)
                 st.info(f"找到 {len(results)} 條包含「{search_kw}」的條文")
-                for item in results[:50]:
+                display_results, total_pages, current_page = _paginate_items(
+                    results,
+                    page_size=50,
+                    key_prefix="tiaowen_inline_search_kw",
+                )
+                for item in display_results:
                     with st.expander(f"條文 {item['number']}：{item['text'][:30]}…", expanded=False):
                         st.markdown(f"**全文**：{item['text']}")
                         st.caption(f"扣入天干：{'  '.join(item.get('tiangan', []))}")
-                if len(results) > 50:
-                    st.caption(f"（只顯示前 50 條，共 {len(results)} 條）")
+                if total_pages > 1:
+                    st.caption(f"第 {current_page}/{total_pages} 頁，共 {len(results)} 條")
 
     else:  # 範圍瀏覽
         col_s, col_e = st.columns(2)
@@ -423,14 +470,19 @@ def render_suanpan_tiaowen_browser_inline():
                 if search_kw.strip() in entry.get("text", "")
             ]
             st.info(f"在 {sel_dept}部 {sel_gender} 中找到 {len(results)} 條包含「{search_kw.strip()}」的條文")
-            for num, entry in results[:50]:
+            display_results, total_pages, current_page = _paginate_items(
+                results,
+                page_size=50,
+                key_prefix="sp_browser_search_kw",
+            )
+            for num, entry in display_results:
                 with st.expander(f"條文 {num}：{entry.get('text', '')[:30]}…", expanded=False):
                     st.markdown(f"**全文**：{entry.get('text', '')}")
                     raw = entry.get("raw_key", "")
                     if raw:
                         st.caption(f"原始鍵：{raw}")
-            if len(results) > 50:
-                st.caption(f"（只顯示前 50 條，共 {len(results)} 條）")
+            if total_pages > 1:
+                st.caption(f"第 {current_page}/{total_pages} 頁，共 {len(results)} 條")
 
     else:  # 瀏覽全部
         all_entries = db.get_all(sel_dept, sel_gender)
@@ -591,7 +643,7 @@ def render_verse_statistics():
     # 分類分布
     st.subheader("📊 分類分布")
     
-    category_counts: Dict[str, int] = {}
+    category_counts: dict[str, int] = {}
     for verse_data in db.verses.values():
         cat = verse_data.get('category', '未知')
         category_counts[cat] = category_counts.get(cat, 0) + 1
@@ -608,7 +660,7 @@ def render_verse_statistics():
     # 標籤頻率
     st.subheader("🏷️ 標籤頻率 Top 20")
     
-    tag_counts: Dict[str, int] = {}
+    tag_counts: dict[str, int] = {}
     for tag in all_tags:
         tag_counts[tag] = tag_counts.get(tag, 0) + 1
     
@@ -668,4 +720,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
