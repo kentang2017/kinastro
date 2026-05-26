@@ -12,16 +12,37 @@ the same module path as the original astro/maya.py.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .calculator import MayanChart
 
 
-def compute_maya_chart(*args, **kwargs) -> "MayanChart":
+def compute_maya_chart(
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    timezone: float,
+    latitude: float,
+    longitude: float,
+    location_name: str = "",
+) -> MayanChart:
     """Lazy-load and call the Maya chart calculator."""
     from .calculator import compute_maya_chart as _fn
-    return _fn(*args, **kwargs)
+    return _fn(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        location_name=location_name,
+    )
 
 
 def render_maya_chart(*args, **kwargs) -> None:
