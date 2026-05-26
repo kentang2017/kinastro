@@ -1,3 +1,5 @@
+import pytest
+
 from astro.tieban.tieban_browser import _slice_page
 
 
@@ -14,9 +16,5 @@ def test_slice_page_clamps_out_of_range_page():
 
 
 def test_slice_page_rejects_non_positive_page_size():
-    try:
+    with pytest.raises(ValueError, match="page_size"):
         _slice_page([1, 2, 3], page=1, page_size=0)
-    except ValueError as exc:
-        assert "page_size" in str(exc)
-    else:
-        raise AssertionError("Expected ValueError for non-positive page_size")
