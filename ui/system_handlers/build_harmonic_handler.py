@@ -13,8 +13,8 @@ from ui.system_engine import SystemHandler
 
 def build_harmonic_handler(
     *,
-    compute_multi_harmonic,
-    render_harmonic,
+    compute_harmonic_chart,
+    render_harmonic_chart,
     ai_button_sink,
 ) -> SystemHandler:
     """Create executable handler for 和諧占星 (Harmonic) Astrology."""
@@ -24,7 +24,7 @@ def build_harmonic_handler(
         """Pure compute wrapped for Streamlit caching."""
         # Remove gender parameter - this system doesn\'t use it
         params_payload = {k: v for k, v in params_payload.items() if k != "gender"}
-        return compute_multi_harmonic(**params_payload, **extra_kwargs)
+        return compute_harmonic_chart(**params_payload, **extra_kwargs)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
@@ -38,15 +38,15 @@ def build_harmonic_handler(
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:
         """Render chart with optional AI hook."""
         hook = lambda _chart=None: ai_button_sink("tab_harmonic", result, "harmonic", "")
-        render_sig = inspect.signature(render_harmonic)
+        render_sig = inspect.signature(render_harmonic_chart)
         has_after_hook = "after_chart_hook" in render_sig.parameters
         has_varkw = any(
             p.kind == inspect.Parameter.VAR_KEYWORD for p in render_sig.parameters.values()
         )
         if has_after_hook or has_varkw:
-            render_harmonic(result, after_chart_hook=hook)
+            render_harmonic_chart(result, after_chart_hook=hook)
         else:
-            render_harmonic(result)
+            render_harmonic_chart(result)
             hook(result)
 
     return SystemHandler(
@@ -62,8 +62,8 @@ def register(registry, ai_button_sink):
     from astro.harmonic import compute_multi_harmonic, render_harmonic
 
     handler = build_harmonic_handler(
-        compute_multi_harmonic=compute_multi_harmonic,
-        render_harmonic=render_harmonic,
+        compute_harmonic_chart=compute_multi_harmonic,
+        render_harmonic_chart=render_harmonic,
         ai_button_sink=ai_button_sink,
     )
     registry.register(handler)
