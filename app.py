@@ -2427,8 +2427,8 @@ if not _engine_handled:
 
     # --- 鐵板神數 (Tie Ban Shen Shu) ---
     elif _selected_system == "tab_tieban":
-        _tb_tab_main, _tb_tab_tiaowen, _tb_tab_kunji = st.tabs([
-            auto_cn("🔮 命盤"), auto_cn("📚 完整條文庫"), auto_cn("🔑 坤集扣入法"),
+        _tb_tab_main, _tb_tab_tiaowen, _tb_tab_detail, _tb_tab_kunji = st.tabs([
+            auto_cn("🔮 命盤"), auto_cn("📜 條文解說"), auto_cn("📚 完整條文庫"), auto_cn("🔑 坤集扣入法"),
         ])
         with _tb_tab_main:
             if _is_calculated:
@@ -2460,13 +2460,16 @@ if not _engine_handled:
                         
                         # 計算
                         tb_result = tbss.calculate(birth_data)
+                        # 快取供條文解說頁使用
+                        st.session_state["_tb_result"] = tb_result
+                        st.session_state["_tb_ganzhi"] = ganzhi
                     
                     # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
                     # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
                     svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
                     _render_interactive_html(
                         html=svg_chart,
-                        height=760,
+                        height=880,
                         key="tieban-main-svg",
                     )
 
@@ -2535,168 +2538,6 @@ if not _engine_handled:
           </div>
         </div>""", unsafe_allow_html=True)
 
-                    # ③ 字：坤集條文（tiaowen_full_12000.json 主條文）
-                    st.divider()
-                    _tb_kunji_title = auto_cn("🔑 坤集條文")
-                    st.subheader(_tb_kunji_title)
-
-                    # 坤集扣入法天干序列 + 條文編號
-                    if tb_result.kunji_tiangan:
-                        _tg_str = "　".join(tb_result.kunji_tiangan)
-                        _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
-                        _ke_lbl = tb_result.ke_label or str(tb_result.ke)
-                        st.markdown(
-                            f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
-                            f'<span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);'
-                            f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
-                            f'#{_tiaowen_num_label}</span>'
-                            f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
-                            f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
-                            f'{auto_cn("扣入天干")}：{_tg_str}</span>'
-                            f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
-                            f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                            f'{auto_cn("刻")}：{_ke_lbl}</span>'
-                            f'</div>',
-                            unsafe_allow_html=True,
-                        )
-
-                    # 坤集主條文（tiaowen_full_12000.json）
-                    _tw = tb_result.tiaowen_data
-                    if _tw and _tw.get("text"):
-                        st.markdown(
-                            f'<div style="background:rgba(255,107,53,0.08);border-left:4px solid #FF6B35;'
-                            f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
-                            f'color:#f0d9c8;line-height:1.9;letter-spacing:0.5px;">'
-                            f'{_tw["text"]}</div>',
-                            unsafe_allow_html=True,
-                        )
-                        if _tw.get("note") and _tw["note"].strip() not in ("", "0 0"):
-                            st.caption(auto_cn(f"備注：{_tw['note']}"))
-                    else:
-                        # 如坤集無此條，退而顯示 verses.json 條文
-                        st.info(tb_result.verse)
-
-                    # 算盤打數條文（suanpan_tiaowen_full.json）
-                    st.divider()
-                    st.subheader(auto_cn("🧮 算盤打數條文"))
-                    st.caption(auto_cn("曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文"))
-                    from astro.tieban.suanpan_full_structure import (
-                        suanpan_calculate,
-                        SuanpanTiaowenDatabase,
-                    )
-                    _sp_calc = suanpan_calculate(
-                        year_gz=str(ganzhi["year"]),
-                        month_gz=str(ganzhi["month"]),
-                        day_gz=str(ganzhi["day"]),
-                        hour_gz=str(ganzhi["hour"]),
-                        gender=st.session_state.get("_calc_gender", "男"),
-                    )
-                    _sp_db = SuanpanTiaowenDatabase()
-                    _sp_tiaowen = _sp_db.get_by_result(_sp_calc)
-
-                    # 基本定部資訊卡
-                    _sp_nayin_label = auto_cn("納音")
-                    _sp_dept_label  = auto_cn("五行部")
-                    _sp_num_label   = auto_cn("算盤總數")
-                    _sp_key_label   = auto_cn("條文鍵")
-                    st.markdown(
-                        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">'
-                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                        f'{_sp_nayin_label}：{_sp_calc.nayin or "未知"}</span>'
-                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                        f'{_sp_dept_label}：{_sp_calc.department or "未知"}部</span>'
-                        f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
-                        f'{_sp_num_label}：{_sp_calc.total_number}</span>'
-                        f'<span style="background:rgba(255,107,53,0.10);border:1px solid rgba(255,107,53,0.3);'
-                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
-                        f'{_sp_key_label}：{_sp_calc.tiaowen_key}</span>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-
-                    # 算盤打數條文內文
-                    if _sp_tiaowen and _sp_tiaowen.get("text"):
-                        _sp_raw = _sp_tiaowen.get("raw_key", "")
-                        _sp_raw_badge = (
-                            f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
-                            f'（{_sp_raw}）</span>'
-                        ) if _sp_raw else ""
-                        st.markdown(
-                            f'<div style="background:rgba(107,203,119,0.06);border-left:4px solid #6BCB77;'
-                            f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
-                            f'color:#d4f0d8;line-height:1.9;letter-spacing:0.5px;">'
-                            f'{_sp_tiaowen["text"]}{_sp_raw_badge}</div>',
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
-
-                    # 歲運條文（流年歲運）
-                    _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
-                    if _sp_suiyun and _sp_suiyun.get("text"):
-                        st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
-                        _sp_sy_raw = _sp_suiyun.get("raw_key", "")
-                        _sp_sy_raw_badge = (
-                            f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
-                            f'（{_sp_sy_raw}）</span>'
-                        ) if _sp_sy_raw else ""
-                        st.markdown(
-                            f'<div style="background:rgba(201,168,76,0.06);border-left:4px solid #C9A84C;'
-                            f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
-                            f'color:#f0e8c0;line-height:1.9;letter-spacing:0.5px;">'
-                            f'{_sp_suiyun["text"]}{_sp_sy_raw_badge}</div>',
-                            unsafe_allow_html=True,
-                        )
-
-                    # 計算步驟展開
-                    with st.expander(auto_cn("查看算盤打數計算步驟"), expanded=False):
-                        for _step in _sp_calc.calculation_steps:
-                            st.markdown(f"- {_step}")
-
-                    # 九十六刻表 & 六親刻分圖查詢結果
-                    _bake = tb_result.bake_fuqin_info
-                    _six = tb_result.six_qin_qizi_info
-                    if _bake or _six:
-                        st.divider()
-                        st.markdown(f"**{auto_cn('⏰ 刻分六親')}**")
-                        _kf_cards = ""
-                        if _bake:
-                            _kf_cards += (
-                                f'<div style="border-left:3px solid rgba(255,217,61,0.5);'
-                                f'padding:8px 12px;margin-bottom:8px;'
-                                f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
-                                f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
-                                f'{auto_cn("父母兄弟（九十六刻）")}</div>'
-                                f'<div style="font-size:13px;color:#FFD93D;">{_bake}</div></div>'
-                            )
-                        if _six:
-                            _kf_cards += (
-                                f'<div style="border-left:3px solid rgba(107,203,119,0.5);'
-                                f'padding:8px 12px;margin-bottom:8px;'
-                                f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
-                                f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
-                                f'{auto_cn("妻子（六親刻分）")}</div>'
-                                f'<div style="font-size:13px;color:#6BCB77;">{_six}</div></div>'
-                            )
-                        st.markdown(f'<div style="width:100%;">{_kf_cards}</div>', unsafe_allow_html=True)
-
-                    # 十二宮條文詳情
-                    st.divider()
-                    st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文")) + "**")
-
-                    expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
-                    with st.expander(expander_label, expanded=False):
-                        from astro.tieban.tieban_browser import render_palace_verses_paginated
-                        render_palace_verses_paginated(
-                            tb_result.palace_verses,
-                            language=get_lang(),
-                            page_size=4,
-                            key_prefix="tb_main_palace_verses",
-                        )
-
                     # AI 分析按鈕
                     _render_ai_button("tab_tieban", {"result": tb_result}, btn_key="tieban")
 
@@ -2752,6 +2593,175 @@ if not _engine_handled:
         </div>""", unsafe_allow_html=True)
 
         with _tb_tab_tiaowen:
+            _tb_result_cached = st.session_state.get("_tb_result")
+            _tb_ganzhi_cached = st.session_state.get("_tb_ganzhi")
+            if _tb_result_cached is not None and _tb_ganzhi_cached is not None:
+                tb_result = _tb_result_cached
+                ganzhi = _tb_ganzhi_cached
+                # ── 坤集條文（tiaowen_full_12000.json 主條文）──────────────
+                _tb_kunji_title = auto_cn("🔑 坤集條文")
+                st.subheader(_tb_kunji_title)
+
+                # 坤集扣入法天干序列 + 條文編號
+                if tb_result.kunji_tiangan:
+                    _tg_str = "　".join(tb_result.kunji_tiangan)
+                    _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
+                    _ke_lbl = tb_result.ke_label or str(tb_result.ke)
+                    st.markdown(
+                        f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
+                        f'<span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
+                        f'#{_tiaowen_num_label}</span>'
+                        f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
+                        f'{auto_cn("扣入天干")}：{_tg_str}</span>'
+                        f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
+                        f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                        f'{auto_cn("刻")}：{_ke_lbl}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                # 坤集主條文（tiaowen_full_12000.json）
+                _tw = tb_result.tiaowen_data
+                if _tw and _tw.get("text"):
+                    st.markdown(
+                        f'<div style="background:rgba(255,107,53,0.08);border-left:4px solid #FF6B35;'
+                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                        f'color:#f0d9c8;line-height:1.9;letter-spacing:0.5px;">'
+                        f'{_tw["text"]}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    if _tw.get("note") and _tw["note"].strip() not in ("", "0 0"):
+                        st.caption(auto_cn(f"備注：{_tw['note']}"))
+                else:
+                    # 如坤集無此條，退而顯示 verses.json 條文
+                    st.info(tb_result.verse)
+
+                # 算盤打數條文（suanpan_tiaowen_full.json）
+                st.divider()
+                st.subheader(auto_cn("🧮 算盤打數條文"))
+                st.caption(auto_cn("曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文"))
+                from astro.tieban.suanpan_full_structure import (
+                    suanpan_calculate,
+                    SuanpanTiaowenDatabase,
+                )
+                _sp_calc = suanpan_calculate(
+                    year_gz=str(ganzhi["year"]),
+                    month_gz=str(ganzhi["month"]),
+                    day_gz=str(ganzhi["day"]),
+                    hour_gz=str(ganzhi["hour"]),
+                    gender=st.session_state.get("_calc_gender", "男"),
+                )
+                _sp_db = SuanpanTiaowenDatabase()
+                _sp_tiaowen = _sp_db.get_by_result(_sp_calc)
+
+                # 基本定部資訊卡
+                _sp_nayin_label = auto_cn("納音")
+                _sp_dept_label  = auto_cn("五行部")
+                _sp_num_label   = auto_cn("算盤總數")
+                _sp_key_label   = auto_cn("條文鍵")
+                st.markdown(
+                    f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">'
+                    f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                    f'{_sp_nayin_label}：{_sp_calc.nayin or "未知"}</span>'
+                    f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
+                    f'{_sp_dept_label}：{_sp_calc.department or "未知"}部</span>'
+                    f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
+                    f'{_sp_num_label}：{_sp_calc.total_number}</span>'
+                    f'<span style="background:rgba(255,107,53,0.10);border:1px solid rgba(255,107,53,0.3);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">'
+                    f'{_sp_key_label}：{_sp_calc.tiaowen_key}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+                # 算盤打數條文內文
+                if _sp_tiaowen and _sp_tiaowen.get("text"):
+                    _sp_raw = _sp_tiaowen.get("raw_key", "")
+                    _sp_raw_badge = (
+                        f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
+                        f'（{_sp_raw}）</span>'
+                    ) if _sp_raw else ""
+                    st.markdown(
+                        f'<div style="background:rgba(107,203,119,0.06);border-left:4px solid #6BCB77;'
+                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                        f'color:#d4f0d8;line-height:1.9;letter-spacing:0.5px;">'
+                        f'{_sp_tiaowen["text"]}{_sp_raw_badge}</div>',
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.info(auto_cn(f"（算盤打數條文鍵 {_sp_calc.tiaowen_key} 暫無資料）"))
+
+                # 歲運條文（流年歲運）
+                _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
+                if _sp_suiyun and _sp_suiyun.get("text"):
+                    st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
+                    _sp_sy_raw = _sp_suiyun.get("raw_key", "")
+                    _sp_sy_raw_badge = (
+                        f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
+                        f'（{_sp_sy_raw}）</span>'
+                    ) if _sp_sy_raw else ""
+                    st.markdown(
+                        f'<div style="background:rgba(201,168,76,0.06);border-left:4px solid #C9A84C;'
+                        f'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                        f'color:#f0e8c0;line-height:1.9;letter-spacing:0.5px;">'
+                        f'{_sp_suiyun["text"]}{_sp_sy_raw_badge}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                # 計算步驟展開
+                with st.expander(auto_cn("查看算盤打數計算步驟"), expanded=False):
+                    for _step in _sp_calc.calculation_steps:
+                        st.markdown(f"- {_step}")
+
+                # 九十六刻表 & 六親刻分圖查詢結果
+                _bake = tb_result.bake_fuqin_info
+                _six = tb_result.six_qin_qizi_info
+                if _bake or _six:
+                    st.divider()
+                    st.markdown(f"**{auto_cn('⏰ 刻分六親')}**")
+                    _kf_cards = ""
+                    if _bake:
+                        _kf_cards += (
+                            f'<div style="border-left:3px solid rgba(255,217,61,0.5);'
+                            f'padding:8px 12px;margin-bottom:8px;'
+                            f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                            f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
+                            f'{auto_cn("父母兄弟（九十六刻）")}</div>'
+                            f'<div style="font-size:13px;color:#FFD93D;">{_bake}</div></div>'
+                        )
+                    if _six:
+                        _kf_cards += (
+                            f'<div style="border-left:3px solid rgba(107,203,119,0.5);'
+                            f'padding:8px 12px;margin-bottom:8px;'
+                            f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
+                            f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
+                            f'{auto_cn("妻子（六親刻分）")}</div>'
+                            f'<div style="font-size:13px;color:#6BCB77;">{_six}</div></div>'
+                        )
+                    st.markdown(f'<div style="width:100%;">{_kf_cards}</div>', unsafe_allow_html=True)
+
+                # 十二宮條文詳情
+                st.divider()
+                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文")) + "**")
+
+                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
+                with st.expander(expander_label, expanded=True):
+                    from astro.tieban.tieban_browser import render_palace_verses_paginated
+                    render_palace_verses_paginated(
+                        tb_result.palace_verses,
+                        language=get_lang(),
+                        page_size=4,
+                        key_prefix="tb_main_palace_verses",
+                    )
+            else:
+                st.info(auto_cn("請先在左側輸入出生資料並點擊推算，即可查看條文解說。"))
+
+        with _tb_tab_detail:
             from astro.tieban.tieban_browser import (
                 render_tiaowen_full_browser_inline,
                 render_suanpan_tiaowen_browser_inline,
