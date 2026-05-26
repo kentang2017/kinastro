@@ -14,6 +14,7 @@ Multi-System Astrology Chart Application
 """
 
 import contextlib
+import importlib
 import json
 import os
 import random
@@ -21,11 +22,10 @@ import textwrap
 from pathlib import Path
 import streamlit as st
 from datetime import datetime, date, time
-from typing import Any
+from typing import Any, Callable
 
 from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
-from astro.qizheng.calculator import compute_chart
 from astro.qizheng.chart_renderer import (
     render_chart_info,
     render_planet_table,
@@ -48,13 +48,11 @@ from astro.qizheng.qizheng_transit import compute_transit, compute_transit_now
 from astro.qizheng.zhangguo import compute_zhangguo
 from astro.qizheng.qizheng_electional import render_electional_tool
 from astro.qizheng.qizheng_financial import render_financial_tab
-from astro.western.western import compute_western_chart, render_western_chart
 from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
 from astro.western.harmonic import render_harmonic_chart
 from astro.western.draconic import render_draconic_chart
 from astro.western.western_synastry import compute_synastry
-from astro.vedic.indian import compute_vedic_chart, render_vedic_chart
 from astro.vedic.financial import render_vedic_financial_tab
 from astro.lal_kitab import compute_lal_kitab_chart, render_lal_kitab_chart, render_lal_kitab_1952_page
 from astro.jaimini import compute_jaimini_chart, render_jaimini_chart, render_jaimini_dasha
@@ -64,18 +62,11 @@ from astro.vedic.vedic_yogas import compute_yogas
 from astro.vedic.bphs_engine import compute_bphs
 from astro.vedic.varga import compute_varga_chart, VARGA_KEYS, VARGA_INFO, render_single_varga
 from astro.sukkayodo import render_sukkayodo_chart
-from astro.thai import (
-    compute_thai_chart, render_thai_chart,
-    calculate_thai_nine_grid, render_nine_grid,
-    calculate_nine_palace_divination, render_nine_palace_divination,
-    build_thai_mandala_svg, THAI_NAKSHATRAS,
-)
 from astro.laos import compute_lao_chart, render_lao_horasat
 from astro.brahma_jati import (
     compute_brahma_jati, render_brahma_jati, render_brahma_jati_browse,
 )
 from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_chart
-from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart, build_mazzalot_star_of_david_svg
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.arabic_lots import compute_albiruni_lots
 from astro.maya import compute_maya_chart, render_maya_chart
@@ -83,10 +74,8 @@ from astro.dogon import compute_dogon_sirius_chart, render_dogon_sirius_chart
 from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_amazigh_sky_svg
 from astro.bahre_hasab import analyze_bahre_hasab_date
 from astro.aztec import compute_aztec_chart, render_aztec_chart
-from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
 from astro.damo import compute_damo_chart, render_damo_chart
 from astro.diqiyijue import compute_diqiyijue_chart, render_diqiyijue_chart
-from astro.cetian_ziwei import compute_cetian_ziwei_chart, render_cetian_ziwei_chart
 from astro.burmese_mahabote import compute_mahabote_chart, render_mahabote_chart
 from astro.wariga.calculator import WarigaCalculator, compute_wariga
 from astro.wariga.renderer import render_streamlit as render_wariga_chart
@@ -224,6 +213,150 @@ from frontend.fludd_rota_renderer import render_fludd_rota
 from astro.fludd_rota import config_from_dict as _fludd_config_from_dict
 from frontend.alchemical_renderer import render_alchemical_tab
 from frontend.bahre_hasab_renderer import render_bahre_hasab_tab
+
+
+# Lazy import map: selected system -> compute module path.
+SYSTEM_IMPORT_MAP: dict[str, str] = {
+    "tab_chinese": "astro.qizheng.calculator",
+    "tab_western": "astro.western.western",
+    "tab_indian": "astro.vedic.indian",
+    "tab_thai": "astro.thai",
+    "tab_ziwei": "astro.ziwei",
+    "tab_cetian_ziwei": "astro.cetian_ziwei",
+    "tab_mazzalot": "astro.jewish_mazzalot",
+}
+
+_SYSTEM_FUNCTION_SPEC: dict[str, dict[str, str]] = {
+    "tab_chinese": {
+        "compute": "compute_chart",
+        "render": "render_full_chart",
+        "render_module": "astro.qizheng.chart_renderer",
+    },
+    "tab_western": {"compute": "compute_western_chart", "render": "render_western_chart"},
+    "tab_indian": {"compute": "compute_vedic_chart", "render": "render_vedic_chart"},
+    "tab_thai": {"compute": "compute_thai_chart", "render": "render_thai_chart"},
+    "tab_ziwei": {"compute": "compute_ziwei_chart", "render": "render_ziwei_chart"},
+    "tab_cetian_ziwei": {"compute": "compute_cetian_ziwei_chart", "render": "render_cetian_ziwei_chart"},
+    "tab_mazzalot": {"compute": "compute_mazzalot_chart", "render": "render_mazzalot_chart"},
+}
+
+SystemFnPair = tuple[Callable[..., Any], Callable[..., Any]]
+_SYSTEM_FUNCTION_CACHE: dict[str, SystemFnPair] = {}
+_MODULE_CACHE: dict[str, Any] = {}
+
+
+def _load_module(module_path: str):
+    module = _MODULE_CACHE.get(module_path)
+    if module is None:
+        module = importlib.import_module(module_path)
+        _MODULE_CACHE[module_path] = module
+    return module
+
+
+def get_system_functions(system_name: str) -> SystemFnPair:
+    """Return (compute_fn, render_fn) for a system via lazy importlib import."""
+    cached = _SYSTEM_FUNCTION_CACHE.get(system_name)
+    if cached is not None:
+        return cached
+
+    module_path = SYSTEM_IMPORT_MAP.get(system_name)
+    spec = _SYSTEM_FUNCTION_SPEC.get(system_name)
+    if module_path is None or spec is None:
+        raise ValueError(f"Unsupported system for lazy import: {system_name}")
+
+    compute_name = spec["compute"]
+    render_name = spec["render"]
+    render_module_path = spec["render_module"] if "render_module" in spec else module_path
+
+    compute_module = _load_module(module_path)
+    render_module = compute_module if render_module_path == module_path else _load_module(render_module_path)
+
+    compute_fn = getattr(compute_module, compute_name)
+    render_fn = getattr(render_module, render_name)
+
+    out = (compute_fn, render_fn)
+    _SYSTEM_FUNCTION_CACHE[system_name] = out
+    return out
+
+
+def _load_attr(module_path: str, attr_name: str):
+    return getattr(_load_module(module_path), attr_name)
+
+
+def compute_chart(*args, **kwargs):
+    return get_system_functions("tab_chinese")[0](*args, **kwargs)
+
+
+def compute_western_chart(*args, **kwargs):
+    return get_system_functions("tab_western")[0](*args, **kwargs)
+
+
+def render_western_chart(*args, **kwargs):
+    return get_system_functions("tab_western")[1](*args, **kwargs)
+
+
+def compute_vedic_chart(*args, **kwargs):
+    return get_system_functions("tab_indian")[0](*args, **kwargs)
+
+
+def render_vedic_chart(*args, **kwargs):
+    return get_system_functions("tab_indian")[1](*args, **kwargs)
+
+
+def compute_thai_chart(*args, **kwargs):
+    return get_system_functions("tab_thai")[0](*args, **kwargs)
+
+
+def render_thai_chart(*args, **kwargs):
+    return get_system_functions("tab_thai")[1](*args, **kwargs)
+
+
+def calculate_thai_nine_grid(*args, **kwargs):
+    return _load_attr("astro.thai", "calculate_thai_nine_grid")(*args, **kwargs)
+
+
+def render_nine_grid(*args, **kwargs):
+    return _load_attr("astro.thai", "render_nine_grid")(*args, **kwargs)
+
+
+def calculate_nine_palace_divination(*args, **kwargs):
+    return _load_attr("astro.thai", "calculate_nine_palace_divination")(*args, **kwargs)
+
+
+def render_nine_palace_divination(*args, **kwargs):
+    return _load_attr("astro.thai", "render_nine_palace_divination")(*args, **kwargs)
+
+
+def build_thai_mandala_svg(*args, **kwargs):
+    return _load_attr("astro.thai", "build_thai_mandala_svg")(*args, **kwargs)
+
+
+def compute_ziwei_chart(*args, **kwargs):
+    return get_system_functions("tab_ziwei")[0](*args, **kwargs)
+
+
+def render_ziwei_chart(*args, **kwargs):
+    return get_system_functions("tab_ziwei")[1](*args, **kwargs)
+
+
+def compute_cetian_ziwei_chart(*args, **kwargs):
+    return get_system_functions("tab_cetian_ziwei")[0](*args, **kwargs)
+
+
+def render_cetian_ziwei_chart(*args, **kwargs):
+    return get_system_functions("tab_cetian_ziwei")[1](*args, **kwargs)
+
+
+def compute_mazzalot_chart(*args, **kwargs):
+    return get_system_functions("tab_mazzalot")[0](*args, **kwargs)
+
+
+def render_mazzalot_chart(*args, **kwargs):
+    return get_system_functions("tab_mazzalot")[1](*args, **kwargs)
+
+
+def build_mazzalot_star_of_david_svg(*args, **kwargs):
+    return _load_attr("astro.jewish_mazzalot", "build_mazzalot_star_of_david_svg")(*args, **kwargs)
 
 
 # ============================================================
