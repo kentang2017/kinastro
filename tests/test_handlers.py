@@ -1,11 +1,12 @@
 """Tests for system handlers — verifying compute/render separation and basic functionality."""
 
 import unittest
-from datetime import date, time
-from typing import Any, Dict
+from datetime import date
+from unittest.mock import patch
 
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import EXECUTION_REGISTRY, SystemHandler
+from ui.system_handlers.build_thai_handler import build_thai_handler
 
 
 class TestBirthChartParams(unittest.TestCase):
@@ -99,18 +100,112 @@ class TestHandlerStructure(unittest.TestCase):
         self.assertIsNotNone(handler.render)
         self.assertEqual(handler.options_schema, {"test": str})
 
+    def test_thai_handler_supports_chart_hook_and_legacy_subtabs(self):
+        """Thai handler should preserve legacy sections and accept chart hook args."""
+
+        calls = {"ai": [], "nine": [], "divination": [], "brahma": []}
+
+        class _DummyContext:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        def _compute_thai_chart(**kwargs):
+            return {"chart": kwargs["year"]}
+
+        def _render_thai_chart(result, after_chart_hook=None):
+            if after_chart_hook:
+                after_chart_hook(result)
+
+        def _calculate_thai_nine_grid(day, month, year):
+            calls["nine"].append((day, month, year))
+            return {"grid": True}
+
+        def _render_nine_grid(result):
+            calls["nine"].append(result)
+
+        def _calculate_nine_palace_divination(chart):
+            calls["divination"].append(chart)
+            return {"palaces": 9}
+
+        def _render_nine_palace_divination(result):
+            calls["divination"].append(result)
+
+        def _compute_brahma_jati(**kwargs):
+            calls["brahma"].append(kwargs)
+            return {"reading": True}
+
+        def _render_brahma_jati(result):
+            calls["brahma"].append(result)
+
+        def _ai_button_sink(*args):
+            calls["ai"].append(args)
+
+        handler = build_thai_handler(
+            compute_thai_chart=_compute_thai_chart,
+            render_thai_chart=_render_thai_chart,
+            calculate_thai_nine_grid=_calculate_thai_nine_grid,
+            render_nine_grid=_render_nine_grid,
+            calculate_nine_palace_divination=_calculate_nine_palace_divination,
+            render_nine_palace_divination=_render_nine_palace_divination,
+            compute_brahma_jati=_compute_brahma_jati,
+            render_brahma_jati=_render_brahma_jati,
+            ai_button_sink=_ai_button_sink,
+        )
+        params = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=7.0,
+            latitude=13.7563,
+            longitude=100.5018,
+            location_name="Bangkok",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+
+        with (
+            patch("ui.system_handlers.build_thai_handler.st.tabs", return_value=[_DummyContext(), _DummyContext(), _DummyContext()]),
+            patch("ui.system_handlers.build_thai_handler.st.columns", return_value=[_DummyContext(), _DummyContext()]),
+            patch("ui.system_handlers.build_thai_handler.st.number_input", return_value=36),
+            patch("ui.system_handlers.build_thai_handler.st.selectbox", return_value="female"),
+            patch("ui.system_handlers.build_thai_handler.st.markdown"),
+        ):
+            handler.render(result, params, {})
+
+        self.assertEqual(calls["ai"], [("tab_thai", result, "thai", "")])
+        self.assertEqual(calls["nine"], [(15, 1, 1990), {"grid": True}])
+        self.assertEqual(calls["divination"], [result, {"palaces": 9}])
+        self.assertEqual(
+            calls["brahma"][0],
+            {
+                "ce_year": 1990,
+                "month": 1,
+                "weekday": date(1990, 1, 15).weekday(),
+                "age": 36,
+                "gender": "female",
+            },
+        )
+        self.assertEqual(calls["brahma"][1], {"reading": True})
+
 
 class TestComputeFunctions(unittest.TestCase):
     """Test compute functions are pure (no Streamlit dependency)."""
 
     def _check_no_streamlit_import(self, module_name: str) -> bool:
         """Check if a module has direct streamlit imports."""
-        import importlib
         import ast
+        import importlib
 
         try:
             module = importlib.import_module(module_name)
-            source = open(module.__file__, "r", encoding="utf-8").read()
+            with open(module.__file__, encoding="utf-8") as source_file:
+                source = source_file.read()
             tree = ast.parse(source)
 
             for node in ast.walk(tree):
@@ -136,7 +231,8 @@ class TestComputeFunctions(unittest.TestCase):
         ]
         for module_name in pure_modules:
             # Note: This is a soft check — some modules may not be importable in test context
-            pass  # Placeholder for actual purity checks
+            with self.subTest(module_name=module_name):
+                pass  # Placeholder for actual purity checks
 
 
 if __name__ == "__main__":
