@@ -17,6 +17,7 @@ def build_kp_handler(
     ai_button_sink,
 ) -> SystemHandler:
     """Create executable handler for KP 占星 (KP Astrology) Astrology."""
+    unsupported_shared_fields = {"gender", "location_name"}
 
     @st.cache_data(show_spinner=False)
     def _cached_compute(params_payload: dict[str, Any], **extra_kwargs):
@@ -25,7 +26,12 @@ def build_kp_handler(
         params_payload = {
             k: v
             for k, v in params_payload.items()
-            if k not in {"gender", "location_name"}
+            if k not in unsupported_shared_fields
+        }
+        extra_kwargs = {
+            k: v
+            for k, v in extra_kwargs.items()
+            if k not in unsupported_shared_fields
         }
         return compute_kp_chart(**params_payload, **extra_kwargs)
 
@@ -33,8 +39,11 @@ def build_kp_handler(
         """Compute chart from unified params."""
         payload = params.to_dict()
         # Remove unsupported shared birth fields for this system
-        payload.pop("gender", None)
-        payload.pop("location_name", None)
+        payload = {
+            k: v
+            for k, v in payload.items()
+            if k not in unsupported_shared_fields
+        }
         # Add system-specific options here if needed
         # e.g., vietnam_mode for ZiWei, ayanamsa for Vedic, etc.
         return _cached_compute(payload)
