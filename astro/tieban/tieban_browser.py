@@ -11,6 +11,7 @@ Tie Ban Shen Shu Verse Browser Tool
 """
 
 from collections.abc import Sequence
+import html
 from math import ceil
 from typing import Any
 
@@ -103,20 +104,24 @@ def render_palace_verses_paginated(
 
     cards_html = ""
     for item in display_items:
+        safe_name = html.escape(str(item["name"]))
+        safe_branch = html.escape(str(item["branch"]))
+        safe_category = html.escape(str(item["category"]))
+        safe_verse = html.escape(str(item["verse"]))
         cat_badge = (
             f'<span style="font-size:10px;color:#FF6B35;margin-left:6px;">'
-            f'【{item["category"]}】</span>'
-        ) if item["category"] else ""
+            f'【{safe_category}】</span>'
+        ) if safe_category else ""
         cards_html += (
             '<div style="border-left:3px solid rgba(255,107,53,0.5);'
             'padding:10px 12px;margin-bottom:10px;'
             'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
             f'<div style="font-size:13px;font-weight:700;color:#FFD93D;margin-bottom:4px;">'
-            f'{item["name"]}'
-            f'<span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({item["branch"]})</span>'
+            f'{safe_name}'
+            f'<span style="font-size:11px;color:#9090b0;font-weight:400;margin-left:4px;">({safe_branch})</span>'
             f'{cat_badge}'
             '</div>'
-            f'<div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{item["verse"]}</div>'
+            f'<div style="font-size:13px;color:#c8c8e8;line-height:1.6;">{safe_verse}</div>'
             '</div>'
         )
 
