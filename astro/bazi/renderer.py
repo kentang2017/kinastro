@@ -575,7 +575,7 @@ def _get_kongwang_for_chart(chart: BaziChart) -> tuple:
 # Streamlit 渲染（Streamlit Renderer）
 # ──────────────────────────────────────────────────────────────────────────────
 
-def render_streamlit(chart: BaziChart) -> None:
+def render_streamlit(chart: BaziChart, after_chart_hook=None) -> None:
     """在 Streamlit 中完整渲染子平八字命盤。
 
     包含：
@@ -588,6 +588,8 @@ def render_streamlit(chart: BaziChart) -> None:
     - 沖合刑害分析
     - 古典文字解讀（中英雙語）
     """
+    if after_chart_hook:
+        after_chart_hook(chart)
     import pandas as pd
 
     # ── SVG 命盤

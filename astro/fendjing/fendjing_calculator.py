@@ -276,4 +276,4 @@ def render_fendjing_chart(chart: dict, after_chart_hook=None):
                 st.markdown(content.replace("\n", "\n\n"))
     
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

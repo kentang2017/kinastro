@@ -1288,7 +1288,7 @@ def render_lal_kitab_chart(
         _render_1952_tab(chart, lang)
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
 
 def _render_1952_tab(chart: "LalKitabChart", lang: str = "zh") -> None:
@@ -1710,7 +1710,7 @@ def render_lal_kitab_1952_page(
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
         if after_chart_hook:
-            after_chart_hook()
+            after_chart_hook(chart)
 
     # ──────────────────────────────────────────────────────────
     # Tab 2: 宮位解釋

@@ -495,4 +495,4 @@ margin-bottom:12px;">
     )
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

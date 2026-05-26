@@ -828,7 +828,7 @@ def render_yemeni_chart(chart_obj, after_chart_hook=None):
         )
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     st.divider()
 

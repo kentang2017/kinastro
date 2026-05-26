@@ -720,7 +720,7 @@ def render_streamlit(
     )
 
     if after_chart_hook is not None:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     # ── Tab labels ──
     if lang == "zh":

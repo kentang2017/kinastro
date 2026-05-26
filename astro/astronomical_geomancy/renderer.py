@@ -818,7 +818,7 @@ def render_streamlit(
         _render_square_chart_tab(chart)
 
         if after_chart_hook:
-            after_chart_hook()
+            after_chart_hook(chart)
 
     with tabs[1]:
         wheel_svg = build_geomancy_wheel_svg(chart)

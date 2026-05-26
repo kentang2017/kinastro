@@ -1729,7 +1729,13 @@ def _try_render_simple_chart(
         import inspect
         sig = inspect.signature(compute_fn)
         valid_params = set(sig.parameters.keys())
-        _p = {k: v for k, v in _p.items() if k in valid_params}
+        # If function has **kwargs, pass all params (it will handle filtering)
+        if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+            # Function accepts **kwargs - pass all params without filtering
+            pass
+        else:
+            # Function has explicit parameters - filter to only those
+            _p = {k: v for k, v in _p.items() if k in valid_params}
 
         with st.spinner(spinner_text):
             chart = compute_fn(**_p)
@@ -2241,7 +2247,7 @@ if not _engine_handled:
                 _gender = st.session_state.get("_calc_gender", "男")
                 with st.spinner(t("spinner_ziwei")):
                     zw_chart = compute_ziwei_chart(**_p, gender=_gender, vietnam_mode=_vietnam_mode)
-                render_ziwei_chart(zw_chart, after_chart_hook=lambda: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
+                render_ziwei_chart(zw_chart, after_chart_hook=lambda c: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
@@ -2257,7 +2263,7 @@ if not _engine_handled:
                 _gender = st.session_state.get("_calc_gender", "男")
                 with st.spinner(t("spinner_cetian_ziwei")):
                     ct_chart = compute_cetian_ziwei_chart(**_p, gender=_gender)
-                render_cetian_ziwei_chart(ct_chart, after_chart_hook=lambda: _render_ai_button("tab_cetian_ziwei", ct_chart, btn_key="cetian_ziwei"))
+                render_cetian_ziwei_chart(ct_chart, after_chart_hook=lambda c: _render_ai_button("tab_cetian_ziwei", ct_chart, btn_key="cetian_ziwei"))
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
@@ -3281,7 +3287,7 @@ if not _engine_handled:
                         _tx_result = _tx_calc.calculate()
                     render_taixuan_chart(
                         _tx_result,
-                        after_chart_hook=lambda: _render_ai_button(
+                        after_chart_hook=lambda c: _render_ai_button(
                             "tab_taixuan",
                             {
                                 "shou_name": _tx_result.shou.name,
@@ -3307,7 +3313,7 @@ if not _engine_handled:
 
         with _tx_tab_qigua:
             render_qigua_ui(
-                after_chart_hook=lambda: _render_ai_button(
+                after_chart_hook=lambda c: _render_ai_button(
                     "tab_taixuan",
                     {"mode": "qigua"},
                     btn_key="taixuan_qigua",
@@ -3387,7 +3393,7 @@ if not _engine_handled:
                 ])
 
                 with _v_tab_rashi:
-                    render_vedic_chart(v_chart, after_chart_hook=lambda: _render_ai_button("tab_indian", v_chart, btn_key="vedic"))
+                    render_vedic_chart(v_chart, after_chart_hook=lambda c: _render_ai_button("tab_indian", v_chart, btn_key="vedic"))
 
                 with _v_tab_dasha:
                     st.subheader(t("vedic_subtab_dasha"))
@@ -3506,7 +3512,7 @@ if not _engine_handled:
         from frontend.vastu_renderer import render_vastu_tab
         if not _try_render_simple_chart(
             compute_fn=compute_vedic_chart,
-            render_fn=lambda chart: render_vastu_tab(v_chart=chart, after_chart_hook=lambda: _render_ai_button("tab_vastu", chart, btn_key="vastu")),
+            render_fn=lambda chart: render_vastu_tab(v_chart=chart, after_chart_hook=lambda c: _render_ai_button("tab_vastu", chart, btn_key="vastu")),
             spinner_text=t("spinner_vastu"),
             ai_btn_key="vastu",
         ):
@@ -3519,7 +3525,7 @@ if not _engine_handled:
         if not _try_render_simple_chart(
             compute_fn=compute_lal_kitab_chart,
             render_fn=lambda chart: render_lal_kitab_1952_page(
-                chart, lang=_lk_lang, after_chart_hook=lambda: _render_ai_button("tab_lal_kitab", chart, btn_key="lal_kitab")
+                chart, lang=_lk_lang, after_chart_hook=lambda c: _render_ai_button("tab_lal_kitab", chart, btn_key="lal_kitab")
             ),
             spinner_text=t("spinner_lal_kitab"),
             ai_btn_key="lal_kitab",
@@ -3534,7 +3540,7 @@ if not _engine_handled:
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_indian")):
                     _v_chart_sukka = compute_vedic_chart(**_p)
-                render_sukkayodo_chart(_v_chart_sukka, after_chart_hook=lambda: _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo"))
+                render_sukkayodo_chart(_v_chart_sukka, after_chart_hook=lambda c: _render_ai_button("tab_sukkayodo", _v_chart_sukka, btn_key="sukkayodo"))
                 st.subheader(t("sukkayodo_subheader"))
                 st.info(t("sukkayodo_info"))
                 st.markdown(t("desc_sukkayodo"))
@@ -3556,7 +3562,7 @@ if not _engine_handled:
                     [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
                 )
                 with thai_tab_chart:
-                    render_thai_chart(t_chart, after_chart_hook=lambda: _render_ai_button("tab_thai", t_chart, btn_key="thai"))
+                    render_thai_chart(t_chart, after_chart_hook=lambda c: _render_ai_button("tab_thai", t_chart, btn_key="thai"))
                 with thai_tab_nine:
                     nine_grid_result = calculate_thai_nine_grid(
                         birth_date.day, birth_date.month, birth_date.year
@@ -3606,7 +3612,7 @@ if not _engine_handled:
         if not _try_render_simple_chart(
             compute_fn=compute_lao_chart,
             render_fn=lambda chart: render_lao_horasat(
-                chart, lang=get_lang(), after_chart_hook=lambda: _render_ai_button("tab_laos", chart, btn_key="tab_laos")
+                chart, lang=get_lang(), after_chart_hook=lambda c: _render_ai_button("tab_laos", c, btn_key="tab_laos")
             ),
             spinner_text=t("spinner_laos"),
             ai_btn_key="tab_laos",
@@ -3699,7 +3705,7 @@ if not _engine_handled:
                 with arabic_subtab_chart:
                     with st.spinner(t("spinner_arabic")):
                         a_chart = compute_arabic_chart(**_p)
-                    render_arabic_chart(a_chart, after_chart_hook=lambda: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
+                    render_arabic_chart(a_chart, after_chart_hook=lambda c: _render_ai_button("tab_arabic", a_chart, btn_key="arabic"))
 
                 with arabic_subtab_lots:
                     _lots_mode_options = {
@@ -3991,7 +3997,7 @@ if not _engine_handled:
                     )
                 render_andean_chart_ui(
                     _andean_chart,
-                    after_chart_hook=lambda: _render_ai_button(
+                    after_chart_hook=lambda c: _render_ai_button(
                         "tab_andean", _andean_chart, btn_key="andean"
                     ),
                 )
@@ -4060,7 +4066,7 @@ if not _engine_handled:
                 with _amz_tab_chart:
                     render_amazigh_chart(
                         _amazigh_chart,
-                        after_chart_hook=lambda: _render_ai_button("tab_amazigh", _amazigh_chart, btn_key="amazigh_chart"),
+                        after_chart_hook=lambda c: _render_ai_button("tab_amazigh", _amazigh_chart, btn_key="amazigh_chart"),
                     )
                     st.markdown(t("desc_amazigh"))
             except Exception as _e:
@@ -4079,7 +4085,7 @@ if not _engine_handled:
                 compute_fn=lambda **kw: _probe,  # already computed above
                 render_fn=lambda chart: render_bahre_hasab_tab(
                     calc_params=_p,
-                    after_chart_hook=lambda: _render_ai_button("tab_bahre_hasab", chart, btn_key="bahre_hasab"),
+                    after_chart_hook=lambda c: _render_ai_button("tab_bahre_hasab", chart, btn_key="bahre_hasab"),
                 ),
                 spinner_text=t("spinner_bahre_hasab"),
                 ai_btn_key="bahre_hasab",
@@ -4131,7 +4137,7 @@ if not _engine_handled:
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_nadi")):
                     nadi_chart = compute_nadi_chart(**_p)
-                render_nadi_chart(nadi_chart, after_chart_hook=lambda: _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi"))
+                render_nadi_chart(nadi_chart, after_chart_hook=lambda c: _render_ai_button("tab_nadi", nadi_chart, btn_key="nadi"))
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
                 st.exception(_e)
@@ -4153,7 +4159,7 @@ if not _engine_handled:
                 ])
 
                 with _jm_tab_chart:
-                    render_jaimini_chart(jm_chart, after_chart_hook=lambda: _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini"))
+                    render_jaimini_chart(jm_chart, after_chart_hook=lambda c: _render_ai_button("tab_jaimini", jm_chart, btn_key="jaimini"))
 
                 with _jm_tab_dasha:
                     render_jaimini_dasha(jm_chart)
@@ -4214,7 +4220,7 @@ if not _engine_handled:
                     )
                     _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_mandala")
                 with _t_tab_natal:
-                    render_tibetan_chart(_tib_chart, after_chart_hook=lambda: _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_natal"))
+                    render_tibetan_chart(_tib_chart, after_chart_hook=lambda c: _render_ai_button("tab_tibetan", _tib_chart, btn_key="tibetan_natal"))
                 with _t_tab_mewa:
                     from astro.tibetan import _render_mewa_parkha
                     _render_mewa_parkha(_tib_chart)
@@ -4240,7 +4246,7 @@ if not _engine_handled:
             compute_fn=compute_nine_star_ki_chart,
             render_fn=lambda chart: render_nine_star_ki_chart(
                 chart,
-                after_chart_hook=lambda: _render_ai_button("tab_nine_star_ki", chart, btn_key="nine_star_ki"),
+                after_chart_hook=lambda c: _render_ai_button("tab_nine_star_ki", chart, btn_key="nine_star_ki"),
                 lang=get_lang(),
             ),
             spinner_text=t("spinner_nine_star_ki"),
@@ -4255,7 +4261,7 @@ if not _engine_handled:
             compute_fn=compute_celtic_tree_chart,
             render_fn=lambda chart: render_celtic_tree_chart(
                 chart,
-                after_chart_hook=lambda: _render_ai_button("tab_celtic_tree", chart, btn_key="celtic_tree"),
+                after_chart_hook=lambda c: _render_ai_button("tab_celtic_tree", chart, btn_key="celtic_tree"),
                 lang=get_lang(),
             ),
             spinner_text=t("spinner_celtic_tree"),
@@ -4518,7 +4524,7 @@ if not _engine_handled:
                 with _ci_tab_detail:
                     render_twelve_ci_chart(
                         _ci_chart,
-                        after_chart_hook=lambda: _render_ai_button(
+                        after_chart_hook=lambda c: _render_ai_button(
                             "tab_twelve_ci", _ci_chart, btn_key="twelve_ci_detail"
                         ),
                     )
@@ -4881,7 +4887,7 @@ if not _engine_handled:
             def _liuren_render(chart):
                 render_liuren_chart(
                     chart,
-                    after_chart_hook=lambda: _render_ai_button("tab_liuren", chart, btn_key="liuren"),
+                    after_chart_hook=lambda c: _render_ai_button("tab_liuren", chart, btn_key="liuren"),
                     benming_zhi=_lr_benming,
                 )
                 # ── 論命分析 ──
@@ -5751,7 +5757,7 @@ if not _engine_handled:
                 _geo_chart = st.session_state[_geo_key]
                 _render_geomancy_ui(
                     _geo_chart,
-                    after_chart_hook=lambda: _render_ai_button(
+                    after_chart_hook=lambda c: _render_ai_button(
                         "tab_astro_geomancy", _geo_chart, btn_key="astro_geomancy"
                     ),
                 )
@@ -5766,7 +5772,7 @@ if not _engine_handled:
         try:
             with st.spinner(t("spinner_european_geomancy")):
                 render_european_geomancy(
-                    after_chart_hook=lambda: _render_ai_button(
+                    after_chart_hook=lambda c: _render_ai_button(
                         "tab_european_geomancy",
                         st.session_state.get("_eg_reading"),
                         btn_key="european_geomancy",
@@ -5815,7 +5821,7 @@ if not _engine_handled:
                     )
             render_fludd_rota(
                 auto_config=_fludd_auto_cfg,
-                after_chart_hook=lambda: _render_ai_button(
+                after_chart_hook=lambda c: _render_ai_button(
                     "tab_fludd_rota",
                     st.session_state.get("fludd_rota_reading"),
                     btn_key="fludd_rota",
@@ -5844,7 +5850,7 @@ if not _engine_handled:
                 }
             render_alchemical_tab(
                 planet_longitudes=_alch_lons,
-                after_chart_hook=lambda: _render_ai_button(
+                after_chart_hook=lambda c: _render_ai_button(
                     "tab_alchemical_astrology",
                     st.session_state.get("alchemical_reading"),
                     btn_key="alchemical_astrology",

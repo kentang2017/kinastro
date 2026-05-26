@@ -137,7 +137,7 @@ def render_diqiyijue_chart(
         )
 
         if after_chart_hook is not None:
-            after_chart_hook()
+            after_chart_hook(chart)
 
     with tab_analysis:
         st.markdown(f"### {t('diqiyijue_section_eight_palaces')}")

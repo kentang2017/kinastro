@@ -639,7 +639,7 @@ def render_nadi_chart(chart: NadiChart, after_chart_hook=None) -> None:
     _render_nadi_south_indian_grid(chart)
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     st.divider()
 

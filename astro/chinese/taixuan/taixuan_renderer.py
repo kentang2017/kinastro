@@ -431,7 +431,7 @@ def render_taixuan_chart(result: TaiXuanResult, after_chart_hook=None) -> None:
 
     # ── AI 分析鉤子 ──────────────────────────────────────────
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
 
 def _render_ganzhi_card(result: TaiXuanResult, is_en: bool) -> None:

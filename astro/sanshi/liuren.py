@@ -562,7 +562,7 @@ def render_liuren_chart(chart: dict, after_chart_hook=None, benming_zhi: str | N
                 )
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
 
 # ============================================================

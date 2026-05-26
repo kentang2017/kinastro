@@ -444,7 +444,7 @@ def render_arabic_chart(chart, after_chart_hook=None):
     """渲染完整的阿拉伯占星排盤"""
     _render_house_grid(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

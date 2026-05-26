@@ -899,7 +899,7 @@ def render_ziwei_chart(chart: ZiweiChart, after_chart_hook=None) -> None:
     _render_sihua_legend()
     _render_palace_grid(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

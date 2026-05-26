@@ -382,4 +382,4 @@ def render_taiyi_chart(chart: dict, after_chart_hook=None):
                     st.metric(auto_cn(k), str(v))
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

@@ -379,7 +379,7 @@ def render_streamlit(
 
     # AI button hook
     if after_chart_hook is not None:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     # Sub-tabs
     tab_sky, tab_constellations, tab_planets, tab_markers = st.tabs([

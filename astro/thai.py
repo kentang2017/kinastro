@@ -438,7 +438,7 @@ def render_thai_chart(chart, after_chart_hook=None):
     st.markdown(svg, unsafe_allow_html=True)
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

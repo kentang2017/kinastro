@@ -711,4 +711,4 @@ Its historical accuracy is disputed by modern scholarship.
 
     # ── After-chart hook (e.g. AI button) ───────────────────────────
     if after_chart_hook is not None:
-        after_chart_hook()
+        after_chart_hook(chart)

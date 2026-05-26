@@ -96,4 +96,4 @@ def render_chinstar_chart(
 
     # Run hook if provided
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

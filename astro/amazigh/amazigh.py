@@ -434,7 +434,7 @@ def render_amazigh_chart(chart: AmazighChart, after_chart_hook=None) -> None:
             )
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     st.divider()
 

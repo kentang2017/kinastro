@@ -54,11 +54,11 @@ def build_bazi_handler(
 def register(registry, ai_button_sink):
     """Self-registration for Bazi handler (modular lazy pattern)."""
     from astro.bazi import compute_bazi as compute_bazi_chart
-    from astro.bazi.renderer import render_streamlit as render_bazi_chart
+    from astro.bazi.renderer import render_streamlit as render_bazi_chart_svg
 
     handler = build_bazi_handler(
         compute_bazi_chart=compute_bazi_chart,
-        render_bazi_chart=render_bazi_chart,
+        render_bazi_chart_svg=render_bazi_chart_svg,
         ai_button_sink=ai_button_sink,
     )
     registry.register(handler)

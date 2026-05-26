@@ -324,7 +324,7 @@ def render_streamlit(chart, *, lang: str = "zh", after_chart_hook: Callable[[], 
         wheel = build_cultural_svg(wheel_inner, "tab_huangji", title="皇極時間輪", animate_spin=False)
         st.markdown(wheel, unsafe_allow_html=True)
         if after_chart_hook:
-            after_chart_hook()
+            after_chart_hook(chart)
 
     with tab2:
         st.markdown("#### 元會運世時間軸")

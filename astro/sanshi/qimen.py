@@ -145,4 +145,4 @@ def render_qimen_chart(chart: dict, after_chart_hook=None):
                     st.markdown(f"**{gong}**（{stem}）：{phase}")
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

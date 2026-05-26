@@ -864,7 +864,7 @@ def render_mazzalot_chart(chart, after_chart_hook=None):
     )
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     # ── 行星位置表 ────────────────────────────────────────────
     st.markdown("#### ✡ " + t("mazzalot_planet_positions"))

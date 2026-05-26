@@ -964,4 +964,4 @@ def render_babylonian_chart(chart, after_chart_hook=None):
     st.dataframe(house_data, width="stretch")
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

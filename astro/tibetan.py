@@ -999,7 +999,7 @@ def render_tibetan_chart(chart, after_chart_hook=None):
     st.divider()
     _render_omens(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_history()
     st.divider()

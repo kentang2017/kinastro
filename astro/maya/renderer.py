@@ -67,7 +67,7 @@ def render_maya_chart(chart: MayanChart, after_chart_hook=None) -> None:
     with tab5:
         _render_cross_system_tab(chart)
         if after_chart_hook:
-            after_chart_hook()
+            after_chart_hook(chart)
 
 
 # ============================================================

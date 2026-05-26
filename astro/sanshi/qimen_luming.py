@@ -1064,4 +1064,4 @@ def render_qimen_luming(result: dict, after_chart_hook=None):
         st.markdown(f"> {auto_cn(overall)}")
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)

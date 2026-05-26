@@ -23,7 +23,7 @@ def build_wuyunliuqi_handler(
         """Pure compute wrapped for Streamlit caching."""
         # Remove gender parameter - this system doesn\'t use it
         params_payload = {k: v for k, v in params_payload.items() if k != "gender"}
-        return compute_wuyunliuqi_chart(**params_payload, **extra_kwargs)
+        return compute_wuyunliuqi(**params_payload, **extra_kwargs)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""

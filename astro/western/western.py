@@ -569,7 +569,7 @@ def render_western_chart(chart, after_chart_hook=None, gender=None):
     """渲染完整的西洋占星排盤"""
     _render_wheel_chart(chart, gender=gender)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

@@ -371,7 +371,7 @@ def render_lao_horasat(
     st.markdown(build_lao_brahma_wheel_svg(data), unsafe_allow_html=True)
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     tab_date, tab_sangkhom, tab_sikarat, tab_planets, tab_interp = st.tabs(
         ["📅 Laos 日期", "🧿 ສັງຄົມ", "⏰ ສີກາດ", "🪐 星曜", "📖 傳統解讀"]

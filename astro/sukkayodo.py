@@ -205,7 +205,7 @@ def render_sukkayodo_chart(chart, after_chart_hook=None):
     _render_wheel(chart, moon_mansion_idx)
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     # 六曜卡片
     st.markdown("### 當日六曜 (Rokuyō)")

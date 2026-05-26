@@ -364,7 +364,7 @@ def render_vedic_chart(chart, after_chart_hook=None):
     with col2:
         _render_north_indian_grid(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

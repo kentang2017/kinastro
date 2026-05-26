@@ -987,6 +987,7 @@ def _render_zurkhai_wheel(chart: ZurkhaiChart) -> None:
 
 # --- 基本資料 ---
 def _render_info(chart: ZurkhaiChart) -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染基本排盤資訊。"""
     st.subheader("📋 祖爾海排盤基本資料 / Zurkhai Chart Info")
 
@@ -1052,6 +1053,7 @@ def _render_info(chart: ZurkhaiChart) -> None:
 # --- 五行平衡 ---
 def _render_element_balance(chart: ZurkhaiChart) -> None:
     """渲染五行元素平衡與相生相剋圖。"""
+    import streamlit as st  # Lazy import for rendering functions
     st.subheader("⚖️ 五行元素平衡 / Five Element Balance")
 
     be = chart.birth_element
@@ -1096,6 +1098,7 @@ def _render_element_balance(chart: ZurkhaiChart) -> None:
 
 # --- 年運預測 ---
 def _render_year_forecast(chart: ZurkhaiChart) -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染年運預測。"""
     st.subheader("🔮 年運預測 / Year Forecast")
 
@@ -1129,6 +1132,7 @@ def _render_year_forecast(chart: ZurkhaiChart) -> None:
 
 # --- 擇吉 ---
 def _render_auspicious_table(chart: ZurkhaiChart) -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染今日擇吉表。"""
     today = date.today()
     today_animal = _get_day_animal(today)
@@ -1171,6 +1175,7 @@ def _render_auspicious_table(chart: ZurkhaiChart) -> None:
 
 # --- 60 年循環表 ---
 def _render_sixty_year_table(chart: ZurkhaiChart) -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染 60 年循環簡表。"""
     st.subheader("🔄 六十年循環 / 60-Year Cycle (Jaran Jiliin Ergiilt)")
 
@@ -1203,6 +1208,7 @@ def _render_sixty_year_table(chart: ZurkhaiChart) -> None:
 
 # --- 五行相生相剋圖 ---
 def _render_element_cycle_diagram() -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染五行相生相剋示意。"""
     st.subheader("♻️ 五行相生相剋 / Five Element Cycles")
 
@@ -1258,6 +1264,7 @@ def _render_element_cycle_diagram() -> None:
 
 # --- 歷史簡介 ---
 def _render_history() -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染祖爾海歷史簡介。"""
     st.subheader("📖 歷史簡介 / Historical Background")
     st.markdown(
@@ -1303,6 +1310,7 @@ def _render_history() -> None:
 
 # --- 文化尊重提示 ---
 def _render_cultural_note() -> None:
+    import streamlit as st  # Lazy import for rendering functions
     """渲染文化尊重提示。"""
     st.info(
         "🙏 **文化尊重提示 / Cultural Respect Note**\n\n"

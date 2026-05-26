@@ -36,8 +36,8 @@ def build_chunzi_handler(
 
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:
         """Render chart with optional AI hook."""
-        render_chunzi_chart(result)
-        ai_button_sink("tab_chunzi", result, "chunzi", "")
+        render_chunzi_chart()
+        ai_button_sink("tab_chunzi", {}, "chunzi", "")
 
     return SystemHandler(
         system_id="tab_chunzi",
