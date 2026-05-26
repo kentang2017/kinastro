@@ -1762,8 +1762,6 @@ def _try_render_simple_chart(
             )
             if _has_varkw or "after_chart_hook" in _render_params:
                 render_fn(chart, after_chart_hook=after_chart_hook)
-            elif len(_render_params) >= 2:
-                render_fn(chart, after_chart_hook)
             else:
                 render_fn(chart)
                 after_chart_hook(chart)
