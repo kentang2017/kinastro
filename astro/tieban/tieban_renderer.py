@@ -45,8 +45,8 @@ def get_palace_name(palace_name: str, language: str = 'zh') -> str:
 
 def render_tieban_chart_svg(result: TieBanResult, 
                              language: str = 'zh',
-                             width: int = 520,
-                             height: int = 740) -> str:
+                             width: int = 640,
+                             height: int = 820) -> str:
     """
     渲染鐵板神數 SVG 星盤圖（響應式設計，手機優先）
     
@@ -80,24 +80,23 @@ def render_tieban_chart_svg(result: TieBanResult,
         'gold': '#C9A84C',
     }
 
-    # 版面常數（手機優先，確保宮位不超出 viewBox）
-    cx = width // 2           # 260
-    cy = 295                  # 垂直中心稍偏上，留空間給底部資訊
+    # 版面常數（放大版，讓宮位卡片有足夠空間）
+    cx = width // 2           # 320
+    cy = 350                  # 垂直中心
 
-    square_size = 254         # 外框正方形邊長
-    palace_w = 80             # 宮位卡片寬
-    palace_h = 56             # 宮位卡片高
-    palace_gap = 8            # 宮位卡片與正方形邊框的間距（與 _calculate_palace_positions 中的 pad 保持一致）
+    square_size = 310         # 外框正方形邊長（加大）
+    palace_w = 98             # 宮位卡片寬（加大）
+    palace_h = 66             # 宮位卡片高（加大）
+    palace_gap = 8            # 宮位卡片與正方形邊框的間距
 
-    outer_x = cx - square_size // 2   # 133
-    outer_y = cy - square_size // 2   # 168
+    outer_x = cx - square_size // 2   # 165
+    outer_y = cy - square_size // 2   # 195
 
-    # 底部資訊卡起始 Y（確保在宮位下方，不重疊）
-    # 底宮下緣 = outer_y + square_size + palace_gap + palace_h; 再加 34px 留白
-    info_y = outer_y + square_size + palace_gap + palace_h + 34   # ≈ 520
+    # 底部資訊卡起始 Y
+    info_y = outer_y + square_size + palace_gap + palace_h + 34
 
     # 菱形半對角線（內層裝飾菱形）
-    diamond_half = 78
+    diamond_half = 96
 
     # 計算 12 宮位位置
     palace_positions = _calculate_palace_positions(
@@ -192,9 +191,7 @@ def render_tieban_chart_svg(result: TieBanResult,
         branch_color = '#FF8888' if is_ming else colors['inner_diamond']
 
         palace_verse_info = result.palace_verses.get(palace_name, {})
-        verse_text = palace_verse_info.get('verse', '')
         verse_number = palace_verse_info.get('number', '')
-        verse_preview = verse_text[:9] + "…" if len(verse_text) > 9 else verse_text
 
         palace_display_name = get_palace_name(palace_name, language)
         px, py = pos['x'], pos['y']
@@ -202,14 +199,12 @@ def render_tieban_chart_svg(result: TieBanResult,
         svg_parts.append(f'''  <!-- {palace_name} -->
   <rect x="{px}" y="{py}" width="{palace_w}" height="{palace_h}"
         fill="{bg_fill}" stroke="{border_color}" stroke-width="{2 if is_ming else 1}" rx="6"/>
-  <text x="{px + palace_w // 2}" y="{py + 13}" text-anchor="middle"
-        font-size="9" font-weight="bold" fill="{name_color}">{palace_display_name}</text>
-  <text x="{px + palace_w // 2}" y="{py + 30}" text-anchor="middle"
-        font-size="16" font-weight="bold" fill="{branch_color}" filter="url(#softGlow)">{branch}</text>
+  <text x="{px + palace_w // 2}" y="{py + 15}" text-anchor="middle"
+        font-size="11" font-weight="bold" fill="{name_color}">{palace_display_name}</text>
   <text x="{px + palace_w // 2}" y="{py + 43}" text-anchor="middle"
-        font-size="7" fill="{colors['text_secondary']}">{verse_preview}</text>
-  <text x="{px + 4}" y="{py + 53}" text-anchor="start"
-        font-size="6" fill="{colors['highlight']}" opacity="0.8">#{verse_number}</text>
+        font-size="22" font-weight="bold" fill="{branch_color}" filter="url(#softGlow)">{branch}</text>
+  <text x="{px + 5}" y="{py + 62}" text-anchor="start"
+        font-size="8" fill="{colors['highlight']}" opacity="0.8">#{verse_number}</text>
 ''')
 
     # ── 命宮 / 身宮 / 五行局 標註 ────────────────────────────────────────────
@@ -265,34 +260,15 @@ def render_tieban_chart_svg(result: TieBanResult,
         font-size="16" font-weight="bold" fill="{colors['accent']}">{result.he_luo_number}</text>
 ''')
 
-    # ── 條文預覽 ──────────────────────────────────────────────────────────────
-    verse_preview_full = result.verse[:44] + "…" if len(result.verse) > 44 else result.verse
-    verse_y = info_y + card_h + 18
-    category = result.verse_data.get('category', '') if isinstance(result.verse_data, dict) else ''
-    tags = result.verse_data.get('tags', []) if isinstance(result.verse_data, dict) else []
-
-    svg_parts.append(f'''
-  <!-- 條文預覽 -->
-  <text x="{cx}" y="{verse_y}" text-anchor="middle"
-        font-size="11" fill="{colors['text_secondary']}">{verse_preview_full}</text>
-''')
-    if category:
-        svg_parts.append(f'''  <text x="{cx}" y="{verse_y + 17}" text-anchor="middle"
-        font-size="10" fill="{colors['accent']}">【{category}】</text>
-''')
-    if tags:
-        svg_parts.append(f'''  <text x="{cx}" y="{verse_y + 31}" text-anchor="middle"
-        font-size="9" fill="{colors['text_secondary']}">{" · ".join(tags[:3])}</text>
-''')
+    # ── 條文預覽已移至「條文解說」子頁面，此處不再重複 ────────────────────
 
     svg_parts.append('</svg>\n')
     svg_content = ''.join(svg_parts)
 
-    # ── 響應式 HTML 容器 ──────────────────────────────────────────────────────
+    # ── 響應式 HTML 容器（全寬，無 max-width 限制）─────────────────────────
     html = f'''<style>
 .tieban-wrap {{
   width: 100%;
-  max-width: 540px;
   margin: 0 auto;
   padding: 4px;
   box-sizing: border-box;
