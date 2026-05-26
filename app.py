@@ -22,7 +22,7 @@ import textwrap
 from pathlib import Path
 import streamlit as st
 from datetime import datetime, date, time
-from typing import Any
+from typing import Any, Callable
 
 from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
@@ -240,10 +240,20 @@ _SYSTEM_FUNCTION_SPEC: dict[str, dict[str, str]] = {
     "tab_mazzalot": {"compute": "compute_mazzalot_chart", "render": "render_mazzalot_chart"},
 }
 
-_SYSTEM_FUNCTION_CACHE: dict[str, tuple[Any, Any]] = {}
+SystemFnPair = tuple[Callable[..., Any], Callable[..., Any]]
+_SYSTEM_FUNCTION_CACHE: dict[str, SystemFnPair] = {}
+_MODULE_CACHE: dict[str, Any] = {}
 
 
-def get_system_functions(system_name: str) -> tuple[Any, Any]:
+def _load_module(module_path: str):
+    module = _MODULE_CACHE.get(module_path)
+    if module is None:
+        module = importlib.import_module(module_path)
+        _MODULE_CACHE[module_path] = module
+    return module
+
+
+def get_system_functions(system_name: str) -> SystemFnPair:
     """Return (compute_fn, render_fn) for a system via lazy importlib import."""
     cached = _SYSTEM_FUNCTION_CACHE.get(system_name)
     if cached is not None:
@@ -256,10 +266,10 @@ def get_system_functions(system_name: str) -> tuple[Any, Any]:
 
     compute_name = spec["compute"]
     render_name = spec["render"]
-    render_module_path = spec.get("render_module", module_path)
+    render_module_path = spec["render_module"] if "render_module" in spec else module_path
 
-    compute_module = importlib.import_module(module_path)
-    render_module = compute_module if render_module_path == module_path else importlib.import_module(render_module_path)
+    compute_module = _load_module(module_path)
+    render_module = compute_module if render_module_path == module_path else _load_module(render_module_path)
 
     compute_fn = getattr(compute_module, compute_name)
     render_fn = getattr(render_module, render_name)
@@ -270,7 +280,7 @@ def get_system_functions(system_name: str) -> tuple[Any, Any]:
 
 
 def _load_attr(module_path: str, attr_name: str):
-    return getattr(importlib.import_module(module_path), attr_name)
+    return getattr(_load_module(module_path), attr_name)
 
 
 def compute_chart(*args, **kwargs):
