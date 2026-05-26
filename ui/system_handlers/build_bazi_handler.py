@@ -9,6 +9,8 @@ import streamlit as st
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import SystemHandler
 
+DEFAULT_BAZI_GENDER = "男"
+
 
 def build_bazi_handler(
     *,
@@ -26,7 +28,7 @@ def build_bazi_handler(
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
         payload = params.to_dict()
-        payload["gender"] = params.gender or "男"
+        payload["gender"] = params.gender or DEFAULT_BAZI_GENDER
         # Add system-specific options here if needed
         # e.g., vietnam_mode for ZiWei, ayanamsa for Vedic, etc.
         return _cached_compute(payload)

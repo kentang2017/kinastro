@@ -240,7 +240,7 @@ class TestBaziHandler(unittest.TestCase):
     """Test Bazi handler specific wiring."""
 
     def test_bazi_handler_passes_gender_and_hook_accepts_chart_arg(self):
-        """Bazi handler should pass gender to compute and support chart hook arg."""
+        """Bazi handler should pass gender/default and support chart hook arg."""
         calls = {"compute": [], "ai": []}
 
         def _compute_bazi_chart(**kwargs):
@@ -277,6 +277,21 @@ class TestBaziHandler(unittest.TestCase):
 
         self.assertEqual(calls["compute"][0]["gender"], "female")
         self.assertEqual(calls["ai"], [("tab_bazi", result, "bazi", "")])
+
+        params_default_gender = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=8.0,
+            latitude=22.3193,
+            longitude=114.1694,
+            location_name="Hong Kong",
+            gender=None,
+        )
+        _ = handler.compute(params_default_gender, {})
+        self.assertEqual(calls["compute"][1]["gender"], "男")
 
 
 if __name__ == "__main__":
