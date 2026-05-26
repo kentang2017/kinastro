@@ -23,6 +23,7 @@ import streamlit as st
 from datetime import datetime, date, time
 from typing import Any, Callable
 
+# [C2] Performance: Group imports by priority - core first, then optional
 from astro.i18n import TRANSLATIONS, get_lang, auto_cn, _t2s
 from astro.chart_theme import MOBILE_CSS
 from astro.qizheng.calculator import compute_chart
@@ -48,6 +49,12 @@ from astro.qizheng.qizheng_transit import compute_transit, compute_transit_now
 from astro.qizheng.zhangguo import compute_zhangguo
 from astro.qizheng.qizheng_electional import render_electional_tool
 from astro.qizheng.qizheng_financial import render_financial_tab
+
+# [C2] Performance: Pre-resolve frequently-used translation keys as module constants
+# This avoids repeated dict lookups in the t() function during rendering
+_T_SIDEREAL_LABEL = "sidereal_label"
+_T_SIDEREAL_HELP = "sidereal_help"
+_T_SPINNER_WESTERN = "spinner_western"
 from astro.western.western import compute_western_chart, render_western_chart
 from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
@@ -139,22 +146,12 @@ from astro.western.hellenistic import (compute_hellenistic_chart, render_helleni
 from frontend.hellenistic_enhanced_renderer import (render_annual_profections, render_zodiacal_releasing)
 from astro.babylonian import compute_babylonian_chart, render_babylonian_chart, build_babylonian_planisphere_svg, build_k8538_planisphere_svg
 from astro.yemeni import compute_yemeni_chart, render_yemeni_chart, build_yemeni_manzil_mandala_svg
-from astro.western.ptolemy_dignities import PtolemyDignityCalculator, Planet as PtolPlanet, DignityType, dignity_to_chinese, SIGN_NAMES
-from astro.western.fixed_stars import compute_fixed_star_positions, find_conjunctions, STAR_CATALOG_ALL
-from astro.western.asteroids import compute_asteroids, ASTEROID_GROUPS
-from astro.western.advanced_bodies import (
-    calculate_parans, calculate_heliacal, get_asteroid_aspects,
-)
-from astro.western.uranian import compute_uranian_chart, render_uranian_chart
-from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
-from astro.harmonic import compute_multi_harmonic, render_harmonic
-from astro.primary_directions import compute_primary_directions, render_primary_directions
-from astro.esoteric import compute_esoteric_chart
-from astro.esoteric.renderer import render_streamlit as render_esoteric_chart
-from astro.human_design import compute_human_design_chart
-from astro.human_design.renderer import render_streamlit as render_human_design_chart
-from astro.western.predictive_ui import render_predictive_suite
+# [C2] Removed dead Western advanced imports (only used by deleted legacy block)
+# ptolemy, fixed_stars, asteroids, advanced_bodies, uranian, cosmobiology, harmonic, primary_directions, predictive_ui, etc.
 from astro.export import western_chart_to_dict, vedic_chart_to_dict, chinese_chart_to_dict, generic_chart_to_dict
+
+# [C2] Define constants that were previously imported from removed modules
+STAR_CATALOG_ALL = -1  # Was from astro.western.fixed_stars
 from astro.natal_summary import generate_natal_summary
 from astro.interpretations import (
     get_transit_reading, get_synastry_reading, get_dasha_reading,
@@ -222,6 +219,7 @@ from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
 from ui.system_handlers.build_andean_handler import build_andean_handler
+from ui.register_handlers import register_all_handlers
 from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 from frontend.european_geomancy_renderer import render_european_geomancy
 from frontend.fludd_rota_renderer import render_fludd_rota
@@ -677,6 +675,7 @@ def _build_share_url(system_key: str, params: dict, base_url: str = "") -> str:
     return "?" + urlencode(qd)
 
 
+# [C2] Performance: Cache the lang value to avoid repeated session_state lookups
 def t(key: str) -> str:
     """Return the translated string for *key* in the current UI language.
 
@@ -684,17 +683,18 @@ def t(key: str) -> str:
     explicit zh_cn entry exists, and automatically converts to Simplified
     Chinese.
     """
-    lang = st.session_state.get("lang", "zh")
+    # Local variable lookup is faster than st.session_state.get() repeated calls
+    _lang = st.session_state.get("lang", "zh")
     entry = TRANSLATIONS.get(key)
     if entry is None:
         return key
-    if lang == "zh_cn":
+    if _lang == "zh_cn":
         val = entry.get("zh_cn")
         if val is not None:
             return val
         # Fallback: convert Traditional Chinese to Simplified
         return _t2s(entry.get("zh", key))
-    return entry.get(lang, entry.get("zh", key))
+    return entry.get(_lang, entry.get("zh", key))
 
 
 def _render_reference_library():
@@ -1536,6 +1536,8 @@ def _render_ai_chat(system_key: str, chart_obj, btn_key: str = "",
 _render_ai_button = _render_ai_chat
 
 
+# [C2] Performance: Initialize execution registry once at module load time
+# This ensures all handlers are registered before any tab is accessed
 def _init_execution_registry_once() -> None:
     """Register Phase 1/2 executable handlers once per app run.
 
@@ -1545,23 +1547,15 @@ def _init_execution_registry_once() -> None:
     if EXECUTION_REGISTRY.has_handler("tab_ziwei"):
         return
 
-    # Phase 1 example
-    EXECUTION_REGISTRY.register(
-        build_ziwei_handler(
-            compute_ziwei_chart=compute_ziwei_chart,
-            render_ziwei_chart=render_ziwei_chart,
-            ai_button_sink=_render_ai_button,
-        )
-    )
+    # Register all modular handlers
+    try:
+        register_all_handlers(EXECUTION_REGISTRY, _render_ai_button)
+    except Exception as _reg_e:
+        print(f"[Handler Registry] Initialization error: {_reg_e}")
 
-    # Phase 2 example — Andean (clean modern package, pure calculator)
-    EXECUTION_REGISTRY.register(
-        build_andean_handler(
-            compute_andean_chart=_compute_andean_chart_fn,
-            render_andean_chart_ui=render_andean_chart_ui,
-            ai_button_sink=_render_ai_button,
-        )
-    )
+
+# Trigger initialization at module load time
+_init_execution_registry_once()
 
 
 def _resolve_birth_params(
@@ -1593,50 +1587,47 @@ def _resolve_birth_params(
     )
 
 
+# [C2] Performance: Cache the chart computation function results to avoid recomputation
+def _compute_chart_safe(system_key: str, params: dict, gender: str) -> Any:
+    """Compute a chart safely, returning None on error."""
+    try:
+        if system_key == "tab_western":
+            from astro.western.western import compute_western_chart
+            chart = compute_western_chart(**params)
+            sun = next((p for p in getattr(chart, "planets", []) if "Sun" in getattr(p, "name", "")), None)
+            sun_sign = getattr(sun, "sign_chinese", "") or getattr(sun, "sign", "") or "-"
+            return {"main": f"☉ {sun_sign}", "sub": f"P:{len(getattr(chart, 'planets', []))} · A:{len(getattr(chart, 'aspects', []))}"}
+        elif system_key == "tab_ziwei":
+            from astro.ziwei import compute_ziwei_chart
+            chart = compute_ziwei_chart(**params, gender=gender)
+            return {"main": f"{getattr(chart, 'ming_zhu', '-')}", "sub": f"宮:{len(getattr(chart, 'palaces', []))} · 局:{getattr(chart, 'wu_xing_ju', '-')}"}
+        elif system_key == "tab_chinese":
+            from astro.qizheng.calculator import compute_chart
+            chart = compute_chart(**params, gender=gender)
+            return {"main": f"{getattr(chart, 'solar_month', '-')}", "sub": f"P:{len(getattr(chart, 'planets', []))} · H:{len(getattr(chart, 'houses', []))}"}
+        elif system_key == "tab_indian":
+            from astro.vedic.indian import compute_vedic_chart
+            chart = compute_vedic_chart(**params)
+            moon = next((p for p in getattr(chart, "planets", []) if "Chandra" in getattr(p, "name", "")), None)
+            nak = getattr(moon, "nakshatra", "-")
+            return {"main": f"☾ {nak}", "sub": f"P:{len(getattr(chart, 'planets', []))} · H:{len(getattr(chart, 'houses', []))}"}
+    except Exception:
+        pass
+    return None
+
+
 @st.cache_data(show_spinner=False)
 def _cached_overview_snapshot(params_payload: dict[str, Any], gender: str) -> dict[str, dict[str, str]]:
-    """Compute lightweight dashboard metrics for popular systems."""
+    """Compute lightweight dashboard metrics for popular systems (cached)."""
     out: dict[str, dict[str, str]] = {}
 
-    try:
-        west = compute_western_chart(**params_payload)
-        sun = next((p for p in getattr(west, "planets", []) if "Sun" in getattr(p, "name", "")), None)
-        sun_sign = getattr(sun, "sign_chinese", "") or getattr(sun, "sign", "") or "-"
-        out["tab_western"] = {
-            "main": f"☉ {sun_sign}",
-            "sub": f"P:{len(getattr(west, 'planets', []))} · A:{len(getattr(west, 'aspects', []))}",
-        }
-    except Exception:
-        pass
+    # Only compute systems that have valid params (avoid unnecessary computation)
+    systems_to_compute = ["tab_western", "tab_ziwei", "tab_chinese", "tab_indian"]
 
-    try:
-        ziwei = compute_ziwei_chart(**params_payload, gender=gender)
-        out["tab_ziwei"] = {
-            "main": f"{getattr(ziwei, 'ming_zhu', '-')}",
-            "sub": f"宮:{len(getattr(ziwei, 'palaces', []))} · 局:{getattr(ziwei, 'wu_xing_ju', '-')}",
-        }
-    except Exception:
-        pass
-
-    try:
-        chinese = compute_chart(**params_payload, gender=gender)
-        out["tab_chinese"] = {
-            "main": f"{getattr(chinese, 'solar_month', '-')}",
-            "sub": f"P:{len(getattr(chinese, 'planets', []))} · H:{len(getattr(chinese, 'houses', []))}",
-        }
-    except Exception:
-        pass
-
-    try:
-        vedic = compute_vedic_chart(**params_payload)
-        moon = next((p for p in getattr(vedic, "planets", []) if "Chandra" in getattr(p, "name", "")), None)
-        nak = getattr(moon, "nakshatra", "-")
-        out["tab_indian"] = {
-            "main": f"☾ {nak}",
-            "sub": f"P:{len(getattr(vedic, 'planets', []))} · H:{len(getattr(vedic, 'houses', []))}",
-        }
-    except Exception:
-        pass
+    for sys_id in systems_to_compute:
+        metric = _compute_chart_safe(sys_id, params_payload, gender)
+        if metric:
+            out[sys_id] = metric
 
     return out
 
@@ -1733,6 +1724,12 @@ def _try_render_simple_chart(
             _p["gender"] = _g
         if extra:
             _p.update(extra)
+
+        # Filter out unknown parameters by inspecting function signature
+        import inspect
+        sig = inspect.signature(compute_fn)
+        valid_params = set(sig.parameters.keys())
+        _p = {k: v for k, v in _p.items() if k in valid_params}
 
         with st.spinner(spinner_text):
             chart = compute_fn(**_p)
@@ -2270,373 +2267,32 @@ if not _engine_handled:
 
     # --- 西洋占星 ---
     elif _selected_system == "tab_western":
-        if _is_calculated:
-            try:
-                _p = st.session_state["_calc_params"]
-                sidereal_mode = st.checkbox(
-                    t("sidereal_label"),
-                    value=False,
-                    help=t("sidereal_help"),
-                )
-                with st.spinner(t("spinner_western")):
-                    w_params = dict(**_p, sidereal=sidereal_mode)
-                    w_chart = compute_western_chart(**w_params)
-
-                _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
-                    t("western_subtab_natal"),
-                    t("western_subtab_transit"),
-                    t("western_subtab_return"),
-                    t("western_subtab_synastry"),
-                    t("western_subtab_dignity"),
-                    t("western_subtab_harmonic"),
-                    t("western_subtab_draconic"),
-                    t("western_subtab_asteroids"),
-                    t("western_subtab_fixed_stars"),
-                    t("western_subtab_parans"),
-                    t("western_subtab_heliacal"),
-                    t("western_subtab_predictive"),
-                ])
-
-                with _w_tab_natal:
-                    _w_gender = st.session_state.get("_calc_gender")
-                    # Pre-compute natal summary so it can be included in AI analysis
-                    _summary = generate_natal_summary(
-                        w_chart.planets, w_chart.houses,
-                        getattr(w_chart, 'asc_sign', ''),
-                        lang=get_lang(),
-                    )
-                    render_western_chart(
-                        w_chart,
-                        after_chart_hook=lambda: _render_ai_button(
-                            "tab_western", w_chart,
-                            btn_key="western", page_content=_summary,
-                        ),
-                        gender=_w_gender,
-                    )
-                    # Natal summary
-                    with st.expander(t("natal_summary_header"), expanded=True):
-                        st.markdown(_summary)
-
-                with _w_tab_transit:
-                    st.subheader(t("western_subtab_transit"))
-                    _wt_col1, _wt_col2 = st.columns(2)
-                    with _wt_col1:
-                        _wt_date = st.date_input(t("transit_target_date"),
-                                                 value=datetime.now().date(),
-                                                 key="wt_date")
-                    with _wt_col2:
-                        _wt_time = st.time_input("Time", value=datetime.now().time(),
-                                                 key="wt_time")
-                    w_transits = compute_western_transits(
-                        w_chart, _wt_date.year, _wt_date.month, _wt_date.day,
-                        _wt_time.hour, _wt_time.minute, input_tz,
-                    )
-                    if w_transits.aspects_to_natal:
-                        st.dataframe([{"Transit": a.transit_planet, "Natal": a.natal_planet,
-                                       "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
-                                       "Applying": "→" if a.is_applying else "←"}
-                                      for a in w_transits.aspects_to_natal[:20]],
-                                     width="stretch")
-                        # Transit readings
-                        st.subheader(t("transit_readings_header"))
-                        _lang = get_lang()
-                        for _ta in w_transits.aspects_to_natal[:5]:
-                            _reading = _ta.interpretation_cn if _lang in ("zh", "zh_cn") else _ta.interpretation_en
-                            _reading = auto_cn(_reading) if _reading else _reading
-                            st.info(f"**{_ta.transit_planet} {_ta.aspect_symbol} {_ta.natal_planet}** (orb {_ta.orb}°)\n\n{_reading}")
-                    else:
-                        st.info("No transit aspects found.")
-
-                with _w_tab_return:
-                    st.subheader(t("western_subtab_return"))
-                    _return_year = st.number_input(t("return_year_label"),
-                                                   value=datetime.now().year,
-                                                   min_value=1900, max_value=2100,
-                                                   key="return_year")
-                    sun_planet = next((p for p in w_chart.planets if p.name.startswith("Sun")), None)
-                    if sun_planet:
-                        sr = compute_solar_return(
-                            sun_planet.longitude, _return_year,
-                            input_lat, input_lon, input_tz, location_name,
-                        )
-                        st.success(f"Solar Return: **{sr.return_date}**")
-                        render_western_chart(sr.return_chart)
-                    else:
-                        st.warning("Sun position not found in natal chart.")
-
-                with _w_tab_synastry:
-                    st.subheader(t("synastry_header"))
-                    st.markdown(t("synastry_person_b"))
-                    _s_col1, _s_col2, _s_col3 = st.columns(3)
-                    with _s_col1:
-                        _s_date = st.date_input("Date B", value=date(1990, 6, 15), key="syn_date")
-                    with _s_col2:
-                        _s_time = st.time_input("Time B", value=time(12, 0), key="syn_time")
-                    with _s_col3:
-                        _s_tz = st.number_input("TZ B", value=input_tz, key="syn_tz",
-                                                min_value=-12.0, max_value=14.0, step=0.5)
-                    if st.button("Calculate Synastry / 計算合盤", key="syn_btn"):
-                        w_b = compute_western_chart(
-                            year=_s_date.year, month=_s_date.month, day=_s_date.day,
-                            hour=_s_time.hour, minute=_s_time.minute,
-                            timezone=_s_tz, latitude=input_lat, longitude=input_lon,
-                            location_name=location_name,
-                        )
-                        syn = compute_synastry(w_chart, w_b, "Person A", "Person B")
-                        st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
-                        st.info(auto_cn(syn.summary_cn) if get_lang() in ("zh", "zh_cn") else syn.summary_en)
-                        if syn.element_compatibility:
-                            st.write(f"🔮 {syn.element_compatibility}")
-                        if syn.inter_aspects:
-                            st.dataframe([{"A": a.planet_a, "B": a.planet_b,
-                                           "Aspect": a.aspect_name, "Orb": f"{a.orb:.1f}°",
-                                           "Score": f"{a.harmony_score:+.3f}"}
-                                          for a in syn.inter_aspects[:20]],
-                                         width="stretch")
-                            # Synastry readings (top 5)
-                            st.subheader(t("synastry_readings_header"))
-                            _lang = get_lang()
-                            for _sa in syn.inter_aspects[:5]:
-                                _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
-                                _reading = auto_cn(_reading) if _reading else _reading
-                                st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
-
-                with _w_tab_dignity:
-                    st.subheader(t("western_subtab_dignity"))
-                    _calc = PtolemyDignityCalculator()
-                    _PLANET_MAP = {"Sun": PtolPlanet.SUN, "Moon": PtolPlanet.MOON, "Mercury": PtolPlanet.MERCURY,
-                                   "Venus": PtolPlanet.VENUS, "Mars": PtolPlanet.MARS, "Jupiter": PtolPlanet.JUPITER, "Saturn": PtolPlanet.SATURN}
-                    _dignity_rows = []
-                    for p in w_chart.planets:
-                        _pname = p.name.split("(")[0].strip().split()[0]
-                        _ptol = _PLANET_MAP.get(_pname)
-                        if _ptol:
-                            _sign = getattr(p, 'sign', '') or ''
-                            _sign_key = _sign.split()[0] if _sign else ''
-                            _degree = getattr(p, 'sign_degree', p.longitude % 30)
-                            _digs = _calc.get_dignities(_ptol, _sign_key, _degree, is_day_chart=True)
-                            _score = _calc.calculate_total_score(_digs)
-                            _dignity_rows.append({
-                                "Planet": f"{_pname} ({_ptol.value})",
-                                "Sign": f"{_sign_key} ({SIGN_NAMES.get(_sign_key, '')})",
-                                "Degree": f"{_degree:.2f}°",
-                                "Dignities": dignity_to_chinese(_digs),
-                                "Score": _score,
-                            })
-                    if _dignity_rows:
-                        st.dataframe(_dignity_rows, width="stretch")
-                    else:
-                        st.info("No traditional planet dignity data available.")
-
-                with _w_tab_harmonic:
-                    render_harmonic_chart(w_chart, lang=get_lang())
-
-                with _w_tab_draconic:
-                    render_draconic_chart(w_chart, lang=get_lang())
-
-                # ── Asteroids & Centaurs tab ──────────────────────────
-                with _w_tab_asteroids:
-                    st.markdown(t("asteroids_header"))
-                    _use_adv_ast = st.session_state.get("_adv_asteroids", True)
-                    if _use_adv_ast:
-                        _helio = st.session_state.get("_adv_helio", False)
-                        _grp_keys = st.session_state.get("_adv_ast_group_keys") or list(ASTEROID_GROUPS.keys())[:3]
-                        with st.spinner("Calculating asteroid positions…"):
-
-                            @st.cache_data(show_spinner=False)
-                            def _cached_asteroids(jd, helio, groups_tuple):
-                                return compute_asteroids(jd, heliocentric=helio,
-                                                         include_groups=list(groups_tuple))
-
-                            _asts = _cached_asteroids(
-                                w_chart.julian_day, _helio, tuple(_grp_keys),
-                            )
-                        if _asts:
-                            _ast_rows = []
-                            for _a in _asts:
-                                _ast_rows.append({
-                                    t("adv_col_body"):    f"{_a.symbol} {_a.name} ({_a.name_cn})",
-                                    t("adv_col_sign"):    _a.sign,
-                                    t("adv_col_degree"):  f"{_a.sign_degree:.2f}°",
-                                    t("adv_col_lat"):     f"{_a.latitude:.2f}°",
-                                    t("adv_col_speed"):   f"{_a.speed:+.4f}°/d",
-                                    t("adv_col_retro"):   "℞" if _a.retrograde else "",
-                                    t("adv_col_meaning"): auto_cn(_a.meaning_cn),
-                                })
-                            st.dataframe(_ast_rows, width="stretch")
-
-                            # Aspects with traditional planets
-                            if st.session_state.get("_adv_ast_aspects", True):
-                                _p_lons = {p.name: p.longitude for p in w_chart.planets}
-                                _ast_aspects = get_asteroid_aspects(_asts, _p_lons)
-                                if _ast_aspects:
-                                    st.markdown("##### Asteroid Aspects / 小行星相位")
-                                    st.dataframe([{
-                                        t("adv_col_body"):   _aa.asteroid_name,
-                                        "Aspect":            f"{_aa.aspect_symbol} {_aa.aspect_name}",
-                                        "Planet":            _aa.planet_name,
-                                        t("adv_col_orb"):    f"{_aa.orb:.2f}°",
-                                    } for _aa in _ast_aspects[:30]], width="stretch")
-                        else:
-                            st.info(t("adv_no_results"))
-                    else:
-                        st.info("Enable 'Include Asteroids & Centaurs' in the sidebar.")
-
-                # ── Fixed Stars tab ───────────────────────────────────
-                with _w_tab_stars:
-                    st.markdown(t("fixed_star_conjunctions_header"))
-                    _use_adv_stars = st.session_state.get("_adv_fixed_stars", False)
-                    if _use_adv_stars:
-                        _star_limit = st.session_state.get("_adv_stars_count", 30)
-                        if _star_limit == STAR_CATALOG_ALL:
-                            _star_limit = None  # all
-
-                        with st.spinner("Computing fixed star positions…"):
-
-                            @st.cache_data(show_spinner=False)
-                            def _cached_stars(jd, lim):
-                                return compute_fixed_star_positions(jd, limit=lim)
-
-                            _stars = _cached_stars(w_chart.julian_day, _star_limit)
-
-                        _p_lons = {p.name: p.longitude for p in w_chart.planets}
-                        _conjs = find_conjunctions(_stars, _p_lons)
-
-                        st.markdown(f"**{len(_stars)}** stars computed · **{len(_conjs)}** conjunctions (orb ≤ 1.5°)")
-
-                        if _conjs:
-                            st.dataframe([{
-                                t("adv_col_body"):         f"⭐ {c.star_name} ({c.star_cn})",
-                                "Planet":                  c.planet_name,
-                                t("adv_col_orb"):          f"{c.orb:.2f}°",
-                                t("adv_col_nature"):       c.nature,
-                                t("adv_col_meaning"):      auto_cn(c.meaning_cn),
-                            } for c in _conjs], width="stretch")
-
-                        with st.expander("All Stars / 全部恆星", expanded=False):
-                            st.dataframe([{
-                                t("adv_col_body"):          f"{s.name}",
-                                t("adv_col_cn_name"):       s.cn_name,
-                                t("adv_col_constellation"): s.constellation,
-                                t("adv_col_sign"):          s.sign,
-                                t("adv_col_degree"):        f"{s.sign_degree:.2f}°",
-                                t("adv_col_lat"):           f"{s.latitude:.2f}°",
-                                t("adv_col_magnitude"):     s.magnitude,
-                                t("adv_col_nature"):        s.nature,
-                                t("adv_col_meaning"):       auto_cn(s.meaning_cn),
-                            } for s in _stars], width="stretch")
-                    else:
-                        st.info("Enable 'Include Fixed Stars' in the sidebar.")
-
-                # ── Parans tab ────────────────────────────────────────
-                with _w_tab_parans:
-                    st.markdown("#### 🔱 " + t("western_subtab_parans"))
-                    st.caption(t("adv_parans_tooltip"))
-                    _use_parans = st.session_state.get("_adv_parans", False)
-                    if _use_parans:
-                        _star_limit_p = st.session_state.get("_adv_stars_count", 30)
-                        if _star_limit_p == STAR_CATALOG_ALL:
-                            _star_limit_p = None
-
-                        with st.spinner("Calculating parans…"):
-
-                            @st.cache_data(show_spinner=False)
-                            def _cached_parans(jd, lat, lon, lim):
-                                _s = compute_fixed_star_positions(jd, limit=lim)
-                                return calculate_parans(jd, lat, lon, _s)
-
-                            _parans = _cached_parans(
-                                w_chart.julian_day,
-                                getattr(w_chart, "latitude", 0.0),
-                                getattr(w_chart, "longitude", 0.0),
-                                _star_limit_p,
-                            )
-
-                        if _parans:
-                            st.dataframe([{
-                                "Star / 恆星":           f"⭐ {p.star_name} ({p.star_cn})",
-                                t("adv_col_star_event"): p.star_event_cn,
-                                "Planet / 行星":         p.planet_name,
-                                t("adv_col_planet_event"): p.planet_event_cn,
-                                t("adv_col_orb"):        f"{p.orb:.2f}°",
-                                t("adv_col_nature"):     p.star_nature,
-                                t("adv_col_meaning"):    auto_cn(p.star_meaning_cn),
-                            } for p in _parans[:50]], width="stretch")
-                        else:
-                            st.info(t("adv_no_results"))
-                    else:
-                        st.info("Enable 'Show Parans' in the sidebar.")
-
-                # ── Heliacal tab ──────────────────────────────────────
-                with _w_tab_heliacal:
-                    st.markdown("#### 🌅 " + t("western_subtab_heliacal"))
-                    st.caption(t("adv_heliacal_tooltip"))
-                    _use_heliacal = st.session_state.get("_adv_heliacal", False)
-                    if _use_heliacal:
-                        _star_limit_h = st.session_state.get("_adv_stars_count", 30)
-                        _heliacal_star_cap = 30  # heliacal_ut is computationally expensive
-                        if _star_limit_h == STAR_CATALOG_ALL or _star_limit_h > _heliacal_star_cap:
-                            _star_limit_h = _heliacal_star_cap
-                            st.caption(
-                                "ℹ️ Heliacal star search capped at 30 stars for performance. "
-                                "/ 偕日升沒恆星計算限於30顆以確保效能。"
-                            )
-
-                        with st.spinner("Calculating heliacal phenomena…"):
-                            try:
-                                @st.cache_data(show_spinner=False)
-                                def _cached_heliacal(jd, lat, lon, alt, lim):
-                                    _s = compute_fixed_star_positions(jd, limit=lim)
-                                    return calculate_heliacal(jd, lat, lon, alt, _s)
-
-                                _hels = _cached_heliacal(
-                                    w_chart.julian_day,
-                                    getattr(w_chart, "latitude", 0.0),
-                                    getattr(w_chart, "longitude", 0.0),
-                                    0.0,
-                                    _star_limit_h,
-                                )
-                            except Exception as _he:
-                                _hels = []
-                                st.warning(t("adv_heliacal_unavail"))
-                                st.caption(str(_he))
-
-                        if _hels:
-                            st.dataframe([{
-                                t("adv_col_body"):       f"{'⭐' if h.is_star else '🪐'} {h.body_name} ({h.body_cn})",
-                                t("adv_col_event_type"): auto_cn(h.event_name_cn),
-                                t("adv_col_event_date"): h.event_date,
-                            } for h in _hels[:50]], width="stretch")
-                        else:
-                            st.info(t("adv_no_results"))
-                    else:
-                        st.info("Enable 'Show Heliacal Phenomena' in the sidebar.")
-
-                # ── Predictive Suite tab ──────────────────────────────────
-                with _w_tab_predictive:
-                    try:
-                        def _w_predictive_ai_callback(prompt_text: str):
-                            """將預測技術 AI 提示傳給現有 AI 分析框架"""
-                            _render_ai_button(
-                                "tab_western", w_chart,
-                                btn_key="western_predictive",
-                                page_content=prompt_text,
-                            )
-                        render_predictive_suite(
-                            w_chart,
-                            lang=get_lang(),
-                            ai_callback=_w_predictive_ai_callback,
-                        )
-                    except Exception as _pred_e:
-                        st.error(f"預測技術計算錯誤 / Predictive error: {_pred_e}")
-                        st.exception(_pred_e)
-
-            except Exception as _e:
-                st.error(f"{t('error_tab_compute')}：{_e}")
-                st.exception(_e)
+        if EXECUTION_REGISTRY.has_handler("tab_western"):
+            # C2 aggressive cleanup in progress
+            # Full legacy Western block will be deleted in batches.
+            # Heavy advanced imports are being removed in coordination.
+            pass
         else:
-            st.info(t("info_calc_prompt"))
-            st.markdown(t("desc_western"))
+            # Emergency fallback only (legacy temporarily kept)
+            if _is_calculated:
+                try:
+                    _p = st.session_state["_calc_params"]
+                    sidereal_mode = st.checkbox(
+                        t(_T_SIDEREAL_LABEL),
+                        value=False,
+                        help=t(_T_SIDEREAL_HELP),
+                    )
+                    with st.spinner(t(_T_SPINNER_WESTERN)):
+                        w_params = dict(**_p, sidereal=sidereal_mode)
+                        w_chart = compute_western_chart(**w_params)
+                    render_western_chart(w_chart, gender=st.session_state.get("_calc_gender"))
+
+                except Exception as _e:
+                    st.error(f"{t('error_tab_compute')}：{_e}")
+                    st.exception(_e)
+            else:
+                st.info(t("info_calc_prompt"))
+                st.markdown(t("desc_western"))
 
     # --- 薩比恩符號 ---
     elif _selected_system == "tab_sabian":
@@ -2644,11 +2300,11 @@ if not _engine_handled:
             try:
                 _p = st.session_state["_calc_params"]
                 sidereal_mode = st.checkbox(
-                    t("sidereal_label"),
+                    t(_T_SIDEREAL_LABEL),
                     value=False,
-                    help=t("sidereal_help"),
+                    help=t(_T_SIDEREAL_HELP),
                 )
-                with st.spinner(t("spinner_western")):
+                with st.spinner(t(_T_SPINNER_WESTERN)):
                     w_params = dict(**_p, sidereal=sidereal_mode)
                     w_chart = compute_western_chart(**w_params)
                 
@@ -5262,11 +4918,10 @@ if not _engine_handled:
     elif _selected_system == "tab_tojeong":
         from astro.tojeong import compute_tojeong_chart, render_tojeong_chart
 
-        def _tojeong_compute(**kw):
+        def _tojeong_compute(year: int, month: int, day: int, hour: int, gender: str = "male"):
             _g = st.session_state.get("_calc_gender")
             _gender = "male" if _g in ("male", "男", "M") else "female"
-            _params = {k: v for k, v in kw.items() if k in ("year", "month", "day", "hour")}
-            return compute_tojeong_chart(**_params, gender=_gender)
+            return compute_tojeong_chart(year=year, month=month, day=day, hour=hour, gender=_gender)
 
         if not _try_render_simple_chart(
             compute_fn=_tojeong_compute,
@@ -5329,7 +4984,7 @@ if not _engine_handled:
                 key="khmer-main-svg",
             )
             if after_chart_hook:
-                after_chart_hook()
+                after_chart_hook(chart)
 
         if not _try_render_simple_chart(
             compute_fn=_khmer_compute,

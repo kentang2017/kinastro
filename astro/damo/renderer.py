@@ -269,7 +269,7 @@ def render_damo_chart(
                 )
 
         if after_chart_hook:
-            after_chart_hook()
+            after_chart_hook(chart)
 
     # ──────────── Tab 2: 詳細解讀 ──────────────
     with tab_detail:

@@ -723,7 +723,7 @@ def render_zurkhai_chart(chart: ZurkhaiChart, after_chart_hook=None) -> None:
     st.divider()
     _render_element_balance(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()
@@ -963,6 +963,7 @@ def _add_relation_line(parts: list, cx: float, cy: float, r: float,
 
 def _render_zurkhai_wheel(chart: ZurkhaiChart) -> None:
     """渲染祖爾海星盤圖 (Zurkhai Star Chart Wheel)。"""
+    import streamlit as st  # Lazy import for rendering functions
     st.subheader("🔮 祖爾海星盤 / Zurkhai Star Chart")
 
     svg = _build_zurkhai_wheel_svg(chart)

@@ -682,7 +682,7 @@ def render_twelve_ci_chart(
     st.markdown(svg, unsafe_allow_html=True)
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     st.divider()
 

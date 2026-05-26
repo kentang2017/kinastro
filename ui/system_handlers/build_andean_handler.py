@@ -62,3 +62,16 @@ def build_andean_handler(
         render=_render,
         options_schema={},  # no extra options for Andean at this time
     )
+
+
+def register(registry, ai_button_sink):
+    """Self-registration entry point for modular lazy loading."""
+    from astro.andean import compute_andean_chart as _compute_andean_chart_fn
+    from astro.andean import render_streamlit as render_andean_chart_ui
+
+    handler = build_andean_handler(
+        compute_andean_chart=_compute_andean_chart_fn,
+        render_andean_chart_ui=render_andean_chart_ui,
+        ai_button_sink=ai_button_sink,
+    )
+    registry.register(handler)

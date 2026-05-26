@@ -393,7 +393,7 @@ svg {{ width:100%; height:auto; display:block; max-width:540px; margin:0 auto; }
 
     # ── ⑥ 回調鉤子（AI 按鈕等）────────────────────────────
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
 
 def render_tojeong_svg(chart: Dict[str, Any]) -> str:

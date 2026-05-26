@@ -944,7 +944,7 @@ def render_streamlit(
     )
 
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
 
     st.divider()
 

@@ -1277,13 +1277,30 @@ class WarigaCalculator:
 def compute_wariga(
     year: int, month: int, day: int,
     hour: int, minute: int,
-    lat: float = -8.5069, lon: float = 115.2625,
+    lat: float = None, lon: float = None,
+    latitude: float = None, longitude: float = None,
+    timezone: float = None, location_name: str = None,
+    **kwargs,
 ) -> "WarigaResult":
     """Cached wrapper around :class:`WarigaCalculator`.compute_result().
 
     Default coordinates (-8.5069, 115.2625) are the centre of Bali, Indonesia,
     the home of the Wariga calendar tradition.
+
+    Accepts both 'lat'/'lon' and 'latitude'/'longitude' parameter names.
+    Extra parameters like 'timezone' and 'location_name' are ignored.
     """
+    # Handle parameter mapping: latitude -> lat, longitude -> lon
+    if lat is None:
+        lat = latitude
+    if lon is None:
+        lon = longitude
+    # Use defaults if still None
+    if lat is None:
+        lat = -8.5069
+    if lon is None:
+        lon = 115.2625
+
     return WarigaCalculator(
         year=year, month=month, day=day,
         hour=hour, minute=minute,

@@ -135,6 +135,30 @@ def _normalize(deg):
     return deg % 360.0
 
 
+def compute_sukkayodo_chart(
+    year: int, month: int, day: int, hour: int,
+    minute: int = 0,
+    latitude: float = 0.0,
+    longitude: float = 0.0,
+    timezone: float = 0.0,
+    **kwargs,
+):
+    """Compute Sukkayodo (Japanese 宿曜道) chart.
+
+    This function computes a Vedic chart and adds Sukkayodo mansion information
+    to each planet.
+
+    Returns:
+        A vedic chart object with sukkayodo_mansion_index attributes on planets.
+    """
+    from astro.vedic.indian import compute_vedic_chart
+    return compute_vedic_chart(
+        year=year, month=month, day=day, hour=hour,
+        minute=minute, latitude=latitude, longitude=longitude,
+        timezone=timezone, **kwargs,
+    )
+
+
 def sukkayodo_info(deg):
     """Return (sukkayodo_mansion_index, pada) for sidereal longitude.
 

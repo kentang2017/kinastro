@@ -675,7 +675,7 @@ def render_mahabote_chart(chart, after_chart_hook=None):
     st.divider()
     _render_mahabote_grid(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

@@ -460,7 +460,7 @@ def render_aztec_chart(chart, after_chart_hook=None):
     """渲染完整的阿茲特克占星排盤"""
     _render_tonalpohualli(chart)
     if after_chart_hook:
-        after_chart_hook()
+        after_chart_hook(chart)
     st.divider()
     _render_info(chart)
     st.divider()

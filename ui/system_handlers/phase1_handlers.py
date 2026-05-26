@@ -39,3 +39,15 @@ def build_ziwei_handler(*, compute_ziwei_chart, render_ziwei_chart, ai_button_si
         render=_render,
         options_schema={"vietnam_mode": bool},
     )
+
+
+def register(registry, ai_button_sink):
+    """Self-registration entry point for modular lazy loading."""
+    from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
+
+    handler = build_ziwei_handler(
+        compute_ziwei_chart=compute_ziwei_chart,
+        render_ziwei_chart=render_ziwei_chart,
+        ai_button_sink=ai_button_sink,
+    )
+    registry.register(handler)

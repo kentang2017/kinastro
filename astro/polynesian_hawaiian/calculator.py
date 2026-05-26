@@ -226,10 +226,14 @@ def compute_polynesian_chart(
     day: int,
     hour: int,
     minute: int,
-    lat: float,
-    lon: float,
-    timezone_offset: float,
+    lat: float = None,
+    lon: float = None,
+    timezone_offset: float = 0,
     location_name: str = "",
+    latitude: float = None,
+    longitude: float = None,
+    timezone: float = None,
+    **kwargs,
 ) -> PolynesianResult:
     """
     Compute a Polynesian / Hawaiian star lore chart.
@@ -238,14 +242,23 @@ def compute_polynesian_chart(
     ----------
     year, month, day : birth date
     hour, minute     : birth local time (24-hour)
-    lat, lon         : observer latitude / longitude (degrees)
-    timezone_offset  : hours east of UTC (negative for west)
+    lat/latitude     : observer latitude (degrees)
+    lon/longitude    : observer longitude (degrees)
+    timezone_offset/timezone : hours east of UTC (negative for west)
     location_name    : optional place name string
 
     Returns
     -------
     PolynesianResult  populated with star positions, guardian house, season.
     """
+    # Handle parameter mapping: latitude -> lat, longitude -> lon
+    if lat is None:
+        lat = latitude
+    if lon is None:
+        lon = longitude
+    # Handle timezone parameter mapping
+    if timezone is not None and timezone_offset == 0:
+        timezone_offset = timezone
     _init_swe()
 
     decimal_hour = hour + minute / 60.0
