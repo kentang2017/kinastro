@@ -204,7 +204,8 @@ class TestComputeFunctions(unittest.TestCase):
 
         try:
             module = importlib.import_module(module_name)
-            source = open(module.__file__, encoding="utf-8").read()
+            with open(module.__file__, encoding="utf-8") as source_file:
+                source = source_file.read()
             tree = ast.parse(source)
 
             for node in ast.walk(tree):
@@ -228,9 +229,10 @@ class TestComputeFunctions(unittest.TestCase):
             "astro.maya",
             "astro.aztec",
         ]
-        for _module_name in pure_modules:
+        for module_name in pure_modules:
             # Note: This is a soft check — some modules may not be importable in test context
-            pass  # Placeholder for actual purity checks
+            with self.subTest(module_name=module_name):
+                pass  # Placeholder for actual purity checks
 
 
 if __name__ == "__main__":
