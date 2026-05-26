@@ -1755,6 +1755,12 @@ def _try_render_simple_chart(
             chart = compute_fn(**_p)
 
         if after_chart_hook:
+            _render_sig = inspect.signature(render_fn)
+            _render_params = _render_sig.parameters
+            _has_varkw = any(
+                p.kind == inspect.Parameter.VAR_KEYWORD for p in _render_params.values()
+            )
+            if _has_varkw or "after_chart_hook" in _render_params:
             render_sig = inspect.signature(render_fn)
             supports_after_chart_hook = "after_chart_hook" in render_sig.parameters or any(
                 p.kind == inspect.Parameter.VAR_KEYWORD for p in render_sig.parameters.values()
