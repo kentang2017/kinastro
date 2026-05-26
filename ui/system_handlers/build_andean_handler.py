@@ -23,7 +23,7 @@ from ui.system_engine import SystemHandler
 def build_andean_handler(
     *,
     compute_andean_chart,
-    render_andean_chart_ui,   # the render_streamlit function
+    render_andean_chart_ui,  # the render_streamlit function
     ai_button_sink,
 ) -> SystemHandler:
     """Create executable handler for Andean / Inca astrology."""
@@ -51,9 +51,7 @@ def build_andean_handler(
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:
         render_andean_chart_ui(
             result,
-            after_chart_hook=lambda: ai_button_sink(
-                "tab_andean", result, "andean", ""
-            ),
+            after_chart_hook=lambda chart: ai_button_sink("tab_andean", chart, "andean", ""),
         )
 
     return SystemHandler(
