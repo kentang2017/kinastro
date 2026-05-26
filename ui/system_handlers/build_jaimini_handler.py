@@ -38,8 +38,8 @@ def build_jaimini_handler(
         """Render chart with optional AI hook."""
         render_jaimini_chart(
             result,
-            after_chart_hook=lambda: ai_button_sink(
-                "tab_jaimini", result, "jaimini", ""
+            after_chart_hook=lambda chart: ai_button_sink(
+                "tab_jaimini", chart, "jaimini", ""
             ),
         )
 
