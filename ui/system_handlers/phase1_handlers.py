@@ -18,7 +18,7 @@ def build_ziwei_handler(*, compute_ziwei_chart, render_ziwei_chart, ai_button_si
 
     @st.cache_data(show_spinner=False)
     def _cached_compute(params_payload: dict[str, Any], vietnam_mode: bool):
-        return compute_ziwei_chart(**params_payload, gender=params_payload.get("gender", "male"), vietnam_mode=vietnam_mode)
+        return compute_ziwei_chart(**params_payload, vietnam_mode=vietnam_mode)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]):
         # `to_dict()` intentionally preserves legacy compute kwargs only.
