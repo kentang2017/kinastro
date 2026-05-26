@@ -10,8 +10,8 @@ Tie Ban Shen Shu Verse Browser Tool
     render_verse_browser()
 """
 
-from collections.abc import Sequence
 import html
+from collections.abc import Sequence
 from math import ceil
 from typing import Any
 
@@ -167,10 +167,12 @@ def render_palace_verses_subtabs(
 ) -> None:
     """Render one sub-tab per palace for detailed verse content."""
     items = _normalize_palace_verse_items(palace_verses, language=language)
-    tab_labels = [
-        f'{item["name"]}{f" · {item["branch"]}" if item["branch"] else ""}'
-        for item in items
-    ]
+    tab_labels = []
+    for item in items:
+        label = item["name"]
+        if item["branch"]:
+            label = f'{label} · {item["branch"]}'
+        tab_labels.append(label)
     tabs = st.tabs(tab_labels)
     tags_label = "Tags" if language == "en" else "標籤"
 
