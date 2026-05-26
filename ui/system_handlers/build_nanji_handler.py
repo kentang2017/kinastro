@@ -88,7 +88,7 @@ def register(registry, ai_button_sink):
             day=day,
             hour=hour,
             minute=minute,
-            gender=_normalize_nanji_gender(gender),
+            gender=gender,
         )
         return njs.compute()
 
