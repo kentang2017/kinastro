@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import Any
 
 import streamlit as st
@@ -36,12 +37,17 @@ def build_uranian_handler(
 
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:
         """Render chart with optional AI hook."""
-        render_uranian_chart(
-            result,
-            after_chart_hook=lambda: ai_button_sink(
-                "tab_uranian", result, "uranian", ""
-            ),
+        hook = lambda _chart=None: ai_button_sink("tab_uranian", result, "uranian", "")
+        render_sig = inspect.signature(render_uranian_chart)
+        has_after_hook = "after_chart_hook" in render_sig.parameters
+        has_varkw = any(
+            p.kind == inspect.Parameter.VAR_KEYWORD for p in render_sig.parameters.values()
         )
+        if has_after_hook or has_varkw:
+            render_uranian_chart(result, after_chart_hook=hook)
+        else:
+            render_uranian_chart(result)
+            hook(result)
 
     return SystemHandler(
         system_id="tab_uranian",
@@ -49,3 +55,15 @@ def build_uranian_handler(
         render=_render,
         options_schema={},  # Add system-specific options here
     )
+
+
+def register(registry, ai_button_sink):
+    """Self-registration for Uranian handler (modular lazy pattern)."""
+    from astro.western.uranian import compute_uranian_chart, render_uranian_chart
+
+    handler = build_uranian_handler(
+        compute_uranian_chart=compute_uranian_chart,
+        render_uranian_chart=render_uranian_chart,
+        ai_button_sink=ai_button_sink,
+    )
+    registry.register(handler)

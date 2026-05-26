@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import Any
 
 import streamlit as st
@@ -36,12 +37,17 @@ def build_cosmobiology_handler(
 
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:
         """Render chart with optional AI hook."""
-        render_cosmobiology(
-            result,
-            after_chart_hook=lambda: ai_button_sink(
-                "tab_cosmobiology", result, "cosmobiology", ""
-            ),
+        hook = lambda _chart=None: ai_button_sink("tab_cosmobiology", result, "cosmobiology", "")
+        render_sig = inspect.signature(render_cosmobiology)
+        has_after_hook = "after_chart_hook" in render_sig.parameters
+        has_varkw = any(
+            p.kind == inspect.Parameter.VAR_KEYWORD for p in render_sig.parameters.values()
         )
+        if has_after_hook or has_varkw:
+            render_cosmobiology(result, after_chart_hook=hook)
+        else:
+            render_cosmobiology(result)
+            hook(result)
 
     return SystemHandler(
         system_id="tab_cosmobiology",
@@ -49,3 +55,15 @@ def build_cosmobiology_handler(
         render=_render,
         options_schema={},  # Add system-specific options here
     )
+
+
+def register(registry, ai_button_sink):
+    """Self-registration for Cosmobiology handler (modular lazy pattern)."""
+    from astro.cosmobiology import compute_cosmobiology_chart, render_cosmobiology
+
+    handler = build_cosmobiology_handler(
+        compute_cosmobiology_chart=compute_cosmobiology_chart,
+        render_cosmobiology=render_cosmobiology,
+        ai_button_sink=ai_button_sink,
+    )
+    registry.register(handler)
