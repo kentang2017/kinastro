@@ -78,7 +78,6 @@ from astro.kabbalistic import compute_kabbalistic_chart, render_kabbalistic_char
 from astro.jewish_mazzalot import compute_mazzalot_chart, render_mazzalot_chart, build_mazzalot_star_of_david_svg
 from astro.arabic.arabic import compute_arabic_chart, render_arabic_chart
 from astro.arabic_lots import compute_albiruni_lots
-from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
 from astro.maya import compute_maya_chart, render_maya_chart
 from astro.dogon import compute_dogon_sirius_chart, render_dogon_sirius_chart
 from astro.amazigh import compute_amazigh_chart, render_amazigh_chart, render_amazigh_sky_svg
@@ -187,7 +186,6 @@ from astro.arabic.picatrix_invocations import render_picatrix_invocations
 from astro.arabic.shams_maarif import render_shams_browse, render_shams_chart
 from astro.arabic.ms164_browser import render_ms164_browse
 from astro.picatrix_behenian import render_streamlit as render_picatrix_behenian
-from astro.chinstar.chinstar import WanHuaXianQin
 from astro.twelve_ci import compute_twelve_ci_chart, render_twelve_ci_chart, build_twelve_ci_svg
 from astro.sanshi.liuren import compute_liuren_chart, render_liuren_chart, compute_lunming, render_lunming_report
 from astro.sanshi.taiyi import compute_taiyi_chart, render_taiyi_chart
@@ -203,7 +201,6 @@ from astro.astrocartography import (
 )
 from astro.nine_star_ki import compute_nine_star_ki_chart, render_nine_star_ki_chart
 from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
-from astro.chinese.taixuan import TaiXuanCalculator
 from astro.chinese.taixuan.taixuan_renderer import (
     render_taixuan_chart,
     render_taixuan_intro,
@@ -1648,6 +1645,360 @@ def _build_overview_items(params_payload: dict[str, Any], gender: str) -> list[d
     return items
 
 
+_BIRTH_KEY_FIELDS = ("year", "month", "day", "hour", "minute", "latitude", "longitude", "timezone")
+
+
+def _birth_sig(params: dict[str, Any]) -> tuple[Any, ...]:
+    return tuple(params[k] for k in _BIRTH_KEY_FIELDS)
+
+
+def _options_sig(options: dict[str, Any] | None = None) -> tuple[tuple[str, Any], ...]:
+    if not options:
+        return tuple()
+    return tuple(sorted((key, _to_hashable(val)) for key, val in options.items()))
+
+
+def _to_hashable(value: Any):
+    if isinstance(value, dict):
+        return tuple(sorted((k, _to_hashable(v)) for k, v in value.items()))
+    if isinstance(value, (list, tuple, set)):
+        return tuple(_to_hashable(v) for v in value)
+    return value
+
+
+def _system_cache_key(system_name: str, params: dict[str, Any], options: dict[str, Any] | None = None) -> tuple[Any, ...]:
+    return (system_name, _birth_sig(params), _options_sig(options))
+
+
+@st.cache_resource(show_spinner=False)
+def _get_swe():
+    import swisseph as swe
+    return swe
+
+
+@st.cache_resource(show_spinner=False)
+def _get_ptolemy_calculator():
+    return PtolemyDignityCalculator()
+
+
+@st.cache_resource(show_spinner=False)
+def _get_wanhua_tool():
+    from astro.chinstar.chinstar import WanHuaXianQin
+    return WanHuaXianQin()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_taixuan_natal_cached(year: int, month: int, day: int, hour: int):
+    from astro.chinese.taixuan import TaiXuanCalculator
+    return TaiXuanCalculator(year=year, month=month, day=day, hour=hour, mode="natal").calculate()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_system_cached(system_name: str, birth_sig: tuple[Any, ...], options_sig: tuple[tuple[str, Any], ...]):
+    year, month, day, hour, minute, latitude, longitude, timezone = birth_sig
+    options = dict(options_sig)
+    common_kwargs = dict(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        latitude=latitude,
+        longitude=longitude,
+        timezone=timezone,
+        location_name=options.get("location_name", ""),
+    )
+    if system_name == "tab_chinese":
+        return compute_chart(**common_kwargs, gender=options.get("gender", "male"))
+    if system_name == "tab_western":
+        return compute_western_chart(**common_kwargs, sidereal=bool(options.get("sidereal", False)))
+    if system_name == "tab_indian":
+        return compute_vedic_chart(**common_kwargs)
+    if system_name == "tab_thai":
+        return compute_thai_chart(**common_kwargs)
+    if system_name == "tab_ziwei":
+        return compute_ziwei_chart(
+            **common_kwargs,
+            gender=options.get("gender", "male"),
+            vietnam_mode=bool(options.get("vietnam_mode", False)),
+        )
+    if system_name == "tab_cetian_ziwei":
+        return compute_cetian_ziwei_chart(**common_kwargs, gender=options.get("gender", "male"))
+    if system_name == "tab_mazzalot":
+        return compute_mazzalot_chart(
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            timezone=timezone,
+            lat=latitude,
+            lon=longitude,
+        )
+    raise ValueError(f"Unsupported cached system: {system_name}")
+
+
+def _get_or_compute_chart(system_name: str, params: dict[str, Any], options: dict[str, Any] | None = None):
+    store = st.session_state.setdefault("_chart_cache_by_system", {})
+    key = _system_cache_key(system_name, params, options)
+    if key not in store:
+        store[key] = _compute_system_cached(system_name, _birth_sig(params), _options_sig(options))
+    return store[key]
+
+
+def _invalidate_chart_cache_if_birth_changed(params: dict[str, Any]) -> None:
+    new_sig = _birth_sig(params)
+    old_sig = st.session_state.get("_last_birth_sig")
+    if old_sig != new_sig:
+        st.session_state["_chart_cache_by_system"] = {}
+        st.session_state["_render_cache_by_system"] = {}
+        st.session_state["_last_birth_sig"] = new_sig
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_transit_now_cached(timezone: float):
+    return compute_transit_now(timezone=timezone)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_shensha_cached(
+    chart_key: tuple[Any, ...],
+    *,
+    year: int,
+    solar_month: int,
+    julian_day: float,
+    hour_branch: str,
+    timezone: float,
+    ming_gong_branch: str,
+):
+    # chart_key is an explicit cache dependency so shensha invalidates with chart variations.
+    _ = chart_key
+    return compute_shensha(
+        year=year,
+        solar_month=solar_month,
+        julian_day=julian_day,
+        hour_branch=hour_branch,
+        timezone=timezone,
+        ming_gong_branch=ming_gong_branch,
+    )
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_dasha_cached(
+    chart_key: tuple[Any, ...],
+    *,
+    birth_year: int,
+    ming_gong_branch: str,
+    gender: str,
+    houses,
+    current_year: int,
+):
+    # chart_key is an explicit cache dependency so dasha invalidates with chart variations.
+    _ = chart_key
+    return compute_dasha(
+        birth_year=birth_year,
+        ming_gong_branch=ming_gong_branch,
+        gender=gender,
+        houses=houses,
+        current_year=current_year,
+    )
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_transit_cached(*, year: int, month: int, day: int, hour: int, minute: int, timezone: float):
+    return compute_transit(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+    )
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_zhangguo_cached(chart_key: tuple[Any, ...], planets, houses, gender: str):
+    # chart_key is an explicit cache dependency so zhangguo invalidates with chart variations.
+    _ = chart_key
+    return compute_zhangguo(planets=planets, houses=houses, gender=gender)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_western_transits_cached(
+    birth_sig: tuple[Any, ...],
+    sidereal: bool,
+    location_name: str,
+    t_year: int,
+    t_month: int,
+    t_day: int,
+    t_hour: int,
+    t_minute: int,
+):
+    _, _, _, _, _, _, _, timezone = birth_sig
+    natal = _compute_system_cached("tab_western", birth_sig, _options_sig({"sidereal": sidereal, "location_name": location_name}))
+    return compute_western_transits(natal, t_year, t_month, t_day, t_hour, t_minute, timezone)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_solar_return_cached(
+    sun_longitude: float,
+    return_year: int,
+    latitude: float,
+    longitude: float,
+    timezone: float,
+    location_name: str,
+):
+    return compute_solar_return(sun_longitude, return_year, latitude, longitude, timezone, location_name)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_synastry_cached(
+    natal_sig: tuple[Any, ...],
+    sidereal: bool,
+    location_name: str,
+    b_year: int,
+    b_month: int,
+    b_day: int,
+    b_hour: int,
+    b_minute: int,
+    b_tz: float,
+    b_lat: float,
+    b_lon: float,
+    b_location_name: str,
+):
+    natal = _compute_system_cached("tab_western", natal_sig, _options_sig({"sidereal": sidereal, "location_name": location_name}))
+    w_b = compute_western_chart(
+        year=b_year,
+        month=b_month,
+        day=b_day,
+        hour=b_hour,
+        minute=b_minute,
+        timezone=b_tz,
+        latitude=b_lat,
+        longitude=b_lon,
+        location_name=b_location_name,
+        sidereal=sidereal,
+    )
+    return compute_synastry(natal, w_b, "Person A", "Person B")
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_vimshottari_cached(moon_longitude: float, julian_day: float):
+    return compute_vimshottari(moon_longitude, julian_day)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_yogini_cached(moon_longitude: float, julian_day: float):
+    return compute_yogini(moon_longitude, julian_day)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_ashtakavarga_cached(p_lons_items: tuple[tuple[str, float], ...], asc_lon: float):
+    return compute_ashtakavarga(dict(p_lons_items), asc_lon)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_yogas_cached(p_lons_items: tuple[tuple[str, float], ...], asc_lon: float):
+    return compute_yogas(dict(p_lons_items), asc_lon)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_bphs_cached(birth_sig: tuple[Any, ...], location_name: str):
+    v_chart = _compute_system_cached("tab_indian", birth_sig, _options_sig({"location_name": location_name}))
+    return compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_varga_cached(varga_key: str, birth_sig: tuple[Any, ...], location_name: str):
+    v_chart = _compute_system_cached("tab_indian", birth_sig, _options_sig({"location_name": location_name}))
+    return compute_varga_chart(varga_key, v_chart.planets, v_chart.ascendant)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_asteroids_cached(julian_day: float, heliocentric: bool, groups_tuple: tuple[str, ...]):
+    return compute_asteroids(julian_day, heliocentric=heliocentric, include_groups=list(groups_tuple))
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_fixed_stars_cached(julian_day: float, limit):
+    return compute_fixed_star_positions(julian_day, limit=limit)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_parans_cached(julian_day: float, latitude: float, longitude: float, limit):
+    stars = _compute_fixed_stars_cached(julian_day, limit)
+    return calculate_parans(julian_day, latitude, longitude, stars)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_heliacal_cached(julian_day: float, latitude: float, longitude: float, altitude: float, limit):
+    stars = _compute_fixed_stars_cached(julian_day, limit)
+    return calculate_heliacal(julian_day, latitude, longitude, altitude, stars)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _build_tieban_svg_cached(birth_sig: tuple[Any, ...], gender: str, language: str) -> str:
+    from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
+    year, month, day, hour, minute, _, _, _ = birth_sig
+    tbss = TieBanShenShu()
+    ganzhi = tbss.calculate_ganzhi(datetime(year, month, day, hour, minute))
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(year, month, day, hour, minute),
+        year_gz=ganzhi["year"],
+        month_gz=ganzhi["month"],
+        day_gz=ganzhi["day"],
+        hour_gz=ganzhi["hour"],
+        gender=gender,
+    )
+    tb_result = tbss.calculate(birth_data)
+    return render_tieban_chart_svg(tb_result, language=language)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _compute_tieban_result_cached(birth_sig: tuple[Any, ...], gender: str):
+    from astro.tieban import TieBanShenShu, TieBanBirthData
+    year, month, day, hour, minute, _, _, _ = birth_sig
+    tbss = TieBanShenShu()
+    ganzhi = tbss.calculate_ganzhi(datetime(year, month, day, hour, minute))
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(year, month, day, hour, minute),
+        year_gz=ganzhi["year"],
+        month_gz=ganzhi["month"],
+        day_gz=ganzhi["day"],
+        hour_gz=ganzhi["hour"],
+        gender=gender,
+    )
+    return tbss.calculate(birth_data)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _build_mazzalot_svg_cached(
+    birth_sig: tuple[Any, ...],
+    location_name: str,
+):
+    year, month, day, hour, minute, latitude, longitude, timezone = birth_sig
+    chart = compute_mazzalot_chart(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        lat=latitude,
+        lon=longitude,
+    )
+    return build_mazzalot_star_of_david_svg(
+        chart,
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        tz=timezone,
+        location=location_name,
+    )
+
+
 def _render_interactive_html(*, html: str, height: int, key: str) -> None:
     """Render embedded HTML/SVG with lightweight hover + click zoom tooltip UX."""
     component = f"""
@@ -1918,6 +2269,7 @@ location_name = _birth_params.location_name
 st.session_state[SessionKeys.CALC_PARAMS] = _params
 st.session_state[SessionKeys.CALC_GENDER] = gender
 st.session_state[SessionKeys.CALCULATED] = True
+_invalidate_chart_cache_if_birth_changed(_params)
 
 _is_calculated = True
 
@@ -2021,7 +2373,11 @@ if not _engine_handled:
                 _p = st.session_state["_calc_params"]
                 _g = st.session_state["_calc_gender"]
                 with st.spinner(t("spinner_chinese")):
-                    chart = compute_chart(**_p, gender=_g)
+                    chart = _get_or_compute_chart(
+                        "tab_chinese",
+                        _p,
+                        {"gender": _g, "location_name": _p.get("location_name", "")},
+                    )
 
                 # 子 tabs for the Chinese chart
                 _ch_tab_natal, _ch_tab_shensha, _ch_tab_dasha, _ch_tab_transit, _ch_tab_zhangguo, _ch_tab_elect, _ch_tab_financial, _ch_tab_mansion = st.tabs([
@@ -2037,7 +2393,7 @@ if not _engine_handled:
 
                 with _ch_tab_natal:
                     # 計算流時盤 for overlay
-                    _transit_now = compute_transit_now(timezone=input_tz)
+                    _transit_now = _compute_transit_now_cached(timezone=input_tz)
 
                     # 選擇是否顯示流時對盤
                     _show_transit_overlay = st.checkbox(
@@ -2062,7 +2418,8 @@ if not _engine_handled:
                     render_ming_gong_interpretations(chart)
 
                 with _ch_tab_shensha:
-                    _shensha = compute_shensha(
+                    _shensha = _compute_shensha_cached(
+                        _system_cache_key("tab_chinese", _p, {"gender": _g}),
                         year=chart.year,
                         solar_month=chart.solar_month,
                         julian_day=chart.julian_day,
@@ -2075,7 +2432,8 @@ if not _engine_handled:
                 with _ch_tab_dasha:
                     from datetime import datetime as _dt
                     _current_year = _dt.now().year
-                    _dasha = compute_dasha(
+                    _dasha = _compute_dasha_cached(
+                        _system_cache_key("tab_chinese", _p, {"gender": _g}),
                         birth_year=chart.year,
                         ming_gong_branch=chart.ming_gong_branch,
                         gender=_g,
@@ -2116,7 +2474,7 @@ if not _engine_handled:
                             key="transit_tz_input",
                         )
 
-                    _transit_custom = compute_transit(
+                    _transit_custom = _compute_transit_cached(
                         year=_t_date.year, month=_t_date.month, day=_t_date.day,
                         hour=_t_time.hour, minute=_t_time.minute,
                         timezone=_t_tz,
@@ -2124,7 +2482,8 @@ if not _engine_handled:
                     render_transit_comparison(chart, _transit_custom)
 
                 with _ch_tab_zhangguo:
-                    _zhangguo = compute_zhangguo(
+                    _zhangguo = _compute_zhangguo_cached(
+                        _system_cache_key("tab_chinese", _p, {"gender": _g}),
                         planets=chart.planets,
                         houses=chart.houses,
                         gender=_g,
@@ -2183,7 +2542,15 @@ if not _engine_handled:
                 _p = st.session_state["_calc_params"]
                 _gender = st.session_state.get("_calc_gender", "男")
                 with st.spinner(t("spinner_ziwei")):
-                    zw_chart = compute_ziwei_chart(**_p, gender=_gender, vietnam_mode=_vietnam_mode)
+                    zw_chart = _get_or_compute_chart(
+                        "tab_ziwei",
+                        _p,
+                        {
+                            "gender": _gender,
+                            "vietnam_mode": _vietnam_mode,
+                            "location_name": _p.get("location_name", ""),
+                        },
+                    )
                 render_ziwei_chart(zw_chart, after_chart_hook=lambda: _render_ai_button("tab_ziwei", zw_chart, btn_key="ziwei"))
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
@@ -2199,7 +2566,11 @@ if not _engine_handled:
                 _p = st.session_state["_calc_params"]
                 _gender = st.session_state.get("_calc_gender", "男")
                 with st.spinner(t("spinner_cetian_ziwei")):
-                    ct_chart = compute_cetian_ziwei_chart(**_p, gender=_gender)
+                    ct_chart = _get_or_compute_chart(
+                        "tab_cetian_ziwei",
+                        _p,
+                        {"gender": _gender, "location_name": _p.get("location_name", "")},
+                    )
                 render_cetian_ziwei_chart(ct_chart, after_chart_hook=lambda: _render_ai_button("tab_cetian_ziwei", ct_chart, btn_key="cetian_ziwei"))
             except Exception as _e:
                 st.error(f"{t('error_tab_compute')}：{_e}")
@@ -2219,8 +2590,11 @@ if not _engine_handled:
                     help=t("sidereal_help"),
                 )
                 with st.spinner(t("spinner_western")):
-                    w_params = dict(**_p, sidereal=sidereal_mode)
-                    w_chart = compute_western_chart(**w_params)
+                    w_chart = _get_or_compute_chart(
+                        "tab_western",
+                        _p,
+                        {"sidereal": sidereal_mode, "location_name": _p.get("location_name", "")},
+                    )
 
                 _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
                     t("western_subtab_natal"),
@@ -2267,9 +2641,12 @@ if not _engine_handled:
                     with _wt_col2:
                         _wt_time = st.time_input("Time", value=datetime.now().time(),
                                                  key="wt_time")
-                    w_transits = compute_western_transits(
-                        w_chart, _wt_date.year, _wt_date.month, _wt_date.day,
-                        _wt_time.hour, _wt_time.minute, input_tz,
+                    w_transits = _compute_western_transits_cached(
+                        _birth_sig(_p),
+                        sidereal_mode,
+                        _p.get("location_name", ""),
+                        _wt_date.year, _wt_date.month, _wt_date.day,
+                        _wt_time.hour, _wt_time.minute,
                     )
                     if w_transits.aspects_to_natal:
                         st.dataframe([{"Transit": a.transit_planet, "Natal": a.natal_planet,
@@ -2295,7 +2672,7 @@ if not _engine_handled:
                                                    key="return_year")
                     sun_planet = next((p for p in w_chart.planets if p.name.startswith("Sun")), None)
                     if sun_planet:
-                        sr = compute_solar_return(
+                        sr = _compute_solar_return_cached(
                             sun_planet.longitude, _return_year,
                             input_lat, input_lon, input_tz, location_name,
                         )
@@ -2316,13 +2693,20 @@ if not _engine_handled:
                         _s_tz = st.number_input("TZ B", value=input_tz, key="syn_tz",
                                                 min_value=-12.0, max_value=14.0, step=0.5)
                     if st.button("Calculate Synastry / 計算合盤", key="syn_btn"):
-                        w_b = compute_western_chart(
-                            year=_s_date.year, month=_s_date.month, day=_s_date.day,
-                            hour=_s_time.hour, minute=_s_time.minute,
-                            timezone=_s_tz, latitude=input_lat, longitude=input_lon,
-                            location_name=location_name,
+                        syn = _compute_synastry_cached(
+                            _birth_sig(_p),
+                            sidereal_mode,
+                            _p.get("location_name", ""),
+                            _s_date.year,
+                            _s_date.month,
+                            _s_date.day,
+                            _s_time.hour,
+                            _s_time.minute,
+                            _s_tz,
+                            input_lat,
+                            input_lon,
+                            location_name,
                         )
-                        syn = compute_synastry(w_chart, w_b, "Person A", "Person B")
                         st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
                         st.info(auto_cn(syn.summary_cn) if get_lang() in ("zh", "zh_cn") else syn.summary_en)
                         if syn.element_compatibility:
@@ -2343,7 +2727,7 @@ if not _engine_handled:
 
                 with _w_tab_dignity:
                     st.subheader(t("western_subtab_dignity"))
-                    _calc = PtolemyDignityCalculator()
+                    _calc = _get_ptolemy_calculator()
                     _PLANET_MAP = {"Sun": PtolPlanet.SUN, "Moon": PtolPlanet.MOON, "Mercury": PtolPlanet.MERCURY,
                                    "Venus": PtolPlanet.VENUS, "Mars": PtolPlanet.MARS, "Jupiter": PtolPlanet.JUPITER, "Saturn": PtolPlanet.SATURN}
                     _dignity_rows = []
@@ -2382,13 +2766,7 @@ if not _engine_handled:
                         _helio = st.session_state.get("_adv_helio", False)
                         _grp_keys = st.session_state.get("_adv_ast_group_keys") or list(ASTEROID_GROUPS.keys())[:3]
                         with st.spinner("Calculating asteroid positions…"):
-
-                            @st.cache_data(show_spinner=False)
-                            def _cached_asteroids(jd, helio, groups_tuple):
-                                return compute_asteroids(jd, heliocentric=helio,
-                                                         include_groups=list(groups_tuple))
-
-                            _asts = _cached_asteroids(
+                            _asts = _compute_asteroids_cached(
                                 w_chart.julian_day, _helio, tuple(_grp_keys),
                             )
                         if _asts:
@@ -2432,12 +2810,7 @@ if not _engine_handled:
                             _star_limit = None  # all
 
                         with st.spinner("Computing fixed star positions…"):
-
-                            @st.cache_data(show_spinner=False)
-                            def _cached_stars(jd, lim):
-                                return compute_fixed_star_positions(jd, limit=lim)
-
-                            _stars = _cached_stars(w_chart.julian_day, _star_limit)
+                            _stars = _compute_fixed_stars_cached(w_chart.julian_day, _star_limit)
 
                         _p_lons = {p.name: p.longitude for p in w_chart.planets}
                         _conjs = find_conjunctions(_stars, _p_lons)
@@ -2479,13 +2852,7 @@ if not _engine_handled:
                             _star_limit_p = None
 
                         with st.spinner("Calculating parans…"):
-
-                            @st.cache_data(show_spinner=False)
-                            def _cached_parans(jd, lat, lon, lim):
-                                _s = compute_fixed_star_positions(jd, limit=lim)
-                                return calculate_parans(jd, lat, lon, _s)
-
-                            _parans = _cached_parans(
+                            _parans = _compute_parans_cached(
                                 w_chart.julian_day,
                                 getattr(w_chart, "latitude", 0.0),
                                 getattr(w_chart, "longitude", 0.0),
@@ -2524,12 +2891,7 @@ if not _engine_handled:
 
                         with st.spinner("Calculating heliacal phenomena…"):
                             try:
-                                @st.cache_data(show_spinner=False)
-                                def _cached_heliacal(jd, lat, lon, alt, lim):
-                                    _s = compute_fixed_star_positions(jd, limit=lim)
-                                    return calculate_heliacal(jd, lat, lon, alt, _s)
-
-                                _hels = _cached_heliacal(
+                                _hels = _compute_heliacal_cached(
                                     w_chart.julian_day,
                                     getattr(w_chart, "latitude", 0.0),
                                     getattr(w_chart, "longitude", 0.0),
@@ -3015,35 +3377,18 @@ if not _engine_handled:
                 try:
                     _p = st.session_state["_calc_params"]
                     with st.spinner(t("spinner_tieban") if hasattr(t, "spinner_tieban") else "計算鐵板神數..."):
-                        # 鐵板神數需要父母信息，此處為簡化示例
-                        from astro.tieban import TieBanShenShu, TieBanBirthData, render_tieban_chart_svg
-                        from astro.tieban.tieban_calculator import Ganzhi
-                        
-                        # 計算干支
-                        tbss = TieBanShenShu()
-                        ganzhi = tbss.calculate_ganzhi(
-                            datetime(
-                                _p["year"], _p["month"], _p["day"],
-                                _p["hour"], _p["minute"]
-                            )
+                        tb_result = _compute_tieban_result_cached(
+                            _birth_sig(_p),
+                            st.session_state.get("_calc_gender", "男"),
                         )
-                        
-                        # 創建出生資料（完整版需用戶輸入父母信息）
-                        birth_data = TieBanBirthData(
-                            birth_dt=datetime(_p["year"], _p["month"], _p["day"], _p["hour"], _p["minute"]),
-                            year_gz=ganzhi['year'],
-                            month_gz=ganzhi['month'],
-                            day_gz=ganzhi['day'],
-                            hour_gz=ganzhi['hour'],
-                            gender=st.session_state.get("_calc_gender", "男"),
-                        )
-                        
-                        # 計算
-                        tb_result = tbss.calculate(birth_data)
                     
                     # ── 鐵板神數主界面（先圖後字，手機優先）──────────────
                     # ① 圖：SVG 星盤（響應式，已用 components.v1.html 渲染）
-                    svg_chart = render_tieban_chart_svg(tb_result, language=get_lang())
+                    svg_chart = _build_tieban_svg_cached(
+                        _birth_sig(_p),
+                        st.session_state.get("_calc_gender", "男"),
+                        get_lang(),
+                    )
                     _render_interactive_html(
                         html=svg_chart,
                         height=760,
@@ -3559,14 +3904,12 @@ if not _engine_handled:
                 try:
                     _p = st.session_state["_calc_params"]
                     with st.spinner(t("spinner_taixuan")):
-                        _tx_calc = TaiXuanCalculator(
+                        _tx_result = _compute_taixuan_natal_cached(
                             year=_p["year"],
                             month=_p["month"],
                             day=_p["day"],
                             hour=_p["hour"],
-                            mode="natal",
                         )
-                        _tx_result = _tx_calc.calculate()
                     render_taixuan_chart(
                         _tx_result,
                         after_chart_hook=lambda: _render_ai_button(
@@ -3659,7 +4002,11 @@ if not _engine_handled:
             try:
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_indian")):
-                    v_chart = compute_vedic_chart(**_p)
+                    v_chart = _get_or_compute_chart(
+                        "tab_indian",
+                        _p,
+                        {"location_name": _p.get("location_name", "")},
+                    )
 
                 _v_tab_rashi, _v_tab_dasha, _v_tab_ashtaka, _v_tab_yogas, _v_tab_bphs, _v_tab_varga, _v_tab_financial = st.tabs([
                     t("vedic_subtab_rashi"),
@@ -3678,7 +4025,7 @@ if not _engine_handled:
                     st.subheader(t("vedic_subtab_dasha"))
                     moon_p = next((p for p in v_chart.planets if "Chandra" in p.name or "Moon" in p.name), None)
                     if moon_p:
-                        vim = compute_vimshottari(moon_p.longitude, v_chart.julian_day)
+                        vim = _compute_vimshottari_cached(moon_p.longitude, v_chart.julian_day)
                         st.info(f"Moon Nakshatra: **{vim.moon_nakshatra}** | Lord: **{vim.moon_nakshatra_lord}** | Balance: {vim.balance_years:.2f} yrs")
                         for md in vim.mahadasha_periods:
                             _dasha_reading = get_dasha_reading(md.lord, get_lang())
@@ -3693,7 +4040,7 @@ if not _engine_handled:
                                                  width="stretch")
                         st.divider()
                         st.markdown("##### Yogini Dasha (36-year cycle)")
-                        yog = compute_yogini(moon_p.longitude, v_chart.julian_day)
+                        yog = _compute_yogini_cached(moon_p.longitude, v_chart.julian_day)
                         st.dataframe([{"Yogini": p.lord, "CN": p.lord_cn,
                                       "Start": p.start_date, "End": p.end_date,
                                       "Years": f"{p.years:.2f}"}
@@ -3718,7 +4065,7 @@ if not _engine_handled:
                         p_lons[canonical] = p.longitude
                     asc_lon = getattr(v_chart, 'ascendant', 0.0) if hasattr(v_chart, 'ascendant') else 0.0
                     if len(p_lons) >= 7:
-                        av = compute_ashtakavarga(p_lons, asc_lon)
+                        av = _compute_ashtakavarga_cached(tuple(sorted(p_lons.items())), asc_lon)
                         st.info(f"Sarvashtakavarga Total: **{av.sarva_total}**")
                         import pandas as pd
                         signs = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir",
@@ -3751,7 +4098,7 @@ if not _engine_handled:
                         canonical = _MAP2.get(key, key)
                         p_lons_y[canonical] = p.longitude
                     asc_lon_y = getattr(v_chart, 'ascendant', 0.0) if hasattr(v_chart, 'ascendant') else 0.0
-                    yogas = compute_yogas(p_lons_y, asc_lon_y)
+                    yogas = _compute_yogas_cached(tuple(sorted(p_lons_y.items())), asc_lon_y)
                     for yg in yogas:
                         icon = "✅" if yg.is_present else "⬜"
                         with st.expander(f"{icon} {yg.name} ({auto_cn(yg.name_cn)}) — {yg.strength}"):
@@ -3761,7 +4108,7 @@ if not _engine_handled:
 
                 with _v_tab_bphs:
                     st.subheader("📜 " + t("vedic_subtab_bphs"))
-                    bphs_result = compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
+                    bphs_result = _compute_bphs_cached(_birth_sig(_p), _p.get("location_name", ""))
                     _render_bphs_result(bphs_result)
                     _render_ai_button("tab_indian", v_chart, btn_key="vedic_bphs")
 
@@ -3772,7 +4119,7 @@ if not _engine_handled:
                     _varga_tabs = st.tabs(_varga_tab_labels)
                     for _vi, _vk in enumerate(VARGA_KEYS):
                         with _varga_tabs[_vi]:
-                            _vc = compute_varga_chart(_vk, v_chart.planets, v_chart.ascendant)
+                            _vc = _compute_varga_cached(_vk, _birth_sig(_p), _p.get("location_name", ""))
                             render_single_varga(_vc)
                     _render_ai_button("tab_indian", v_chart, btn_key="vedic_varga")
 
@@ -3849,7 +4196,11 @@ if not _engine_handled:
             try:
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_thai")):
-                    t_chart = compute_thai_chart(**_p)
+                    t_chart = _get_or_compute_chart(
+                        "tab_thai",
+                        _p,
+                        {"location_name": _p.get("location_name", "")},
+                    )
                 thai_tab_chart, thai_tab_nine, thai_tab_brahma = st.tabs(
                     [t("thai_subtab_chart"), t("thai_subtab_nine"), t("thai_subtab_brahma")]
                 )
@@ -3939,11 +4290,10 @@ if not _engine_handled:
             try:
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_mazzalot")):
-                    _mz_chart = compute_mazzalot_chart(
-                        year=_p["year"], month=_p["month"], day=_p["day"],
-                        hour=_p["hour"], minute=_p["minute"],
-                        timezone=_p["timezone"],
-                        lat=_p["latitude"], lon=_p["longitude"],
+                    _mz_chart = _get_or_compute_chart(
+                        "tab_mazzalot",
+                        _p,
+                        {"location_name": _p.get("location_name", "")},
                     )
                 _mz_tab_star, _mz_tab_natal, _mz_tab_omens = st.tabs([
                     t("mazzalot_subtab_star"),
@@ -3951,16 +4301,7 @@ if not _engine_handled:
                     t("mazzalot_subtab_omens"),
                 ])
                 with _mz_tab_star:
-                    _mz_svg = build_mazzalot_star_of_david_svg(
-                        _mz_chart,
-                        year=birth_date.year,
-                        month=birth_date.month,
-                        day=birth_date.day,
-                        hour=birth_time.hour,
-                        minute=birth_time.minute,
-                        tz=input_tz,
-                        location=location_name,
-                    )
+                    _mz_svg = _build_mazzalot_svg_cached(_birth_sig(_p), location_name)
                     st.markdown(_mz_svg, unsafe_allow_html=True)
                     st.caption(
                         '<p style="text-align:center; color:#888; font-size:11px;">'
@@ -4932,8 +5273,8 @@ if not _engine_handled:
 
         if _is_calculated:
             try:
-                import swisseph as _swe_cs
                 from astro.ziwei import _solar_to_lunar as _cs_solar_to_lunar
+                _swe_cs = _get_swe()
                 _p = st.session_state["_calc_params"]
                 _cs_jd = _swe_cs.julday(
                     _p["year"], _p["month"], _p["day"],
@@ -4953,7 +5294,7 @@ if not _engine_handled:
         if _auto_ok:
             try:
                 with st.spinner(t("spinner_chinstar")):
-                    _cs_tool = WanHuaXianQin()
+                    _cs_tool = _get_wanhua_tool()
                     _cs_chart = _cs_tool.build_chart(
                         year=int(_chinstar_year),
                         month=int(_chinstar_month),
@@ -5110,7 +5451,7 @@ if not _engine_handled:
 
                     # ── 完整文字輸出（可複製） ──────────────────────
                     with st.expander(t("chinstar_full_text_expander")):
-                        st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+                        st.code(_cs_tool.format_chart(_cs_chart), language="")
 
                 with _cs_tab_xiangtai:
                     from astro.chinstar.chinstar import lookup_xiangtai, _get_xiangtai_fu
@@ -5234,7 +5575,7 @@ if not _engine_handled:
                 if st.button(t("calculate_btn"), key="chinstar_calc_btn"):
                     try:
                         with st.spinner(t("spinner_chinstar")):
-                            _cs_tool = WanHuaXianQin()
+                            _cs_tool = _get_wanhua_tool()
                             _cs_chart = _cs_tool.build_chart(
                                 year=int(_chinstar_year),
                                 month=int(_chinstar_month),
@@ -5251,7 +5592,7 @@ if not _engine_handled:
 
                         with _cs_tab_chart:
                             from astro.chinstar.chinstar import BRANCHES as _cs_branches, QIN_ELEMENT as _cs_qin_elem
-                            st.code(WanHuaXianQin.format_chart(_cs_chart), language="")
+                            st.code(_cs_tool.format_chart(_cs_chart), language="")
                     except Exception as _e:
                         st.error(f"{t('error_tab_compute')}：{_e}")
                         st.exception(_e)
