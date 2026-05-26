@@ -18,6 +18,7 @@ import json
 import os
 import random
 import textwrap
+from functools import lru_cache
 from pathlib import Path
 import streamlit as st
 from datetime import datetime, date, time
@@ -675,7 +676,29 @@ def _build_share_url(system_key: str, params: dict, base_url: str = "") -> str:
     return "?" + urlencode(qd)
 
 
-# [C2] Performance: Cache the lang value to avoid repeated session_state lookups
+# [C2] Performance: Cache translations to reduce repeated dict lookups/conversions
+# Keep cache bounded to a small multiple of known keys × languages.
+_TRANSLATION_CACHE_MIN_SIZE = 256
+_TRANSLATION_CACHE_SIZE_MULTIPLIER = 4
+_TRANSLATION_CACHE_MAXSIZE = max(
+    _TRANSLATION_CACHE_MIN_SIZE,
+    len(TRANSLATIONS) * _TRANSLATION_CACHE_SIZE_MULTIPLIER,
+)
+
+
+@lru_cache(maxsize=_TRANSLATION_CACHE_MAXSIZE)
+def _translate_cached(lang: str, key: str) -> str:
+    entry = TRANSLATIONS.get(key)
+    if entry is None:
+        return key
+    if lang == "zh_cn":
+        val = entry.get("zh_cn")
+        if val is not None:
+            return val
+        return _t2s(entry.get("zh", key))
+    return entry.get(lang, entry.get("zh", key))
+
+
 def t(key: str) -> str:
     """Return the translated string for *key* in the current UI language.
 
@@ -683,18 +706,8 @@ def t(key: str) -> str:
     explicit zh_cn entry exists, and automatically converts to Simplified
     Chinese.
     """
-    # Local variable lookup is faster than st.session_state.get() repeated calls
     _lang = st.session_state.get("lang", "zh")
-    entry = TRANSLATIONS.get(key)
-    if entry is None:
-        return key
-    if _lang == "zh_cn":
-        val = entry.get("zh_cn")
-        if val is not None:
-            return val
-        # Fallback: convert Traditional Chinese to Simplified
-        return _t2s(entry.get("zh", key))
-    return entry.get(_lang, entry.get("zh", key))
+    return _translate_cached(_lang, key)
 
 
 def _render_reference_library():
