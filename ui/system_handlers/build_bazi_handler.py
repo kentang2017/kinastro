@@ -26,7 +26,7 @@ def build_bazi_handler(
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
         payload = params.to_dict()
-        payload["gender"] = params.gender or "male"
+        payload["gender"] = params.gender or "男"
         # Add system-specific options here if needed
         # e.g., vietnam_mode for ZiWei, ayanamsa for Vedic, etc.
         return _cached_compute(payload)
