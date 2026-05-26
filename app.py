@@ -678,8 +678,12 @@ def _build_share_url(system_key: str, params: dict, base_url: str = "") -> str:
 
 # [C2] Performance: Cache translations to reduce repeated dict lookups/conversions
 # Keep cache bounded to a small multiple of known keys × languages.
-_TRANSLATION_CACHE_MAXSIZE = max(256, len(TRANSLATIONS) * 4)
-_TRANSLATIONS_REF = TRANSLATIONS
+_TRANSLATION_CACHE_MIN_SIZE = 256
+_TRANSLATION_CACHE_SIZE_MULTIPLIER = 4
+_TRANSLATION_CACHE_MAXSIZE = max(
+    _TRANSLATION_CACHE_MIN_SIZE,
+    len(TRANSLATIONS) * _TRANSLATION_CACHE_SIZE_MULTIPLIER,
+)
 
 
 @lru_cache(maxsize=_TRANSLATION_CACHE_MAXSIZE)
@@ -702,10 +706,6 @@ def t(key: str) -> str:
     explicit zh_cn entry exists, and automatically converts to Simplified
     Chinese.
     """
-    global _TRANSLATIONS_REF
-    if _TRANSLATIONS_REF is not TRANSLATIONS:
-        _translate_cached.cache_clear()
-        _TRANSLATIONS_REF = TRANSLATIONS
     _lang = st.session_state.get("lang", "zh")
     return _translate_cached(_lang, key)
 
