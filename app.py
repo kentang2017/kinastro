@@ -770,6 +770,7 @@ def _load_from_query_params() -> bool:
         timezone=tz, latitude=lat, longitude=lon, location_name="",
     )
     st.session_state["_confirmed_gender"] = "male"
+    st.session_state[SessionKeys.CALCULATED] = True
     st.session_state["_qp_loaded"] = True
     return True
 
@@ -1101,12 +1102,8 @@ def _build_city_presets() -> tuple[
 CITY_PRESETS, CITY_OPTIONS = _build_city_presets()
 
 
-# ============================================================
-# 側邊欄 - 輸入排盤資料
-# ============================================================
-with st.sidebar:
-    st.header(t("sidebar_header"))
-
+def render_birth_input_form() -> bool:
+    """Render sidebar birth input form; return True only on submit."""
     # ── "Now" button outside the form so it can trigger a rerun ──
     _dt_col, _now_col = st.columns([3, 1])
     _dt_col.subheader(t("date_time"))
@@ -1275,22 +1272,39 @@ with st.sidebar:
             width="stretch",
             type="primary",
         )
-        if _form_submitted:
-            # Persist custom coords for next session
-            if _is_custom:
-                st.session_state["_custom_lat"] = input_lat
-                st.session_state["_custom_lon"] = input_lon
-                st.session_state["_custom_tz"]  = input_tz
-            # Mark that the user has confirmed the birth data
-            st.session_state["_calc_success_flash"] = True
-            st.session_state["_birth_confirmed"] = True
-            st.session_state["_confirmed_params"] = dict(
-                year=birth_date.year, month=birth_date.month, day=birth_date.day,
-                hour=birth_time.hour, minute=birth_time.minute,
-                timezone=input_tz, latitude=input_lat, longitude=input_lon,
-                location_name=location_name,
-            )
-            st.session_state["_confirmed_gender"] = gender
+
+    if not _form_submitted:
+        return False
+
+    # Persist custom coords for next session
+    if _is_custom:
+        st.session_state["_custom_lat"] = input_lat
+        st.session_state["_custom_lon"] = input_lon
+        st.session_state["_custom_tz"] = input_tz
+    # Mark that the user has confirmed the birth data
+    st.session_state["_calc_success_flash"] = True
+    st.session_state[SessionKeys.BIRTH_CONFIRMED] = True
+    st.session_state[SessionKeys.CONFIRMED_PARAMS] = dict(
+        year=birth_date.year, month=birth_date.month, day=birth_date.day,
+        hour=birth_time.hour, minute=birth_time.minute,
+        timezone=input_tz, latitude=input_lat, longitude=input_lon,
+        location_name=location_name,
+    )
+    st.session_state[SessionKeys.CONFIRMED_GENDER] = gender
+    st.session_state[SessionKeys.CALCULATED] = True
+    for _k in list(st.session_state.keys()):
+        if _k.startswith("chart_"):
+            del st.session_state[_k]
+    st.session_state["current_chart"] = None
+    return True
+
+
+# ============================================================
+# 側邊欄 - 輸入排盤資料
+# ============================================================
+with st.sidebar:
+    st.header(t("sidebar_header"))
+    _form_submitted = render_birth_input_form()
 
     # ── Astrology system selector (categorised accordion with search) ──
     st.divider()
@@ -1876,7 +1890,10 @@ def _get_or_compute_chart(system_name: str, params: dict[str, Any], options: dic
     key = _system_cache_key(system_name, params, options)
     if key not in store:
         store[key] = _compute_system_cached(system_name, _birth_sig(params), _options_sig(options))
-    return store[key]
+    chart = store[key]
+    st.session_state[f"chart_{system_name}"] = chart
+    st.session_state["current_chart"] = chart
+    return chart
 
 
 def _invalidate_chart_cache_if_birth_changed(params: dict[str, Any]) -> None:
@@ -2375,36 +2392,30 @@ if "_system_select" not in st.session_state:
 # 主區域 — 根據側邊欄選擇顯示對應占星體系
 # ============================================================
 
-# Use confirmed params (submitted via form) when available, else fall back to
-# current widget values so the chart still renders on first load.
-_confirmed = st.session_state.get("_confirmed_params")
-_birth_params = _resolve_birth_params(
-    confirmed_params=_confirmed,
-    confirmed_gender=st.session_state.get(SessionKeys.CONFIRMED_GENDER, gender),
-    birth_date_val=birth_date,
-    birth_time_val=birth_time,
-    timezone_val=input_tz,
-    latitude_val=input_lat,
-    longitude_val=input_lon,
-    location_name_val=location_name,
-    fallback_gender=gender,
-)
-_params = _birth_params.to_dict()
-gender = _birth_params.gender
-birth_date = date(_birth_params.year, _birth_params.month, _birth_params.day)
-birth_time = time(_birth_params.hour, _birth_params.minute)
-input_tz = _birth_params.timezone
-input_lat = _birth_params.latitude
-input_lon = _birth_params.longitude
-location_name = _birth_params.location_name
+_confirmed = st.session_state.get(SessionKeys.CONFIRMED_PARAMS)
+_confirmed_gender = st.session_state.get(SessionKeys.CONFIRMED_GENDER, "male")
+_is_calculated = bool(st.session_state.get(SessionKeys.CALCULATED, False) and _confirmed)
 
-# Store params in session_state for lazy per-tab computation
-st.session_state[SessionKeys.CALC_PARAMS] = _params
-st.session_state[SessionKeys.CALC_GENDER] = gender
-st.session_state[SessionKeys.CALCULATED] = True
-_invalidate_chart_cache_if_birth_changed(_params)
+if _is_calculated:
+    _birth_params = BirthChartParams.from_dict(_confirmed, gender=_confirmed_gender)
+    _params = _birth_params.to_dict()
+    gender = _birth_params.gender
+    birth_date = date(_birth_params.year, _birth_params.month, _birth_params.day)
+    birth_time = time(_birth_params.hour, _birth_params.minute)
+    input_tz = _birth_params.timezone
+    input_lat = _birth_params.latitude
+    input_lon = _birth_params.longitude
+    location_name = _birth_params.location_name
 
-_is_calculated = True
+    # Store params in session_state for lazy per-tab computation
+    st.session_state[SessionKeys.CALC_PARAMS] = _params
+    st.session_state[SessionKeys.CALC_GENDER] = gender
+    _invalidate_chart_cache_if_birth_changed(_params)
+else:
+    _birth_params = None
+    _params = st.session_state.get(SessionKeys.CALC_PARAMS, {})
+    gender = st.session_state.get(SessionKeys.CALC_GENDER, "male")
+    input_tz = float(_params.get("timezone", _DEFAULT_TZ))
 
 # Success flash banner after each new calculation submission
 if st.session_state.get("_calc_success_flash"):
