@@ -112,6 +112,10 @@ from astro.medical_astrology.calculator import compute_medical_chart
 from astro.medical_astrology.renderer import render_streamlit as render_medical_astrology_chart
 from astro.byzantine_astrology.calculator import compute_byzantine_chart
 from astro.byzantine_astrology.renderer import render_streamlit as render_byzantine_astrology_chart
+from astro.human_design import (
+    compute_human_design_chart,
+    render_streamlit as render_human_design_chart,
+)
 from astro.shanghan_qianfa.calculator import compute_shanghan_qianfa
 from astro.shanghan_qianfa.renderer import render_streamlit as render_shanghan_qianfa_chart
 from astro.beiji.renderer import render_streamlit as render_beiji_chart
