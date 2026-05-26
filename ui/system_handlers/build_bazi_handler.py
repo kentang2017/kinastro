@@ -9,6 +9,8 @@ import streamlit as st
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import SystemHandler
 
+DEFAULT_BAZI_GENDER = "男"
+
 
 def build_bazi_handler(
     *,
@@ -19,17 +21,14 @@ def build_bazi_handler(
     """Create executable handler for 八字 (Bazi) Astrology."""
 
     @st.cache_data(show_spinner=False)
-    def _cached_compute(params_payload: dict[str, Any], **extra_kwargs):
+    def _cached_compute(params_payload: dict[str, Any]):
         """Pure compute wrapped for Streamlit caching."""
-        # Remove gender parameter - this system doesn\'t use it
-        params_payload = {k: v for k, v in params_payload.items() if k != "gender"}
-        return compute_bazi_chart(**params_payload, **extra_kwargs)
+        return compute_bazi_chart(**params_payload)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
         payload = params.to_dict()
-        # Remove gender parameter - this system doesn\'t use it
-        payload.pop("gender", None)
+        payload["gender"] = params.gender or DEFAULT_BAZI_GENDER
         # Add system-specific options here if needed
         # e.g., vietnam_mode for ZiWei, ayanamsa for Vedic, etc.
         return _cached_compute(payload)
@@ -38,8 +37,8 @@ def build_bazi_handler(
         """Render chart with optional AI hook."""
         render_bazi_chart_svg(
             result,
-            after_chart_hook=lambda: ai_button_sink(
-                "tab_bazi", result, "bazi", ""
+            after_chart_hook=lambda chart: ai_button_sink(
+                "tab_bazi", chart, "bazi", ""
             ),
         )
 
