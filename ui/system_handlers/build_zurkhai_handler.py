@@ -38,8 +38,8 @@ def build_zurkhai_handler(
         """Render chart with optional AI hook."""
         render_zurkhai_chart(
             result,
-            after_chart_hook=lambda: ai_button_sink(
-                "tab_zurkhai", result, "zurkhai", ""
+            after_chart_hook=lambda chart: ai_button_sink(
+                "tab_zurkhai", chart, "zurkhai", ""
             ),
         )
 
