@@ -10,6 +10,7 @@ from typing import Any, Callable
 
 _CONTENT_DIR = Path(__file__).resolve().parent.parent / "content"
 _TEMPLATES_DIR = _CONTENT_DIR / "templates"
+_STAR_PARTICLE_COUNT = 60
 
 
 @lru_cache(maxsize=1)
@@ -23,9 +24,9 @@ def _load_template(name: str) -> str:
 
 
 def build_star_particles_html() -> str:
-    """Build CSS-based star particle background HTML (60 particles)."""
+    """Build CSS-based star particle background HTML."""
     parts: list[str] = []
-    for _ in range(60):
+    for _ in range(_STAR_PARTICLE_COUNT):
         x = random.uniform(0, 100)
         y = random.uniform(0, 100)
         dur = random.uniform(2.5, 6.0)
