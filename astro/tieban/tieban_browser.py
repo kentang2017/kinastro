@@ -20,6 +20,39 @@ import streamlit as st
 from astro.tieban.suanpan_full_structure import SuanpanTiaowenDatabase
 from astro.tieban.tieban_calculator import TiaowenDatabase, VerseDatabase
 
+PALACE_ORDER = [
+    "命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
+    "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮",
+]
+
+PALACE_NAMES_EN = {
+    "命宮": "Life",
+    "兄弟宮": "Siblings",
+    "夫妻宮": "Spouse",
+    "子女宮": "Children",
+    "財帛宮": "Wealth",
+    "疾厄宮": "Health",
+    "遷移宮": "Travel",
+    "交友宮": "Friends",
+    "官祿宮": "Career",
+    "田宅宮": "Property",
+    "福德宮": "Fortune",
+    "父母宮": "Parents",
+}
+
+CATEGORY_TRANS = {
+    "綜合": "General",
+    "父母": "Parents",
+    "兄弟": "Siblings",
+    "夫妻": "Spouse",
+    "子女": "Children",
+    "財運": "Wealth",
+    "事業": "Career",
+    "健康": "Health",
+    "災厄": "Disaster",
+    "遷移": "Travel",
+}
+
 
 def _slice_page(items: Sequence[Any], *, page: int, page_size: int) -> list[Any]:
     """Return a single page of items with bounds clamped safely."""
@@ -54,6 +87,31 @@ def _paginate_items(
     return _slice_page(items, page=page, page_size=page_size), total_pages, page
 
 
+def _normalize_palace_verse_items(
+    palace_verses: dict[str, dict[str, Any]],
+    *,
+    language: str = "zh",
+) -> list[dict[str, Any]]:
+    """Normalize palace verse data for shared renderers."""
+    no_verse_text = "No verse yet" if language == "en" else "暫無條文"
+    items = []
+    for palace_name in PALACE_ORDER:
+        palace_info = palace_verses.get(palace_name, {})
+        category = palace_info.get("category", "")
+        items.append(
+            {
+                "palace_name": palace_name,
+                "name": PALACE_NAMES_EN.get(palace_name, palace_name) if language == "en" else palace_name,
+                "branch": palace_info.get("branch", ""),
+                "category": CATEGORY_TRANS.get(category, category) if language == "en" else category,
+                "verse": palace_info.get("verse", no_verse_text),
+                "number": palace_info.get("number", ""),
+                "tags": palace_info.get("tags", []),
+            }
+        )
+    return items
+
+
 def render_palace_verses_paginated(
     palace_verses: dict[str, dict[str, Any]],
     *,
@@ -62,38 +120,7 @@ def render_palace_verses_paginated(
     key_prefix: str = "tieban_palace_verses",
 ) -> None:
     """Render paginated 12-palace verse cards."""
-    palace_order = [
-        "命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
-        "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮",
-    ]
-    palace_names_en = {
-        "命宮": "Life", "兄弟宮": "Siblings", "夫妻宮": "Spouse",
-        "子女宮": "Children", "財帛宮": "Wealth", "疾厄宮": "Health",
-        "遷移宮": "Travel", "交友宮": "Friends", "官祿宮": "Career",
-        "田宅宮": "Property", "福德宮": "Fortune", "父母宮": "Parents",
-    }
-    category_trans = {
-        "綜合": "General", "父母": "Parents", "兄弟": "Siblings",
-        "夫妻": "Spouse", "子女": "Children", "財運": "Wealth",
-        "事業": "Career", "健康": "Health", "災厄": "Disaster",
-        "遷移": "Travel",
-    }
-    no_verse_text = "No verse yet" if language == "en" else "暫無條文"
-
-    items = []
-    for palace_name in palace_order:
-        palace_info = palace_verses.get(palace_name, {})
-        verse = palace_info.get("verse", no_verse_text)
-        category = palace_info.get("category", "")
-        branch = palace_info.get("branch", "")
-        display_name = palace_names_en.get(palace_name, palace_name) if language == "en" else palace_name
-        display_category = category_trans.get(category, category) if language == "en" else category
-        items.append({
-            "name": display_name,
-            "branch": branch,
-            "category": display_category,
-            "verse": verse,
-        })
+    items = _normalize_palace_verse_items(palace_verses, language=language)
 
     display_items, total_pages, current_page = _paginate_items(
         items,
@@ -131,6 +158,55 @@ def render_palace_verses_paginated(
             st.caption(f"Page {current_page}/{total_pages} · {len(items)} verses")
         else:
             st.caption(f"第 {current_page}/{total_pages} 頁，共 {len(items)} 條")
+
+
+def render_palace_verses_subtabs(
+    palace_verses: dict[str, dict[str, Any]],
+    *,
+    language: str = "zh",
+) -> None:
+    """Render one sub-tab per palace for detailed verse content."""
+    items = _normalize_palace_verse_items(palace_verses, language=language)
+    tab_labels = [
+        f'{item["name"]}{f" · {item["branch"]}" if item["branch"] else ""}'
+        for item in items
+    ]
+    tabs = st.tabs(tab_labels)
+    tags_label = "Tags" if language == "en" else "標籤"
+
+    for tab, item in zip(tabs, items):
+        with tab:
+            meta_parts = []
+            if item["number"]:
+                meta_parts.append(
+                    f'<span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FF9966;">#{html.escape(str(item["number"]))}</span>'
+                )
+            if item["category"]:
+                meta_parts.append(
+                    f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">{html.escape(str(item["category"]))}</span>'
+                )
+            if item["branch"]:
+                meta_parts.append(
+                    f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
+                    f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">{html.escape(str(item["branch"]))}</span>'
+                )
+            if meta_parts:
+                st.markdown(
+                    f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">{"".join(meta_parts)}</div>',
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown(
+                '<div style="background:rgba(255,255,255,0.03);border-left:4px solid #FF6B35;'
+                'border-radius:0 12px 12px 0;padding:14px 18px;font-size:15px;'
+                f'color:#f0d9c8;line-height:1.9;letter-spacing:0.5px;">{html.escape(str(item["verse"]))}</div>',
+                unsafe_allow_html=True,
+            )
+            if item["tags"]:
+                safe_tags = "、".join(html.escape(str(tag)) for tag in item["tags"])
+                st.caption(f"{tags_label}：{safe_tags}")
 
 
 def render_verse_browser():

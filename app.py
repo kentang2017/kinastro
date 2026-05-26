@@ -2755,12 +2755,28 @@ if not _engine_handled:
 
                 expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
                 with st.expander(expander_label, expanded=True):
-                    from astro.tieban.tieban_browser import render_palace_verses_paginated
+                    from astro.tieban.tieban_browser import (
+                        render_palace_verses_paginated,
+                        render_palace_verses_subtabs,
+                    )
                     render_palace_verses_paginated(
                         tb_result.palace_verses,
                         language=get_lang(),
                         page_size=4,
                         key_prefix="tb_main_palace_verses",
+                    )
+                    st.markdown(
+                        "**"
+                        + (
+                            auto_cn("📑 逐宮詳細解說")
+                            if get_lang() != "en"
+                            else "📑 Palace Details"
+                        )
+                        + "**"
+                    )
+                    render_palace_verses_subtabs(
+                        tb_result.palace_verses,
+                        language=get_lang(),
                     )
             else:
                 st.info(auto_cn("請先在左側輸入出生資料並點擊推算，即可查看條文解說。"))
