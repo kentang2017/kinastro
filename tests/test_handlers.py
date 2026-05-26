@@ -257,8 +257,22 @@ class TestHandlerStructure(unittest.TestCase):
         """Nanji handler should normalize args and render via birth params."""
         calls = {"compute": None, "render": None, "ai": None}
 
-        def _compute_nanji(**kwargs):
-            calls["compute"] = kwargs
+        def _compute_nanji(
+            year,
+            month,
+            day,
+            hour,
+            minute=0,
+            gender="男",
+        ):
+            calls["compute"] = {
+                "year": year,
+                "month": month,
+                "day": day,
+                "hour": hour,
+                "minute": minute,
+                "gender": gender,
+            }
             return {"nanji": "result"}
 
         def _render_nanji(**kwargs):
@@ -296,10 +310,6 @@ class TestHandlerStructure(unittest.TestCase):
                 "day": 3,
                 "hour": 4,
                 "minute": 5,
-                "timezone": 8.0,
-                "latitude": 1.2,
-                "longitude": 3.4,
-                "location_name": "Test",
                 "gender": "女",
             },
         )

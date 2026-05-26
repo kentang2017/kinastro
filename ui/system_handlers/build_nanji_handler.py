@@ -31,14 +31,13 @@ def build_nanji_handler(
         """Pure compute wrapped for Streamlit caching."""
         sig = inspect.signature(compute_nanji_chart)
         valid_params = set(sig.parameters.keys())
-        has_kwargs = any(
-            p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
-        )
-        if not has_kwargs:
-            params_payload = {
-                k: v for k, v in params_payload.items() if k in valid_params
-            }
-        params_payload["gender"] = _normalize_nanji_gender(params_payload.get("gender"))
+        params_payload = {
+            k: v for k, v in params_payload.items() if k in valid_params
+        }
+        if "gender" in valid_params:
+            params_payload["gender"] = _normalize_nanji_gender(
+                params_payload.get("gender")
+            )
         return compute_nanji_chart(**params_payload, **extra_kwargs)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
