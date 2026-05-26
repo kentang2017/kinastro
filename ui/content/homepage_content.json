@@ -1,0 +1,153 @@
+{
+  "categories": [
+    {
+      "icon": "☯️",
+      "title_zh": "三式神機",
+      "title_en": "San Shi Divination",
+      "systems": ["大六壬", "太乙神數", "奇門祿命"],
+      "accent": "#C9A84C",
+      "bg": "rgba(201,168,76,0.12)",
+      "border": "rgba(201,168,76,0.28)"
+    },
+    {
+      "icon": "🏮",
+      "title_zh": "中式占星",
+      "title_en": "Chinese Systems",
+      "systems": ["紫微斗數", "七政四餘", "萬化仙禽", "十二星次", "策天飛星", "達摩一掌經", "鐵板神數", "邵子神數", "皇極經世", "鬼谷分定經", "滌器遺訣", "太玄數占星", "開元占經", "五運六氣", "六爻終身卦", "北極神數", "南極神數", "子平八字", "蠢子數"],
+      "accent": "#C9A84C",
+      "bg": "rgba(201,168,76,0.10)",
+      "border": "rgba(201,168,76,0.22)"
+    },
+    {
+      "icon": "🏛️",
+      "title_zh": "西洋占星",
+      "title_en": "Western Astrology",
+      "systems": ["西洋占星", "薩比安符號", "希臘化占星", "星移地圖", "天王星漢堡", "宇宙生物學", "和諧占星", "古典主限推運", "凱爾特樹", "出生時間校正", "赫密士前世盤", "靈性占星", "拜占庭占星", "人間圖", "世俗占星", "弗拉德命運輪盤", "煉金占星"],
+      "accent": "#7B9ED9",
+      "bg": "rgba(123,158,217,0.1)",
+      "border": "rgba(123,158,217,0.22)"
+    },
+    {
+      "icon": "🪷",
+      "title_zh": "印度占星",
+      "title_en": "Vedic Jyotish",
+      "systems": ["Jyotish", "紅皮書 Lal Kitab", "納迪占星", "Jaimini", "KP 占星", "吠陀風水"],
+      "accent": "#FF9933",
+      "bg": "rgba(255,153,51,0.1)",
+      "border": "rgba(255,153,51,0.22)"
+    },
+    {
+      "icon": "🌏",
+      "title_zh": "亞洲體系",
+      "title_en": "Asian Systems",
+      "systems": ["土亭數", "宿曜道", "泰國占星", "老撾占星", "緬甸 Mahabote", "峇里 Wariga", "爪哇 Weton", "馬來伊斯蘭占星（十二星）", "馬來七星五刻占卜", "祖爾海", "藏傳時輪金剛", "九星氣學", "高棉占星", "波利尼西亞"],
+      "accent": "#E0A526",
+      "bg": "rgba(224,165,38,0.1)",
+      "border": "rgba(224,165,38,0.22)"
+    },
+    {
+      "icon": "🕌",
+      "title_zh": "中東體系",
+      "title_en": "Middle East Systems",
+      "systems": ["卡巴拉", "猶太占星", "薩珊波斯", "薩珊波斯進階版", "阿拉伯占星", "也門占星", "Picatrix 占星魔法", "柏柏爾占星", "地占占星"],
+      "accent": "#3AB09E",
+      "bg": "rgba(58,176,158,0.1)",
+      "border": "rgba(58,176,158,0.22)"
+    },
+    {
+      "icon": "🌍",
+      "title_zh": "非洲體系",
+      "title_en": "African Systems",
+      "systems": ["衣索比亞 Bahre Hasab", "多貢天狼星宇宙學"],
+      "accent": "#B07D42",
+      "bg": "rgba(176,125,66,0.1)",
+      "border": "rgba(176,125,66,0.22)"
+    },
+    {
+      "icon": "🜁",
+      "title_zh": "隱祕與原民傳統",
+      "title_en": "Obscure & Indigenous",
+      "systems": ["亞美尼亞占星"],
+      "accent": "#A06C3B",
+      "bg": "rgba(160,108,59,0.1)",
+      "border": "rgba(160,108,59,0.22)"
+    },
+    {
+      "icon": "🏺",
+      "title_zh": "古代文明",
+      "title_en": "Ancient Civilizations",
+      "systems": ["瑪雅占星", "印加／安地斯占星", "阿茲特克", "古埃及十度", "巴比倫占星", "蘇美/美索不達米亞", "伊特魯里亞占星"],
+      "accent": "#D4A04A",
+      "bg": "rgba(212,160,74,0.1)",
+      "border": "rgba(212,160,74,0.22)"
+    },
+    {
+      "icon": "⚕️",
+      "title_zh": "醫占",
+      "title_en": "Medical Astrology",
+      "systems": ["醫學占星", "傷寒鈐法"],
+      "accent": "#2ECC71",
+      "bg": "rgba(46,204,113,0.1)",
+      "border": "rgba(46,204,113,0.22)"
+    },
+    {
+      "icon": "📜",
+      "title_zh": "傳統卜卦占星",
+      "title_en": "Traditional Horary",
+      "systems": ["傳統卜卦占星", "運動占星", "擇日占星", "歐洲地占"],
+      "accent": "#7B4EBE",
+      "bg": "rgba(123,78,190,0.1)",
+      "border": "rgba(123,78,190,0.25)"
+    }
+  ],
+  "features": [
+    {
+      "icon": "🔮",
+      "title_zh": "{total_systems} 體系合一",
+      "title_en": "{total_systems} Systems in One",
+      "desc_zh": "在同一介面中切換中國、西洋、印度、阿拉伯、瑪雅等全球 {total_systems} 種占星體系",
+      "desc_en": "Switch between {total_systems} global astrology traditions — Chinese, Western, Indian, Arabic, Mayan and more — all in a single interface"
+    },
+    {
+      "icon": "🪐",
+      "title_zh": "精密天文計算",
+      "title_en": "Precision Astronomy",
+      "desc_zh": "使用瑞士星曆表 (Swiss Ephemeris) pyswisseph 進行高精度天文運算",
+      "desc_en": "High-precision astronomical calculations powered by Swiss Ephemeris (pyswisseph)"
+    },
+    {
+      "icon": "🤖",
+      "title_zh": "AI 智慧分析",
+      "title_en": "AI-Powered Analysis",
+      "desc_zh": "整合 Cerebras / OpenAI，提供專業命理解讀，支援中英雙語互動問答",
+      "desc_en": "Integrated with Cerebras / OpenAI for professional chart readings with bilingual Q&A"
+    },
+    {
+      "icon": "📊",
+      "title_zh": "精美 SVG 圖表",
+      "title_en": "Beautiful SVG Charts",
+      "desc_zh": "純 SVG 渲染，清晰美觀，支援響應式設計，手機平板完美顯示",
+      "desc_en": "Pure SVG rendering — crisp, responsive, and perfect on mobile and tablet"
+    },
+    {
+      "icon": "🌍",
+      "title_zh": "三語介面",
+      "title_en": "Trilingual Interface",
+      "desc_zh": "繁體中文、簡體中文、English 即時切換，無需重新載入",
+      "desc_en": "Switch instantly between Traditional Chinese, Simplified Chinese, and English — no reload required"
+    },
+    {
+      "icon": "🆓",
+      "title_zh": "完全免費開源",
+      "title_en": "Free & Open Source",
+      "desc_zh": "MIT License，永久免費，無任何隱藏費用，歡迎 Fork 與貢獻",
+      "desc_en": "MIT License — free forever, no hidden fees. Fork and contribute welcome"
+    }
+  ],
+  "hero": {
+    "badge_zh": "線上免費使用 · Open Source · MIT License",
+    "badge_en": "Free Online · Open Source · MIT License",
+    "desc_zh": "從七政四餘到西洋占星、從紫微斗數到印度 Jyotish、<br/>從三式（六壬、太乙、奇門）到 Astrocartography、凱爾特樹木曆、太玄數占星、<br/>紅皮書 Lal Kitab、薩珊波斯占星、<strong style=\"color:#A78BFA;\">皇極經世（Huangji Jingshi）</strong>、<strong style=\"color:#A78BFA;\">馬來伊斯蘭占星（Bintang Duabelas）</strong>、<strong style=\"color:#A78BFA;\">馬來七星五刻占卜（Kinketika）</strong>、<strong style=\"color:#A78BFA;\">柏柏爾占星</strong>、<strong style=\"color:#A78BFA;\">衣索比亞 Bahre Hasab</strong>、瑪雅曆法到巴比倫星表、<strong style=\"color:#A78BFA;\">世俗占星</strong>、<strong style=\"color:#A78BFA;\">拜占庭占星</strong>、醫學占星、傷寒鈐法、<br/>傳統卜卦占星、<strong style=\"color:#A78BFA;\">運動占星（Sports Astrology）</strong>、擇日占星、蠢子數、<strong style=\"color:#A78BFA;\">亞美尼亞占星</strong>、<strong style=\"color:#A78BFA;\">地占占星</strong>、<strong style=\"color:#A78BFA;\">伊特魯里亞占星</strong>、<strong style=\"color:#A78BFA;\">煉金占星</strong>——堅占星將<strong style=\"color:#EAB308;font-weight:600;\">全球 {total_systems} 種占星體系</strong>融合為一，讓千年星學智慧觸手可及。",
+    "desc_en": "From Seven Luminaries to Western Astrology, from Zi Wei Dou Shu to Indian Jyotish,<br/>from San Shi (Liu Ren, Tai Yi, Qi Men) to Astrocartography, Celtic Tree Calendar, Tai Xuan Shu,<br/>Lal Kitab, Sassanid Persian Astrology, <strong style=\"color:#A78BFA;\">Huangji Jingshi</strong>, <strong style=\"color:#A78BFA;\">Malay Islamic Astrology (Bintang Duabelas)</strong>, <strong style=\"color:#A78BFA;\">Malay Time Divination (Kinketika)</strong>, <strong style=\"color:#A78BFA;\">Berber Astrology</strong>, <strong style=\"color:#A78BFA;\">Ethiopian Bahre Hasab</strong>, Mayan Calendar to Babylonian Star Catalogue, <strong style=\"color:#A78BFA;\">Mundane Astrology</strong>, <strong style=\"color:#A78BFA;\">Byzantine Astrology</strong>, Medical Astrology, Shang Han Method,<br/>Traditional Horary, <strong style=\"color:#A78BFA;\">Sports Astrology (Frawley)</strong>, Electional Astrology, Chun Zi Shu, <strong style=\"color:#A78BFA;\">Armenian Astrology</strong>, <strong style=\"color:#A78BFA;\">Geomantic Astrology</strong>, <strong style=\"color:#A78BFA;\">Etruscan Astrology</strong>, <strong style=\"color:#A78BFA;\">Alchemical Astrology</strong> — KinAstro unifies <strong style=\"color:#EAB308;font-weight:600;\">{total_systems} astrology systems</strong> worldwide, bringing millennia of stellar wisdom to your fingertips."
+  }
+}
