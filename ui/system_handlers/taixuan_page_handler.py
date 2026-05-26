@@ -68,7 +68,6 @@ def render_taixuan_page(
                     ),
                 )
             except Exception as err:
-                st.error(f"{translate('error_tab_compute')}：{err}")
                 st.exception(err)
         else:
             render_taixuan_intro()
