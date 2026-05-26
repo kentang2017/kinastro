@@ -11,6 +11,7 @@ from ui.system_handlers.build_bazi_handler import build_bazi_handler
 from ui.system_handlers.build_beiji_handler import build_beiji_handler
 from ui.system_handlers.build_nanji_handler import build_nanji_handler
 from ui.system_handlers.build_thai_handler import build_thai_handler
+from ui.system_handlers.phase1_handlers import build_ziwei_handler
 
 
 class TestBirthChartParams(unittest.TestCase):
@@ -371,6 +372,46 @@ class TestHandlerStructure(unittest.TestCase):
 
         self.assertEqual(calls["compute"]["year"], 1990)
         self.assertEqual(calls["ai"], [("tab_andean", result, "andean", "")])
+
+    def test_ziwei_handler_hook_accepts_chart_arg(self):
+        """Ziwei handler should pass a hook that accepts chart argument."""
+        calls = {"compute": None, "ai": []}
+
+        def _compute_ziwei_chart(**kwargs):
+            calls["compute"] = kwargs
+            return {"ziwei": "result", "year": kwargs["year"]}
+
+        def _render_ziwei_chart(result, after_chart_hook=None):
+            if after_chart_hook:
+                after_chart_hook(result)
+
+        def _ai_button_sink(*args):
+            calls["ai"].append(args)
+
+        handler = build_ziwei_handler(
+            compute_ziwei_chart=_compute_ziwei_chart,
+            render_ziwei_chart=_render_ziwei_chart,
+            ai_button_sink=_ai_button_sink,
+        )
+        params = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=8.0,
+            latitude=22.3193,
+            longitude=114.1694,
+            location_name="Hong Kong",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+        handler.render(result, params, {})
+
+        self.assertEqual(calls["compute"]["year"], 1990)
+        self.assertEqual(calls["compute"]["gender"], "female")
+        self.assertEqual(calls["ai"], [("tab_ziwei", result, "ziwei", "")])
 
 
 class TestComputeFunctions(unittest.TestCase):
