@@ -21,15 +21,20 @@ def build_kp_handler(
     @st.cache_data(show_spinner=False)
     def _cached_compute(params_payload: dict[str, Any], **extra_kwargs):
         """Pure compute wrapped for Streamlit caching."""
-        # Remove gender parameter - this system doesn't use it
-        params_payload = {k: v for k, v in params_payload.items() if k != "gender"}
+        # Remove unsupported shared birth fields for this system
+        params_payload = {
+            k: v
+            for k, v in params_payload.items()
+            if k not in {"gender", "location_name"}
+        }
         return compute_kp_chart(**params_payload, **extra_kwargs)
 
     def _compute(params: BirthChartParams, options: dict[str, Any]) -> Any:
         """Compute chart from unified params."""
         payload = params.to_dict()
-        # Remove gender parameter - this system doesn\'t use it
+        # Remove unsupported shared birth fields for this system
         payload.pop("gender", None)
+        payload.pop("location_name", None)
         # Add system-specific options here if needed
         # e.g., vietnam_mode for ZiWei, ayanamsa for Vedic, etc.
         return _cached_compute(payload)

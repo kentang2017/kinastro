@@ -9,6 +9,7 @@ from ui.system_engine import EXECUTION_REGISTRY, SystemHandler
 from ui.system_handlers.build_andean_handler import build_andean_handler
 from ui.system_handlers.build_bazi_handler import build_bazi_handler
 from ui.system_handlers.build_beiji_handler import build_beiji_handler
+from ui.system_handlers.build_kp_handler import build_kp_handler
 from ui.system_handlers.build_nanji_handler import build_nanji_handler
 from ui.system_handlers.build_thai_handler import build_thai_handler
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
@@ -412,6 +413,47 @@ class TestHandlerStructure(unittest.TestCase):
         self.assertEqual(calls["compute"]["year"], 1990)
         self.assertEqual(calls["compute"]["gender"], "female")
         self.assertEqual(calls["ai"], [("tab_ziwei", result, "ziwei", "")])
+
+    def test_kp_handler_filters_unsupported_shared_fields(self):
+        """KP handler should not pass location_name/gender to compute."""
+        calls = {"compute": None, "ai": []}
+
+        def _compute_kp_chart(**kwargs):
+            calls["compute"] = kwargs
+            return {"kp": "result", "year": kwargs["year"]}
+
+        def _render_kp_chart(result, after_chart_hook=None):
+            if after_chart_hook:
+                after_chart_hook()
+
+        def _ai_button_sink(*args):
+            calls["ai"].append(args)
+
+        handler = build_kp_handler(
+            compute_kp_chart=_compute_kp_chart,
+            render_kp_chart=_render_kp_chart,
+            ai_button_sink=_ai_button_sink,
+        )
+        params = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=8.0,
+            latitude=22.3193,
+            longitude=114.1694,
+            location_name="Hong Kong",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+        handler.render(result, params, {})
+
+        self.assertEqual(calls["compute"]["year"], 1990)
+        self.assertNotIn("location_name", calls["compute"])
+        self.assertNotIn("gender", calls["compute"])
+        self.assertEqual(calls["ai"], [("tab_kp", result, "kp", "")])
 
 
 class TestComputeFunctions(unittest.TestCase):
