@@ -200,12 +200,6 @@ from astro.astrocartography import (
 )
 from astro.nine_star_ki import compute_nine_star_ki_chart, render_nine_star_ki_chart
 from astro.celtic import compute_celtic_tree_chart, render_celtic_tree_chart
-from astro.chinese.taixuan import TaiXuanCalculator
-from astro.chinese.taixuan.taixuan_renderer import (
-    render_taixuan_chart,
-    render_taixuan_intro,
-    render_qigua_ui,
-)
 from astro.rectification.renderer import render_streamlit as render_rectification_page
 from astro.trutine_of_hermes.renderer import render_streamlit as render_trutine_chart
 from astro.bazi import compute_bazi as compute_bazi_chart, render_streamlit as render_bazi_chart
@@ -224,6 +218,7 @@ from ui.system_handlers.homepage_handler import (
 )
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
 from ui.system_handlers.build_andean_handler import build_andean_handler
+from ui.system_handlers.taixuan_page_handler import render_taixuan_page
 from ui.register_handlers import register_all_handlers
 from frontend.arabic_lots_dashboard import render_arabic_lots_dashboard
 from frontend.european_geomancy_renderer import render_european_geomancy
@@ -2970,58 +2965,12 @@ if not _engine_handled:
 
     # --- 太玄數占星 ---
     elif _selected_system == "tab_taixuan":
-        # 子頁籤：本命排盤 / 即時問卜
-        _tx_natal_label = t("taixuan_natal_tab")
-        _tx_qigua_label = t("taixuan_qigua_tab")
-        _tx_tab_natal, _tx_tab_qigua = st.tabs([_tx_natal_label, _tx_qigua_label])
-
-        with _tx_tab_natal:
-            if _is_calculated:
-                try:
-                    _p = st.session_state["_calc_params"]
-                    with st.spinner(t("spinner_taixuan")):
-                        _tx_calc = TaiXuanCalculator(
-                            year=_p["year"],
-                            month=_p["month"],
-                            day=_p["day"],
-                            hour=_p["hour"],
-                            mode="natal",
-                        )
-                        _tx_result = _tx_calc.calculate()
-                    render_taixuan_chart(
-                        _tx_result,
-                        after_chart_hook=lambda c: _render_ai_button(
-                            "tab_taixuan",
-                            {
-                                "shou_name": _tx_result.shou.name,
-                                "gua_title": _tx_result.shou.gua_title,
-                                "gua_text": _tx_result.shou.gua_text,
-                                "zhan_name": _tx_result.shou.zhan_name,
-                                "zhan_text": _tx_result.shou.zhan_text,
-                                "year_gz": _tx_result.year_gz,
-                                "day_gz": _tx_result.day_gz,
-                                "sishi": _tx_result.sishi,
-                                "mansion": _tx_result.shou.mansion,
-                                "planet": _tx_result.shou.planet,
-                            },
-                            btn_key="taixuan_natal",
-                        ),
-                    )
-                except Exception as _e:
-                    st.error(f"{t('error_tab_compute')}：{_e}")
-                    import traceback
-                    st.code(traceback.format_exc())
-            else:
-                render_taixuan_intro()
-
-        with _tx_tab_qigua:
-            render_qigua_ui(
-                after_chart_hook=lambda c: _render_ai_button(
-                    "tab_taixuan",
-                    {"mode": "qigua"},
-                    btn_key="taixuan_qigua",
-                )
-            )
+        render_taixuan_page(
+            is_calculated=_is_calculated,
+            calc_params=st.session_state.get("_calc_params"),
+            translate=t,
+            render_ai_button=_render_ai_button,
+        )
 
     # --- 五運六氣 ---
     elif _selected_system == "tab_wuyunliuqi":
