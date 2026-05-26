@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 
 def compute_dogon_sirius_chart(*args, **kwargs):
+    kwargs.pop("gender", None)
     from .calculator import compute_dogon_sirius_chart as _fn
     return _fn(*args, **kwargs)
 
