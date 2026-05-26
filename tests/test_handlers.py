@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from ui.components.birth_form import BirthChartParams
 from ui.system_engine import EXECUTION_REGISTRY, SystemHandler
+from ui.system_handlers.build_beiji_handler import build_beiji_handler
+from ui.system_handlers.build_nanji_handler import build_nanji_handler
 from ui.system_handlers.build_thai_handler import build_thai_handler
 
 
@@ -192,6 +194,127 @@ class TestHandlerStructure(unittest.TestCase):
             },
         )
         self.assertEqual(calls["brahma"][1], {"reading": True})
+
+    def test_beiji_handler_filters_payload_and_normalizes_gender(self):
+        """Beiji handler should pass only supported args to compute_beiji."""
+        calls = {"compute": None, "render": None, "ai": None}
+
+        def _compute_beiji(year, month, day, hour, minute=0, gender="男", ke=0):
+            calls["compute"] = {
+                "year": year,
+                "month": month,
+                "day": day,
+                "hour": hour,
+                "minute": minute,
+                "gender": gender,
+                "ke": ke,
+            }
+            return {"ok": True}
+
+        def _render_beiji(result):
+            calls["render"] = result
+
+        def _ai(*args):
+            calls["ai"] = args
+
+        handler = build_beiji_handler(
+            compute_beiji_chart=_compute_beiji,
+            render_beiji_chart=_render_beiji,
+            ai_button_sink=_ai,
+        )
+        params = BirthChartParams(
+            year=1990,
+            month=1,
+            day=15,
+            hour=12,
+            minute=30,
+            timezone=8.0,
+            latitude=22.3,
+            longitude=114.1,
+            location_name="Hong Kong",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+        handler.render(result, params, {})
+
+        self.assertEqual(
+            calls["compute"],
+            {
+                "year": 1990,
+                "month": 1,
+                "day": 15,
+                "hour": 12,
+                "minute": 30,
+                "gender": "女",
+                "ke": 0,
+            },
+        )
+        self.assertEqual(calls["render"], {"ok": True})
+        self.assertEqual(calls["ai"], ("tab_beiji", {"ok": True}, "beiji", ""))
+
+    def test_nanji_handler_compute_and_render_wiring(self):
+        """Nanji handler should normalize args and render via birth params."""
+        calls = {"compute": None, "render": None, "ai": None}
+
+        def _compute_nanji(**kwargs):
+            calls["compute"] = kwargs
+            return {"nanji": "result"}
+
+        def _render_nanji(**kwargs):
+            calls["render"] = kwargs
+
+        def _ai(*args):
+            calls["ai"] = args
+
+        handler = build_nanji_handler(
+            compute_nanji_chart=_compute_nanji,
+            render_nanji_chart=_render_nanji,
+            ai_button_sink=_ai,
+        )
+        params = BirthChartParams(
+            year=2020,
+            month=2,
+            day=3,
+            hour=4,
+            minute=5,
+            timezone=8.0,
+            latitude=1.2,
+            longitude=3.4,
+            location_name="Test",
+            gender="female",
+        )
+
+        result = handler.compute(params, {})
+        handler.render(result, params, {})
+
+        self.assertEqual(
+            calls["compute"],
+            {
+                "year": 2020,
+                "month": 2,
+                "day": 3,
+                "hour": 4,
+                "minute": 5,
+                "timezone": 8.0,
+                "latitude": 1.2,
+                "longitude": 3.4,
+                "location_name": "Test",
+                "gender": "女",
+            },
+        )
+        self.assertEqual(
+            calls["render"],
+            {
+                "year": 2020,
+                "month": 2,
+                "day": 3,
+                "hour": 4,
+                "minute": 5,
+                "gender": "女",
+            },
+        )
+        self.assertEqual(calls["ai"], ("tab_nanji", {"nanji": "result"}, "nanji", ""))
 
 
 class TestComputeFunctions(unittest.TestCase):
