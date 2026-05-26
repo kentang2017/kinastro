@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Mapping
+from collections.abc import Mapping
+from typing import Any, Callable
 
 import streamlit as st
 
@@ -60,7 +61,7 @@ def render_taixuan_page(
                     tx_result = _compute_taixuan_natal(calc_params)
                 render_taixuan_chart(
                     tx_result,
-                    after_chart_hook=lambda _chart: render_ai_button(
+                    after_chart_hook=lambda _result: render_ai_button(
                         "tab_taixuan",
                         _build_taixuan_ai_payload(tx_result),
                         btn_key="taixuan_natal",
@@ -74,7 +75,7 @@ def render_taixuan_page(
 
     with tx_tab_qigua:
         render_qigua_ui(
-            after_chart_hook=lambda _chart: render_ai_button(
+            after_chart_hook=lambda _result: render_ai_button(
                 "tab_taixuan",
                 {"mode": "qigua"},
                 btn_key="taixuan_qigua",
