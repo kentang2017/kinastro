@@ -43,12 +43,12 @@ def _paginate_items(
     if total_pages == 1:
         return list(items), total_pages, 1
 
-    page = int(st.selectbox(
+    page: int = st.selectbox(
         label,
         options=list(range(1, total_pages + 1)),
         index=0,
         key=f"{key_prefix}_page",
-    ))
+    )
     return _slice_page(items, page=page, page_size=page_size), total_pages, page
 
 
