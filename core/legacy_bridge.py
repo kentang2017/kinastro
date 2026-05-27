@@ -635,7 +635,7 @@ def _render_geomancy_ui(*args, **kwargs):
 
 def _render_reference_library() -> None:
     st.markdown("### 📚 Reference Library")
-    render_picatrix_browse()
+    render_picatrix_browse(chart_key_prefix="arabic_reference_tab")
     st.divider()
     render_shams_browse()
     st.divider()

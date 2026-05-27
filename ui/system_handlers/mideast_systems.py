@@ -258,7 +258,7 @@ def render_tab_arabic() -> None:
                 ])
 
                 with ptab_browse:
-                    render_picatrix_browse()
+                    render_picatrix_browse(chart_key_prefix="arabic_picatrix_tab")
 
                 with ptab_mansions:
                     st.info(t("picatrix_moon_lon_info").format(lon=_birth_moon_lon))
@@ -344,7 +344,7 @@ def render_tab_arabic() -> None:
             ])
 
             with ptab_browse:
-                render_picatrix_browse()
+                render_picatrix_browse(chart_key_prefix="arabic_picatrix_tab")
 
             with ptab_mansions:
                 render_mansion_lookup(moon_lon=None)

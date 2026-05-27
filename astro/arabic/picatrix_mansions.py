@@ -526,7 +526,10 @@ def get_all_talisman_intents() -> list[str]:
 # 渲染函數 (Rendering Functions)
 # ============================================================
 
-def render_mansion_lookup(moon_lon: float | None = None) -> None:
+def render_mansion_lookup(
+    moon_lon: float | None = None,
+    chart_key_prefix: str = "picatrix_lookup",
+) -> None:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
     渲染月宿查詢器（Mansion Lookup Tool）。
@@ -562,7 +565,11 @@ def render_mansion_lookup(moon_lon: float | None = None) -> None:
     _render_single_mansion(mansion)
 
     st.divider()
-    _render_mansion_wheel(all_mansions, highlight_index=mansion.index)
+    _render_mansion_wheel(
+        all_mansions,
+        highlight_index=mansion.index,
+        chart_key=f"{chart_key_prefix}_mansion_wheel",
+    )
 
 
 def _render_single_mansion(m: PicatrixMansion) -> None:
@@ -657,7 +664,11 @@ def _render_single_mansion(m: PicatrixMansion) -> None:
     st.markdown(html, unsafe_allow_html=True)
 
 
-def _render_mansion_wheel(mansions: list, highlight_index: int = -1) -> None:
+def _render_mansion_wheel(
+    mansions: list,
+    highlight_index: int = -1,
+    chart_key: str = "picatrix_mansion_wheel",
+) -> None:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
     使用 Plotly Barpolar 繪製 28 月宿輪圖（正圓扇形佈局）。
@@ -752,7 +763,7 @@ def _render_mansion_wheel(mansions: list, highlight_index: int = -1) -> None:
             font=dict(color="#e0e0e0", size=10),
         ),
     )
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, width='stretch', key=chart_key)
 
 
 def render_planetary_hours_tool(
@@ -762,6 +773,7 @@ def render_planetary_hours_tool(
     timezone: float = 8.0,
     latitude: float = 25.0,
     longitude: float = 121.5,
+    chart_key: str = "picatrix_planetary_hours",
 ) -> None:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim) Book III, Ch. 9
@@ -921,7 +933,7 @@ def _render_planetary_hours_chart(result: PlanetaryHoursResult) -> None:
         plot_bgcolor="#1a1a2e",
         font=dict(color="#e0e0e0"),
     )
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, width='stretch', key=chart_key)
 
 
 def render_talisman_generator() -> None:
@@ -1019,7 +1031,7 @@ def render_talisman_generator() -> None:
 # 瀏覽函數 (Browse / Reference Functions)
 # ============================================================
 
-def render_picatrix_browse() -> None:
+def render_picatrix_browse(chart_key_prefix: str = "picatrix_browse") -> None:
     """
     資料來源：Picatrix《賢者之目的》(Ghayat al-Hakim)
     渲染 Picatrix 完整參考瀏覽器（不需要排盤資料）。
@@ -1052,7 +1064,11 @@ def render_picatrix_browse() -> None:
     all_mansions = get_all_mansions()
 
     with browse_tabs[0]:
-        _render_mansion_wheel(all_mansions, highlight_index=today_idx)
+        _render_mansion_wheel(
+            all_mansions,
+            highlight_index=today_idx,
+            chart_key=f"{chart_key_prefix}_mansion_wheel",
+        )
 
     with browse_tabs[1]:
         _render_mansion_grid(all_mansions, highlight_index=today_idx)
