@@ -165,19 +165,51 @@ def render_tab_shanghan_qianfa() -> None:
         input_lat = 25.033
         input_lon = 121.565
         location_name = ""
-    if _is_calculated:
-        try:
-            _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_shanghan_qianfa")):
-                _shanghan_result = compute_shanghan_qianfa(**_p)
-            render_shanghan_qianfa_chart(_shanghan_result)
-            _render_ai_button("tab_shanghan_qianfa", _shanghan_result, btn_key="shanghan_qianfa")
-        except Exception as _e:
-            st.error(f"{t('error_tab_compute')}：{_e}")
-            st.exception(_e)
-    else:
+
+    if not _is_calculated:
         st.info(t("info_shanghan_qianfa_prompt"))
         st.markdown(t("desc_shanghan_qianfa"))
+        return
+
+    # ── Onset date & method version inputs ────────────────────────────────
+    _col_onset, _col_method = st.columns(2)
+    with _col_onset:
+        _onset_val = st.session_state.get("_shanghan_onset_date") or date.today()
+        _onset_date = st.date_input(
+            t("shanghan_onset_date_label"),
+            value=_onset_val,
+            help=t("shanghan_onset_date_help"),
+            key="shanghan_onset_date_input",
+        )
+        st.session_state["_shanghan_onset_date"] = _onset_date
+    with _col_method:
+        _method_options = [t("shanghan_method_v1"), t("shanghan_method_v2")]
+        _method_saved = st.session_state.get("_shanghan_method_version", "v1")
+        _method_default_idx = 1 if _method_saved == "v2" else 0
+        _method_label = st.selectbox(
+            t("shanghan_method_version_label"),
+            options=_method_options,
+            index=_method_default_idx,
+            key="shanghan_method_select",
+        )
+        _method_version = "v2" if _method_label == t("shanghan_method_v2") else "v1"
+        st.session_state["_shanghan_method_version"] = _method_version
+
+    try:
+        _p = st.session_state["_calc_params"]
+        with st.spinner(t("spinner_shanghan_qianfa")):
+            _shanghan_result = compute_shanghan_qianfa(
+                **_p,
+                onset_year=_onset_date.year,
+                onset_month=_onset_date.month,
+                onset_day=_onset_date.day,
+                method_version=_method_version,
+            )
+        render_shanghan_qianfa_chart(_shanghan_result)
+        _render_ai_button("tab_shanghan_qianfa", _shanghan_result, btn_key="shanghan_qianfa")
+    except Exception as _e:
+        st.error(f"{t('error_tab_compute')}：{_e}")
+        st.exception(_e)
 
 
 def render_tab_horary() -> None:
