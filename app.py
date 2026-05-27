@@ -208,7 +208,8 @@ invalidate_chart_cache_if_birth_changed(_params)
 
 _is_calculated = True
 _selected_system = st.session_state.get(SessionKeys.SYSTEM_SELECT)
-_render_system_title(_selected_system or "")
+if _selected_system:
+    _render_system_title(_selected_system)
 
 # ── Status flash after chart submission ───────────────────────────────────
 if st.session_state.get("_calc_success_flash"):
