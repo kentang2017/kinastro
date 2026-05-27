@@ -29,7 +29,7 @@ def build_ziwei_handler(*, compute_ziwei_chart, render_ziwei_chart, ai_button_si
     def _render(result: Any, params: BirthChartParams, options: dict[str, Any]) -> None:
         render_ziwei_chart(
             result,
-            after_chart_hook=lambda: ai_button_sink("tab_ziwei", result, "ziwei", ""),
+            after_chart_hook=lambda: ai_button_sink("tab_ziwei", result, ""),
         )
 
     return SystemHandler(
