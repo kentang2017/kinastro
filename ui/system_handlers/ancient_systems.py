@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, time as time_cls
-import importlib
 
 import streamlit as st
 
@@ -13,9 +12,11 @@ from ui.helpers import t
 _LEGACY_NAMES = ('_compute_andean_chart_fn', '_compute_armenian_chart_fn', '_compute_etruscan_chart_fn', 'compute_aztec_chart', 'compute_decan_chart', 'compute_maya_chart', 'compute_sumerian_chart', 'render_andean_chart_ui', 'render_armenian_chart_ui', 'render_aztec_chart', 'render_decan_browse', 'render_decan_chart', 'render_etruscan_chart_ui', 'render_maya_chart', 'render_sumerian_chart')
 
 def _bind_legacy() -> None:
-    _legacy = importlib.import_module("app")
+    from core import legacy_bridge as _legacy_bridge
+
     for _name in _LEGACY_NAMES:
-        globals()[_name] = getattr(_legacy, _name)
+        if hasattr(_legacy_bridge, _name):
+            globals()[_name] = getattr(_legacy_bridge, _name)
 
 def _render_ai_button(system_key: str, chart_obj, page_content: str = "", **_kwargs) -> None:
     set_ai_context(system_key, chart_obj, page_content)
