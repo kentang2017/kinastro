@@ -172,10 +172,9 @@ def render_tab_shanghan_qianfa() -> None:
         return
 
     # ── Onset date & method version inputs ────────────────────────────────
-    from datetime import date as _date_cls
-    _col_onset, _col_method = st.columns([2, 2])
+    _col_onset, _col_method = st.columns(2)
     with _col_onset:
-        _onset_val = st.session_state.get("_shanghan_onset_date", _date_cls.today())
+        _onset_val = st.session_state.get("_shanghan_onset_date") or date.today()
         _onset_date = st.date_input(
             t("shanghan_onset_date_label"),
             value=_onset_val,
