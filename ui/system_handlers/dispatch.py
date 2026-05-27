@@ -6,6 +6,11 @@ from __future__ import annotations
 
 from typing import Callable
 
+import streamlit as st
+
+from astro.system_registry import get_system
+from ui.helpers import t
+
 
 def _get_dispatch() -> dict[str, Callable]:
     from ui.system_handlers import chinese_systems, western_systems, vedic_systems
@@ -102,6 +107,14 @@ def _get_dispatch() -> dict[str, Callable]:
 
 
 _DISPATCH: dict[str, Callable] | None = None
+
+
+def render_system_title(system_id: str) -> None:
+    """Render a unified system page title from registry metadata."""
+    system = get_system(system_id)
+    if system is None:
+        return
+    st.header(t(system.tab_key))
 
 
 def render_system(system_id: str) -> bool:
