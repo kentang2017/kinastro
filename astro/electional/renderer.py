@@ -921,15 +921,6 @@ def render_streamlit(
     st.markdown(_ELECTIONAL_CSS, unsafe_allow_html=True)
     lang = get_lang()
 
-    st.markdown(
-        '<div class="elect-header">'
-        '<h2>⏳ 擇日占星 · Electional Astrology & Vedic Muhurta</h2>'
-        '<p>Western Traditional Electional (Lilly/Bonatti) · Vedic Muhurta Panchanga '
-        '(Muhurta Chintamani / Kalaprakashika / BPHS)</p>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
     west_tab, vedic_tab = st.tabs([
         auto_cn("⚜️ 西方傳統擇日（Lilly/Bonatti）", "⚜️ Western Electional (Lilly/Bonatti)"),
         auto_cn("🪷 吠陀擇時（Vedic Muhurta）", "🪷 Vedic Muhurta"),
