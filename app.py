@@ -314,7 +314,15 @@ with _natal_tab:
 
 # ── Fallback: dispatch to modular system handler files ────────────────────
 if not _engine_handled:
-    _handled = _dispatch_render_system(_selected_system or "")
+    try:
+        _handled = _dispatch_render_system(_selected_system or "")
+    except Exception as _dispatch_err:
+        _sys_label = _selected_system or "unknown"
+        _is_zh = st.session_state.get("lang", "zh") in ("zh", "zh_cn")
+        _err_prefix = f"體系 **{_sys_label}** 起盤時發生錯誤：" if _is_zh else f"System **{_sys_label}** raised an error: "
+        st.error(f"{_err_prefix}`{type(_dispatch_err).__name__}: {_dispatch_err}`")
+        st.exception(_dispatch_err)
+        _handled = True
     if not _handled and _selected_system:
         st.warning(
             f"{'未知體系' if st.session_state.get('lang','zh') in ('zh','zh_cn') else 'Unknown system'}: "

@@ -27,7 +27,7 @@ from astro.ai_analysis import (
 from ui.helpers import t
 
 
-def set_ai_context(system_key: str, chart_obj, page_content: str = "") -> None:
+def set_ai_context(system_key: str, chart_obj, page_content: str = "", **_) -> None:
     """Store chart data for the global fixed AI chat panel.
 
     Parameters
@@ -38,6 +38,9 @@ def set_ai_context(system_key: str, chart_obj, page_content: str = "") -> None:
         The chart object produced by the compute function.
     page_content : str
         Optional extra text content rendered on the page.
+    **_ :
+        Extra keyword arguments (e.g. ``btn_key``) are accepted and ignored
+        for backward-compatibility with legacy call sites.
     """
     st.session_state["_global_chat_system"] = system_key
     st.session_state["_global_chat_chart"] = chart_obj
