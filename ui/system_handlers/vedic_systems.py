@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, time as time_cls
-import importlib
 
 import streamlit as st
 
@@ -23,9 +22,11 @@ from core.cached_computations import (
 _LEGACY_NAMES = ('VARGA_INFO', 'VARGA_KEYS', 'auto_cn', 'compute_jaimini_chart', 'compute_lal_kitab_chart', 'compute_nadi_chart', 'compute_vedic_chart', 'get_dasha_reading', 'get_lang', 'get_yogini_reading', 'render_jaimini_chart', 'render_jaimini_dasha', 'render_lal_kitab_1952_page', 'render_nadi_chart', 'render_single_varga', 'render_sukkayodo_chart', 'render_vedic_chart', 'render_vedic_financial_tab')
 
 def _bind_legacy() -> None:
-    _legacy = importlib.import_module("app")
+    from core import legacy_bridge as _legacy_bridge
+
     for _name in _LEGACY_NAMES:
-        globals()[_name] = getattr(_legacy, _name)
+        if hasattr(_legacy_bridge, _name):
+            globals()[_name] = getattr(_legacy_bridge, _name)
 
 def _render_ai_button(system_key: str, chart_obj, page_content: str = "", **_kwargs) -> None:
     set_ai_context(system_key, chart_obj, page_content)

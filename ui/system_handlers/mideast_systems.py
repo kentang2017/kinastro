@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, time as time_cls
-import importlib
 
 import streamlit as st
 
@@ -18,9 +17,11 @@ from core.cached_computations import (
 _LEGACY_NAMES = ('_compute_geomancy_chart', '_mode', '_render_geomancy_input', '_render_geomancy_ui', '_render_reference_library', 'analyze_bahre_hasab_date', 'build_yemeni_manzil_mandala_svg', 'compute_albiruni_lots', 'compute_amazigh_chart', 'compute_arabic_chart', 'compute_dogon_sirius_chart', 'compute_kabbalistic_chart', 'compute_moon_longitude', 'compute_yemeni_chart', 'get_lang', 'render_amazigh_chart', 'render_amazigh_sky_svg', 'render_arabic_chart', 'render_arabic_lots_dashboard', 'render_bahre_hasab_tab', 'render_deep_sassanian_chart', 'render_dogon_sirius_chart', 'render_european_geomancy', 'render_kabbalistic_chart', 'render_mansion_lookup', 'render_mazzalot_chart', 'render_ms164_browse', 'render_picatrix_behenian', 'render_picatrix_browse', 'render_picatrix_invocations', 'render_planetary_hours_tool', 'render_shams_browse', 'render_shams_chart', 'render_talisman_generator', 'render_yemeni_chart')
 
 def _bind_legacy() -> None:
-    _legacy = importlib.import_module("app")
+    from core import legacy_bridge as _legacy_bridge
+
     for _name in _LEGACY_NAMES:
-        globals()[_name] = getattr(_legacy, _name)
+        if hasattr(_legacy_bridge, _name):
+            globals()[_name] = getattr(_legacy_bridge, _name)
 
 def _render_ai_button(system_key: str, chart_obj, page_content: str = "", **_kwargs) -> None:
     set_ai_context(system_key, chart_obj, page_content)

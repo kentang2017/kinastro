@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, time as time_cls
-import importlib
 
 import streamlit as st
 
@@ -27,9 +26,11 @@ from core.cached_computations import (
 _LEGACY_NAMES = ('_system_cache_key', 'auto_cn', 'build_twelve_ci_svg', 'compute_bazi_chart', 'compute_damo_chart', 'compute_diqiyijue_chart', 'compute_liuren_chart', 'compute_lunming', 'compute_twelve_ci_chart', 'compute_wuyunliuqi', 'datetime', 'ganzhi', 'get_lang', 'get_qizheng_dasha_reading', 'render_aspect_summary', 'render_bazi', 'render_bazi_chart', 'render_beiji_chart', 'render_cetian_ziwei_chart', 'render_chart_info', 'render_chunzi_chart', 'render_damo_chart', 'render_dasha', 'render_diqiyijue_chart', 'render_electional_tool', 'render_financial_tab', 'render_full_chart', 'render_house_table', 'render_kaiyuan_chart', 'render_liuren_chart', 'render_lunming_report', 'render_mansion_text_panel', 'render_ming_gong_interpretations', 'render_nanji_chart', 'render_planet_table', 'render_qigua_ui', 'render_shensha', 'render_taixuan_chart', 'render_taixuan_intro', 'render_transit_comparison', 'render_twelve_ci_chart', 'render_wuyunliuqi_chart', 'render_wuyunliuqi_intro', 'render_zhangguo')
 
 def _bind_legacy() -> None:
-    _legacy = importlib.import_module("app")
+    from core import legacy_bridge as _legacy_bridge
+
     for _name in _LEGACY_NAMES:
-        globals()[_name] = getattr(_legacy, _name)
+        if hasattr(_legacy_bridge, _name):
+            globals()[_name] = getattr(_legacy_bridge, _name)
 
 def _render_ai_button(system_key: str, chart_obj, page_content: str = "", **_kwargs) -> None:
     set_ai_context(system_key, chart_obj, page_content)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, time as time_cls
-import importlib
 
 import streamlit as st
 
@@ -25,9 +24,11 @@ from core.cached_computations import (
 _LEGACY_NAMES = ('ACG_LINE_COLORS', 'ACG_PLANETS', 'ACG_PLANET_COLORS', 'ASTEROID_GROUPS', 'PLANET_GLYPHS', 'PtolPlanet', 'SIGN_NAMES', 'STAR_CATALOG_ALL', '_fludd_config_from_dict', '_render_global_ai_chat', 'auto_cn', 'build_babylonian_planisphere_svg', 'build_greek_horoscope_svg', 'compute_astrocartography', 'compute_astrocartography_transit', 'compute_babylonian_chart', 'compute_cosmobiology_chart', 'compute_esoteric_chart', 'compute_hellenistic_chart', 'compute_hellenistic_extended', 'compute_human_design_chart', 'compute_multi_harmonic', 'compute_primary_directions', 'compute_uranian_chart', 'compute_western_chart', 'datetime', 'dignity_to_chinese', 'find_conjunctions', 'format_acg_for_prompt', 'generate_natal_summary', 'get_asteroid_aspects', 'get_lang', 'render_alchemical_tab', 'render_annual_profections', 'render_babylonian_chart', 'render_cosmobiology', 'render_draconic_chart', 'render_electional_chart', 'render_esoteric_chart', 'render_extended_lots', 'render_fludd_rota', 'render_harmonic', 'render_harmonic_chart', 'render_hellenistic_chart', 'render_human_design_chart', 'render_mundane_chart', 'render_predictive_suite', 'render_primary_directions', 'render_rectification_page', 'render_trutine_chart', 'render_uranian_chart', 'render_valens_combinations', 'render_western_chart', 'render_wiki', 'render_zodiacal_releasing', 'time')
 
 def _bind_legacy() -> None:
-    _legacy = importlib.import_module("app")
+    from core import legacy_bridge as _legacy_bridge
+
     for _name in _LEGACY_NAMES:
-        globals()[_name] = getattr(_legacy, _name)
+        if hasattr(_legacy_bridge, _name):
+            globals()[_name] = getattr(_legacy_bridge, _name)
 
 def _render_ai_button(system_key: str, chart_obj, page_content: str = "", **_kwargs) -> None:
     set_ai_context(system_key, chart_obj, page_content)
