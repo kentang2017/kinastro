@@ -483,9 +483,9 @@ def _render_love_synastry_tab(
 
     _ls_col_name1, _ls_col_name2 = st.columns(2)
     with _ls_col_name1:
-        _ls_name_a = st.text_input(t("love_synastry_name_a"), value="你", key="ls_name_a")
+        _ls_name_a = st.text_input(t("love_synastry_name_a"), value=t("love_synastry_name_a_default"), key="ls_name_a")
     with _ls_col_name2:
-        _ls_name_b = st.text_input(t("love_synastry_name_b"), value="對方", key="ls_name_b")
+        _ls_name_b = st.text_input(t("love_synastry_name_b"), value=t("love_synastry_name_b_default"), key="ls_name_b")
 
     st.markdown(f"**{t('love_synastry_person_b')}**")
     _ls_c1, _ls_c2, _ls_c3 = st.columns(3)
@@ -498,12 +498,12 @@ def _render_love_synastry_tab(
                                   min_value=-12.0, max_value=14.0, step=0.5)
 
     if st.button(t("love_synastry_calculate"), key="ls_btn"):
-        with st.spinner("💘 計算愛情合盤中…"):
+        with st.spinner(t("love_synastry_calculating")):
             _ls_result = compute_love_synastry_cached(
                 _birth_sig(_p),
                 sidereal_mode,
                 _p.get("location_name", ""),
-                _ls_name_a or "你",
+                _ls_name_a or t("love_synastry_name_a_default"),
                 _ls_date.year,
                 _ls_date.month,
                 _ls_date.day,
@@ -513,7 +513,7 @@ def _render_love_synastry_tab(
                 input_lat,
                 input_lon,
                 location_name,
-                _ls_name_b or "對方",
+                _ls_name_b or t("love_synastry_name_b_default"),
             )
         st.session_state["_ls_result"] = _ls_result
 
@@ -578,7 +578,8 @@ def _render_love_synastry_tab(
             )
 
         if len(_ls_result.key_love_aspects) > 5:
-            with st.expander(f"全部 {len(_ls_result.key_love_aspects)} 個愛情相位 / All aspects"):
+            _exp_label = f"{t('love_synastry_all_aspects')} ({len(_ls_result.key_love_aspects)})"
+            with st.expander(_exp_label):
                 st.dataframe(
                     [{"A": a.planet_a, "B": a.planet_b, "Aspect": a.aspect_name,
                       "Orb": f"{a.orb:.1f}°", "Score": f"{a.harmony_score:+.3f}",

@@ -14,8 +14,6 @@ import math
 from dataclasses import dataclass, field
 from typing import Optional
 
-import streamlit as st
-
 from astro.interpretations import get_synastry_reading
 
 # ============================================================
@@ -250,7 +248,7 @@ def _house_cusps_from_chart(chart) -> list[float]:
     return [h.cusp for h in houses_sorted]
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+
 def compute_love_synastry(
     chart_a,
     chart_b,
