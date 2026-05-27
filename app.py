@@ -41,7 +41,10 @@ from ui.components.birth_form import BirthChartParams, build_birth_params
 from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
 from ui.system_handlers.phase1_handlers import build_ziwei_handler
-from ui.system_handlers.dispatch import render_system as _dispatch_render_system
+from ui.system_handlers.dispatch import (
+    render_system as _dispatch_render_system,
+    render_system_title as _render_system_title,
+)
 
 # ── Compute helpers ───────────────────────────────────────────────────────
 from core.cached_computations import (
@@ -205,6 +208,7 @@ invalidate_chart_cache_if_birth_changed(_params)
 
 _is_calculated = True
 _selected_system = st.session_state.get(SessionKeys.SYSTEM_SELECT)
+_render_system_title(_selected_system or "")
 
 # ── Status flash after chart submission ───────────────────────────────────
 if st.session_state.get("_calc_success_flash"):
