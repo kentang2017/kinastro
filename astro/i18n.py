@@ -4048,8 +4048,32 @@ Enter your birth information to look up your tree month and its poetic attribute
         "en": "Shanghan Lun Six-Channel, stem-branch Qianfa, classical formulas",
     },
     "info_shanghan_qianfa_prompt": {
-        "zh": "👈 請在左側輸入出生及發病日期，點擊「開始排盤」進行傷寒鈐法推算。",
-        "en": "👈 Enter birth date and onset date on the left, then click 'Calculate Chart'.",
+        "zh": "👈 請在左側輸入出生日期，點擊「開始排盤」，並在下方輸入發病日期。",
+        "en": "👈 Enter birth date on the left, click 'Calculate Chart', then enter onset date below.",
+    },
+    "shanghan_onset_date_label": {
+        "zh": "📅 發病日期",
+        "en": "📅 Onset Date",
+    },
+    "shanghan_onset_date_help": {
+        "zh": "輸入患者發病日期（陽曆），預設為今日。",
+        "en": "Enter the illness onset date (solar calendar). Defaults to today.",
+    },
+    "shanghan_method_version_label": {
+        "zh": "🔢 鈐法版本",
+        "en": "🔢 Qianfa Method",
+    },
+    "shanghan_method_v1": {
+        "zh": "普濟方（雙支合算法）",
+        "en": "Puji Fang (Double-Branch Method)",
+    },
+    "shanghan_method_v2": {
+        "zh": "薛氏醫案（日支直接法）",
+        "en": "Xue's Medical Cases (Day-Branch Method)",
+    },
+    "shanghan_compute_btn": {
+        "zh": "🌿 推算傷寒鈐法",
+        "en": "🌿 Compute Shanghan Qianfa",
     },
     "tab_beiji": {
         "zh": "⭐ 北極神數",
