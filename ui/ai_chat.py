@@ -40,7 +40,7 @@ def set_ai_context(system_key: str, chart_obj, page_content: str = "", **_) -> N
         Optional extra text content rendered on the page.
     **_ :
         Extra keyword arguments (e.g. ``btn_key``) are accepted and ignored
-        for forward-compatibility with legacy call sites.
+        for backward-compatibility with legacy call sites.
     """
     st.session_state["_global_chat_system"] = system_key
     st.session_state["_global_chat_chart"] = chart_obj
