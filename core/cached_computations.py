@@ -22,6 +22,7 @@ from astro.western.western import compute_western_chart
 from astro.western.western_transit import compute_western_transits
 from astro.western.western_return import compute_solar_return
 from astro.western.western_synastry import compute_synastry
+from astro.western.western_love_synastry import compute_love_synastry
 from astro.western.fixed_stars import compute_fixed_star_positions
 from astro.western.asteroids import compute_asteroids
 from astro.western.advanced_bodies import calculate_parans, calculate_heliacal
@@ -277,6 +278,39 @@ def compute_synastry_cached(
         sidereal=sidereal,
     )
     return compute_synastry(natal, w_b, "Person A", "Person B")
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def compute_love_synastry_cached(
+    natal_sig: tuple[Any, ...],
+    sidereal: bool,
+    location_name: str,
+    name_a: str,
+    b_year: int,
+    b_month: int,
+    b_day: int,
+    b_hour: int,
+    b_minute: int,
+    b_tz: float,
+    b_lat: float,
+    b_lon: float,
+    b_location_name: str,
+    name_b: str,
+):
+    natal = compute_system_cached("tab_western", natal_sig, _options_sig({"sidereal": sidereal, "location_name": location_name}))
+    w_b = compute_western_chart(
+        year=b_year,
+        month=b_month,
+        day=b_day,
+        hour=b_hour,
+        minute=b_minute,
+        timezone=b_tz,
+        latitude=b_lat,
+        longitude=b_lon,
+        location_name=b_location_name,
+        sidereal=sidereal,
+    )
+    return compute_love_synastry(natal, w_b, name_a, name_b)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)

@@ -15,6 +15,7 @@ from core.cached_computations import (
     compute_parans_cached,
     compute_solar_return_cached,
     compute_synastry_cached,
+    compute_love_synastry_cached,
     compute_western_transits_cached,
     get_or_compute_chart,
     get_ptolemy_calculator,
@@ -112,11 +113,12 @@ def render_tab_western() -> None:
                     {"sidereal": sidereal_mode, "location_name": _p.get("location_name", "")},
                 )
 
-            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
+            _w_tab_natal, _w_tab_transit, _w_tab_return, _w_tab_synastry, _w_tab_love_synastry, _w_tab_dignity, _w_tab_harmonic, _w_tab_draconic, _w_tab_asteroids, _w_tab_stars, _w_tab_parans, _w_tab_heliacal, _w_tab_predictive = st.tabs([
                 t("western_subtab_natal"),
                 t("western_subtab_transit"),
                 t("western_subtab_return"),
                 t("western_subtab_synastry"),
+                t("western_subtab_love_synastry"),
                 t("western_subtab_dignity"),
                 t("western_subtab_harmonic"),
                 t("western_subtab_draconic"),
@@ -240,6 +242,11 @@ def render_tab_western() -> None:
                             _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
                             _reading = auto_cn(_reading) if _reading else _reading
                             st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
+
+            with _w_tab_love_synastry:
+                _render_love_synastry_tab(
+                    _p, sidereal_mode, input_tz, input_lat, input_lon, location_name,
+                )
 
             with _w_tab_dignity:
                 st.subheader(t("western_subtab_dignity"))
@@ -455,6 +462,164 @@ def render_tab_western() -> None:
     else:
         st.info(t("info_calc_prompt"))
         st.markdown(t("desc_western"))
+
+
+def _render_love_synastry_tab(
+    _p: dict,
+    sidereal_mode: bool,
+    input_tz: float,
+    input_lat: float,
+    input_lon: float,
+    location_name: str,
+) -> None:
+    """Render the ❤️ Love Synastry sub-tab inside the Western chart view."""
+    from datetime import date as _date, time as _time_cls
+    _bind_legacy()
+
+    _lang = get_lang()
+    _is_zh = _lang in ("zh", "zh_cn")
+
+    st.subheader(t("love_synastry_header"))
+
+    _ls_col_name1, _ls_col_name2 = st.columns(2)
+    with _ls_col_name1:
+        _ls_name_a = st.text_input(t("love_synastry_name_a"), value=t("love_synastry_name_a_default"), key="ls_name_a")
+    with _ls_col_name2:
+        _ls_name_b = st.text_input(t("love_synastry_name_b"), value=t("love_synastry_name_b_default"), key="ls_name_b")
+
+    st.markdown(f"**{t('love_synastry_person_b')}**")
+    _ls_c1, _ls_c2, _ls_c3 = st.columns(3)
+    with _ls_c1:
+        _ls_date = st.date_input("Date ❤️", value=_date(1990, 6, 15), key="ls_date")
+    with _ls_c2:
+        _ls_time = st.time_input("Time ❤️", value=_time_cls(12, 0), key="ls_time")
+    with _ls_c3:
+        _ls_tz = st.number_input("TZ ❤️", value=input_tz, key="ls_tz",
+                                  min_value=-12.0, max_value=14.0, step=0.5)
+
+    if st.button(t("love_synastry_calculate"), key="ls_btn"):
+        with st.spinner(t("love_synastry_calculating")):
+            _ls_result = compute_love_synastry_cached(
+                _birth_sig(_p),
+                sidereal_mode,
+                _p.get("location_name", ""),
+                _ls_name_a or t("love_synastry_name_a_default"),
+                _ls_date.year,
+                _ls_date.month,
+                _ls_date.day,
+                _ls_time.hour,
+                _ls_time.minute,
+                _ls_tz,
+                input_lat,
+                input_lon,
+                location_name,
+                _ls_name_b or t("love_synastry_name_b_default"),
+            )
+        st.session_state["_ls_result"] = _ls_result
+
+    _ls_result = st.session_state.get("_ls_result")
+    if _ls_result is None:
+        return
+
+    # ── Love Scores ──────────────────────────────────────────────
+    st.markdown(f"### {t('love_synastry_scores')}")
+    _score_defs = [
+        ("overall",    "love_synastry_overall",    "❤️"),
+        ("attraction", "love_synastry_attraction",  "✨"),
+        ("emotional",  "love_synastry_emotional",   "💙"),
+        ("sexual",     "love_synastry_sexual",      "🔥"),
+        ("longterm",   "love_synastry_longterm",    "💍"),
+    ]
+    for _sk, _si18n, _emoji in _score_defs:
+        _sv = _ls_result.scores.get(_sk, 50.0)
+        _label = f"{_emoji} {t(_si18n)}"
+        st.write(f"**{_label}** — {_sv:.0f} / 100")
+        # Color the progress bar: red for overall, pink shades for others
+        _pct = _sv / 100
+        _color = "#e74c3c" if _sk == "overall" else "#e91e8c"
+        st.markdown(
+            f"""<div style="background:#f0f0f0;border-radius:8px;height:14px;width:100%;margin-bottom:10px;">
+              <div style="background:{_color};width:{_pct*100:.1f}%;height:14px;border-radius:8px;"></div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
+    # ── Romantic Summary ─────────────────────────────────────────
+    st.markdown(f"### {t('love_synastry_summary')}")
+    _summary_text = auto_cn(_ls_result.romantic_summary_cn) if _is_zh else _ls_result.romantic_summary_en
+    st.success(f"💌 {_summary_text}")
+
+    st.markdown(f"### {t('love_synastry_advice')}")
+    _advice_text = auto_cn(_ls_result.love_advice_cn) if _is_zh else _ls_result.love_advice_en
+    st.info(f"🌹 {_advice_text}")
+
+    st.divider()
+
+    # ── Key Love Aspects (top 5 highlighted) ─────────────────────
+    if _ls_result.key_love_aspects:
+        st.markdown(f"### {t('love_synastry_aspects')}")
+        _top_aspects = _ls_result.key_love_aspects[:5]
+        for _la in _top_aspects:
+            _reading = _la.interpretation_cn if _is_zh else _la.interpretation_en
+            if _is_zh:
+                _reading = auto_cn(_reading)
+            _relevance_stars = "❤️" * round(_la.love_relevance * 5)
+            st.markdown(
+                f"""<div style="border-left:4px solid #e91e8c;padding:10px 14px;margin:8px 0;
+                    background:linear-gradient(90deg,#fff0f5,#fff);border-radius:4px;">
+                  <strong style="color:#c0106a;">{_la.planet_a} {_la.aspect_symbol} {_la.planet_b}</strong>
+                  &nbsp;&nbsp;<span style="color:#888;">orb {_la.orb:.1f}°</span>
+                  &nbsp;&nbsp;{_relevance_stars}<br/>
+                  <span style="font-size:0.9em;">{_reading}</span>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+
+        if len(_ls_result.key_love_aspects) > 5:
+            _exp_label = f"{t('love_synastry_all_aspects')} ({len(_ls_result.key_love_aspects)})"
+            with st.expander(_exp_label):
+                st.dataframe(
+                    [{"A": a.planet_a, "B": a.planet_b, "Aspect": a.aspect_name,
+                      "Orb": f"{a.orb:.1f}°", "Score": f"{a.harmony_score:+.3f}",
+                      "Relevance": f"{a.love_relevance:.2f}"}
+                     for a in _ls_result.key_love_aspects],
+                    width="stretch",
+                )
+
+    # ── House Overlays ───────────────────────────────────────────
+    if _ls_result.house_overlays:
+        st.markdown(f"### {t('love_synastry_overlays')}")
+        _house_icons = {5: "🎭", 7: "💍", 8: "🌑"}
+        for _ov in _ls_result.house_overlays:
+            _ov_meaning = auto_cn(_ov.meaning_cn) if _is_zh else _ov.meaning_en
+            _icon = _house_icons.get(_ov.house_number, "🏠")
+            st.markdown(
+                f"""<div style="border-left:4px solid #ff6b9d;padding:10px 14px;margin:8px 0;
+                    background:#fff8fa;border-radius:4px;">
+                  {_icon} <strong style="color:#c0106a;">{_ov.planet_owner} 的 {_ov.planet_name}</strong>
+                  落入 <strong>{_ov.house_owner}</strong> 的
+                  <strong>第 {_ov.house_number} 宮</strong>
+                  {"(" + _ov.house_sign + ")" if _ov.house_sign else ""}<br/>
+                  <span style="font-size:0.9em;color:#555;">{_ov_meaning}</span>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+
+    # ── Composite Core Planets ───────────────────────────────────
+    if _ls_result.composite_planets:
+        st.markdown(f"### {t('love_synastry_composite')}")
+        _cp_glyphs = {"Sun": "☉", "Moon": "☽", "Venus": "♀", "Mars": "♂"}
+        _cp_cols = st.columns(len(_ls_result.composite_planets))
+        for _ci, _cp in enumerate(_ls_result.composite_planets):
+            with _cp_cols[_ci]:
+                _glyph = _cp_glyphs.get(_cp.name, "★")
+                _sign_label = _cp.sign_zh if _is_zh else _cp.sign
+                st.metric(
+                    label=f"{_glyph} {_cp.name}",
+                    value=f"{_sign_label} {_cp.sign_degree:.1f}°",
+                )
 
 
 def render_tab_sabian() -> None:
