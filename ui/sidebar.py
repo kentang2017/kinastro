@@ -38,6 +38,7 @@ _DEFAULT_LAT = 22.3193
 _DEFAULT_LON = 114.1694
 _DEFAULT_TZ = 8.0
 _CITY_CUSTOM_LABEL = "自訂"
+_PRIORITY_REGION_COUNTRIES = {"CN", "HK", "MO", "TW"}
 
 STAR_CATALOG_ALL = -1
 
@@ -118,10 +119,21 @@ def _build_city_presets() -> tuple[
         world_rows = json.loads(world_file.read_text(encoding="utf-8"))
         world_rows.sort(key=lambda r: _safe_pop(r.get("pop")), reverse=True)
 
-        for row in world_rows[:_CITY_WORLD_LIMIT]:
+        def _add_admin_alias(admin_name: str, country: str, lat: float, lon: float, tz: float) -> None:
+            _admin = (admin_name or "").strip()
+            if not _admin:
+                return
+            _label = f"{_admin} ({country})" if country else _admin
+            _add_city(_label, lat, lon, tz)
+
+        for idx, row in enumerate(world_rows):
             name = (row.get("name") or "").strip()
             country = (row.get("country") or "").strip()
             if not name or "lat" not in row or "lon" not in row:
+                continue
+            # Keep global options performant by capping low-population world rows,
+            # while still loading full coverage for Greater China locales.
+            if idx >= _CITY_WORLD_LIMIT and country not in _PRIORITY_REGION_COUNTRIES:
                 continue
 
             city_label = f"{name} ({country})" if country else name
@@ -129,6 +141,8 @@ def _build_city_presets() -> tuple[
             lon = float(row["lon"])
             tz = _CHINA_REGION_TZ if country in {"CN", "HK", "MO", "TW"} else _normalize_tz_from_lon(lon)
             _add_city(city_label, lat, lon, tz)
+            _add_admin_alias(row.get("admin1") or "", country, lat, lon, tz)
+            _add_admin_alias(row.get("admin2") or "", country, lat, lon, tz)
 
     city_presets[_CITY_CUSTOM_LABEL] = (0.0, 0.0, 0.0)
     city_options = sorted([c for c in city_presets if c != _CITY_CUSTOM_LABEL]) + [_CITY_CUSTOM_LABEL]
