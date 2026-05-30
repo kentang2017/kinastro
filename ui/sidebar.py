@@ -131,6 +131,8 @@ def _build_city_presets() -> tuple[
             country = (row.get("country") or "").strip()
             if not name or "lat" not in row or "lon" not in row:
                 continue
+            # Keep global options performant by capping low-population world rows,
+            # while still loading full coverage for Greater China locales.
             if idx >= _CITY_WORLD_LIMIT and country not in _PRIORITY_REGION_COUNTRIES:
                 continue
 
