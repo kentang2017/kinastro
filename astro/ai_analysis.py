@@ -25,11 +25,9 @@ logger = logging.getLogger(__name__)
 # Cerebras SDK wrapper
 # ---------------------------------------------------------------------------
 
-DEFAULT_MODEL = "qwen-3-235b-a22b-thinking-2507"
+DEFAULT_MODEL = "gpt-oss-120b"
 
 CEREBRAS_MODEL_OPTIONS = [
-    "qwen-3-235b-a22b-thinking-2507",
-    "qwen-3-235b-a22b-instruct-2507",
     "qwen-3-32b",
     "llama-3.3-70b",
     "gpt-oss-120b",
@@ -37,8 +35,6 @@ CEREBRAS_MODEL_OPTIONS = [
 ]
 
 CEREBRAS_MODEL_DESCRIPTIONS = {
-    "qwen-3-235b-a22b-thinking-2507": "Cerebras: Latest Qwen 3 reasoning model for deeper analysis.",
-    "qwen-3-235b-a22b-instruct-2507": "Cerebras: Latest Qwen 3 instruct model with fast high-quality output.",
     "qwen-3-32b": "Cerebras: Balanced speed and quality for daily AI readings.",
     "llama-3.3-70b": "Cerebras: Strong general-purpose model with stable instruction following.",
     "gpt-oss-120b": "Cerebras: Open-weight large model for capable free-form analysis.",
