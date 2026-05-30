@@ -28,14 +28,12 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "gpt-oss-120b"
 
 CEREBRAS_MODEL_OPTIONS = [
-    "qwen-3-32b",
     "llama-3.3-70b",
     "gpt-oss-120b",
     "zai-glm-4.6",
 ]
 
 CEREBRAS_MODEL_DESCRIPTIONS = {
-    "qwen-3-32b": "Cerebras: Balanced speed and quality for daily AI readings.",
     "llama-3.3-70b": "Cerebras: Strong general-purpose model with stable instruction following.",
     "gpt-oss-120b": "Cerebras: Open-weight large model for capable free-form analysis.",
     "zai-glm-4.6": "Cerebras: Reliable multilingual model for broad general tasks.",
