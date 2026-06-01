@@ -17,7 +17,18 @@ from .calculator import (
     get_lao_auspicious_time,
     get_monthly_fortune,
 )
-from .renderer import build_lao_brahma_wheel_svg, render_lao_horasat
+
+
+def build_lao_brahma_wheel_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the Laos Brahma wheel SVG renderer."""
+    from ui.handlers.tab_laos.render import build_lao_brahma_wheel_svg as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_lao_horasat(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the Laos Horasat chart renderer."""
+    from ui.handlers.tab_laos.render import render_lao_horasat as _fn
+    return _fn(*args, **kwargs)
 
 
 class LaoHorasat:

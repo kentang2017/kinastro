@@ -56,7 +56,7 @@ def compute_current_outer_planets(*args, **kwargs):  # type: ignore[override]
 
 def render_streamlit(*args, **kwargs):  # type: ignore[override]
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_mundane.render import render_streamlit as _fn
     return _fn(*args, **kwargs)
 
 

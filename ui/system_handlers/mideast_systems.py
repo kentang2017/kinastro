@@ -494,7 +494,7 @@ def render_tab_picatrix_behenian() -> None:
         st.markdown(t("desc_picatrix_behenian"))
         # Show compendium even without a chart
         try:
-            from astro.picatrix_behenian.renderer import _render_compendium_tab
+            from ui.handlers.tab_picatrix_behenian.render import _render_compendium_tab
             _render_compendium_tab()
         except Exception:
             pass

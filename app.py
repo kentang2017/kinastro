@@ -72,6 +72,18 @@ def _sync_lang_from_selectbox() -> None:
     st.session_state["lang"] = _LANG_MAP.get(_sel, "zh")
 
 
+# Bridge the Streamlit session state to astro.i18n so that compute
+# modules which call t() without depending on streamlit still resolve
+# the active language. astro.i18n was decoupled from streamlit in the
+# astro/-streamlit decoupling pass; this hook keeps the in-app
+# language switch functioning.
+from astro.i18n import set_ui_lang as _set_ui_lang
+
+
+def _sync_astro_lang() -> None:
+    _set_ui_lang(st.session_state.get("lang", "zh"))
+
+
 if "_lang_select" in st.session_state:
     _sync_lang_from_selectbox()
 else:
@@ -81,6 +93,8 @@ else:
         st.session_state.get("lang", "zh"),
         _DEFAULT_LANG_LABEL,
     )
+
+_sync_astro_lang()
 
 
 # ── Query params restore (share link) ────────────────────────────────────

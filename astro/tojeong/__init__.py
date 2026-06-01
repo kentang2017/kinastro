@@ -13,7 +13,12 @@ astro/tojeong — 土亭數排盤模組 (Tojeong Shu / 土亭數)
 """
 
 from .tojeong_calculator import compute_tojeong_chart, get_tojeong_pattern
-from .tojeong_renderer import render_tojeong_chart
+
+
+def render_tojeong_chart(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load and call the Streamlit renderer for Tojeong charts."""
+    from ui.handlers.tab_tojeong.render import render_tojeong_chart as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_tojeong_chart",

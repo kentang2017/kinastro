@@ -24,8 +24,7 @@ from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import swisseph as swe
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 from .constants import (
     ZODIAC_BODY_PARTS,
     ZODIAC_SIGN_ORDER,
@@ -707,7 +706,7 @@ def compute_electional_windows(
 # ============================================================
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_medical_chart(
     year: int,
     month: int,

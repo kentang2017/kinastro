@@ -15,7 +15,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from typing import Dict, List, Optional, Tuple
 
 # ==================== 二十八宿 + 禽名 + 五行數據（完全來自文本） ====================
@@ -856,7 +856,7 @@ class WanHuaXianQin:
 _DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_json(filename: str) -> object:
     """Load a JSON file from the data directory (cached)."""
     path = os.path.join(_DATA_DIR, filename)

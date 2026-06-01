@@ -9,8 +9,7 @@ astro/sanshi/qimen.py — 奇門遁甲排盤模組 (Qi Men Dun Jia Divination Mo
 
 from __future__ import annotations
 
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 from astro.i18n import auto_cn
 
 # 九宮排列順序（用於顯示）

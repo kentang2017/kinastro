@@ -19,7 +19,7 @@ astro/yemeni.py — 也門占星 (Yemeni / South Arabian / Rasulid Astrology)
 架構 100% 模仿 astro/western/hellenistic.py，使用 sidereal zodiac 計算。
 """
 import math
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -393,7 +393,9 @@ class YemeniChart:
 # ============================================================
 # 核心計算函數 (Core Computation)
 # ============================================================
-@st.cache_data(ttl=3600, show_spinner=False)
+from core.cache import cache_data
+
+@cache_data(ttl=3600, show_spinner=False)
 def compute_yemeni_chart(year, month, day, hour, minute, timezone,
                          latitude, longitude, location_name=""):
     """

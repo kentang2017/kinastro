@@ -21,7 +21,7 @@ For important life decisions please consult a qualified Nine Star Ki practitione
 
 from __future__ import annotations
 
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Optional
@@ -181,6 +181,8 @@ _YEAR_STAR_TO_MONTH_BASE: dict[int, int] = {
 
 # 陰遁飛星逆飛序列 (counterclockwise)
 # Star sequence when flying counterclockwise starting from n: n, n-1, n-2 ... (mod 9, 0→9)
+from core.cache import cache_data, cache_resource
+
 def _fly_star_ccw(start: int, steps: int) -> int:
     """Return the star number after flying *steps* positions counterclockwise from *start*."""
     return ((start - 1 - steps) % 9) + 1
@@ -402,7 +404,7 @@ class NineStarKiChart:
     compatibility: list = field(default_factory=list)
 
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def compute_nine_star_ki_chart(
     year: int, month: int, day: int,
     hour: int = 12, minute: int = 0,

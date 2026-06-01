@@ -24,8 +24,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Dict, List, Optional, Tuple
 
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 from .constants import (
     PLANET_PERIOD_YEARS,
     PLANET_SEQUENCE,
@@ -475,7 +474,7 @@ def _build_houses(
 # 主計算函數 (Main Calculation)
 # ============================================================
 
-@st.cache_data(ttl=86400, show_spinner=False)
+@cache_data(ttl=86400, show_spinner=False)
 def compute_mahabote_chart(
     year: int,
     month: int,

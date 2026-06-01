@@ -19,7 +19,11 @@ from .calculator import (
     EpochPlanetPosition,
     TrutineVariant,
 )
-from .renderer import render_streamlit
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_trutine_of_hermes.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_epoch_chart",

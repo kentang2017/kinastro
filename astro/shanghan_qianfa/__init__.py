@@ -8,6 +8,10 @@ using stem-branch (干支) Qianfa push-calculation to identify the Six Channels
 """
 
 from .calculator import compute_shanghan_qianfa, ShanghanResult
-from .renderer import render_streamlit
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_shanghan_qianfa.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = ["compute_shanghan_qianfa", "ShanghanResult", "render_streamlit"]

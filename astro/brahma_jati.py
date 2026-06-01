@@ -16,8 +16,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "thai", "data")
 
 # ── 泰國 12 生肖 Thai → numeric id mapping ──────────────────────────────
@@ -31,6 +30,8 @@ _THAI_YEAR_NAMES = [
 # zodiac but shifted: CE year 4 ≡ Rat (ปีชวด).
 _CYCLE_OFFSET = 4
 
+
+from core.cache import cache_data, cache_resource
 
 def _thai_zodiac_index(ce_year: int) -> int:
     """Return 0‑based Thai zodiac index for a CE year (0=Rat … 11=Pig)."""
@@ -51,7 +52,7 @@ _WEEKDAY_TO_EN = {
 
 # ── JSON Loaders (cached) ───────────────────────────────────────────────
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_json(filename: str) -> dict:
     path = os.path.join(_DATA_DIR, filename)
     with open(path, "r", encoding="utf-8") as f:

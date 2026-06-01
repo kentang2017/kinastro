@@ -7,8 +7,7 @@
 """
 
 import os
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 _TXT_PATH = os.path.normpath(
     os.path.join(os.path.dirname(__file__), "..", "..", "七政.txt")
 )
@@ -54,7 +53,7 @@ def _is_palace_marker(line: str) -> bool:
     return any(marker in stripped for marker in _PALACE_MARKERS)
 
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_texts() -> tuple[dict[str, str], dict[str, str]]:  # (li_ming_dict, planet_dict)
     """Parse 七政.txt and return (li_ming_dict, planet_dict).
 

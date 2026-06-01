@@ -12,7 +12,7 @@ from .mahabote import (
 
 
 def _get_renderer():
-    from .renderer import render_mahabote_basic
+    from ui.handlers.tab_mahabote.render import render_mahabote_basic
 
     return render_mahabote_basic
 

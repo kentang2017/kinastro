@@ -12,7 +12,7 @@ astro/damo/calculator.py — 達摩一掌經排盤核心計算模組
 4. 日上起時：同方向數至出生時辰（子=1, 丑=2 ... 亥=12）
 5. 四宮各得一星一道，由此推斷命運
 
-此模組為純計算函式，不含 UI 邏輯，支援 @st.cache_data 快取。
+此模組為純計算函式，不含 UI 邏輯，支援 @cache_data 快取。
 """
 
 from __future__ import annotations
@@ -22,8 +22,7 @@ import os
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量 (Constants)
 # ============================================================
@@ -231,7 +230,7 @@ def _compute_overall_summary(palaces: list) -> str:
 # 核心計算 (Core Computation)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_damo_chart(
     year: int,
     month: int,

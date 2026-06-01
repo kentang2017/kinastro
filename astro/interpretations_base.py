@@ -19,9 +19,7 @@ import os
 from abc import ABC, abstractmethod
 from typing import List
 
-import streamlit as st
-
-
+from core.cache import cache_data, cache_resource
 class InterpretationEngine(ABC):
     """所有解讀引擎的抽象基類。
 
@@ -89,7 +87,7 @@ class JsonInterpretationEngine(InterpretationEngine):
         return list(self._data.keys())
 
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_interpretation_json(json_path: str) -> dict:
     """Load and cache a JSON interpretation file."""
     abs_path = os.path.abspath(json_path)

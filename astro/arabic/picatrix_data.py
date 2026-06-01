@@ -13,14 +13,14 @@ Do NOT modify without consulting primary sources.
 
 from __future__ import annotations
 import json
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from pathlib import Path
 from typing import Any
 from html import escape
 
 
 # ====================== 資料載入函式 ======================
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_json(filename: str) -> dict[str, Any]:
     """從 data/ 資料夾載入 JSON (cached)"""
     json_path = Path(__file__).parent.parent / "data" / filename

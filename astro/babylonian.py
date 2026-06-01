@@ -23,7 +23,7 @@ astro/babylonian.py — 古巴比倫占星 (Babylonian / Chaldean Astrology)
 常量定義方式、註解風格、i18n 呼叫方式與 chart dict 格式來實現。
 """
 import math
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -233,6 +233,8 @@ PLANET_COLORS = {
 # ============================================================
 # Internal helpers
 # ============================================================
+from core.cache import cache_data, cache_resource
+
 def _sign_idx(lon):
     return int(lon / 30) % 12
 
@@ -426,7 +428,7 @@ def _build_planisphere_data(planet_longs, positions):
 # ============================================================
 # Main compute function
 # ============================================================
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_babylonian_chart(year, month, day, hour, minute, timezone,
                              lat, lon):
     """Compute a Babylonian sidereal natal chart.

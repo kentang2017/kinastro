@@ -14,7 +14,7 @@
 import math
 
 import swisseph as swe
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from dataclasses import dataclass, field
 
 from astro.ziwei_vietnamese import (
@@ -781,7 +781,7 @@ def _build_palaces(
 # 計算函數 (Computation)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_ziwei_chart(
     year: int,
     month: int,

@@ -7,7 +7,7 @@
 
 import json
 import os
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -73,11 +73,11 @@ class ZhangguoResult:
 
 
 # ============================================================
-# 資料載入 (cached via @st.cache_data)
+# 資料載入 (cached via @cache_data)
 # ============================================================
 
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_star_data() -> list:
     fpath = os.path.join(_DATA_DIR, "zhangguo_star_in_branch.json")
     with open(fpath, "r", encoding="utf-8") as f:
@@ -85,7 +85,7 @@ def _load_star_data() -> list:
     return data.get("entries", [])
 
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def _load_pattern_data() -> list:
     fpath = os.path.join(_DATA_DIR, "zhangguo_patterns.json")
     with open(fpath, "r", encoding="utf-8") as f:

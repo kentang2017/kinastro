@@ -33,7 +33,7 @@ The calendar begins on the Winter Solstice eve (Dec 24) with Beth
 
 from __future__ import annotations
 
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Optional
@@ -270,6 +270,8 @@ GRAVES_NOTE_EN = (
 # Internal helpers
 # ════════════════════════════════════════════════════════════════════
 
+from core.cache import cache_data, cache_resource
+
 def _date_to_md(d: date) -> tuple[int, int]:
     """Return (month, day) tuple for a date."""
     return (d.month, d.day)
@@ -406,7 +408,7 @@ _WESTERN_OVERLAP: dict[int, tuple[str, str]] = {
 # Public compute function (cached)
 # ════════════════════════════════════════════════════════════════════
 
-@st.cache_data(show_spinner=False)
+@cache_data(show_spinner=False)
 def compute_celtic_tree_chart(
     year: int, month: int, day: int,
     **_kwargs,

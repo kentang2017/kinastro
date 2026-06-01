@@ -7,7 +7,7 @@ House = Sign index + 1 (fixed, never Lagna-based).
 """
 
 import swisseph as swe
-import streamlit as st
+from core.cache import cache_data, cache_resource
 import pandas as pd
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
@@ -644,7 +644,7 @@ def _normalize(deg: float) -> float:
     return deg % 360.0
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_lal_kitab_chart(
     year: int, month: int, day: int,
     hour: int, minute: int, timezone: float,

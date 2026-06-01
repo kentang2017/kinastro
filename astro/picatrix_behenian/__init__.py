@@ -21,7 +21,11 @@ from .calculator import (
     compute_today_magic,
     find_electional_windows,
 )
-from .renderer import render_streamlit
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_picatrix_behenian.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "BEHENIAN_STARS",

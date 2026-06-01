@@ -15,7 +15,7 @@ def compute_huangji_pan(*args, **kwargs) -> "HuangjiPanResult":
 
 
 def render_streamlit(*args, **kwargs) -> None:
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_huangji.render import render_streamlit as _fn
 
     return _fn(*args, **kwargs)
 

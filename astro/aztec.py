@@ -19,9 +19,10 @@ Tonalpohualli 計算公式：
 """
 
 import swisseph as swe
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass, field
 
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量 (Constants)
 # ============================================================
@@ -194,6 +195,7 @@ ZODIAC_SIGNS = [
 # ============================================================
 
 @dataclass
+
 class AztecPlanet:
     """行星位置資料（帶阿茲特克日徵對應）"""
     name: str
@@ -355,7 +357,7 @@ def get_direction_color(sign_index):
 # 計算函數 (Calculation Functions)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_aztec_chart(year, month, day, hour, minute,
                         timezone, latitude, longitude, location_name=""):
     """

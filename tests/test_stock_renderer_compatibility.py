@@ -1,3 +1,12 @@
+"""tests/test_stock_renderer_compatibility.py — 股票五行相容評等測試。
+
+Phase 7 refactor moved the renderer functions out of
+``astro/qizheng/financial/stock_renderer.py`` (deleted) and into
+``ui/handlers/tab_chinese/render_financial.py``. The fixture below loads
+just the private helpers we need, with a stubbed streamlit module so the
+import doesn't drag in the real UI framework.
+"""
+
 import importlib.util
 import sys
 import types
@@ -8,17 +17,33 @@ import pytest
 
 @pytest.fixture
 def financial_modules():
+    repo_root = Path(__file__).resolve().parents[1]
+
+    # Stub streamlit so the renderer module imports cleanly.
     fake_st = types.ModuleType("streamlit")
     fake_st.markdown = lambda *args, **kwargs: None
+    fake_st.tabs = lambda *args, **kwargs: [types.SimpleNamespace()]
+    fake_st.expander = lambda *args, **kwargs: types.SimpleNamespace()
+    fake_st.subheader = lambda *args, **kwargs: None
+    fake_st.write = lambda *args, **kwargs: None
+    fake_st.info = lambda *args, **kwargs: None
+    fake_st.success = lambda *args, **kwargs: None
+    fake_st.error = lambda *args, **kwargs: None
+    fake_st.warning = lambda *args, **kwargs: None
+    fake_st.code = lambda *args, **kwargs: None
+    fake_st.plotly_chart = lambda *args, **kwargs: None
+    fake_st.dataframe = lambda *args, **kwargs: None
+    fake_st.metric = lambda *args, **kwargs: None
+    fake_st.columns = lambda n: [types.SimpleNamespace() for _ in range(n)]
     sys.modules["streamlit"] = fake_st
 
     package_roots = [
-        ("astro", Path(__file__).resolve().parents[1] / "astro"),
-        ("astro.qizheng", Path(__file__).resolve().parents[1] / "astro" / "qizheng"),
-        (
-            "astro.qizheng.financial",
-            Path(__file__).resolve().parents[1] / "astro" / "qizheng" / "financial",
-        ),
+        ("astro", repo_root / "astro"),
+        ("astro.qizheng", repo_root / "astro" / "qizheng"),
+        ("astro.qizheng.financial", repo_root / "astro" / "qizheng" / "financial"),
+        ("ui", repo_root / "ui"),
+        ("ui.handlers", repo_root / "ui" / "handlers"),
+        ("ui.handlers.tab_chinese", repo_root / "ui" / "handlers" / "tab_chinese"),
     ]
     for package_name, package_path in package_roots:
         package = types.ModuleType(package_name)
@@ -26,17 +51,14 @@ def financial_modules():
         sys.modules[package_name] = package
 
     loaded_modules = {}
-    for module_name, file_name in (
-        ("astro.qizheng.financial.name_wuxing", "name_wuxing.py"),
-        ("astro.qizheng.financial.stock_renderer", "stock_renderer.py"),
+    for module_name, rel_path in (
+        ("astro.qizheng.financial.name_wuxing", "astro/qizheng/financial/name_wuxing.py"),
+        (
+            "ui.handlers.tab_chinese.render_financial",
+            "ui/handlers/tab_chinese/render_financial.py",
+        ),
     ):
-        file_path = (
-            Path(__file__).resolve().parents[1]
-            / "astro"
-            / "qizheng"
-            / "financial"
-            / file_name
-        )
+        file_path = repo_root / rel_path
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         module = importlib.util.module_from_spec(spec)
         assert spec.loader is not None
@@ -52,13 +74,20 @@ def financial_modules():
         "astro.qizheng",
         "astro.qizheng.financial",
         "astro.qizheng.financial.name_wuxing",
-        "astro.qizheng.financial.stock_renderer",
+        "ui",
+        "ui.handlers",
+        "ui.handlers.tab_chinese",
+        "ui.handlers.tab_chinese.render_financial",
     ):
         sys.modules.pop(module_name, None)
 
 
+def _stock_renderer(modules):
+    return modules["ui.handlers.tab_chinese.render_financial"]
+
+
 def test_merge_wuxing_distributions_sums_each_element(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     merged = stock_renderer._merge_wuxing_distributions(
         {"木": 2, "火": 1, "土": 0, "金": 0, "水": 0},
@@ -70,7 +99,7 @@ def test_merge_wuxing_distributions_sums_each_element(financial_modules):
 
 def test_composite_compatibility_grade_with_merged_distributions(financial_modules):
     name_wuxing = financial_modules["astro.qizheng.financial.name_wuxing"]
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     personal_distribution = {"木": 3, "火": 0, "土": 0, "金": 0, "水": 0}
     combined_stock_distribution = stock_renderer._merge_wuxing_distributions(
@@ -105,7 +134,7 @@ def test_composite_compatibility_grade_with_merged_distributions(financial_modul
 
 
 def test_weak_fire_profile_heavily_penalises_metal_water(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     comparison = {
         "score": -2,
@@ -129,7 +158,7 @@ def test_weak_fire_profile_heavily_penalises_metal_water(financial_modules):
 
 
 def test_weak_fire_profile_rewards_wood_fire_setup(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     comparison = {
         "score": 2,
@@ -165,7 +194,7 @@ def test_compare_wuxing_accepts_string_distribution_values(financial_modules):
 
 
 def test_compatibility_grade_accepts_string_distribution_values(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     grade = stock_renderer._compatibility_grade(
         {"score": "2", "relationship_code": "stock_feeds_you"},
@@ -179,7 +208,7 @@ def test_compatibility_grade_accepts_string_distribution_values(financial_module
 
 
 def test_price_forecast_profile_detects_bullish_regime(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     forecast = stock_renderer._build_price_forecast_profile(
         current=120.0,
@@ -206,7 +235,7 @@ def test_price_forecast_profile_detects_bullish_regime(financial_modules):
 
 
 def test_price_forecast_profile_detects_bearish_regime(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     forecast = stock_renderer._build_price_forecast_profile(
         current=80.0,
@@ -233,7 +262,7 @@ def test_price_forecast_profile_detects_bearish_regime(financial_modules):
 
 
 def test_price_forecast_profile_detects_sideways_regime(financial_modules):
-    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    stock_renderer = _stock_renderer(financial_modules)
 
     forecast = stock_renderer._build_price_forecast_profile(
         current=100.0,

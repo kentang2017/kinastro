@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 def render_diqiyijue_chart(*args, **kwargs) -> None:
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_diqiyijue_chart as _fn
+    from ui.handlers.tab_diqiyijue.render import render_diqiyijue_chart as _fn
     return _fn(*args, **kwargs)
 
 

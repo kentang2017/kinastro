@@ -27,8 +27,7 @@ import math
 from dataclasses import dataclass, field
 from typing import List
 
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 from .western import (
     ZODIAC_SIGNS,
     ASPECT_TYPES,
@@ -264,6 +263,8 @@ HARMONIC_SYMBOLISM: dict[int, dict] = {
 }
 
 
+from core.cache import cache_data, cache_resource
+
 def _prime_factors(n: int) -> List[int]:
     """Return prime factors of n (with repetition)."""
     factors = []
@@ -402,7 +403,7 @@ def _find_harmonic_aspects(planets: List[HarmonicPlanet], k: int) -> List[Harmon
     return aspects
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_harmonic_chart(
     natal_longitudes: tuple,   # tuple of (name, lon, lat, retrograde) — hashable for cache
     natal_ascendant: float,

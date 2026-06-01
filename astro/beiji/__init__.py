@@ -18,7 +18,21 @@ from .calculator import (
     get_hour_branch,
     get_year_ganzhi,
 )
-from .renderer import render_beiji_chart, render_beiji_search, render_streamlit
+
+def render_beiji_chart(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_beiji_chart renderer for this package."""
+    from ui.handlers.tab_beiji.render import render_beiji_chart as _fn
+    return _fn(*args, **kwargs)
+
+def render_beiji_search(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_beiji_search renderer for this package."""
+    from ui.handlers.tab_beiji.render import render_beiji_search as _fn
+    return _fn(*args, **kwargs)
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_beiji.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     # 資料類別

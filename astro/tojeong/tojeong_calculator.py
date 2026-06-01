@@ -13,8 +13,7 @@ import json
 import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 # 天干地支
 TIANGAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 DIZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
@@ -51,7 +50,7 @@ POSTHEAVEN_NUMS = {
 }
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def load_patterns_data() -> Dict[str, Any]:
     """載入 129 格局數據"""
     pattern_path = os.path.join(os.path.dirname(__file__), "patterns_129.json")

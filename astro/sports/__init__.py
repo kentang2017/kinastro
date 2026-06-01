@@ -7,7 +7,7 @@ __version__ = "0.1.0"
 
 def render_streamlit(*args, **kwargs):
     """Lazy-load Streamlit renderer to keep package import lightweight."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_sports_astrology.render import render_streamlit as _fn
     return _fn(*args, **kwargs)
 
 
@@ -37,7 +37,7 @@ def analyze_event_chart_with_team_natal(*args, **kwargs):
 
 def render_streamlit(*args, **kwargs):
     """Lazy-load Streamlit renderer."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_sports_astrology.render import render_streamlit as _fn
 
     return _fn(*args, **kwargs)
 

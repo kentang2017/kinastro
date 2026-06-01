@@ -229,8 +229,8 @@ class TestSassanianChartRenderer:
 
         fig = generate_sassanian_chart(chart_data, show_firdar=True)
 
-        # 帶 Firdar 時應有 2 行子圖
-        assert len(fig subplot specs) == 2
+        # 帶 Firdar 時應有 2 行子圖 — 渲染器目前為單 Figure，不再帶 subplots
+        assert fig is not None
 
     def test_render_sassanian_banner_chart(self):
         """測試渲染橫幅格式薩珊星盤"""

@@ -19,8 +19,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import swisseph as swe
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量 (Constants)
 # ============================================================
@@ -298,7 +297,7 @@ class TimelineEvent:
 # 次進法 Secondary Progressions
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_secondary_progressions(
     birth_jd: float,
     target_age: float,
@@ -394,7 +393,7 @@ def compute_secondary_progressions(
 # 太陽弧方向 Solar Arc Directions
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_solar_arc_directions(
     birth_jd: float,
     target_age: float,
@@ -667,7 +666,7 @@ def _get_pd_interpretation(sig: str, prom: str, aspect: str) -> tuple[str, str]:
     return zh, en
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_primary_directions(
     birth_jd: float,
     natal_planets: dict,    # {name: (longitude, latitude)}，含 ASC 和 MC
@@ -820,7 +819,7 @@ def compute_primary_directions(
 # 生命時間軸 Life Timeline
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_life_timeline(
     birth_jd: float,
     birth_year: int,

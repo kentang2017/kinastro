@@ -22,7 +22,6 @@ References
 """
 
 from astro.kp.kp_calculator import compute_kp_chart, KPChart
-from astro.kp.kp_renderer import render_kp_chart
 from astro.kp.kp_utils import (
     get_nakshatra_lord,
     get_sub_lord,
@@ -37,6 +36,12 @@ from astro.kp.constants import (
     PLANETS,
     HOUSES,
 )
+
+
+def render_kp_chart(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load and call the Streamlit renderer for KP charts."""
+    from ui.handlers.tab_kp.render import render_kp_chart as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     # Main computation

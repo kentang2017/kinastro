@@ -24,7 +24,7 @@ import json
 import os
 from html import escape as _esc
 import swisseph as swe
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass, field
 
 from astro.i18n import t, get_lang
@@ -80,6 +80,8 @@ JAIMINI_SIGN_QUALITY = {i: JAIMINI_RASHIS[i][4] for i in range(12)}
 # Chara ↔ Sthira 互視（排除自身對面的座）
 # Dwiswabhava ↔ Dwiswabhava 互視
 # 格式：JAIMINI_RASHI_DRISHTI[sign_index] → list of aspected sign indices
+
+from core.cache import cache_data, cache_resource
 
 def _build_rashi_drishti_table():
     """建立 Rashi Drishti 規則表（古法規則）。
@@ -557,7 +559,7 @@ def _compute_chara_dasha(asc_lon, planets, birth_jd):
 # 主計算函數 (Main Compute Function)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_jaimini_chart(year, month, day, hour, minute, timezone,
                           latitude, longitude, location_name=""):
     """計算 Jaimini 占星排盤 (Sidereal / Lahiri Ayanamsa / Whole Sign Houses)

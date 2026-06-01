@@ -36,7 +36,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-import streamlit as st
+from core.cache import cache_data, cache_resource
 import swisseph as swe
 
 # ============================================================
@@ -582,7 +582,7 @@ def find_parans(lines: dict[str, dict[str, list[tuple[float, float]]]],
 # 主計算函數 Main Computation Function
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_astrocartography(
     year: int, month: int, day: int,
     hour: int, minute: int, timezone: float,
@@ -647,7 +647,7 @@ def compute_astrocartography(
     )
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_astrocartography_transit(
     natal_year: int, natal_month: int, natal_day: int,
     natal_hour: int, natal_minute: int, natal_timezone: float,

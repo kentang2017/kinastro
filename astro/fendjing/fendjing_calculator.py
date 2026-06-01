@@ -10,10 +10,10 @@ astro/sanshi/fendjing.py — 鬼谷分定經排盤模組 (Ghost Valley Fen Ding 
 from __future__ import annotations
 
 import pickle
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 from astro.i18n import t, auto_cn
 
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量
 # ============================================================
@@ -29,7 +29,8 @@ TWELVE_PALACES: list[str] = [
 ]
 
 # 載入 twogan.pickle 數據
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
+
 def load_twogan_data() -> dict:
     """載入兩頭鉗數據庫"""
     import os
@@ -110,7 +111,7 @@ def _find_lunar_hour(day_gz: str) -> dict[str, str]:
     return dict(zip(DIZHI, hour_list))
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_fendjing_chart(
     year: int, month: int, day: int,
     hour: int, minute: int,

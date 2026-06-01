@@ -17,10 +17,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 from astro.i18n import auto_cn
 
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量表
 # ============================================================
@@ -616,7 +616,7 @@ def _overall_assessment(
 # 主計算函數
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_qimen_luming(
     year: int,
     month: int,

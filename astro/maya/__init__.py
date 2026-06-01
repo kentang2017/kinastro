@@ -26,7 +26,7 @@ def compute_maya_chart(*args, **kwargs) -> "MayanChart":
 
 def render_maya_chart(*args, **kwargs) -> None:
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_maya_chart as _fn
+    from ui.handlers.tab_maya.render import render_maya_chart as _fn
     return _fn(*args, **kwargs)
 
 

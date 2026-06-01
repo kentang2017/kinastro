@@ -14,7 +14,11 @@ Burmese / Shan Mahabote Deep Astrology sub-package
 """
 
 from .calculator import compute_mahabote_chart, compute_compatibility, MahaboteChart
-from .renderer import render_streamlit as render_mahabote_chart
+
+def render_mahabote_chart(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_mahabote.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_mahabote_chart",

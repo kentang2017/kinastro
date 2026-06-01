@@ -13,14 +13,15 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Optional
 
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 from astro.vedic.indian import compute_vedic_chart
 from astro.qizheng.financial.stock_fetcher import (
     fetch_stock_info,
     get_display_name,
     get_strength_label,
 )
+
+from core.cache import cache_data, cache_resource
 
 
 _BENEFIC = frozenset({"Jupiter", "Venus", "Mercury", "Moon"})
@@ -134,7 +135,7 @@ def _score_planet(planet) -> tuple[int, str, str]:
     return score, zh, en
 
 
-@st.cache_data(ttl=300, show_spinner=False)
+@cache_data(ttl=300, show_spinner=False)
 def compute_vedic_stock_data(
     ipo_year: int,
     ipo_month: int,

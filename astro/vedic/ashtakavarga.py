@@ -3,7 +3,7 @@ astro/ashtakavarga.py — Ashtakavarga 八分力量系統
 
 Bhinnashtakavarga for 7 planets + Sarvashtakavarga.
 """
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from dataclasses import dataclass
 
 PLANET_ORDER = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"]
@@ -79,7 +79,7 @@ class AshtakavargaResult:
     sarva_total: int
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_ashtakavarga(planet_longitudes: dict,
                          ascendant: float) -> AshtakavargaResult:
     """Compute Ashtakavarga from planet longitudes (canonical names) + Asc.

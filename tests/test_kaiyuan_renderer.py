@@ -2,7 +2,25 @@ from __future__ import annotations
 
 import pytest
 
-from astro.kaiyuan import renderer as kaiyuan_renderer
+from ui.handlers.tab_kaiyuan.render import (
+    _build_mansion_ranges,
+    _build_twelve_palace_ranges,
+    _compute_live_observations,
+    _has_live_chart_params,
+    init_swisseph,
+)
+
+kaiyuan_renderer = type(
+    "KaiyuanRendererShim",
+    (),
+    {
+        "_build_mansion_ranges": _build_mansion_ranges,
+        "_build_twelve_palace_ranges": _build_twelve_palace_ranges,
+        "_compute_live_observations": _compute_live_observations,
+        "_has_live_chart_params": _has_live_chart_params,
+        "init_swisseph": init_swisseph,
+    },
+)
 
 
 class _FakeSwe:

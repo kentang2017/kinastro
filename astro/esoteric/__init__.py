@@ -24,7 +24,16 @@ from .calculator import (
     RayIndicator,
     RayTally,
 )
-from .renderer import render_streamlit, render_esoteric_chart_svg
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_esoteric.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
+
+def render_esoteric_chart_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_esoteric_chart_svg renderer for this package."""
+    from ui.handlers.tab_esoteric.render import render_esoteric_chart_svg as _fn
+    return _fn(*args, **kwargs)
 from .constants import (
     SEVEN_RAYS,
     SIGN_RULERS,

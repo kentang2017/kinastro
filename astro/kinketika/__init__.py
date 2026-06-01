@@ -8,7 +8,7 @@ from .ketika_data import ACTIVITY_CATALOGUE, BINTANG_TUJUH, FORTUNE_LABELS, KETI
 
 def render_streamlit(*args, **kwargs):
     """延遲載入 Streamlit renderer。"""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_kinketika.render import render_streamlit as _fn
 
     return _fn(*args, **kwargs)
 

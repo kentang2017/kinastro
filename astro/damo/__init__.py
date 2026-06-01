@@ -12,4 +12,9 @@ Public API:
 """
 
 from astro.damo.calculator import compute_damo_chart, DamoChart  # noqa: F401
-from astro.damo.renderer import render_damo_chart  # noqa: F401
+
+
+def render_damo_chart(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load and call the Streamlit renderer for Damo charts."""
+    from ui.handlers.tab_damo.render import render_damo_chart as _fn
+    return _fn(*args, **kwargs)

@@ -29,7 +29,7 @@ from .calculator import (
 
 # renderer imports streamlit — defer to avoid breaking non-UI imports
 def _get_render_streamlit():  # noqa: ANN201
-    from .renderer import render_streamlit as _r
+    from ui.handlers.tab_nanji.render import render_streamlit as _r
     return _r
 
 

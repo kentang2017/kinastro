@@ -1,15 +1,15 @@
 """
 astro/swe_init.py — 集中初始化 pyswisseph (Centralized Swiss Ephemeris Init)
 
-使用 @st.cache_resource 確保整個 Streamlit 進程只初始化一次。
+使用 @cache_resource 確保整個 Streamlit 進程只初始化一次。
 """
 import os
 
-import streamlit as st
+from core.cache import cache_data, cache_resource
 import swisseph as swe
 
 
-@st.cache_resource
+@cache_resource
 def init_swisseph():
     """初始化 pyswisseph，只在進程啟動時執行一次。
 

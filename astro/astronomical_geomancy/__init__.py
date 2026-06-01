@@ -5,7 +5,21 @@ Public API for the Astronomical Geomancy (地占占星) module.
 """
 
 from .calculator import compute_geomancy_chart, format_geomancy_for_prompt
-from .renderer import render_streamlit, render_input_panel, build_geomancy_wheel_svg
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_astro_geomancy.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
+
+def render_input_panel(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_input_panel renderer for this package."""
+    from ui.handlers.tab_astro_geomancy.render import render_input_panel as _fn
+    return _fn(*args, **kwargs)
+
+def build_geomancy_wheel_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the build_geomancy_wheel_svg renderer for this package."""
+    from ui.handlers.tab_astro_geomancy.render import build_geomancy_wheel_svg as _fn
+    return _fn(*args, **kwargs)
 from .models import (
     GeomancyChart,
     GeomancyFigure,

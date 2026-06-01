@@ -8,8 +8,7 @@
 
 import math
 
-import streamlit as st
-
+from core.streamlit_lazy import lazy_streamlit as st
 # 七曜名稱索引對照 (lord index → name string)
 GRAHA_NAMES_BY_INDEX = [
     "Ketu", "Venus", "Sun", "Moon", "Mars",

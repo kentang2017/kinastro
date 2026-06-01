@@ -14,7 +14,7 @@ from .yearly import YearlyFortune
 
 def render_streamlit(*args, **kwargs) -> None:
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_bintang_duabelas.render import render_streamlit as _fn
 
     return _fn(*args, **kwargs)
 

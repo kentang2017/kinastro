@@ -11,7 +11,11 @@ Public API:
 """
 
 from .calculator import compute_cosmobiology_chart, ComsobioChart
-from .renderer import render_cosmobiology
+
+def render_cosmobiology(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_cosmobiology renderer for this package."""
+    from ui.handlers.tab_cosmobiology.render import render_cosmobiology as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_cosmobiology_chart",

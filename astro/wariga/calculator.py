@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import List, Optional
 
-import streamlit as _st
+from core.streamlit_lazy import lazy_streamlit as _st
 import swisseph as swe
 
 from .constants import (

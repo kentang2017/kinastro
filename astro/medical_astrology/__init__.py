@@ -19,6 +19,10 @@ Sources:
 """
 
 from .calculator import compute_medical_chart, MedicalChart
-from .renderer import render_streamlit
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_medical_astrology.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = ["compute_medical_chart", "MedicalChart", "render_streamlit"]

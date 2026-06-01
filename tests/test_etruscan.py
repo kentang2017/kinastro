@@ -23,7 +23,7 @@ from astro.etruscan.calculator import (
     format_etruscan_for_prompt,
     _azimuth_to_templum,
 )
-from astro.etruscan.renderer import build_piacenza_liver_svg
+from astro.etruscan import build_piacenza_liver_svg
 
 
 # ─────────────────────────────────────────────────────────────────────────────

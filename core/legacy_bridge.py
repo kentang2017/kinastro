@@ -203,15 +203,15 @@ def compute_wuyunliuqi(*args, **kwargs):
 
 
 def render_aspect_summary(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_aspect_summary", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_aspect_summary", *args, **kwargs)
 
 
 def render_bazi(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_bazi", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_bazi", *args, **kwargs)
 
 
 def render_bazi_chart(*args, **kwargs):
-    return _call("astro.bazi.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_bazi.render", "render_streamlit", *args, **kwargs)
 
 
 def render_beiji_chart(
@@ -232,7 +232,7 @@ def render_beiji_chart(
         minute=minute,
         gender=gender,
     )
-    _call("astro.beiji.renderer", "render_beiji_chart", result)
+    _call("ui.handlers.tab_beiji.render", "render_beiji_chart", result)
 
 
 def render_cetian_ziwei_chart(*args, **kwargs):
@@ -240,7 +240,7 @@ def render_cetian_ziwei_chart(*args, **kwargs):
 
 
 def render_chart_info(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_chart_info", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_chart_info", *args, **kwargs)
 
 
 def render_chunzi_chart() -> None:
@@ -248,15 +248,15 @@ def render_chunzi_chart() -> None:
 
 
 def render_damo_chart(*args, **kwargs):
-    return _call("astro.damo.renderer", "render_damo_chart", *args, **kwargs)
+    return _call("ui.handlers.tab_damo.render", "render_damo_chart", *args, **kwargs)
 
 
 def render_dasha(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_dasha", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_dasha", *args, **kwargs)
 
 
 def render_diqiyijue_chart(*args, **kwargs):
-    return _call("astro.diqiyijue.renderer", "render_diqiyijue_chart", *args, **kwargs)
+    return _call("ui.handlers.tab_diqiyijue.render", "render_diqiyijue_chart", *args, **kwargs)
 
 
 def render_electional_tool(*args, **kwargs):
@@ -268,15 +268,15 @@ def render_financial_tab(*args, **kwargs):
 
 
 def render_full_chart(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_full_chart", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_full_chart", *args, **kwargs)
 
 
 def render_house_table(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_house_table", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_house_table", *args, **kwargs)
 
 
 def render_kaiyuan_chart() -> None:
-    _call("astro.kaiyuan.renderer", "render_streamlit")
+    _call("ui.handlers.tab_kaiyuan.render", "render_streamlit")
 
 
 def render_liuren_chart(*args, **kwargs):
@@ -288,11 +288,11 @@ def render_lunming_report(*args, **kwargs):
 
 
 def render_mansion_text_panel(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_mansion_text_panel", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_mansion_text_panel", *args, **kwargs)
 
 
 def render_ming_gong_interpretations(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_ming_gong_interpretations", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_ming_gong_interpretations", *args, **kwargs)
 
 
 def render_nanji_chart(*args, **kwargs):
@@ -300,27 +300,27 @@ def render_nanji_chart(*args, **kwargs):
 
 
 def render_planet_table(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_planet_table", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_planet_table", *args, **kwargs)
 
 
 def render_qigua_ui(*args, **kwargs):
-    return _call("astro.chinese.taixuan.taixuan_renderer", "render_qigua_ui", *args, **kwargs)
+    return _call("ui.handlers.tab_taixuan.render", "render_qigua_ui", *args, **kwargs)
 
 
 def render_shensha(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_shensha", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_shensha", *args, **kwargs)
 
 
 def render_taixuan_chart(*args, **kwargs):
-    return _call("astro.chinese.taixuan.taixuan_renderer", "render_taixuan_chart", *args, **kwargs)
+    return _call("ui.handlers.tab_taixuan.render", "render_taixuan_chart", *args, **kwargs)
 
 
 def render_taixuan_intro(*args, **kwargs):
-    return _call("astro.chinese.taixuan.taixuan_renderer", "render_taixuan_intro", *args, **kwargs)
+    return _call("ui.handlers.tab_taixuan.render", "render_taixuan_intro", *args, **kwargs)
 
 
 def render_transit_comparison(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_transit_comparison", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_transit_comparison", *args, **kwargs)
 
 
 def render_twelve_ci_chart(*args, **kwargs):
@@ -328,15 +328,15 @@ def render_twelve_ci_chart(*args, **kwargs):
 
 
 def render_wuyunliuqi_chart(*args, **kwargs):
-    return _call("astro.wuyunliuqi.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_wuyunliuqi.render", "render_streamlit", *args, **kwargs)
 
 
 def render_wuyunliuqi_intro(*args, **kwargs):
-    return _call("astro.wuyunliuqi.renderer", "render_wuyunliuqi_intro", *args, **kwargs)
+    return _call("ui.handlers.tab_wuyunliuqi.render", "render_wuyunliuqi_intro", *args, **kwargs)
 
 
 def render_zhangguo(*args, **kwargs):
-    return _call("astro.qizheng.chart_renderer", "render_zhangguo", *args, **kwargs)
+    return _call("ui.handlers.tab_chinese.render", "render_zhangguo", *args, **kwargs)
 
 
 # Western systems
@@ -410,7 +410,7 @@ def render_babylonian_chart(*args, **kwargs):
 
 
 def render_cosmobiology(*args, **kwargs):
-    return _call("astro.cosmobiology.renderer", "render_cosmobiology", *args, **kwargs)
+    return _call("ui.handlers.tab_cosmobiology.render", "render_cosmobiology", *args, **kwargs)
 
 
 def render_draconic_chart(*args, **kwargs):
@@ -434,7 +434,7 @@ def render_fludd_rota(*args, **kwargs):
 
 
 def render_harmonic(*args, **kwargs):
-    return _call("astro.harmonic.renderer", "render_harmonic", *args, **kwargs)
+    return _call("ui.handlers.tab_harmonic.render", "render_harmonic", *args, **kwargs)
 
 
 def render_harmonic_chart(*args, **kwargs):
@@ -458,11 +458,11 @@ def render_predictive_suite(*args, **kwargs):
 
 
 def render_primary_directions(*args, **kwargs):
-    return _call("astro.primary_directions.renderer", "render_primary_directions", *args, **kwargs)
+    return _call("ui.handlers.tab_primary_directions.render", "render_primary_directions", *args, **kwargs)
 
 
 def render_rectification_page(*args, **kwargs):
-    return _call("astro.rectification.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_rectification.render", "render_streamlit", *args, **kwargs)
 
 
 def render_trutine_chart(*args, **kwargs):
@@ -568,7 +568,7 @@ def render_celtic_tree_chart(*args, **kwargs):
 
 
 def render_jawa_weton_chart(*args, **kwargs):
-    return _call("astro.jawa_weton.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_jawa_weton.render", "render_streamlit", *args, **kwargs)
 
 
 def render_kinketika_chart(*args, **kwargs):
@@ -576,11 +576,11 @@ def render_kinketika_chart(*args, **kwargs):
 
 
 def render_lao_horasat(*args, **kwargs):
-    return _call("astro.laos.renderer", "render_lao_horasat", *args, **kwargs)
+    return _call("ui.handlers.tab_laos.render", "render_lao_horasat", *args, **kwargs)
 
 
 def render_liuyao_lifetime_chart(*args, **kwargs):
-    return _call("astro.liuyao_lifetime.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_liuyao_lifetime.render", "render_streamlit", *args, **kwargs)
 
 
 def render_mahabote_chart(*args, **kwargs):
@@ -612,7 +612,7 @@ def render_tibetan_chart(*args, **kwargs):
 
 
 def render_wariga_chart(*args, **kwargs):
-    return _call("astro.wariga.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_wariga.render", "render_streamlit", *args, **kwargs)
 
 
 def render_zurkhai_chart(*args, **kwargs):
@@ -687,7 +687,7 @@ def render_amazigh_sky_svg(*args, **kwargs):
 
 
 def render_arabic_chart(*args, **kwargs):
-    return _call("astro.arabic.arabic", "render_arabic_chart", *args, **kwargs)
+    return _call("astro.arabic", "render_streamlit", *args, **kwargs)
 
 
 def render_arabic_lots_dashboard(*args, **kwargs):
@@ -801,11 +801,11 @@ def render_aztec_chart(*args, **kwargs):
 
 
 def render_decan_browse(*args, **kwargs):
-    return _call("astro.egyptian.decans", "render_decan_browse", *args, **kwargs)
+    return _call("ui.handlers.tab_egyptian_decans.render", "render_decan_browse", *args, **kwargs)
 
 
 def render_decan_chart(*args, **kwargs):
-    return _call("astro.egyptian.decans", "render_decan_chart", *args, **kwargs)
+    return _call("ui.handlers.tab_egyptian_decans.render", "render_decan_chart", *args, **kwargs)
 
 
 def render_etruscan_chart_ui(*args, **kwargs):
@@ -817,7 +817,7 @@ def render_maya_chart(*args, **kwargs):
 
 
 def render_sumerian_chart(*args, **kwargs):
-    return _call("astro.sumerian.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_sumerian.render", "render_streamlit", *args, **kwargs)
 
 
 # Sanshi / specialty systems
@@ -839,11 +839,11 @@ def compute_taiyi_chart(*args, **kwargs):
 
 
 def render_horary_chart(*args, **kwargs):
-    return _call("astro.horary.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_horary.render", "render_streamlit", *args, **kwargs)
 
 
 def render_medical_astrology_chart(*args, **kwargs):
-    return _call("astro.medical_astrology.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_medical_astrology.render", "render_streamlit", *args, **kwargs)
 
 
 def render_qimen_luming(*args, **kwargs):
@@ -851,7 +851,7 @@ def render_qimen_luming(*args, **kwargs):
 
 
 def render_shanghan_qianfa_chart(*args, **kwargs):
-    return _call("astro.shanghan_qianfa.renderer", "render_streamlit", *args, **kwargs)
+    return _call("ui.handlers.tab_shanghan_qianfa.render", "render_streamlit", *args, **kwargs)
 
 
 def render_sports_astrology_chart(*args, **kwargs):

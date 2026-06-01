@@ -29,10 +29,17 @@ from .calculator import (
     Direction,
     PrimaryDirectionsResult,
 )
-from .renderer import (
-    render_primary_directions,
-    render_primary_directions_svg,
-)
+
+def render_primary_directions(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_primary_directions renderer for this package."""
+    from ui.handlers.tab_primary_directions.render import render_primary_directions as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_primary_directions_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_primary_directions_svg renderer for this package."""
+    from ui.handlers.tab_primary_directions.render import render_primary_directions_svg as _fn
+    return _fn(*args, **kwargs)
 from .constants import EXAMPLE_CHARTS
 
 __all__ = [

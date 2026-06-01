@@ -5058,9 +5058,45 @@ Enter your birth information to look up your tree month and its poetic attribute
 }
 
 def get_ui_lang() -> str:
-    """Return the full UI language code: 'zh', 'zh_cn', or 'en'."""
-    import streamlit as st
-    return st.session_state.get("lang", "zh")
+    """Return the full UI language code: 'zh', 'zh_cn', or 'en'.
+
+    Resolution order:
+      1. The module-level ``_ui_lang_override`` (set by :func:`set_ui_lang`).
+      2. ``st.session_state["lang"]`` if Streamlit is importable and a
+         session is available.
+      3. The environment variable ``KINASTRO_LANG``.
+      4. Default ``"zh"``.
+
+    This allows ``astro.i18n`` to be imported and used in non-Streamlit
+    contexts (CLI, FastAPI, pytest) without raising on streamlit access.
+    """
+    override = _ui_lang_override
+    if override is not None:
+        return override
+    try:
+        import streamlit as st  # noqa: WPS433 — local import is intentional
+        return st.session_state.get("lang", "zh")
+    except Exception:
+        pass
+    import os
+    return os.environ.get("KINASTRO_LANG", "zh")
+
+
+# Module-level UI language override. The Streamlit UI sets this from
+# ``st.session_state["lang"]`` via :func:`set_ui_lang` (called in app.py
+# during language-switch handling). Non-UI callers can either set
+# ``KINASTRO_LANG`` in the environment or call :func:`set_ui_lang` directly.
+_ui_lang_override: str | None = None
+
+
+def set_ui_lang(lang: str) -> None:
+    """Set the language used by :func:`t` / :func:`get_ui_lang`.
+
+    Pass ``None`` to clear the override and fall back to the Streamlit
+    session state (or the environment).
+    """
+    global _ui_lang_override
+    _ui_lang_override = lang
 
 
 def get_lang() -> str:

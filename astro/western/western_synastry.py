@@ -3,7 +3,7 @@ astro/western_synastry.py — 合盤 (Synastry Chart Comparison)
 
 Calculates cross-aspects between two natal charts with interpretation text.
 """
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from dataclasses import dataclass, field
 from astro.interpretations import get_synastry_reading
 
@@ -55,7 +55,7 @@ class SynastryResult:
     summary_cn: str = ""
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_synastry(chart_a, chart_b,
                      name_a="Person A", name_b="Person B"):
     """Compute cross-aspects between two WesternChart objects."""

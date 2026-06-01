@@ -8,7 +8,7 @@
 - 星次（中國黃道十二宮）對應
 """
 
-import streamlit as st
+from core.cache import cache_data, cache_resource
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -268,7 +268,7 @@ def _branch_to_cusp(branch: int) -> float:
     return sign_index * 30.0
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_chart(
     year: int,
     month: int,
@@ -573,7 +573,7 @@ def get_mansion_for_degree(lon: float) -> dict:
     return TWENTY_EIGHT_MANSIONS[get_mansion_index_for_degree(lon)]
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@cache_data(ttl=1800, show_spinner=False)
 def get_stock_lingyun_chart(
     year: int,
     month: int = None,
@@ -591,7 +591,7 @@ def calculate_stock_score(solar_chart: dict) -> dict:
     return _impl(solar_chart)
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@cache_data(ttl=1800, show_spinner=False)
 def get_four_great_transits(year: int, lat: float = 22.3, lon: float = 114.2) -> str:
     """取得四大天運統運文字。"""
     from .stock_lingyun import get_four_great_transits as _impl

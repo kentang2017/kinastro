@@ -4,7 +4,7 @@ astro/western_return.py — 返照盤 (Solar & Lunar Return)
 Finds the exact moment Sun/Moon returns to natal position,
 then casts a full chart.
 """
-import streamlit as st
+from core.cache import cache_data, cache_resource
 import swisseph as swe
 from dataclasses import dataclass
 from .western import compute_western_chart
@@ -47,7 +47,7 @@ class LunarReturnResult:
     return_chart: object
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_solar_return(natal_sun_lon, target_year, latitude, longitude,
                          timezone=0.0, location_name=""):
     """Find when Sun returns to natal longitude in target_year."""
@@ -80,7 +80,7 @@ def compute_solar_return(natal_sun_lon, target_year, latitude, longitude,
     )
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_lunar_return(natal_moon_lon, after_jd, latitude, longitude,
                          timezone=0.0, location_name=""):
     """Find next Moon return to natal longitude after given JD."""

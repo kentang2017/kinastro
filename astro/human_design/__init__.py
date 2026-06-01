@@ -31,7 +31,7 @@ from .constants import (
 
 # renderer imports streamlit — defer to avoid breaking non-UI imports
 def _get_render_streamlit():  # noqa: ANN201
-    from .renderer import render_streamlit as _r
+    from ui.handlers.tab_human_design.render import render_streamlit as _r
     return _r
 
 
@@ -42,7 +42,7 @@ def render_streamlit(*args, **kwargs):
 
 def render_bodygraph_svg(*args, **kwargs):
     """Generate BodyGraph SVG (deferred import)."""
-    from .renderer import render_bodygraph_svg as _r
+    from ui.handlers.tab_human_design.render import render_bodygraph_svg as _r
     return _r(*args, **kwargs)
 
 

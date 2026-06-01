@@ -19,7 +19,7 @@ along the *tropical* ecliptic determines the active Ci.
 from __future__ import annotations
 
 import math
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 from datetime import datetime, date
@@ -27,6 +27,7 @@ from typing import Optional
 
 from astro.i18n import t, get_lang
 
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 十二星次定義 — 冬至 0° 起、每 30° 一次
 # Twelve Ci definitions — winter solstice = 0°, 30° each
@@ -353,6 +354,7 @@ _PLANET_ZH = {
 # ============================================================
 
 @dataclass
+
 class TwelveCiPlanet:
     """One planet's position in the Twelve Ci system."""
     name: str           # English name
@@ -431,7 +433,7 @@ def _compute_planet_ci(name: str, jd: float) -> TwelveCiPlanet:
     )
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_twelve_ci_chart(
     year: int, month: int, day: int,
     hour: int, minute: int, timezone: float,

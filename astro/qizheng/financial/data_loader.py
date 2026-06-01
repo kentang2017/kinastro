@@ -5,8 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import streamlit as st
-
+from core.cache import cache_data, cache_resource
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _HISTORICAL_EVENTS_FILE = _DATA_DIR / "historical_events.json"
 _GREAT_CONJUNCTIONS_FILE = _DATA_DIR / "great_conjunctions.json"
@@ -61,7 +60,7 @@ def _validate_fields(rows: list[dict], required_fields: set[str]) -> list[dict]:
     return valid_rows
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def load_historical_events() -> list[dict]:
     """載入歷史金融事件資料。"""
     required = {
@@ -84,7 +83,7 @@ def load_historical_events() -> list[dict]:
         return _DEFAULT_HISTORICAL_EVENTS
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def load_great_conjunctions() -> list[dict]:
     """載入木土大合相資料。"""
     required = {"year", "month", "day", "lon", "sign", "note_zh", "note_en"}

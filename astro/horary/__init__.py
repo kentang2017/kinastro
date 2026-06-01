@@ -29,11 +29,23 @@ from .calculator import (
     WesternHoraryChart,
     VedicPrashnaChart,
 )
-from .renderer import (
-    render_streamlit,
-    render_western_horary_svg,
-    render_vedic_prashna_svg,
-)
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_horary.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_western_horary_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_western_horary_svg renderer for this package."""
+    from ui.handlers.tab_horary.render import render_western_horary_svg as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_vedic_prashna_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_vedic_prashna_svg renderer for this package."""
+    from ui.handlers.tab_horary.render import render_vedic_prashna_svg as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_western_horary",

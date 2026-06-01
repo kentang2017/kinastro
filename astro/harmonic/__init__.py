@@ -18,7 +18,16 @@ Public API:
 """
 
 from .calculator import compute_harmonic_chart, compute_multi_harmonic, HarmonicChart, MultiHarmonicResult
-from .renderer import render_harmonic, render_harmonic_chart_svg
+
+def render_harmonic(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_harmonic renderer for this package."""
+    from ui.handlers.tab_harmonic.render import render_harmonic as _fn
+    return _fn(*args, **kwargs)
+
+def render_harmonic_chart_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_harmonic_chart_svg renderer for this package."""
+    from ui.handlers.tab_harmonic.render import render_harmonic_chart_svg as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_harmonic_chart",

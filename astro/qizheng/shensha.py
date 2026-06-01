@@ -14,7 +14,7 @@
   - 十二長生（以年柱納音五行為基準佈局）
 """
 
-import streamlit as st
+from core.cache import cache_data, cache_resource
 from dataclasses import dataclass, field
 
 # ============================================================
@@ -392,7 +392,7 @@ def get_hour_stem(day_stem: int, hour_branch: int) -> int:
     return (base + hour_branch) % 10
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_shensha(
     year: int,
     solar_month: int,

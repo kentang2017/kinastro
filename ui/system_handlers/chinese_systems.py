@@ -743,7 +743,7 @@ def render_tab_shaozi() -> None:
         if _is_calculated:
             try:
                 from astro.shaozi import ShaoziShenShu, ShaoziBirthData
-                from astro.shaozi.renderer import render_shaozi_result
+                from ui.handlers.tab_shaozi.render import render_shaozi_result
 
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_shaozi")):
@@ -774,7 +774,7 @@ def render_tab_shaozi() -> None:
                 import traceback
                 st.code(traceback.format_exc())
         else:
-            from astro.shaozi.renderer import render_shaozi_placeholder
+            from ui.handlers.tab_shaozi.render import render_shaozi_placeholder
             render_shaozi_placeholder()
 
     with _sz_tab_64keys:
@@ -782,7 +782,7 @@ def render_tab_shaozi() -> None:
             try:
                 from astro.shaozi import ShaoziShenShu as _SzMain, ShaoziBirthData
                 from astro.shaozi.shaozi_full_structure import ShaoziFullShenShu as _SzFull
-                from astro.shaozi.renderer import render_shaozi_64key_section
+                from ui.handlers.tab_shaozi.render import render_shaozi_64key_section
 
                 _p = st.session_state["_calc_params"]
                 with st.spinner(t("spinner_shaozi")):
@@ -812,11 +812,11 @@ def render_tab_shaozi() -> None:
                 import traceback
                 st.code(traceback.format_exc())
         else:
-            from astro.shaozi.renderer import render_shaozi_placeholder
+            from ui.handlers.tab_shaozi.render import render_shaozi_placeholder
             render_shaozi_placeholder()
 
     with _sz_tab_tiaowen:
-        from astro.shaozi.renderer import render_shaozi_tiaowen_browser
+        from ui.handlers.tab_shaozi.render import render_shaozi_tiaowen_browser
         render_shaozi_tiaowen_browser()
 
 

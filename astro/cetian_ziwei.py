@@ -24,9 +24,10 @@
 import math
 
 import swisseph as swe
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass, field
 
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量 (Constants)
 # ============================================================
@@ -344,6 +345,7 @@ _CST_OFFSET = 8.0 / 24.0
 # ============================================================
 
 @dataclass
+
 class CetianPalace:
     """策天十八飛星宮位資料"""
     index: int                      # 宮位序號 0-11（從命宮算起）
@@ -799,7 +801,7 @@ def _build_cetian_palaces(
 # 計算函數 (Computation)
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_cetian_ziwei_chart(
     year: int,
     month: int,

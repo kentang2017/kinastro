@@ -30,7 +30,7 @@ Sefer Yetzirah（創造之書）與聖經星象解讀。
 
 import math
 import swisseph as swe
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass, field
 
 from astro.i18n import t
@@ -252,6 +252,8 @@ FALL = {"Sun": 6, "Moon": 7, "Mars": 3, "Mercury": 11,
 # ============================================================
 # 內部工具函數 (Internal Helpers)
 # ============================================================
+from core.cache import cache_data, cache_resource
+
 def _sign_idx(lon):
     """根據黃經返回星座索引 (0–11)"""
     return int(lon / 30) % 12
@@ -401,7 +403,7 @@ def _determine_omen(planet, sign_idx):
 # ============================================================
 # 主計算函數 (Main Compute Function)
 # ============================================================
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_mazzalot_chart(year, month, day, hour, minute, timezone,
                            lat, lon):
     """計算猶太 Mazzalot 占星排盤（Sidereal Zodiac, Placidus Houses）

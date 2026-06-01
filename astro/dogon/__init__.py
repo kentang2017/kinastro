@@ -22,7 +22,7 @@ def format_dogon_sirius_for_prompt(*args, **kwargs) -> str:
 
 
 def render_dogon_sirius_chart(*args, **kwargs) -> None:
-    from .renderer import render_dogon_sirius_chart as _fn
+    from ui.handlers.tab_dogon_sirius.render import render_dogon_sirius_chart as _fn
     return _fn(*args, **kwargs)
 
 

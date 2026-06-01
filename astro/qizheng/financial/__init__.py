@@ -11,7 +11,11 @@
 
 from .stock_fetcher import fetch_stock_info, StockInfo
 from .stock_calculator import compute_stock_chart, StockChartData
-from .stock_renderer import render_stock_fortune_tab
+
+def render_stock_fortune_tab(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_stock_fortune_tab renderer for this package."""
+    from ui.handlers.tab_chinese.render_financial import render_stock_fortune_tab as _fn
+    return _fn(*args, **kwargs)
 from .gann_macro_stock import (
     GANN_NATAL_DEFAULT,
     GANN_NATAL_PRESETS,

@@ -29,7 +29,7 @@ def compute_andean_chart(*args, **kwargs) -> "AndeanChart":
 
 def render_streamlit(*args, **kwargs) -> None:
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_andean.render import render_streamlit as _fn
     return _fn(*args, **kwargs)
 
 

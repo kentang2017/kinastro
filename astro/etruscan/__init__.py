@@ -33,8 +33,14 @@ def compute_etruscan_chart(*args, **kwargs) -> "EtruscanChart":
 
 def render_streamlit(*args, **kwargs) -> None:
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_etruscan.render import render_streamlit as _fn
     return _fn(*args, **kwargs)
 
 
-__all__ = ["compute_etruscan_chart", "render_streamlit"]
+def build_piacenza_liver_svg(*args, **kwargs) -> str:
+    """Lazy-load and call the Piacenza liver SVG builder."""
+    from ui.handlers.tab_etruscan.render import build_piacenza_liver_svg as _fn
+    return _fn(*args, **kwargs)
+
+
+__all__ = ["compute_etruscan_chart", "render_streamlit", "build_piacenza_liver_svg"]

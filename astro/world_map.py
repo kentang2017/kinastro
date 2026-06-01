@@ -8,7 +8,7 @@ dropdown via Streamlit's ``st.session_state``.
 
 from __future__ import annotations
 
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from astro.i18n import get_lang
 
 # ── Region → astrology systems mapping ─────────────────────────────────────

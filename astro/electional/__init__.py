@@ -40,11 +40,23 @@ from .calculator import (
     VedicMuhurtaFactor,
     PanchangaElement,
 )
-from .renderer import (
-    render_streamlit,
-    render_western_electional_svg,
-    render_vedic_muhurta_svg,
-)
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_streamlit renderer for this package."""
+    from ui.handlers.tab_electional.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_western_electional_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_western_electional_svg renderer for this package."""
+    from ui.handlers.tab_electional.render import render_western_electional_svg as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_vedic_muhurta_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the render_vedic_muhurta_svg renderer for this package."""
+    from ui.handlers.tab_electional.render import render_vedic_muhurta_svg as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     "compute_western_electional",

@@ -23,7 +23,7 @@ from .chunzi import (
 
 def render_streamlit() -> None:
     """懶載入 Streamlit 渲染器（避免非 UI 環境載入 streamlit）"""
-    from .renderer import render_streamlit as _render
+    from ui.handlers.tab_chunzi.render import render_streamlit as _render
     _render()
 
 

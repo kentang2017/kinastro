@@ -34,7 +34,7 @@ def compute_byzantine_chart(*args, **kwargs):  # type: ignore[override]
 
 def render_streamlit(*args, **kwargs):  # type: ignore[override]
     """Lazy-load and call the Streamlit renderer."""
-    from .renderer import render_streamlit as _fn
+    from ui.handlers.tab_byzantine_astrology.render import render_streamlit as _fn
     return _fn(*args, **kwargs)
 
 

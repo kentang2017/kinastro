@@ -20,7 +20,7 @@ from .calculator import compute_sumerian_chart, MesopotamianChart
 
 
 def _lazy_renderer():
-    from .renderer import render_streamlit
+    from ui.handlers.tab_sumerian.render import render_streamlit
     return render_streamlit
 
 

@@ -20,9 +20,7 @@ from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-import streamlit as st
-
-
+from core.cache import cache_data, cache_resource
 @dataclass
 class StockInfo:
     """股票基本資訊"""
@@ -275,7 +273,7 @@ def _fetch_chart_quote_fallback(normalized_ticker: str) -> tuple[dict, str]:
     return fallback_info, ""
 
 
-@st.cache_data(ttl=300, show_spinner=False)
+@cache_data(ttl=300, show_spinner=False)
 def fetch_stock_info(ticker_input: str) -> StockInfo:
     """
     從 yfinance 擷取股票資訊。
@@ -287,7 +285,7 @@ def fetch_stock_info(ticker_input: str) -> StockInfo:
         StockInfo dataclass；若出錯則 .error 欄位有說明。
 
     Note:
-        使用 @st.cache_data(ttl=300) 快取 5 分鐘，避免頻繁呼叫 Yahoo Finance API。
+        使用 @cache_data(ttl=300) 快取 5 分鐘，避免頻繁呼叫 Yahoo Finance API。
     """
     try:
         import yfinance as yf  # lazy import

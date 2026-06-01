@@ -21,7 +21,7 @@ Mathematical conventions:
 from __future__ import annotations
 
 import math
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple

@@ -12,7 +12,24 @@ from .calculator import (
 )
 from .interpreter import get_planet_sign_reading, interpret_chart, interpret_planet
 from .lao_horasat import LaoHorasat, compute_lao_horasat_chart, create_lao_horasat
-from .renderer import build_lao_brahma_wheel_svg, render_lao_horasat, render_streamlit
+
+
+def build_lao_brahma_wheel_svg(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the Laos Brahma wheel SVG renderer."""
+    from ui.handlers.tab_laos.render import build_lao_brahma_wheel_svg as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_lao_horasat(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the Laos Horasat chart renderer."""
+    from ui.handlers.tab_laos.render import render_lao_horasat as _fn
+    return _fn(*args, **kwargs)
+
+
+def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
+    """Lazy-load the Laos Streamlit entry point."""
+    from ui.handlers.tab_laos.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
 
 __all__ = [
     # Core dataclasses

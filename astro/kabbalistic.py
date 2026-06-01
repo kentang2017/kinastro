@@ -7,9 +7,10 @@
 """
 
 import swisseph as swe
-import streamlit as st
+from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass, field
 
+from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量 (Constants)
 # ============================================================
@@ -110,6 +111,7 @@ PLANET_COLORS = {
 # ============================================================
 
 @dataclass
+
 class KabbalisticPlanet:
     """Kabbalistic planet position with Tree of Life correspondences"""
     name: str
@@ -197,7 +199,7 @@ def _find_house(lon, cusps):
     return 1
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def compute_kabbalistic_chart(year, month, day, hour, minute, timezone,
                               latitude, longitude, location_name=""):
     """計算卡巴拉占星排盤 (Tropical Zodiac, Placidus Houses)"""
