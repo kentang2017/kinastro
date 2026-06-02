@@ -361,7 +361,9 @@ def test_tieban_svg_palace_grid_stays_within_container():
         svg,
     )
     assert len(palace_boxes) == 12
-    assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, _, w, _ in palace_boxes)
+    assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, _, w, _ in palace_boxes), (
+        f"Palace boxes must not exceed content width of {TIEBAN_CONTENT_WIDTH}px"
+    )
 
 
 def run_all_tests():

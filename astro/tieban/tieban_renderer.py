@@ -26,6 +26,12 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
 
     # Layout constants
     palace_verse_max_chars = 8
+    palace_column_spacing = 125
+    palace_grid_top_offset = 42
+    palace_row_spacing = 40
+    palace_box_width = 52
+    palace_box_height = 24
+    palace_box_radius = 3
 
     # Build SVG components
     svg_parts = [
@@ -138,12 +144,12 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
     for i, p in enumerate(palaces):
         row = i // 4
         col = i % 4
-        x = 20 + col * 125
-        y_offset = 42 + row * 40
+        x = 20 + col * palace_column_spacing
+        y_offset = palace_grid_top_offset + row * palace_row_spacing
 
         # Palace box
         svg_parts.append(
-            f'<rect x="{x}" y="{y_offset}" width="52" height="24" rx="3" '
+            f'<rect x="{x}" y="{y_offset}" width="{palace_box_width}" height="{palace_box_height}" rx="{palace_box_radius}" '
             f'stroke="#6a7b9b" fill="#1e2a4a" stroke-width="1"/>'
         )
 
