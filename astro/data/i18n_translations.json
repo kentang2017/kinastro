@@ -1488,6 +1488,10 @@
     "en": "\n### What is Myanmar Mahabote Astrology?\n\n**Mahabote** (မဟာဘုတ်) is the core traditional Myanmar astrology system, meaning \"Great Creation\":\n\n- **Seven Planets + Rahu**: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn + Rahu (Wednesday evening)\n- **Eight-Direction Wheel**: NE, E, SE, S, SW, W, NW, N — each planet maps to a compass direction\n- **Eight Houses**: Birth, Life, Mind, Body, Power, Death, Morality + Karma (8th hidden house)\n- **Animal Guardians**: Garuda, Tiger, Lion, Tusked Elephant, Rat, Guinea Pig, Naga, Tuskless Elephant\n- **Planetary Periods (Atar)**: Seven-planet cycle totalling 96 years\n- **Sakka Calendar**: Mahabote value = (Sakka year + weekday number) mod 8\n- **Traditional Omens**: Each direction includes fortune, career, marriage, and health readings\n",
     "zh": "\n### 什麼是緬甸 Mahabote 占星？\n\n**Mahabote** (မဟာဘုတ်) 是緬甸傳統占星術核心體系，意為「大創造」：\n\n- **七曜行星 + 羅睺**：日、月、火、水、木、金、土 + 羅睺（星期三傍晚）\n- **八方位輪盤**：NE、E、SE、S、SW、W、NW、N，每顆行星對應一個方位\n- **八宮位**：本命、壽命、意識、身體、權勢、死亡、道德 + 業力（第八隱藏宮）\n- **動物守護**：迦樓羅、虎、獅、象(有牙)、鼠、天竺鼠、龍/那伽、象(無牙)\n- **行星大運 (Atar)**：七星循環共 96 年，主宰人生各階段\n- **Sakka 曆計算**：Mahabote 值 = (Sakka 年 + 星期數) mod 8\n- **傳統預兆**：每個方位含吉凶、事業、婚姻、健康解讀\n"
   },
+  "desc_malay_nujum": {
+    "en": "Integrated Malay traditional methods: Mata Angin Lapan, Bintang Tujuh, Perkisaran Naga, and enhanced Bintang Duabelas.",
+    "zh": "整合 Mata Angin Lapan、Bintang Tujuh、Perkisaran Naga 與強化 Bintang Duabelas 的馬來傳統占法。"
+  },
   "desc_maya": {
     "en": "\n### What is Maya Astrology?\n\n**Maya Astrology** draws from the astronomical and calendrical traditions of Guatemalan Maya civilisation:\n\n- **Long Count**: Days counted in B'ak'tun, Ka'tun, Tu'n, Winal, K'in units\n- **Tzolkin (Sacred Calendar)**: 260-day cycle — 13 numbers × 20 day signs\n- **Haab (Civil Calendar)**: 365 days — 18 months × 20 days + 5 Wayeb nameless days\n- **Calendar Round**: Tzolkin × Haab synchronised cycle, ~52 years per round\n- **Planetary Overlay**: Western planetary positions mapped to Tzolkin energies\n",
     "zh": "\n### 什麼是瑪雅占星？\n\n**瑪雅占星**源自瓜地馬拉瑪雅文明的天文與曆法傳統：\n\n- **Long Count（長紀年）**：以 B'ak'tun、Ka'tun、Tu'n、Winal、K'in 計算天數\n- **Tzolkin（神聖曆）**：260 天循環，13 數字 × 20 神明名\n- **Haab（民用曆）**：365 天，18 月 × 20 日 + 5 Wayeb 無日\n- **Calendar Round**：Tzolkin × Haab 同步循環，約 52 年一輪\n- **行星疊加**：結合西方占星行星位置對應 Tzolkin 能量\n"
@@ -2019,6 +2023,10 @@
   "info_lao_prompt": {
     "en": "👈 Enter birth data on the left and click 'Calculate Chart' to view Lao date info, ສັງຄົມ, ສີກາດ, and the Brahman wheel.",
     "zh": "👈 請先在左側輸入出生資料並點擊「開始排盤」，即可查看老撾曆、ສັງຄົມ、ສີກາດ與婆羅門占星輪。"
+  },
+  "info_malay_nujum_prompt": {
+    "en": "Malay Ilmu Nujum combines eight-wind directionality, seven-star timing, and dragon-cycle election guidance with bilingual structured outputs.",
+    "zh": "馬來 Ilmu Nujum 結合八風方位、七星時機與龍行擇吉，提供雙語結構化解讀。"
   },
   "info_maya_prompt": {
     "en": "👈 Enter your birth date on the left and click 'Calculate Chart' to discover your Tzolk'in day sign, Long Count position, and full Maya chart.",
@@ -3176,6 +3184,10 @@
     "en": "Calculating Myanmar Mahabote chart...",
     "zh": "正在計算緬甸 Mahabote 排盤..."
   },
+  "spinner_malay_nujum": {
+    "en": "Computing Malay Ilmu Nujum...",
+    "zh": "正在推算馬來 Ilmu Nujum..."
+  },
   "spinner_maya": {
     "en": "Calculating Maya astrology chart...",
     "zh": "正在計算瑪雅占星排盤..."
@@ -3546,6 +3558,10 @@
     "en": "Burmese/Shan Mahabote deep astrology",
     "zh": "緬甸／撣族 Mahabote 深度排盤"
   },
+  "sys_hint_malay_nujum": {
+    "en": "Input name and time to get directional, timing, and dragon-cycle recommendations.",
+    "zh": "輸入姓名與時間可同時獲得方向、時機與龍行週期建議。"
+  },
   "sys_hint_maya": {
     "en": "Maya Tzolk'in sacred calendar, Long Count, Calendar Round 52-year cycle",
     "zh": "瑪雅 Tzolk'in 神聖曆、Long Count 長紀年、Calendar Round 52年循環"
@@ -3902,6 +3918,10 @@
   "tab_mahabote": {
     "en": "🇲🇲 Burmese/Shan Mahabote",
     "zh": "🇲🇲 緬甸／撣族 Mahabote"
+  },
+  "tab_malay_nujum": {
+    "en": "Malay Ilmu Nujum (Mata Angin · Bintang Tujuh · Naga)",
+    "zh": "馬來 Ilmu Nujum（八風・七星・龍行）"
   },
   "tab_maya": {
     "en": "🏺 Maya Astrology",

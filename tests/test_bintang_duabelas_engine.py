@@ -50,6 +50,8 @@ def test_full_reading_maps_star_sign_to_house() -> None:
     engine = BintangDuabelasEngine()
     result = engine.get_full_reading("Ahmad", "Khadijah")
     assert result["star_sign"]["sign_number"] == result["house"]["house_number"]
+    assert result["name_profile"]["abjad_total"] > 0
+    assert "interpretation_template" in result
 
 
 def test_planetary_hours_day_schedule_uses_birth_datetime_weekday() -> None:

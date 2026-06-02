@@ -844,6 +844,7 @@ class TestApiServer:
                     "/api/thai", "/api/kabbalistic", "/api/arabic",
                     "/api/maya", "/api/ziwei", "/api/mahabote",
                     "/api/decans", "/api/nadi", "/api/zurkhai",
+                    "/api/malay_nujum",
                     "/api/hellenistic"]
         for ep in expected:
             assert ep in routes, f"Missing endpoint: {ep}"

@@ -709,6 +709,10 @@ def render_bintang_duabelas_chart(*args, **kwargs):
     return _call("astro.bintang_duabelas", "render_streamlit", *args, **kwargs)
 
 
+def render_malay_nujum_chart(*args, **kwargs):
+    return _call("astro.malay", "render_streamlit", *args, **kwargs)
+
+
 def render_brahma_jati(*args, **kwargs):
     return _call("astro.brahma_jati", "render_brahma_jati", *args, **kwargs)
 
