@@ -6,6 +6,7 @@ Test suite for Tie Ban Shen Shu module
 
 import sys
 import os
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 # 添加父目錄到路徑
@@ -13,6 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from astro.tieban import TieBanShenShu, TieBanBirthData
 from astro.tieban.tieban_calculator import Ganzhi
+from astro.tieban.tieban_renderer import render_tieban_chart_svg
+
+TIEBAN_CONTENT_WIDTH = 520
 
 
 def test_ganzhi_creation():
@@ -336,6 +340,42 @@ def test_kunji_and_tiaowen():
     print(f"  calculate().kunji_tiangan: {result.kunji_tiangan}")
     
     print("✅ 坤集扣入法與完整條文資料庫測試通過")
+
+
+def test_tieban_svg_palace_grid_stays_within_container():
+    """十二宮格 SVG 不能超出內容區域（避免右側裁切）"""
+    tbss = TieBanShenShu()
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1990, 5, 15, 14, 30),
+        year_gz=Ganzhi('庚', '午'),
+        month_gz=Ganzhi('辛', '巳'),
+        day_gz=Ganzhi('戊', '辰'),
+        hour_gz=Ganzhi('己', '未'),
+        gender="男",
+    )
+    result = tbss.calculate(birth_data)
+    svg = render_tieban_chart_svg(result, language="zh")
+
+    root = ET.fromstring(svg)
+    palace_boxes = []
+    for node in root.iter():
+        tag = str(node.tag)
+        tag_name = tag.split("}")[-1] if "}" in tag else tag
+        if tag_name != "rect":
+            continue
+        attrs = node.attrib
+        if (
+            attrs.get("rx") == "3"
+            and attrs.get("stroke") == "#6a7b9b"
+            and attrs.get("fill") == "#1e2a4a"
+            and attrs.get("stroke-width") == "1"
+        ):
+            palace_boxes.append((int(attrs.get("x", "0")), int(attrs.get("width", "0"))))
+
+    assert len(palace_boxes) == 12
+    assert all(x + w <= TIEBAN_CONTENT_WIDTH for x, w in palace_boxes), (
+        f"Palace boxes must not exceed content width of {TIEBAN_CONTENT_WIDTH}px"
+    )
 
 
 def run_all_tests():
