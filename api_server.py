@@ -17,7 +17,7 @@ import json
 import logging
 from datetime import date, datetime
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -68,6 +68,7 @@ from astro.astronomical_geomancy.calculator import (
     compute_geomancy_chart,
     format_geomancy_for_prompt,
 )
+from astro.malay import MalayNujumEngine, MalayNujumRequest
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -265,6 +266,18 @@ class TaiyiParams(BirthParams):
         pattern=r"^(male|female)$",
         description="Gender: 'male' or 'female'",
     )
+
+
+class MalayNujumParams(BirthParams):
+    """Parameters for Malay Ilmu Nujum endpoint."""
+
+    method: Literal["mata_angin_lapan", "bintang_tujuh", "bintang_duabelas_plus", "perkisaran_naga"] = Field(
+        default="mata_angin_lapan",
+        description="One of: mata_angin_lapan, bintang_tujuh, bintang_duabelas_plus, perkisaran_naga",
+    )
+    name: str = Field(default="", description="Primary name for abjad-based modules.")
+    mother_name: str = Field(default="", description="Mother name used by Bintang Duabelas+.")
+    script_hint: str = Field(default="auto", description="Name script hint: auto/roman/arabic.")
 
 
 class ChartResponse(BaseModel):
@@ -713,6 +726,33 @@ async def ziwei_chart(params: BirthParams) -> ChartResponse:
         return ChartResponse(system="ziwei", data=data)
     except Exception as exc:
         logger.exception("Zi Wei chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/malay_nujum", response_model=ChartResponse, tags=["Systems"])
+async def malay_nujum_chart(params: MalayNujumParams) -> ChartResponse:
+    """Compute Malay Ilmu Nujum systems (Mata Angin, Bintang Tujuh, Naga, Duabelas+)."""
+    try:
+        engine = MalayNujumEngine()
+        request = MalayNujumRequest(
+            method=params.method,
+            name=params.name,
+            mother_name=params.mother_name,
+            moment=datetime(
+                params.year,
+                params.month,
+                params.day,
+                params.hour,
+                params.minute,
+            ),
+            latitude=params.latitude,
+            longitude=params.longitude,
+            script_hint=params.script_hint,
+        )
+        data = engine.run_request(request)
+        return ChartResponse(system="malay_nujum", data=_chart_to_dict(data))
+    except Exception as exc:
+        logger.exception("Malay Nujum computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 

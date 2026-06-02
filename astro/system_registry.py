@@ -1283,6 +1283,32 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_malay_nujum",
+    name_zh="馬來 Ilmu Nujum（八風・七星・龍行）",
+    name_en="Malay Ilmu Nujum (Mata Angin · Bintang Tujuh · Naga)",
+    category="cat_asian",
+    icon="🧭",
+    tab_key="tab_malay_nujum",
+    desc_key="desc_malay_nujum",
+    spinner_key="spinner_malay_nujum",
+    hint_key="sys_hint_malay_nujum",
+    tags=[
+        "malay nujum",
+        "ilmu nujum",
+        "mata angin lapan",
+        "pelangkah rijal al-ghalib",
+        "bintang tujuh",
+        "perkisaran naga",
+        "asian",
+    ],
+    maturity="beta",
+    accent_color=_a("cat_asian"),
+    origin_culture="Malay / Nusantara",
+    tradition_period="Traditional Malay manuscripts",
+    ai_persona_key="info_malay_nujum_prompt",
+))
+
+_reg(System(
     id="tab_kinketika",
     name_zh="馬來七星五刻占卜",
     name_en="Kinketika (Malay Time Divination)",

@@ -202,6 +202,24 @@ class BintangDuabelasEngine:
     def get_all_houses(self) -> list[dict[str, int | str]]:
         return self.houses.get_all_houses()
 
+    def get_name_abjad_profile(self, name: str, script_hint: str = "auto") -> dict[str, object]:
+        """取得姓名 Abjad 摘要，供完整解讀重用。"""
+        normalized = self.normalize_name(name, script_hint=script_hint)
+        total = self.name_to_abjad(name, script_hint=script_hint)
+        full_total = self.abjad.name_to_abjad_full(name, script_hint=script_hint)
+        return {
+            "input_name": name,
+            "normalized": normalized.normalized,
+            "source_script": normalized.source_script,
+            "used_override": normalized.used_override,
+            "abjad_total": total,
+            "abjad_full_total": full_total,
+            "letter_breakdown": [
+                {"letter": letter, "value": value}
+                for letter, value in self.get_letter_breakdown(name, script_hint=script_hint)
+            ],
+        }
+
     def get_full_reading(
         self,
         person_name: str,
@@ -216,7 +234,34 @@ class BintangDuabelasEngine:
             mother_script_hint=mother_script_hint,
         )
         house = self.houses.get_house_for_person(int(sign["sign_number"]))
-        return {"star_sign": sign, "house": house}
+        person_profile = self.get_name_abjad_profile(person_name, script_hint=person_script_hint)
+        mother_profile = self.get_name_abjad_profile(mother_name, script_hint=mother_script_hint)
+        interpretation_template = {
+            "zh": {
+                "summary": (
+                    f"命主姓名 Abjad 值為 {person_profile['abjad_total']}，母系參照值為 {mother_profile['abjad_total']}，"
+                    f"對應第 {house['house_number']} 宮（{house.get('name_zh', house.get('name_malay', ''))}）。"
+                ),
+                "auspicious_focus": "可在吉時優先推進該宮代表事務，並借助主宰行星主題。",
+                "caution": "若遇凶時段，先調整節奏與資源配置，不宜硬推。",
+            },
+            "en": {
+                "summary": (
+                    f"Native name Abjad is {person_profile['abjad_total']} and maternal reference is "
+                    f"{mother_profile['abjad_total']}, mapping to House {house['house_number']} "
+                    f"({house.get('name_en', house.get('name_malay', ''))})."
+                ),
+                "auspicious_focus": "Advance house-related topics during favorable hours under its ruling planet theme.",
+                "caution": "During difficult periods, adjust timing and resources before committing.",
+            },
+        }
+        return {
+            "star_sign": sign,
+            "house": house,
+            "name_profile": person_profile,
+            "mother_profile": mother_profile,
+            "interpretation_template": interpretation_template,
+        }
 
     def generate_azimat(
         self,

@@ -75,6 +75,7 @@ def _get_dispatch() -> dict[str, Callable]:
         "tab_wariga": asian_systems.render_tab_wariga,
         "tab_jawa_weton": asian_systems.render_tab_jawa_weton,
         "tab_bintang_duabelas": asian_systems.render_tab_bintang_duabelas,
+        "tab_malay_nujum": asian_systems.render_tab_malay_nujum,
         "tab_kinketika": asian_systems.render_tab_kinketika,
         "tab_liuyao_lifetime": asian_systems.render_tab_liuyao_lifetime,
         "tab_byzantine_astrology": asian_systems.render_tab_byzantine_astrology,
