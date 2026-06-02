@@ -6,7 +6,7 @@ Test suite for Tie Ban Shen Shu module
 
 import sys
 import os
-import re
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 # 添加父目錄到路徑
@@ -17,8 +17,6 @@ from astro.tieban.tieban_calculator import Ganzhi
 from astro.tieban.tieban_renderer import render_tieban_chart_svg
 
 TIEBAN_CONTENT_WIDTH = 520
-MAX_PALACE_BOX_WIDTH = 80
-MAX_PALACE_BOX_HEIGHT = 40
 
 
 def test_ganzhi_creation():
@@ -358,16 +356,22 @@ def test_tieban_svg_palace_grid_stays_within_container():
     result = tbss.calculate(birth_data)
     svg = render_tieban_chart_svg(result, language="zh")
 
-    rects = re.findall(
-        r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" rx="\d+"[^>]*/>',
-        svg,
-    )
-    palace_boxes = [
-        (x, y, w, h) for x, y, w, h in rects
-        if int(w) <= MAX_PALACE_BOX_WIDTH and int(h) <= MAX_PALACE_BOX_HEIGHT
-    ]
+    root = ET.fromstring(svg)
+    palace_boxes = []
+    for node in root.iter():
+        if not str(node.tag).endswith("rect"):
+            continue
+        attrs = node.attrib
+        if (
+            attrs.get("rx") == "3"
+            and attrs.get("stroke") == "#6a7b9b"
+            and attrs.get("fill") == "#1e2a4a"
+            and attrs.get("stroke-width") == "1"
+        ):
+            palace_boxes.append((attrs.get("x", "0"), attrs.get("width", "0")))
+
     assert len(palace_boxes) == 12
-    assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, _, w, _ in palace_boxes), (
+    assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, w in palace_boxes), (
         f"Palace boxes must not exceed content width of {TIEBAN_CONTENT_WIDTH}px"
     )
 
