@@ -24,6 +24,9 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
     # Import here to avoid circular imports
     from astro.tieban.tieban_calculator import TieBanResult, Ganzhi
 
+    # Layout constants
+    palace_verse_max_chars = 8
+
     # Build SVG components
     svg_parts = [
         '<svg viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg" '
@@ -162,7 +165,11 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
             if pkey in result.palace_verses:
                 v = result.palace_verses[pkey]
                 verse_raw = v.get("verse", "")
-                verse_text = (verse_raw[:8] + "…") if len(verse_raw) > 8 else verse_raw
+                verse_text = (
+                    verse_raw[:palace_verse_max_chars] + "…"
+                    if len(verse_raw) > palace_verse_max_chars
+                    else verse_raw
+                )
                 if verse_text:
                     svg_parts.append(
                         f'<text x="{x + 26}" y="{y_offset + 48}" text-anchor="middle" class="verse" font-size="9">{verse_text}</text>'

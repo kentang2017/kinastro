@@ -357,8 +357,7 @@ def test_tieban_svg_palace_grid_stays_within_container():
     svg = render_tieban_chart_svg(result, language="zh")
 
     palace_boxes = re.findall(
-        r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" rx="3" '
-        r'stroke="#6a7b9b" fill="#1e2a4a" stroke-width="1"/>',
+        r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" rx="3"[^>]*/>',
         svg,
     )
     assert len(palace_boxes) == 12
