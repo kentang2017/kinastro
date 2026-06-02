@@ -16,6 +16,8 @@ from astro.tieban import TieBanShenShu, TieBanBirthData
 from astro.tieban.tieban_calculator import Ganzhi
 from astro.tieban.tieban_renderer import render_tieban_chart_svg
 
+TIEBAN_CONTENT_WIDTH = 520
+
 
 def test_ganzhi_creation():
     """測試干支創建"""
@@ -360,7 +362,7 @@ def test_tieban_svg_palace_grid_stays_within_container():
         svg,
     )
     assert len(palace_boxes) == 12
-    assert all(int(x) + int(w) <= 520 for x, _, w, _ in palace_boxes)
+    assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, _, w, _ in palace_boxes)
 
 
 def run_all_tests():
