@@ -356,10 +356,14 @@ def test_tieban_svg_palace_grid_stays_within_container():
     result = tbss.calculate(birth_data)
     svg = render_tieban_chart_svg(result, language="zh")
 
-    palace_boxes = re.findall(
-        r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" rx="3"[^>]*/>',
+    rects = re.findall(
+        r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" rx="\d+"[^>]*/>',
         svg,
     )
+    palace_boxes = [
+        (x, y, w, h) for x, y, w, h in rects
+        if int(w) <= 80 and int(h) <= 40
+    ]
     assert len(palace_boxes) == 12
     assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, _, w, _ in palace_boxes), (
         f"Palace boxes must not exceed content width of {TIEBAN_CONTENT_WIDTH}px"

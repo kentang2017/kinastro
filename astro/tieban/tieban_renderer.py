@@ -32,6 +32,7 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
     palace_box_width = 52
     palace_box_height = 24
     palace_box_radius = 3
+    palace_box_center_x = palace_box_width // 2
 
     # Build SVG components
     svg_parts = [
@@ -155,14 +156,14 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
 
         # Palace letter
         svg_parts.append(
-            f'<text x="{x + 26}" y="{y_offset + 17}" text-anchor="middle" '
+            f'<text x="{x + palace_box_center_x}" y="{y_offset + 17}" text-anchor="middle" '
             f'class="value">{p}</text>'
         )
 
         # Label
         label = labels[i] if i < len(labels) else p
         svg_parts.append(
-            f'<text x="{x + 26}" y="{y_offset + 36}" text-anchor="middle" class="label" font-size="10">{label}</text>'
+            f'<text x="{x + palace_box_center_x}" y="{y_offset + 36}" text-anchor="middle" class="label" font-size="10">{label}</text>'
         )
 
         # Verse (if available)
@@ -178,7 +179,7 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
                 )
                 if verse_text:
                     svg_parts.append(
-                        f'<text x="{x + 26}" y="{y_offset + 48}" text-anchor="middle" class="verse" font-size="9">{verse_text}</text>'
+                        f'<text x="{x + palace_box_center_x}" y="{y_offset + 48}" text-anchor="middle" class="verse" font-size="9">{verse_text}</text>'
                     )
 
     svg_parts.append("</g>")
