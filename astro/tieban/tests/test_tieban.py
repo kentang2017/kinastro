@@ -359,7 +359,8 @@ def test_tieban_svg_palace_grid_stays_within_container():
     root = ET.fromstring(svg)
     palace_boxes = []
     for node in root.iter():
-        tag_name = str(node.tag).split("}")[-1]
+        tag = str(node.tag)
+        tag_name = tag.split("}")[-1] if "}" in tag else tag
         if tag_name != "rect":
             continue
         attrs = node.attrib
