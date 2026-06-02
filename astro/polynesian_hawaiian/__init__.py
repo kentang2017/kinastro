@@ -13,6 +13,7 @@ def compute_polynesian_chart(*args, **kwargs):
 def render_streamlit(*args, **kwargs):
     """Lazy-load Streamlit renderer."""
     from ui.handlers.tab_polynesian.render import render_streamlit as _fn
+    from .renderer import render_streamlit as _fn
 
     return _fn(*args, **kwargs)
 
