@@ -17,6 +17,8 @@ from astro.tieban.tieban_calculator import Ganzhi
 from astro.tieban.tieban_renderer import render_tieban_chart_svg
 
 TIEBAN_CONTENT_WIDTH = 520
+MAX_PALACE_BOX_WIDTH = 80
+MAX_PALACE_BOX_HEIGHT = 40
 
 
 def test_ganzhi_creation():
@@ -362,7 +364,7 @@ def test_tieban_svg_palace_grid_stays_within_container():
     )
     palace_boxes = [
         (x, y, w, h) for x, y, w, h in rects
-        if int(w) <= 80 and int(h) <= 40
+        if int(w) <= MAX_PALACE_BOX_WIDTH and int(h) <= MAX_PALACE_BOX_HEIGHT
     ]
     assert len(palace_boxes) == 12
     assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, _, w, _ in palace_boxes), (
