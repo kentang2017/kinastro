@@ -437,7 +437,12 @@
   },
   "app_title": {
     "en": "⭐ Kin Astro",
-    "zh": "⭐ 堅占星 Kin Astro"
+    "zh": "⭐ 堅占星 Kin Astro",
+    "zh_cn": "坚占星 KinAstro | 多系统占星",
+    "ko": " KinAstro | 다중 시스템 점성술",
+    "ja": " KinAstro | 多システム占星術",
+    "vi": "KinAstro | Chiêm Tinh Đa Hệ Thống",
+    "th": " KinAstro | โหราศาสตร์หลายระบบ"
   },
   "arabic_lots_category_houses": {
     "en": "House Lots",
@@ -2264,7 +2269,11 @@
   },
   "lang_switcher_label": {
     "en": "Language",
-    "zh": "語言切換"
+    "zh": "語言切換",
+    "ko": "언어 전환",
+    "ja": "言語切り替え",
+    "vi": "Chuyển ngôn ngữ",
+    "th": "เปลี่ยนภาษา"
   },
   "latitude": {
     "en": "Latitude",
@@ -4573,5 +4582,59 @@
   "ziwei_subtab_natal": {
     "en": "Natal",
     "zh": "本命盤"
+  },
+  "birth_input": {
+    "en": "Birth Data",
+    "zh": "出生資料",
+    "zh_cn": "出生资料",
+    "ko": "출생 정보",
+    "ja": "出生情報",
+    "vi": "Dữ liệu Sinh nhật",
+    "th": "ข้อมูลการเกิด"
+  },
+  "calculate": {
+    "en": "Calculate",
+    "zh": "計算",
+    "zh_cn": "计算",
+    "ko": "계산",
+    "ja": "計算",
+    "vi": "Tính toán",
+    "th": "คำนวณ"
+  },
+  "chart": {
+    "en": "Chart",
+    "zh": "命盤",
+    "zh_cn": "命盘",
+    "ko": "차트",
+    "ja": "チャート",
+    "vi": "Bản đồ sao",
+    "th": "แผนผัง"
+  },
+  "save": {
+    "en": "Save",
+    "zh": "儲存",
+    "zh_cn": "保存",
+    "ko": "저장",
+    "ja": "保存",
+    "vi": "Lưu",
+    "th": "บันทึก"
+  },
+  "cancel": {
+    "en": "Cancel",
+    "zh": "取消",
+    "zh_cn": "取消",
+    "ko": "취소",
+    "ja": "キャンセル",
+    "vi": "Hủy",
+    "th": "ยกเลิก"
+  },
+  "settings": {
+    "en": "Settings",
+    "zh": "設定",
+    "zh_cn": "设置",
+    "ko": "설정",
+    "ja": "設定",
+    "vi": "Cài đặt",
+    "th": "การตั้งค่า"
   }
 }

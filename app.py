@@ -59,7 +59,15 @@ init_session_state_defaults(st)
 inject_star_particles()
 
 # ── Language initialization ───────────────────────────────────────────────
-_LANG_MAP = {"繁體中文": "zh", "简体中文": "zh_cn", "English": "en"}
+_LANG_MAP = {
+    "繁體中文": "zh",
+    "简体中文": "zh_cn",
+    "English": "en",
+    "한국어": "ko",
+    "日本語": "ja",
+    "Tiếng Việt": "vi",
+    "ภาษาไทย": "th",
+}
 _LANG_LABEL_MAP = {v: k for k, v in _LANG_MAP.items()}
 _DEFAULT_LANG_LABEL = "繁體中文"
 
@@ -173,7 +181,15 @@ with _lang_col:
     )
     st.selectbox(
         t("lang_switcher_label"),
-        options=["繁體中文", "简体中文", "English"],
+        options=[
+            "繁體中文",
+            "简体中文",
+            "English",
+            "한국어",
+            "日本語",
+            "Tiếng Việt",
+            "ภาษาไทย",
+        ],
         key="_lang_select",
         on_change=_sync_lang_from_selectbox,
         label_visibility="collapsed",

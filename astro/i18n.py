@@ -52,10 +52,10 @@ def __getattr__(name: str):
 
 
 # ── Language state ──────────────────────────────────────────────────────────
-
+# ── Language state ──────────────────────────────────────────────────────────
 _DEFAULT_LANG = "zh"
 _LANG_ENV = os.environ.get("KINASTRO_LANG", _DEFAULT_LANG).lower()
-_VALID_LANGS = ("zh", "en", "zh_cn")  # tuple for O(1) `in` check (frozen)
+_VALID_LANGS = ("zh", "en", "zh_cn", "ko", "ja", "vi", "th")  # tuple for O(1) `in` check (frozen)
 
 
 def get_ui_lang() -> str:
