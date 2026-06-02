@@ -99,9 +99,27 @@ def auto_cn(text: str, en_text: str = "") -> str:
     is the English fallback.  We honour that — but the underlying
     mechanism is just a TRANSLATIONS lookup, so if ``text`` happens
     to be a key (starts with ``key::``) we look that up instead.
+    
+    For other languages (ko, ja, vi, th), it returns:
+    - The translation from i18n_translations.json if found
+    - Otherwise, the en_text if provided
+    - Otherwise, the original text (zh/TW)
     """
     lang = _LANG_ENV
     if lang.startswith("en"):
+        return en_text or text
+    # For other languages, check i18n_translations.json first
+    if lang not in ("zh", "zh_cn"):
+        # Try to find translation from i18n_translations.json
+        # Look up both text and en_text as keys
+        entry = _ensure_loaded().get(en_text)
+        if entry and lang in entry:
+            return entry[lang]
+        # Check if text itself is a key
+        entry = _ensure_loaded().get(text)
+        if entry and lang in entry:
+            return entry[lang]
+        # Fall back to en_text if provided, otherwise text
         return en_text or text
     return text
 
