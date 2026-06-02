@@ -359,7 +359,8 @@ def test_tieban_svg_palace_grid_stays_within_container():
     root = ET.fromstring(svg)
     palace_boxes = []
     for node in root.iter():
-        if not str(node.tag).endswith("rect"):
+        tag_name = str(node.tag).split("}")[-1]
+        if tag_name != "rect":
             continue
         attrs = node.attrib
         if (
@@ -368,10 +369,10 @@ def test_tieban_svg_palace_grid_stays_within_container():
             and attrs.get("fill") == "#1e2a4a"
             and attrs.get("stroke-width") == "1"
         ):
-            palace_boxes.append((attrs.get("x", "0"), attrs.get("width", "0")))
+            palace_boxes.append((int(attrs.get("x", "0")), int(attrs.get("width", "0"))))
 
     assert len(palace_boxes) == 12
-    assert all(int(x) + int(w) <= TIEBAN_CONTENT_WIDTH for x, w in palace_boxes), (
+    assert all(x + w <= TIEBAN_CONTENT_WIDTH for x, w in palace_boxes), (
         f"Palace boxes must not exceed content width of {TIEBAN_CONTENT_WIDTH}px"
     )
 

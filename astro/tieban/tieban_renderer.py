@@ -25,7 +25,7 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
     from astro.tieban.tieban_calculator import TieBanResult, Ganzhi
 
     # Layout constants
-    palace_verse_max_chars = 8
+    palace_verse_max_chars = 8  # Keep verse snippets on one line in compact palace cells
     palace_column_spacing = 125
     palace_grid_top_offset = 42
     palace_row_spacing = 40
