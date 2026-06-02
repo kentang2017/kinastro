@@ -518,7 +518,7 @@ def render_lao_horasat(
         st.dataframe(rows, width="stretch")
 
     with tab_interp:
-        from .interpreter import interpret_chart
+        from astro.laos.interpreter import interpret_chart
 
         interp = interpret_chart(data)
 
