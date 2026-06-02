@@ -9,13 +9,19 @@ from .reamker_calculator import ReamkerAstrology
 
 def render_khmer_chart(*args, **kwargs):  # type: ignore[no-redef]
     """Lazy-load the Khmer Reamker renderer."""
-    from ui.handlers.tab_khmer.render import render_khmer_chart as _fn  # type: ignore[attr-defined]
+    try:
+        from ui.handlers.tab_khmer.render import render_khmer_chart as _fn  # type: ignore[attr-defined]
+    except (ModuleNotFoundError, ImportError):
+        from .renderer import render_khmer_chart as _fn
     return _fn(*args, **kwargs)
 
 
 def render_reamker_grid_svg(*args, **kwargs):  # type: ignore[no-redef]
     """Lazy-load the Reamker grid SVG renderer."""
-    from ui.handlers.tab_khmer.render import render_reamker_grid_svg as _fn  # type: ignore[attr-defined]
+    try:
+        from ui.handlers.tab_khmer.render import render_reamker_grid_svg as _fn  # type: ignore[attr-defined]
+    except (ModuleNotFoundError, ImportError):
+        from .renderer import render_reamker_grid_svg as _fn
     return _fn(*args, **kwargs)
 
 __all__ = ["ReamkerAstrology", "render_khmer_chart", "render_reamker_grid_svg"]
