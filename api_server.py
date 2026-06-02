@@ -17,7 +17,7 @@ import json
 import logging
 from datetime import date, datetime
 from functools import lru_cache
-from typing import Any, Literal, Optional
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -68,7 +68,7 @@ from astro.astronomical_geomancy.calculator import (
     compute_geomancy_chart,
     format_geomancy_for_prompt,
 )
-from astro.malay import MalayNujumEngine, MalayNujumRequest
+from astro.malay import MalayNujumEngine, MalayNujumMethod, MalayNujumRequest
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -271,7 +271,7 @@ class TaiyiParams(BirthParams):
 class MalayNujumParams(BirthParams):
     """Parameters for Malay Ilmu Nujum endpoint."""
 
-    method: Literal["mata_angin_lapan", "bintang_tujuh", "bintang_duabelas_plus", "perkisaran_naga"] = Field(
+    method: MalayNujumMethod = Field(
         default="mata_angin_lapan",
         description="One of: mata_angin_lapan, bintang_tujuh, bintang_duabelas_plus, perkisaran_naga",
     )

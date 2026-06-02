@@ -77,12 +77,6 @@ class MalayNujumEngine:
         script_hint: str = "auto",
         mother_script_hint: str = "auto",
     ) -> dict[str, object]:
-        sign = self._bintang_duabelas.determine_star_sign(
-            name,
-            mother_name,
-            person_script_hint=script_hint,
-            mother_script_hint=mother_script_hint,
-        )
         reading = self._bintang_duabelas.get_full_reading(
             name,
             mother_name,
@@ -93,7 +87,7 @@ class MalayNujumEngine:
         mother_abjad = compute_name_abjad_profile(mother_name, script_hint=mother_script_hint)
 
         house = reading["house"]
-        house_number = int(house["house_number"])
+        house_number = house.get("house_number", 1)
         interpretation = {
             "zh": {
                 "summary": f"命主落在第 {house_number} 宮，主題為 {house.get('domain_zh', '人生課題')}。",
@@ -101,7 +95,7 @@ class MalayNujumEngine:
                 "caution": "若遇凶時段，先做準備與修正，不宜硬推。",
             },
             "en": {
-                "summary": f"Native maps to House {house_number}, emphasizing {house.get('domain_zh', 'life themes')}.",
+                "summary": f"Native maps to House {house_number}, emphasizing {house.get('domain_en', 'life themes')}.",
                 "auspicious_focus": "Strengthen house-related resources and alliances before major moves.",
                 "caution": "During difficult periods, prioritize preparation and correction over forced execution.",
             },
@@ -111,7 +105,7 @@ class MalayNujumEngine:
             "system": "bintang_duabelas_plus",
             "name_profile": person_abjad,
             "mother_profile": mother_abjad,
-            "star_sign": sign,
+            "star_sign": reading.get("star_sign", {}),
             "reading": reading,
             "process_summary": {
                 "zh": "整合姓名 Abjad、母系星宮映射與十二宮主題，輸出擴充版解讀模板。",

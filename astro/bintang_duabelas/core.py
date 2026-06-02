@@ -203,14 +203,15 @@ class BintangDuabelasEngine:
         return self.houses.get_all_houses()
 
     def get_name_abjad_profile(self, name: str, script_hint: str = "auto") -> dict[str, object]:
-        """取得姓名 Abjad 摘要，供完整解讀重用。"""
+        """取得姓名 Abjad 摘要，供完整解讀重用 / Get reusable Abjad profile for full readings."""
         normalized = self.normalize_name(name, script_hint=script_hint)
         total = self.name_to_abjad(name, script_hint=script_hint)
         full_total = self.abjad.name_to_abjad_full(name, script_hint=script_hint)
         return {
             "input_name": name,
             "normalized": normalized.normalized,
-            "source_script": normalized.source_script,
+            "source_script": normalized.detected_script,
+            "normalization_method": normalized.method,
             "used_override": normalized.used_override,
             "abjad_total": total,
             "abjad_full_total": full_total,
@@ -240,7 +241,7 @@ class BintangDuabelasEngine:
             "zh": {
                 "summary": (
                     f"命主姓名 Abjad 值為 {person_profile['abjad_total']}，母系參照值為 {mother_profile['abjad_total']}，"
-                    f"對應第 {house['house_number']} 宮（{house.get('name_zh', house.get('name_malay', ''))}）。"
+                    f"對應第 {house['house_number']} 宮（{house.get('name_zh') or house.get('name_malay') or '未知宮位'}）。"
                 ),
                 "auspicious_focus": "可在吉時優先推進該宮代表事務，並借助主宰行星主題。",
                 "caution": "若遇凶時段，先調整節奏與資源配置，不宜硬推。",
@@ -249,7 +250,7 @@ class BintangDuabelasEngine:
                 "summary": (
                     f"Native name Abjad is {person_profile['abjad_total']} and maternal reference is "
                     f"{mother_profile['abjad_total']}, mapping to House {house['house_number']} "
-                    f"({house.get('name_en', house.get('name_malay', ''))})."
+                    f"({house.get('name_en') or house.get('name_malay') or 'Unknown House'})."
                 ),
                 "auspicious_focus": "Advance house-related topics during favorable hours under its ruling planet theme.",
                 "caution": "During difficult periods, adjust timing and resources before committing.",

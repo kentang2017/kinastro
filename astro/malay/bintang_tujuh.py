@@ -38,6 +38,7 @@ def compute_bintang_tujuh(
     profile = compute_name_abjad_profile(name, script_hint=script_hint)
     abjad_mod = int(profile["abjad_total"]) % 7
     weekday_seed = moment.weekday() % 7
+    # 210 minutes = 24h / 7, i.e. seven equal timing windows per day.
     clock_seed = ((moment.hour * 60 + moment.minute) // 210) % 7
     moon_bucket = _moon_phase_bucket(moment)
 

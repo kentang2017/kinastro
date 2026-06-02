@@ -25,7 +25,6 @@ def compute_mata_angin_lapan(
     script_hint: str = "auto",
 ) -> dict[str, object]:
     """Compute directional election guidance for Mata Angin Lapan."""
-    del latitude, longitude  # reserved for future refinements
 
     abjad = compute_name_abjad_profile(name, script_hint=script_hint)
     sun_lon = _planet_longitude(moment, swe.SUN)
@@ -36,6 +35,8 @@ def compute_mata_angin_lapan(
     pelangkah_seed = (abjad["abjad_total"] + moment.day + moon_sector + moment.weekday()) % 8
     dominant_index = (sun_sector + pelangkah_seed) % 8
 
+    # Pelangkah directional spread:
+    # dominant ±1 are supporting sectors, opposite triad (+3/+4/+5) is cautionary.
     favorable_indices = {
         dominant_index,
         (dominant_index + 1) % 8,

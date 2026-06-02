@@ -59,12 +59,17 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> dict[str
             mata = engine.compute_mata_angin_lapan(name, moment)
             latest_payload = mata
             verdict = mata.get("fortune", {})
-            st.metric(auto_cn("吉凶判斷", "Fortune verdict"), verdict.get("verdict_zh", "—"))
+            st.metric(
+                auto_cn("吉凶判斷", "Fortune verdict"),
+                verdict.get("verdict_zh") or verdict.get("verdict", "—"),
+            )
             render_mata_angin_wheel(mata, chart_key="malay_nujum_mata_angin_chart")
             _render_process(mata)
-            advice = mata.get("advice", {}).get("zh", {}) if isinstance(mata.get("advice"), dict) else {}
-            st.markdown(f"- {advice.get('best_action', '')}")
-            st.markdown(f"- {advice.get('avoid_action', '')}")
+            advice = mata.get("advice", {}).get("zh", {})
+            if advice.get("best_action"):
+                st.markdown(f"- {advice['best_action']}")
+            if advice.get("avoid_action"):
+                st.markdown(f"- {advice['avoid_action']}")
             with st.expander(auto_cn("八方向細節", "Eight-direction details"), expanded=False):
                 st.json(mata.get("sectors", []))
         else:
@@ -89,7 +94,7 @@ def render_streamlit(default_birth_datetime: datetime | None = None) -> dict[str
             duabelas = engine.compute_bintang_duabelas_plus(name, mother_name)
             latest_payload = duabelas
             reading = duabelas.get("reading", {})
-            house = reading.get("house", {}) if isinstance(reading, dict) else {}
+            house = reading.get("house", {})
             st.metric(auto_cn("落宮", "Mapped House"), house.get("house_number", "—"))
             _render_process(duabelas)
             st.markdown(duabelas.get("interpretation_template", {}).get("zh", {}).get("summary", ""))

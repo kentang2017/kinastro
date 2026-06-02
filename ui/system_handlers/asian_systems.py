@@ -12,7 +12,44 @@ from core.cached_computations import (
     get_or_compute_chart,
 )
 
-_LEGACY_NAMES = ('build_kalachakra_mandala_svg', 'calculate_nine_palace_divination', 'calculate_thai_nine_grid', 'compute_brahma_jati', 'compute_celtic_tree_chart', 'compute_lao_chart', 'compute_lifetime_hexagram', 'compute_mahabote_chart', 'compute_nine_star_ki_chart', 'compute_polynesian_chart', 'compute_tibetan_chart', 'compute_wariga', 'compute_weton', 'compute_zurkhai_chart', 'datetime', 'get_lang', 'render_bintang_duabelas_chart', 'render_brahma_jati', 'render_brahma_jati_browse', 'render_byzantine_astrology_chart', 'render_celtic_tree_chart', 'render_jawa_weton_chart', 'render_kinketika_chart', 'render_lao_horasat', 'render_liuyao_lifetime_chart', 'render_malay_nujum_chart', 'render_mahabote_chart', 'render_nine_grid', 'render_nine_palace_divination', 'render_nine_star_ki_chart', 'render_polynesian_chart_ui', 'render_thai_chart', 'render_tibetan_chart', 'render_wariga_chart', 'render_zurkhai_chart', 'x')
+_LEGACY_NAMES = (
+    "build_kalachakra_mandala_svg",
+    "calculate_nine_palace_divination",
+    "calculate_thai_nine_grid",
+    "compute_brahma_jati",
+    "compute_celtic_tree_chart",
+    "compute_lao_chart",
+    "compute_lifetime_hexagram",
+    "compute_mahabote_chart",
+    "compute_nine_star_ki_chart",
+    "compute_polynesian_chart",
+    "compute_tibetan_chart",
+    "compute_wariga",
+    "compute_weton",
+    "compute_zurkhai_chart",
+    "datetime",
+    "get_lang",
+    "render_bintang_duabelas_chart",
+    "render_brahma_jati",
+    "render_brahma_jati_browse",
+    "render_byzantine_astrology_chart",
+    "render_celtic_tree_chart",
+    "render_jawa_weton_chart",
+    "render_kinketika_chart",
+    "render_lao_horasat",
+    "render_liuyao_lifetime_chart",
+    "render_malay_nujum_chart",
+    "render_mahabote_chart",
+    "render_nine_grid",
+    "render_nine_palace_divination",
+    "render_nine_star_ki_chart",
+    "render_polynesian_chart_ui",
+    "render_thai_chart",
+    "render_tibetan_chart",
+    "render_wariga_chart",
+    "render_zurkhai_chart",
+    "x",
+)
 
 def _bind_legacy() -> None:
     from core import legacy_bridge as _legacy_bridge

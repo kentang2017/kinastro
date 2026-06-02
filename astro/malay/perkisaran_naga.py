@@ -19,15 +19,17 @@ def _moon_sector(moment: datetime) -> int:
 def compute_perkisaran_naga(
     moment: datetime,
     *,
-    locale_hint: str = "nusantara",
+    _locale_hint: str = "nusantara",
 ) -> dict[str, object]:
     """Compute directional dragon-cycle guidance for construction and planting."""
-    del locale_hint  # reserved for future regional variants
 
     moon_sector = _moon_sector(moment)
     yearly_shift = moment.year % 8
     naga_index = (moon_sector + yearly_shift + moment.month) % 8
 
+    # Traditional directional offsets:
+    # +2/+3 favor structural anchoring, +1/+2/+6 favor growth cycles,
+    # while 0/-1/+4 are treated as dragon-head/opposition risk sectors.
     construction_indices = {(naga_index + 2) % 8, (naga_index + 3) % 8}
     planting_indices = {(naga_index + 1) % 8, (naga_index + 2) % 8, (naga_index + 6) % 8}
     avoid_indices = {naga_index, (naga_index - 1) % 8, (naga_index + 4) % 8}
