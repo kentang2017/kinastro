@@ -6,6 +6,7 @@ Test suite for Tie Ban Shen Shu module
 
 import sys
 import os
+import re
 from datetime import datetime
 
 # 添加父目錄到路徑
@@ -13,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from astro.tieban import TieBanShenShu, TieBanBirthData
 from astro.tieban.tieban_calculator import Ganzhi
+from astro.tieban.tieban_renderer import render_tieban_chart_svg
 
 
 def test_ganzhi_creation():
@@ -336,6 +338,29 @@ def test_kunji_and_tiaowen():
     print(f"  calculate().kunji_tiangan: {result.kunji_tiangan}")
     
     print("✅ 坤集扣入法與完整條文資料庫測試通過")
+
+
+def test_tieban_svg_palace_grid_stays_within_container():
+    """十二宮格 SVG 不能超出內容區域（避免右側裁切）"""
+    tbss = TieBanShenShu()
+    birth_data = TieBanBirthData(
+        birth_dt=datetime(1990, 5, 15, 14, 30),
+        year_gz=Ganzhi('庚', '午'),
+        month_gz=Ganzhi('辛', '巳'),
+        day_gz=Ganzhi('戊', '辰'),
+        hour_gz=Ganzhi('己', '未'),
+        gender="男",
+    )
+    result = tbss.calculate(birth_data)
+    svg = render_tieban_chart_svg(result, language="zh")
+
+    palace_boxes = re.findall(
+        r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" rx="3" '
+        r'stroke="#6a7b9b" fill="#1e2a4a" stroke-width="1"/>',
+        svg,
+    )
+    assert len(palace_boxes) == 12
+    assert all(int(x) + int(w) <= 520 for x, _, w, _ in palace_boxes)
 
 
 def run_all_tests():

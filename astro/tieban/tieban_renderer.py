@@ -123,7 +123,7 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
         f"{language == 'zh' and '十二宮條文' or 'Palaces'}:</text>",
     ])
 
-    # Draw 12 palaces in 3 rows of 4
+    # Draw 12 palaces in 3 rows of 4 (fit within 520px content area)
     palace_labels_zh = ["命", "兄弟", "夫妻", "子女", "財帛", "疾病", "奴僕", "配偶", "田宅", "官祿", "遷流", "財庫"]
     palace_labels_en = ["Ming", "Siblings", "Spouse", "Children", "Wealth", "Health", "Servants", "Spouse", "Property", "Career", "Migration", "Treasure"]
 
@@ -135,25 +135,25 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
     for i, p in enumerate(palaces):
         row = i // 4
         col = i % 4
-        x = 20 + col * 170
-        y_offset = 50 + row * 35
+        x = 20 + col * 125
+        y_offset = 42 + row * 40
 
         # Palace box
         svg_parts.append(
-            f'<rect x="{x}" y="{y_offset}" width="40" height="25" rx="3" '
+            f'<rect x="{x}" y="{y_offset}" width="52" height="24" rx="3" '
             f'stroke="#6a7b9b" fill="#1e2a4a" stroke-width="1"/>'
         )
 
         # Palace letter
         svg_parts.append(
-            f'<text x="{x + 20}" y="{y_offset + 18}" text-anchor="middle" '
+            f'<text x="{x + 26}" y="{y_offset + 17}" text-anchor="middle" '
             f'class="value">{p}</text>'
         )
 
         # Label
         label = labels[i] if i < len(labels) else p
         svg_parts.append(
-            f'<text x="{x}" y="{y_offset + 45}" class="label" font-size="10">{label}</text>'
+            f'<text x="{x + 26}" y="{y_offset + 36}" text-anchor="middle" class="label" font-size="10">{label}</text>'
         )
 
         # Verse (if available)
@@ -161,10 +161,11 @@ def render_tieban_chart_svg(result, language: str = "zh") -> str:
             pkey = palace_names[i] if language == 'zh' else palace_names_en[i]
             if pkey in result.palace_verses:
                 v = result.palace_verses[pkey]
-                verse_text = v.get("verse", "")[:30]
+                verse_raw = v.get("verse", "")
+                verse_text = (verse_raw[:8] + "…") if len(verse_raw) > 8 else verse_raw
                 if verse_text:
                     svg_parts.append(
-                        f'<text x="{x}" y="{y_offset + 60}" class="verse" font-size="9">{verse_text}</text>'
+                        f'<text x="{x + 26}" y="{y_offset + 48}" text-anchor="middle" class="verse" font-size="9">{verse_text}</text>'
                     )
 
     svg_parts.append("</g>")
