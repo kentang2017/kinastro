@@ -60,12 +60,19 @@ def _in_streamlit() -> bool:
     """Return True iff we are executing inside a live Streamlit script run.
 
     We use a deliberately conservative probe: we only return True if
-    Streamlit is *already* in ``sys.modules`` (meaning some other code
-    has imported it, which typically only happens inside an actual
-    ``streamlit run`` session).  In CLI / FastAPI / pytest contexts,
-    Streamlit is absent from ``sys.modules`` at the time the first
-    ``astro.*`` module is imported, and we return False without ever
-    touching the Streamlit import graph.
+    Streamlit is *already* in ``sys.modules`` AND it exposes a real
+    ``ScriptRunContext``. The second check matters for tests that
+    inject a stub ``streamlit`` module into ``sys.modules`` (e.g.
+    ``test_stock_renderer_compatibility``, ``test_stock_fetcher_
+    fallback``) — those stubs satisfy the ``"streamlit" in sys.modules``
+    probe but cannot serve cache writes, so falling through to the real
+    streamlit decorator would blow up with UnserializableReturnValueError
+    during pytest collection.
+
+    In CLI / FastAPI / pytest contexts, Streamlit is absent from
+    ``sys.modules`` at the time the first ``astro.*`` module is imported,
+    and we return False without ever touching the Streamlit import
+    graph.
 
     This is the key to keeping ``astro.*`` importable in non-Streamlit
     environments: doing a runtime ``importlib.util.find_spec`` or
@@ -80,9 +87,13 @@ def _in_streamlit() -> bool:
     except Exception:
         return False
     try:
-        return get_script_run_ctx() is not None
+        ctx = get_script_run_ctx()
     except Exception:
         return False
+    # A stubbed streamlit module either lacks ScriptRunContext entirely
+    # (caught above) or returns None from get_script_run_ctx when no
+    # rerun is in flight. Either way: not a real streamlit run.
+    return ctx is not None
 
 
 # We resolve the real streamlit decorators lazily, only after a positive
@@ -124,7 +135,13 @@ else:
                     # Unhashable argument — fall through to a direct call.
                     return fn(*args, **kwargs)
                 now = time.monotonic()
-                hit = store.get(key)
+                try:
+                    hit = store.get(key)
+                except TypeError:
+                    # Key constructed fine but cannot be hashed as a
+                    # whole (e.g. a list slipped in via ``args``).
+                    # Fall through to a direct call.
+                    return fn(*args, **kwargs)
                 if hit is not None and (ttl is None or now - hit[0] < ttl):
                     return hit[1]
                 value = fn(*args, **kwargs)

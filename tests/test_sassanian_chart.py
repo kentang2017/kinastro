@@ -44,11 +44,7 @@ class TestSassanianAstronomy:
         assert 21.0 < ayanamsa < 23.0, f"Expected ~22°, got {ayanamsa:.2f}°"
 
     def test_sassanian_ayanamsa_historical(self):
-        pytest.skip(
-            "Implementation bug: calculate_sassanian_ayanamsa returns "
-            "~1° for 500 CE where the spec expects ~21.5°. Tracked as a "
-            "compute-layer issue, not a phase 6/7 regression."
-        )
+        """測試歷史日期的薩珊 Ayanamsa"""
         # 500 CE 的薩珊 Ayanamsa 應約為 21.5°
         julian_day = swe.julday(500, 1, 1, 12, 0)
         ayanamsa = calculate_sassanian_ayanamsa(julian_day)

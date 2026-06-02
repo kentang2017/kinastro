@@ -25,3 +25,12 @@ def _lazy_renderer():
 
 
 __all__ = ["compute_sumerian_chart", "MesopotamianChart"]
+
+
+def render_streamlit(*args, **kwargs):
+    """Sumerian streamlit renderer (lazy-loaded)."""
+    from ui.handlers.tab_sumerian.render import render_streamlit as _fn
+    return _fn(*args, **kwargs)
+
+
+__all__ = __all__ + ["render_streamlit"]

@@ -22,10 +22,35 @@ from .calculator import (
     find_electional_windows,
 )
 
-def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the render_streamlit renderer for this package."""
-    from ui.handlers.tab_picatrix_behenian.render import render_streamlit as _fn
-    return _fn(*args, **kwargs)
+
+# Lazy re-export: the renderer module moved to ``ui.handlers.tab_picatrix_behenian.render`` during
+# the phase-7 compute/render split, but legacy callers still expect to
+# find the names at ``astro.picatrix_behenian.<name>``. PEP 562 __getattr__ keeps
+# ``import astro.astro.picatrix_behenian`` free of streamlit until a caller actually
+# accesses the symbol.
+_NEW_HOME = "ui.handlers.tab_picatrix_behenian.render"
+_NAMES = ['render_streamlit']
+_LEGACY = "picatrix_behenian.renderer"
+
+
+def __getattr__(name):
+    if name in _NAMES:
+        try:
+            import importlib
+            mod = importlib.import_module(_NEW_HOME)
+            value = getattr(mod, name)
+        except (ImportError, AttributeError):
+            try:
+                import importlib
+                legacy = importlib.import_module(_LEGACY, __name__)
+                value = getattr(legacy, name)
+            except (ImportError, AttributeError):
+                raise AttributeError(
+                    "module %r has no attribute %r" % (__name__, name)
+                )
+        globals()[name] = value
+        return value
+    raise AttributeError("module %r has no attribute %r" % (__name__, name))
 
 __all__ = [
     "BEHENIAN_STARS",

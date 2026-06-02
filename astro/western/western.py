@@ -16,7 +16,7 @@ Lilly Christian Astrology）所包含的古典占星技法：
 """
 
 import swisseph as swe
-from core.cache import cache_data, cache_resource
+import streamlit as st
 from dataclasses import dataclass, field
 
 # ============================================================
@@ -422,7 +422,7 @@ def _compute_fixed_star_conjunctions(planets, jd):
 # 計算函數 (Calculation Functions)
 # ============================================================
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_western_chart(year, month, day, hour, minute, timezone,
                           latitude, longitude, location_name="",
                           sidereal=False):
@@ -562,18 +562,472 @@ def compute_western_chart(year, month, day, hour, minute, timezone,
 
 
 # ============================================================
-# 向後相容 shim (Backward-compat shim for render_western_chart)
+# 渲染函數 (Rendering Functions)
 # ============================================================
-#
-# Streamlit 渲染程式碼已搬至 ui/handlers/tab_western/render.py。
-# 為避免破壞既有 caller（``from astro.western.western import
-# render_western_chart``），本檔仍 re-export 該名稱並以 lazy 方式
-# 轉發到新位置。該函式只會在 streamlit 已啟動的環境下被呼叫,
-# 不會在 compute 流程中觸碰 streamlit。
-# ============================================================
-
 
 def render_western_chart(chart, after_chart_hook=None, gender=None):
-    """[deprecated] 渲染西洋占星排盤; 已搬至 ui/handlers/tab_western/render.py"""
-    from ui.handlers.tab_western.render import render_streamlit as _render
-    return _render(chart, after_chart_hook=after_chart_hook, gender=gender)
+    """渲染完整的西洋占星排盤"""
+    _render_wheel_chart(chart, gender=gender)
+    if after_chart_hook:
+        after_chart_hook()
+    st.divider()
+    _render_info(chart)
+    st.divider()
+    _render_planet_table(chart)
+    st.divider()
+    _render_house_table(chart)
+    st.divider()
+    _render_aspects(chart)
+    st.divider()
+    _render_classical_dignities(chart)
+    st.divider()
+    _render_day_night_sect(chart)
+    st.divider()
+    _render_chart_ruler(chart)
+    st.divider()
+    _render_arabic_parts(chart)
+    st.divider()
+    _render_fixed_stars(chart)
+
+
+def _render_info(chart):
+    st.subheader("📋 Chart Information")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Date:** {chart.year}/{chart.month}/{chart.day}")
+        st.write(f"**Time:** {chart.hour:02d}:{chart.minute:02d}")
+        st.write(f"**Timezone:** UTC{chart.timezone:+.1f}")
+    with col2:
+        st.write(f"**Location:** {chart.location_name}")
+        asc_info = ZODIAC_SIGNS[_sign_index(chart.ascendant)]
+        mc_info = ZODIAC_SIGNS[_sign_index(chart.midheaven)]
+        st.write(
+            f"**Ascendant:** {asc_info[1]} {chart.asc_sign} "
+            f"({asc_info[2]}) "
+            f"{_format_deg(chart.ascendant)}"
+        )
+        st.write(
+            f"**Midheaven:** {mc_info[1]} {chart.mc_sign} {_format_deg(chart.midheaven)}"
+        )
+    if chart.sidereal_mode:
+        st.info(f"⚙️ **Sidereal Mode (Lahiri Ayanamsa):** {chart.ayanamsa:.2f}°")
+
+
+def _render_wheel_chart(chart, gender=None):
+    """渲染西洋占星輪圖 (Western Wheel Chart) — SVG 版"""
+    st.subheader("🔮 西洋占星輪盤 (Western Wheel)")
+
+    asc_idx = _sign_index(chart.ascendant)
+    mc_idx = _sign_index(chart.midheaven)
+
+    house_signs = {}
+    for h in chart.houses:
+        house_signs[h.number] = _sign_index(h.cusp)
+
+    asc_info = ZODIAC_SIGNS[asc_idx]
+    mc_info = ZODIAC_SIGNS[mc_idx]
+
+    wheel_grid = [
+        [10, 11, 12, 1],
+        [9, -1, -1, 2],
+        [8, -1, -1, 3],
+        [7, 6, 5, 4],
+    ]
+
+    # SVG layout constants
+    W = 560
+    CAP_H = 44
+    CW = W / 4          # cell width  = 140
+    CH = 110             # cell height = 110
+    H = CAP_H + CH * 4  # total height
+
+    def _esc(text):
+        """Escape special XML characters for safe SVG text content."""
+        return (
+            text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+            .replace("'", "&apos;")
+        )
+
+    parts: list[str] = []
+    parts.append(
+        f'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {W} {H}" '
+        f'style="width:100%;max-width:{W}px;display:block;margin:auto;'
+        f'font-family:sans-serif;">'
+    )
+
+    # Caption
+    asc_deg = f"{_sign_degree(chart.ascendant):.1f}"
+    mc_deg = f"{_sign_degree(chart.midheaven):.1f}"
+    parts.append(
+        f'<text x="{W / 2}" y="17" text-anchor="middle" '
+        f'fill="#e0e0e0" font-size="14" font-weight="bold">'
+        f'Western Wheel Chart</text>'
+    )
+    parts.append(
+        f'<text x="{W / 2}" y="36" text-anchor="middle" '
+        f'fill="#c8c8c8" font-size="11">'
+        f'\u0020\u25B2 ASC {_esc(asc_info[1])}{_esc(asc_info[0])} {asc_deg}\u00B0'
+        f'\u2003\u2B21 MC {_esc(mc_info[1])}{_esc(mc_info[0])} {mc_deg}\u00B0'
+        f'</text>'
+    )
+
+    center_rendered = False
+    for r, row_data in enumerate(wheel_grid):
+        for c, idx in enumerate(row_data):
+            x = c * CW
+            y = CAP_H + r * CH
+            cx = x + CW / 2
+
+            if idx == -1:
+                if center_rendered:
+                    continue
+                # Merge four centre cells into one — show birth info
+                center_rendered = True
+                mx = 1 * CW       # col 1
+                my = CAP_H + 1 * CH  # row 1
+                mw = CW * 2       # span 2 cols
+                mh = CH * 2       # span 2 rows
+                mcx = mx + mw / 2
+                mcy = my + mh / 2
+
+                parts.append(
+                    f'<rect x="{mx}" y="{my}" width="{mw}" height="{mh}" '
+                    f'fill="#1a1a2e" stroke="#444" stroke-width="1" rx="2"/>'
+                )
+
+                # Birth date line
+                date_str = f'{chart.year}/{chart.month:02d}/{chart.day:02d}'
+                time_str = f'{chart.hour:02d}:{chart.minute:02d}'
+                tz_str = f'UTC{chart.timezone:+.1f}'
+                parts.append(
+                    f'<text x="{mcx}" y="{mcy - 28}" text-anchor="middle" '
+                    f'fill="#e0e0e0" font-size="12">'
+                    f'{_esc(date_str)}  {_esc(time_str)}</text>'
+                )
+                parts.append(
+                    f'<text x="{mcx}" y="{mcy - 10}" text-anchor="middle" '
+                    f'fill="#aaa" font-size="11">{_esc(tz_str)}</text>'
+                )
+
+                # Gender line
+                if gender:
+                    gender_label = "男命" if gender == "male" else "女命"
+                    parts.append(
+                        f'<text x="{mcx}" y="{mcy + 10}" text-anchor="middle" '
+                        f'fill="#e0e0e0" font-size="12">{_esc(gender_label)}</text>'
+                    )
+
+                # Location line
+                if chart.location_name:
+                    parts.append(
+                        f'<text x="{mcx}" y="{mcy + 30}" text-anchor="middle" '
+                        f'fill="#aaa" font-size="11">{_esc(chart.location_name)}</text>'
+                    )
+                continue
+
+            h = next((hh for hh in chart.houses if hh.number == idx), None)
+            if h is None:
+                parts.append(
+                    f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
+                    f'fill="#1e1e2e" stroke="#444" stroke-width="1"/>'
+                )
+                continue
+
+            sign_idx = house_signs.get(idx, _sign_index(h.cusp))
+            sign_info = ZODIAC_SIGNS[sign_idx]
+            planets_in_house = h.planets
+
+            is_asc = idx == 1
+            is_mc = idx == 10
+            fill = (
+                "#3d3010" if is_asc else ("#1a2a3d" if is_mc else "#1e1e2e")
+            )
+
+            parts.append(
+                f'<rect x="{x}" y="{y}" width="{CW}" height="{CH}" '
+                f'fill="{fill}" stroke="#444" stroke-width="1" rx="2"/>'
+            )
+
+            # House number + marker
+            marker = " \u25B2" if is_asc else (" \u2B21" if is_mc else "")
+            parts.append(
+                f'<text x="{cx}" y="{y + 18}" text-anchor="middle" '
+                f'fill="#e0e0e0" font-size="13" font-weight="bold">'
+                f'{idx}{marker}</text>'
+            )
+
+            # Sign glyph + name
+            parts.append(
+                f'<text x="{cx}" y="{y + 34}" text-anchor="middle" '
+                f'fill="#e0e0e0" font-size="11">'
+                f'{_esc(sign_info[1])} {_esc(sign_info[0])}</text>'
+            )
+
+            # Degree
+            parts.append(
+                f'<text x="{cx}" y="{y + 48}" text-anchor="middle" '
+                f'fill="#aaa" font-size="10">{_esc(_format_deg(h.cusp))}</text>'
+            )
+
+            # Planets – laid out in rows of up to 3
+            if planets_in_house:
+                n = len(planets_in_house)
+                font_size = 11 if n <= 2 else (10 if n <= 3 else 9)
+                names = [p.split(" ")[0] for p in planets_in_house]
+                per_row = min(n, 3)
+                p_spacing = 44   # horizontal gap between planet labels
+                p_base_y = 66    # vertical offset for first planet row
+                p_row_h = 16     # vertical gap between planet rows
+                for i, (short, full) in enumerate(
+                    zip(names, planets_in_house)
+                ):
+                    row_i = i // per_row
+                    col_i = i % per_row
+                    row_count = min(per_row, n - row_i * per_row)
+                    px = cx + (col_i - (row_count - 1) / 2) * p_spacing
+                    py = y + p_base_y + row_i * p_row_h
+                    color = PLANET_COLORS.get(full, "#c8c8c8")
+                    parts.append(
+                        f'<text x="{px}" y="{py}" text-anchor="middle" '
+                        f'fill="{color}" font-size="{font_size}" '
+                        f'font-weight="bold">{_esc(short)}</text>'
+                    )
+            else:
+                parts.append(
+                    f'<text x="{cx}" y="{y + 68}" text-anchor="middle" '
+                    f'fill="#555" font-size="11">\u2014</text>'
+                )
+
+    parts.append("</svg></div>")
+    st.markdown("".join(parts), unsafe_allow_html=True)
+    st.caption("▲ = House 1 (Ascendant)   ⬡ = House 10 (Midheaven)")
+
+
+def _render_planet_table(chart):
+    st.subheader("🪐 Planet Positions")
+    header = (
+        "| Planet | Sign | Degree | Element | House | Retrograde "
+        "| Essential Dignity | Joy Status |"
+    )
+    sep = (
+        "|:------:|:----:|:------:|:-------:|:-----:|:----------:"
+        "|:---------------:|:---------:|"
+    )
+    rows = [header, sep]
+    for p in chart.planets:
+        retro = "℞" if p.retrograde else ""
+        color = PLANET_COLORS.get(p.name, "#c8c8c8")
+        name_html = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
+        rows.append(
+            f"| {name_html} "
+            f"| {p.sign_glyph} {p.sign} ({p.sign_chinese}) "
+            f"| {p.sign_degree:.2f}° "
+            f"| {p.element} "
+            f"| {p.house} "
+            f"| {retro} "
+            f"| {p.essential_dignity} "
+            f"| {p.joy_status} |"
+        )
+    st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+
+def _render_house_table(chart):
+    st.subheader("🏛️ House Cusps")
+    header = "| House | Cusp | Sign | Planets |"
+    sep = "|:-----:|:----:|:----:|:-------:|"
+    rows = [header, sep]
+    for h in chart.houses:
+        planets_str = ", ".join(h.planets) if h.planets else "—"
+        rows.append(
+            f"| {h.number} | {_format_deg(h.cusp)} "
+            f"| {h.sign_glyph} {h.sign} | {planets_str} |"
+        )
+    st.markdown("\n".join(rows))
+
+
+def _render_aspects(chart):
+    st.subheader("🔗 Aspects")
+    aspects = []
+    for i in range(len(chart.planets)):
+        for j in range(i + 1, len(chart.planets)):
+            p1 = chart.planets[i]
+            p2 = chart.planets[j]
+            diff = abs(p1.longitude - p2.longitude)
+            if diff > 180:
+                diff = 360 - diff
+            for asp in ASPECT_TYPES:
+                orb = abs(diff - asp["angle"])
+                if orb <= asp["orb"]:
+                    aspects.append({
+                        "p1": p1.name, "p2": p2.name,
+                        "aspect": asp["name"], "symbol": asp["symbol"],
+                        "orb": orb,
+                    })
+                    break
+    if not aspects:
+        st.info("No significant aspects found.")
+        return
+    header = "| Planet 1 | Aspect | Planet 2 | Orb |"
+    sep = "|:--------:|:------:|:--------:|:---:|"
+    rows = [header, sep]
+    for a in aspects:
+        rows.append(
+            f"| {a['p1']} | {a['symbol']} {a['aspect']} "
+            f"| {a['p2']} | {a['orb']:.1f}° |"
+        )
+    st.markdown("\n".join(rows))
+
+
+def _render_classical_dignities(chart):
+    st.subheader("🏛️ 本質廟旺落陷 (Essential Dignities & Debilities)")
+    rows = [
+        "| Planet | Sign | House | Dignity | Joy |",
+        "|:------:|:----:|:-----:|:-------:|:---:|",
+    ]
+    for p in chart.planets:
+        color = PLANET_COLORS.get(p.name, "#c8c8c8")
+        name_html = f'<span style="color:{color};font-weight:bold">{p.name}</span>'
+        dignity_icon = ""
+        if "入廟" in p.essential_dignity:
+            dignity_icon = "♔"
+        elif "入旺" in p.essential_dignity:
+            dignity_icon = "↑"
+        elif "落陷" in p.essential_dignity:
+            dignity_icon = "♕"
+        elif "入弱" in p.essential_dignity:
+            dignity_icon = "↓"
+        rows.append(
+            f"| {name_html} "
+            f"| {p.sign_glyph} {p.sign} ({p.sign_chinese}) "
+            f"| {p.house} "
+            f"| {dignity_icon} {p.essential_dignity} "
+            f"| {'⭐' if '喜樂' in p.joy_status else '—'} {p.joy_status} |"
+        )
+    st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+    st.markdown("**符號說明:** ♔ 入廟 | ↑ 入旺 | ♕ 落陷 | ↓ 入弱 | ⭐ 喜樂")
+
+
+def _render_day_night_sect(chart):
+    st.subheader("☀️ 🌙 日夜盤判定 (Day & Night Sect)")
+    if chart.is_day_chart:
+        st.success(
+            "**日盤 (Day Chart)** — 太陽位於地平線以上（House 7–12）\n\n"
+            "日盤中，太陽作為主要主宰，行星若在日間位置（晝行星，如 Sun、Jupiter、Saturn）效力更強。\n\n"
+            "⚠️ 本盤 Venus、Moon 等夜行星在此盤中效力減弱。"
+        )
+    else:
+        st.info(
+            "**夜盤 (Night Chart)** — 太陽位於地平線以下（House 1–6）\n\n"
+            "夜盤中，月亮作為主要主宰，夜行星（如 Moon、Venus）效力更強。\n\n"
+            "⚠️ 本盤 Sun、Jupiter 等日行星在此盤中效力減弱。"
+        )
+
+
+def _render_chart_ruler(chart):
+    st.subheader("👑 命度主星 (Chart Ruler)")
+    asc_idx = _sign_index(chart.ascendant)
+    asc_sign_info = ZODIAC_SIGNS[asc_idx]
+    ruler_info = CLASSICAL_DIGNITIES[asc_idx]
+    ruler_name = ruler_info.get("domicile", "—")
+
+    dignity_icon = ""
+    dignity_text = chart.chart_ruler_dignity
+    if "入廟" in dignity_text:
+        dignity_icon = "♔"
+    elif "入旺" in dignity_text:
+        dignity_icon = "↑"
+    elif "落陷" in dignity_text:
+        dignity_icon = "♕"
+    elif "入弱" in dignity_text:
+        dignity_icon = "↓"
+
+    st.markdown(
+        f"**上升星座:** {asc_sign_info[1]} {asc_sign_info[0]}（{asc_sign_info[2]}）\n\n"
+        f"**命度主星:** {chart.chart_ruler} — {dignity_icon} {dignity_text}\n\n"
+        f"**主星守護:** {ruler_name or '—'} 守護 {asc_sign_info[0]}\n\n"
+        f"命度主星是全盤最重要的行星，它的吉凶、廟旺落陷、飛遊狀態\n"
+        f"決定了命主一生的主要命運走向。"
+    )
+
+    # Also show the main significators
+    st.markdown("**主要象徵星:**")
+    sig_cols = st.columns(3)
+    with sig_cols[0]:
+        st.markdown(f"**命度主星:** {chart.chart_ruler}")
+    with sig_cols[1]:
+        st.markdown(f"**助產星 (Exaltation):** "
+                    f"{ruler_info.get('exaltation', '—') or '—'}")
+    with sig_cols[2]:
+        first_house_planets = next(
+            (", ".join(h.planets) for h in chart.houses if h.number == 1), "空"
+        )
+        moon_name = next((p.name for p in chart.planets if "Moon" in p.name), "—")
+        st.markdown(
+            f"**命宮行星:** {first_house_planets}\n\n"
+            f"**身宮 (Moon):** {moon_name}"
+        )
+
+
+def _render_arabic_parts(chart):
+    st.subheader("🔮 阿拉伯點 / 幸運點 (Arabic Parts / Lots)")
+
+    # Day/Night indicator
+    sect = "日盤公式" if chart.is_day_chart else "夜盤公式"
+    st.caption(f"計算方式: {sect} — Lot of Fortune = ASC + {'Moon - Sun' if chart.is_day_chart else 'Sun - Moon'}")
+
+    header = "| Lot | Sign | Degree | House |"
+    sep = "|:---|:----:|:------:|:-----:|"
+    rows = [header, sep]
+    for part in chart.arabic_parts:
+        rows.append(
+            f"| **{part.chinese_name}** ({part.english_name}) "
+            f"| {part.sign_glyph} {part.sign} "
+            f"| {part.sign_degree:.2f}° "
+            f"| {part.house} |"
+        )
+    st.markdown("\n".join(rows))
+
+    st.markdown(
+        "**說明:** 阿拉伯點是古典占星的重要技法，"
+        "透過上升點與行星經度的加減運算推導各生活領域的敏感度數。"
+    )
+
+
+def _render_fixed_stars(chart):
+    st.subheader("⭐ 恆星相位 (Fixed Star Conjunctions)")
+
+    if not chart.fixed_star_conjunctions:
+        st.info("本盤無恆星與行星形成緊密合相（orb ≤ 1°）。")
+        return
+
+    header = "| Planet | Fixed Star | Chinese | Orb | 恆星意義 |"
+    sep = "|:------:|:----------:|:-------:|:---:|:------:|"
+    rows = [header, sep]
+    for fc in chart.fixed_star_conjunctions:
+        p_color = PLANET_COLORS.get(fc.planet_name, "#c8c8c8")
+        planet_html = f'<span style="color:{p_color};font-weight:bold">{fc.planet_name}</span>'
+        rows.append(
+            f"| {planet_html} "
+            f"| {fc.star_name} "
+            f"| {fc.star_name_cn} "
+            f"| {fc.orb:.2f}° "
+            f"| {fc.meaning} |"
+        )
+    st.markdown("\n".join(rows), unsafe_allow_html=True)
+
+    st.markdown(
+        "**恆星說明:** 恆星（Fixed Stars）與行星合相時，"
+        "會赋予行星特殊的影響力，其效力較一般行星相位更為強烈且恆定。\n\n"
+        "主要恆星：\n"
+        "- **Aldebaran (畢宿五)** — 勇氣、好戰\n"
+        "- **Regulus (軒轅十四)** — 王權、吉祥\n"
+        "- **Antares (心宿二)** — 膽識、軍事\n"
+        "- **Spica (角宿一)** — 財富、創造\n"
+        "- **Sirius (天狼星)** — 榮耀、財富\n"
+    )

@@ -3,7 +3,7 @@ astro/vedic_yogas.py — 吠陀瑜伽組合檢測 (Vedic Yoga Detection)
 
 Detects Gajakesari, Kemdruma, Gandanta, Pancha Mahapurusha, etc.
 """
-from core.cache import cache_data, cache_resource
+import streamlit as st
 from dataclasses import dataclass
 
 EXALTATION = {"Sun": 0, "Moon": 1, "Mars": 9, "Mercury": 5,
@@ -43,7 +43,7 @@ class YogaResult:
     description_cn: str
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_yogas(planet_longitudes: dict, ascendant_lon: float) -> list:
     """Detect Vedic yogas from planet longitudes + ascendant.
 

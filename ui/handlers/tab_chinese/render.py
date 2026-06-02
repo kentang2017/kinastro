@@ -1526,7 +1526,7 @@ def render_ming_gong_interpretations(chart: ChartData):
     1. 立命X宮 — 命宮所在地支的推命文字
     2. X入本命宮 — 各星曜入命宮的文字描述
     """
-    from .ming_gong_interp import get_li_ming_text, get_planet_in_ming_text
+    from astro.qizheng.ming_gong_interp import get_li_ming_text, get_planet_in_ming_text
 
     st.subheader("🔮 命宮特徵解讀")
 

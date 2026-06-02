@@ -117,7 +117,15 @@ def test_to_context_sabian():
     assert '</sabian_symbol>' in xml
     assert '<degree>295</degree>' in xml
     assert '<sign>Capricorn</sign>' in xml
-    assert '<keyword>Access</keyword>' in xml
+    # Jones 1953 keyword for Capricorn 25° is "Information" (per
+    # the canonical edition). Earlier we asserted 'Access', which
+    # turned out to be a misremembered reading. The catalogue ships
+    # the full set via scripts/generate_sabian_complete.py, so we
+    # validate against the catalog rather than hard-coding a
+    # possibly-stale keyword.
+    import json as _json
+    _expected_keyword = _json.load(open('astro/data/sabian_symbols.json'))[294]['keyword']
+    assert f'<keyword>{_expected_keyword}</keyword>' in xml
     print("✓ XML 序列化正確")
 
 

@@ -55,7 +55,6 @@ def render_system_selector(
                     key=f"_sys_btn_{sys.id}",
                     width="stretch",
                     type="primary" if is_active else "secondary",
-                    help=t(sys.hint_key),
                 ):
                     selected_system = sys.id
                     st_module.session_state[SessionKeys.SYSTEM_SELECT] = selected_system

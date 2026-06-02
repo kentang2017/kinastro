@@ -11,7 +11,7 @@ import json
 import math
 import os
 import swisseph as swe
-from core.cache import cache_data, cache_resource
+import streamlit as st
 from dataclasses import dataclass, field
 
 # ============================================================
@@ -140,7 +140,7 @@ THAI_DAY_OMENS = {
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "thai", "data")
 
 
-@cache_data(ttl=86400, show_spinner=False)
+@st.cache_data(ttl=86400, show_spinner=False)
 def _load_brahma_jati_remedies():
     """Load Brahma Jati spells & remedies JSON."""
     path = os.path.join(_DATA_DIR, "brahma_jati_spells_remedies.json")
@@ -301,7 +301,7 @@ def _whole_sign_cusps(asc_lon):
     return [((asc_sign + i) % 12) * 30.0 for i in range(12)]
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_thai_chart(year, month, day, hour, minute, timezone,
                        latitude, longitude, location_name=""):
     """計算泰國占星排盤 (Sidereal / Lahiri Ayanamsa / Whole Sign Houses)

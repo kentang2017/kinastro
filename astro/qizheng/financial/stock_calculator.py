@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from core.cache import cache_data, cache_resource
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone as tz_cls
@@ -265,7 +265,7 @@ def _planet_score(p: PlanetPosition) -> tuple[int, str, str]:
     return score, desc_zh, desc_en
 
 
-@cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=300, show_spinner=False)
 def compute_daily_fortune(
     query_year: int, query_month: int, query_day: int,
     query_hour: int,
@@ -351,7 +351,7 @@ def compute_daily_fortune(
     )
 
 
-@cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def compute_stock_chart(
     ipo_year: int, ipo_month: int, ipo_day: int,
     ipo_hour: int, ipo_minute: int,

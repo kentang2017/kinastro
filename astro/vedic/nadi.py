@@ -23,15 +23,14 @@ import re
 
 import pandas as pd
 import swisseph as swe
-from core.streamlit_lazy import lazy_streamlit as st
+import streamlit as st
 from dataclasses import dataclass, field
 
-from core.cache import cache_data, cache_resource
 # ── Nadi JSON Data ────────────────────────────────────────────────────────────
 _NADI_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "nadi", "data")
 
 
-@cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def _load_nadi_json(filename: str) -> dict:
     path = os.path.join(_NADI_DATA_DIR, filename)
     with open(path, "r", encoding="utf-8") as f:
@@ -398,7 +397,7 @@ def _nadi_amsha(sign_deg: float) -> int:
     return min(int(sign_deg / 0.2) + 1, NADI_AMSHA_PER_SIGN)
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_nadi_chart(year, month, day, hour, minute, timezone,
                        latitude, longitude, location_name="") -> NadiChart:
     """計算納迪占星命盤（使用恆星黃道 Lahiri 歲差）。"""

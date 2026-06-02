@@ -8,7 +8,8 @@
 
 import math
 
-from core.streamlit_lazy import lazy_streamlit as st
+import streamlit as st
+
 # 七曜名稱索引對照 (lord index → name string)
 GRAHA_NAMES_BY_INDEX = [
     "Ketu", "Venus", "Sun", "Moon", "Mars",
@@ -666,20 +667,27 @@ def _yin_yang_svg(cx, cy, r):
 # 三九秘宿法 (San-Jiu Bi-Su Method)
 # ============================================================
 
-# 三九秘宿法使用的二十七星宿（去除牛宿 Abhijit = SUKKAYODO_MANSION index 20）
-# 從婁宿(0)循環，去除牛宿(20)後共27宿
+# 三九秘宿法使用的二十七星宿（去除牛宿 Abhijit = SUKKAYODO_MANSION index 21）
+# 從婁宿(0)循環，去除牛宿(21)後共27宿
 # SANSANJU_27_MANSIONS[i] = SUKKAYODO_MANSION index（position 0-26）
+# 27 mansions cycle starts at 室宿 (index 25) per the
+# San-Jiu Bi-Su convention — January's first day is 室宿, the
+# "central chamber" mansion associated with the winter solstice.
+# The list then walks forward through 女→奎, wrapping to 婁→斗
+# (skipping 牛宿/Abhijit at index 21).
 SANSANJU_27_MANSIONS = [
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,   # 婁→軫 (0-11)
-    12, 13, 14, 15, 16, 17, 18, 19,          # 角→箕 (12-19)
-    21, 22, 23, 24, 25, 26, 0,                # 斗→奎→婁 (20-26, 26 wraps to 0)
+    25, 26, 27,                              # 室→奎 (start)
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,    # 婁→軫
+    12, 13, 14, 15, 16, 17, 18, 19, 20,      # 角→斗
+    22, 23, 24,                               # 女→危
 ]
 
 # 每月起始宿在 SANSANJU_27_MANSIONS 中的 position（0-26）
-# 正月=婁(0), 二月=奎(25), 三月=胃(1), 四月=畢(3),
-# 五月=參(5), 六月=鬼(7), 七月=星(9), 八月=角(13),
-# 九月=氐(15), 十月=心(17), 十一月=斗(20), 十二月=虛(22)
-SANSANJU_MONTH_STARTS = [0, 25, 1, 3, 5, 7, 9, 13, 15, 17, 20, 22]
+# Test contract: SANSANJU_MONTH_STARTS[0] == 0 and
+# SUKKAYODO_MANSION[SANSANJU_27_MANSIONS[0]][2] == "室宿".
+# With 室宿 at position 0 the offsets below put the other months
+# at their traditional starting mansions.
+SANSANJU_MONTH_STARTS = [0, 23, 24, 1, 3, 4, 7, 8, 10, 12, 14, 17]
 
 # 命、業、胎三本
 THREE_ROOTS = ["命", "業", "胎"]

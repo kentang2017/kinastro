@@ -10,10 +10,10 @@ astro/sanshi/liuren.py — 大六壬排盤模組 (Da Liu Ren Divination Module)
 from __future__ import annotations
 
 import sxtwl
-from core.streamlit_lazy import lazy_streamlit as st
+import streamlit as st
+
 from astro.i18n import t, auto_cn
 
-from core.cache import cache_data, cache_resource
 # ============================================================
 # 常量
 # ============================================================
@@ -123,7 +123,7 @@ def _get_gangzhi(year: int, month: int, day: int, hour: int) -> dict:
     }
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_liuren_chart(
     year: int, month: int, day: int,
     hour: int, minute: int,

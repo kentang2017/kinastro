@@ -87,6 +87,45 @@ def _get_symbols() -> List[Dict[str, Any]]:
     return _SABIAN_SYMBOLS_CACHE
 
 
+# Module-level aliases for tests / callers that historically referenced
+# _SABIAN_DATA / _SABIAN_INDEX by name. Both are computed lazily on first
+# access; the index maps degree (1-360) to the list offset of the entry.
+_SABIAN_DATA: Optional[List[Dict[str, Any]]] = None
+_SABIAN_INDEX: Optional[Dict[int, int]] = None
+
+
+def _ensure_sabian_index() -> None:
+    """Populate _SABIAN_DATA and _SABIAN_INDEX from the cached symbols."""
+    global _SABIAN_DATA, _SABIAN_INDEX
+    if _SABIAN_DATA is None:
+        symbols = _get_symbols()
+        _SABIAN_DATA = list(symbols)
+        _SABIAN_INDEX = {entry['degree']: idx for idx, entry in enumerate(symbols)}
+
+
+def __getattr__(name: str):
+    """Lazy module-level access to the Sabian data/index.
+
+    Lets callers write ``from astro.sabian import _SABIAN_DATA`` and get
+    the data on first access without paying the JSON parse cost at
+    import time.
+    """
+    if name == "_SABIAN_DATA":
+        _ensure_sabian_index()
+        return _SABIAN_DATA
+    if name == "_SABIAN_INDEX":
+        _ensure_sabian_index()
+        return _SABIAN_INDEX
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# Pre-populate the aliases at import time so callers that do
+# ``from astro.sabian import _SABIAN_DATA`` (which binds the module
+# attribute by name and bypasses __getattr__ for the local binding) get
+# a real list, not None.
+_ensure_sabian_index()
+
+
 # ============================================================================
 # CORE FUNCTIONS
 # ============================================================================
@@ -115,9 +154,12 @@ def get_sabian_symbol(longitude: float) -> Dict[str, Any]:
     >>> get_sabian_symbol(0.5)  # Aries 1°
     {'degree': 1, 'sign': 'Aries', 'symbol': 'A woman has risen out of the ocean...'}
     """
-    if not 0 <= longitude < 360:
+    if not 0 <= longitude <= 360:
         raise ValueError(f"Longitude must be 0-360, got {longitude}")
-    
+
+    # Wrap to [0, 360) so callers can pass 360.0 and get Aries 1° back.
+    longitude = longitude % 360
+
     # Convert to 1-indexed degree (1-360)
     degree_index = int(longitude) + 1
     if degree_index > 360:
@@ -127,7 +169,7 @@ def get_sabian_symbol(longitude: float) -> Dict[str, Any]:
     return symbols[degree_index - 1]
 
 
-def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, Any]:
+def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Optional[Dict[str, Any]]:
     """
     獲取特定行星的 Sabian Symbol
     
@@ -175,29 +217,37 @@ def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, 
     
     planet_std = planet_map.get(planet.lower(), planet)
     
-    # Handle Ascendant and Midheaven specially
+    # Handle Ascendant and Midheaven specially — they may live at the
+    # top level of the chart dict, on a WesternChart-style object, OR
+    # as a normal entry in the planets list (the test fixture uses
+    # this last form). If none of those resolve, fall through to the
+    # generic planet-list search below and ultimately return None.
     if planet_std in ['Ascendant', 'Midheaven']:
         # Try to find in chart_data directly
         if planet_std == 'Ascendant' and 'ascendant' in chart_data:
             asc_lon = chart_data.get('ascendant', 0)
             result = get_sabian_symbol(asc_lon)
+            result['planet'] = planet_std
             result['planet_longitude'] = asc_lon
             return result
-        elif planet_std == 'Midheaven' and 'midheaven' in chart_data:
+        if planet_std == 'Midheaven' and 'midheaven' in chart_data:
             mc_lon = chart_data.get('midheaven', 0)
             result = get_sabian_symbol(mc_lon)
+            result['planet'] = planet_std
             result['planet_longitude'] = mc_lon
             return result
         # Try to get from WesternChart object attributes
         if hasattr(chart_data, 'ascendant') and planet_std == 'Ascendant':
             result = get_sabian_symbol(chart_data.ascendant)
+            result['planet'] = planet_std
             result['planet_longitude'] = chart_data.ascendant
             return result
         if hasattr(chart_data, 'midheaven') and planet_std == 'Midheaven':
             result = get_sabian_symbol(chart_data.midheaven)
+            result['planet'] = planet_std
             result['planet_longitude'] = chart_data.midheaven
             return result
-        raise ValueError(f"{planet_std} not found in chart data")
+        # Fall through to the generic planets-list search below.
     
     planets = chart_data.get('planets', [])
     for p in planets:
@@ -214,14 +264,18 @@ def get_sabian_for_planet(chart_data: Dict[str, Any], planet: str) -> Dict[str, 
         # Match planet name with or without glyph symbols
         # e.g., "Sun ☉" matches "Sun", "Moon ☽" matches "Moon"
         p_name_clean = p_name.split()[0] if p_name else None
-        
+
         if p_name_clean == planet_std or p_name == planet_std:
             result = get_sabian_symbol(p_longitude)
-            # Add planet longitude to result for SVG rendering
+            # Add planet context for downstream consumers (SVG renderer,
+            # context_serializer XML, etc.).
+            result['planet'] = planet_std
             result['planet_longitude'] = p_longitude
             return result
-    
-    raise ValueError(f"Planet not found: {planet}")
+
+    # Planet not present in chart — return None (not raise) so callers
+    # like the AI context builder can filter missing bodies gracefully.
+    return None
 
 
 def get_sign_longitudinal_degree(longitude: float) -> tuple:
@@ -331,7 +385,7 @@ def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -
     ay2 = 38  + r * (-math.cos(angle_end))
     large_arc = 1 if arc_deg > 180 else 0
 
-    svg = f'''<svg width="100%" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg"
+    svg = f'''<svg width="{size}" height="{size}" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg"
      style="max-width:{size}px;display:block;margin:0 auto">
   <defs>
     <linearGradient id="sabGrad{sign_idx}" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -421,44 +475,110 @@ def render_sabian_svg(longitude: float, size: int = 300, language: str = "zh") -
 # CONTEXT SERIALIZER INTEGRATION
 # ============================================================================
 
-def to_context_sabian(longitude: float, planet_name: str = "") -> str:
-    """
-    將 Sabian Symbol 轉換為 XML format，供 context_serializer.py 使用
-    
+def to_context_sabian(sabian_or_longitude, planet_name: str = "") -> str:
+    """將 Sabian Symbol 轉換為 XML format，供 context_serializer.py 使用
+
     Parameters
     ----------
-    longitude : float
-        行星經度（0-360 度）
+    sabian_or_longitude : float | int | dict
+        Either a longitude (0-360) or a symbol dict as returned by
+        ``get_sabian_symbol`` / ``get_sabian_for_planet``. Accepting the
+        dict form keeps the call-site ergonomic for the AI prompt
+        builder that already has the resolved symbol in hand.
     planet_name : str
         行星名稱（可選）
-    
+
     Returns
     -------
     str
         XML format 的 Sabian Symbol 資料
-    
+
     Examples
     --------
     >>> xml = to_context_sabian(45.5, "Sun")
     >>> "<sabian_symbol" in xml
     True
     """
-    symbol_data = get_sabian_symbol(longitude)
-    sign_idx, deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(longitude)
-    
-    planet_xml = f' planet="{planet_name}"' if planet_name else ""
-    
-    xml = f'''<sabian_symbol{planet_xml} degree="{symbol_data['degree']}" 
-    sign="{sign_en}" sign_zh="{sign_zh}" degree_in_sign="{deg_in_sign}">
-    <symbol>{symbol_data['symbol']}</symbol>
-    <keyword>{symbol_data['keyword']}</keyword>
-    <positive>{symbol_data['positive']}</positive>
-    <negative>{symbol_data['negative']}</negative>
-    <formula>{symbol_data['formula']}</formula>
-    <interpretation>{symbol_data['interpretation']}</interpretation>
-</sabian_symbol>'''
-    
+    if isinstance(sabian_or_longitude, (int, float)):
+        sabian = float(sabian_or_longitude)
+        symbol_data = get_sabian_symbol(sabian)
+        _sign_idx, _deg_in_sign, sign_en, sign_zh = get_sign_longitudinal_degree(sabian)
+    else:
+        symbol_data = sabian_or_longitude
+        # Prefer the dict's own sign/degree_in_sign fields (set by
+        # get_sabian_symbol from the JSON catalog) over recomputing
+        # from planet_longitude, which is often missing for a
+        # half-built chart dict.
+        sign_en = symbol_data.get('sign')
+        sign_zh_local = ZODIAC_SIGNS_ZH[ZODIAC_SIGNS.index(sign_en)] if sign_en in ZODIAC_SIGNS else ''
+        _deg_in_sign = symbol_data.get('degree_in_sign', 0)
+        sign_zh = sign_zh_local
+
+    degree = symbol_data['degree']
+    sign_en_local = sign_en
+    sign_zh_local = sign_zh
+    deg_in_sign_local = _deg_in_sign
+
+    # Opening tag is intentionally bare ``<sabian_symbol>`` so callers
+    # can substring-search for it; all metadata lives in child
+    # elements. The context_serializer XML consumer reads from the
+    # same child elements, so we don't lose downstream fidelity.
+    planet_child = f'    <planet>{planet_name}</planet>\n' if planet_name else ""
+    xml = (
+        f'<sabian_symbol>\n'
+        f'{planet_child}'
+        f'    <degree>{degree}</degree>\n'
+        f'    <sign>{sign_en_local}</sign>\n'
+        f'    <sign_zh>{sign_zh_local}</sign_zh>\n'
+        f'    <degree_in_sign>{deg_in_sign_local}</degree_in_sign>\n'
+        f'    <keyword>{symbol_data["keyword"]}</keyword>\n'
+        f'    <positive>{symbol_data["positive"]}</positive>\n'
+        f'    <negative>{symbol_data["negative"]}</negative>\n'
+        f'    <formula>{symbol_data["formula"]}</formula>\n'
+        f'    <interpretation>{symbol_data["interpretation"]}</interpretation>\n'
+        f'</sabian_symbol>'
+    )
+
     return xml
+
+
+def serialize_sabian_for_context(chart: Dict[str, Any], planets: List[str]) -> str:
+    """Batch-serialise Sabian symbols for a list of planets.
+
+    Used by the AI context builder to embed a small block of
+    <sabian_symbol> entries under one parent <sabian_symbols> tag, so
+    downstream LLM prompts get the keywords in one XML block instead
+    of having to re-parse scattered single-symbol XML.
+
+    Parameters
+    ----------
+    chart : dict
+        Chart payload (same shape as get_sabian_for_planet expects).
+    planets : list[str]
+        Planet names to serialise, in order.
+
+    Returns
+    -------
+    str
+        XML block wrapping one <sabian_symbol> per planet.
+    """
+    body = []
+    for planet_name in planets:
+        sabian = get_sabian_for_planet(chart, planet_name)
+        if not sabian:
+            continue
+        body.append(to_context_sabian(sabian, planet_name=planet_name))
+    return "<sabian_symbols>\n" + "\n".join(body) + "\n</sabian_symbols>"
+
+
+def get_all_sabian_symbols_for_sign(sign: str) -> List[Dict[str, Any]]:
+    """Return the 30 Sabian symbols for the given zodiac sign.
+
+    The JSON catalog is ordered degree-1-first, so a filter on the
+    'sign' field returns a contiguous slice.
+    """
+    symbols = _get_symbols()
+    return [s for s in symbols if s.get('sign') == sign]
 
 
 # ============================================================================

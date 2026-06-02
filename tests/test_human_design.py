@@ -421,25 +421,25 @@ class TestProfile:
 
 class TestBodygraphSVG:
     def test_svg_is_string(self, generator_chart):
-        from astro.human_design import render_bodygraph_svg
+        from ui.handlers.tab_human_design.render import render_bodygraph_svg
         svg = render_bodygraph_svg(generator_chart)
         assert isinstance(svg, str)
 
     def test_svg_contains_svg_tag(self, generator_chart):
-        from astro.human_design import render_bodygraph_svg
+        from ui.handlers.tab_human_design.render import render_bodygraph_svg
         svg = render_bodygraph_svg(generator_chart)
         assert "<svg" in svg
         assert "</svg>" in svg
 
     def test_svg_contains_center_labels(self, generator_chart):
-        from astro.human_design import render_bodygraph_svg
+        from ui.handlers.tab_human_design.render import render_bodygraph_svg
         svg = render_bodygraph_svg(generator_chart)
         assert "HEAD" in svg
         assert "AJNA" in svg
         assert "SAC" in svg
 
     def test_svg_with_custom_size(self, generator_chart):
-        from astro.human_design import render_bodygraph_svg
+        from ui.handlers.tab_human_design.render import render_bodygraph_svg
         svg = render_bodygraph_svg(generator_chart, width=400, height=500)
         assert 'width="400"' in svg
         assert 'height="500"' in svg

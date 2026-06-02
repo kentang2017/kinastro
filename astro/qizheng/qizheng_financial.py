@@ -19,6 +19,7 @@ from datetime import datetime, timedelta, timezone as tz_cls
 from typing import Optional
 
 import pandas as pd
+from core.cache import cache_data, cache_resource
 import streamlit as st
 import swisseph as swe
 
@@ -66,13 +67,13 @@ _WEALTH_PLANET_ENERGY = {
 # 財帛宮索引（七政四餘第二宮）
 _CAIBO_HOUSE_INDEX = 1
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def _get_historical_events() -> list[dict]:
     """快取歷史金融事件資料。"""
     return load_historical_events()
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@cache_data(ttl=3600, show_spinner=False)
 def _get_great_conjunctions() -> list[dict]:
     """快取木土大合相資料。"""
     return load_great_conjunctions()
@@ -110,7 +111,7 @@ class FinancialData:
 # 計算函數
 # ============================================================
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@cache_data(ttl=1800, show_spinner=False)
 def compute_financial_aspects(
     year: int, month: int, day: int,
     hour: int, minute: int,
@@ -574,7 +575,7 @@ def render_financial_tab(
     # ════════════════════════════════════════════════════
     with _tab_stock:
         try:
-            from .financial import render_stock_fortune_tab
+            from ui.handlers.tab_chinese.render_financial import render_stock_fortune_tab
             render_stock_fortune_tab(input_tz=input_tz)
         except ImportError as _ie:
             st.error(f"股票靈運模組載入失敗 / Stock fortune module failed to load: {_ie}")

@@ -11,11 +11,11 @@
 
 from .stock_fetcher import fetch_stock_info, StockInfo
 from .stock_calculator import compute_stock_chart, StockChartData
-
-def render_stock_fortune_tab(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the render_stock_fortune_tab renderer for this package."""
-    from ui.handlers.tab_chinese.render_financial import render_stock_fortune_tab as _fn
-    return _fn(*args, **kwargs)
+# The render_stock_fortune_tab entry point moved to the UI layer
+# (ui/handlers/tab_chinese/render_financial.py) during the phase-7
+# compute/render split. Keep a lazy re-export so legacy callers that
+# do ``from astro.qizheng.financial import render_stock_fortune_tab``
+# still work without dragging streamlit in at astro import time.
 from .gann_macro_stock import (
     GANN_NATAL_DEFAULT,
     GANN_NATAL_PRESETS,

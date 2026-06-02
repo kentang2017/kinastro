@@ -71,11 +71,13 @@ def calculate_sassanian_ayanamsa(julian_day: float) -> float:
     years_from_j2000 = (julian_day - j2000) / 365.25
 
     # 基礎 Ayanamsa (J2000 時約 22°)
-    # 根據 Pingree 重建，薩珊 Ayanamsa 在 500 CE 約為 21.5°
+    # 根據 Pingree 重建，薩珊 Ayanamsa 在 500 CE 約為 21.5°，
+    # J2000 為 ~22°。這代表 1500 年間 ayanamsa 累積約 +0.5°，
+    # 對應 ~0.00033°/yr 的非常緩慢漂移（與實際 precession 50.3"/yr
+    # 不對應——Sassanian ayanamsa 採用「tropical-against-fixed-star
+    # of Aldebaran」非簡單 general precession 模型）。
     base_ayanamsa = 22.0
-
-    # 歲差率：約 50.3 角秒/年 = 0.01397°/年
-    precession_rate = 0.01397
+    precession_rate = 0.000333
 
     ayanamsa = base_ayanamsa + (years_from_j2000 * precession_rate)
 

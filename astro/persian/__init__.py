@@ -13,6 +13,25 @@ References
 - Sassanian silver plates and rock reliefs (Metropolitan Museum, Louvre)
 """
 
+from astro.persian.sassanian_chart_renderer import (
+    generate_sassanian_chart,
+    render_sassanian_banner_chart,
+    get_sassanian_color_palette,
+)
+
+from astro.persian.sassanian_astronomy import (
+    calculate_sassanian_ayanamsa,
+    get_royal_stars_positions,
+    compute_sassanian_planet_positions,
+)
+
+from astro.persian.sassanian_symbols import (
+    get_pahlavi_name,
+    get_royal_star_pahlavi,
+    render_faravahar_element,
+    render_eight_pointed_star,
+)
+
 from astro.persian.sassanian_astrology import (
     compute_sassanian_chart,
     SassanianChart,
@@ -26,29 +45,6 @@ from astro.persian.sassanian_astrology import (
     calculate_persian_lots,
     get_royal_stars_prominence,
 )
-from astro.persian.sassanian_astronomy import (
-    calculate_sassanian_ayanamsa,
-    get_royal_stars_positions,
-    compute_sassanian_planet_positions,
-)
-
-
-def generate_sassanian_chart(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the Sassanian chart SVG generator."""
-    from astro.persian.sassanian_chart_renderer import generate_sassanian_chart as _fn
-    return _fn(*args, **kwargs)
-
-
-def render_sassanian_banner_chart(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the Sassanian banner renderer."""
-    from astro.persian.sassanian_chart_renderer import render_sassanian_banner_chart as _fn
-    return _fn(*args, **kwargs)
-
-
-def get_sassanian_color_palette(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the Sassanian color palette helper."""
-    from astro.persian.sassanian_chart_renderer import get_sassanian_color_palette as _fn
-    return _fn(*args, **kwargs)
 
 __all__ = [
     # 星盤渲染
@@ -70,6 +66,13 @@ __all__ = [
     "SassanianPlanet",
     "FirdarPeriod",
     "HylegResult",
+    # 高階計算 (讓舊 API 仍可 import)
+    "calculate_firdar",
+    "calculate_hyleg_alcocoden",
+    "calculate_profections",
+    "calculate_almuten_figuris",
+    "calculate_persian_lots",
+    "get_royal_stars_prominence",
     # 進階版 (lazy-loaded)
     "compute_deep_sassanian_chart",
     "render_deep_streamlit",
@@ -83,6 +86,11 @@ def compute_deep_sassanian_chart(*args, **kwargs):  # type: ignore[override]
 
 
 def render_deep_streamlit(*args, **kwargs):  # type: ignore[override]
-    """Lazy-load and call the advanced Sassanian Streamlit renderer."""
+    """Lazy-load and call the advanced Sassanian Streamlit renderer.
+
+    The legacy ``astro.persian.renderer`` module was moved to
+    ``ui.handlers.tab_persian.render`` during the phase-7 compute /
+    render split, so we re-route here.
+    """
     from ui.handlers.tab_persian.render import render_streamlit as _fn
     return _fn(*args, **kwargs)

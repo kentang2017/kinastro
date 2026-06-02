@@ -67,6 +67,12 @@ from astro.shaozi.shaozi_64_keys import (
     get_detailed_key,
 )
 from astro.shaozi.shaozi_full_structure import ShaoziFullShenShu
+from astro.shaozi.renderer import (
+    render_shaozi_result,
+    render_shaozi_placeholder,
+    render_shaozi_64key_section,
+    render_shaozi_tiaowen_browser,
+)
 
 __all__ = [
     # Core calculator
@@ -97,4 +103,9 @@ __all__ = [
     "get_detailed_key",
     # Full advanced engine
     "ShaoziFullShenShu",
+    # Renderer
+    "render_shaozi_result",
+    "render_shaozi_placeholder",
+    "render_shaozi_64key_section",
+    "render_shaozi_tiaowen_browser",
 ]

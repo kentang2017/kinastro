@@ -1,4 +1,19 @@
-"""Legacy compatibility bridge for refactored system handlers."""
+"""Legacy compatibility bridge for refactored system handlers.
+
+The phase-6/7 compute/render split moved most ``astro.<pkg>.renderer``
+modules to ``ui.handlers.tab_<id>.render``. This bridge is the *last*
+fallback for the many system-handler call sites that still hard-code
+the old module path.  ``_get_attr`` now transparently tries:
+
+1.  the literal module path the caller asked for
+2.  the corresponding ``ui.handlers.tab_<id>.render`` location
+    (auto-derived from the legacy package name)
+3.  the package's own ``__init__`` module (some packages re-export
+    ``render_streamlit``)
+
+If none of those succeed the original ``ModuleNotFoundError`` /
+``AttributeError`` bubbles up unchanged.
+"""
 
 from __future__ import annotations
 
@@ -13,8 +28,151 @@ _mode = None
 x = None
 
 
+# Map of legacy module paths to their new homes. Keys are the
+# ``importlib.import_module`` target the legacy_bridge callers ask
+# for; values are fallback modules tried in order. This is the
+# source of truth for any future phase-6/7 rename — keep it in sync
+# with ``ui/handlers/tab_*/render.py`` layout.
+_LEGACY_TO_NEW: dict[str, tuple[str, ...]] = {
+    "astro.qizheng.chart_renderer": (
+        "ui.handlers.tab_chinese.render",
+    ),
+    "astro.bazi.renderer": (
+        "ui.handlers.tab_bazi.render",
+    ),
+    "astro.damo.renderer": (
+        "ui.handlers.tab_damo.render",
+    ),
+    "astro.diqiyijue.renderer": (
+        "ui.handlers.tab_diqiyijue.render",
+    ),
+    "astro.cosmobiology.renderer": (
+        "ui.handlers.tab_cosmobiology.render",
+    ),
+    "astro.harmonic.renderer": (
+        "ui.handlers.tab_harmonic.render",
+    ),
+    "astro.electional": (
+        "ui.handlers.tab_electional.render",
+    ),
+    "astro.beiji.renderer": (
+        "ui.handlers.tab_beiji.render",
+    ),
+    "astro.kaiyuan.renderer": (
+        "ui.handlers.tab_kaiyuan.render",
+    ),
+    "astro.human_design": (
+        "ui.handlers.tab_human_design.render",
+    ),
+    "astro.esoteric": (
+        "ui.handlers.tab_esoteric.render",
+    ),
+    "astro.mundane": (
+        "ui.handlers.tab_mundane.render",
+    ),
+    "astro.rectification.renderer": (
+        "ui.handlers.tab_rectification.render",
+    ),
+    "astro.trutine_of_hermes": (
+        "ui.handlers.tab_trutine_of_hermes.render",
+    ),
+    "astro.primary_directions.renderer": (
+        "ui.handlers.tab_primary_directions.render",
+    ),
+    "astro.wuyunliuqi.renderer": (
+        "ui.handlers.tab_wuyunliuqi.render",
+    ),
+    "astro.chinese.taixuan.taixuan_renderer": (
+        "ui.handlers.tab_taixuan.render",
+    ),
+}
+
+
+def _module_candidates(module_name: str) -> list[str]:
+    """Return module names to try for ``module_name``, in priority order.
+
+    The first entry is the caller-supplied path. After that we add the
+    hand-mapped ``ui.handlers.tab_<id>.render`` location and finally the
+    parent package's ``__init__`` module (in case the package
+    re-exports the requested attr via PEP 562 ``__getattr__``).
+    """
+    candidates = [module_name]
+    if module_name in _LEGACY_TO_NEW:
+        candidates.extend(_LEGACY_TO_NEW[module_name])
+    # Auto-derive: ``astro.<pkg>(.subpkg)?(.renderer)?`` →
+    # ``ui.handlers.tab_<id>.render`` (id = the package's short name,
+    # optionally suffixed with the leaf submodule). This covers the
+    # ~50 systems that were migrated in phase 6/7 without needing a
+    # hand-written entry in ``_LEGACY_TO_NEW``.
+    candidates.extend(_auto_derive_candidates(module_name))
+    # Also try the bare parent package as a final fallback — many
+    # __init__.py modules in this project lazy-export renderer
+    # symbols through PEP 562 __getattr__.
+    if "." in module_name:
+        parent = module_name.rsplit(".", 1)[0]
+        if parent != module_name and parent not in candidates:
+            candidates.append(parent)
+    return candidates
+
+
+# Map of legacy ``astro.<pkg>`` short names to the ``tab_<id>`` name
+# the phase-6/7 split chose. Most are the same as the package name
+# (``astro.bazi`` → ``tab_bazi``), but a handful had to be renamed
+# because the original package name collided with a reserved word or
+# didn't match the user-facing tab label. Keeping the table explicit
+# avoids surprise ``tab_zh`` / ``tab_sa`` / etc. auto-mappings.
+_TAB_NAME_OVERRIDES: dict[str, str] = {
+    "chinese": "chinese",        # 七政四餘 uses tab_chinese
+    "astronomical_geomancy": "astro_geomancy",
+    "dogon": "dogon_sirius",
+    "polynesian_hawaiian": "polynesian",
+    "sports": "sports_astrology",
+    "chinese_taixuan": "taixuan",
+    "tojeong": "tojeong",
+    "persian": "persian",
+    "vedic_indian": "western",  # no dedicated tab; routes to western
+    "egyptian": "egyptian_decans",  # the package is "astro.egyptian"
+    "decans": "egyptian_decans",    # legacy called astro.egyptian.decans
+}
+
+
+def _auto_derive_candidates(module_name: str) -> list[str]:
+    """Generate ``ui.handlers.tab_<id>.render`` fallbacks for a legacy
+    ``astro.<pkg>...`` path.
+    """
+    if not module_name.startswith("astro."):
+        return []
+    parts = module_name.split(".")
+    # Strip the leading "astro."
+    pkg_parts = parts[1:]
+    # Drop trailing ".renderer" if present, since the new home is a
+    # ``render`` module (no trailing ``er``).
+    if pkg_parts and pkg_parts[-1] == "renderer":
+        pkg_parts = pkg_parts[:-1]
+    if not pkg_parts:
+        return []
+    # Use the last component as the package's short name (this matches
+    # e.g. ``astro.bazi.renderer`` → pkg="bazi").
+    short = pkg_parts[-1]
+    if short in _TAB_NAME_OVERRIDES:
+        tab_id = _TAB_NAME_OVERRIDES[short]
+    else:
+        tab_id = short
+    return [f"ui.handlers.tab_{tab_id}.render"]
+
+
 def _get_attr(module_name: str, attr_name: str):
-    return getattr(importlib.import_module(module_name), attr_name)
+    last_err: Exception | None = None
+    for candidate in _module_candidates(module_name):
+        try:
+            return getattr(importlib.import_module(candidate), attr_name)
+        except (ModuleNotFoundError, ImportError, AttributeError) as exc:
+            last_err = exc
+            continue
+    # If everything failed, re-raise the original ModuleNotFoundError
+    # so the traceback still points at the module the caller named.
+    assert last_err is not None
+    raise last_err
 
 
 def _call(module_name: str, attr_name: str, *args, **kwargs):
@@ -203,15 +361,15 @@ def compute_wuyunliuqi(*args, **kwargs):
 
 
 def render_aspect_summary(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_aspect_summary", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_aspect_summary", *args, **kwargs)
 
 
 def render_bazi(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_bazi", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_bazi", *args, **kwargs)
 
 
 def render_bazi_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_bazi.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.bazi.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_beiji_chart(
@@ -232,7 +390,7 @@ def render_beiji_chart(
         minute=minute,
         gender=gender,
     )
-    _call("ui.handlers.tab_beiji.render", "render_beiji_chart", result)
+    _call("astro.beiji.renderer", "render_beiji_chart", result)
 
 
 def render_cetian_ziwei_chart(*args, **kwargs):
@@ -240,7 +398,7 @@ def render_cetian_ziwei_chart(*args, **kwargs):
 
 
 def render_chart_info(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_chart_info", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_chart_info", *args, **kwargs)
 
 
 def render_chunzi_chart() -> None:
@@ -248,15 +406,15 @@ def render_chunzi_chart() -> None:
 
 
 def render_damo_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_damo.render", "render_damo_chart", *args, **kwargs)
+    return _call("astro.damo.renderer", "render_damo_chart", *args, **kwargs)
 
 
 def render_dasha(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_dasha", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_dasha", *args, **kwargs)
 
 
 def render_diqiyijue_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_diqiyijue.render", "render_diqiyijue_chart", *args, **kwargs)
+    return _call("astro.diqiyijue.renderer", "render_diqiyijue_chart", *args, **kwargs)
 
 
 def render_electional_tool(*args, **kwargs):
@@ -268,15 +426,15 @@ def render_financial_tab(*args, **kwargs):
 
 
 def render_full_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_full_chart", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_full_chart", *args, **kwargs)
 
 
 def render_house_table(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_house_table", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_house_table", *args, **kwargs)
 
 
 def render_kaiyuan_chart() -> None:
-    _call("ui.handlers.tab_kaiyuan.render", "render_streamlit")
+    _call("astro.kaiyuan.renderer", "render_streamlit")
 
 
 def render_liuren_chart(*args, **kwargs):
@@ -288,11 +446,11 @@ def render_lunming_report(*args, **kwargs):
 
 
 def render_mansion_text_panel(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_mansion_text_panel", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_mansion_text_panel", *args, **kwargs)
 
 
 def render_ming_gong_interpretations(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_ming_gong_interpretations", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_ming_gong_interpretations", *args, **kwargs)
 
 
 def render_nanji_chart(*args, **kwargs):
@@ -300,27 +458,27 @@ def render_nanji_chart(*args, **kwargs):
 
 
 def render_planet_table(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_planet_table", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_planet_table", *args, **kwargs)
 
 
 def render_qigua_ui(*args, **kwargs):
-    return _call("ui.handlers.tab_taixuan.render", "render_qigua_ui", *args, **kwargs)
+    return _call("astro.chinese.taixuan.taixuan_renderer", "render_qigua_ui", *args, **kwargs)
 
 
 def render_shensha(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_shensha", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_shensha", *args, **kwargs)
 
 
 def render_taixuan_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_taixuan.render", "render_taixuan_chart", *args, **kwargs)
+    return _call("astro.chinese.taixuan.taixuan_renderer", "render_taixuan_chart", *args, **kwargs)
 
 
 def render_taixuan_intro(*args, **kwargs):
-    return _call("ui.handlers.tab_taixuan.render", "render_taixuan_intro", *args, **kwargs)
+    return _call("astro.chinese.taixuan.taixuan_renderer", "render_taixuan_intro", *args, **kwargs)
 
 
 def render_transit_comparison(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_transit_comparison", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_transit_comparison", *args, **kwargs)
 
 
 def render_twelve_ci_chart(*args, **kwargs):
@@ -328,15 +486,15 @@ def render_twelve_ci_chart(*args, **kwargs):
 
 
 def render_wuyunliuqi_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_wuyunliuqi.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.wuyunliuqi.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_wuyunliuqi_intro(*args, **kwargs):
-    return _call("ui.handlers.tab_wuyunliuqi.render", "render_wuyunliuqi_intro", *args, **kwargs)
+    return _call("astro.wuyunliuqi.renderer", "render_wuyunliuqi_intro", *args, **kwargs)
 
 
 def render_zhangguo(*args, **kwargs):
-    return _call("ui.handlers.tab_chinese.render", "render_zhangguo", *args, **kwargs)
+    return _call("astro.qizheng.chart_renderer", "render_zhangguo", *args, **kwargs)
 
 
 # Western systems
@@ -410,7 +568,7 @@ def render_babylonian_chart(*args, **kwargs):
 
 
 def render_cosmobiology(*args, **kwargs):
-    return _call("ui.handlers.tab_cosmobiology.render", "render_cosmobiology", *args, **kwargs)
+    return _call("astro.cosmobiology.renderer", "render_cosmobiology", *args, **kwargs)
 
 
 def render_draconic_chart(*args, **kwargs):
@@ -434,7 +592,7 @@ def render_fludd_rota(*args, **kwargs):
 
 
 def render_harmonic(*args, **kwargs):
-    return _call("ui.handlers.tab_harmonic.render", "render_harmonic", *args, **kwargs)
+    return _call("astro.harmonic.renderer", "render_harmonic", *args, **kwargs)
 
 
 def render_harmonic_chart(*args, **kwargs):
@@ -458,11 +616,11 @@ def render_predictive_suite(*args, **kwargs):
 
 
 def render_primary_directions(*args, **kwargs):
-    return _call("ui.handlers.tab_primary_directions.render", "render_primary_directions", *args, **kwargs)
+    return _call("astro.primary_directions.renderer", "render_primary_directions", *args, **kwargs)
 
 
 def render_rectification_page(*args, **kwargs):
-    return _call("ui.handlers.tab_rectification.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.rectification.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_trutine_chart(*args, **kwargs):
@@ -568,7 +726,7 @@ def render_celtic_tree_chart(*args, **kwargs):
 
 
 def render_jawa_weton_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_jawa_weton.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.jawa_weton.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_kinketika_chart(*args, **kwargs):
@@ -576,11 +734,11 @@ def render_kinketika_chart(*args, **kwargs):
 
 
 def render_lao_horasat(*args, **kwargs):
-    return _call("ui.handlers.tab_laos.render", "render_lao_horasat", *args, **kwargs)
+    return _call("astro.laos.renderer", "render_lao_horasat", *args, **kwargs)
 
 
 def render_liuyao_lifetime_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_liuyao_lifetime.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.liuyao_lifetime.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_mahabote_chart(*args, **kwargs):
@@ -612,7 +770,7 @@ def render_tibetan_chart(*args, **kwargs):
 
 
 def render_wariga_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_wariga.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.wariga.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_zurkhai_chart(*args, **kwargs):
@@ -687,7 +845,7 @@ def render_amazigh_sky_svg(*args, **kwargs):
 
 
 def render_arabic_chart(*args, **kwargs):
-    return _call("astro.arabic", "render_streamlit", *args, **kwargs)
+    return _call("astro.arabic.arabic", "render_arabic_chart", *args, **kwargs)
 
 
 def render_arabic_lots_dashboard(*args, **kwargs):
@@ -801,11 +959,11 @@ def render_aztec_chart(*args, **kwargs):
 
 
 def render_decan_browse(*args, **kwargs):
-    return _call("ui.handlers.tab_egyptian_decans.render", "render_decan_browse", *args, **kwargs)
+    return _call("astro.egyptian.decans", "render_decan_browse", *args, **kwargs)
 
 
 def render_decan_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_egyptian_decans.render", "render_decan_chart", *args, **kwargs)
+    return _call("astro.egyptian.decans", "render_decan_chart", *args, **kwargs)
 
 
 def render_etruscan_chart_ui(*args, **kwargs):
@@ -817,7 +975,7 @@ def render_maya_chart(*args, **kwargs):
 
 
 def render_sumerian_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_sumerian.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.sumerian.renderer", "render_streamlit", *args, **kwargs)
 
 
 # Sanshi / specialty systems
@@ -839,11 +997,11 @@ def compute_taiyi_chart(*args, **kwargs):
 
 
 def render_horary_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_horary.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.horary.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_medical_astrology_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_medical_astrology.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.medical_astrology.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_qimen_luming(*args, **kwargs):
@@ -851,7 +1009,7 @@ def render_qimen_luming(*args, **kwargs):
 
 
 def render_shanghan_qianfa_chart(*args, **kwargs):
-    return _call("ui.handlers.tab_shanghan_qianfa.render", "render_streamlit", *args, **kwargs)
+    return _call("astro.shanghan_qianfa.renderer", "render_streamlit", *args, **kwargs)
 
 
 def render_sports_astrology_chart(*args, **kwargs):

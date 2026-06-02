@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 import json
 
-from core.cache import cache_data, cache_resource
+import streamlit as st
+
 from astro.swe_init import init_swisseph
 from astro.western.western import compute_western_chart
 from astro.western.western_transit import compute_western_transits
@@ -18,17 +19,17 @@ from astro.systems.base import BaseChart
 _DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "armenian"
 
 
-@cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def _load_signs() -> List[Dict[str, Any]]:
     return json.loads((_DATA_DIR / "armenian_signs.json").read_text(encoding="utf-8"))["signs"]
 
 
-@cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def _load_keywords() -> Dict[str, List[str]]:
     return json.loads((_DATA_DIR / "armenian_keywords.json").read_text(encoding="utf-8"))
 
 
-@cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def _load_cultural_sources() -> List[Dict[str, str]]:
     return json.loads((_DATA_DIR / "cultural_sources.json").read_text(encoding="utf-8"))
 
@@ -99,7 +100,7 @@ class ArmenianChart(BaseChart):
         return dedup
 
     @classmethod
-    @cache_data(ttl=3600, show_spinner=False)
+    @st.cache_data(ttl=3600, show_spinner=False)
     def compute_natal(
         cls,
         year: int,
@@ -179,7 +180,7 @@ class ArmenianChart(BaseChart):
         )
 
     @staticmethod
-    @cache_data(ttl=1800, show_spinner=False)
+    @st.cache_data(ttl=1800, show_spinner=False)
     def compute_transit(
         natal_chart: "ArmenianChart",
         year: int,
@@ -200,7 +201,7 @@ class ArmenianChart(BaseChart):
         ).__dict__
 
     @staticmethod
-    @cache_data(ttl=1800, show_spinner=False)
+    @st.cache_data(ttl=1800, show_spinner=False)
     def compute_progression(
         natal_chart: "ArmenianChart",
         target_age: float,
@@ -216,7 +217,7 @@ class ArmenianChart(BaseChart):
         ).__dict__
 
     @staticmethod
-    @cache_data(ttl=1800, show_spinner=False)
+    @st.cache_data(ttl=1800, show_spinner=False)
     def compute_solar_return(
         natal_chart: "ArmenianChart",
         target_year: int,

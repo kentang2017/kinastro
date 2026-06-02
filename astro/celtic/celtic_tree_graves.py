@@ -33,6 +33,7 @@ The calendar begins on the Winter Solstice eve (Dec 24) with Beth
 
 from __future__ import annotations
 
+import streamlit as st
 from core.streamlit_lazy import lazy_streamlit as st
 from dataclasses import dataclass
 from datetime import date, datetime

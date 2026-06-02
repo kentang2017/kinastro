@@ -739,7 +739,7 @@ class TestLimingMansionCalculation:
 
     def test_full_chart_liming_labels(self):
         """透過 compute_chart 驗證今制=參水八度立命，古制=井木十一度立命"""
-        from astro.qizheng.chart_renderer import _format_liming_mansion
+        from ui.handlers.tab_chinese.render import _format_liming_mansion
         chart = compute_chart(
             year=1985, month=8, day=26, hour=2, minute=55,
             timezone=8.0, latitude=22.4501, longitude=114.1688,

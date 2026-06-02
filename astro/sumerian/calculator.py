@@ -25,7 +25,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 import swisseph as swe
-from core.cache import cache_data, cache_resource
+import streamlit as st
+
 from .constants import (
     SUMERIAN_ZODIAC_SIGNS,
     ZODIAC_SIGN_ORDER,
@@ -321,7 +322,7 @@ def _heliacal_stars_for_month(month: int) -> List[Dict]:
 # Main compute function
 # ============================================================
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_sumerian_chart(
     year: int,
     month: int,

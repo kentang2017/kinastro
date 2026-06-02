@@ -40,7 +40,7 @@ from astro.esoteric.calculator import (
     _build_ray_tally,
     RayTally,
 )
-from astro.esoteric import render_esoteric_chart_svg
+from ui.handlers.tab_esoteric.render import render_esoteric_chart_svg
 
 
 # ============================================================

@@ -4,7 +4,7 @@ astro/vedic_dasha.py — Vimshottari & Yogini Dasha 大運系統
 Vimshottari: 120-year cycle based on Moon's nakshatra lord.
 Yogini: 36-year cycle with 8 Yogini periods.
 """
-from core.cache import cache_data, cache_resource
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -64,7 +64,7 @@ class YoginiResult:
     periods: list = field(default_factory=list)
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_vimshottari(moon_longitude: float, birth_jd: float) -> VimshottariResult:
     """Compute Vimshottari Dasha (120-year cycle) from Moon's longitude."""
     nak_span = 13.333333333333334  # 360/27
@@ -137,7 +137,7 @@ def _compute_antardasha(maha_lord: str, start_jd: float, end_jd: float,
     return subs
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_yogini(moon_longitude: float, birth_jd: float) -> YoginiResult:
     """Compute Yogini Dasha (36-year cycle)."""
     nak_span = 13.333333333333334

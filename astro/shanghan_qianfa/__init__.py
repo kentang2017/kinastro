@@ -9,9 +9,34 @@ using stem-branch (干支) Qianfa push-calculation to identify the Six Channels
 
 from .calculator import compute_shanghan_qianfa, ShanghanResult
 
-def render_streamlit(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the render_streamlit renderer for this package."""
-    from ui.handlers.tab_shanghan_qianfa.render import render_streamlit as _fn
-    return _fn(*args, **kwargs)
+
+# Lazy re-export: the renderer module moved to ``ui.handlers.tab_shanghan_qianfa.render`` during
+# the phase-7 compute/render split, but legacy callers still expect to
+# find the names at ``astro.shanghan_qianfa.<name>``. PEP 562 __getattr__ keeps
+# ``import astro.astro.shanghan_qianfa`` free of streamlit until a caller actually
+# accesses the symbol.
+_NEW_HOME = "ui.handlers.tab_shanghan_qianfa.render"
+_NAMES = ['render_streamlit']
+_LEGACY = "shanghan_qianfa.renderer"
+
+
+def __getattr__(name):
+    if name in _NAMES:
+        try:
+            import importlib
+            mod = importlib.import_module(_NEW_HOME)
+            value = getattr(mod, name)
+        except (ImportError, AttributeError):
+            try:
+                import importlib
+                legacy = importlib.import_module(_LEGACY, __name__)
+                value = getattr(legacy, name)
+            except (ImportError, AttributeError):
+                raise AttributeError(
+                    "module %r has no attribute %r" % (__name__, name)
+                )
+        globals()[name] = value
+        return value
+    raise AttributeError("module %r has no attribute %r" % (__name__, name))
 
 __all__ = ["compute_shanghan_qianfa", "ShanghanResult", "render_streamlit"]

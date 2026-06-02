@@ -44,6 +44,7 @@ from astro.tieban.tieban_calculator import (
     TieBanResult,
     TiaowenDatabase,
 )
+from astro.tieban.tieban_renderer import render_tieban_chart_svg
 from astro.tieban.kunji_full_structure import (
     kou_ru_fa,
     advanced_kou_ru_fa,
@@ -95,4 +96,6 @@ __all__ = [
     "SUIJUN_ADD",
     "NAYIN_ADD",
     "NAYIN_TO_ELEMENT",
+    # 渲染器
+    "render_tieban_chart_svg",
 ]

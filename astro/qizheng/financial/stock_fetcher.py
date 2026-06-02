@@ -19,8 +19,9 @@ from datetime import date, datetime, timezone
 from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from core.cache import cache_data
 
-from core.cache import cache_data, cache_resource
+
 @dataclass
 class StockInfo:
     """股票基本資訊"""

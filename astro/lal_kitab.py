@@ -1,3 +1,4 @@
+import streamlit as st
 """
 Lal Kitab (लाल किताब / 紅皮書) Astrology Module
 Pt. Roop Chand Joshi's system — Kal Purush Kundli

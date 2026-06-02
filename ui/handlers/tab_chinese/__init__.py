@@ -6,7 +6,7 @@ this package is the streamlit-side dispatcher.
 
 from __future__ import annotations
 
-from .render import (
+from .render_financial import (
     render_stock_fortune_tab,
 )
 

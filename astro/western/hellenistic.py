@@ -5,7 +5,7 @@ Lots, Egyptian Bounds, Annual Profections, Zodiacal Releasing,
 Planetary Condition scoring, Sect analysis, Greek horoscope SVG chart.
 """
 import math
-from core.streamlit_lazy import lazy_streamlit as st
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 
@@ -56,8 +56,6 @@ DETRIMENT = {"Sun": [10], "Moon": [9], "Mars": [1,6], "Mercury": [8,11],
 FALL = {"Sun": 6, "Moon": 7, "Mars": 3, "Mercury": 11,
         "Jupiter": 9, "Venus": 5, "Saturn": 0}
 
-
-from core.cache import cache_data, cache_resource
 
 def _sign_idx(lon): return int(lon / 30) % 12
 def _sign_deg(lon): return lon % 30
@@ -297,7 +295,7 @@ def _compute_sect(planet_longs, planet_houses, is_day):
     }
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_hellenistic_chart(western_chart, birth_year=None,
                               current_year=None, current_jd=None):
     """Derive Hellenistic techniques from a WesternChart."""

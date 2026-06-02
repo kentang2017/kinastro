@@ -27,7 +27,7 @@ astro/tibetan.py — 西藏占星 / 時輪金剛占星 (Tibetan Kalachakra Astro
 """
 
 import math
-from core.cache import cache_data, cache_resource
+import streamlit as st
 import swisseph as swe
 from dataclasses import dataclass, field
 from datetime import date
@@ -517,7 +517,7 @@ class TibetanChart:
 # 主計算函數 (Main Computation)
 # ============================================================
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_tibetan_chart(year, month, day, hour, minute,
                           timezone, latitude, longitude,
                           location_name="", gender="male") -> TibetanChart:

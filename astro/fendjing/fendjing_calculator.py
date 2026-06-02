@@ -9,6 +9,7 @@ astro/sanshi/fendjing.py — 鬼谷分定經排盤模組 (Ghost Valley Fen Ding 
 
 from __future__ import annotations
 
+import streamlit as st
 import pickle
 from core.streamlit_lazy import lazy_streamlit as st
 from astro.i18n import t, auto_cn

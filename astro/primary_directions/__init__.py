@@ -29,18 +29,37 @@ from .calculator import (
     Direction,
     PrimaryDirectionsResult,
 )
-
-def render_primary_directions(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the render_primary_directions renderer for this package."""
-    from ui.handlers.tab_primary_directions.render import render_primary_directions as _fn
-    return _fn(*args, **kwargs)
-
-
-def render_primary_directions_svg(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load the render_primary_directions_svg renderer for this package."""
-    from ui.handlers.tab_primary_directions.render import render_primary_directions_svg as _fn
-    return _fn(*args, **kwargs)
 from .constants import EXAMPLE_CHARTS
+
+
+# Lazy re-export: the renderer module moved to ``ui.handlers.tab_primary_directions.render`` during
+# the phase-7 compute/render split, but legacy callers still expect to
+# find the names at ``astro.primary_directions.<name>``. PEP 562 __getattr__ keeps
+# ``import astro.astro.primary_directions`` free of streamlit until a caller actually
+# accesses the symbol.
+_NEW_HOME = "ui.handlers.tab_primary_directions.render"
+_NAMES = ['render_primary_directions', 'render_primary_directions_svg']
+_LEGACY = "primary_directions.renderer"
+
+
+def __getattr__(name):
+    if name in _NAMES:
+        try:
+            import importlib
+            mod = importlib.import_module(_NEW_HOME)
+            value = getattr(mod, name)
+        except (ImportError, AttributeError):
+            try:
+                import importlib
+                legacy = importlib.import_module(_LEGACY, __name__)
+                value = getattr(legacy, name)
+            except (ImportError, AttributeError):
+                raise AttributeError(
+                    "module %r has no attribute %r" % (__name__, name)
+                )
+        globals()[name] = value
+        return value
+    raise AttributeError("module %r has no attribute %r" % (__name__, name))
 
 __all__ = [
     "compute_primary_directions",

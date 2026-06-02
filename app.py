@@ -47,10 +47,7 @@ from ui.system_handlers.dispatch import (
 )
 
 # ── Compute helpers ───────────────────────────────────────────────────────
-from core.cached_computations import (
-    invalidate_chart_cache_if_birth_changed,
-    build_overview_items,
-)
+from core.cached_computations import invalidate_chart_cache_if_birth_changed
 
 # ── System registry & ziwei (needed for EXECUTION_REGISTRY) ──────────────
 from astro.system_registry import get_system
@@ -237,6 +234,105 @@ if st.session_state.get("_calc_success_flash"):
 if _qp_restored and not st.session_state.get("_qp_notice_shown"):
     st.success(t("share_chart_loaded"))
     st.session_state["_qp_notice_shown"] = True
+
+# ── Overview dashboard build helper ────────────────────────────────────────
+def build_overview_items(
+    params: dict[str, Any], gender: str, get_system_fn, t_fn
+) -> list[dict[str, Any]]:
+    """Build overview cards for popular systems in priority order.
+    
+    延遲導入 compute 函數以加快啟動速度：
+    - astro.western.western: ~1.4s (最大瓶頸)
+    - astro.ziwei, astro.qizheng, astro.vedic: ~0.1s each
+    """
+    items = []
+    
+    # 延遲導入 compute 函數 (僅在需要時載入)
+    from astro.western.western import compute_western_chart
+    from astro.ziwei import compute_ziwei_chart
+    from astro.qizheng.calculator import compute_chart
+    from astro.vedic.indian import compute_vedic_chart
+
+    # Western astrology
+    try:
+        west = compute_western_chart(**params)
+        sun = next(
+            (p for p in getattr(west, "planets", []) if "Sun" in getattr(p, "name", "")),
+            None,
+        )
+        sun_sign = (
+            getattr(sun, "sign_chinese", "")
+            or getattr(sun, "sign", "")
+            or "-"
+        )
+        items.append(
+            {
+                "system_id": "tab_western",
+                "icon": get_system_fn("tab_western").icon,
+                "title": t_fn(get_system_fn("tab_western").tab_key),
+                "metric_main": f"☉ {sun_sign}",
+                "metric_sub": f"P:{len(getattr(west, 'planets', []))} · A:{len(getattr(west, 'aspects', []))}",
+                "accent": get_system_fn("tab_western").accent_color,
+            }
+        )
+    except Exception:
+        pass
+
+    # Ziwei
+    try:
+        ziwei = compute_ziwei_chart(**params, gender=gender)
+        items.append(
+            {
+                "system_id": "tab_ziwei",
+                "icon": get_system_fn("tab_ziwei").icon,
+                "title": t_fn(get_system_fn("tab_ziwei").tab_key),
+                "metric_main": f"{getattr(ziwei, 'ming_zhu', '-')}",
+                "metric_sub": f"宮:{len(getattr(ziwei, 'palaces', []))} · 局:{getattr(ziwei, 'wu_xing_ju', '-')}",
+                "accent": get_system_fn("tab_ziwei").accent_color,
+            }
+        )
+    except Exception:
+        pass
+
+    # Chinese (Qizheng)
+    try:
+        chinese = compute_chart(**params, gender=gender)
+        items.append(
+            {
+                "system_id": "tab_chinese",
+                "icon": get_system_fn("tab_chinese").icon,
+                "title": t_fn(get_system_fn("tab_chinese").tab_key),
+                "metric_main": f"{getattr(chinese, 'solar_month', '-')}",
+                "metric_sub": f"P:{len(getattr(chinese, 'planets', []))} · H:{len(getattr(chinese, 'houses', []))}",
+                "accent": get_system_fn("tab_chinese").accent_color,
+            }
+        )
+    except Exception:
+        pass
+
+    # Vedic
+    try:
+        vedic = compute_vedic_chart(**params)
+        moon = next(
+            (p for p in getattr(vedic, "planets", []) if "Chandra" in getattr(p, "name", "")),
+            None,
+        )
+        nak = getattr(moon, "nakshatra", "-")
+        items.append(
+            {
+                "system_id": "tab_indian",
+                "icon": get_system_fn("tab_indian").icon,
+                "title": t_fn(get_system_fn("tab_indian").tab_key),
+                "metric_main": f"☾ {nak}",
+                "metric_sub": f"P:{len(getattr(vedic, 'planets', []))} · H:{len(getattr(vedic, 'houses', []))}",
+                "accent": get_system_fn("tab_indian").accent_color,
+            }
+        )
+    except Exception:
+        pass
+
+    return items
+
 
 # ── Overview dashboard (when no system selected yet) ─────────────────────
 if not _selected_system:

@@ -15,10 +15,34 @@ astro/tojeong — 土亭數排盤模組 (Tojeong Shu / 土亭數)
 from .tojeong_calculator import compute_tojeong_chart, get_tojeong_pattern
 
 
-def render_tojeong_chart(*args, **kwargs):  # type: ignore[no-redef]
-    """Lazy-load and call the Streamlit renderer for Tojeong charts."""
-    from ui.handlers.tab_tojeong.render import render_tojeong_chart as _fn
-    return _fn(*args, **kwargs)
+# Lazy re-export: the renderer module moved to ``ui.handlers.tab_tojeong.render`` during
+# the phase-7 compute/render split, but legacy callers still expect to
+# find the names at ``astro.tojeong.<name>``. PEP 562 __getattr__ keeps
+# ``import astro.astro.tojeong`` free of streamlit until a caller actually
+# accesses the symbol.
+_NEW_HOME = "ui.handlers.tab_tojeong.render"
+_NAMES = ['render_tojeong_chart']
+_LEGACY = "tojeong.renderer"
+
+
+def __getattr__(name):
+    if name in _NAMES:
+        try:
+            import importlib
+            mod = importlib.import_module(_NEW_HOME)
+            value = getattr(mod, name)
+        except (ImportError, AttributeError):
+            try:
+                import importlib
+                legacy = importlib.import_module(_LEGACY, __name__)
+                value = getattr(legacy, name)
+            except (ImportError, AttributeError):
+                raise AttributeError(
+                    "module %r has no attribute %r" % (__name__, name)
+                )
+        globals()[name] = value
+        return value
+    raise AttributeError("module %r has no attribute %r" % (__name__, name))
 
 __all__ = [
     "compute_tojeong_chart",

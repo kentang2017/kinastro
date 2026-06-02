@@ -5,7 +5,7 @@ Shams al-Maʻārif al-Kubrā - Wafq & Talisman Generator
 功能全部包含：
 - Class 形式
 - Abjad 計算
-- Magic Square 生成（3\~9階）
+- Magic Square 生成（3~9階）
 - 99 美名完整資料表（含行星、用途、時辰建議）
 - 行星時辰計算器
 - SVG 護符自動生成（可直接列印）
@@ -14,7 +14,16 @@ Shams al-Maʻārif al-Kubrā - Wafq & Talisman Generator
 from typing import List, Dict, Tuple, Optional
 from datetime import datetime, timedelta
 import math
-import svgwrite  # pip install svgwrite
+
+# svgwrite is only required for the optional ``generate_talisman_svg``
+# helper. Make it a soft import so that unit tests for the abjad /
+# magic-square / planetary-hour paths don't need the extra package.
+try:
+    import svgwrite  # type: ignore[import-untyped]  # pip install svgwrite
+    _HAS_SVGWRITE = True
+except ImportError:  # pragma: no cover - exercised only on bare installs
+    svgwrite = None  # type: ignore[assignment]
+    _HAS_SVGWRITE = False
 
 class IslamicWafqGenerator:
     # ====================== Abjad 字典 ======================
@@ -137,7 +146,7 @@ class IslamicWafqGenerator:
 
     # ====================== 魔方生成（書中核心技法） ======================
     def generate_magic_square(self, n: int) -> List[List[int]]:
-        """產生 n×n 魔方（支援 3\~9 階）"""
+        """產生 n×n 魔方（支援 3~9 階）"""
         if n == 4:  # 書中最常用 4×4（字母「د」）
             return [
                 [16, 3, 2, 13], [5, 10, 11, 8],
@@ -154,7 +163,7 @@ class IslamicWafqGenerator:
                 else:
                     x, y = nx, ny
             return square
-        raise ValueError("目前支援 3\~9 階，偶數階僅支援 4×4")
+        raise ValueError("目前支援 3~9 階，偶數階僅支援 4×4")
 
     # ====================== 行星時辰計算器 ======================
     def planetary_hours(self, date: datetime, latitude: float = 25.0) -> Dict:
@@ -181,9 +190,20 @@ class IslamicWafqGenerator:
         return hours
 
     # ====================== SVG 護符生成（可直接列印） ======================
-    def generate_talisman_svg(self, square: List[List[int]], title: str = "Wafq", 
+    def generate_talisman_svg(self, square: List[List[int]], title: str = "Wafq",
                               asma: str = "", filename: str = "talisman.svg"):
-        """生成可列印的 SVG 護符圖"""
+        """生成可列印的 SVG 護符圖
+
+        Raises ``RuntimeError`` if ``svgwrite`` is not installed. The
+        abjad / magic-square / planetary-hour logic in the rest of the
+        class doesn't need SVG output, so this method is the only
+        svgwrite consumer.
+        """
+        if not _HAS_SVGWRITE:
+            raise RuntimeError(
+                "svgwrite is required for generate_talisman_svg(); "
+                "install it with `pip install svgwrite`."
+            )
         dwg = svgwrite.Drawing(filename, size=("400px", "450px"))
         
         # 邊框

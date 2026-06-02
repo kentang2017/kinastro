@@ -3,6 +3,17 @@
 All ``@st.cache_data`` / ``@st.cache_resource`` wrappers live here so
 they can be shared across the thin ``app.py`` and system-handler modules
 without circular imports.
+
+Lazy import policy
+------------------
+The astro compute modules are *only* imported on first call to the
+matching wrapper. This is critical: importing this module was the
+biggest cold-start cost in the whole project (≈1.1s out of 1.5s
+total) because it eagerly pulled in 44 astro submodules. Each
+wrapper now does ``from astro.<x> import <fn> as _fn`` inside its
+body so the cost is paid only when the user actually visits the
+matching tab. ``app.py`` and the 5 system handlers import only a few
+named wrappers, so the wrappers themselves are cheap.
 """
 
 from __future__ import annotations
@@ -12,32 +23,8 @@ from typing import Any
 
 import streamlit as st
 
-# ── Astro compute imports ────────────────────────────────────────────────────
-from astro.qizheng.calculator import compute_chart
-from astro.qizheng.shensha import compute_shensha
-from astro.qizheng.qizheng_dasha import compute_dasha
-from astro.qizheng.qizheng_transit import compute_transit, compute_transit_now
-from astro.qizheng.zhangguo import compute_zhangguo
-from astro.western.western import compute_western_chart
-from astro.western.western_transit import compute_western_transits
-from astro.western.western_return import compute_solar_return
-from astro.western.western_synastry import compute_synastry
-from astro.western.western_love_synastry import compute_love_synastry
-from astro.western.fixed_stars import compute_fixed_star_positions
-from astro.western.asteroids import compute_asteroids
-from astro.western.advanced_bodies import calculate_parans, calculate_heliacal
-from astro.vedic.indian import compute_vedic_chart
-from astro.vedic.vedic_dasha import compute_vimshottari, compute_yogini
-from astro.vedic.ashtakavarga import compute_ashtakavarga
-from astro.vedic.vedic_yogas import compute_yogas
-from astro.vedic.bphs_engine import compute_bphs
-from astro.vedic.varga import compute_varga_chart
-from astro.thai import compute_thai_chart
-from astro.ziwei import compute_ziwei_chart
-from astro.cetian_ziwei import compute_cetian_ziwei_chart
-from astro.jewish_mazzalot import compute_mazzalot_chart, build_mazzalot_star_of_david_svg
 
-# ── Key helpers ──────────────────────────────────────────────────────────────
+# ── Key helpers (module-level: tiny, no astro deps) ──────────────────────────
 
 _BIRTH_KEY_FIELDS = ("year", "month", "day", "hour", "minute", "latitude", "longitude", "timezone")
 
@@ -94,45 +81,40 @@ def compute_taixuan_natal_cached(year: int, month: int, day: int, hour: int):
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_system_cached(system_name: str, birth_sig: tuple[Any, ...], options_sig: tuple[tuple[str, Any], ...]):
+    from astro.qizheng.calculator import compute_chart as _compute_chart
+    from astro.western.western import compute_western_chart as _compute_western_chart
+    from astro.vedic.indian import compute_vedic_chart as _compute_vedic_chart
+    from astro.thai import compute_thai_chart as _compute_thai_chart
+    from astro.ziwei import compute_ziwei_chart as _compute_ziwei_chart
+    from astro.cetian_ziwei import compute_cetian_ziwei_chart as _compute_cetian_ziwei_chart
+    from astro.jewish_mazzalot import compute_mazzalot_chart as _compute_mazzalot_chart
     year, month, day, hour, minute, latitude, longitude, timezone = birth_sig
     options = dict(options_sig)
     common_kwargs = dict(
-        year=year,
-        month=month,
-        day=day,
-        hour=hour,
-        minute=minute,
-        latitude=latitude,
-        longitude=longitude,
-        timezone=timezone,
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        latitude=latitude, longitude=longitude, timezone=timezone,
         location_name=options.get("location_name", ""),
     )
     if system_name == "tab_chinese":
-        return compute_chart(**common_kwargs, gender=options.get("gender", "male"))
+        return _compute_chart(**common_kwargs, gender=options.get("gender", "male"))
     if system_name == "tab_western":
-        return compute_western_chart(**common_kwargs, sidereal=bool(options.get("sidereal", False)))
+        return _compute_western_chart(**common_kwargs, sidereal=bool(options.get("sidereal", False)))
     if system_name == "tab_indian":
-        return compute_vedic_chart(**common_kwargs)
+        return _compute_vedic_chart(**common_kwargs)
     if system_name == "tab_thai":
-        return compute_thai_chart(**common_kwargs)
+        return _compute_thai_chart(**common_kwargs)
     if system_name == "tab_ziwei":
-        return compute_ziwei_chart(
+        return _compute_ziwei_chart(
             **common_kwargs,
             gender=options.get("gender", "male"),
             vietnam_mode=bool(options.get("vietnam_mode", False)),
         )
     if system_name == "tab_cetian_ziwei":
-        return compute_cetian_ziwei_chart(**common_kwargs, gender=options.get("gender", "male"))
+        return _compute_cetian_ziwei_chart(**common_kwargs, gender=options.get("gender", "male"))
     if system_name == "tab_mazzalot":
-        return compute_mazzalot_chart(
-            year=year,
-            month=month,
-            day=day,
-            hour=hour,
-            minute=minute,
-            timezone=timezone,
-            lat=latitude,
-            lon=longitude,
+        return _compute_mazzalot_chart(
+            year=year, month=month, day=day, hour=hour, minute=minute,
+            timezone=timezone, lat=latitude, lon=longitude,
         )
     raise ValueError(f"Unsupported cached system: {system_name}")
 
@@ -158,7 +140,8 @@ def invalidate_chart_cache_if_birth_changed(params: dict[str, Any]) -> None:
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_transit_now_cached(timezone: float):
-    return compute_transit_now(timezone=timezone)
+    from astro.qizheng.qizheng_transit import compute_transit_now as _fn
+    return _fn(timezone=timezone)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -172,14 +155,11 @@ def compute_shensha_cached(
     timezone: float,
     ming_gong_branch: str,
 ):
+    from astro.qizheng.shensha import compute_shensha as _fn
     _ = chart_key
-    return compute_shensha(
-        year=year,
-        solar_month=solar_month,
-        julian_day=julian_day,
-        hour_branch=hour_branch,
-        timezone=timezone,
-        ming_gong_branch=ming_gong_branch,
+    return _fn(
+        year=year, solar_month=solar_month, julian_day=julian_day,
+        hour_branch=hour_branch, timezone=timezone, ming_gong_branch=ming_gong_branch,
     )
 
 
@@ -193,32 +173,25 @@ def compute_dasha_cached(
     houses,
     current_year: int,
 ):
+    from astro.qizheng.qizheng_dasha import compute_dasha as _fn
     _ = chart_key
-    return compute_dasha(
-        birth_year=birth_year,
-        ming_gong_branch=ming_gong_branch,
-        gender=gender,
-        houses=houses,
-        current_year=current_year,
+    return _fn(
+        birth_year=birth_year, ming_gong_branch=ming_gong_branch,
+        gender=gender, houses=houses, current_year=current_year,
     )
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_transit_cached(*, year: int, month: int, day: int, hour: int, minute: int, timezone: float):
-    return compute_transit(
-        year=year,
-        month=month,
-        day=day,
-        hour=hour,
-        minute=minute,
-        timezone=timezone,
-    )
+    from astro.qizheng.qizheng_transit import compute_transit as _fn
+    return _fn(year=year, month=month, day=day, hour=hour, minute=minute, timezone=timezone)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_zhangguo_cached(chart_key: tuple[Any, ...], planets, houses, gender: str):
+    from astro.qizheng.zhangguo import compute_zhangguo as _fn
     _ = chart_key
-    return compute_zhangguo(planets=planets, houses=houses, gender=gender)
+    return _fn(planets=planets, houses=houses, gender=gender)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -226,15 +199,12 @@ def compute_western_transits_cached(
     birth_sig: tuple[Any, ...],
     sidereal: bool,
     location_name: str,
-    t_year: int,
-    t_month: int,
-    t_day: int,
-    t_hour: int,
-    t_minute: int,
+    t_year: int, t_month: int, t_day: int, t_hour: int, t_minute: int,
 ):
+    from astro.western.western_transit import compute_western_transits as _fn
     _, _, _, _, _, _, _, timezone = birth_sig
     natal = compute_system_cached("tab_western", birth_sig, _options_sig({"sidereal": sidereal, "location_name": location_name}))
-    return compute_western_transits(natal, t_year, t_month, t_day, t_hour, t_minute, timezone)
+    return _fn(natal, t_year, t_month, t_day, t_hour, t_minute, timezone)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -246,7 +216,8 @@ def compute_solar_return_cached(
     timezone: float,
     location_name: str,
 ):
-    return compute_solar_return(sun_longitude, return_year, latitude, longitude, timezone, location_name)
+    from astro.western.western_return import compute_solar_return as _fn
+    return _fn(sun_longitude, return_year, latitude, longitude, timezone, location_name)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -254,30 +225,18 @@ def compute_synastry_cached(
     natal_sig: tuple[Any, ...],
     sidereal: bool,
     location_name: str,
-    b_year: int,
-    b_month: int,
-    b_day: int,
-    b_hour: int,
-    b_minute: int,
-    b_tz: float,
-    b_lat: float,
-    b_lon: float,
-    b_location_name: str,
+    b_year: int, b_month: int, b_day: int, b_hour: int, b_minute: int,
+    b_tz: float, b_lat: float, b_lon: float, b_location_name: str,
 ):
+    from astro.western.western import compute_western_chart as _wc
+    from astro.western.western_synastry import compute_synastry as _fn
     natal = compute_system_cached("tab_western", natal_sig, _options_sig({"sidereal": sidereal, "location_name": location_name}))
-    w_b = compute_western_chart(
-        year=b_year,
-        month=b_month,
-        day=b_day,
-        hour=b_hour,
-        minute=b_minute,
-        timezone=b_tz,
-        latitude=b_lat,
-        longitude=b_lon,
-        location_name=b_location_name,
-        sidereal=sidereal,
+    w_b = _wc(
+        year=b_year, month=b_month, day=b_day, hour=b_hour, minute=b_minute,
+        timezone=b_tz, latitude=b_lat, longitude=b_lon,
+        location_name=b_location_name, sidereal=sidereal,
     )
-    return compute_synastry(natal, w_b, "Person A", "Person B")
+    return _fn(natal, w_b, "Person A", "Person B")
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -286,85 +245,83 @@ def compute_love_synastry_cached(
     sidereal: bool,
     location_name: str,
     name_a: str,
-    b_year: int,
-    b_month: int,
-    b_day: int,
-    b_hour: int,
-    b_minute: int,
-    b_tz: float,
-    b_lat: float,
-    b_lon: float,
-    b_location_name: str,
+    b_year: int, b_month: int, b_day: int, b_hour: int, b_minute: int,
+    b_tz: float, b_lat: float, b_lon: float, b_location_name: str,
     name_b: str,
 ):
+    from astro.western.western import compute_western_chart as _wc
+    from astro.western.western_love_synastry import compute_love_synastry as _fn
     natal = compute_system_cached("tab_western", natal_sig, _options_sig({"sidereal": sidereal, "location_name": location_name}))
-    w_b = compute_western_chart(
-        year=b_year,
-        month=b_month,
-        day=b_day,
-        hour=b_hour,
-        minute=b_minute,
-        timezone=b_tz,
-        latitude=b_lat,
-        longitude=b_lon,
-        location_name=b_location_name,
-        sidereal=sidereal,
+    w_b = _wc(
+        year=b_year, month=b_month, day=b_day, hour=b_hour, minute=b_minute,
+        timezone=b_tz, latitude=b_lat, longitude=b_lon,
+        location_name=b_location_name, sidereal=sidereal,
     )
-    return compute_love_synastry(natal, w_b, name_a, name_b)
+    return _fn(natal, w_b, name_a, name_b)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_vimshottari_cached(moon_longitude: float, julian_day: float):
-    return compute_vimshottari(moon_longitude, julian_day)
+    from astro.vedic.vedic_dasha import compute_vimshottari as _fn
+    return _fn(moon_longitude, julian_day)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_yogini_cached(moon_longitude: float, julian_day: float):
-    return compute_yogini(moon_longitude, julian_day)
+    from astro.vedic.vedic_dasha import compute_yogini as _fn
+    return _fn(moon_longitude, julian_day)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_ashtakavarga_cached(p_lons_items: tuple[tuple[str, float], ...], asc_lon: float):
-    return compute_ashtakavarga(dict(p_lons_items), asc_lon)
+    from astro.vedic.ashtakavarga import compute_ashtakavarga as _fn
+    return _fn(dict(p_lons_items), asc_lon)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_yogas_cached(p_lons_items: tuple[tuple[str, float], ...], asc_lon: float):
-    return compute_yogas(dict(p_lons_items), asc_lon)
+    from astro.vedic.vedic_yogas import compute_yogas as _fn
+    return _fn(dict(p_lons_items), asc_lon)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_bphs_cached(birth_sig: tuple[Any, ...], location_name: str):
+    from astro.vedic.bphs_engine import compute_bphs as _fn
     v_chart = compute_system_cached("tab_indian", birth_sig, _options_sig({"location_name": location_name}))
-    return compute_bphs(v_chart.planets, v_chart.houses, v_chart.ascendant)
+    return _fn(v_chart.planets, v_chart.houses, v_chart.ascendant)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_varga_cached(varga_key: str, birth_sig: tuple[Any, ...], location_name: str):
+    from astro.vedic.varga import compute_varga_chart as _fn
     v_chart = compute_system_cached("tab_indian", birth_sig, _options_sig({"location_name": location_name}))
-    return compute_varga_chart(varga_key, v_chart.planets, v_chart.ascendant)
+    return _fn(varga_key, v_chart.planets, v_chart.ascendant)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_asteroids_cached(julian_day: float, heliocentric: bool, groups_tuple: tuple[str, ...]):
-    return compute_asteroids(julian_day, heliocentric=heliocentric, include_groups=list(groups_tuple))
+    from astro.western.asteroids import compute_asteroids as _fn
+    return _fn(julian_day, heliocentric=heliocentric, include_groups=list(groups_tuple))
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_fixed_stars_cached(julian_day: float, limit):
-    return compute_fixed_star_positions(julian_day, limit=limit)
+    from astro.western.fixed_stars import compute_fixed_star_positions as _fn
+    return _fn(julian_day, limit=limit)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_parans_cached(julian_day: float, latitude: float, longitude: float, limit):
+    from astro.western.advanced_bodies import calculate_parans as _fn
     stars = compute_fixed_stars_cached(julian_day, limit)
-    return calculate_parans(julian_day, latitude, longitude, stars)
+    return _fn(julian_day, latitude, longitude, stars)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def compute_heliacal_cached(julian_day: float, latitude: float, longitude: float, altitude: float, limit):
+    from astro.western.advanced_bodies import calculate_heliacal as _fn
     stars = compute_fixed_stars_cached(julian_day, limit)
-    return calculate_heliacal(julian_day, latitude, longitude, altitude, stars)
+    return _fn(julian_day, latitude, longitude, altitude, stars)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -407,102 +364,13 @@ def build_mazzalot_svg_cached(
     birth_sig: tuple[Any, ...],
     location_name: str,
 ):
+    from astro.jewish_mazzalot import compute_mazzalot_chart, build_mazzalot_star_of_david_svg
     year, month, day, hour, minute, latitude, longitude, timezone = birth_sig
     chart = compute_mazzalot_chart(
-        year=year,
-        month=month,
-        day=day,
-        hour=hour,
-        minute=minute,
-        timezone=timezone,
-        lat=latitude,
-        lon=longitude,
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        timezone=timezone, lat=latitude, lon=longitude,
     )
     return build_mazzalot_star_of_david_svg(
         chart,
-        year=year,
-        month=month,
-        day=day,
-        hour=hour,
-        minute=minute,
-        tz=timezone,
-        location=location_name,
+        year=year, month=month, day=day, hour=hour,
     )
-
-
-# ── Overview dashboard ───────────────────────────────────────────────────────
-
-@st.cache_data(show_spinner=False)
-def cached_overview_snapshot(params_payload: dict[str, Any], gender: str) -> dict[str, dict[str, str]]:
-    """Compute lightweight dashboard metrics for popular systems."""
-    out: dict[str, dict[str, str]] = {}
-
-    try:
-        west = compute_western_chart(**params_payload)
-        sun = next((p for p in getattr(west, "planets", []) if "Sun" in getattr(p, "name", "")), None)
-        sun_sign = getattr(sun, "sign_chinese", "") or getattr(sun, "sign", "") or "-"
-        out["tab_western"] = {
-            "main": f"☉ {sun_sign}",
-            "sub": f"P:{len(getattr(west, 'planets', []))} · A:{len(getattr(west, 'aspects', []))}",
-        }
-    except Exception:
-        pass
-
-    try:
-        ziwei = compute_ziwei_chart(**params_payload, gender=gender)
-        out["tab_ziwei"] = {
-            "main": f"{getattr(ziwei, 'ming_zhu', '-')}",
-            "sub": f"宮:{len(getattr(ziwei, 'palaces', []))} · 局:{getattr(ziwei, 'wu_xing_ju', '-')}",
-        }
-    except Exception:
-        pass
-
-    try:
-        chinese = compute_chart(**params_payload, gender=gender)
-        out["tab_chinese"] = {
-            "main": f"{getattr(chinese, 'solar_month', '-')}",
-            "sub": f"P:{len(getattr(chinese, 'planets', []))} · H:{len(getattr(chinese, 'houses', []))}",
-        }
-    except Exception:
-        pass
-
-    try:
-        vedic = compute_vedic_chart(**params_payload)
-        moon = next((p for p in getattr(vedic, "planets", []) if "Chandra" in getattr(p, "name", "")), None)
-        nak = getattr(moon, "nakshatra", "-")
-        out["tab_indian"] = {
-            "main": f"☾ {nak}",
-            "sub": f"P:{len(getattr(vedic, 'planets', []))} · H:{len(getattr(vedic, 'houses', []))}",
-        }
-    except Exception:
-        pass
-
-    return out
-
-
-def build_overview_items(
-    params_payload: dict[str, Any],
-    gender: str,
-    get_system_fn,
-    t_fn,
-) -> list[dict[str, str]]:
-    """Build rendered overview item cards in fixed priority order."""
-    snapshot = cached_overview_snapshot(params_payload, gender)
-    ordered = ["tab_western", "tab_ziwei", "tab_chinese", "tab_indian"]
-    items: list[dict[str, str]] = []
-    for sys_id in ordered:
-        meta = get_system_fn(sys_id)
-        metric = snapshot.get(sys_id)
-        if not meta or not metric:
-            continue
-        items.append(
-            {
-                "system_id": sys_id,
-                "icon": meta.icon,
-                "title": t_fn(meta.tab_key),
-                "metric_main": metric.get("main", "-"),
-                "metric_sub": metric.get("sub", "-"),
-                "accent": meta.accent_color,
-            }
-        )
-    return items

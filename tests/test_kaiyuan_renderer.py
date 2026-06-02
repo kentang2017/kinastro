@@ -12,18 +12,6 @@ from ui.handlers.tab_kaiyuan.render import (
     _collect_live_omens,
     _compute_live_observations,
     _has_live_chart_params,
-    init_swisseph,
-)
-
-kaiyuan_renderer = types.SimpleNamespace(
-    KaiyuanObservation=KaiyuanObservation,
-    _build_astrolabe_svg=_build_astrolabe_svg,
-    _build_mansion_ranges=_build_mansion_ranges,
-    _build_twelve_palace_ranges=_build_twelve_palace_ranges,
-    _collect_live_omens=_collect_live_omens,
-    _compute_live_observations=_compute_live_observations,
-    _has_live_chart_params=_has_live_chart_params,
-    init_swisseph=init_swisseph,
 )
 
 
@@ -45,7 +33,7 @@ class _FakeSwe:
 
 
 def test_build_mansion_ranges_cover_full_circle() -> None:
-    ranges = kaiyuan_renderer._build_mansion_ranges()
+    ranges = _build_mansion_ranges()
     assert len(ranges) == 28
     assert ranges[0]["name"] == "角"
     total_width = sum(entry["end"] - entry["start"] for entry in ranges)
@@ -53,7 +41,7 @@ def test_build_mansion_ranges_cover_full_circle() -> None:
 
 
 def test_build_twelve_palace_ranges_cover_full_circle() -> None:
-    ranges = kaiyuan_renderer._build_twelve_palace_ranges()
+    ranges = _build_twelve_palace_ranges()
     assert len(ranges) == 12
     assert ranges[0]["name"] == "戌宮"
     assert ranges[0]["station"] == "降婁"
@@ -62,16 +50,13 @@ def test_build_twelve_palace_ranges_cover_full_circle() -> None:
 
 
 def test_has_live_chart_params_requires_date_fields() -> None:
-    assert kaiyuan_renderer._has_live_chart_params({"year": 2026, "month": 5, "day": 18})
-    assert not kaiyuan_renderer._has_live_chart_params({"year": 2026, "month": 5, "day": 0})
+    assert _has_live_chart_params({"year": 2026, "month": 5, "day": 18})
+    assert not _has_live_chart_params({"year": 2026, "month": 5, "day": 0})
 
 
-@pytest.mark.skip(
-    reason="Hardcoded to 2026-05-18 ephemeris; mansion positions drift over time. "
-    "Re-enable when the test is re-parameterised with a fixtures date."
-)
 def test_compute_live_observations_uses_current_chart_inputs(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(kaiyuan_renderer, "init_swisseph", lambda: _FakeSwe())
+    from ui.handlers.tab_kaiyuan import render as kaiyuan_module
+    monkeypatch.setattr(kaiyuan_module, "init_swisseph", lambda: _FakeSwe())
     params = {
         "year": 2026,
         "month": 5,
@@ -84,7 +69,7 @@ def test_compute_live_observations_uses_current_chart_inputs(monkeypatch: pytest
         "location_name": "Hong Kong",
     }
 
-    observations = kaiyuan_renderer._compute_live_observations(params)
+    observations = _compute_live_observations(params)
 
     assert [obs.key for obs in observations] == [
         "moon",
@@ -102,7 +87,7 @@ def test_compute_live_observations_uses_current_chart_inputs(monkeypatch: pytest
 
 def test_build_astrolabe_svg_contains_chart_metadata() -> None:
     observations = [
-        kaiyuan_renderer.KaiyuanObservation(
+        KaiyuanObservation(
             key="moon",
             label="月",
             short_label="月",
@@ -112,7 +97,7 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
             mansion_name="角",
             mansion_degree=6.4,
         ),
-        kaiyuan_renderer.KaiyuanObservation(
+        KaiyuanObservation(
             key="jupiter",
             label="歲星（木）",
             short_label="歲",
@@ -133,7 +118,7 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
         "location_name": "Hong Kong",
     }
 
-    svg = kaiyuan_renderer._build_astrolabe_svg(observations, params, width=420)
+    svg = _build_astrolabe_svg(observations, params, width=420)
 
     assert svg.startswith('<svg xmlns="http://www.w3.org/2000/svg"')
     assert "開元星盤" in svg
@@ -146,7 +131,7 @@ def test_build_astrolabe_svg_contains_chart_metadata() -> None:
 
 def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
     observations = [
-        kaiyuan_renderer.KaiyuanObservation(
+        KaiyuanObservation(
             key="moon",
             label="月",
             short_label="月",
@@ -156,7 +141,7 @@ def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
             mansion_name="角",
             mansion_degree=6.4,
         ),
-        kaiyuan_renderer.KaiyuanObservation(
+        KaiyuanObservation(
             key="jupiter",
             label="歲星（木）",
             short_label="歲",
@@ -172,7 +157,7 @@ def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
     }
     moon_data = {"角": {"開元占經": "月犯角，主朝廷有憂。"}}
 
-    rows = kaiyuan_renderer._collect_live_omens(observations, five_planet_data, moon_data)
+    rows = _collect_live_omens(observations, five_planet_data, moon_data)
 
     assert len(rows) == 2
     assert rows[0]["is_moon"] is True

@@ -5,6 +5,13 @@ from astro.huangji.huangji import EXPECTED_GUA_KEYS
 from astro.i18n import TRANSLATIONS
 from astro.system_registry import get_system, search_systems
 
+# Skip the whole module when the optional ``ephem`` dependency is not
+# importable. ephempip installs a binary extension that was compiled
+# against Python 3.11 and is incompatible with the 3.12 ABI we ship
+# (it references ``PyUnicode_GET_SIZE`` which was removed in 3.12).
+# Re-enable once the ephem package publishes a 3.12 wheel.
+pytest.importorskip("ephem", reason="ephem binary is not built for Python 3.12")
+
 
 def test_huangji_compute_basic_structure() -> None:
     chart = compute_huangji_pan(

@@ -29,7 +29,8 @@ import math
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from core.streamlit_lazy import lazy_streamlit as st
+import streamlit as st
+
 from .western import (
     ZODIAC_SIGNS,
     PLANET_COLORS,
@@ -147,8 +148,6 @@ SIGN_SOUL_MEANINGS: dict[str, dict] = {
 # ============================================================
 
 @dataclass
-from core.cache import cache_data, cache_resource
-
 class DraconicPlanet:
     """行星在龍頭星盤中的位置"""
     name: str
@@ -246,7 +245,7 @@ def _find_overlay_aspects(
     return aspects
 
 
-@cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_draconic_chart(
     natal_longitudes: tuple,   # tuple of (name, lon, lat, retrograde, house) — hashable
     natal_ascendant: float,

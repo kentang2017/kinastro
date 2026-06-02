@@ -78,7 +78,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "silver",
         "invocation_summary": "For finding treasures and helping captives; invoke the Moon",
-        "start_degree": 360 / 28 * 1,
+        "start_degree": 12.857142857142858,
     },
     {
         "index": 2,
@@ -98,7 +98,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "golden yellow",
         "metal": "gold",
         "invocation_summary": "For commerce and navigation; invoke Jupiter",
-        "start_degree": 360 / 28 * 2,
+        "start_degree": 25.714285714285715,
     },
     {
         "index": 3,
@@ -120,7 +120,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "red",
         "metal": "iron",
         "invocation_summary": "For conflict and destruction; invoke Mars",
-        "start_degree": 360 / 28 * 3,
+        "start_degree": 38.57142857142857,
     },
     {
         "index": 4,
@@ -138,7 +138,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "yellow",
         "metal": "gold",
         "invocation_summary": "For reconciliation and binding; invoke the Sun",
-        "start_degree": 360 / 28 * 4,
+        "start_degree": 51.42857142857143,
     },
     {
         "index": 5,
@@ -156,7 +156,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "red",
         "metal": "copper",
         "invocation_summary": "For love, friendship, and freedom; invoke Mercury",
-        "start_degree": 360 / 28 * 5,
+        "start_degree": 64.28571428571429,
     },
     {
         "index": 6,
@@ -176,7 +176,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "green",
         "metal": "silver",
         "invocation_summary": "For wealth, love, and journey safety; invoke the Moon",
-        "start_degree": 360 / 28 * 6,
+        "start_degree": 77.14285714285714,
     },
     {
         "index": 7,
@@ -198,7 +198,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "black",
         "metal": "lead",
         "invocation_summary": "For driving away enemies and captives; invoke Saturn",
-        "start_degree": 360 / 28 * 7,
+        "start_degree": 90.0,
     },
     {
         "index": 8,
@@ -220,7 +220,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "red",
         "metal": "iron",
         "invocation_summary": "For harm and destruction; invoke Mars",
-        "start_degree": 360 / 28 * 8,
+        "start_degree": 102.85714285714286,
     },
     {
         "index": 9,
@@ -242,7 +242,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "golden",
         "metal": "gold",
         "invocation_summary": "For goodwill, healing, and hunting; invoke the Sun",
-        "start_degree": 360 / 28 * 9,
+        "start_degree": 115.71428571428572,
     },
     {
         "index": 10,
@@ -264,7 +264,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "silver",
         "invocation_summary": "For friendship and freeing captives; invoke Mercury",
-        "start_degree": 360 / 28 * 10,
+        "start_degree": 128.57142857142858,
     },
     {
         "index": 11,
@@ -282,7 +282,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "yellow",
         "metal": "tin",
         "invocation_summary": "For agriculture and profit; invoke Jupiter",
-        "start_degree": 360 / 28 * 11,
+        "start_degree": 141.42857142857144,
     },
     {
         "index": 12,
@@ -300,7 +300,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "green",
         "metal": "copper",
         "invocation_summary": "For love, travel, and wealth; invoke Venus",
-        "start_degree": 360 / 28 * 12,
+        "start_degree": 154.28571428571428,
     },
     {
         "index": 13,
@@ -318,7 +318,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "gold",
         "invocation_summary": "For love and healing; invoke Mercury",
-        "start_degree": 360 / 28 * 13,
+        "start_degree": 167.14285714285714,
     },
     {
         "index": 14,
@@ -340,7 +340,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "silver",
         "invocation_summary": "For uncovering secrets and captives; invoke the Moon",
-        "start_degree": 360 / 28 * 14,
+        "start_degree": 180.0,
     },
     {
         "index": 15,
@@ -362,7 +362,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "black",
         "metal": "lead",
         "invocation_summary": "For separation and destruction; invoke Saturn",
-        "start_degree": 360 / 28 * 15,
+        "start_degree": 192.85714285714286,
     },
     {
         "index": 16,
@@ -380,7 +380,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "golden",
         "metal": "tin",
         "invocation_summary": "For goodness, travel, and hunting; invoke Jupiter",
-        "start_degree": 360 / 28 * 16,
+        "start_degree": 205.71428571428572,
     },
     {
         "index": 17,
@@ -402,7 +402,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "red",
         "metal": "iron",
         "invocation_summary": "For conflict and division; invoke Mars",
-        "start_degree": 360 / 28 * 17,
+        "start_degree": 218.57142857142858,
     },
     {
         "index": 18,
@@ -420,7 +420,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "dark red",
         "metal": "iron",
         "invocation_summary": "For binding and destructive spells; invoke Venus",
-        "start_degree": 360 / 28 * 18,
+        "start_degree": 231.42857142857144,
     },
     {
         "index": 19,
@@ -442,7 +442,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "green",
         "metal": "quicksilver",
         "invocation_summary": "For taming and strengthening prisons; invoke Mercury",
-        "start_degree": 360 / 28 * 19,
+        "start_degree": 244.2857142857143,
     },
     {
         "index": 20,
@@ -464,7 +464,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "silver",
         "invocation_summary": "For taming, building, and captives; invoke the Moon",
-        "start_degree": 360 / 28 * 20,
+        "start_degree": 257.14285714285717,
     },
     {
         "index": 21,
@@ -486,7 +486,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "black",
         "metal": "lead",
         "invocation_summary": "For freedom, kindness, and healing; invoke Saturn",
-        "start_degree": 360 / 28 * 21,
+        "start_degree": 270.0,
     },
     {
         "index": 22,
@@ -508,7 +508,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "yellow",
         "metal": "tin",
         "invocation_summary": "For healing and purging evil; invoke Jupiter",
-        "start_degree": 360 / 28 * 22,
+        "start_degree": 282.8571428571429,
     },
     {
         "index": 23,
@@ -530,7 +530,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "silver",
         "invocation_summary": "For all goodness and marriages; invoke Saturn",
-        "start_degree": 360 / 28 * 23,
+        "start_degree": 295.7142857142857,
     },
     {
         "index": 24,
@@ -552,7 +552,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "green",
         "metal": "copper",
         "invocation_summary": "For building and planting; invoke Mercury",
-        "start_degree": 360 / 28 * 24,
+        "start_degree": 308.57142857142856,
     },
     {
         "index": 25,
@@ -574,7 +574,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "yellow",
         "metal": "tin",
         "invocation_summary": "For building and friendship; invoke Jupiter",
-        "start_degree": 360 / 28 * 25,
+        "start_degree": 321.42857142857144,
     },
     {
         "index": 26,
@@ -596,7 +596,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "red",
         "metal": "iron",
         "invocation_summary": "For goodwill and building completion; invoke Mars",
-        "start_degree": 360 / 28 * 26,
+        "start_degree": 334.2857142857143,
     },
     {
         "index": 27,
@@ -618,7 +618,7 @@ PICATRIX_MANSIONS: list[dict] = [
         "color": "white",
         "metal": "silver",
         "invocation_summary": "For all fortunate works; invoke the Moon",
-        "start_degree": 360 / 28 * 27,
+        "start_degree": 347.14285714285717,
     },
 ]
 
@@ -702,8 +702,13 @@ correspondences = _expand_correspondences()
 def enrich_mansions():
     """把 Greer 版的詳細用途、圖像、注意事項合併到原有 Mansions"""
     greer_dict = {m["number"]: m for m in GREER_MANSIONS}
+    width = 360.0 / 28.0
     for mansion in PICATRIX_MANSIONS:
         num = mansion.get("index", 0) + 1
+        # Recompute ecliptic bounds for this mansion so they don't
+        # drift after a phase-6/7 refactor rounds upstream values.
+        mansion["start_degree"] = (num - 1) * width
+        mansion["end_degree"] = num * width
         if num in greer_dict:
             g = greer_dict[num]
             mansion.update({
@@ -713,8 +718,6 @@ def enrich_mansions():
                 "bad_uses": g.get("bad_uses", []),
                 "detailed_image": g.get("image", ""),
                 "notes": g.get("notes", ""),
-                "start_degree": g["start_deg"],
-                "end_degree": g["end_deg"],
             })
     return PICATRIX_MANSIONS
 
