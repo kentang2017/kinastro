@@ -32,7 +32,7 @@ def render_streamlit(chart: MyanmarMahaboteChart, *, lang: LanguageCode = "zh", 
     st.write(list(chart.direction_advice_zh if lang == "zh" else chart.direction_advice_en))
 
     st.markdown("### 流年對照 / Flow-Year Overlay")
-    overlay = chart.current_year_overlay if lang == "zh" else chart.target_year_overlay
+    overlay = chart.current_year_overlay
     if overlay:
         st.write(
             {

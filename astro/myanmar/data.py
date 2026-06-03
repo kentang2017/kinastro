@@ -245,6 +245,8 @@ ZODIAC_8: tuple[ZodiacAnimal, ...] = (
 )
 
 ZODIAC_BY_LORD_KEY = {
+    # The year-mod-7 lord cycle uses 7 classical lords and intentionally excludes
+    # the Rahu sector (still represented in ZODIAC_8 for weekday/annual overlays).
     "sun": ZODIAC_8[0],
     "moon": ZODIAC_8[1],
     "mars": ZODIAC_8[2],

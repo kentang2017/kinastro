@@ -69,7 +69,7 @@ from astro.astronomical_geomancy.calculator import (
     format_geomancy_for_prompt,
 )
 from astro.malay import MalayNujumEngine, MalayNujumMethod, MalayNujumRequest
-from astro.myanmar import compute_myanmar_mahabote_chart
+from astro.myanmar import compute_myanmar_mahabote_chart, serialize_chart as serialize_myanmar_chart
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -462,7 +462,7 @@ def _cached_myanmar_mahabote(key: str, year: int, month: int, day: int, hour: in
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name,
     )
-    return _chart_to_dict(chart)
+    return serialize_myanmar_chart(chart)
 
 
 @lru_cache(maxsize=256)

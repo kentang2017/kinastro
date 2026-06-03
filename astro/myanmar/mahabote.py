@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import date
 from html import escape
 
@@ -256,13 +256,17 @@ def compute_myanmar_mahabote_chart(
         direction_advice_zh=direction_advice_zh,
         current_year_overlay=current_overlay,
         target_year_overlay=target_overlay,
+        zodiac_wheel_svg="",
+        house_board_svg="",
     )
-    chart.zodiac_wheel_svg = build_zodiac_wheel_svg(chart)
-    chart.house_board_svg = build_house_board_svg(chart)
-    return chart
+    return replace(
+        chart,
+        zodiac_wheel_svg=build_zodiac_wheel_svg(chart),
+        house_board_svg=build_house_board_svg(chart),
+    )
 
 
-def chart_to_dict(chart: MyanmarMahaboteChart) -> dict[str, object]:
+def serialize_chart(chart: MyanmarMahaboteChart) -> dict[str, object]:
     """Stable dict serializer for API payloads."""
     payload = asdict(chart)
     payload["houses"] = [
@@ -276,3 +280,7 @@ def chart_to_dict(chart: MyanmarMahaboteChart) -> dict[str, object]:
         for h in chart.houses
     ]
     return payload
+
+
+# Backward-compatible alias.
+chart_to_dict = serialize_chart
