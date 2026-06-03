@@ -306,7 +306,7 @@ def render_tab_tieban() -> None:
         input_lon = 121.565
         location_name = ""
     _tb_tab_main, _tb_tab_tiaowen, _tb_tab_kunji = st.tabs([
-        auto_cn("🔮 命盤"), auto_cn("📚 完整條文庫"), auto_cn("🔑 坤集扣入法"),
+        auto_cn("🔮 命盤", "🔮 命盤"), auto_cn("📚 完整條文庫", "📚 完整條文庫"), auto_cn("🔑 坤集扣入法", "🔑 坤集扣入法"),
     ])
     with _tb_tab_main:
         if _is_calculated:
@@ -398,13 +398,13 @@ def render_tab_tieban() -> None:
 
                 # ③ 字：坤集條文（tiaowen_full_12000.json 主條文）
                 st.divider()
-                _tb_kunji_title = auto_cn("🔑 坤集條文")
+                _tb_kunji_title = auto_cn("🔑 坤集條文", "🔑 坤集條文")
                 st.subheader(_tb_kunji_title)
 
                 # 坤集扣入法天干序列 + 條文編號
                 if tb_result.kunji_tiangan:
                     _tg_str = "　".join(tb_result.kunji_tiangan)
-                    _tiaowen_num_label = auto_cn("坤集編號") + f" {tb_result.tiaowen_number}"
+                    _tiaowen_num_label = auto_cn("坤集編號", "坤集編號") + f" {tb_result.tiaowen_number}"
                     _ke_lbl = tb_result.ke_label or str(tb_result.ke)
                     st.markdown(
                         f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
@@ -413,10 +413,10 @@ def render_tab_tieban() -> None:
                         f'#{_tiaowen_num_label}</span>'
                         f'<span style="background:rgba(255,217,61,0.10);border:1px solid rgba(255,217,61,0.3);'
                         f'border-radius:8px;padding:4px 10px;font-size:12px;color:#FFD93D;">'
-                        f'{auto_cn("扣入天干")}：{_tg_str}</span>'
+                        f'{auto_cn("扣入天干", "扣入天干")}：{_tg_str}</span>'
                         f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.25);'
                         f'border-radius:8px;padding:4px 10px;font-size:12px;color:#6BCB77;">'
-                        f'{auto_cn("刻")}：{_ke_lbl}</span>'
+                        f'{auto_cn("刻", "刻")}：{_ke_lbl}</span>'
                         f'</div>',
                         unsafe_allow_html=True,
                     )
@@ -439,8 +439,8 @@ def render_tab_tieban() -> None:
 
                 # 算盤打數條文（suanpan_tiaowen_full.json）
                 st.divider()
-                st.subheader(auto_cn("🧮 算盤打數條文"))
-                st.caption(auto_cn("曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文"))
+                st.subheader(auto_cn("🧮 算盤打數條文", "🧮 算盤打數條文"))
+                st.caption(auto_cn("曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文", "曹展碩實務版 · 金鎖銀匙歌 · 算盤打數五部條文"))
                 from astro.tieban.suanpan_full_structure import (
                     suanpan_calculate,
                     SuanpanTiaowenDatabase,
@@ -456,10 +456,10 @@ def render_tab_tieban() -> None:
                 _sp_tiaowen = _sp_db.get_by_result(_sp_calc)
 
                 # 基本定部資訊卡
-                _sp_nayin_label = auto_cn("納音")
-                _sp_dept_label  = auto_cn("五行部")
-                _sp_num_label   = auto_cn("算盤總數")
-                _sp_key_label   = auto_cn("條文鍵")
+                _sp_nayin_label = auto_cn("納音", "納音")
+                _sp_dept_label  = auto_cn("五行部", "五行部")
+                _sp_num_label   = auto_cn("算盤總數", "算盤總數")
+                _sp_key_label   = auto_cn("條文鍵", "條文鍵")
                 st.markdown(
                     f'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">'
                     f'<span style="background:rgba(107,203,119,0.10);border:1px solid rgba(107,203,119,0.3);'
@@ -498,7 +498,7 @@ def render_tab_tieban() -> None:
                 # 歲運條文（流年歲運）
                 _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
                 if _sp_suiyun and _sp_suiyun.get("text"):
-                    st.markdown(f"**{auto_cn('🌀 歲運條文')}**")
+                    st.markdown(f"**{auto_cn("🌀 歲運條文", "🌀 歲運條文")}**")
                     _sp_sy_raw = _sp_suiyun.get("raw_key", "")
                     _sp_sy_raw_badge = (
                         f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
@@ -513,7 +513,7 @@ def render_tab_tieban() -> None:
                     )
 
                 # 計算步驟展開
-                with st.expander(auto_cn("查看算盤打數計算步驟"), expanded=False):
+                with st.expander(auto_cn("查看算盤打數計算步驟", "查看算盤打數計算步驟"), expanded=False):
                     for _step in _sp_calc.calculation_steps:
                         st.markdown(f"- {_step}")
 
@@ -522,7 +522,7 @@ def render_tab_tieban() -> None:
                 _six = tb_result.six_qin_qizi_info
                 if _bake or _six:
                     st.divider()
-                    st.markdown(f"**{auto_cn('⏰ 刻分六親')}**")
+                    st.markdown(f"**{auto_cn("⏰ 刻分六親", "⏰ 刻分六親")}**")
                     _kf_cards = ""
                     if _bake:
                         _kf_cards += (
@@ -530,7 +530,7 @@ def render_tab_tieban() -> None:
                             f'padding:8px 12px;margin-bottom:8px;'
                             f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
                             f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
-                            f'{auto_cn("父母兄弟（九十六刻）")}</div>'
+                            f'{auto_cn("父母兄弟（九十六刻）", "父母兄弟（九十六刻）")}</div>'
                             f'<div style="font-size:13px;color:#FFD93D;">{_bake}</div></div>'
                         )
                     if _six:
@@ -539,16 +539,16 @@ def render_tab_tieban() -> None:
                             f'padding:8px 12px;margin-bottom:8px;'
                             f'background:rgba(255,255,255,0.03);border-radius:0 8px 8px 0;">'
                             f'<div style="font-size:11px;color:#9090b0;margin-bottom:2px;">'
-                            f'{auto_cn("妻子（六親刻分）")}</div>'
+                            f'{auto_cn("妻子（六親刻分）", "妻子（六親刻分）")}</div>'
                             f'<div style="font-size:13px;color:#6BCB77;">{_six}</div></div>'
                         )
                     st.markdown(f'<div style="width:100%;">{_kf_cards}</div>', unsafe_allow_html=True)
 
                 # 十二宮條文詳情
                 st.divider()
-                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文")) + "**")
+                st.markdown("**🏛️ " + (t("tieban_palace_verses") if hasattr(t, "tieban_palace_verses") else auto_cn("十二宮條文", "十二宮條文")) + "**")
 
-                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文")
+                expander_label = t("tieban_view_palace_verses") if hasattr(t, "tieban_view_palace_verses") else auto_cn("查看十二宮詳細條文", "查看十二宮詳細條文")
                 with st.expander(expander_label, expanded=False):
                     palace_order = ["命宮", "兄弟宮", "夫妻宮", "子女宮", "財帛宮", "疾厄宮",
                                    "遷移宮", "交友宮", "官祿宮", "田宅宮", "福德宮", "父母宮"]
@@ -568,7 +568,7 @@ def render_tab_tieban() -> None:
                     _palace_cards = ""
                     for palace_name in palace_order:
                         palace_info = tb_result.palace_verses.get(palace_name, {})
-                        verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else auto_cn("暫無條文"))
+                        verse = palace_info.get("verse", t("no_verse") if hasattr(t, "no_verse") else auto_cn("暫無條文", "暫無條文"))
                         category = palace_info.get("category", "")
                         branch = palace_info.get("branch", "")
                         display_name = palace_names_en.get(palace_name, palace_name) if get_lang() == "en" else palace_name
@@ -650,14 +650,14 @@ def render_tab_tieban() -> None:
             render_suanpan_tiaowen_browser_inline,
         )
         _tiaowen_db_choice = st.radio(
-            auto_cn("條文庫"),
-            [auto_cn("📚 坤集扣入法（12000 條）"), auto_cn("🧮 算盤打數五部條文")],
+            auto_cn("條文庫", "條文庫"),
+            [auto_cn("📚 坤集扣入法（12000 條）", "📚 坤集扣入法（12000 條）"), auto_cn("🧮 算盤打數五部條文", "🧮 算盤打數五部條文")],
             horizontal=True,
             label_visibility="collapsed",
             key="tb_tiaowen_db_choice",
         )
         st.divider()
-        if _tiaowen_db_choice == auto_cn("📚 坤集扣入法（12000 條）"):
+        if _tiaowen_db_choice == auto_cn("📚 坤集扣入法（12000 條）", "📚 坤集扣入法（12000 條）"):
             render_tiaowen_full_browser_inline()
         else:
             render_suanpan_tiaowen_browser_inline()
@@ -737,7 +737,7 @@ def render_tab_shaozi() -> None:
         input_lon = 121.565
         location_name = ""
     _sz_tab_main, _sz_tab_64keys, _sz_tab_tiaowen = st.tabs([
-        auto_cn("🔯 命盤"), auto_cn("🗝️ 64鑰匙"), auto_cn("📚 條文庫"),
+        auto_cn("🔯 命盤", "🔯 命盤"), auto_cn("🗝️ 64鑰匙", "🗝️ 64鑰匙"), auto_cn("📚 條文庫", "📚 條文庫"),
     ])
     with _sz_tab_main:
         if _is_calculated:

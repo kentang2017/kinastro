@@ -177,7 +177,7 @@ def render_tab_western() -> None:
                     _lang = get_lang()
                     for _ta in w_transits.aspects_to_natal[:5]:
                         _reading = _ta.interpretation_cn if _lang in ("zh", "zh_cn") else _ta.interpretation_en
-                        _reading = auto_cn(_reading) if _reading else _reading
+                        _reading = auto_cn(_reading, 'reading_zh') if _reading else _reading
                         st.info(f"**{_ta.transit_planet} {_ta.aspect_symbol} {_ta.natal_planet}** (orb {_ta.orb}°)\n\n{_reading}")
                 else:
                     st.info("No transit aspects found.")
@@ -226,7 +226,7 @@ def render_tab_western() -> None:
                         location_name,
                     )
                     st.metric("Harmony Score", f"{syn.harmony_summary:.3f}")
-                    st.info(auto_cn(syn.summary_cn) if get_lang() in ("zh", "zh_cn") else syn.summary_en)
+                    st.info(auto_cn(syn.summary_cn, 'summary_cn') if get_lang() in ("zh", "zh_cn") else syn.summary_en)
                     if syn.element_compatibility:
                         st.write(f"🔮 {syn.element_compatibility}")
                     if syn.inter_aspects:
@@ -240,7 +240,7 @@ def render_tab_western() -> None:
                         _lang = get_lang()
                         for _sa in syn.inter_aspects[:5]:
                             _reading = _sa.interpretation_cn if _lang in ("zh", "zh_cn") else _sa.interpretation_en
-                            _reading = auto_cn(_reading) if _reading else _reading
+                            _reading = auto_cn(_reading, 'reading_zh') if _reading else _reading
                             st.info(f"**{_sa.planet_a} {_sa.aspect_symbol} {_sa.planet_b}** (orb {_sa.orb}°)\n\n{_reading}")
 
             with _w_tab_love_synastry:
@@ -302,7 +302,7 @@ def render_tab_western() -> None:
                                 t("adv_col_lat"):     f"{_a.latitude:.2f}°",
                                 t("adv_col_speed"):   f"{_a.speed:+.4f}°/d",
                                 t("adv_col_retro"):   "℞" if _a.retrograde else "",
-                                t("adv_col_meaning"): auto_cn(_a.meaning_cn),
+                                t("adv_col_meaning"): auto_cn(_a.meaning_cn, 'meaning_cn'),
                             })
                         st.dataframe(_ast_rows, width="stretch")
 
@@ -346,7 +346,7 @@ def render_tab_western() -> None:
                             "Planet":                  c.planet_name,
                             t("adv_col_orb"):          f"{c.orb:.2f}°",
                             t("adv_col_nature"):       c.nature,
-                            t("adv_col_meaning"):      auto_cn(c.meaning_cn),
+                            t("adv_col_meaning"):      auto_cn(c.meaning_cn, 'meaning_cn'),
                         } for c in _conjs], width="stretch")
 
                     with st.expander("All Stars / 全部恆星", expanded=False):
@@ -359,7 +359,7 @@ def render_tab_western() -> None:
                             t("adv_col_lat"):           f"{s.latitude:.2f}°",
                             t("adv_col_magnitude"):     s.magnitude,
                             t("adv_col_nature"):        s.nature,
-                            t("adv_col_meaning"):       auto_cn(s.meaning_cn),
+                            t("adv_col_meaning"):       auto_cn(s.meaning_cn, 'meaning_cn'),
                         } for s in _stars], width="stretch")
                 else:
                     st.info("Enable 'Include Fixed Stars' in the sidebar.")
@@ -390,7 +390,7 @@ def render_tab_western() -> None:
                             t("adv_col_planet_event"): p.planet_event_cn,
                             t("adv_col_orb"):        f"{p.orb:.2f}°",
                             t("adv_col_nature"):     p.star_nature,
-                            t("adv_col_meaning"):    auto_cn(p.star_meaning_cn),
+                            t("adv_col_meaning"):    auto_cn(p.star_meaning_cn, 'meaning_cn'),
                         } for p in _parans[:50]], width="stretch")
                     else:
                         st.info(t("adv_no_results"))
@@ -429,7 +429,7 @@ def render_tab_western() -> None:
                     if _hels:
                         st.dataframe([{
                             t("adv_col_body"):       f"{'⭐' if h.is_star else '🪐'} {h.body_name} ({h.body_cn})",
-                            t("adv_col_event_type"): auto_cn(h.event_name_cn),
+                            t("adv_col_event_type"): auto_cn(h.event_name_cn, 'event_name_cn'),
                             t("adv_col_event_date"): h.event_date,
                         } for h in _hels[:50]], width="stretch")
                     else:
@@ -548,11 +548,11 @@ def _render_love_synastry_tab(
 
     # ── Romantic Summary ─────────────────────────────────────────
     st.markdown(f"### {t('love_synastry_summary')}")
-    _summary_text = auto_cn(_ls_result.romantic_summary_cn) if _is_zh else _ls_result.romantic_summary_en
+    _summary_text = auto_cn(_ls_result.romantic_summary_cn, 'romantic_summary_cn') if _is_zh else _ls_result.romantic_summary_en
     st.success(f"💌 {_summary_text}")
 
     st.markdown(f"### {t('love_synastry_advice')}")
-    _advice_text = auto_cn(_ls_result.love_advice_cn) if _is_zh else _ls_result.love_advice_en
+    _advice_text = auto_cn(_ls_result.love_advice_cn, 'love_advice_cn') if _is_zh else _ls_result.love_advice_en
     st.info(f"🌹 {_advice_text}")
 
     st.divider()
@@ -564,7 +564,7 @@ def _render_love_synastry_tab(
         for _la in _top_aspects:
             _reading = _la.interpretation_cn if _is_zh else _la.interpretation_en
             if _is_zh:
-                _reading = auto_cn(_reading)
+                _reading = auto_cn(_reading, 'reading_zh')
             _relevance_stars = "❤️" * round(_la.love_relevance * 5)
             st.markdown(
                 f"""<div style="border-left:4px solid #e91e8c;padding:10px 14px;margin:8px 0;
@@ -593,7 +593,7 @@ def _render_love_synastry_tab(
         st.markdown(f"### {t('love_synastry_overlays')}")
         _house_icons = {5: "🎭", 7: "💍", 8: "🌑"}
         for _ov in _ls_result.house_overlays:
-            _ov_meaning = auto_cn(_ov.meaning_cn) if _is_zh else _ov.meaning_en
+            _ov_meaning = auto_cn(_ov.meaning_cn, 'meaning_cn') if _is_zh else _ov.meaning_en
             _icon = _house_icons.get(_ov.house_number, "🏠")
             st.markdown(
                 f"""<div style="border-left:4px solid #ff6b9d;padding:10px 14px;margin:8px 0;
@@ -867,10 +867,10 @@ def render_tab_hellenistic() -> None:
             with _h_tab_lots:
                 if _hellen_chart.lots:
                     st.subheader(t("hellen_lots_header"))
-                    st.dataframe([{"Name": f"{l.name} ({auto_cn(l.name_cn)})",
+                    st.dataframe([{"Name": f"{l.name} ({auto_cn(l.name_cn, 'name_cn')})",
                                    "Sign": l.sign, "Degree": f"{l.sign_degree:.2f}°",
                                    "House": l.house, "Formula": l.formula_en,
-                                   "Meaning": auto_cn(l.meaning_cn)}
+                                   "Meaning": auto_cn(l.meaning_cn, 'meaning_cn')}
                                   for l in _hellen_chart.lots],
                                  width="stretch")
 
