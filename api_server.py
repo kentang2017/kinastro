@@ -69,6 +69,7 @@ from astro.astronomical_geomancy.calculator import (
     format_geomancy_for_prompt,
 )
 from astro.malay import MalayNujumEngine, MalayNujumMethod, MalayNujumRequest
+from astro.myanmar import compute_myanmar_mahabote_chart, serialize_chart as serialize_myanmar_chart
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -453,6 +454,18 @@ def _cached_mahabote(key: str, year: int, month: int, day: int, hour: int,
 
 
 @lru_cache(maxsize=256)
+def _cached_myanmar_mahabote(key: str, year: int, month: int, day: int, hour: int,
+                             minute: int, timezone: float, latitude: float,
+                             longitude: float, location_name: str) -> dict:
+    chart = compute_myanmar_mahabote_chart(
+        year=year, month=month, day=day, hour=hour, minute=minute,
+        timezone=timezone, latitude=latitude, longitude=longitude,
+        location_name=location_name,
+    )
+    return serialize_myanmar_chart(chart)
+
+
+@lru_cache(maxsize=256)
 def _cached_decans(key: str, year: int, month: int, day: int, hour: int,
                    minute: int, timezone: float, latitude: float,
                    longitude: float, location_name: str) -> dict:
@@ -765,6 +778,18 @@ async def mahabote_chart(params: BirthParams) -> ChartResponse:
         return ChartResponse(system="mahabote", data=data)
     except Exception as exc:
         logger.exception("Mahabote chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/myanmar_mahabote", response_model=ChartResponse, tags=["Systems"])
+async def myanmar_mahabote_chart(params: BirthParams) -> ChartResponse:
+    """Compute an enhanced Myanmar Bedin / Mahabote chart."""
+    try:
+        key = _cache_key(params)
+        data = _cached_myanmar_mahabote(key, **_base_kwargs(params))
+        return ChartResponse(system="myanmar_mahabote", data=data)
+    except Exception as exc:
+        logger.exception("Myanmar Mahabote chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -1407,6 +1432,7 @@ _SYSTEMS_BASIC: list[tuple[str, Any]] = [
     ("maya", _cached_maya),
     ("ziwei", _cached_ziwei),
     ("mahabote", _cached_mahabote),
+    ("myanmar_mahabote", _cached_myanmar_mahabote),
     ("decans", _cached_decans),
     ("nadi", _cached_nadi),
     ("zurkhai", _cached_zurkhai),
