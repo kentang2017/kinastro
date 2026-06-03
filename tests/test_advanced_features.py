@@ -843,6 +843,7 @@ class TestApiServer:
         expected = ["/api/chinese", "/api/western", "/api/vedic",
                     "/api/thai", "/api/kabbalistic", "/api/arabic",
                     "/api/maya", "/api/ziwei", "/api/mahabote",
+                    "/api/myanmar_mahabote",
                     "/api/decans", "/api/nadi", "/api/zurkhai",
                     "/api/malay_nujum",
                     "/api/hellenistic"]
