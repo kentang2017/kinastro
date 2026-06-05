@@ -498,7 +498,7 @@ def render_tab_tieban() -> None:
                 # 歲運條文（流年歲運）
                 _sp_suiyun = _sp_db.get_suiyun_by_result(_sp_calc)
                 if _sp_suiyun and _sp_suiyun.get("text"):
-                    st.markdown(f"**{auto_cn("🌀 歲運條文", "🌀 歲運條文")}**")
+                    st.markdown(f'**{auto_cn("🌀 歲運條文", "🌀 歲運條文")}**')
                     _sp_sy_raw = _sp_suiyun.get("raw_key", "")
                     _sp_sy_raw_badge = (
                         f'<span style="font-size:11px;color:#9090b0;margin-left:8px;">'
@@ -522,7 +522,7 @@ def render_tab_tieban() -> None:
                 _six = tb_result.six_qin_qizi_info
                 if _bake or _six:
                     st.divider()
-                    st.markdown(f"**{auto_cn("⏰ 刻分六親", "⏰ 刻分六親")}**")
+                    st.markdown(f'**{auto_cn("⏰ 刻分六親", "⏰ 刻分六親")}**')
                     _kf_cards = ""
                     if _bake:
                         _kf_cards += (
