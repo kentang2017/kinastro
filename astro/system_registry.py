@@ -1879,6 +1879,23 @@ _reg(System(
 # ═════════════════════════════════════════════════════════════════════════════
 
 _reg(System(
+    id="tab_napoleon_oraculum",
+    name_zh="拿破崙命運之書",
+    name_en="Napoleon's Book of Fate",
+    category="cat_horary",
+    icon="👑",
+    tab_key="👑 拿破崙命運之書 Napoleon's Book of Fate",
+    desc_key="16題×16數字的 Oraculum 命運占問，依字母表揭示原典神諭。",
+    spinner_key="翻閱命運之書中… Consulting the Oraculum...",
+    hint_key="先定一問，再取 1~16 之數，依字母揭示答案。",
+    tags=["napoleon", "oraculum", "book of fate", "fortune book", "divination", "horary"],
+    maturity="core",
+    accent_color=_a("cat_horary"),
+    origin_culture="European occult fortune-book tradition",
+    tradition_period="19th century printed divination manuals",
+))
+
+_reg(System(
     id="tab_horary",
     name_zh="傳統卜卦占星",
     name_en="Traditional Horary",

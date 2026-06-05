@@ -103,6 +103,7 @@ def _get_dispatch() -> dict[str, Callable]:
         "tab_medical_astrology": sanshi_systems.render_tab_medical_astrology,
         "tab_shanghan_qianfa": sanshi_systems.render_tab_shanghan_qianfa,
         "tab_horary": sanshi_systems.render_tab_horary,
+        "tab_napoleon_oraculum": sanshi_systems.render_tab_napoleon_oraculum,
         "tab_sports_astrology": sanshi_systems.render_tab_sports_astrology,
     }
 
