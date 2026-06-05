@@ -939,6 +939,25 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_enochian",
+    name_zh="伊諾克占星",
+    name_en="Enochian Astrology",
+    category="cat_western",
+    icon="🔮",
+    tab_key="tab_enochian",
+    desc_key="desc_enochian",
+    spinner_key="spinner_enochian",
+    hint_key="sys_hint_enochian",
+    tags=["enochian", "john dee", "edward kelley", "angels", "aethyrs", "watchtowers",
+          "sigillum", "magical", "western", "esoteric"],
+    maturity="core",
+    accent_color="#FFD700",   # Enochian gold
+    origin_culture="Western",
+    tradition_period="16th century (John Dee & Edward Kelley, 1582–1587)",
+    ai_persona_key="info_enochian_prompt",
+))
+
+_reg(System(
     id="tab_byzantine_astrology",
     name_zh="拜占庭占星",
     name_en="Byzantine Astrology",

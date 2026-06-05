@@ -11503,5 +11503,50 @@
     "ja": "福德",
     "vi": "Phước đức",
     "th": "บุญกุศล"
+  },
+  "tab_enochian": {
+    "en": "🔮 Enochian Astrology",
+    "zh": "🔮 伊諾克占星",
+    "ko": "�� 에녹 점성술",
+    "ja": "🔮 エノキアン占星術",
+    "vi": "🔮 Chiêm tinh Enochian",
+    "th": "🔮 โหราศาสตร์เอโนเชียน",
+    "zh_cn": "🔮 以诺克占星"
+  },
+  "desc_enochian": {
+    "en": "**Enochian Astrology** — John Dee & Edward Kelley's Angelic Magic System (1582–1587).\n\n• Natal chart mapped to 30 Aethyrs (consciousness levels), 4 Watchtowers (elemental force fields), and angelic guardians.\n• Personal Patron Angel (Sun), Matron Angel (Moon), and Ascendant Angel.\n• Sigillum Dei Aemeth (Seal of God): personalized sacred geometry visualization.\n• Four Watchtowers grid: East/Air, West/Water, North/Earth, South/Fire.\n• Ritual directions and magical practice suggestions.\n• Cross-reference with standard Western Astrology.\n\nEnter birth data and click Calculate.",
+    "zh": "**伊諾克占星（Enochian Astrology）** — 約翰·迪伊 & 愛德華·凱利的天使魔法系統（1582–1587）。\n\n• 將出生盤對應到 30 個以太層（Aethyrs，意識層次）、4 個守望塔（元素力量場）和天使守護者。\n• 個人守護天使（太陽）、守護女神天使（月亮）和上升點天使。\n• Sigillum Dei Aemeth（神之印）：個人化神聖幾何視覺化。\n• 四個守望塔網格：東/風、西/水、北/土、南/火。\n• 儀式方向和魔法實踐建議。\n• 與標準西方占星的對照分析。\n\n請輸入出生資料後點擊計算。",
+    "ko": "**Enochian Astrology** — John Dee & Edward Kelley's Angelic Magic System (1582–1587).\n\n• Natal chart mapped to 30 Aethyrs, 4 Watchtowers, and angelic guardians.\n• Personal Patron Angel (Sun), Matron Angel (Moon), and Ascendant Angel.\n• Sigillum Dei Aemeth personalized visualization.\n• Four Watchtowers grid analysis.\n• Ritual directions and magical practice suggestions.\n\nEnter birth data and click Calculate.",
+    "ja": "**Enochian Astrology** — John Dee & Edward Kelley's Angelic Magic System (1582–1587).\n\n• Natal chart mapped to 30 Aethyrs, 4 Watchtowers, and angelic guardians.\n• Personal Patron Angel (Sun), Matron Angel (Moon), and Ascendant Angel.\n• Sigillum Dei Aemeth personalized visualization.\n• Four Watchtowers grid analysis.\n• Ritual directions and magical practice suggestions.\n\nEnter birth data and click Calculate.",
+    "vi": "**Enochian Astrology** — John Dee & Edward Kelley's Angelic Magic System (1582–1587).\n\nEnter birth data and click Calculate.",
+    "th": "**Enochian Astrology** — John Dee & Edward Kelley's Angelic Magic System (1582–1587).\n\nEnter birth data and click Calculate.",
+    "zh_cn": "**以诺克占星（Enochian Astrology）** — 约翰·迪伊 & 爱德华·凯利的天使魔法系统（1582–1587）。\n\n请输入出生资料后点击计算。"
+  },
+  "spinner_enochian": {
+    "en": "Computing Enochian Astrology chart…",
+    "zh": "正在計算伊諾克占星命盤…",
+    "ko": "Computing Enochian Astrology chart…",
+    "ja": "Computing Enochian Astrology chart…",
+    "vi": "Computing Enochian Astrology chart…",
+    "th": "Computing Enochian Astrology chart…",
+    "zh_cn": "正在计算以诺克占星命盘…"
+  },
+  "sys_hint_enochian": {
+    "en": "30 Aethyrs · 4 Watchtowers · Patron Angels · Sigillum Dei Aemeth · Angelic Magic",
+    "zh": "30 以太層 · 四個守望塔 · 守護天使 · 神之印 · 天使魔法",
+    "ko": "30 Aethyrs · 4 Watchtowers · Patron Angels · Sigillum Dei Aemeth · Angelic Magic",
+    "ja": "30 Aethyrs · 4 Watchtowers · Patron Angels · Sigillum Dei Aemeth · Angelic Magic",
+    "vi": "30 Aethyrs · 4 Watchtowers · Patron Angels · Sigillum Dei Aemeth · Angelic Magic",
+    "th": "30 Aethyrs · 4 Watchtowers · Patron Angels · Sigillum Dei Aemeth · Angelic Magic",
+    "zh_cn": "30 以太层 · 四个守望塔 · 守护天使 · 神之印 · 天使魔法"
+  },
+  "info_enochian_prompt": {
+    "en": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
+    "zh": "👈 請輸入出生資料後點擊「開始排盤」，進行伊諾克占星天使魔法分析。",
+    "ko": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
+    "ja": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
+    "vi": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
+    "th": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
+    "zh_cn": "👈 请输入出生资料后点击「开始排盘」，进行以诺克占星天使魔法分析。"
   }
 }

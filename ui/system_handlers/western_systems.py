@@ -1864,6 +1864,31 @@ def render_tab_alchemical_astrology() -> None:
     _render_global_ai_chat()
 
 
+def render_tab_enochian() -> None:
+    _bind_legacy()
+    _is_calculated = st.session_state.get("_calculated", False)
+    _selected_system = "tab_enochian"
+    _p0 = st.session_state.get("_calc_params")
+    try:
+        from astro.enochian import compute_enochian_chart
+        from ui.handlers.tab_enochian.render import render_streamlit as _render_enochian
+
+        if _is_calculated:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_enochian")):
+                _enochian_result = compute_enochian_chart(**_p)
+            _render_enochian(_enochian_result)
+            _render_ai_button("tab_enochian", _enochian_result, btn_key="enochian")
+        else:
+            st.info(t("info_enochian_prompt"))
+            st.markdown(t("desc_enochian"))
+    except Exception as _e:
+        st.error(f"{t('error_tab_compute')}：{_e}")
+        st.exception(_e)
+
+    _render_global_ai_chat()
+
+
 def render_tab_history() -> None:
     _bind_legacy()
     _is_calculated = st.session_state.get("_calculated", False)
