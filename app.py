@@ -52,6 +52,10 @@ from core.cached_computations import invalidate_chart_cache_if_birth_changed
 # ── System registry & ziwei (needed for EXECUTION_REGISTRY) ──────────────
 from astro.system_registry import get_system
 from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
+from astro.vietnam import (
+    compute_vietnam_tu_vi_chart,
+    render_streamlit as render_vietnam_tu_vi_chart,
+)
 
 # ── Page init ─────────────────────────────────────────────────────────────
 inject_custom_css()
@@ -390,6 +394,8 @@ def _init_execution_registry_once() -> None:
         build_ziwei_handler(
             compute_ziwei_chart=compute_ziwei_chart,
             render_ziwei_chart=render_ziwei_chart,
+            compute_vietnam_tu_vi_chart=compute_vietnam_tu_vi_chart,
+            render_vietnam_tu_vi_chart=render_vietnam_tu_vi_chart,
             ai_button_sink=set_ai_context,
         )
     )
@@ -411,12 +417,28 @@ with _natal_tab:
             )
             st.session_state["_ziwei_vietnam_mode"] = _vietnam_mode
             _engine_options["vietnam_mode"] = _vietnam_mode
+            _vietnam_full_mode = st.toggle(
+                "Trung Châu Tam Hợp 完整版",
+                value=st.session_state.get("_ziwei_vietnam_full_mode", False),
+                disabled=not _vietnam_mode,
+                help="啟用獨立越南模組（解讀/對照/remedies/12宮圖）",
+                key="_ziwei_vietnam_full_toggle",
+            )
+            st.session_state["_ziwei_vietnam_full_mode"] = _vietnam_full_mode
+            _engine_options["vietnam_full_mode"] = bool(_vietnam_mode and _vietnam_full_mode)
+            _engine_options["calendar_mode"] = "solar_gregorian"
+            _engine_options["interpret_mode"] = "trung_chau_tam_hop"
+            _engine_options["lang"] = st.session_state.get("lang", "zh")
         with _ziwei_col1:
             if _vietnam_mode:
                 st.markdown(
                     '<span style="background:#DA251D;color:#FFCD00;'
                     'font-weight:bold;padding:4px 10px;border-radius:6px;font-size:13px">'
-                    '🇻🇳 越南 Tử Vi Đẩu Số 模式已啟用</span>',
+                    + (
+                        '🇻🇳 越南 Tử Vi Đẩu Số 完整版已啟用</span>'
+                        if _engine_options.get("vietnam_full_mode")
+                        else '🇻🇳 越南 Tử Vi Đẩu Số 模式已啟用</span>'
+                    ),
                     unsafe_allow_html=True,
                 )
             else:
