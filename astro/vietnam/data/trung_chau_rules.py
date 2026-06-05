@@ -30,13 +30,13 @@ TRUNG_CHAU_PATTERNS: list[dict[str, object]] = [
 ]
 
 DAI_HAN_STYLE_GUIDE = {
-    "zh": "Đại hạn 著重十年戰略：關注心理韌性、生理承載、技能升級三軸。",
+    "zh": "大限著重十年戰略：關注心理韌性、生理承載、技能升級三軸。",
     "vi": "Đại hạn nhấn mạnh chiến lược 10 năm: tâm lý, thể chất, nâng cấp kỹ năng.",
     "en": "Đại hạn emphasizes a 10-year strategy across psychology, physiology, and upskilling.",
 }
 
 LUU_NIEN_STYLE_GUIDE = {
-    "zh": "Lưu niên 著重年度調整：用小步迭代應對流年起伏。",
+    "zh": "流年著重年度調整：用小步迭代應對流年起伏。",
     "vi": "Lưu niên tập trung điều chỉnh theo năm bằng các bước nhỏ.",
     "en": "Lưu niên focuses on yearly calibration through small iterative steps.",
 }

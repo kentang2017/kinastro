@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from astro.ziwei import ZiweiChart
 
 CalendarMode = Literal["solar_gregorian", "chinese_lunar_baseline", "vietnam_lunar"]
 InterpretMode = Literal["traditional_cn", "trung_chau_tam_hop"]
@@ -76,7 +79,7 @@ class TuViChart:
     input_data: TuViInput
     solar_date_used: str
     lunar_profile: dict[str, object]
-    base_chart: object
+    base_chart: "ZiweiChart"
     interpretation_mode: InterpretMode
     language: LanguageCode
     star_profiles: dict[str, StarProfileVN]

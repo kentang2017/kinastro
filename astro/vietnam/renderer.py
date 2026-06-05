@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from collections.abc import Callable
 
 import svgwrite
 
 from astro.vietnam.data.stars import get_star_name
+from astro.vietnam.models import TuViChart
 
 
-def build_12_palace_svg(chart: Any, lang: str = "zh") -> str:
+def build_12_palace_svg(chart: TuViChart, lang: str = "zh") -> str:
     """Build a simple 12-palace circular SVG with localized star names."""
     dwg = svgwrite.Drawing(size=(760, 760))
     cx, cy = 380, 380
@@ -21,14 +22,14 @@ def build_12_palace_svg(chart: Any, lang: str = "zh") -> str:
 
     for i, palace in enumerate(chart.base_chart.palaces):
         angle = (i * 30) - 90
-        rad = angle * 3.1415926535 / 180.0
+        rad = angle * math.pi / 180.0
         x_outer = cx + outer_r * math.cos(rad)
         y_outer = cy + outer_r * math.sin(rad)
         dwg.add(dwg.line(start=(cx, cy), end=(x_outer, y_outer), stroke="#333", stroke_width=1))
 
         label_r = 265
-        lx = cx + label_r * math.cos(rad + (15 * 3.1415926535 / 180.0))
-        ly = cy + label_r * math.sin(rad + (15 * 3.1415926535 / 180.0))
+        lx = cx + label_r * math.cos(rad + (15 * math.pi / 180.0))
+        ly = cy + label_r * math.sin(rad + (15 * math.pi / 180.0))
         stars_local = ", ".join(get_star_name(s, lang) for s in palace.stars[:2]) or "-"
         dwg.add(dwg.text(
             f"{palace.name} {palace.branch_name}",
@@ -63,11 +64,18 @@ def build_12_palace_svg(chart: Any, lang: str = "zh") -> str:
     return dwg.tostring()
 
 
-def render_streamlit(chart: Any, after_chart_hook=None) -> None:
+def render_streamlit(
+    chart: TuViChart,
+    after_chart_hook: Callable[[], None] | None = None,
+) -> None:
     """Render Vietnam Tu Vi chart in Streamlit."""
     import streamlit as st
 
-    st.subheader("🇻🇳 越南 Tử Vi Đẩu Số（Trung Châu Tam Hợp）")
+    mode_label = {
+        "trung_chau_tam_hop": "Trung Châu Tam Hợp",
+        "traditional_cn": "Traditional CN",
+    }.get(str(chart.interpretation_mode), str(chart.interpretation_mode))
+    st.subheader(f"🇻🇳 Việt Nam Tử Vi Đẩu Số（{mode_label}）")
     st.caption(f"Interpret mode: {chart.interpretation_mode} · Language: {chart.language}")
 
     svg = chart.visual.get("svg_12_palace") or build_12_palace_svg(chart, chart.language)

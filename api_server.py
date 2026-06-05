@@ -288,7 +288,7 @@ class VietnamTuViParams(BirthParams):
     gender: str = Field(
         default="男",
         pattern=r"^(男|女|male|female)$",
-        description="Gender for Ziwei calculation",
+        description="Gender for Ziwei calculation. Accepted values: 男/女 or male/female.",
     )
     calendar_mode: str = Field(
         default="solar_gregorian",

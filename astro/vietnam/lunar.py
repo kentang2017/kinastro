@@ -19,8 +19,11 @@ def vietnam_lunar_to_solar_date(
     timezone: float = 7.0,
 ) -> date:
     """Find a matching Gregorian date by scanning dates and matching lunar fields."""
-    scan_start = date(max(1, lunar_year - 1), 1, 1)
-    scan_end = date(lunar_year + 1, 12, 31)
+    # Most matching dates occur from roughly one CNY window to the next.
+    # Keep search bounded to reduce unnecessary daily swe/_solar_to_lunar calls.
+    anchor = date(max(1, lunar_year), 2, 1)
+    scan_start = anchor - timedelta(days=70)
+    scan_end = anchor + timedelta(days=420)
     cur = scan_start
     while cur <= scan_end:
         jd = swe.julday(cur.year, cur.month, cur.day, 12.0 - timezone)

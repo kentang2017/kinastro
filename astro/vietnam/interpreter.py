@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 from astro.vietnam.data.trung_chau_rules import (
     DAI_HAN_STYLE_GUIDE,
     LUU_NIEN_STYLE_GUIDE,
@@ -11,12 +13,24 @@ from astro.vietnam.data.trung_chau_rules import (
 from astro.vietnam.models import InterpretationBlock
 
 
-def _match_patterns(stars: set[str]) -> list[dict[str, object]]:
-    matched: list[dict[str, object]] = []
+class TrungChauPattern(TypedDict):
+    name: str
+    insight: str
+    effort: str
+
+
+def _match_patterns(stars: set[str]) -> list[TrungChauPattern]:
+    matched: list[TrungChauPattern] = []
     for pattern in TRUNG_CHAU_PATTERNS:
         required = set(pattern.get("requires", {}).get("all_of", []))
         if required and required.issubset(stars):
-            matched.append(pattern)
+            matched.append(
+                TrungChauPattern(
+                    name=str(pattern["name"]),
+                    insight=str(pattern["insight"]),
+                    effort=str(pattern["effort"]),
+                )
+            )
     return matched
 
 
