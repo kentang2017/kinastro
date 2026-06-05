@@ -28,7 +28,7 @@ from typing import Dict, List, Optional, Tuple
 @dataclass
 class AethyrData:
     """30 個以太層之一的完整資料 / Data for one of the 30 Aethyrs."""
-    number: int            # 1 (最高) → 30 (最低) / 1=highest, 30=lowest
+    number: int            # 1 → 30 (30=最高天界 highest, 1=最接近物質界 closest to Earth)
     name: str              # Enochian 名稱 (大寫) / Enochian name
     name_zh: str           # 中文名稱
     governors: List[str]   # 三位守護天使名稱 / Three Governor Angel names
@@ -142,7 +142,7 @@ AETHYRS: List[AethyrData] = [
     ),
     AethyrData(
         number=26, name="DES", name_zh="德斯",
-        governors=["POPHAND", "NIGRANA", "PАЗНИТА"],
+        governors=["POPHAND", "NIGRANA", "PAZNITA"],
         element="Earth", element_zh="土",
         planet="Venus", planet_zh="金星",
         keywords_en=["Beauty", "Foundation", "Form", "Material Manifestation"],

@@ -570,13 +570,13 @@ def compute_enochian_chart(
         wt = WATCHTOWERS.get(watchtower_dir)
         watchtower_zh = wt.direction_zh if wt else watchtower_dir
 
-        # Aethyr：根據行星對應範圍和星座選擇最接近的 Aethyr
+        # Aethyr：優先使用星座對應 Aethyr（若在行星範圍內），否則用行星範圍中心
         aethyr_range = planet_data.get("aethyr_range", (16, 20))
         sign_aethyr_num = sign_data.get("aethyr", aethyr_range[0])
-        # 選用星座 Aethyr（更精確）或行星範圍中心
-        aethyr_num = min(sign_aethyr_num, 30, key=lambda n: abs(n - (sum(aethyr_range) // 2)))
-        if sign_aethyr_num <= aethyr_range[1]:
+        if aethyr_range[0] <= sign_aethyr_num <= aethyr_range[1]:
             aethyr_num = sign_aethyr_num
+        else:
+            aethyr_num = (aethyr_range[0] + aethyr_range[1]) // 2
         aethyr = AETHYR_BY_NUMBER.get(aethyr_num, AETHYRS[0])
 
         element = planet_data.get("element", sign_data.get("element", "Air"))

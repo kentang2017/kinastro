@@ -40,7 +40,7 @@ from astro.enochian.constants import (
     SIGILLUM_DEI_AEMETH,
     ENOCHIAN_PLANETS,
 )
-from astro.i18n import get_ui_lang, t
+from astro.i18n import t
 
 # ============================================================
 # CSS 樣式
@@ -507,7 +507,7 @@ def _render_cross_reference(chart: EnochianChart) -> None:
 # 主渲染函式
 # ============================================================
 
-def render_streamlit(chart: Optional[EnochianChart] = None) -> None:  # type: ignore[name-defined]
+def render_streamlit(chart: Optional[EnochianChart] = None) -> None:
     """
     完整的 Enochian 占星 Streamlit UI 渲染器。
 
