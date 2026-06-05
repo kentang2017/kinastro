@@ -1886,9 +1886,6 @@ def render_tab_enochian() -> None:
         st.error(f"{t('error_tab_compute')}：{_e}")
         st.exception(_e)
 
-    _render_global_ai_chat()
-
-
 def render_tab_history() -> None:
     _bind_legacy()
     _is_calculated = st.session_state.get("_calculated", False)
