@@ -18,20 +18,22 @@ Public API:
     EnochianChart            — 命盤結果 dataclass
 """
 
-from .calculator import (
+from .enochian import (
     compute_enochian_chart,
     EnochianChart,
     EnochianPlanetPoint,
     EnochianHousePoint,
     PatronAngel,
     AethyrReading,
+    SigillumNode,
 )
 
-from .renderer import (
+from .visualization import (
     render_sigillum_svg,
     render_watchtower_svg,
     render_aethyr_svg,
     render_enochian_summary_svg,
+    render_element_balance_svg,
 )
 
 from .constants import (
@@ -46,6 +48,11 @@ from .constants import (
     ELEMENT_TABLE,
     AethyrData,
     WatchtowerData,
+)
+from .data import (
+    load_angel_tables,
+    load_sigillum_rules,
+    load_watchtower_aethyr_rules,
 )
 
 
@@ -63,12 +70,14 @@ __all__ = [
     "EnochianHousePoint",
     "PatronAngel",
     "AethyrReading",
+    "SigillumNode",
     # Renderer
     "render_streamlit",
     "render_sigillum_svg",
     "render_watchtower_svg",
     "render_aethyr_svg",
     "render_enochian_summary_svg",
+    "render_element_balance_svg",
     # Constants
     "AETHYRS",
     "AETHYR_BY_NUMBER",
@@ -81,4 +90,7 @@ __all__ = [
     "ELEMENT_TABLE",
     "AethyrData",
     "WatchtowerData",
+    "load_angel_tables",
+    "load_sigillum_rules",
+    "load_watchtower_aethyr_rules",
 ]
