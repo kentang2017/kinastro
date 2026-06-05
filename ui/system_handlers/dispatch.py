@@ -48,6 +48,7 @@ def _get_dispatch() -> dict[str, Callable]:
         "tab_rectification": western_systems.render_tab_rectification,
         "tab_trutine_of_hermes": western_systems.render_tab_trutine_of_hermes,
         "tab_esoteric": western_systems.render_tab_esoteric,
+        "tab_enochian": western_systems.render_tab_enochian,
         "tab_human_design": western_systems.render_tab_human_design,
         "tab_electional": western_systems.render_tab_electional,
         "tab_mundane": western_systems.render_tab_mundane,

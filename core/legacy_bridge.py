@@ -583,6 +583,10 @@ def render_esoteric_chart(*args, **kwargs):
     return _call("astro.esoteric", "render_streamlit", *args, **kwargs)
 
 
+def render_enochian_chart(*args, **kwargs):
+    return _call("astro.enochian", "render_streamlit", *args, **kwargs)
+
+
 def render_extended_lots(*args, **kwargs):
     return _call("astro.western.hellenistic", "render_extended_lots", *args, **kwargs)
 

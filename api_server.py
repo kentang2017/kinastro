@@ -55,6 +55,7 @@ from astro.bazi import compute_bazi
 from astro.horary.calculator import compute_western_horary, compute_vedic_prashna
 from astro.sports import analyze_sports_horary
 from astro.esoteric import compute_esoteric_chart
+from astro.enochian import compute_enochian_chart
 from astro.harmonic import compute_multi_harmonic
 from astro.primary_directions import compute_primary_directions
 from astro.electional.calculator import (
@@ -1262,6 +1263,31 @@ async def esoteric_chart(params: BirthParams) -> ChartResponse:
         return ChartResponse(system="esoteric", data=_chart_to_dict(chart))
     except Exception as exc:
         logger.exception("Esoteric Astrology chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/enochian", response_model=ChartResponse, tags=["Systems"])
+async def enochian_chart(params: BirthParams) -> ChartResponse:
+    """Compute an Enochian Astrology chart.
+
+    Maps the natal chart to the Enochian Magic system of John Dee & Edward Kelley (1582–1587):
+    - 30 Aethyrs (consciousness levels): primary and secondary Aethyr assignments
+    - 4 Watchtowers (elemental force fields): East/Air, West/Water, North/Earth, South/Fire
+    - Personal Patron Angel (Sun), Matron Angel (Moon), Ascendant Angel
+    - Sigillum Dei Aemeth personal mapping (7-pointed star, activated angels)
+    - Planetary correspondences: each planet → angel, watchtower, Aethyr, element, Enochian Call
+    - Ritual directions and magical practice suggestions
+    - Elemental balance analysis across the 4 Watchtowers
+
+    Ref: Lon Milo DuQuette, *Enochian Vision Magick* (Weiser, 2008);
+         Stephen Skinner, *The Complete Magician's Tables* (Golden Hoard, 2007).
+    """
+    try:
+        kw = _base_kwargs(params)
+        chart = compute_enochian_chart(**kw)
+        return ChartResponse(system="enochian", data=_chart_to_dict(chart))
+    except Exception as exc:
+        logger.exception("Enochian Astrology chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
