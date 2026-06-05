@@ -1,0 +1,15 @@
+{
+  "heptagram_nodes": [
+    {"index": 1, "planet": "Saturn", "default_angel": "ZAPHKIEL"},
+    {"index": 2, "planet": "Jupiter", "default_angel": "TZADKIEL"},
+    {"index": 3, "planet": "Mars", "default_angel": "CAMAEL"},
+    {"index": 4, "planet": "Sun", "default_angel": "MICHAEL"},
+    {"index": 5, "planet": "Venus", "default_angel": "HANAEL"},
+    {"index": 6, "planet": "Mercury", "default_angel": "RAPHAEL"},
+    {"index": 7, "planet": "Moon", "default_angel": "GABRIEL"}
+  ],
+  "activation_window": {
+    "major_roles": ["Patron", "Matron", "Ascendant", "ChartRuler", "StrongestPlanet"],
+    "max_highlight_angels": 7
+  }
+}

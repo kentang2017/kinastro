@@ -1,0 +1,15 @@
+{
+  "watchtower_weights": {
+    "angular_house_bonus": 0.4,
+    "chart_ruler_bonus": 0.45,
+    "strongest_planet_bonus": 0.35,
+    "luminary_bonus": 0.3
+  },
+  "aethyr_weights": {
+    "planet_match": 0.25,
+    "adjacent_aethyr": 0.1,
+    "element_match": 0.08,
+    "angle_bonus": 0.15,
+    "ruler_bonus": 0.2
+  }
+}

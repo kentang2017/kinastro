@@ -1,0 +1,25 @@
+{
+  "traditional_planetary_angels": {
+    "Sun": {"angel": "MICHAEL", "angel_zh": "米迦勒"},
+    "Moon": {"angel": "GABRIEL", "angel_zh": "加百列"},
+    "Mercury": {"angel": "RAPHAEL", "angel_zh": "拉斐爾"},
+    "Venus": {"angel": "HANAEL", "angel_zh": "哈納爾"},
+    "Mars": {"angel": "CAMAEL", "angel_zh": "卡馬爾"},
+    "Jupiter": {"angel": "TZADKIEL", "angel_zh": "察德基爾"},
+    "Saturn": {"angel": "TZAPHKIEL", "angel_zh": "察法基爾"}
+  },
+  "sigillum_activation_angels": {
+    "Jupiter": [{"angel": "TZADKIEL", "angel_zh": "察德基爾"}],
+    "Saturn": [{"angel": "TZAPHKIEL", "angel_zh": "察法基爾"}],
+    "Moon": [{"angel": "GABRIEL", "angel_zh": "加百列"}],
+    "Sun": [{"angel": "MICHAEL", "angel_zh": "米迦勒"}],
+    "default": [
+      {"angel": "TZADKIEL", "angel_zh": "察德基爾"},
+      {"angel": "TZAPHKIEL", "angel_zh": "察法基爾"}
+    ]
+  },
+  "invocation_templates": {
+    "en": "By the Names of {angel_names}, through the {watchtower} Watchtower and Aethyr {aethyr}, I align with my divine path.",
+    "zh": "奉 {angel_names} 之名，透過{watchtower}方守望塔與 {aethyr} 以太層，我與神聖道路對齊。"
+  }
+}

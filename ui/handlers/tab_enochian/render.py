@@ -32,6 +32,7 @@ from astro.enochian.renderer import (
     render_watchtower_svg,
     render_aethyr_svg,
     render_enochian_summary_svg,
+    render_element_balance_svg,
 )
 from astro.enochian.constants import (
     AETHYRS,
@@ -465,6 +466,13 @@ def _render_summary_section(chart: EnochianChart) -> None:
                 f'</div>'
             )
             st.markdown(bar_html, unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("**Elemental Balance SVG**")
+        st.components.v1.html(
+            render_element_balance_svg(chart.element_scores, width=360, height=210),
+            height=220,
+            scrolling=False,
+        )
 
 
 def _render_cross_reference(chart: EnochianChart) -> None:
@@ -541,14 +549,17 @@ def render_streamlit(chart: Optional[EnochianChart] = None) -> None:
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        _render_angel_card(chart.patron_angel,
-                           "守護天使（太陽）", "Patron Angel (Sun)")
+        _render_angel_card(chart.patron_angel, "守護天使（太陽）", "Patron Angel (Sun)")
     with col2:
-        _render_angel_card(chart.matron_angel,
-                           "守護女神天使（月亮）", "Matron Angel (Moon)")
+        _render_angel_card(chart.matron_angel, "守護女神天使（月亮）", "Matron Angel (Moon)")
     with col3:
-        _render_angel_card(chart.asc_angel,
-                           "上升點天使", "Ascendant Angel")
+        _render_angel_card(chart.asc_angel, "上升點天使", "Ascendant Angel")
+
+    col4, col5 = st.columns(2)
+    with col4:
+        _render_angel_card(chart.chart_ruler_angel, "命主星天使", "Chart Ruler Angel")
+    with col5:
+        _render_angel_card(chart.strongest_planet_angel, "最強行星天使", "Strongest Planet Angel")
 
     st.divider()
 
@@ -618,5 +629,3 @@ with the Angelic Magic system recorded by John Dee (1527–1608) and Edward Kell
 - Aaron Leitch: *Secrets of the Magickal Grimoires* (Llewellyn, 2005)
 - Israel Regardie: *The Golden Dawn* (Llewellyn, 1971)
 """)
-
-
