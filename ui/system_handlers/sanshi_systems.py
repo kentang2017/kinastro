@@ -256,6 +256,18 @@ def render_tab_horary() -> None:
         st.exception(_e)
 
 
+def render_tab_napoleon_oraculum() -> None:
+    try:
+        from astro.napoleon_oraculum import render_streamlit as _render_oraculum
+
+        _payload = _render_oraculum()
+        if _payload:
+            _render_ai_button("tab_napoleon_oraculum", _payload, btn_key="napoleon_oraculum")
+    except Exception as _e:
+        st.error(f"{t('error_tab_compute')}：{_e}")
+        st.exception(_e)
+
+
 def render_tab_sports_astrology() -> None:
     _bind_legacy()
     _is_calculated = st.session_state.get("_calculated", False)
