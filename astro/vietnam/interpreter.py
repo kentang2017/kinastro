@@ -44,6 +44,7 @@ def build_interpretation(
 ) -> InterpretationBlock:
     """Generate interpretation block based on selected mode."""
     star_set = set(stars)
+    sep = "：" if lang == "zh" else ": "
 
     if interpret_mode == "traditional_cn":
         return InterpretationBlock(
@@ -60,12 +61,12 @@ def build_interpretation(
     effort_notes = [str(m["effort"]) for m in matched]
 
     personality = (
-        f"Trung Châu 心理取向：{TRUNG_CHAU_CORE_THEMES['psychology']}"
+        f"Trung Châu 心理取向{sep}{TRUNG_CHAU_CORE_THEMES['psychology']}"
         + (f" 已成格：{'；'.join(pattern_notes)}" if pattern_notes else " 目前未成明顯專格，以穩定節奏累積。")
     )
-    physiology = f"Trung Châu 生理取向：{TRUNG_CHAU_CORE_THEMES['physiology']}"
+    physiology = f"Trung Châu 生理取向{sep}{TRUNG_CHAU_CORE_THEMES['physiology']}"
     self_effort = (
-        f"Trung Châu 後天取向：{TRUNG_CHAU_CORE_THEMES['self_effort']}"
+        f"Trung Châu 後天取向{sep}{TRUNG_CHAU_CORE_THEMES['self_effort']}"
         + (f" 執行焦點：{'；'.join(effort_notes)}" if effort_notes else " 執行焦點：先強化日常習慣與技能堆疊。")
     )
 

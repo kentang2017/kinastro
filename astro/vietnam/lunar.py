@@ -9,6 +9,9 @@ import swisseph as swe
 from astro.ziwei import _solar_to_lunar
 from astro.vietnam.models import TuViInput
 
+PRE_CNY_SCAN_DAYS = 70
+POST_CNY_SCAN_DAYS = 420
+
 
 def vietnam_lunar_to_solar_date(
     lunar_year: int,
@@ -22,8 +25,8 @@ def vietnam_lunar_to_solar_date(
     # Most matching dates occur from roughly one CNY window to the next.
     # Keep search bounded to reduce unnecessary daily swe/_solar_to_lunar calls.
     anchor = date(max(1, lunar_year), 2, 1)
-    scan_start = anchor - timedelta(days=70)
-    scan_end = anchor + timedelta(days=420)
+    scan_start = anchor - timedelta(days=PRE_CNY_SCAN_DAYS)
+    scan_end = anchor + timedelta(days=POST_CNY_SCAN_DAYS)
     cur = scan_start
     while cur <= scan_end:
         jd = swe.julday(cur.year, cur.month, cur.day, 12.0 - timezone)

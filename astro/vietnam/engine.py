@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from astro.vietnam.comparison import build_comparison
 from astro.vietnam.data.stars import get_star_profile
 from astro.vietnam.interpreter import build_interpretation
@@ -86,6 +88,7 @@ def compute_vietnam_tu_vi_chart(**kwargs) -> TuViChart:
         },
     }
 
+    visual = {"svg_12_palace": ""}
     result = TuViChart(
         system="vietnam_tu_vi",
         input_data=payload,
@@ -98,6 +101,6 @@ def compute_vietnam_tu_vi_chart(**kwargs) -> TuViChart:
         interpretation=interpretation,
         remedies=remedies,
         comparison=comparison,
+        visual=visual,
     )
-    result.visual["svg_12_palace"] = build_12_palace_svg(result, payload.lang)
-    return result
+    return replace(result, visual={"svg_12_palace": build_12_palace_svg(result, payload.lang)})

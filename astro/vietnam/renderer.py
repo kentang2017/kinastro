@@ -10,6 +10,28 @@ import svgwrite
 from astro.vietnam.data.stars import get_star_name
 from astro.vietnam.models import TuViChart
 
+MAX_STARS_PER_PALACE = 2
+SECTION_TITLES = {
+    "zh": {
+        "personality": "🧭 基本性格 + 格局",
+        "periods": "⏳ 大限 / 流年",
+        "remedies": "🛠️ Remedies",
+        "comparison": "🔍 中越對照",
+    },
+    "vi": {
+        "personality": "🧭 Tính cách & Cách cục",
+        "periods": "⏳ Đại hạn / Lưu niên",
+        "remedies": "🛠️ Remedies",
+        "comparison": "🔍 So sánh Trung-Việt",
+    },
+    "en": {
+        "personality": "🧭 Personality & Pattern",
+        "periods": "⏳ Dai Han / Luu Nien",
+        "remedies": "🛠️ Remedies",
+        "comparison": "🔍 CN-VN Comparison",
+    },
+}
+
 
 def build_12_palace_svg(chart: TuViChart, lang: str = "zh") -> str:
     """Build a simple 12-palace circular SVG with localized star names."""
@@ -30,7 +52,7 @@ def build_12_palace_svg(chart: TuViChart, lang: str = "zh") -> str:
         label_r = 265
         lx = cx + label_r * math.cos(rad + (15 * math.pi / 180.0))
         ly = cy + label_r * math.sin(rad + (15 * math.pi / 180.0))
-        stars_local = ", ".join(get_star_name(s, lang) for s in palace.stars[:2]) or "-"
+        stars_local = ", ".join(get_star_name(s, lang) for s in palace.stars[:MAX_STARS_PER_PALACE]) or "-"
         dwg.add(dwg.text(
             f"{palace.name} {palace.branch_name}",
             insert=(lx, ly - 8),
@@ -75,6 +97,7 @@ def render_streamlit(
         "trung_chau_tam_hop": "Trung Châu Tam Hợp",
         "traditional_cn": "Traditional CN",
     }.get(str(chart.interpretation_mode), str(chart.interpretation_mode))
+    titles = SECTION_TITLES.get(chart.language, SECTION_TITLES["zh"])
     st.subheader(f"🇻🇳 Việt Nam Tử Vi Đẩu Số（{mode_label}）")
     st.caption(f"Interpret mode: {chart.interpretation_mode} · Language: {chart.language}")
 
@@ -84,20 +107,20 @@ def render_streamlit(
     if after_chart_hook:
         after_chart_hook()
 
-    st.markdown("### 🧭 基本性格 + 格局")
+    st.markdown(f"### {titles['personality']}")
     st.write(chart.interpretation.personality)
     st.write(chart.interpretation.physiology)
     st.write(chart.interpretation.self_effort)
 
-    st.markdown("### ⏳ Đại hạn / Lưu niên")
+    st.markdown(f"### {titles['periods']}")
     st.write(chart.interpretation.dai_han)
     st.write(chart.interpretation.luu_nien)
 
-    st.markdown("### 🛠️ Remedies")
+    st.markdown(f"### {titles['remedies']}")
     for item in chart.remedies:
         st.markdown(f"- {item}")
 
-    st.markdown("### 🔍 中越對照")
+    st.markdown(f"### {titles['comparison']}")
     for row in chart.comparison:
         st.markdown(
             f"**{row.topic}**\n\n"
