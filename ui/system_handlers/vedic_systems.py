@@ -51,9 +51,9 @@ def _render_bphs_result(bphs_result):
             status_icon = "🏠"
         _dignity_rows.append({
             "": status_icon,
-            t("bphs_col_planet"): f"{auto_cn(d.planet_zh, "planet_zh")} ({d.planet})",
-            t("bphs_col_sign"): f"{auto_cn(d.rashi_zh, "rashi_zh")} ({d.rashi_en})",
-            t("bphs_col_dignity"): auto_cn(d.status_zh, "status_zh"),
+            t("bphs_col_planet"): f"{auto_cn(d.planet_zh, 'planet_zh')} ({d.planet})",
+            t("bphs_col_sign"): f"{auto_cn(d.rashi_zh, 'rashi_zh')} ({d.rashi_en})",
+            t("bphs_col_dignity"): auto_cn(d.status_zh, 'status_zh'),
         })
     if _dignity_rows:
         st.dataframe(pd.DataFrame(_dignity_rows), hide_index=True, width='stretch')
@@ -66,10 +66,10 @@ def _render_bphs_result(bphs_result):
     _maitri_rows = []
     for m in bphs_result.graha_maitri:
         _maitri_rows.append({
-            t("bphs_col_planet"): f"{auto_cn(m.planet_zh, "planet_zh")} ({m.planet})",
-            t("bphs_col_friends"): auto_cn(m.friends_zh, "friends_zh"),
-            t("bphs_col_neutral"): auto_cn(m.neutral_zh, "neutral_zh"),
-            t("bphs_col_enemies"): auto_cn(m.enemies_zh, "enemies_zh"),
+            t("bphs_col_planet"): f"{auto_cn(m.planet_zh, 'planet_zh')} ({m.planet})",
+            t("bphs_col_friends"): auto_cn(m.friends_zh, 'friends_zh'),
+            t("bphs_col_neutral"): auto_cn(m.neutral_zh, 'neutral_zh'),
+            t("bphs_col_enemies"): auto_cn(m.enemies_zh, 'enemies_zh'),
         })
     if _maitri_rows:
         st.dataframe(pd.DataFrame(_maitri_rows), hide_index=True, width='stretch')
@@ -81,12 +81,12 @@ def _render_bphs_result(bphs_result):
     st.caption(t("bphs_caption_avastha"))
     _strength_icon_map = {"強": "💪", "中": "⚖️", "弱": "⚠️"}
     for av in bphs_result.avasthas:
-        _av_strength = auto_cn(av.strength, "strength")
+        _av_strength = auto_cn(av.strength, 'strength')
         strength_icon = _strength_icon_map.get(av.strength, "❓")
-        with st.expander(f"{strength_icon} {auto_cn(av.planet_zh, "planet_zh")} ({av.planet}) — {auto_cn(av.avastha_name, "avastha_name")} [{_av_strength}]"):
-            st.markdown(f"**{t('bphs_label_avastha')}:** {auto_cn(av.avastha_name, "avastha_name")}")
+        with st.expander(f"{strength_icon} {auto_cn(av.planet_zh, 'planet_zh')} ({av.planet}) — {auto_cn(av.avastha_name, 'avastha_name')} [{_av_strength}]"):
+            st.markdown(f"**{t('bphs_label_avastha')}:** {auto_cn(av.avastha_name, 'avastha_name')}")
             st.markdown(f"**{t('bphs_label_strength')}:** {_av_strength}")
-            st.markdown(f"**{t('bphs_label_effect')}:** {auto_cn(av.reading_zh, "reading_zh")}")
+            st.markdown(f"**{t('bphs_label_effect')}:** {auto_cn(av.reading_zh, 'reading_zh')}")
 
     st.divider()
 
@@ -95,9 +95,9 @@ def _render_bphs_result(bphs_result):
     st.caption(t("bphs_caption_raja"))
     for ry in bphs_result.raja_yogas:
         icon = "✅" if ry.is_present else "⬜"
-        with st.expander(f"{icon} {auto_cn(ry.name, "name_cn")}"):
-            st.markdown(f"**{t('bphs_label_description')}:** {auto_cn(ry.description_zh, "description_zh")}")
-            st.markdown(f"**{t('bphs_label_judgment')}:** {auto_cn(ry.reason_zh, "reason_zh")}")
+        with st.expander(f"{icon} {auto_cn(ry.name, 'name_cn')}"):
+            st.markdown(f"**{t('bphs_label_description')}:** {auto_cn(ry.description_zh, 'description_zh')}")
+            st.markdown(f"**{t('bphs_label_judgment')}:** {auto_cn(ry.reason_zh, 'reason_zh')}")
 
     st.divider()
 
@@ -106,26 +106,26 @@ def _render_bphs_result(bphs_result):
     st.caption(t("bphs_caption_bhava"))
     for br in bphs_result.bhava_readings:
         _house_label = t("bphs_label_house_num").format(n=br.bhava)
-        label_parts = [f"{_house_label} {auto_cn(br.bhava_zh, "bhava_zh")}"]
+        label_parts = [f"{_house_label} {auto_cn(br.bhava_zh, 'bhava_zh')}"]
         if br.signification:
             label_parts.append(f"— {br.signification}")
         label = " ".join(label_parts)
         with st.expander(label):
             _lord_in = t("bphs_label_lord_in_house").format(n=br.lord_house)
-            st.markdown(f"**{t('bphs_label_house_lord')}:** {auto_cn(br.lord_zh, "lord_zh")} ({br.lord_key}) — {_lord_in}")
+            st.markdown(f"**{t('bphs_label_house_lord')}:** {auto_cn(br.lord_zh, 'lord_zh')} ({br.lord_key}) — {_lord_in}")
             if br.lord_placement_zh:
-                st.info(f"{t('bphs_label_lord_reading')}：{auto_cn(br.lord_placement_zh, "lord_placement_zh")}")
+                st.info(f"{t('bphs_label_lord_reading')}：{auto_cn(br.lord_placement_zh, 'lord_placement_zh')}")
             if br.planets_in_bhava:
                 st.markdown(t("bphs_label_planets_in"))
                 for pk, pk_zh, reading, level in br.planets_in_bhava:
-                    level_str = f" [{auto_cn(level, "level")}]" if level else ""
-                    st.markdown(f"- **{auto_cn(pk_zh, "pk_zh")}** ({pk}){level_str}：{auto_cn(reading, "reading")}")
+                    level_str = f" [{auto_cn(level, 'level')}]" if level else ""
+                    st.markdown(f"- **{auto_cn(pk_zh, 'pk_zh')}** ({pk}){level_str}：{auto_cn(reading, 'reading')}")
             if br.special_yogas:
                 st.markdown(t("bphs_label_special_yogas"))
                 for sy in br.special_yogas:
-                    st.markdown(f"- **{auto_cn(sy.get('name', ''), "name_cn")}**：{auto_cn(sy.get('zh', ''), "zh")}")
+                    st.markdown(f"- **{auto_cn(sy.get('name', ''), 'name_cn')}**：{auto_cn(sy.get('zh', ''), 'zh')}")
             if br.note_zh:
-                st.caption(f"💡 {auto_cn(br.note_zh, "note_zh")}")
+                st.caption(f"💡 {auto_cn(br.note_zh, 'note_zh')}")
 
     st.divider()
 
@@ -145,7 +145,7 @@ def _render_bphs_result(bphs_result):
         st.dataframe(pd.DataFrame(_varga_rows), hide_index=True, width='stretch')
     note = bphs_result.varga_info.get("general_note_zh", "")
     if note:
-        st.caption(f"💡 {auto_cn(note, "note")}")
+        st.caption(f"💡 {auto_cn(note, 'note')}")
 
 
 def render_tab_indian() -> None:
@@ -273,9 +273,9 @@ def render_tab_indian() -> None:
                 yogas = compute_yogas_cached(tuple(sorted(p_lons_y.items())), asc_lon_y)
                 for yg in yogas:
                     icon = "✅" if yg.is_present else "⬜"
-                    with st.expander(f"{icon} {yg.name} ({auto_cn(yg.name_cn, "name_cn")}) — {yg.strength}"):
+                    with st.expander(f"{icon} {yg.name} ({auto_cn(yg.name_cn, 'name_cn')}) — {yg.strength}"):
                         _yg_text = yg.description_cn if get_lang() in ("zh", "zh_cn") else yg.description
-                        st.write(auto_cn(_yg_text, "reading_zh"))
+                        st.write(auto_cn(_yg_text, 'reading_zh'))
                 _render_ai_button("tab_indian", v_chart, btn_key="vedic_yogas")
 
             with _v_tab_bphs:
