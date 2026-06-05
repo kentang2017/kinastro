@@ -1,5 +1,5 @@
 """
-astro/enochian/renderer.py — Enochian 占星 SVG 視覺化模組
+astro/enochian/visualization.py — Enochian 占星 SVG 視覺化模組
 
 提供三個主要視覺化：
   1. render_sigillum_svg()    — Sigillum Dei Aemeth（神之印）圓形魔法圖
@@ -672,6 +672,7 @@ def render_element_balance_svg(
     ]
     y = 50
     for element, zh in el_order:
+        # Defensive clamp for API/UI callers that may pass non-normalized values.
         score = max(0.0, min(1.0, float(element_scores.get(element, 0.0))))
         color = _ELEMENT_COLORS.get(element, _COLORS["gold"])
         bar_w = int((width - 180) * score)

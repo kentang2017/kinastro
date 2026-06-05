@@ -13,8 +13,17 @@ _DATA_DIR = Path(__file__).resolve().parent
 @lru_cache(maxsize=None)
 def _load_json(filename: str) -> Dict[str, Any]:
     path = _DATA_DIR / filename
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            f"Enochian data file not found: {path}. Ensure it exists in astro/enochian/data/."
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"Invalid JSON in Enochian data file: {path}. Please fix JSON syntax."
+        ) from exc
 
 
 @lru_cache(maxsize=1)

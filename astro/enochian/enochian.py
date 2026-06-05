@@ -1,5 +1,5 @@
 """
-astro/enochian/calculator.py — Enochian Astrology 計算引擎
+astro/enochian/enochian.py — Enochian Astrology 計算引擎
 
 本模組將標準 natal chart（出生盤）對應到 Enochian 魔法系統：
   - 行星位置 → Enochian 天使、守望塔、以太層（Aethyr）
@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import swisseph as swe
-from astro.western.western import compute_western_chart
+from astro.western.western import WesternChart, compute_western_chart
 
 from .data import (
     load_angel_tables,
@@ -88,6 +88,19 @@ _SIGNS_ZH = [
     "獅子座", "處女座", "天秤座", "天蠍座",
     "射手座", "摩羯座", "水瓶座", "雙魚座",
 ]
+
+PLANET_ZH_MAP: Dict[str, str] = {
+    "Sun": "太陽",
+    "Moon": "月亮",
+    "Mercury": "水星",
+    "Venus": "金星",
+    "Mars": "火星",
+    "Jupiter": "木星",
+    "Saturn": "土星",
+    "Uranus": "天王星",
+    "Neptune": "海王星",
+    "Pluto": "冥王星",
+}
 
 # ============================================================
 # 資料類別 (Data Classes)
@@ -245,10 +258,10 @@ class EnochianChart:
     magical_purpose_en: str
     magical_purpose_zh: str
     invocation_en: str
+    invocation_zh: str
 
     # 與西方占星的對照 / Western astrology comparison
     western_cross_reference: Dict[str, str]
-    invocation_zh: str
 
 
 # ============================================================
@@ -425,12 +438,12 @@ def _build_aethyr_readings(planet_points: List[EnochianPlanetPoint],
 
 
 def _build_patron_angel(planet_name: str, planet_point: Optional[EnochianPlanetPoint],
-                        angel_type: str, sign: str) -> PatronAngel:
+                        angel_type: str, sign: str, source_role: str = "") -> PatronAngel:
     """建立守護天使物件。"""
     if planet_point:
         watchtower = planet_point.watchtower
         watchtower_zh = planet_point.watchtower_zh
-        aethyr = planet_point.aethyr
+        primary_aethyr = planet_point.aethyr
         angel_name = planet_point.enochian_angel
         angel_name_zh = planet_point.angel_zh
     else:
@@ -438,7 +451,7 @@ def _build_patron_angel(planet_name: str, planet_point: Optional[EnochianPlanetP
         watchtower = sign_data.get("watchtower", "East")
         watchtower_zh = WATCHTOWERS[watchtower].direction_zh
         aethyr_num = sign_data.get("aethyr", 30)
-        aethyr = AETHYR_BY_NUMBER.get(aethyr_num, AETHYRS[0])
+        primary_aethyr = AETHYR_BY_NUMBER.get(aethyr_num, AETHYRS[0])
         angel_name = sign_data.get("angel", "RAPHAEL")
         angel_name_zh = sign_data.get("angel_zh", "拉斐爾")
 
@@ -449,11 +462,11 @@ def _build_patron_angel(planet_name: str, planet_point: Optional[EnochianPlanetP
     invocation_en = (
         f"I call upon thee, {angel_name}, my {angel_type} Angel! "
         f"By the power of the {watchtower}ern Watchtower and the "
-        f"{aethyr.name} Aethyr, guide and protect me on my path."
+        f"{primary_aethyr.name} Aethyr, guide and protect me on my path."
     )
     invocation_zh = (
         f"我呼喚你，{angel_name_zh}，我的守護天使！"
-        f"以{watchtower_zh}方守望塔的力量和{aethyr.name_zh}以太層的庇護，"
+        f"以{watchtower_zh}方守望塔的力量和{primary_aethyr.name_zh}以太層的庇護，"
         f"在我的道路上引導和保護我。"
     )
 
@@ -465,11 +478,12 @@ def _build_patron_angel(planet_name: str, planet_point: Optional[EnochianPlanetP
         determined_zh={"Sun": "太陽", "Moon": "月亮", "Ascendant": "上升點"}.get(planet_name, planet_name),
         watchtower=watchtower,
         watchtower_zh=watchtower_zh,
-        primary_aethyr=aethyr,
+        primary_aethyr=primary_aethyr,
         attributes_en=attributes_en,
         attributes_zh=attributes_zh,
         invocation_en=invocation_en,
         invocation_zh=invocation_zh,
+        source_role=source_role,
     )
 
 
@@ -529,10 +543,12 @@ def _build_western_cross_reference(planet_points: List[EnochianPlanetPoint]) -> 
 
 
 def _normalize_western_planet_name(name: str) -> str:
+    """Extract plain planet name from Western labels (e.g. 'Sun ☉' -> 'Sun')."""
     return name.split()[0].strip()
 
 
-def _compute_strongest_planet(western_chart) -> str:
+def _compute_strongest_planet(western_chart: WesternChart) -> str:
+    """Score planets by angularity, luminary priority, dignity, and retrograde state."""
     rules = load_watchtower_aethyr_rules().get("watchtower_weights", {})
     angular_bonus = float(rules.get("angular_house_bonus", 0.4))
     luminary_bonus = float(rules.get("luminary_bonus", 0.3))
@@ -600,7 +616,8 @@ def _build_dynamic_activation_angels(
     for angel in angels:
         if angel and angel not in deduped:
             deduped.append(angel)
-    max_items = int(load_sigillum_rules().get("activation_window", {}).get("max_highlight_angels", 7))
+    sigillum_rules = load_sigillum_rules()
+    max_items = int(sigillum_rules.get("activation_window", {}).get("max_highlight_angels", 7))
     return deduped[:max_items]
 
 
@@ -658,12 +675,6 @@ def compute_enochian_chart(
 
     # 5. 建立行星 Enochian 對應
     planet_points: List[EnochianPlanetPoint] = []
-    planet_zh_map = {
-        "Sun": "太陽", "Moon": "月亮", "Mercury": "水星", "Venus": "金星",
-        "Mars": "火星", "Jupiter": "木星", "Saturn": "土星",
-        "Uranus": "天王星", "Neptune": "海王星", "Pluto": "冥王星",
-    }
-
     western_planets = {
         _normalize_western_planet_name(p.name): p
         for p in western_chart.planets
@@ -714,7 +725,7 @@ def compute_enochian_chart(
 
         # 個人化解讀
         interp_zh = (
-            f"你的{planet_zh_map.get(planet_name, planet_name)}位於{sign_zh}（宮位{house}），"
+            f"你的{PLANET_ZH_MAP.get(planet_name, planet_name)}位於{sign_zh}（宮位{house}），"
             f"對應{element_zh}元素守望塔（{watchtower_zh}方）和{aethyr.name_zh}以太層。"
             f"守護天使{angel_zh}帶來：{' 、'.join(keywords_zh[:2])}。"
         )
@@ -726,7 +737,7 @@ def compute_enochian_chart(
 
         point = EnochianPlanetPoint(
             planet_name=planet_name,
-            planet_zh=planet_zh_map.get(planet_name, planet_name),
+            planet_zh=PLANET_ZH_MAP.get(planet_name, planet_name),
             longitude=lon,
             sign=sign,
             sign_zh=sign_zh,
@@ -809,10 +820,8 @@ def compute_enochian_chart(
     sun_point = next((p for p in planet_points if p.planet_name == "Sun"), None)
     moon_point = next((p for p in planet_points if p.planet_name == "Moon"), None)
 
-    patron_angel = _build_patron_angel("Sun", sun_point, "Patron", asc_sign)
-    patron_angel.source_role = "Patron"
-    matron_angel = _build_patron_angel("Moon", moon_point, "Matron", asc_sign)
-    matron_angel.source_role = "Matron"
+    patron_angel = _build_patron_angel("Sun", sun_point, "Patron", asc_sign, source_role="Patron")
+    matron_angel = _build_patron_angel("Moon", moon_point, "Matron", asc_sign, source_role="Matron")
 
     # 上升點天使：用上升點星座對應
     asc_sign_data = SIGN_ENOCHIAN.get(asc_sign, {})
@@ -838,7 +847,8 @@ def compute_enochian_chart(
         source_role="Ascendant",
     )
 
-    chart_ruler_planet = _normalize_western_planet_name(getattr(western_chart, "chart_ruler", "Sun"))
+    chart_ruler_raw = _normalize_western_planet_name(getattr(western_chart, "chart_ruler", "Sun"))
+    chart_ruler_planet = chart_ruler_raw if chart_ruler_raw in _SWE_IDS else "Sun"
     strongest_planet = _compute_strongest_planet(western_chart)
     chart_ruler_point = next((p for p in planet_points if p.planet_name == chart_ruler_planet), sun_point)
     strongest_planet_point = next((p for p in planet_points if p.planet_name == strongest_planet), sun_point)
@@ -848,15 +858,15 @@ def compute_enochian_chart(
         chart_ruler_point,
         "ChartRuler",
         asc_sign,
+        source_role="ChartRuler",
     )
-    chart_ruler_angel.source_role = "ChartRuler"
     strongest_planet_angel = _build_patron_angel(
         strongest_planet,
         strongest_planet_point,
         "StrongestPlanet",
         asc_sign,
+        source_role="StrongestPlanet",
     )
-    strongest_planet_angel.source_role = "StrongestPlanet"
 
     guardian_angel_cards = [
         patron_angel,

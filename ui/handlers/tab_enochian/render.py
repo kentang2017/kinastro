@@ -555,12 +555,11 @@ def render_streamlit(chart: Optional[EnochianChart] = None) -> None:
     with col3:
         _render_angel_card(chart.asc_angel, "上升點天使", "Ascendant Angel")
 
-    if hasattr(chart, "chart_ruler_angel") and hasattr(chart, "strongest_planet_angel"):
-        col4, col5 = st.columns(2)
-        with col4:
-            _render_angel_card(chart.chart_ruler_angel, "命主星天使", "Chart Ruler Angel")
-        with col5:
-            _render_angel_card(chart.strongest_planet_angel, "最強行星天使", "Strongest Planet Angel")
+    col4, col5 = st.columns(2)
+    with col4:
+        _render_angel_card(chart.chart_ruler_angel, "命主星天使", "Chart Ruler Angel")
+    with col5:
+        _render_angel_card(chart.strongest_planet_angel, "最強行星天使", "Strongest Planet Angel")
 
     st.divider()
 
@@ -630,4 +629,3 @@ with the Angelic Magic system recorded by John Dee (1527–1608) and Edward Kell
 - Aaron Leitch: *Secrets of the Magickal Grimoires* (Llewellyn, 2005)
 - Israel Regardie: *The Golden Dawn* (Llewellyn, 1971)
 """)
-

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Dict, List, Tuple
 
+MAX_GUARDIAN_ANGELS_DISPLAY = 4
+
 
 def build_spiritual_path(
     dominant_watchtower: str,
@@ -14,8 +16,8 @@ def build_spiritual_path(
     primary_aethyr_name_zh: str,
     guardian_angels: List[str],
 ) -> Tuple[str, str]:
-    angels = ", ".join(guardian_angels[:4]) if guardian_angels else "your guardian choir"
-    angels_zh = "、".join(guardian_angels[:4]) if guardian_angels else "你的守護天使群"
+    angels = ", ".join(guardian_angels[:MAX_GUARDIAN_ANGELS_DISPLAY]) if guardian_angels else "your guardian choir"
+    angels_zh = "、".join(guardian_angels[:MAX_GUARDIAN_ANGELS_DISPLAY]) if guardian_angels else "你的守護天使群"
     en = (
         f"Your spiritual path is anchored in the {dominant_watchtower} Watchtower and {dominant_element} element. "
         f"Aethyr {primary_aethyr_name} is your primary initiation field, guided by {angels}."
@@ -68,4 +70,3 @@ def build_invocation(
             aethyr=aethyr_name_zh,
         ),
     }
-
