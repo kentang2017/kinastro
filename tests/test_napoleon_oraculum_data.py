@@ -1,4 +1,11 @@
-from astro.napoleon_oraculum.data import answers, get_oraculum_answer, oraculum, question_pairs, questions
+from astro.napoleon_oraculum.data import (
+    ORACULUM_LETTERS,
+    answers,
+    get_oraculum_answer,
+    oraculum,
+    question_pairs,
+    questions,
+)
 
 
 def test_oraculum_shapes() -> None:
@@ -9,8 +16,7 @@ def test_oraculum_shapes() -> None:
 
 
 def test_answers_tables_complete() -> None:
-    required = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "O", "P", "Q", "Ɐ"]
-    for key in required:
+    for key in ORACULUM_LETTERS:
         assert key in answers
         assert len(answers[key]) == 16
 

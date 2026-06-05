@@ -53,15 +53,15 @@ def render_streamlit() -> dict[str, object]:
         unsafe_allow_html=True,
     )
 
-    options = list(range(16))
+    question_indices = list(range(16))
     question_idx = st.selectbox(
         "問題 / Question",
-        options=options,
+        options=question_indices,
         format_func=lambda idx: f"{idx + 1}. {question_pairs[idx]['en']}｜{question_pairs[idx]['zh']}",
         key="napoleon_oraculum_question",
     )
 
-    mode_col, number_col = st.columns([1, 1.2])
+    mode_col, number_col = st.columns([5, 6])
     with mode_col:
         mode = st.radio(
             "取數方式 / Number",
@@ -81,11 +81,13 @@ def render_streamlit() -> dict[str, object]:
             )
         st.session_state["napoleon_oraculum_number"] = number
     else:
+        if "napoleon_oraculum_number" not in st.session_state:
+            st.session_state["napoleon_oraculum_number"] = 8
         with number_col:
-            st.write("&nbsp;")
+            st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
             if st.button("🎲 擲命運之數 / Cast", key="napoleon_oraculum_cast", width="stretch"):
                 st.session_state["napoleon_oraculum_number"] = random.randint(1, 16)
-        number = st.session_state.get("napoleon_oraculum_number", random.randint(1, 16))
+        number = st.session_state["napoleon_oraculum_number"]
 
     st.info(f"Question #{question_idx + 1} · Number {number}")
 
