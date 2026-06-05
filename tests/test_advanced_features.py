@@ -842,7 +842,7 @@ class TestApiServer:
         routes = [r.path for r in api_server.app.routes]
         expected = ["/api/chinese", "/api/western", "/api/vedic",
                     "/api/thai", "/api/kabbalistic", "/api/arabic",
-                    "/api/maya", "/api/ziwei", "/api/mahabote",
+                    "/api/maya", "/api/ziwei", "/api/vietnam_tu_vi", "/api/mahabote",
                     "/api/myanmar_mahabote",
                     "/api/decans", "/api/nadi", "/api/zurkhai",
                     "/api/malay_nujum",

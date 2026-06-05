@@ -70,6 +70,7 @@ from astro.astronomical_geomancy.calculator import (
 )
 from astro.malay import MalayNujumEngine, MalayNujumMethod, MalayNujumRequest
 from astro.myanmar import compute_myanmar_mahabote_chart, serialize_chart as serialize_myanmar_chart
+from astro.vietnam import compute_vietnam_tu_vi_chart
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -281,6 +282,30 @@ class MalayNujumParams(BirthParams):
     script_hint: str = Field(default="auto", description="Name script hint: auto/roman/arabic.")
 
 
+class VietnamTuViParams(BirthParams):
+    """Parameters for Vietnam Tử Vi endpoint."""
+
+    gender: str = Field(
+        default="男",
+        pattern=r"^(男|女|male|female)$",
+        description="Gender for Ziwei calculation",
+    )
+    calendar_mode: str = Field(
+        default="solar_gregorian",
+        pattern=r"^(solar_gregorian|chinese_lunar_baseline|vietnam_lunar)$",
+    )
+    interpret_mode: str = Field(
+        default="trung_chau_tam_hop",
+        pattern=r"^(traditional_cn|trung_chau_tam_hop)$",
+    )
+    lang: str = Field(default="zh", pattern=r"^(zh|vi|en)$")
+    use_lunar_input: bool = Field(default=False)
+    lunar_year: Optional[int] = Field(default=None)
+    lunar_month: Optional[int] = Field(default=None)
+    lunar_day: Optional[int] = Field(default=None)
+    lunar_is_leap: bool = Field(default=False)
+
+
 class ChartResponse(BaseModel):
     """Generic envelope for a single chart result."""
 
@@ -437,6 +462,51 @@ def _cached_ziwei(key: str, year: int, month: int, day: int, hour: int,
         year=year, month=month, day=day, hour=hour, minute=minute,
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name,
+    )
+    return _chart_to_dict(chart)
+
+
+@lru_cache(maxsize=256)
+def _cached_vietnam_tu_vi(
+    key: str,
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    timezone: float,
+    latitude: float,
+    longitude: float,
+    location_name: str,
+    gender: str,
+    calendar_mode: str,
+    interpret_mode: str,
+    lang: str,
+    use_lunar_input: bool,
+    lunar_year: int | None,
+    lunar_month: int | None,
+    lunar_day: int | None,
+    lunar_is_leap: bool,
+) -> dict:
+    chart = compute_vietnam_tu_vi_chart(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        location_name=location_name,
+        gender=gender,
+        calendar_mode=calendar_mode,
+        interpret_mode=interpret_mode,
+        lang=lang,
+        use_lunar_input=use_lunar_input,
+        lunar_year=lunar_year,
+        lunar_month=lunar_month,
+        lunar_day=lunar_day,
+        lunar_is_leap=lunar_is_leap,
     )
     return _chart_to_dict(chart)
 
@@ -739,6 +809,41 @@ async def ziwei_chart(params: BirthParams) -> ChartResponse:
         return ChartResponse(system="ziwei", data=data)
     except Exception as exc:
         logger.exception("Zi Wei chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/vietnam_tu_vi", response_model=ChartResponse, tags=["Systems"])
+async def vietnam_tu_vi_chart(params: VietnamTuViParams) -> ChartResponse:
+    """Compute a Vietnam Tử Vi Đẩu Số chart."""
+    try:
+        key = _cache_key(
+            params,
+            gender=params.gender,
+            calendar_mode=params.calendar_mode,
+            interpret_mode=params.interpret_mode,
+            lang=params.lang,
+            use_lunar_input=params.use_lunar_input,
+            lunar_year=params.lunar_year,
+            lunar_month=params.lunar_month,
+            lunar_day=params.lunar_day,
+            lunar_is_leap=params.lunar_is_leap,
+        )
+        data = _cached_vietnam_tu_vi(
+            key,
+            **_base_kwargs(params),
+            gender=params.gender,
+            calendar_mode=params.calendar_mode,
+            interpret_mode=params.interpret_mode,
+            lang=params.lang,
+            use_lunar_input=params.use_lunar_input,
+            lunar_year=params.lunar_year,
+            lunar_month=params.lunar_month,
+            lunar_day=params.lunar_day,
+            lunar_is_leap=params.lunar_is_leap,
+        )
+        return ChartResponse(system="vietnam_tu_vi", data=data)
+    except Exception as exc:
+        logger.exception("Vietnam Tu Vi chart computation failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -1537,6 +1642,7 @@ async def list_systems() -> dict[str, list[str]]:
             "arabic",
             "maya",
             "ziwei",
+            "vietnam_tu_vi",
             "mahabote",
             "decans",
             "nadi",
