@@ -56,6 +56,7 @@ from astro.horary.calculator import compute_western_horary, compute_vedic_prashn
 from astro.sports import analyze_sports_horary
 from astro.esoteric import compute_esoteric_chart
 from astro.enochian import compute_enochian_chart
+from astro.goetia import compute_goetia_chart
 from astro.harmonic import compute_multi_harmonic
 from astro.primary_directions import compute_primary_directions
 from astro.electional.calculator import (
@@ -1291,7 +1292,31 @@ async def enochian_chart(params: BirthParams) -> ChartResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-class ElectionalParams(BirthParams):
+@app.post("/api/goetia", response_model=ChartResponse, tags=["Systems"])
+async def goetia_chart(params: BirthParams) -> ChartResponse:
+    """Compute a Goetia / Solomonic Astrology chart.
+
+    Maps the natal chart to the 72-spirit system of the Ars Goetia (Lesser Key of Solomon):
+    - Personalized demon recommendations based on natal planetary positions, houses, and elements
+    - Electional timing windows for the next 30 days (best times to call each spirit)
+    - Demon sigil SVG visualizations and Goetia Natal Overview circular chart
+    - Bilingual (EN/ZH) ritual steps, invocations, banishing instructions, and safety notes
+    - Complete 72-demon database with rank, planet, element, zodiac sign, and powers
+
+    Ref: S.L. MacGregor Mathers & Aleister Crowley, *The Goetia* (1904);
+         Joseph H. Peterson, *The Lesser Key of Solomon* (Ibis Press, 2001);
+         Stephen Skinner & David Rankine, *The Goetia of Dr Rudd* (Golden Hoard, 2007).
+    """
+    try:
+        kw = _base_kwargs(params)
+        chart = compute_goetia_chart(**kw)
+        return ChartResponse(system="goetia", data=_chart_to_dict(chart))
+    except Exception as exc:
+        logger.exception("Goetia chart computation failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+
     """Parameters for Electional Astrology / Vedic Muhurta."""
 
     tradition: str = Field(
