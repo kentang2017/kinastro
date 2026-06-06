@@ -1,5 +1,5 @@
 """
-堅占星 (Kin Astro) — Multi-System Astrology Application
+堅占星 (KinAstro) — Multi-System Astrology Application
 Multi-System Astrology Chart Application
 
 支援七政四餘（中國）、紫微斗數、策天飛星、十二星次、達摩一掌經、太玄數占星、五運六氣、
@@ -24,7 +24,7 @@ import streamlit as st
 
 # ── Page config must be the first Streamlit call ──────────────────────────
 st.set_page_config(
-    page_title="堅占星 KinAstro | 世界占星",
+    page_title="堅占星 KinAstro | 八十四體系占星",
     page_icon="🌌",
     layout="wide",
     initial_sidebar_state="expanded",

@@ -1,9 +1,9 @@
-# ⭐ 堅占星 Kin Astro
+# ⭐ 堅占星 KinAstro｜八十四體系占星
 
 <!-- Logo / Hero -->
 <div align="center">
 
-![Kin Astro](https://img.shields.io/badge/Kin_Astro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
+![KinAstro](https://img.shields.io/badge/KinAstro-堅占星-FF6B6B?style=for-the-badge&logo=star&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-2.7.0-00C853?style=for-the-badge)
 ![Systems](https://img.shields.io/badge/Systems-84-FFD700?style=for-the-badge)
 [![Repo Size](https://img.shields.io/github/repo-size/kentang2017/kinastro?label=Project%20Size)](https://github.com/kentang2017/kinastro)
