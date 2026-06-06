@@ -1,0 +1,3482 @@
+[
+  {
+    "number": 1,
+    "name": "Bael",
+    "name_zh": "巴耶爾",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 66,
+    "powers_en": [
+      "Grants invisibility",
+      "Makes the operator cunning",
+      "Teaches arts and sciences"
+    ],
+    "powers_zh": [
+      "賦予隱形能力",
+      "使施法者機智狡黠",
+      "教授藝術與科學"
+    ],
+    "appearance_en": "Appears as a cat, a toad, a man, or all three at once",
+    "appearance_zh": "以貓、蟾蜍、人形，或三者同時顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Bael, aligned with invisibility and cunning.",
+    "keywords_en": [
+      "invisibility",
+      "cunning",
+      "learning",
+      "authority"
+    ],
+    "keywords_zh": [
+      "隱形",
+      "機智",
+      "學識",
+      "權威"
+    ],
+    "house_affinity": [
+      1,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon BAEL, noble King of the East, commander of 66 legions. Come in peace and lend your aid in invisibility, cunning, and learning.",
+    "invocation_zh": "我召喚巴耶爾，東方尊貴的王，統領66個軍團。請和平降臨，賜予隱形、機智、學識之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 2,
+    "name": "Agares",
+    "name_zh": "阿加雷斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Taurus",
+    "sign_zh": "金牛座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 31,
+    "powers_en": [
+      "Teaches all languages",
+      "Brings back runaways",
+      "Causes earthquakes"
+    ],
+    "powers_zh": [
+      "教授各種語言",
+      "使逃亡者返回",
+      "引發地震"
+    ],
+    "appearance_en": "Appears as an old nobleman riding a crocodile and bearing a hawk",
+    "appearance_zh": "現為騎著鱷魚、手持鷹隼的年老貴族",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Agares, aligned with languages and travel.",
+    "keywords_en": [
+      "languages",
+      "travel",
+      "earthquakes"
+    ],
+    "keywords_zh": [
+      "語言",
+      "旅行",
+      "地震"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      11
+    ],
+    "invocation_en": "I call upon AGARES, noble Duke of the East, commander of 31 legions. Come in peace and lend your aid in languages, travel, and earthquakes.",
+    "invocation_zh": "我召喚阿加雷斯，東方尊貴的公爵，統領31個軍團。請和平降臨，賜予語言、旅行、地震之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 3,
+    "name": "Vassago",
+    "name_zh": "瓦薩戈",
+    "rank": "Prince",
+    "rank_zh": "王子",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Taurus",
+    "sign_zh": "金牛座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 26,
+    "powers_en": [
+      "Gives true divination",
+      "Reveals hidden things",
+      "Speaks of what is to come"
+    ],
+    "powers_zh": [
+      "給出準確占卜",
+      "揭示隱藏之物",
+      "述說將來之事"
+    ],
+    "appearance_en": "Appears as a courteous prince in gentle human form",
+    "appearance_zh": "以溫和有禮的人形王子顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Vassago, aligned with divination and secrets.",
+    "keywords_en": [
+      "divination",
+      "secrets",
+      "prophecy"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "秘密",
+      "預言"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon VASSAGO, noble Prince of the West, commander of 26 legions. Come in peace and lend your aid in divination, secrets, and prophecy.",
+    "invocation_zh": "我召喚瓦薩戈，西方尊貴的王子，統領26個軍團。請和平降臨，賜予占卜、秘密、預言之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 4,
+    "name": "Gamigin",
+    "name_zh": "加米金",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "North",
+    "direction_zh": "北",
+    "legion_count": 30,
+    "powers_en": [
+      "Teaches liberal arts",
+      "Answers concerning the dead",
+      "Performs necromantic revelations"
+    ],
+    "powers_zh": [
+      "教授自由藝術",
+      "回答有關死者之事",
+      "施行死靈啟示"
+    ],
+    "appearance_en": "Appears as a small horse or ass and speaks with a hoarse voice",
+    "appearance_zh": "形如小馬或驢子，並以沙啞聲音說話",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Gamigin, aligned with necromancy and learning.",
+    "keywords_en": [
+      "necromancy",
+      "learning",
+      "ghosts"
+    ],
+    "keywords_zh": [
+      "死靈術",
+      "學識",
+      "幽靈"
+    ],
+    "house_affinity": [
+      8,
+      12,
+      9
+    ],
+    "invocation_en": "I call upon GAMIGIN, noble Marquis of the North, commander of 30 legions. Come in peace and lend your aid in necromancy, learning, and ghosts.",
+    "invocation_zh": "我召喚加米金，北方尊貴的侯爵，統領30個軍團。請和平降臨，賜予死靈術、學識、幽靈之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 5,
+    "name": "Marbas",
+    "name_zh": "馬巴斯",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Gemini",
+    "sign_zh": "雙子座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 36,
+    "powers_en": [
+      "Heals diseases",
+      "Reveals hidden secrets",
+      "Teaches mechanics"
+    ],
+    "powers_zh": [
+      "治療疾病",
+      "揭露隱秘秘密",
+      "教授機械技藝"
+    ],
+    "appearance_en": "Appears first as a great lion and later as a man",
+    "appearance_zh": "先以巨獅之形出現，之後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Marbas, aligned with healing and secrets.",
+    "keywords_en": [
+      "healing",
+      "secrets",
+      "mechanics"
+    ],
+    "keywords_zh": [
+      "療癒",
+      "秘密",
+      "機械"
+    ],
+    "house_affinity": [
+      6,
+      9,
+      11
+    ],
+    "invocation_en": "I call upon MARBAS, noble President of the West, commander of 36 legions. Come in peace and lend your aid in healing, secrets, and mechanics.",
+    "invocation_zh": "我召喚馬巴斯，西方尊貴的總裁，統領36個軍團。請和平降臨，賜予療癒、秘密、機械之助。",
+    "safety_note_en": "Use clean ritual conditions and pair all spiritual work with practical care. Never substitute invocation for urgent medical treatment.",
+    "safety_note_zh": "請保持儀式環境潔淨，並讓靈性工作配合實際照護。切勿以召喚取代緊急醫療。"
+  },
+  {
+    "number": 6,
+    "name": "Valefor",
+    "name_zh": "瓦勒福爾",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 10,
+    "powers_en": [
+      "Guides theft and stealth",
+      "Tempts into unlawful gain",
+      "Binds hostile forces"
+    ],
+    "powers_zh": [
+      "引導盜取與潛行",
+      "誘惑人追求不義之利",
+      "束縛敵對勢力"
+    ],
+    "appearance_en": "Appears as a lion with the head of a donkey",
+    "appearance_zh": "呈現獅身驢首之形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Valefor, aligned with theft and temptation.",
+    "keywords_en": [
+      "theft",
+      "temptation",
+      "binding"
+    ],
+    "keywords_zh": [
+      "盜取",
+      "誘惑",
+      "束縛"
+    ],
+    "house_affinity": [
+      2,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon VALEFOR, noble Duke of the West, commander of 10 legions. Come in peace and lend your aid in theft, temptation, and binding.",
+    "invocation_zh": "我召喚瓦勒福爾，西方尊貴的公爵，統領10個軍團。請和平降臨，賜予盜取、誘惑、束縛之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 7,
+    "name": "Amon",
+    "name_zh": "阿蒙",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 40,
+    "powers_en": [
+      "Reconciles enemies",
+      "Causes love",
+      "Reveals past and future"
+    ],
+    "powers_zh": [
+      "使敵人和解",
+      "促成愛情",
+      "揭示過去與未來"
+    ],
+    "appearance_en": "Appears as a wolf with a serpent tail breathing fire, then as a raven-headed man",
+    "appearance_zh": "先為吐火的狼身蛇尾，後化為烏鴉頭的人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Amon, aligned with reconciliation and love.",
+    "keywords_en": [
+      "reconciliation",
+      "love",
+      "prophecy"
+    ],
+    "keywords_zh": [
+      "和解",
+      "愛情",
+      "預言"
+    ],
+    "house_affinity": [
+      7,
+      11,
+      10
+    ],
+    "invocation_en": "I call upon AMON, noble Marquis of the East, commander of 40 legions. Come in peace and lend your aid in reconciliation, love, and prophecy.",
+    "invocation_zh": "我召喚阿蒙，東方尊貴的侯爵，統領40個軍團。請和平降臨，賜予和解、愛情、預言之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 8,
+    "name": "Barbatos",
+    "name_zh": "巴巴托斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 30,
+    "powers_en": [
+      "Understands the speech of animals",
+      "Reveals hidden treasures",
+      "Reconciles friends"
+    ],
+    "powers_zh": [
+      "理解動物語言",
+      "揭示隱藏寶藏",
+      "使朋友重歸於好"
+    ],
+    "appearance_en": "Appears as a horned hunter or archer accompanied by spirits of the forest",
+    "appearance_zh": "化作長角獵人或弓手，身旁伴隨林野之靈",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Barbatos, aligned with animals and treasure.",
+    "keywords_en": [
+      "animals",
+      "treasure",
+      "reconciliation"
+    ],
+    "keywords_zh": [
+      "動物",
+      "寶藏",
+      "和解"
+    ],
+    "house_affinity": [
+      6,
+      11,
+      3
+    ],
+    "invocation_en": "I call upon BARBATOS, noble Duke of the East, commander of 30 legions. Come in peace and lend your aid in animals, treasure, and reconciliation.",
+    "invocation_zh": "我召喚巴巴托斯，東方尊貴的公爵，統領30個軍團。請和平降臨，賜予動物、寶藏、和解之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 9,
+    "name": "Paimon",
+    "name_zh": "派蒙",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 200,
+    "powers_en": [
+      "Teaches arts and sciences",
+      "Bestows wisdom",
+      "Binds spirits and reveals secrets"
+    ],
+    "powers_zh": [
+      "教授藝術與科學",
+      "賜予智慧",
+      "束縛靈體並揭示秘密"
+    ],
+    "appearance_en": "Appears crowned and riding a dromedary, preceded by loud musical spirits",
+    "appearance_zh": "戴王冠騎單峰駱駝而來，前方有喧響樂隊般的靈體開道",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Paimon, aligned with learning and wisdom.",
+    "keywords_en": [
+      "learning",
+      "wisdom",
+      "binding",
+      "secrets"
+    ],
+    "keywords_zh": [
+      "學識",
+      "智慧",
+      "束縛",
+      "秘密"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      5
+    ],
+    "invocation_en": "I call upon PAIMON, noble King of the West, commander of 200 legions. Come in peace and lend your aid in learning, wisdom, and binding.",
+    "invocation_zh": "我召喚派蒙，西方尊貴的王，統領200個軍團。請和平降臨，賜予學識、智慧、束縛之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 10,
+    "name": "Buer",
+    "name_zh": "布耶爾",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Jupiter",
+    "planet_zh": "木星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Sagittarius",
+    "sign_zh": "射手座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 50,
+    "powers_en": [
+      "Heals all infirmities",
+      "Teaches philosophy",
+      "Gives excellent familiars"
+    ],
+    "powers_zh": [
+      "治療各種病痛",
+      "教授哲學",
+      "賜予優秀使魔"
+    ],
+    "appearance_en": "Appears in the form of a centaur-like archer",
+    "appearance_zh": "以半人馬弓手般的形象出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Buer, aligned with healing and wisdom.",
+    "keywords_en": [
+      "healing",
+      "wisdom",
+      "familiars"
+    ],
+    "keywords_zh": [
+      "療癒",
+      "智慧",
+      "使魔"
+    ],
+    "house_affinity": [
+      6,
+      9,
+      11
+    ],
+    "invocation_en": "I call upon BUER, noble President of the South, commander of 50 legions. Come in peace and lend your aid in healing, wisdom, and familiars.",
+    "invocation_zh": "我召喚布耶爾，南方尊貴的總裁，統領50個軍團。請和平降臨，賜予療癒、智慧、使魔之助。",
+    "safety_note_en": "Use clean ritual conditions and pair all spiritual work with practical care. Never substitute invocation for urgent medical treatment.",
+    "safety_note_zh": "請保持儀式環境潔淨，並讓靈性工作配合實際照護。切勿以召喚取代緊急醫療。"
+  },
+  {
+    "number": 11,
+    "name": "Gusion",
+    "name_zh": "古辛",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 40,
+    "powers_en": [
+      "Answers all questions truly",
+      "Reconciles enemies",
+      "Grants honor and dignity"
+    ],
+    "powers_zh": [
+      "誠實回答一切問題",
+      "使敵人和解",
+      "賜予榮譽與尊位"
+    ],
+    "appearance_en": "Appears as a noble spirit in human likeness",
+    "appearance_zh": "以高貴靈體的人形顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Gusion, aligned with divination and reconciliation.",
+    "keywords_en": [
+      "divination",
+      "reconciliation",
+      "honor"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "和解",
+      "榮耀"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon GUSION, noble Duke of the East, commander of 40 legions. Come in peace and lend your aid in divination, reconciliation, and honor.",
+    "invocation_zh": "我召喚古辛，東方尊貴的公爵，統領40個軍團。請和平降臨，賜予占卜、和解、榮耀之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 12,
+    "name": "Sitri",
+    "name_zh": "西特里",
+    "rank": "Prince",
+    "rank_zh": "王子",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 60,
+    "powers_en": [
+      "Inflames love and lust",
+      "Reveals secrets of intimacy",
+      "Compels desire"
+    ],
+    "powers_zh": [
+      "激起愛與慾",
+      "揭露親密之祕",
+      "驅使欲望升起"
+    ],
+    "appearance_en": "Appears first as a leopard with griffin wings, then as a beautiful human",
+    "appearance_zh": "先呈豹身鷹翼之形，後化為俊美人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Sitri, aligned with love and passion.",
+    "keywords_en": [
+      "love",
+      "passion",
+      "secrets",
+      "desire"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "激情",
+      "秘密",
+      "欲望"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon SITRI, noble Prince of the West, commander of 60 legions. Come in peace and lend your aid in love, passion, and secrets.",
+    "invocation_zh": "我召喚西特里，西方尊貴的王子，統領60個軍團。請和平降臨，賜予愛情、激情、秘密之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 13,
+    "name": "Beleth",
+    "name_zh": "貝列斯",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 85,
+    "powers_en": [
+      "Causes love",
+      "Commands mighty legions",
+      "Bestows honor"
+    ],
+    "powers_zh": [
+      "引發愛情",
+      "統御強大軍團",
+      "授予榮耀"
+    ],
+    "appearance_en": "Appears as a terrible king on a pale horse with trumpets sounding before him",
+    "appearance_zh": "作為騎蒼白戰馬的可怖君王現身，前有號角齊鳴",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Beleth, aligned with love and authority.",
+    "keywords_en": [
+      "love",
+      "authority",
+      "honor"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "權威",
+      "榮耀"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon BELETH, noble King of the East, commander of 85 legions. Come in peace and lend your aid in love, authority, and honor.",
+    "invocation_zh": "我召喚貝列斯，東方尊貴的王，統領85個軍團。請和平降臨，賜予愛情、權威、榮耀之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 14,
+    "name": "Leraje",
+    "name_zh": "勒拉耶",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Causes battles",
+      "Makes wounds fester",
+      "Masters archery"
+    ],
+    "powers_zh": [
+      "引發戰鬥",
+      "使傷口潰爛",
+      "精通箭術"
+    ],
+    "appearance_en": "Appears as a handsome archer dressed in green",
+    "appearance_zh": "以身穿綠衣的俊美弓箭手形象出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Leraje, aligned with war and wounds.",
+    "keywords_en": [
+      "war",
+      "wounds",
+      "archery"
+    ],
+    "keywords_zh": [
+      "戰爭",
+      "傷口",
+      "箭術"
+    ],
+    "house_affinity": [
+      6,
+      10,
+      12
+    ],
+    "invocation_en": "I call upon LERAJE, noble Marquis of the South, commander of 30 legions. Come in peace and lend your aid in war, wounds, and archery.",
+    "invocation_zh": "我召喚勒拉耶，南方尊貴的侯爵，統領30個軍團。請和平降臨，賜予戰爭、傷口、箭術之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 15,
+    "name": "Eligos",
+    "name_zh": "艾利戈斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Scorpio",
+    "sign_zh": "天蠍座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 60,
+    "powers_en": [
+      "Reveals hidden things in war",
+      "Shows the outcome of battles",
+      "Wins favor with lords and knights"
+    ],
+    "powers_zh": [
+      "揭示戰爭中的隱情",
+      "展示戰局結果",
+      "贏得領主與騎士的青睞"
+    ],
+    "appearance_en": "Appears as a handsome knight carrying a lance, banner, and serpent",
+    "appearance_zh": "顯現為手持長槍、旗幟與蛇的俊美騎士",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Eligos, aligned with war and secrets.",
+    "keywords_en": [
+      "war",
+      "secrets",
+      "honor"
+    ],
+    "keywords_zh": [
+      "戰爭",
+      "秘密",
+      "榮耀"
+    ],
+    "house_affinity": [
+      6,
+      10,
+      12
+    ],
+    "invocation_en": "I call upon ELIGOS, noble Duke of the East, commander of 60 legions. Come in peace and lend your aid in war, secrets, and honor.",
+    "invocation_zh": "我召喚艾利戈斯，東方尊貴的公爵，統領60個軍團。請和平降臨，賜予戰爭、秘密、榮耀之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 16,
+    "name": "Zepar",
+    "name_zh": "澤帕爾",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 26,
+    "powers_en": [
+      "Causes love",
+      "Kindles passion",
+      "Can render women barren"
+    ],
+    "powers_zh": [
+      "引發愛情",
+      "點燃激情",
+      "可使女子不孕"
+    ],
+    "appearance_en": "Appears as a soldier clothed in red armor",
+    "appearance_zh": "以身披紅甲的士兵形象顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Zepar, aligned with love and passion.",
+    "keywords_en": [
+      "love",
+      "passion",
+      "desire"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "激情",
+      "欲望"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon ZEPAR, noble Duke of the South, commander of 26 legions. Come in peace and lend your aid in love, passion, and desire.",
+    "invocation_zh": "我召喚澤帕爾，南方尊貴的公爵，統領26個軍團。請和平降臨，賜予愛情、激情、欲望之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 17,
+    "name": "Botis",
+    "name_zh": "波提斯",
+    "rank": "Count/President",
+    "rank_zh": "伯爵/總裁",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 60,
+    "powers_en": [
+      "Knows past, present, and future",
+      "Reconciles enemies",
+      "Gives truthful counsel"
+    ],
+    "powers_zh": [
+      "知曉過去現在未來",
+      "使敵人和解",
+      "提供真實忠告"
+    ],
+    "appearance_en": "Appears first as a viper, then as a horned man with a sword",
+    "appearance_zh": "先現毒蛇之形，後化為持劍有角的人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Botis, aligned with divination and reconciliation.",
+    "keywords_en": [
+      "divination",
+      "reconciliation",
+      "truth"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "和解",
+      "真理"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon BOTIS, noble Count/President of the South, commander of 60 legions. Come in peace and lend your aid in divination, reconciliation, and truth.",
+    "invocation_zh": "我召喚波提斯，南方尊貴的伯爵/總裁，統領60個軍團。請和平降臨，賜予占卜、和解、真理之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 18,
+    "name": "Bathin",
+    "name_zh": "巴丁",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 30,
+    "powers_en": [
+      "Knows the virtues of herbs",
+      "Knows precious stones",
+      "Transports people swiftly"
+    ],
+    "powers_zh": [
+      "通曉藥草效力",
+      "知曉寶石之德",
+      "快速運送人們"
+    ],
+    "appearance_en": "Appears as a strong man with a serpent tail riding a pale horse",
+    "appearance_zh": "顯現為騎蒼白馬、長有蛇尾的健壯男子",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Bathin, aligned with herbs and stones.",
+    "keywords_en": [
+      "herbs",
+      "stones",
+      "travel"
+    ],
+    "keywords_zh": [
+      "藥草",
+      "礦石",
+      "旅行"
+    ],
+    "house_affinity": [
+      6,
+      9,
+      2
+    ],
+    "invocation_en": "I call upon BATHIN, noble Duke of the West, commander of 30 legions. Come in peace and lend your aid in herbs, stones, and travel.",
+    "invocation_zh": "我召喚巴丁，西方尊貴的公爵，統領30個軍團。請和平降臨，賜予藥草、礦石、旅行之助。",
+    "safety_note_en": "Work with firm containment and a precise intention. Avoid dangerous weather, open water, or unfocused travel magic during the rite.",
+    "safety_note_zh": "作業時要有穩固結界與明確意圖。儀式期間避免危險天候、開放水域或目標不明的旅行魔法。"
+  },
+  {
+    "number": 19,
+    "name": "Sallos",
+    "name_zh": "薩洛斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Taurus",
+    "sign_zh": "金牛座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Causes love between men and women",
+      "Brings peace in relationships",
+      "Softens hostility"
+    ],
+    "powers_zh": [
+      "促成人與人之愛",
+      "為關係帶來和平",
+      "緩和敵意"
+    ],
+    "appearance_en": "Appears as a gallant soldier riding a crocodile and wearing a ducal crown",
+    "appearance_zh": "化為騎鱷魚且佩戴公爵冠冕的瀟灑士兵",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Sallos, aligned with love and peace.",
+    "keywords_en": [
+      "love",
+      "peace",
+      "friendship"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "和平",
+      "友誼"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon SALLOS, noble Duke of the South, commander of 30 legions. Come in peace and lend your aid in love, peace, and friendship.",
+    "invocation_zh": "我召喚薩洛斯，南方尊貴的公爵，統領30個軍團。請和平降臨，賜予愛情、和平、友誼之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 20,
+    "name": "Purson",
+    "name_zh": "普爾松",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "North",
+    "direction_zh": "北",
+    "legion_count": 22,
+    "powers_en": [
+      "Reveals past, present, and future",
+      "Finds hidden treasure",
+      "Can assume human form"
+    ],
+    "powers_zh": [
+      "揭示過去現在未來",
+      "尋得隱藏寶藏",
+      "可化為人形"
+    ],
+    "appearance_en": "Appears as a lion-faced man riding a bear and bearing a viper, with trumpets before him",
+    "appearance_zh": "現為獅面人騎熊持毒蛇，前方有號角開路",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Purson, aligned with divination and treasure.",
+    "keywords_en": [
+      "divination",
+      "treasure",
+      "transformation"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "寶藏",
+      "變形"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon PURSON, noble King of the North, commander of 22 legions. Come in peace and lend your aid in divination, treasure, and transformation.",
+    "invocation_zh": "我召喚普爾松，北方尊貴的王，統領22個軍團。請和平降臨，賜予占卜、寶藏、變形之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 21,
+    "name": "Marax",
+    "name_zh": "馬拉克斯",
+    "rank": "Count/President",
+    "rank_zh": "伯爵/總裁",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Teaches astronomy",
+      "Knows herbs and stones",
+      "Gives excellent familiars"
+    ],
+    "powers_zh": [
+      "教授天文學",
+      "通曉藥草與礦石",
+      "賜予優秀使魔"
+    ],
+    "appearance_en": "Appears as a great bull with a human face",
+    "appearance_zh": "呈現為人面巨牛",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Marax, aligned with astronomy and herbs.",
+    "keywords_en": [
+      "astronomy",
+      "herbs",
+      "familiars"
+    ],
+    "keywords_zh": [
+      "天文",
+      "藥草",
+      "使魔"
+    ],
+    "house_affinity": [
+      9,
+      3,
+      12
+    ],
+    "invocation_en": "I call upon MARAX, noble Count/President of the South, commander of 30 legions. Come in peace and lend your aid in astronomy, herbs, and familiars.",
+    "invocation_zh": "我召喚馬拉克斯，南方尊貴的伯爵/總裁，統領30個軍團。請和平降臨，賜予天文、藥草、使魔之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 22,
+    "name": "Ipos",
+    "name_zh": "伊波斯",
+    "rank": "Count/Prince",
+    "rank_zh": "伯爵/王子",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 36,
+    "powers_en": [
+      "Reveals past and future",
+      "Makes one bold",
+      "Makes one witty"
+    ],
+    "powers_zh": [
+      "揭示過去與未來",
+      "使人勇敢",
+      "使人機敏風趣"
+    ],
+    "appearance_en": "Appears as an angelic figure with a lion head, goose feet, and a hare tail",
+    "appearance_zh": "形如獅首、鵝足、兔尾的天使形體",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Ipos, aligned with divination and boldness.",
+    "keywords_en": [
+      "divination",
+      "boldness",
+      "cunning"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "勇氣",
+      "機智"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon IPOS, noble Count/Prince of the West, commander of 36 legions. Come in peace and lend your aid in divination, boldness, and cunning.",
+    "invocation_zh": "我召喚伊波斯，西方尊貴的伯爵/王子，統領36個軍團。請和平降臨，賜予占卜、勇氣、機智之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 23,
+    "name": "Aim",
+    "name_zh": "艾姆",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 26,
+    "powers_en": [
+      "Sets things ablaze",
+      "Brings destruction",
+      "Gives true and wise answers"
+    ],
+    "powers_zh": [
+      "點燃事物",
+      "帶來毀滅",
+      "給出真實而智慧的回答"
+    ],
+    "appearance_en": "Appears as a handsome man with three heads riding a viper and carrying a firebrand",
+    "appearance_zh": "以三頭俊美男子騎毒蛇、手持火炬之形出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Aim, aligned with destruction and wisdom.",
+    "keywords_en": [
+      "destruction",
+      "wisdom",
+      "truth"
+    ],
+    "keywords_zh": [
+      "毀滅",
+      "智慧",
+      "真理"
+    ],
+    "house_affinity": [
+      8,
+      10,
+      12
+    ],
+    "invocation_en": "I call upon AIM, noble Duke of the South, commander of 26 legions. Come in peace and lend your aid in destruction, wisdom, and truth.",
+    "invocation_zh": "我召喚艾姆，南方尊貴的公爵，統領26個軍團。請和平降臨，賜予毀滅、智慧、真理之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 24,
+    "name": "Naberius",
+    "name_zh": "納貝流士",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Virgo",
+    "sign_zh": "處女座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 19,
+    "powers_en": [
+      "Teaches arts and sciences",
+      "Restores lost dignities",
+      "Improves rhetoric"
+    ],
+    "powers_zh": [
+      "教授藝術與科學",
+      "恢復失去的尊位",
+      "提升修辭能力"
+    ],
+    "appearance_en": "Appears as a black crane or raven speaking with a rough voice",
+    "appearance_zh": "以黑鶴或烏鴉之形出現，聲音粗啞",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Naberius, aligned with learning and dignity.",
+    "keywords_en": [
+      "learning",
+      "dignity",
+      "rhetoric"
+    ],
+    "keywords_zh": [
+      "學識",
+      "尊位",
+      "修辭"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      5
+    ],
+    "invocation_en": "I call upon NABERIUS, noble Marquis of the West, commander of 19 legions. Come in peace and lend your aid in learning, dignity, and rhetoric.",
+    "invocation_zh": "我召喚納貝流士，西方尊貴的侯爵，統領19個軍團。請和平降臨，賜予學識、尊位、修辭之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 25,
+    "name": "Glasya-Labolas",
+    "name_zh": "格拉夏-拉波拉斯",
+    "rank": "Count/President",
+    "rank_zh": "伯爵/總裁",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 36,
+    "powers_en": [
+      "Teaches arts and sciences",
+      "Inspires bloodshed",
+      "Makes the operator invisible"
+    ],
+    "powers_zh": [
+      "教授藝術與科學",
+      "激發流血衝突",
+      "使施法者隱形"
+    ],
+    "appearance_en": "Appears as a winged dog",
+    "appearance_zh": "以長翼之犬的形態出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Glasya-Labolas, aligned with learning and war.",
+    "keywords_en": [
+      "learning",
+      "war",
+      "invisibility"
+    ],
+    "keywords_zh": [
+      "學識",
+      "戰爭",
+      "隱形"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      5
+    ],
+    "invocation_en": "I call upon GLASYA-LABOLAS, noble Count/President of the East, commander of 36 legions. Come in peace and lend your aid in learning, war, and invisibility.",
+    "invocation_zh": "我召喚格拉夏-拉波拉斯，東方尊貴的伯爵/總裁，統領36個軍團。請和平降臨，賜予學識、戰爭、隱形之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 26,
+    "name": "Buné",
+    "name_zh": "布涅",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Virgo",
+    "sign_zh": "處女座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 30,
+    "powers_en": [
+      "Performs necromancy",
+      "Speaks with ghosts",
+      "Gives riches and wisdom"
+    ],
+    "powers_zh": [
+      "施行死靈術",
+      "與幽靈交談",
+      "帶來財富與智慧"
+    ],
+    "appearance_en": "Appears as a three-headed dragon with the heads of a dog, griffin, and man",
+    "appearance_zh": "顯現為三頭龍，分別具犬首、鷹獅首與人首",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Buné, aligned with necromancy and ghosts.",
+    "keywords_en": [
+      "necromancy",
+      "ghosts",
+      "treasure",
+      "wisdom"
+    ],
+    "keywords_zh": [
+      "死靈術",
+      "幽靈",
+      "寶藏",
+      "智慧"
+    ],
+    "house_affinity": [
+      8,
+      12,
+      9
+    ],
+    "invocation_en": "I call upon BUNÉ, noble Duke of the West, commander of 30 legions. Come in peace and lend your aid in necromancy, ghosts, and treasure.",
+    "invocation_zh": "我召喚布涅，西方尊貴的公爵，統領30個軍團。請和平降臨，賜予死靈術、幽靈、寶藏之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 27,
+    "name": "Ronové",
+    "name_zh": "羅諾維",
+    "rank": "Marquis/Count",
+    "rank_zh": "侯爵/伯爵",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 19,
+    "powers_en": [
+      "Teaches languages",
+      "Gives loyal servants",
+      "Bestows favor"
+    ],
+    "powers_zh": [
+      "教授語言",
+      "賜予忠誠僕役",
+      "帶來恩寵"
+    ],
+    "appearance_en": "Appears in a monstrous but commanding form",
+    "appearance_zh": "以怪異卻威嚴的形態現身",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Ronové, aligned with languages and servants.",
+    "keywords_en": [
+      "languages",
+      "servants",
+      "honor"
+    ],
+    "keywords_zh": [
+      "語言",
+      "僕役",
+      "榮耀"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      11
+    ],
+    "invocation_en": "I call upon RONOVÉ, noble Marquis/Count of the East, commander of 19 legions. Come in peace and lend your aid in languages, servants, and honor.",
+    "invocation_zh": "我召喚羅諾維，東方尊貴的侯爵/伯爵，統領19個軍團。請和平降臨，賜予語言、僕役、榮耀之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 28,
+    "name": "Berith",
+    "name_zh": "貝里斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 26,
+    "powers_en": [
+      "Knows past, present, and future",
+      "Transforms metals",
+      "Grants honor"
+    ],
+    "powers_zh": [
+      "知曉過去現在未來",
+      "轉化金屬",
+      "賜予榮耀"
+    ],
+    "appearance_en": "Appears as a soldier in red riding a red horse and wearing a golden crown",
+    "appearance_zh": "現為身穿紅衣、騎紅馬並戴金冠的戰士",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Berith, aligned with divination and metals.",
+    "keywords_en": [
+      "divination",
+      "metals",
+      "honor"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "金屬",
+      "榮耀"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon BERITH, noble Duke of the East, commander of 26 legions. Come in peace and lend your aid in divination, metals, and honor.",
+    "invocation_zh": "我召喚貝里斯，東方尊貴的公爵，統領26個軍團。請和平降臨，賜予占卜、金屬、榮耀之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 29,
+    "name": "Astaroth",
+    "name_zh": "阿斯塔羅斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Taurus",
+    "sign_zh": "金牛座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 40,
+    "powers_en": [
+      "Reveals secrets",
+      "Teaches the liberal arts",
+      "Answers questions, though lazily"
+    ],
+    "powers_zh": [
+      "揭示秘密",
+      "教授自由學藝",
+      "回答問題但態度慵懶"
+    ],
+    "appearance_en": "Appears as a foul angel riding an infernal dragon and holding a viper",
+    "appearance_zh": "以騎地獄巨龍、手持毒蛇的墮落天使形象出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Astaroth, aligned with secrets and learning.",
+    "keywords_en": [
+      "secrets",
+      "learning",
+      "wisdom"
+    ],
+    "keywords_zh": [
+      "秘密",
+      "學識",
+      "智慧"
+    ],
+    "house_affinity": [
+      12,
+      8,
+      2
+    ],
+    "invocation_en": "I call upon ASTAROTH, noble Duke of the West, commander of 40 legions. Come in peace and lend your aid in secrets, learning, and wisdom.",
+    "invocation_zh": "我召喚阿斯塔羅斯，西方尊貴的公爵，統領40個軍團。請和平降臨，賜予秘密、學識、智慧之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 30,
+    "name": "Forneus",
+    "name_zh": "福爾紐斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Neptune",
+    "planet_zh": "海王星",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Pisces",
+    "sign_zh": "雙魚座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 29,
+    "powers_en": [
+      "Teaches rhetoric",
+      "Teaches languages",
+      "Causes love and reconciles enemies"
+    ],
+    "powers_zh": [
+      "教授修辭學",
+      "教授語言",
+      "促成愛情並使敵人和解"
+    ],
+    "appearance_en": "Appears as a great sea monster",
+    "appearance_zh": "以巨大的海中怪獸之形顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Forneus, aligned with rhetoric and languages.",
+    "keywords_en": [
+      "rhetoric",
+      "languages",
+      "love",
+      "reconciliation"
+    ],
+    "keywords_zh": [
+      "修辭",
+      "語言",
+      "愛情",
+      "和解"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      10
+    ],
+    "invocation_en": "I call upon FORNEUS, noble Marquis of the West, commander of 29 legions. Come in peace and lend your aid in rhetoric, languages, and love.",
+    "invocation_zh": "我召喚福爾紐斯，西方尊貴的侯爵，統領29個軍團。請和平降臨，賜予修辭、語言、愛情之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 31,
+    "name": "Foras",
+    "name_zh": "佛拉斯",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 29,
+    "powers_en": [
+      "Knows herbs",
+      "Knows precious stones",
+      "Grants invisibility and eloquence"
+    ],
+    "powers_zh": [
+      "通曉藥草",
+      "知曉寶石",
+      "賦予隱形與雄辯"
+    ],
+    "appearance_en": "Appears as a strong human figure",
+    "appearance_zh": "以強壯的人形出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Foras, aligned with herbs and stones.",
+    "keywords_en": [
+      "herbs",
+      "stones",
+      "invisibility",
+      "eloquence"
+    ],
+    "keywords_zh": [
+      "藥草",
+      "礦石",
+      "隱形",
+      "雄辯"
+    ],
+    "house_affinity": [
+      6,
+      9,
+      2
+    ],
+    "invocation_en": "I call upon FORAS, noble President of the West, commander of 29 legions. Come in peace and lend your aid in herbs, stones, and invisibility.",
+    "invocation_zh": "我召喚佛拉斯，西方尊貴的總裁，統領29個軍團。請和平降臨，賜予藥草、礦石、隱形之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 32,
+    "name": "Asmodeus",
+    "name_zh": "阿斯莫德",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 72,
+    "powers_en": [
+      "Teaches arithmetic, astronomy, and handicrafts",
+      "Grants invisibility",
+      "Reveals hidden treasure"
+    ],
+    "powers_zh": [
+      "教授算術、天文與工藝",
+      "賜予隱形",
+      "揭示隱藏寶藏"
+    ],
+    "appearance_en": "Appears with three heads, serpent tail, goose feet, and rides a dragon breathing fire",
+    "appearance_zh": "三頭、蛇尾、鵝足，騎乘吐火巨龍而來",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Asmodeus, aligned with numbers and astronomy.",
+    "keywords_en": [
+      "numbers",
+      "astronomy",
+      "crafts",
+      "invisibility",
+      "treasure"
+    ],
+    "keywords_zh": [
+      "算術",
+      "天文",
+      "工藝",
+      "隱形",
+      "寶藏"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      10
+    ],
+    "invocation_en": "I call upon ASMODEUS, noble King of the East, commander of 72 legions. Come in peace and lend your aid in numbers, astronomy, and crafts.",
+    "invocation_zh": "我召喚阿斯莫德，東方尊貴的王，統領72個軍團。請和平降臨，賜予算術、天文、工藝之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 33,
+    "name": "Gaap",
+    "name_zh": "加普",
+    "rank": "Prince/President",
+    "rank_zh": "王子/總裁",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 66,
+    "powers_en": [
+      "Knows past, present, and future",
+      "Causes love or hate",
+      "Gives familiars"
+    ],
+    "powers_zh": [
+      "知曉過去現在未來",
+      "引起愛或恨",
+      "賜予使魔"
+    ],
+    "appearance_en": "Appears in human form as a learned southern prince",
+    "appearance_zh": "以博學的南方王子人形顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Gaap, aligned with divination and love.",
+    "keywords_en": [
+      "divination",
+      "love",
+      "hate",
+      "familiars"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "愛情",
+      "憎恨",
+      "使魔"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon GAAP, noble Prince/President of the South, commander of 66 legions. Come in peace and lend your aid in divination, love, and hate.",
+    "invocation_zh": "我召喚加普，南方尊貴的王子/總裁，統領66個軍團。請和平降臨，賜予占卜、愛情、憎恨之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 34,
+    "name": "Furfur",
+    "name_zh": "富爾富爾",
+    "rank": "Count",
+    "rank_zh": "伯爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 26,
+    "powers_en": [
+      "Causes love",
+      "Raises lightning and thunder",
+      "Reveals secret matters"
+    ],
+    "powers_zh": [
+      "引發愛情",
+      "喚起雷電與雷鳴",
+      "揭露祕密之事"
+    ],
+    "appearance_en": "Appears as a hart or deer with a fiery tail, and as an angel when constrained",
+    "appearance_zh": "通常如火尾牡鹿顯現，受制後可化為天使形體",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Furfur, aligned with love and weather.",
+    "keywords_en": [
+      "love",
+      "weather",
+      "secrets"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "風暴",
+      "秘密"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon FURFUR, noble Count of the East, commander of 26 legions. Come in peace and lend your aid in love, weather, and secrets.",
+    "invocation_zh": "我召喚富爾富爾，東方尊貴的伯爵，統領26個軍團。請和平降臨，賜予愛情、風暴、秘密之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 35,
+    "name": "Marchosias",
+    "name_zh": "馬可西亞斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 30,
+    "powers_en": [
+      "Fights fiercely",
+      "Answers truthfully",
+      "Defends with great strength"
+    ],
+    "powers_zh": [
+      "猛烈作戰",
+      "誠實作答",
+      "以強大力量防衛"
+    ],
+    "appearance_en": "Appears as a wolf with griffin wings and a serpent tail, breathing fire, then as a man",
+    "appearance_zh": "先為吐火的狼身鷹翼蛇尾，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Marchosias, aligned with war and truth.",
+    "keywords_en": [
+      "war",
+      "truth",
+      "boldness"
+    ],
+    "keywords_zh": [
+      "戰爭",
+      "真理",
+      "勇氣"
+    ],
+    "house_affinity": [
+      6,
+      10,
+      12
+    ],
+    "invocation_en": "I call upon MARCHOSIAS, noble Marquis of the West, commander of 30 legions. Come in peace and lend your aid in war, truth, and boldness.",
+    "invocation_zh": "我召喚馬可西亞斯，西方尊貴的侯爵，統領30個軍團。請和平降臨，賜予戰爭、真理、勇氣之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 36,
+    "name": "Stolas",
+    "name_zh": "斯托拉斯",
+    "rank": "Prince",
+    "rank_zh": "王子",
+    "planet": "Jupiter",
+    "planet_zh": "木星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Sagittarius",
+    "sign_zh": "射手座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 26,
+    "powers_en": [
+      "Teaches astronomy",
+      "Explains herbs",
+      "Explains precious stones"
+    ],
+    "powers_zh": [
+      "教授天文學",
+      "解說藥草",
+      "解說寶石"
+    ],
+    "appearance_en": "Appears as a crowned raven or owl before assuming human form",
+    "appearance_zh": "先以戴冠烏鴉或貓頭鷹現身，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Stolas, aligned with astronomy and herbs.",
+    "keywords_en": [
+      "astronomy",
+      "herbs",
+      "stones"
+    ],
+    "keywords_zh": [
+      "天文",
+      "藥草",
+      "礦石"
+    ],
+    "house_affinity": [
+      9,
+      3,
+      12
+    ],
+    "invocation_en": "I call upon STOLAS, noble Prince of the South, commander of 26 legions. Come in peace and lend your aid in astronomy, herbs, and stones.",
+    "invocation_zh": "我召喚斯托拉斯，南方尊貴的王子，統領26個軍團。請和平降臨，賜予天文、藥草、礦石之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 37,
+    "name": "Phenex",
+    "name_zh": "菲尼克斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 20,
+    "powers_en": [
+      "Inspires poetry",
+      "Teaches arts and sciences",
+      "Speaks with a sweet voice"
+    ],
+    "powers_zh": [
+      "激發詩歌靈感",
+      "教授藝術與科學",
+      "以甜美聲音說話"
+    ],
+    "appearance_en": "Appears as a phoenix singing with the voice of a child, then as a man if requested",
+    "appearance_zh": "如鳳凰般歌唱，聲音似孩童；受請求後可化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Phenex, aligned with poetry and learning.",
+    "keywords_en": [
+      "poetry",
+      "learning",
+      "wisdom"
+    ],
+    "keywords_zh": [
+      "詩歌",
+      "學識",
+      "智慧"
+    ],
+    "house_affinity": [
+      5,
+      9,
+      3
+    ],
+    "invocation_en": "I call upon PHENEX, noble Marquis of the West, commander of 20 legions. Come in peace and lend your aid in poetry, learning, and wisdom.",
+    "invocation_zh": "我召喚菲尼克斯，西方尊貴的侯爵，統領20個軍團。請和平降臨，賜予詩歌、學識、智慧之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 38,
+    "name": "Halphas",
+    "name_zh": "哈爾法斯",
+    "rank": "Count",
+    "rank_zh": "伯爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "North",
+    "direction_zh": "北",
+    "legion_count": 26,
+    "powers_en": [
+      "Builds towers",
+      "Sends soldiers to war",
+      "Strengthens fortifications"
+    ],
+    "powers_zh": [
+      "建造高塔",
+      "派遣士兵作戰",
+      "強化防禦工事"
+    ],
+    "appearance_en": "Appears as a stork-like bird with a rough voice",
+    "appearance_zh": "形如鸛鳥，聲音粗啞",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Halphas, aligned with fortress and war.",
+    "keywords_en": [
+      "fortress",
+      "war"
+    ],
+    "keywords_zh": [
+      "堡壘",
+      "戰爭"
+    ],
+    "house_affinity": [
+      4,
+      10,
+      12
+    ],
+    "invocation_en": "I call upon HALPHAS, noble Count of the North, commander of 26 legions. Come in peace and lend your aid in fortress and war.",
+    "invocation_zh": "我召喚哈爾法斯，北方尊貴的伯爵，統領26個軍團。請和平降臨，賜予堡壘、戰爭之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 39,
+    "name": "Malphas",
+    "name_zh": "馬爾法斯",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 40,
+    "powers_en": [
+      "Builds houses, towers, and walls",
+      "Reveals enemies’ desires",
+      "Provides good familiars"
+    ],
+    "powers_zh": [
+      "建造房屋、高塔與城牆",
+      "揭示敵人的慾望",
+      "提供良好使魔"
+    ],
+    "appearance_en": "Appears as a great raven and then as a man",
+    "appearance_zh": "先以巨鴉之形出現，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Malphas, aligned with houses and fortress.",
+    "keywords_en": [
+      "houses",
+      "fortress",
+      "secrets"
+    ],
+    "keywords_zh": [
+      "建築",
+      "堡壘",
+      "秘密"
+    ],
+    "house_affinity": [
+      4,
+      10,
+      6
+    ],
+    "invocation_en": "I call upon MALPHAS, noble President of the West, commander of 40 legions. Come in peace and lend your aid in houses, fortress, and secrets.",
+    "invocation_zh": "我召喚馬爾法斯，西方尊貴的總裁，統領40個軍團。請和平降臨，賜予建築、堡壘、秘密之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 40,
+    "name": "Räum",
+    "name_zh": "勞姆",
+    "rank": "Count",
+    "rank_zh": "伯爵",
+    "planet": "Jupiter",
+    "planet_zh": "木星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Sagittarius",
+    "sign_zh": "射手座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 30,
+    "powers_en": [
+      "Steals treasures",
+      "Destroys cities and dignities",
+      "Reveals past and future"
+    ],
+    "powers_zh": [
+      "竊取寶藏",
+      "毀滅城市與尊位",
+      "揭示過去與未來"
+    ],
+    "appearance_en": "Appears as a crow and then takes human shape",
+    "appearance_zh": "先呈烏鴉之形，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Räum, aligned with theft and destruction.",
+    "keywords_en": [
+      "theft",
+      "destruction",
+      "prophecy"
+    ],
+    "keywords_zh": [
+      "盜取",
+      "毀滅",
+      "預言"
+    ],
+    "house_affinity": [
+      2,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon RÄUM, noble Count of the East, commander of 30 legions. Come in peace and lend your aid in theft, destruction, and prophecy.",
+    "invocation_zh": "我召喚勞姆，東方尊貴的伯爵，統領30個軍團。請和平降臨，賜予盜取、毀滅、預言之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 41,
+    "name": "Focalor",
+    "name_zh": "佛卡洛爾",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Gemini",
+    "sign_zh": "雙子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 30,
+    "powers_en": [
+      "Drowns sailors",
+      "Destroys ships",
+      "Commands wind and sea"
+    ],
+    "powers_zh": [
+      "使水手溺亡",
+      "摧毀船隻",
+      "統御風與海"
+    ],
+    "appearance_en": "Appears as a man with griffin wings",
+    "appearance_zh": "以長有鷹獅翅膀的人形現身",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Focalor, aligned with water and weather.",
+    "keywords_en": [
+      "water",
+      "weather",
+      "destruction"
+    ],
+    "keywords_zh": [
+      "水域",
+      "風暴",
+      "毀滅"
+    ],
+    "house_affinity": [
+      3,
+      8,
+      12
+    ],
+    "invocation_en": "I call upon FOCALOR, noble Duke of the East, commander of 30 legions. Come in peace and lend your aid in water, weather, and destruction.",
+    "invocation_zh": "我召喚佛卡洛爾，東方尊貴的公爵，統領30個軍團。請和平降臨，賜予水域、風暴、毀滅之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 42,
+    "name": "Vepar",
+    "name_zh": "維帕爾",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 29,
+    "powers_en": [
+      "Rules the waters",
+      "Guides armored ships",
+      "Causes worm-eaten wounds"
+    ],
+    "powers_zh": [
+      "統治水域",
+      "引導航武裝船艦",
+      "造成蟲蝕般傷口"
+    ],
+    "appearance_en": "Appears as a mermaid",
+    "appearance_zh": "以美人魚之形顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Vepar, aligned with water and travel.",
+    "keywords_en": [
+      "water",
+      "travel",
+      "wounds"
+    ],
+    "keywords_zh": [
+      "水域",
+      "旅行",
+      "傷口"
+    ],
+    "house_affinity": [
+      3,
+      8,
+      12
+    ],
+    "invocation_en": "I call upon VEPAR, noble Duke of the West, commander of 29 legions. Come in peace and lend your aid in water, travel, and wounds.",
+    "invocation_zh": "我召喚維帕爾，西方尊貴的公爵，統領29個軍團。請和平降臨，賜予水域、旅行、傷口之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 43,
+    "name": "Sabnock",
+    "name_zh": "薩布諾克",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Scorpio",
+    "sign_zh": "天蠍座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 50,
+    "powers_en": [
+      "Builds towers and castles",
+      "Afflicts with wounds",
+      "Causes worms to breed in sores"
+    ],
+    "powers_zh": [
+      "建造高塔與城堡",
+      "施加傷害",
+      "使傷口生蟲"
+    ],
+    "appearance_en": "Appears as an armed soldier with a lion head riding a pale horse",
+    "appearance_zh": "以獅首武裝士兵騎蒼白戰馬之姿出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Sabnock, aligned with fortress and wounds.",
+    "keywords_en": [
+      "fortress",
+      "wounds",
+      "war"
+    ],
+    "keywords_zh": [
+      "堡壘",
+      "傷口",
+      "戰爭"
+    ],
+    "house_affinity": [
+      4,
+      10,
+      12
+    ],
+    "invocation_en": "I call upon SABNOCK, noble Marquis of the South, commander of 50 legions. Come in peace and lend your aid in fortress, wounds, and war.",
+    "invocation_zh": "我召喚薩布諾克，南方尊貴的侯爵，統領50個軍團。請和平降臨，賜予堡壘、傷口、戰爭之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 44,
+    "name": "Shax",
+    "name_zh": "沙克斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 30,
+    "powers_en": [
+      "Takes away sight, hearing, and understanding",
+      "Steals money and goods",
+      "Reveals hidden things when commanded"
+    ],
+    "powers_zh": [
+      "奪走視覺、聽覺與理解力",
+      "竊取金錢與物品",
+      "受命時揭示隱藏之物"
+    ],
+    "appearance_en": "Appears as a stork-like bird speaking with a hoarse voice",
+    "appearance_zh": "形如鸛鳥，並以沙啞聲音說話",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Shax, aligned with theft and senses.",
+    "keywords_en": [
+      "theft",
+      "senses",
+      "secrets"
+    ],
+    "keywords_zh": [
+      "盜取",
+      "感官",
+      "秘密"
+    ],
+    "house_affinity": [
+      2,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon SHAX, noble Marquis of the East, commander of 30 legions. Come in peace and lend your aid in theft, senses, and secrets.",
+    "invocation_zh": "我召喚沙克斯，東方尊貴的侯爵，統領30個軍團。請和平降臨，賜予盜取、感官、秘密之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 45,
+    "name": "Viné",
+    "name_zh": "維內",
+    "rank": "King/Count",
+    "rank_zh": "王/伯爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 36,
+    "powers_en": [
+      "Discovers hidden things",
+      "Breaks witchcraft and enchantments",
+      "Builds towers"
+    ],
+    "powers_zh": [
+      "發現隱藏之物",
+      "破解巫術與魔咒",
+      "建造高塔"
+    ],
+    "appearance_en": "Appears as a lion riding a black horse and bearing a viper",
+    "appearance_zh": "現為騎黑馬持毒蛇的獅子",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Viné, aligned with secrets and witchcraft.",
+    "keywords_en": [
+      "secrets",
+      "witchcraft",
+      "fortress"
+    ],
+    "keywords_zh": [
+      "秘密",
+      "巫術",
+      "堡壘"
+    ],
+    "house_affinity": [
+      12,
+      8,
+      2
+    ],
+    "invocation_en": "I call upon VINÉ, noble King/Count of the South, commander of 36 legions. Come in peace and lend your aid in secrets, witchcraft, and fortress.",
+    "invocation_zh": "我召喚維內，南方尊貴的王/伯爵，統領36個軍團。請和平降臨，賜予秘密、巫術、堡壘之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 46,
+    "name": "Bifrons",
+    "name_zh": "比夫龍斯",
+    "rank": "Count",
+    "rank_zh": "伯爵",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 6,
+    "powers_en": [
+      "Teaches astronomy and geometry",
+      "Teaches arts",
+      "Moves corpses from place to place"
+    ],
+    "powers_zh": [
+      "教授天文與幾何",
+      "教授技藝",
+      "移動屍體"
+    ],
+    "appearance_en": "Appears in a monstrous form until constrained",
+    "appearance_zh": "在受約束前以怪異形態現身",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Bifrons, aligned with astronomy and geometry.",
+    "keywords_en": [
+      "astronomy",
+      "geometry",
+      "necromancy"
+    ],
+    "keywords_zh": [
+      "天文",
+      "幾何",
+      "死靈術"
+    ],
+    "house_affinity": [
+      9,
+      3,
+      12
+    ],
+    "invocation_en": "I call upon BIFRONS, noble Count of the East, commander of 6 legions. Come in peace and lend your aid in astronomy, geometry, and necromancy.",
+    "invocation_zh": "我召喚比夫龍斯，東方尊貴的伯爵，統領6個軍團。請和平降臨，賜予天文、幾何、死靈術之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 47,
+    "name": "Uvall",
+    "name_zh": "烏瓦爾",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 37,
+    "powers_en": [
+      "Causes the love of women",
+      "Reveals past and future",
+      "Wins friendship"
+    ],
+    "powers_zh": [
+      "使人獲得女性之愛",
+      "揭示過去與未來",
+      "贏得友誼"
+    ],
+    "appearance_en": "Appears first as a dromedary and later as a human speaking Egyptian",
+    "appearance_zh": "先以單峰駱駝之形出現，後化為說埃及語的人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Uvall, aligned with love and prophecy.",
+    "keywords_en": [
+      "love",
+      "prophecy",
+      "friendship"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "預言",
+      "友誼"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon UVALL, noble Duke of the East, commander of 37 legions. Come in peace and lend your aid in love, prophecy, and friendship.",
+    "invocation_zh": "我召喚烏瓦爾，東方尊貴的公爵，統領37個軍團。請和平降臨，賜予愛情、預言、友誼之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 48,
+    "name": "Haagenti",
+    "name_zh": "哈根提",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Jupiter",
+    "planet_zh": "木星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Sagittarius",
+    "sign_zh": "射手座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 33,
+    "powers_en": [
+      "Transforms metals",
+      "Makes wine from water",
+      "Bestows wisdom"
+    ],
+    "powers_zh": [
+      "轉化金屬",
+      "化水為酒",
+      "賜予智慧"
+    ],
+    "appearance_en": "Appears as a little bull with griffin wings, then as a man",
+    "appearance_zh": "先為長鷹獅翅膀的小公牛，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Haagenti, aligned with metals and transformation.",
+    "keywords_en": [
+      "metals",
+      "transformation",
+      "wisdom"
+    ],
+    "keywords_zh": [
+      "金屬",
+      "變形",
+      "智慧"
+    ],
+    "house_affinity": [
+      2,
+      8,
+      10
+    ],
+    "invocation_en": "I call upon HAAGENTI, noble President of the West, commander of 33 legions. Come in peace and lend your aid in metals, transformation, and wisdom.",
+    "invocation_zh": "我召喚哈根提，西方尊貴的總裁，統領33個軍團。請和平降臨，賜予金屬、變形、智慧之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 49,
+    "name": "Crocell",
+    "name_zh": "克羅塞爾",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Gemini",
+    "sign_zh": "雙子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 48,
+    "powers_en": [
+      "Teaches geometry",
+      "Teaches liberal arts",
+      "Creates the sound of rushing waters"
+    ],
+    "powers_zh": [
+      "教授幾何學",
+      "教授自由藝術",
+      "製造奔流水聲"
+    ],
+    "appearance_en": "Appears as an angelic spirit",
+    "appearance_zh": "以天使般的靈體現身",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Crocell, aligned with geometry and learning.",
+    "keywords_en": [
+      "geometry",
+      "learning",
+      "water"
+    ],
+    "keywords_zh": [
+      "幾何",
+      "學識",
+      "水域"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      10
+    ],
+    "invocation_en": "I call upon CROCELL, noble Duke of the East, commander of 48 legions. Come in peace and lend your aid in geometry, learning, and water.",
+    "invocation_zh": "我召喚克羅塞爾，東方尊貴的公爵，統領48個軍團。請和平降臨，賜予幾何、學識、水域之助。",
+    "safety_note_en": "Work with firm containment and a precise intention. Avoid dangerous weather, open water, or unfocused travel magic during the rite.",
+    "safety_note_zh": "作業時要有穩固結界與明確意圖。儀式期間避免危險天候、開放水域或目標不明的旅行魔法。"
+  },
+  {
+    "number": 50,
+    "name": "Furcas",
+    "name_zh": "富爾卡斯",
+    "rank": "Knight",
+    "rank_zh": "騎士",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 20,
+    "powers_en": [
+      "Teaches philosophy and astrology",
+      "Teaches rhetoric and logic",
+      "Teaches chiromancy and pyromancy"
+    ],
+    "powers_zh": [
+      "教授哲學與占星",
+      "教授修辭與邏輯",
+      "教授手相與火占"
+    ],
+    "appearance_en": "Appears as a cruel old man with a long beard riding a horse and holding a sharp weapon",
+    "appearance_zh": "以長鬚老者騎馬持利器的形象出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Furcas, aligned with wisdom and astronomy.",
+    "keywords_en": [
+      "wisdom",
+      "astronomy",
+      "rhetoric",
+      "logic",
+      "chiromancy"
+    ],
+    "keywords_zh": [
+      "智慧",
+      "天文",
+      "修辭",
+      "邏輯",
+      "手相"
+    ],
+    "house_affinity": [
+      9,
+      10,
+      3
+    ],
+    "invocation_en": "I call upon FURCAS, noble Knight of the East, commander of 20 legions. Come in peace and lend your aid in wisdom, astronomy, and rhetoric.",
+    "invocation_zh": "我召喚富爾卡斯，東方尊貴的騎士，統領20個軍團。請和平降臨，賜予智慧、天文、修辭之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 51,
+    "name": "Balam",
+    "name_zh": "巴拉姆",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 40,
+    "powers_en": [
+      "Gives perfect invisibility",
+      "Bestows wisdom",
+      "Reveals past, present, and future"
+    ],
+    "powers_zh": [
+      "賦予完美隱形",
+      "賜予智慧",
+      "揭示過去現在未來"
+    ],
+    "appearance_en": "Appears with three heads, a serpent tail, and flaming eyes while riding a bear",
+    "appearance_zh": "三頭、蛇尾、火眼，騎乘巨熊而來",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Balam, aligned with invisibility and wisdom.",
+    "keywords_en": [
+      "invisibility",
+      "wisdom",
+      "divination"
+    ],
+    "keywords_zh": [
+      "隱形",
+      "智慧",
+      "占卜"
+    ],
+    "house_affinity": [
+      1,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon BALAM, noble King of the East, commander of 40 legions. Come in peace and lend your aid in invisibility, wisdom, and divination.",
+    "invocation_zh": "我召喚巴拉姆，東方尊貴的王，統領40個軍團。請和平降臨，賜予隱形、智慧、占卜之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 52,
+    "name": "Alloces",
+    "name_zh": "阿洛凱斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 36,
+    "powers_en": [
+      "Teaches astronomy",
+      "Teaches liberal arts",
+      "Incites murders and violence"
+    ],
+    "powers_zh": [
+      "教授天文學",
+      "教授自由藝術",
+      "煽動謀殺與暴力"
+    ],
+    "appearance_en": "Appears as a soldier with a lion face, red complexion, and burning eyes riding a great horse",
+    "appearance_zh": "以獅面紅膚、雙眼燃燒的騎兵形象出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Alloces, aligned with astronomy and learning.",
+    "keywords_en": [
+      "astronomy",
+      "learning",
+      "war"
+    ],
+    "keywords_zh": [
+      "天文",
+      "學識",
+      "戰爭"
+    ],
+    "house_affinity": [
+      9,
+      3,
+      12
+    ],
+    "invocation_en": "I call upon ALLOCES, noble Duke of the East, commander of 36 legions. Come in peace and lend your aid in astronomy, learning, and war.",
+    "invocation_zh": "我召喚阿洛凱斯，東方尊貴的公爵，統領36個軍團。請和平降臨，賜予天文、學識、戰爭之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 53,
+    "name": "Camio",
+    "name_zh": "卡米歐",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Gemini",
+    "sign_zh": "雙子座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Understands the speech of birds and beasts",
+      "Understands the sound of waters",
+      "Gives true answers"
+    ],
+    "powers_zh": [
+      "理解鳥獸之語",
+      "理解水聲之意",
+      "給出真實答案"
+    ],
+    "appearance_en": "Appears first as a thrush and then as a man carrying a sharp sword",
+    "appearance_zh": "先如畫眉鳥般顯現，後化為持利劍的人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Camio, aligned with animals and truth.",
+    "keywords_en": [
+      "animals",
+      "truth",
+      "divination"
+    ],
+    "keywords_zh": [
+      "動物",
+      "真理",
+      "占卜"
+    ],
+    "house_affinity": [
+      6,
+      11,
+      3
+    ],
+    "invocation_en": "I call upon CAMIO, noble President of the South, commander of 30 legions. Come in peace and lend your aid in animals, truth, and divination.",
+    "invocation_zh": "我召喚卡米歐，南方尊貴的總裁，統領30個軍團。請和平降臨，賜予動物、真理、占卜之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 54,
+    "name": "Murmur",
+    "name_zh": "穆爾穆爾",
+    "rank": "Duke/Count",
+    "rank_zh": "公爵/伯爵",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 30,
+    "powers_en": [
+      "Teaches philosophy",
+      "Constrains the souls of the dead",
+      "Commands the dead to speak"
+    ],
+    "powers_zh": [
+      "教授哲學",
+      "制約亡者靈魂",
+      "命死者開口說話"
+    ],
+    "appearance_en": "Appears as a warrior riding a griffin, with ministers sounding trumpets before him",
+    "appearance_zh": "以騎鷹獅的戰士之姿出現，前有號角侍從開道",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Murmur, aligned with wisdom and necromancy.",
+    "keywords_en": [
+      "wisdom",
+      "necromancy",
+      "binding"
+    ],
+    "keywords_zh": [
+      "智慧",
+      "死靈術",
+      "束縛"
+    ],
+    "house_affinity": [
+      9,
+      10,
+      3
+    ],
+    "invocation_en": "I call upon MURMUR, noble Duke/Count of the East, commander of 30 legions. Come in peace and lend your aid in wisdom, necromancy, and binding.",
+    "invocation_zh": "我召喚穆爾穆爾，東方尊貴的公爵/伯爵，統領30個軍團。請和平降臨，賜予智慧、死靈術、束縛之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 55,
+    "name": "Orobas",
+    "name_zh": "歐羅巴斯",
+    "rank": "Prince",
+    "rank_zh": "王子",
+    "planet": "Jupiter",
+    "planet_zh": "木星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Sagittarius",
+    "sign_zh": "射手座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 20,
+    "powers_en": [
+      "Reveals past, present, and future",
+      "Teaches concerning divinity and creation",
+      "Grants dignity and prelacies"
+    ],
+    "powers_zh": [
+      "揭示過去現在未來",
+      "教授神性與創造之理",
+      "賜予尊位與高職"
+    ],
+    "appearance_en": "Appears first as a horse and then as a man",
+    "appearance_zh": "先以馬形出現，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Orobas, aligned with divination and virtue.",
+    "keywords_en": [
+      "divination",
+      "virtue",
+      "honor"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "德性",
+      "榮耀"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon OROBAS, noble Prince of the East, commander of 20 legions. Come in peace and lend your aid in divination, virtue, and honor.",
+    "invocation_zh": "我召喚歐羅巴斯，東方尊貴的王子，統領20個軍團。請和平降臨，賜予占卜、德性、榮耀之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 56,
+    "name": "Gremory",
+    "name_zh": "格莫里",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Taurus",
+    "sign_zh": "金牛座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 26,
+    "powers_en": [
+      "Knows past, present, and future",
+      "Causes the love of women",
+      "Reveals where treasures are hidden"
+    ],
+    "powers_zh": [
+      "知曉過去現在未來",
+      "引發女性之愛",
+      "揭示寶藏藏匿之處"
+    ],
+    "appearance_en": "Appears as a beautiful duchess wearing a crown and riding a camel",
+    "appearance_zh": "以戴冠冕、騎駱駝的美麗女公爵形象顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Gremory, aligned with divination and love.",
+    "keywords_en": [
+      "divination",
+      "love",
+      "treasure"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "愛情",
+      "寶藏"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon GREMORY, noble Duke of the West, commander of 26 legions. Come in peace and lend your aid in divination, love, and treasure.",
+    "invocation_zh": "我召喚格莫里，西方尊貴的公爵，統領26個軍團。請和平降臨，賜予占卜、愛情、寶藏之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 57,
+    "name": "Ose",
+    "name_zh": "奧賽",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 3,
+    "powers_en": [
+      "Teaches liberal sciences",
+      "Transforms into any form",
+      "Reveals divine secrets"
+    ],
+    "powers_zh": [
+      "教授自由科學",
+      "變化成任何形態",
+      "揭示神祕奧義"
+    ],
+    "appearance_en": "Appears as a leopard and then as a man",
+    "appearance_zh": "先為豹形，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Ose, aligned with learning and transformation.",
+    "keywords_en": [
+      "learning",
+      "transformation",
+      "secrets"
+    ],
+    "keywords_zh": [
+      "學識",
+      "變形",
+      "秘密"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      5
+    ],
+    "invocation_en": "I call upon OSE, noble President of the South, commander of 3 legions. Come in peace and lend your aid in learning, transformation, and secrets.",
+    "invocation_zh": "我召喚奧賽，南方尊貴的總裁，統領3個軍團。請和平降臨，賜予學識、變形、秘密之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 58,
+    "name": "Amy",
+    "name_zh": "阿米",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 36,
+    "powers_en": [
+      "Teaches astrology",
+      "Teaches liberal arts",
+      "Gives familiars and reveals treasure"
+    ],
+    "powers_zh": [
+      "教授占星術",
+      "教授自由藝術",
+      "賜予使魔並揭示寶藏"
+    ],
+    "appearance_en": "Appears first as a flame of fire and then as a man",
+    "appearance_zh": "先如一團火焰顯現，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Amy, aligned with astronomy and learning.",
+    "keywords_en": [
+      "astronomy",
+      "learning",
+      "familiars",
+      "treasure"
+    ],
+    "keywords_zh": [
+      "天文",
+      "學識",
+      "使魔",
+      "寶藏"
+    ],
+    "house_affinity": [
+      9,
+      3,
+      12
+    ],
+    "invocation_en": "I call upon AMY, noble President of the South, commander of 36 legions. Come in peace and lend your aid in astronomy, learning, and familiars.",
+    "invocation_zh": "我召喚阿米，南方尊貴的總裁，統領36個軍團。請和平降臨，賜予天文、學識、使魔之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 59,
+    "name": "Oriax",
+    "name_zh": "奧里亞克斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Teaches astrology",
+      "Teaches the virtues of planets and the zodiac",
+      "Transforms men"
+    ],
+    "powers_zh": [
+      "教授占星術",
+      "教授行星與黃道之德性",
+      "改變人的形態"
+    ],
+    "appearance_en": "Appears as a lion with a serpent tail riding a horse and bearing two great serpents",
+    "appearance_zh": "現為騎馬的獅子，拖著蛇尾，並手持兩條巨蛇",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Oriax, aligned with astronomy and virtue.",
+    "keywords_en": [
+      "astronomy",
+      "virtue",
+      "transformation"
+    ],
+    "keywords_zh": [
+      "天文",
+      "德性",
+      "變形"
+    ],
+    "house_affinity": [
+      9,
+      3,
+      12
+    ],
+    "invocation_en": "I call upon ORIAX, noble Marquis of the South, commander of 30 legions. Come in peace and lend your aid in astronomy, virtue, and transformation.",
+    "invocation_zh": "我召喚奧里亞克斯，南方尊貴的侯爵，統領30個軍團。請和平降臨，賜予天文、德性、變形之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 60,
+    "name": "Vapula",
+    "name_zh": "瓦普拉",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 36,
+    "powers_en": [
+      "Teaches philosophy",
+      "Teaches mechanics",
+      "Teaches sciences"
+    ],
+    "powers_zh": [
+      "教授哲學",
+      "教授機械學",
+      "教授諸般科學"
+    ],
+    "appearance_en": "Appears as a lion with griffin wings",
+    "appearance_zh": "以獅身鷹翼之形出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Vapula, aligned with wisdom and mechanics.",
+    "keywords_en": [
+      "wisdom",
+      "mechanics",
+      "learning"
+    ],
+    "keywords_zh": [
+      "智慧",
+      "機械",
+      "學識"
+    ],
+    "house_affinity": [
+      9,
+      10,
+      3
+    ],
+    "invocation_en": "I call upon VAPULA, noble Duke of the East, commander of 36 legions. Come in peace and lend your aid in wisdom, mechanics, and learning.",
+    "invocation_zh": "我召喚瓦普拉，東方尊貴的公爵，統領36個軍團。請和平降臨，賜予智慧、機械、學識之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 61,
+    "name": "Zagan",
+    "name_zh": "扎甘",
+    "rank": "King/President",
+    "rank_zh": "王/總裁",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Gemini",
+    "sign_zh": "雙子座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 33,
+    "powers_en": [
+      "Makes men witty",
+      "Turns wine into blood or water",
+      "Transforms metals"
+    ],
+    "powers_zh": [
+      "使人機智聰穎",
+      "使酒化為血或水",
+      "轉化金屬"
+    ],
+    "appearance_en": "Appears first as a bull with griffin wings and then as a man",
+    "appearance_zh": "先為鷹獅翼公牛，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Zagan, aligned with cunning and transformation.",
+    "keywords_en": [
+      "cunning",
+      "transformation",
+      "metals"
+    ],
+    "keywords_zh": [
+      "機智",
+      "變形",
+      "金屬"
+    ],
+    "house_affinity": [
+      3,
+      12,
+      10
+    ],
+    "invocation_en": "I call upon ZAGAN, noble King/President of the South, commander of 33 legions. Come in peace and lend your aid in cunning, transformation, and metals.",
+    "invocation_zh": "我召喚扎甘，南方尊貴的王/總裁，統領33個軍團。請和平降臨，賜予機智、變形、金屬之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 62,
+    "name": "Valac",
+    "name_zh": "瓦拉克",
+    "rank": "President",
+    "rank_zh": "總裁",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Virgo",
+    "sign_zh": "處女座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 38,
+    "powers_en": [
+      "Reveals where serpents are hidden",
+      "Locates hidden treasure",
+      "Guides the searcher safely"
+    ],
+    "powers_zh": [
+      "揭示蛇類藏身之處",
+      "定位隱藏寶藏",
+      "引導尋找者安全前行"
+    ],
+    "appearance_en": "Appears as a child with angel wings riding a two-headed dragon",
+    "appearance_zh": "以長有天使翅膀的孩童騎雙頭龍之形出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Valac, aligned with serpents and treasure.",
+    "keywords_en": [
+      "serpents",
+      "treasure",
+      "secrets"
+    ],
+    "keywords_zh": [
+      "蛇類",
+      "寶藏",
+      "秘密"
+    ],
+    "house_affinity": [
+      8,
+      12,
+      2
+    ],
+    "invocation_en": "I call upon VALAC, noble President of the South, commander of 38 legions. Come in peace and lend your aid in serpents, treasure, and secrets.",
+    "invocation_zh": "我召喚瓦拉克，南方尊貴的總裁，統領38個軍團。請和平降臨，賜予蛇類、寶藏、秘密之助。",
+    "safety_note_en": "Strengthen spiritual protections, keep offerings clean, and formally close the rite. Do not leave any channel to the unseen unattended.",
+    "safety_note_zh": "請加強靈性防護、保持供品潔淨，並正式完成閉儀。不要讓任何通往幽界的通道無人看守。"
+  },
+  {
+    "number": 63,
+    "name": "Andras",
+    "name_zh": "安德拉斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Sows discord",
+      "Turns allies against one another",
+      "Kills the careless operator and servants"
+    ],
+    "powers_zh": [
+      "播下不和",
+      "使同盟互相反目",
+      "殺害粗心的施術者與僕從"
+    ],
+    "appearance_en": "Appears as an angel with a raven head riding a black wolf and bearing a sharp sword",
+    "appearance_zh": "顯現為烏鴉頭天使騎黑狼、手持利劍",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Andras, aligned with discord and war.",
+    "keywords_en": [
+      "discord",
+      "war",
+      "destruction"
+    ],
+    "keywords_zh": [
+      "不和",
+      "戰爭",
+      "毀滅"
+    ],
+    "house_affinity": [
+      7,
+      12,
+      10
+    ],
+    "invocation_en": "I call upon ANDRAS, noble Marquis of the South, commander of 30 legions. Come in peace and lend your aid in discord, war, and destruction.",
+    "invocation_zh": "我召喚安德拉斯，南方尊貴的侯爵，統領30個軍團。請和平降臨，賜予不和、戰爭、毀滅之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 64,
+    "name": "Haures",
+    "name_zh": "豪雷斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "West",
+    "direction_zh": "西",
+    "legion_count": 36,
+    "powers_en": [
+      "Reveals past, present, and future",
+      "Destroys enemies",
+      "Resists other spirits"
+    ],
+    "powers_zh": [
+      "揭示過去現在未來",
+      "毀滅敵人",
+      "抵禦其他靈體"
+    ],
+    "appearance_en": "Appears as a leopard at first, then as a man with fiery eyes",
+    "appearance_zh": "先以豹形出現，後化為雙目如火的人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Haures, aligned with divination and destruction.",
+    "keywords_en": [
+      "divination",
+      "destruction",
+      "resistance"
+    ],
+    "keywords_zh": [
+      "占卜",
+      "毀滅",
+      "抵禦"
+    ],
+    "house_affinity": [
+      9,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon HAURES, noble Duke of the West, commander of 36 legions. Come in peace and lend your aid in divination, destruction, and resistance.",
+    "invocation_zh": "我召喚豪雷斯，西方尊貴的公爵，統領36個軍團。請和平降臨，賜予占卜、毀滅、抵禦之助。",
+    "safety_note_en": "Keep a strict protective circle and a clearly limited charge. Do not approach this spirit in anger or with reckless harmful intent.",
+    "safety_note_zh": "務必維持嚴密的保護圓與明確限制的請求。切勿在憤怒或魯莽傷害的意圖下接近此靈。"
+  },
+  {
+    "number": 65,
+    "name": "Andrealphus",
+    "name_zh": "安德烈亞爾弗斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Venus",
+    "planet_zh": "金星",
+    "element": "Air",
+    "element_zh": "風",
+    "zodiac_sign": "Libra",
+    "sign_zh": "天秤座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 30,
+    "powers_en": [
+      "Teaches geometry",
+      "Teaches mensuration",
+      "Can transform into a peacock"
+    ],
+    "powers_zh": [
+      "教授幾何學",
+      "教授測量學",
+      "可化為孔雀"
+    ],
+    "appearance_en": "Appears as a noisy peacock and later as a human",
+    "appearance_zh": "先以吵鬧孔雀之形出現，後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Andrealphus, aligned with geometry and transformation.",
+    "keywords_en": [
+      "geometry",
+      "transformation",
+      "astronomy"
+    ],
+    "keywords_zh": [
+      "幾何",
+      "變形",
+      "天文"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      10
+    ],
+    "invocation_en": "I call upon ANDREALPHUS, noble Marquis of the East, commander of 30 legions. Come in peace and lend your aid in geometry, transformation, and astronomy.",
+    "invocation_zh": "我召喚安德烈亞爾弗斯，東方尊貴的侯爵，統領30個軍團。請和平降臨，賜予幾何、變形、天文之助。",
+    "safety_note_en": "Maintain clear self-identification and grounding throughout the operation. Banish thoroughly after any work involving glamour, thought, or altered form.",
+    "safety_note_zh": "在整個操作中保持清晰自我認知與接地。凡涉及魅惑、心念或變形之作業，事後務必徹底驅散。"
+  },
+  {
+    "number": 66,
+    "name": "Cimeies",
+    "name_zh": "奇米埃斯",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Mercury",
+    "planet_zh": "水星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Virgo",
+    "sign_zh": "處女座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 20,
+    "powers_en": [
+      "Teaches grammar, logic, and rhetoric",
+      "Discovers hidden treasure",
+      "Gives skill in ordered thought"
+    ],
+    "powers_zh": [
+      "教授文法、邏輯與修辭",
+      "發現隱藏寶藏",
+      "賜予有序思維能力"
+    ],
+    "appearance_en": "Appears as a black horse or as a man riding a black horse",
+    "appearance_zh": "以黑馬，或騎黑馬的人形出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Cimeies, aligned with grammar and logic.",
+    "keywords_en": [
+      "grammar",
+      "logic",
+      "treasure"
+    ],
+    "keywords_zh": [
+      "文法",
+      "邏輯",
+      "寶藏"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      10
+    ],
+    "invocation_en": "I call upon CIMEIES, noble Marquis of the East, commander of 20 legions. Come in peace and lend your aid in grammar, logic, and treasure.",
+    "invocation_zh": "我召喚奇米埃斯，東方尊貴的侯爵，統領20個軍團。請和平降臨，賜予文法、邏輯、寶藏之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  },
+  {
+    "number": 67,
+    "name": "Amdusias",
+    "name_zh": "阿姆杜西亞斯",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Sun",
+    "planet_zh": "太陽",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Leo",
+    "sign_zh": "獅子座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 29,
+    "powers_en": [
+      "Commands musical sounds",
+      "Makes trees bow",
+      "Gives excellent familiars"
+    ],
+    "powers_zh": [
+      "統御音樂之聲",
+      "使樹木低頭",
+      "賜予優秀使魔"
+    ],
+    "appearance_en": "Appears as a unicorn and later takes human form amid the sound of trumpets and cymbals",
+    "appearance_zh": "先以獨角獸之形現身，後伴隨號角與鈸聲化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Amdusias, aligned with music and animals.",
+    "keywords_en": [
+      "music",
+      "animals",
+      "familiars"
+    ],
+    "keywords_zh": [
+      "音樂",
+      "動物",
+      "使魔"
+    ],
+    "house_affinity": [
+      5,
+      11,
+      3
+    ],
+    "invocation_en": "I call upon AMDUSIAS, noble Duke of the East, commander of 29 legions. Come in peace and lend your aid in music, animals, and familiars.",
+    "invocation_zh": "我召喚阿姆杜西亞斯，東方尊貴的公爵，統領29個軍團。請和平降臨，賜予音樂、動物、使魔之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 68,
+    "name": "Belial",
+    "name_zh": "貝利亞爾",
+    "rank": "King",
+    "rank_zh": "王",
+    "planet": "Saturn",
+    "planet_zh": "土星",
+    "element": "Earth",
+    "element_zh": "土",
+    "zodiac_sign": "Capricorn",
+    "sign_zh": "摩羯座",
+    "direction": "North",
+    "direction_zh": "北",
+    "legion_count": 80,
+    "powers_en": [
+      "Causes favor and affection",
+      "Distributes offices and honors",
+      "Supports authority and advancement"
+    ],
+    "powers_zh": [
+      "帶來恩寵與喜愛",
+      "分配官職與榮耀",
+      "扶持權威與晉升"
+    ],
+    "appearance_en": "Appears as a beautiful angel in a chariot of fire",
+    "appearance_zh": "以坐在火焰戰車中的美麗天使形象出現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Belial, aligned with love and honor.",
+    "keywords_en": [
+      "love",
+      "honor",
+      "authority"
+    ],
+    "keywords_zh": [
+      "愛情",
+      "榮耀",
+      "權威"
+    ],
+    "house_affinity": [
+      5,
+      7,
+      11
+    ],
+    "invocation_en": "I call upon BELIAL, noble King of the North, commander of 80 legions. Come in peace and lend your aid in love, honor, and authority.",
+    "invocation_zh": "我召喚貝利亞爾，北方尊貴的王，統領80個軍團。請和平降臨，賜予愛情、榮耀、權威之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 69,
+    "name": "Decarabia",
+    "name_zh": "德卡拉比亞",
+    "rank": "Marquis",
+    "rank_zh": "侯爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "South",
+    "direction_zh": "南",
+    "legion_count": 30,
+    "powers_en": [
+      "Knows the virtues of herbs and stones",
+      "Makes birds appear and fly",
+      "Reveals natural correspondences"
+    ],
+    "powers_zh": [
+      "知曉藥草與礦石之德",
+      "使鳥群顯現並飛翔",
+      "揭示自然對應關係"
+    ],
+    "appearance_en": "Appears first as a pentagram-shaped star and then as a man when commanded",
+    "appearance_zh": "先以五芒星之形顯現，受命後化為人形",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Decarabia, aligned with herbs and stones.",
+    "keywords_en": [
+      "herbs",
+      "stones",
+      "animals"
+    ],
+    "keywords_zh": [
+      "藥草",
+      "礦石",
+      "動物"
+    ],
+    "house_affinity": [
+      6,
+      9,
+      2
+    ],
+    "invocation_en": "I call upon DECARABIA, noble Marquis of the South, commander of 30 legions. Come in peace and lend your aid in herbs, stones, and animals.",
+    "invocation_zh": "我召喚德卡拉比亞，南方尊貴的侯爵，統領30個軍團。請和平降臨，賜予藥草、礦石、動物之助。",
+    "safety_note_en": "Record all responses carefully, maintain respectful authority, and test revelations before acting upon them.",
+    "safety_note_zh": "請仔細記錄一切回應，保持尊重而有權威的態度，並在採取行動前驗證所得啟示。"
+  },
+  {
+    "number": 70,
+    "name": "Seere",
+    "name_zh": "賽爾",
+    "rank": "Prince",
+    "rank_zh": "王子",
+    "planet": "Jupiter",
+    "planet_zh": "木星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Sagittarius",
+    "sign_zh": "射手座",
+    "direction": "East",
+    "direction_zh": "東",
+    "legion_count": 26,
+    "powers_en": [
+      "Travels anywhere instantly",
+      "Reveals hidden things",
+      "Causes abundance"
+    ],
+    "powers_zh": [
+      "可瞬間前往任何地方",
+      "揭示隱藏之物",
+      "帶來豐盛"
+    ],
+    "appearance_en": "Appears as a beautiful man riding a winged horse",
+    "appearance_zh": "以騎有翼駿馬的俊美男子形象顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Seere, aligned with travel and secrets.",
+    "keywords_en": [
+      "travel",
+      "secrets",
+      "abundance"
+    ],
+    "keywords_zh": [
+      "旅行",
+      "秘密",
+      "豐盛"
+    ],
+    "house_affinity": [
+      3,
+      9,
+      12
+    ],
+    "invocation_en": "I call upon SEERE, noble Prince of the East, commander of 26 legions. Come in peace and lend your aid in travel, secrets, and abundance.",
+    "invocation_zh": "我召喚賽爾，東方尊貴的王子，統領26個軍團。請和平降臨，賜予旅行、秘密、豐盛之助。",
+    "safety_note_en": "Work with firm containment and a precise intention. Avoid dangerous weather, open water, or unfocused travel magic during the rite.",
+    "safety_note_zh": "作業時要有穩固結界與明確意圖。儀式期間避免危險天候、開放水域或目標不明的旅行魔法。"
+  },
+  {
+    "number": 71,
+    "name": "Dantalion",
+    "name_zh": "但他林",
+    "rank": "Duke",
+    "rank_zh": "公爵",
+    "planet": "Moon",
+    "planet_zh": "月亮",
+    "element": "Water",
+    "element_zh": "水",
+    "zodiac_sign": "Cancer",
+    "sign_zh": "巨蟹座",
+    "direction": "North",
+    "direction_zh": "北",
+    "legion_count": 36,
+    "powers_en": [
+      "Reveals the thoughts of others",
+      "Changes appearance",
+      "Causes love"
+    ],
+    "powers_zh": [
+      "揭示他人思想",
+      "改變外貌形態",
+      "引發愛情"
+    ],
+    "appearance_en": "Appears as a man with many faces holding a book",
+    "appearance_zh": "以手持書卷、擁有眾多面孔的人形顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Dantalion, aligned with thoughts and transformation.",
+    "keywords_en": [
+      "thoughts",
+      "transformation",
+      "love"
+    ],
+    "keywords_zh": [
+      "思想",
+      "變形",
+      "愛情"
+    ],
+    "house_affinity": [
+      1,
+      12,
+      3
+    ],
+    "invocation_en": "I call upon DANTALION, noble Duke of the North, commander of 36 legions. Come in peace and lend your aid in thoughts, transformation, and love.",
+    "invocation_zh": "我召喚但他林，北方尊貴的公爵，統領36個軍團。請和平降臨，賜予思想、變形、愛情之助。",
+    "safety_note_en": "State ethical boundaries clearly and avoid coercive requests in matters of affection. Ground emotions carefully before dismissal.",
+    "safety_note_zh": "務必清楚聲明倫理界線，避免在情感議題上提出強制性請求。送離前要仔細穩定情緒。"
+  },
+  {
+    "number": 72,
+    "name": "Andromalius",
+    "name_zh": "安德羅瑪流士",
+    "rank": "Count",
+    "rank_zh": "伯爵",
+    "planet": "Mars",
+    "planet_zh": "火星",
+    "element": "Fire",
+    "element_zh": "火",
+    "zodiac_sign": "Aries",
+    "sign_zh": "白羊座",
+    "direction": "North",
+    "direction_zh": "北",
+    "legion_count": 36,
+    "powers_en": [
+      "Returns thieves and stolen goods",
+      "Discovers wickedness and deceit",
+      "Finds hidden treasure"
+    ],
+    "powers_zh": [
+      "帶回盜賊與失物",
+      "揭露邪惡與欺詐",
+      "尋得隱藏寶藏"
+    ],
+    "appearance_en": "Appears as a man holding a serpent",
+    "appearance_zh": "以手持蛇的人形顯現",
+    "sigil_description": "An angular seal of intersecting strokes, loops, and descending hooks traditionally attributed to Andromalius, aligned with theft and secrets.",
+    "keywords_en": [
+      "theft",
+      "secrets",
+      "treasure",
+      "justice"
+    ],
+    "keywords_zh": [
+      "盜取",
+      "秘密",
+      "寶藏",
+      "正義"
+    ],
+    "house_affinity": [
+      2,
+      12,
+      8
+    ],
+    "invocation_en": "I call upon ANDROMALIUS, noble Count of the North, commander of 36 legions. Come in peace and lend your aid in theft, secrets, and treasure.",
+    "invocation_zh": "我召喚安德羅瑪流士，北方尊貴的伯爵，統領36個軍團。請和平降臨，賜予盜取、秘密、寶藏之助。",
+    "safety_note_en": "Guard against greed and pride. Verify all promised gains carefully and keep your petition proportionate and lawful.",
+    "safety_note_zh": "提防貪念與傲慢。對任何應許的利益都要仔細驗證，並使請求保持節制且合乎正道。"
+  }
+]

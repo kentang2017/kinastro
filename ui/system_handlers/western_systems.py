@@ -1886,6 +1886,30 @@ def render_tab_enochian() -> None:
         st.error(f"{t('error_tab_compute')}：{_e}")
         st.exception(_e)
 
+
+def render_tab_goetia() -> None:
+    _bind_legacy()
+    _is_calculated = st.session_state.get("_calculated", False)
+    _selected_system = "tab_goetia"
+    _p0 = st.session_state.get("_calc_params")
+    try:
+        from astro.goetia import compute_goetia_chart
+        from ui.handlers.tab_goetia.render import render_streamlit as _render_goetia
+
+        if _is_calculated:
+            _p = st.session_state["_calc_params"]
+            with st.spinner(t("spinner_goetia")):
+                _goetia_result = compute_goetia_chart(**_p)
+            _render_goetia(_goetia_result)
+            _render_ai_button("tab_goetia", _goetia_result, btn_key="goetia")
+        else:
+            st.info(t("info_goetia_prompt"))
+            st.markdown(t("desc_goetia"))
+    except Exception as _e:
+        st.error(f"{t('error_tab_compute')}：{_e}")
+        st.exception(_e)
+
+
 def render_tab_history() -> None:
     _bind_legacy()
     _is_calculated = st.session_state.get("_calculated", False)

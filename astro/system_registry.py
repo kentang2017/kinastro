@@ -958,6 +958,25 @@ _reg(System(
 ))
 
 _reg(System(
+    id="tab_goetia",
+    name_zh="格提亞占星",
+    name_en="Goetia / Solomonic Astrology",
+    category="cat_western",
+    icon="⬡",
+    tab_key="tab_goetia",
+    desc_key="desc_goetia",
+    spinner_key="spinner_goetia",
+    hint_key="sys_hint_goetia",
+    tags=["goetia", "solomonic", "lesser key of solomon", "72 spirits", "demons",
+          "ars goetia", "lemegeton", "ceremonial magic", "western", "esoteric"],
+    maturity="core",
+    accent_color="#8B0000",   # Deep crimson (Solomonic)
+    origin_culture="Western",
+    tradition_period="Solomonic tradition (medieval, formalized 17th c.)",
+    ai_persona_key="info_goetia_prompt",
+))
+
+_reg(System(
     id="tab_byzantine_astrology",
     name_zh="拜占庭占星",
     name_en="Byzantine Astrology",
