@@ -327,11 +327,9 @@ def _score_demon(
             f"與你的身份和外在表現有直接聯繫。"
         )
 
-    # 去重
-    seen_en: set = set()
-    seen_zh: set = set()
-    unique_reasons_en = [r for r in reasons_en if r not in seen_en and not seen_en.add(r)]  # type: ignore[func-returns-value]
-    unique_reasons_zh = [r for r in reasons_zh if r not in seen_zh and not seen_zh.add(r)]  # type: ignore[func-returns-value]
+    # 去重（保持順序）
+    unique_reasons_en = list(dict.fromkeys(reasons_en))
+    unique_reasons_zh = list(dict.fromkeys(reasons_zh))
 
     return score, unique_reasons_en[:3], unique_reasons_zh[:3], connections_en[:3], connections_zh[:3]
 
@@ -504,6 +502,8 @@ def _compute_electional_windows(
             month=int(greg[1]),
             day=int(greg[2]),
             hour_start=hour_start,
+            # hour_end is capped at 23 because the window may cross midnight
+            # (e.g., hour_start=22 + 2-hour window = 24); 23 is the last valid hour
             hour_end=min(hour_end, 23),
             timezone=timezone,
             planet=planet,

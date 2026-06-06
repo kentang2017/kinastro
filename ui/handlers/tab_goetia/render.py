@@ -361,9 +361,9 @@ def _render_recommendation_card(rec: DemonRecommendation, rank: int, is_zh: bool
                 st.markdown(f"• {reason}")
 
             # 命盤連結
-            if rec.natal_connections_zh if is_zh else rec.natal_connections:
+            connections = rec.natal_connections_zh if is_zh else rec.natal_connections
+            if connections:
                 st.markdown(f"**{'命盤連結' if is_zh else 'Natal Connections'}**")
-                connections = rec.natal_connections_zh if is_zh else rec.natal_connections
                 for conn in connections:
                     st.caption(f"🔗 {conn}")
 

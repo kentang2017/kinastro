@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, List
 
 _DATA_DIR = Path(__file__).resolve().parent
 
@@ -39,13 +39,17 @@ def load_demons() -> List[Dict[str, Any]]:
 
 
 @lru_cache(maxsize=1)
+def _demons_by_number() -> Dict[int, Any]:
+    """Build a number→demon lookup dict (cached once)."""
+    return {d["number"]: d for d in load_demons()}
+
+
 def load_demon_by_number(number: int) -> Dict[str, Any]:
     """根據編號載入單一魔神 / Load a single demon by number (1–72)."""
-    demons = load_demons()
-    for d in demons:
-        if d["number"] == number:
-            return d
-    raise ValueError(f"Demon #{number} not found in Goetia database.")
+    lookup = _demons_by_number()
+    if number not in lookup:
+        raise ValueError(f"Demon #{number} not found in Goetia database.")
+    return lookup[number]
 
 
 @lru_cache(maxsize=1)
