@@ -11,7 +11,7 @@ Multi-System Astrology Chart Application
 卡巴拉、猶太 Mazzalot、薩珊波斯、阿拉伯占星、也門占星、Picatrix 占星魔法、
 瑪雅、阿茲特克、古埃及十度區間（Decans）、巴比倫占星
 
-共八十四種體系，使用 pyswisseph 進行天文計算。
+共八十八種體系，使用 pyswisseph 進行天文計算。
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import streamlit as st
 
 # ── Page config must be the first Streamlit call ──────────────────────────
 st.set_page_config(
-    page_title="堅占星 KinAstro | 八十四體系占星",
+    page_title="堅占星 KinAstro | 八十八體系占星",
     page_icon="🌌",
     layout="wide",
     initial_sidebar_state="expanded",
