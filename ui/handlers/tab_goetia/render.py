@@ -195,7 +195,7 @@ def render_streamlit(chart: Optional[GoetiaChart] = None) -> None:
     # ── 標題 ───────────────────────────────────────────────
     st.markdown("""
 <div class="goetia-header">
-  <h2>⬡ Goetia / Solomonic Astrology — 格提亞／所羅門占星</h2>
+  <h2>⬡ Goetia / Solomonic Astrology — 所羅門占星</h2>
   <p>Lesser Key of Solomon · 72 Spirit System · Ars Goetia · 魔神召喚與占星整合</p>
 </div>
 """, unsafe_allow_html=True)
@@ -428,6 +428,7 @@ def _render_natal_overview_tab(chart: GoetiaChart, is_zh: bool) -> None:
 
     for pp in chart.planet_points:
         el_color = _elem_color(pp.element)
+        planet_color = PLANET_COLORS.get(pp.planet_name, "#888")
         planet_display = pp.planet_zh if is_zh else pp.planet_name
         sign_display = pp.sign_zh if is_zh else pp.sign
         element_display = pp.element_zh if is_zh else pp.element
@@ -435,7 +436,7 @@ def _render_natal_overview_tab(chart: GoetiaChart, is_zh: bool) -> None:
         demons_list = ", ".join(pp.associated_demons[:3]) if pp.associated_demons else "—"
 
         st.markdown(
-            f"<span style='color:{PLANET_COLORS.get(pp.planet_name,\"#888\")}'>**{planet_display}**</span>"
+            f"<span style='color:{planet_color}'>**{planet_display}**</span>"
             f" {sign_display}{retro} (H{pp.house}) — "
             f"<span style='color:{el_color}'>{element_display}</span>"
             f" — Demons: `{demons_list}`",

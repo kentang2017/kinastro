@@ -959,7 +959,7 @@ _reg(System(
 
 _reg(System(
     id="tab_goetia",
-    name_zh="格提亞占星",
+    name_zh="所羅門占星",
     name_en="Goetia / Solomonic Astrology",
     category="cat_western",
     icon="⬡",

@@ -155,6 +155,9 @@ CITY_PRESETS, CITY_OPTIONS = _build_city_presets()
 def render_sidebar() -> None:
     """Render the full sidebar including birth form and system selector."""
     with st.sidebar:
+        if "_form_submitted_flag" in st.session_state:
+            del st.session_state["_form_submitted_flag"]
+
         st.header(t("sidebar_header"))
 
         _dt_col, _now_col = st.columns([3, 1])
@@ -313,13 +316,9 @@ def render_sidebar() -> None:
                 t("generate_chart_btn"),
                 width="stretch",
                 type="primary",
-                key="_form_submit_button",  # Add explicit key for consistency
             )
-            # Hidden checkbox to trigger form submission (helps with refresh issues)
-            _form_submitted_flag = _form_submitted or st.session_state.get("_form_submitted_flag", False)
-            st.session_state["_form_submitted_flag"] = _form_submitted_flag
-            
-            if _form_submitted_flag:
+
+            if _form_submitted:
                 if _is_custom:
                     st.session_state["_custom_lat"] = input_lat
                     st.session_state["_custom_lon"] = input_lon

@@ -11548,5 +11548,41 @@
     "vi": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
     "th": "👈 Enter birth data and click 'Calculate Chart' to begin the Enochian Astrology analysis.",
     "zh_cn": "👈 请输入出生资料后点击「开始排盘」，进行以诺克占星天使魔法分析。"
+  },
+  "tab_goetia": {
+    "en": "⬡ Goetia / Solomonic Astrology",
+    "zh": "⬡ 所羅門占星",
+    "ko": "⬡ Goetia / Solomonic Astrology",
+    "ja": "⬡ Goetia / Solomonic Astrology",
+    "vi": "⬡ Goetia / Solomonic Astrology",
+    "th": "⬡ Goetia / Solomonic Astrology",
+    "zh_cn": "⬡ 所罗门占星"
+  },
+  "desc_goetia": {
+    "en": "**Goetia / Solomonic Astrology** — Natal astrology integrated with the 72 spirits of the Ars Goetia.\n\n• Maps natal planets, signs, houses, and elemental balance to Goetic correspondences.\n• Personalized primary demon recommendations and sigil visualizations.\n• Electional windows for ritual timing within the coming 30 days.\n• Ritual sequence, invocation text, and safety / dismissal guidance.\n• Cross-reference with standard Western natal interpretation.\n\nEnter birth data and click Calculate.",
+    "zh": "**所羅門占星（Goetia / Solomonic Astrology）** — 將本命占星與《所羅門小鑰匙》格提亞七十二靈體系整合。\n\n• 將本命盤的行星、星座、宮位與元素平衡映射到格提亞對應。\n• 提供個人化主要靈體推薦與印記視覺化。\n• 計算未來 30 天的儀式選時窗口。\n• 提供儀式步驟、召喚語與遣返／安全提示。\n• 可與標準西方本命占星交叉參照。\n\n請輸入出生資料後點擊計算。",
+    "ko": "**Goetia / Solomonic Astrology** — Natal astrology integrated with the 72 spirits of the Ars Goetia.\n\nEnter birth data and click Calculate.",
+    "ja": "**Goetia / Solomonic Astrology** — Natal astrology integrated with the 72 spirits of the Ars Goetia.\n\nEnter birth data and click Calculate.",
+    "vi": "**Goetia / Solomonic Astrology** — Natal astrology integrated with the 72 spirits of the Ars Goetia.\n\nEnter birth data and click Calculate.",
+    "th": "**Goetia / Solomonic Astrology** — Natal astrology integrated with the 72 spirits of the Ars Goetia.\n\nEnter birth data and click Calculate.",
+    "zh_cn": "**所罗门占星（Goetia / Solomonic Astrology）** — 将本命占星与《所罗门小钥匙》格提亚七十二灵体系统整合。\n\n请输入出生资料后点击计算。"
+  },
+  "spinner_goetia": {
+    "en": "Computing Goetia / Solomonic Astrology chart…",
+    "zh": "正在計算所羅門占星命盤…",
+    "ko": "Computing Goetia / Solomonic Astrology chart…",
+    "ja": "Computing Goetia / Solomonic Astrology chart…",
+    "vi": "Computing Goetia / Solomonic Astrology chart…",
+    "th": "Computing Goetia / Solomonic Astrology chart…",
+    "zh_cn": "正在计算所罗门占星命盘…"
+  },
+  "sys_hint_goetia": {
+    "en": "72 Spirits · Ars Goetia · Solomonic Magic · Natal Correspondences · Electional Timing",
+    "zh": "72 靈體 · Ars Goetia · 所羅門魔法 · 本命對應 · 儀式選時",
+    "ko": "72 Spirits · Ars Goetia · Solomonic Magic · Natal Correspondences · Electional Timing",
+    "ja": "72 Spirits · Ars Goetia · Solomonic Magic · Natal Correspondences · Electional Timing",
+    "vi": "72 Spirits · Ars Goetia · Solomonic Magic · Natal Correspondences · Electional Timing",
+    "th": "72 Spirits · Ars Goetia · Solomonic Magic · Natal Correspondences · Electional Timing",
+    "zh_cn": "72 灵体 · Ars Goetia · 所罗门魔法 · 本命对应 · 仪式选时"
   }
 }
