@@ -94,6 +94,59 @@ flagged for manual verification against an external almanac or ephemeris.
 
 ---
 
+## 🪷 解讀系統 Phase 3 | Interpretation System
+
+KinAstro now includes a dedicated structured Ziwei interpretation layer under
+`astro/interpretation/`:
+
+- `astro/interpretation/ziwei.py` builds a **traditional template-first**
+  reading with explicit sections for 命宮、身宮、四化、星曜組合、 and 大限
+- `astro/interpretation/ziwei_prompt_templates.py` provides reusable
+  Ziwei-specific prompts and few-shot examples for future multi-system prompt
+  expansion
+- `astro/interpretation/providers.py` adds a thin provider abstraction so the
+  same interpretation flow can target **Cerebras** or a **local Ollama**
+  server
+
+In `app.py`, Ziwei now exposes:
+
+1. **Traditional mode** – fully local, rule-based output without LLM calls
+2. **Hybrid mode** – traditional scaffold plus AI enhancement
+3. **AI Only mode** – same structured pipeline, reserved for stronger future
+   RAG/LLM emphasis
+
+The final interpretation is stored as editable markdown in the UI so users can
+revise or export it before generating reports.
+
+---
+
+## 📄 PDF 報告生成 Phase 4 | PDF Report Generation
+
+KinAstro now includes a professional Ziwei PDF reporting stack under
+`astro/report/`:
+
+- `astro/report/pdf_generator.py` uses **reportlab** for page layout, header,
+  footer, branded sections, and printable PDF assembly
+- `astro/report/templates/ziwei.py` provides the first production template,
+  configurable report options, and a dedicated **Pillow**-based palace-grid PNG
+  renderer optimized for export
+- `generate_pdf_report("ziwei", ...)` accepts `ZiweiChartResult` and
+  `ZiweiInterpretationResult` directly, so the PDF uses structured fields such
+  as Summary, 命宮分析, 身宮分析, 四化影響, 星群組合, 大限概述, AI notes, and the
+  editable final interpretation
+
+In the Streamlit Ziwei interpretation panel, users can now:
+
+1. Select the report template
+2. Choose whether AI-enhanced notes are included
+3. Preview the printable chart image
+4. Download a client-ready PDF directly
+
+The implementation keeps TXT/CSV and other export paths untouched while adding a
+higher-quality PDF workflow for professional consultation delivery.
+
+---
+
 ## 🧭 體系總覽 | Systems at a Glance
 
 > 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 → 非洲 → 隱祕與原民傳統 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；目前清單已與側邊欄同步，納入皇極經世（Huangji Jingshi）、伊諾克占星（Enochian Astrology）、所羅門占星（Goetia / Solomonic Astrology）、馬來伊斯蘭占星 Bintang Duabelas（十二星）、馬來 Ilmu Nujum、馬來七星五刻占卜 Kinketika、地占占星（Astronomical Geomancy）、伊特魯里亞占星（Etruscan Astrology）、吠陀風水（Vastu Shastra）、歐洲地占（European Geomancy）、弗拉德命運輪盤（Fludd Rota Simulator）、煉金占星（Alchemical Astrology）、衣索比亞 Bahre Hasab（Ethiopian Bahre Hasab）、亞美尼亞占星（Armenian Astrology）、拿破崙命運之書（Napoleon's Book of Fate）與運動占星（Sports Astrology）

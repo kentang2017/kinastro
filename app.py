@@ -319,10 +319,11 @@ def _build_overview_metrics(
 
     try:
         west = compute_western_chart(**params)
+        west_planets = list(getattr(west, "planets", []) or [])
         sun = next(
             (
                 planet
-                for planet in getattr(west, "planets", [])
+                for planet in west_planets
                 if "Sun" in getattr(planet, "name", "")
             ),
             None,
@@ -333,7 +334,7 @@ def _build_overview_metrics(
                 "system_id": "tab_western",
                 "metric_main": f"☉ {sun_sign}",
                 "metric_sub": (
-                    f"P:{len(getattr(west, 'planets', []))} · "
+                    f"P:{len(west_planets)} · "
                     f"A:{len(getattr(west, 'aspects', []))}"
                 ),
             }
@@ -396,6 +397,285 @@ def _build_overview_metrics(
         pass
 
     return items
+
+
+def _freeze_birth_params(params: dict[str, Any]) -> tuple[tuple[str, Any], ...]:
+    """Return a stable key for interpretation-model chart computation."""
+    return tuple(sorted(params.items()))
+
+
+@st.cache_data(show_spinner=False)
+def _compute_ziwei_interpretation_chart(
+    frozen_params: tuple[tuple[str, Any], ...],
+    birth_gender: str,
+):
+    """Compute a typed Ziwei chart once for structured interpretation flows."""
+    # pylint: disable=import-outside-toplevel
+    from astro import compute_chart
+    from astro.models import BirthData
+
+    payload = dict(frozen_params)
+    birth_data = BirthData(
+        year=int(payload["year"]),
+        month=int(payload["month"]),
+        day=int(payload["day"]),
+        hour=int(payload["hour"]),
+        minute=int(payload["minute"]),
+        timezone=float(payload["timezone"]),
+        latitude=float(payload["latitude"]),
+        longitude=float(payload["longitude"]),
+        location_name=str(payload.get("location_name", "")),
+        gender=birth_gender,
+    )
+    return compute_chart("ziwei", birth_data)
+
+
+@st.cache_data(show_spinner=False)
+def _build_ziwei_report_preview_image(
+    chart_payload: dict[str, Any],
+    template_name: str,
+) -> bytes:
+    """Build a cached Ziwei report preview image."""
+    # pylint: disable=import-outside-toplevel
+    from astro.models import ZiweiChartResult
+    from astro.report import ZiweiReportOptions, render_ziwei_report_chart_png
+
+    chart = ZiweiChartResult.model_validate(chart_payload)
+    return render_ziwei_report_chart_png(
+        chart,
+        theme=ZiweiReportOptions(template_name=template_name).theme,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def _build_ziwei_pdf_report_bytes(
+    chart_payload: dict[str, Any],
+    interpretation_payload: dict[str, Any],
+    final_text: str,
+    include_ai_notes: bool,
+    template_name: str,
+) -> bytes:
+    """Build a cached professional Ziwei PDF report."""
+    # pylint: disable=import-outside-toplevel
+    from astro.interpretation import ZiweiInterpretationResult
+    from astro.models import ZiweiChartResult
+    from astro.report import ZiweiReportOptions, generate_pdf_report
+
+    chart = ZiweiChartResult.model_validate(chart_payload)
+    interpretation = ZiweiInterpretationResult.model_validate(interpretation_payload)
+    interpretation = interpretation.model_copy(
+        update={
+            "ai_enhanced_notes": (
+                interpretation.ai_enhanced_notes if include_ai_notes else ""
+            ),
+            "final_text": final_text or interpretation.final_text,
+        }
+    )
+    return generate_pdf_report(
+        "ziwei",
+        chart=chart,
+        interpretation=interpretation,
+        options=ZiweiReportOptions(
+            template_name=template_name,
+            include_ai_notes=include_ai_notes,
+        ),
+    )
+
+
+def _render_ziwei_export_panel(
+    chart_payload: dict[str, Any],
+    interpretation_payload: dict[str, Any],
+) -> None:
+    """Render Ziwei PDF export controls and preview."""
+    st.divider()
+    st.subheader("📄 Export / 匯出")
+    template_name = st.selectbox(
+        "Report style / 報告樣式",
+        options=["ziwei-professional-v1"],
+        key="_ziwei_report_template",
+    )
+    include_ai_notes = st.checkbox(
+        "Include AI enhanced notes / 包含 AI 增強說明",
+        value=bool(interpretation_payload.get("ai_enhanced_notes")),
+        key="_ziwei_report_include_ai",
+    )
+    preview_col, action_col = st.columns([3, 2])
+    with preview_col:
+        st.caption("Preview chart image / 預覽命盤圖像")
+        st.image(
+            _build_ziwei_report_preview_image(chart_payload, template_name),
+            use_container_width=True,
+        )
+    with action_col:
+        st.caption(
+            "The PDF includes birth header, chart visual, structured sections, "
+            "and footer disclaimers."
+        )
+        current_text = st.session_state.get(
+            "_ziwei_interp_text",
+            interpretation_payload.get("final_text", ""),
+        )
+        pdf_bytes = _build_ziwei_pdf_report_bytes(
+            chart_payload,
+            interpretation_payload,
+            current_text,
+            include_ai_notes,
+            template_name,
+        )
+        st.download_button(
+            "Download PDF / 下載 PDF",
+            data=pdf_bytes,
+            file_name="kinastro-ziwei-report.pdf",
+            mime="application/pdf",
+            key="_ziwei_report_download_pdf",
+            type="primary",
+        )
+
+
+def _render_ziwei_interpretation_panel(
+    params: dict[str, Any],
+    birth_gender: str,
+) -> None:
+    """Render the structured Ziwei interpretation UI."""
+    # pylint: disable=import-outside-toplevel,too-many-locals,too-many-statements
+    from astro.ai_analysis import CEREBRAS_MODEL_OPTIONS
+    from astro.interpretation import (
+        DEFAULT_CEREBRAS_MODEL,
+        DEFAULT_OLLAMA_HOST,
+        DEFAULT_OLLAMA_MODEL,
+        InterpretationProviderConfig,
+        ZiweiInterpretationResult,
+        generate_ziwei_interpretation,
+    )
+
+    st.divider()
+    st.subheader("🪷 Ziwei Interpretation / 紫微解讀")
+    st.caption(
+        "Traditional mode stays local and rule-based. "
+        "Hybrid / AI mode adds Cerebras or local Ollama enhancement."
+    )
+
+    mode_options = {
+        "Traditional / 傳統模板": "traditional",
+        "Hybrid / 傳統 + AI": "hybrid",
+        "AI Only / AI 強化": "ai",
+    }
+    selected_mode_label = st.selectbox(
+        "Interpretation mode / 解讀模式",
+        options=list(mode_options),
+        key="_ziwei_interp_mode",
+    )
+    selected_mode = mode_options[selected_mode_label]
+
+    provider = "traditional"
+    model_name = ""
+    ollama_host = DEFAULT_OLLAMA_HOST
+    if selected_mode != "traditional":
+        provider = st.radio(
+            "AI provider / 模型來源",
+            options=["cerebras", "ollama"],
+            format_func=lambda value: (
+                "Cerebras (Cloud)" if value == "cerebras" else "Ollama (Local)"
+            ),
+            horizontal=True,
+            key="_ziwei_interp_provider",
+        )
+        if provider == "cerebras":
+            model_name = st.selectbox(
+                "Model / 模型",
+                options=CEREBRAS_MODEL_OPTIONS,
+                index=max(
+                    CEREBRAS_MODEL_OPTIONS.index(DEFAULT_CEREBRAS_MODEL),
+                    0,
+                ),
+                key="_ziwei_interp_cerebras_model",
+            )
+        else:
+            model_name = st.text_input(
+                "Ollama model / 本地模型",
+                value=st.session_state.get(
+                    "_ziwei_interp_ollama_model", DEFAULT_OLLAMA_MODEL
+                ),
+                key="_ziwei_interp_ollama_model",
+            ).strip() or DEFAULT_OLLAMA_MODEL
+            ollama_host = st.text_input(
+                "Ollama host / 本地主機",
+                value=st.session_state.get(
+                    "_ziwei_interp_ollama_host", DEFAULT_OLLAMA_HOST
+                ),
+                key="_ziwei_interp_ollama_host",
+            ).strip() or DEFAULT_OLLAMA_HOST
+
+    user_instruction = st.text_area(
+        "Focus prompt / 解讀重點",
+        value=st.session_state.get("_ziwei_interp_instruction", ""),
+        placeholder="例如：聚焦事業、關係模式、未來十年大限轉折。",
+        key="_ziwei_interp_instruction",
+        height=90,
+    )
+
+    params_signature = _freeze_birth_params(params)
+    previous_signature = st.session_state.get("_ziwei_interp_signature")
+    if previous_signature != params_signature:
+        st.session_state.pop("_ziwei_interp_result", None)
+        st.session_state.pop("_ziwei_interp_text", None)
+        st.session_state["_ziwei_interp_signature"] = params_signature
+
+    action_label = (
+        "Regenerate interpretation / 重新生成解讀"
+        if st.session_state.get("_ziwei_interp_result")
+        else "Generate interpretation / 生成解讀"
+    )
+    if st.button(action_label, key="_ziwei_interp_generate_btn", type="primary"):
+        with st.spinner("Generating Ziwei interpretation..."):
+            chart = _compute_ziwei_interpretation_chart(params_signature, birth_gender)
+            result = generate_ziwei_interpretation(
+                chart,
+                mode=selected_mode,
+                provider_config=InterpretationProviderConfig(
+                    provider=provider,
+                    model=model_name or None,
+                    ollama_host=ollama_host,
+                ),
+                user_instruction=user_instruction,
+            )
+            st.session_state["_ziwei_interp_result"] = result.model_dump()
+            st.session_state["_ziwei_interp_text"] = result.final_text
+
+    result_payload = st.session_state.get("_ziwei_interp_result")
+    if not result_payload:
+        return
+
+    interpretation = ZiweiInterpretationResult.model_validate(result_payload)
+    chart_payload = _compute_ziwei_interpretation_chart(
+        params_signature, birth_gender
+    ).model_dump()
+    st.caption(f"Provider / 來源：**{interpretation.provider}**")
+    with st.expander("Summary / 摘要", expanded=True):
+        st.markdown(interpretation.summary)
+    with st.expander("Ming Gong / 命宮分析"):
+        st.markdown(interpretation.ming_gong_analysis)
+    with st.expander("Shen Gong / 身宮分析"):
+        st.markdown(interpretation.shen_gong_analysis)
+    with st.expander("Si Hua / 四化流向"):
+        st.markdown(interpretation.si_hua_effects)
+    with st.expander("Major Star Combinations / 星曜組合"):
+        st.markdown(
+            "\n".join(f"- {item}" for item in interpretation.major_star_combinations)
+        )
+    with st.expander("Da Xian Overview / 大限概覽"):
+        st.markdown("\n".join(f"- {item}" for item in interpretation.da_xian_overview))
+    if interpretation.ai_enhanced_notes:
+        with st.expander("AI Enhanced Notes / AI 補充"):
+            st.markdown(interpretation.ai_enhanced_notes)
+    if interpretation.warnings:
+        st.warning("\n".join(interpretation.warnings))
+    st.text_area(
+        "Editable final interpretation / 可編輯最終解讀",
+        key="_ziwei_interp_text",
+        height=420,
+    )
+    _render_ziwei_export_panel(chart_payload, result_payload)
 
 
 # ── Overview dashboard (when no system selected yet) ─────────────────────
@@ -522,6 +802,7 @@ with _natal_tab:
     )
 
 # ── Fallback: dispatch to modular system handler files ────────────────────
+_handled = False
 if not _engine_handled:
     try:
         from ui.system_handlers.dispatch import render_system as _dispatch_render_system

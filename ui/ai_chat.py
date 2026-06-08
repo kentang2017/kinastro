@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from astro.ai_analysis import (
     CerebrasClient,
@@ -53,6 +54,94 @@ _render_ai_button = set_ai_context
 _render_ai_chat = set_ai_context
 
 
+def _render_save_pdf_button() -> None:
+    """Render a browser-print button so users can save the current page as PDF."""
+    components.html(
+        """
+<!doctype html>
+<html>
+  <body style="margin:0;background:transparent;">
+    <script>
+      function printWholePage() {
+        const targetWindow = window.parent || window.top || window;
+        const targetDocument = targetWindow.document || document;
+        const appContainer =
+          targetDocument.querySelector('[data-testid="stAppViewContainer"]');
+        const mainContainer =
+          targetDocument.querySelector('[data-testid="stMainBlockContainer"]');
+        const scrollingElement =
+          targetDocument.scrollingElement ||
+          targetDocument.documentElement ||
+          targetDocument.body;
+
+        const state = {
+          windowX: targetWindow.scrollX || 0,
+          windowY: targetWindow.scrollY || 0,
+          appTop: appContainer ? appContainer.scrollTop : 0,
+          mainTop: mainContainer ? mainContainer.scrollTop : 0,
+          rootTop: scrollingElement ? scrollingElement.scrollTop : 0,
+        };
+
+        const restoreScroll = () => {
+          if (appContainer) {
+            appContainer.scrollTop = state.appTop;
+          }
+          if (mainContainer) {
+            mainContainer.scrollTop = state.mainTop;
+          }
+          if (scrollingElement) {
+            scrollingElement.scrollTop = state.rootTop;
+          }
+          targetWindow.scrollTo(state.windowX, state.windowY);
+        };
+
+        targetWindow.addEventListener('afterprint', restoreScroll, { once: true });
+
+        if (appContainer) {
+          appContainer.scrollTop = 0;
+        }
+        if (mainContainer) {
+          mainContainer.scrollTop = 0;
+        }
+        if (scrollingElement) {
+          scrollingElement.scrollTop = 0;
+        }
+        targetWindow.scrollTo(0, 0);
+
+        targetWindow.setTimeout(() => {
+          try { targetWindow.print(); }
+          catch (_error) {
+            try { window.top.print(); }
+            catch (_fallbackError) { window.print(); }
+          }
+        }, 180);
+      }
+    </script>
+    <button
+      onclick="printWholePage()"
+      title="Save current page as PDF"
+      style="
+        width:100%;
+        background:linear-gradient(135deg, rgba(245,197,24,0.22), rgba(167,139,250,0.18));
+        color:#f8fafc;
+        border:1px solid rgba(245,197,24,0.45);
+        border-radius:10px;
+        padding:0.62rem 0.9rem;
+        font-size:0.88rem;
+        font-weight:700;
+        cursor:pointer;
+        box-shadow:0 6px 16px rgba(0,0,0,0.22);
+      "
+    >
+      📄 生成 PDF / Save PDF
+    </button>
+  </body>
+</html>
+""",
+        height=46,
+    )
+
+
 def render_global_ai_chat() -> None:
     """Render the fixed-bottom AI chat panel using stored chart context."""
     _system_key = st.session_state.get("_global_chat_system", "")
@@ -79,10 +168,14 @@ def render_global_ai_chat() -> None:
         unsafe_allow_html=True,
     )
 
-    _clear_key = f"{_ck}_clear"
-    if st.button(t("ai_chat_clear"), key=_clear_key, type="secondary"):
-        st.session_state[_ck] = []
-        st.rerun()
+    _toolbar_col1, _toolbar_col2 = st.columns([1, 1])
+    with _toolbar_col1:
+        _clear_key = f"{_ck}_clear"
+        if st.button(t("ai_chat_clear"), key=_clear_key, type="secondary"):
+            st.session_state[_ck] = []
+            st.rerun()
+    with _toolbar_col2:
+        _render_save_pdf_button()
 
     _chat_box = st.container(height=400)
     _history = st.session_state[_ck]

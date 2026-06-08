@@ -7,7 +7,12 @@ trustworthy interface while existing renderers continue to use legacy objects.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Self
+from typing import Any, Literal
+
+try:  # Python 3.11+
+    from typing import Self
+except ImportError:  # pragma: no cover - older runtimes
+    from typing_extensions import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 

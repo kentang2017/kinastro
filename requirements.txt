@@ -3,8 +3,12 @@ pyswisseph==2.10.3.2
 plotly>=6.0.1
 svgwrite==1.4.3
 fpdf2>=2.7.6
+reportlab>=4.2.2
+pillow>=10.4.0
+pypdf>=5.1.0
 fastapi>=0.115.0
 pydantic>=2.9,<3
+typing_extensions>=4.12.2
 uvicorn[standard]>=0.34.0
 cerebras-cloud-sdk>=1.67.0
 openai>=1.0.0
