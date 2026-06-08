@@ -771,63 +771,10 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
     backdrop-filter: blur(var(--ka-glass-blur));
 }
 
-.ka-print-pdf-btn {
-    width: 100%;
-    background: linear-gradient(135deg, rgba(245, 197, 24, 0.22), rgba(167, 139, 250, 0.18));
-    color: #f8fafc;
-    border: 1px solid rgba(245, 197, 24, 0.45);
-    border-radius: 10px;
-    padding: 0.62rem 0.9rem;
-    font-size: 0.88rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
-}
-
-.ka-print-pdf-btn:hover {
-    filter: brightness(1.05);
-}
-
 /* Streamlit chat input styling */
 .stChatInput {
     background: var(--ka-deep-indigo, #0F172A);
     padding-top: 0.25rem;
-}
-
-@media print {
-    html,
-    body,
-    .stApp,
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMain"],
-    [data-testid="stMainBlockContainer"],
-    [data-testid="stVerticalBlock"],
-    .main,
-    .block-container,
-    section.main {
-        overflow: visible !important;
-        height: auto !important;
-        max-height: none !important;
-        position: static !important;
-    }
-
-    section[data-testid="stSidebar"],
-    .stToolbar,
-    .stDecoration,
-    .stDeployButton,
-    .ai-chat-fixed-panel,
-    .ka-print-pdf-btn,
-    .star-particles,
-    .cosmic-transition {
-        display: none !important;
-    }
-
-    .stApp,
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMainBlockContainer"] {
-        background: #ffffff !important;
-        color: #000000 !important;
-    }
 }
 
 /* ── Responsive: mobile — bottom-docked compact chat ───────── */
