@@ -23,11 +23,16 @@ astro/enochian/enochian.py — Enochian Astrology 計算引擎
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 import swisseph as swe
+from astro.recommendation_engine import (
+    CriterionEvaluation,
+    RecommendationProfile,
+    RecommendationRule,
+    rank_candidates,
+)
 from astro.western.western import WesternChart, compute_western_chart
 
 from .data import (
@@ -44,16 +49,13 @@ from .interpretations import (
 from .constants import (
     AETHYRS,
     AETHYR_BY_NUMBER,
-    AETHYR_BY_NAME,
     WATCHTOWERS,
     ENOCHIAN_PLANETS,
     SIGN_ENOCHIAN,
     HOUSE_ENOCHIAN,
     ELEMENT_TABLE,
     RITUAL_TEMPLATES,
-    SIGILLUM_DEI_AEMETH,
     AethyrData,
-    WatchtowerData,
 )
 
 # ============================================================
@@ -264,6 +266,51 @@ class EnochianChart:
     western_cross_reference: Dict[str, str]
 
 
+@dataclass(frozen=True)
+class EnochianAngelCandidate:
+    """Intermediate recommendation candidate for guardian angel ranking."""
+
+    name: str
+    name_zh: str
+    watchtower: str
+    watchtower_zh: str
+    primary_aethyr: AethyrData
+    element: str
+    element_zh: str
+    attributes_en: Tuple[str, ...]
+    attributes_zh: Tuple[str, ...]
+    source_planets: Tuple[str, ...] = ()
+    source_signs: Tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class EnochianAngelRecommendationContext:
+    """Scoring context for one guardian-angel role."""
+
+    watchtower_scores: Dict[str, float]
+    element_scores: Dict[str, float]
+    focus_planets: Tuple[str, ...]
+    focus_watchtower: str
+    focus_element: str
+    focus_aethyrs: Tuple[int, ...]
+    asc_sign: str
+
+
+@dataclass(frozen=True)
+class EnochianAethyrRecommendationContext:
+    """Scoring context for Aethyr ranking."""
+
+    planet_points: List[EnochianPlanetPoint]
+    planet_strengths: Dict[str, float]
+    watchtower_scores: Dict[str, float]
+    element_scores: Dict[str, float]
+    chart_ruler_planet: str
+    strongest_planet: str
+    dominant_watchtower: str
+    dominant_element: str
+    aspect_pairs: List[Tuple[EnochianPlanetPoint, EnochianPlanetPoint]]
+
+
 # ============================================================
 # 輔助函式 (Helper Functions)
 # ============================================================
@@ -319,73 +366,114 @@ def _get_house_for_longitude(longitude: float, house_cusps: List[float]) -> int:
     return 1  # 默認第一宮
 
 
-def _score_watchtowers(planet_points: List[EnochianPlanetPoint]) -> Dict[str, float]:
-    """計算四個守望塔的強度分數（基於行星在其對應守望塔中的數量和重要性）。"""
+def _score_watchtowers(
+    planet_points: List[EnochianPlanetPoint],
+    planet_strengths: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
+    """計算四個守望塔的強度分數。"""
     scores = {"East": 0.0, "West": 0.0, "North": 0.0, "South": 0.0}
-    # 行星重要性權重
-    weights = {
-        "Sun": 3.0, "Moon": 2.5, "Ascendant": 2.0,
-        "Mercury": 1.5, "Venus": 1.5, "Mars": 1.5,
-        "Jupiter": 1.2, "Saturn": 1.2,
-        "Uranus": 1.0, "Neptune": 1.0, "Pluto": 1.0,
-    }
     for point in planet_points:
-        w = weights.get(point.planet_name, 1.0)
+        w = (
+            float(planet_strengths.get(point.planet_name, 1.0))
+            if planet_strengths is not None
+            else 1.0
+        )
         scores[point.watchtower] = scores.get(point.watchtower, 0.0) + w
-    # 正規化
     total = sum(scores.values()) or 1.0
     return {k: round(v / total, 3) for k, v in scores.items()}
 
 
-def _score_elements(planet_points: List[EnochianPlanetPoint]) -> Dict[str, float]:
+def _score_elements(
+    planet_points: List[EnochianPlanetPoint],
+    planet_strengths: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
     """計算四元素平衡分數。"""
     scores = {"Fire": 0.0, "Water": 0.0, "Air": 0.0, "Earth": 0.0}
-    weights = {
-        "Sun": 3.0, "Moon": 2.5,
-        "Mercury": 1.5, "Venus": 1.5, "Mars": 1.5,
-        "Jupiter": 1.2, "Saturn": 1.2,
-        "Uranus": 1.0, "Neptune": 1.0, "Pluto": 1.0,
-    }
     for point in planet_points:
-        w = weights.get(point.planet_name, 1.0)
+        w = (
+            float(planet_strengths.get(point.planet_name, 1.0))
+            if planet_strengths is not None
+            else 1.0
+        )
         scores[point.element] = scores.get(point.element, 0.0) + w
     total = sum(scores.values()) or 1.0
     return {k: round(v / total, 3) for k, v in scores.items()}
 
 
-def _find_primary_aethyr(planet_points: List[EnochianPlanetPoint],
-                         ascendant_sign: str) -> AethyrData:
-    """根據太陽、月亮、上升點決定最重要的 Aethyr。"""
-    # 以太陽的 Aethyr 為主
+def _angular_distance(left: float, right: float) -> float:
+    """Return the shortest circular angular distance in degrees."""
+    return abs((left - right + 180.0) % 360.0 - 180.0)
+
+
+def _compute_major_aspect_pairs(
+    planet_points: List[EnochianPlanetPoint],
+) -> List[Tuple[EnochianPlanetPoint, EnochianPlanetPoint]]:
+    """Return major aspect pairs for additional Aethyr weighting."""
+    aspect_defs = ((0.0, 8.0), (60.0, 4.0), (90.0, 6.0), (120.0, 6.0), (180.0, 8.0))
+    pairs: List[Tuple[EnochianPlanetPoint, EnochianPlanetPoint]] = []
+    for index, left in enumerate(planet_points):
+        for right in planet_points[index + 1:]:
+            distance = _angular_distance(left.longitude, right.longitude)
+            if any(abs(distance - angle) <= orb for angle, orb in aspect_defs):
+                pairs.append((left, right))
+    return pairs
+
+
+def _compute_planet_strength_scores(western_chart: WesternChart) -> Dict[str, float]:
+    """Score natal planets by angularity, dignity, and retrograde state."""
+    rules = load_watchtower_aethyr_rules().get("watchtower_weights", {})
+    angular_bonus = float(rules.get("angular_house_bonus", 0.4))
+    luminary_bonus = float(rules.get("luminary_bonus", 0.3))
+    scores: Dict[str, float] = {}
+    for planet in western_chart.planets:
+        p_name = _normalize_western_planet_name(planet.name)
+        score = 1.0
+        if planet.house in (1, 4, 7, 10):
+            score += angular_bonus
+        if p_name in {"Sun", "Moon"}:
+            score += luminary_bonus
+        dignity = str(getattr(planet, "essential_dignity", "")).lower()
+        if "domicile" in dignity:
+            score += 0.5
+        elif "exalt" in dignity:
+            score += 0.35
+        elif "detriment" in dignity or "fall" in dignity:
+            score -= 0.3
+        if getattr(planet, "retrograde", False):
+            score -= 0.2
+        scores[p_name] = max(scores.get(p_name, 0.0), score)
+    return scores
+
+
+def _find_primary_aethyr(
+    planet_points: List[EnochianPlanetPoint],
+    ascendant_sign: str,
+) -> AethyrData:
+    """Compatibility helper for callers that still expect the Phase 1 fallback."""
     for point in planet_points:
         if point.planet_name == "Sun":
             return point.aethyr
-    # 備選：月亮
     for point in planet_points:
         if point.planet_name == "Moon":
             return point.aethyr
-    # 最後備選：ASC 星座
     sign_data = SIGN_ENOCHIAN.get(ascendant_sign, {})
     aethyr_num = sign_data.get("aethyr", 30)
     return AETHYR_BY_NUMBER.get(aethyr_num, AETHYRS[0])
 
 
-def _compute_aethyr_relevance(aethyr: AethyrData,
-                               planet_points: List[EnochianPlanetPoint]) -> float:
-    """計算一個 Aethyr 對命盤的相關性分數（0–1）。"""
+def _compute_aethyr_relevance(
+    aethyr: AethyrData,
+    planet_points: List[EnochianPlanetPoint],
+) -> float:
+    """Compatibility relevance score used by legacy helper paths."""
     score = 0.0
-    weights = {"Sun": 0.25, "Moon": 0.20, "Mercury": 0.10,
-               "Venus": 0.10, "Mars": 0.10, "Jupiter": 0.08,
-               "Saturn": 0.08, "Uranus": 0.03, "Neptune": 0.03, "Pluto": 0.03}
     for point in planet_points:
         if point.aethyr.number == aethyr.number:
-            score += weights.get(point.planet_name, 0.02)
-        # 相鄰 Aethyr 加分
+            score += 0.25
         elif abs(point.aethyr.number - aethyr.number) <= 2:
-            score += weights.get(point.planet_name, 0.02) * 0.3
-        # 同元素加分
+            score += 0.08
         if point.element == aethyr.element:
-            score += weights.get(point.planet_name, 0.02) * 0.2
+            score += 0.04
     return min(score, 1.0)
 
 
@@ -520,11 +608,14 @@ def _build_magical_purpose(planet_points: List[EnochianPlanetPoint],
     wt = WATCHTOWERS.get(dominant_dir)
 
     en = (
-        f"Your primary magical purpose is aligned with the {dominant_dir}ern Watchtower ({wt.element if wt else ''} element). "
+        f"Your primary magical purpose is aligned with the "
+        f"{dominant_dir}ern Watchtower ({wt.element if wt else ''} element). "
         f"{wt.ritual_purpose_en if wt else 'Work with elemental forces for transformation.'}"
     )
     zh = (
-        f"你的主要魔法目的與{wt.direction_zh if wt else dominant_dir}方守望塔（{wt.element_zh if wt else ''}元素）對齊。"
+        f"你的主要魔法目的與"
+        f"{wt.direction_zh if wt else dominant_dir}方守望塔"
+        f"（{wt.element_zh if wt else ''}元素）對齊。"
         f"{wt.ritual_purpose_zh if wt else '與元素力量合作進行轉化。'}"
     )
     return en, zh
@@ -548,29 +639,554 @@ def _normalize_western_planet_name(name: str) -> str:
 
 
 def _compute_strongest_planet(western_chart: WesternChart) -> str:
-    """Score planets by angularity, luminary priority, dignity, and retrograde state."""
-    rules = load_watchtower_aethyr_rules().get("watchtower_weights", {})
-    angular_bonus = float(rules.get("angular_house_bonus", 0.4))
-    luminary_bonus = float(rules.get("luminary_bonus", 0.3))
-    scores: Dict[str, float] = {}
-    for planet in western_chart.planets:
-        p_name = _normalize_western_planet_name(planet.name)
-        score = 1.0
-        if planet.house in (1, 4, 7, 10):
-            score += angular_bonus
-        if p_name in {"Sun", "Moon"}:
-            score += luminary_bonus
-        dignity = str(getattr(planet, "essential_dignity", "")).lower()
-        if "domicile" in dignity:
-            score += 0.5
-        elif "exalt" in dignity:
-            score += 0.35
-        elif "detriment" in dignity or "fall" in dignity:
-            score -= 0.3
-        if getattr(planet, "retrograde", False):
-            score -= 0.2
-        scores[p_name] = max(scores.get(p_name, 0.0), score)
+    """Return the strongest natal planet using dynamic strength scores."""
+    scores = _compute_planet_strength_scores(western_chart)
     return max(scores, key=scores.get) if scores else "Sun"
+
+
+def _merge_unique(base: Tuple[str, ...], values: List[str]) -> Tuple[str, ...]:
+    """Merge unique non-empty strings while preserving order."""
+    merged = list(base)
+    for value in values:
+        if value and value not in merged:
+            merged.append(value)
+    return tuple(merged)
+
+
+def _build_angel_candidates(
+    planet_points: List[EnochianPlanetPoint],
+    asc_sign: str,
+) -> List[EnochianAngelCandidate]:
+    """Build unique angel candidates from natal correspondences."""
+    candidates: Dict[str, EnochianAngelCandidate] = {}
+    for point in planet_points:
+        existing = candidates.get(point.enochian_angel)
+        attrs_en = tuple(point.keywords_en[:4]) or tuple(point.aethyr.keywords_en[:4])
+        attrs_zh = tuple(point.keywords_zh[:4]) or tuple(point.aethyr.keywords_zh[:4])
+        if existing is None:
+            candidates[point.enochian_angel] = EnochianAngelCandidate(
+                name=point.enochian_angel,
+                name_zh=point.angel_zh,
+                watchtower=point.watchtower,
+                watchtower_zh=point.watchtower_zh,
+                primary_aethyr=point.aethyr,
+                element=point.element,
+                element_zh=point.element_zh,
+                attributes_en=attrs_en,
+                attributes_zh=attrs_zh,
+                source_planets=(point.planet_name,),
+                source_signs=(point.sign,),
+            )
+        else:
+            candidates[point.enochian_angel] = EnochianAngelCandidate(
+                name=existing.name,
+                name_zh=existing.name_zh,
+                watchtower=existing.watchtower,
+                watchtower_zh=existing.watchtower_zh,
+                primary_aethyr=existing.primary_aethyr,
+                element=existing.element,
+                element_zh=existing.element_zh,
+                attributes_en=_merge_unique(existing.attributes_en, point.keywords_en[:2]),
+                attributes_zh=_merge_unique(existing.attributes_zh, point.keywords_zh[:2]),
+                source_planets=_merge_unique(existing.source_planets, [point.planet_name]),
+                source_signs=_merge_unique(existing.source_signs, [point.sign]),
+            )
+
+    asc_data = SIGN_ENOCHIAN.get(asc_sign, {})
+    asc_angel_name = str(asc_data.get("angel", "RAPHAEL"))
+    if asc_angel_name not in candidates:
+        asc_watchtower = str(asc_data.get("watchtower", "East"))
+        asc_watchtower_obj = WATCHTOWERS.get(asc_watchtower)
+        asc_aethyr = AETHYR_BY_NUMBER.get(int(asc_data.get("aethyr", 30)), AETHYRS[0])
+        candidates[asc_angel_name] = EnochianAngelCandidate(
+            name=asc_angel_name,
+            name_zh=str(asc_data.get("angel_zh", "拉斐爾")),
+            watchtower=asc_watchtower,
+            watchtower_zh=(
+                asc_watchtower_obj.direction_zh if asc_watchtower_obj else asc_watchtower
+            ),
+            primary_aethyr=asc_aethyr,
+            element=str(asc_data.get("element", asc_aethyr.element)),
+            element_zh=str(asc_data.get("element_zh", asc_aethyr.element_zh)),
+            attributes_en=tuple(asc_aethyr.keywords_en[:4]),
+            attributes_zh=tuple(asc_aethyr.keywords_zh[:4]),
+            source_signs=(asc_sign,),
+        )
+    return list(candidates.values())
+
+
+def _evaluate_angel_focus_planets(
+    candidate: EnochianAngelCandidate,
+    context: EnochianAngelRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Score direct resonance with role-defining planets."""
+    evaluations: List[CriterionEvaluation] = []
+    for planet in context.focus_planets:
+        if planet in candidate.source_planets:
+            evaluations.append(
+                CriterionEvaluation(
+                    score=1.0,
+                    reason_en=f"{candidate.name} is activated by natal {planet}.",
+                    reason_zh=f"{candidate.name_zh} 由命盤的 {planet} 啟動。",
+                    connection_en=f"Linked through {planet}.",
+                    connection_zh=f"透過 {planet} 對應。",
+                    metadata={"planet_name": planet},
+                )
+            )
+    return evaluations
+
+
+def _evaluate_angel_watchtower(
+    candidate: EnochianAngelCandidate,
+    context: EnochianAngelRecommendationContext,
+) -> CriterionEvaluation:
+    """Score watchtower affinity for an angel candidate."""
+    base_score = float(context.watchtower_scores.get(candidate.watchtower, 0.0))
+    if candidate.watchtower == context.focus_watchtower:
+        base_score += 0.4
+    return CriterionEvaluation(
+        score=base_score,
+        reason_en=f"{candidate.watchtower} Watchtower is emphasized in your chart.",
+        reason_zh=f"{candidate.watchtower_zh}守望塔在命盤中較強。",
+        connection_en=f"Watchtower emphasis: {candidate.watchtower}.",
+        connection_zh=f"守望塔重心：{candidate.watchtower_zh}。",
+    )
+
+
+def _evaluate_angel_element(
+    candidate: EnochianAngelCandidate,
+    context: EnochianAngelRecommendationContext,
+) -> CriterionEvaluation:
+    """Score elemental affinity for an angel candidate."""
+    score = float(context.element_scores.get(candidate.element, 0.0))
+    if candidate.element == context.focus_element:
+        score += 0.25
+    return CriterionEvaluation(
+        score=score,
+        reason_en=f"{candidate.element} elemental current supports this role.",
+        reason_zh=f"{candidate.element_zh}元素流支持此角色。",
+        connection_en=f"Elemental affinity: {candidate.element}.",
+        connection_zh=f"元素親和：{candidate.element_zh}。",
+    )
+
+
+def _evaluate_angel_aethyr(
+    candidate: EnochianAngelCandidate,
+    context: EnochianAngelRecommendationContext,
+) -> CriterionEvaluation:
+    """Score Aethyr proximity for an angel candidate."""
+    if not context.focus_aethyrs:
+        return CriterionEvaluation(score=0.0)
+    distance = min(
+        abs(candidate.primary_aethyr.number - aethyr_number)
+        for aethyr_number in context.focus_aethyrs
+    )
+    if distance == 0:
+        score = 1.0
+    elif distance == 1:
+        score = 0.6
+    elif distance == 2:
+        score = 0.3
+    else:
+        score = 0.0
+    return CriterionEvaluation(
+        score=score,
+        reason_en=f"{candidate.name} resonates with {candidate.primary_aethyr.name}.",
+        reason_zh=f"{candidate.name_zh} 與 {candidate.primary_aethyr.name_zh} 共振。",
+        connection_en=f"Aethyr focus: {candidate.primary_aethyr.name}.",
+        connection_zh=f"以太焦點：{candidate.primary_aethyr.name_zh}。",
+    )
+
+
+def _evaluate_angel_asc_sign(
+    candidate: EnochianAngelCandidate,
+    context: EnochianAngelRecommendationContext,
+) -> Optional[CriterionEvaluation]:
+    """Reward direct ascendant-sign linkage when present."""
+    if context.asc_sign not in candidate.source_signs:
+        return None
+    return CriterionEvaluation(
+        score=0.7,
+        reason_en=f"{candidate.name} is directly linked to your Ascendant sign.",
+        reason_zh=f"{candidate.name_zh} 直接對應你的上升星座。",
+        connection_en=f"Ascendant sign bridge: {context.asc_sign}.",
+        connection_zh=f"上升星座橋接：{context.asc_sign}。",
+    )
+
+
+def _build_angel_profile(role: str) -> RecommendationProfile:
+    """Return role-specific angel weighting."""
+    role_weights = {
+        "Patron": {"focus_planets": 1.5, "watchtower": 1.1},
+        "Matron": {"focus_planets": 1.45, "element": 1.25},
+        "Ascendant": {"asc_sign": 1.7, "watchtower": 1.2},
+        "ChartRuler": {"focus_planets": 1.7, "aethyr": 1.15},
+        "StrongestPlanet": {"focus_planets": 1.8, "watchtower": 1.15},
+    }
+    return RecommendationProfile(
+        name=f"angel_{role.lower()}",
+        rule_weights=role_weights.get(role, {}),
+        group_weights={
+            "planetary": 1.0,
+            "watchtower": 1.0,
+            "elemental": 0.95,
+            "aethyr": 1.0,
+            "identity": 1.0,
+        },
+    )
+
+
+def _select_guardian_angel(
+    candidates: List[EnochianAngelCandidate],
+    context: EnochianAngelRecommendationContext,
+    *,
+    role: str,
+    determined_by: str,
+    determined_zh: str,
+    fallback: PatronAngel,
+) -> PatronAngel:
+    """Rank angel candidates for one role and convert the winner."""
+    ranked = rank_candidates(
+        candidates,
+        context,
+        rules=[
+            RecommendationRule(
+                "focus_planets",
+                1.0,
+                _evaluate_angel_focus_planets,
+                group="planetary",
+            ),
+            RecommendationRule(
+                "watchtower",
+                1.0,
+                _evaluate_angel_watchtower,
+                group="watchtower",
+            ),
+            RecommendationRule(
+                "element",
+                1.0,
+                _evaluate_angel_element,
+                group="elemental",
+            ),
+            RecommendationRule(
+                "aethyr",
+                1.0,
+                _evaluate_angel_aethyr,
+                group="aethyr",
+            ),
+            RecommendationRule(
+                "asc_sign",
+                1.0,
+                _evaluate_angel_asc_sign,
+                group="identity",
+            ),
+        ],
+        top_n=1,
+        profile=_build_angel_profile(role),
+    )
+    if not ranked:
+        return fallback
+
+    winner = ranked[0].item
+    return PatronAngel(
+        name=winner.name,
+        name_zh=winner.name_zh,
+        type=role,
+        determined_by=determined_by,
+        determined_zh=determined_zh,
+        watchtower=winner.watchtower,
+        watchtower_zh=winner.watchtower_zh,
+        primary_aethyr=winner.primary_aethyr,
+        attributes_en=list(winner.attributes_en[:4]),
+        attributes_zh=list(winner.attributes_zh[:4]),
+        invocation_en=(
+            f"I call upon thee, {winner.name}, guardian of my {role} current. "
+            f"Through the {winner.watchtower} Watchtower and the "
+            f"{winner.primary_aethyr.name} Aethyr, align me with "
+            f"{', '.join(winner.attributes_en[:2])}."
+        ),
+        invocation_zh=(
+            f"我呼喚你，{winner.name_zh}，守護我{determined_zh}之流。"
+            f"透過{winner.watchtower_zh}方守望塔與"
+            f"{winner.primary_aethyr.name_zh}以太層，使我與"
+            f"{'、'.join(winner.attributes_zh[:2])}對齊。"
+        ),
+        source_role=role,
+    )
+
+
+def _evaluate_aethyr_planet_match(
+    aethyr: AethyrData,
+    context: EnochianAethyrRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Reward direct natal planet mappings into the candidate Aethyr."""
+    rules = load_watchtower_aethyr_rules().get("aethyr_weights", {})
+    weight = float(rules.get("planet_match", 0.25))
+    evaluations: List[CriterionEvaluation] = []
+    for point in context.planet_points:
+        if point.aethyr.number == aethyr.number:
+            evaluations.append(
+                CriterionEvaluation(
+                    score=context.planet_strengths.get(point.planet_name, 1.0) * weight,
+                    reason_en=f"{point.planet_name} directly maps into {aethyr.name}.",
+                    reason_zh=f"{point.planet_zh} 直接映射到 {aethyr.name_zh}。",
+                    connection_en=f"Direct natal Aethyr link via {point.planet_name}.",
+                    connection_zh=f"透過 {point.planet_zh} 的直接以太連結。",
+                    metadata={"planet_name": point.planet_name},
+                )
+            )
+    return evaluations
+
+
+def _evaluate_aethyr_adjacent(
+    aethyr: AethyrData,
+    context: EnochianAethyrRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Reward near-Aethyr resonance around natal focal points."""
+    rules = load_watchtower_aethyr_rules().get("aethyr_weights", {})
+    adjacent_weight = float(rules.get("adjacent_aethyr", 0.1))
+    evaluations: List[CriterionEvaluation] = []
+    for point in context.planet_points:
+        distance = abs(point.aethyr.number - aethyr.number)
+        if distance == 0 or distance > 2:
+            continue
+        evaluations.append(
+            CriterionEvaluation(
+                score=(
+                    context.planet_strengths.get(point.planet_name, 1.0)
+                    * adjacent_weight
+                    * (0.6 if distance == 1 else 0.3)
+                ),
+                reason_en=f"{aethyr.name} is adjacent to {point.planet_name}'s Aethyr.",
+                reason_zh=f"{aethyr.name_zh} 鄰近 {point.planet_zh} 的以太層。",
+                connection_en=f"Near resonance around {point.aethyr.name}.",
+                connection_zh=f"圍繞 {point.aethyr.name_zh} 的近距共振。",
+                metadata={"planet_name": point.planet_name},
+            )
+        )
+    return evaluations
+
+
+def _evaluate_aethyr_element(
+    aethyr: AethyrData,
+    context: EnochianAethyrRecommendationContext,
+) -> CriterionEvaluation:
+    """Reward elemental affinity from the full chart balance."""
+    rules = load_watchtower_aethyr_rules().get("aethyr_weights", {})
+    weight = float(rules.get("element_match", 0.08))
+    score = context.element_scores.get(aethyr.element, 0.0) * (1.0 + weight)
+    if aethyr.element == context.dominant_element:
+        score += weight
+    return CriterionEvaluation(
+        score=score,
+        reason_en=f"{aethyr.element} elemental balance supports {aethyr.name}.",
+        reason_zh=f"{aethyr.element_zh}元素平衡支持 {aethyr.name_zh}。",
+        connection_en=f"Elemental current: {aethyr.element}.",
+        connection_zh=f"元素流向：{aethyr.element_zh}。",
+    )
+
+
+def _evaluate_aethyr_angular(
+    aethyr: AethyrData,
+    context: EnochianAethyrRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Reward angular planets that reinforce the candidate Aethyr."""
+    rules = load_watchtower_aethyr_rules().get("aethyr_weights", {})
+    angle_bonus = float(rules.get("angle_bonus", 0.15))
+    evaluations: List[CriterionEvaluation] = []
+    for point in context.planet_points:
+        if point.house not in (1, 4, 7, 10):
+            continue
+        if point.aethyr.number != aethyr.number and point.element != aethyr.element:
+            continue
+        evaluations.append(
+            CriterionEvaluation(
+                score=context.planet_strengths.get(point.planet_name, 1.0) * angle_bonus,
+                reason_en=f"{point.planet_name} angularity amplifies {aethyr.name}.",
+                reason_zh=f"{point.planet_zh} 的角宮強化 {aethyr.name_zh}。",
+                connection_en=f"Angular house {point.house} activation.",
+                connection_zh=f"第{point.house}宮角宮啟動。",
+                metadata={"planet_name": point.planet_name},
+            )
+        )
+    return evaluations
+
+
+def _evaluate_aethyr_rulers(
+    aethyr: AethyrData,
+    context: EnochianAethyrRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Reward links to chart ruler and strongest planet."""
+    rules = load_watchtower_aethyr_rules().get("aethyr_weights", {})
+    ruler_bonus = float(rules.get("ruler_bonus", 0.2))
+    evaluations: List[CriterionEvaluation] = []
+    for key_planet, label_en, label_zh in (
+        (context.chart_ruler_planet, "chart ruler", "命主星"),
+        (context.strongest_planet, "strongest planet", "最強行星"),
+    ):
+        point = next(
+            (item for item in context.planet_points if item.planet_name == key_planet),
+            None,
+        )
+        if point is None:
+            continue
+        if (
+            point.aethyr.number != aethyr.number
+            and point.element != aethyr.element
+            and key_planet != aethyr.planet
+        ):
+            continue
+        evaluations.append(
+            CriterionEvaluation(
+                score=context.planet_strengths.get(key_planet, 1.0) * ruler_bonus,
+                reason_en=f"{label_en.title()} aligns with {aethyr.name}.",
+                reason_zh=f"{label_zh} 與 {aethyr.name_zh} 對齊。",
+                connection_en=f"{label_en.title()} bridge via {key_planet}.",
+                connection_zh=f"透過 {key_planet} 建立{label_zh}橋接。",
+                metadata={"planet_name": key_planet},
+            )
+        )
+    return evaluations
+
+
+def _evaluate_aethyr_aspects(
+    aethyr: AethyrData,
+    context: EnochianAethyrRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Reward major aspect structures that reinforce an Aethyr field."""
+    evaluations: List[CriterionEvaluation] = []
+    for left, right in context.aspect_pairs:
+        if not (
+            left.aethyr.number == aethyr.number
+            or right.aethyr.number == aethyr.number
+            or (left.element == aethyr.element and right.element == aethyr.element)
+        ):
+            continue
+        evaluations.append(
+            CriterionEvaluation(
+                score=(
+                    context.planet_strengths.get(left.planet_name, 1.0)
+                    + context.planet_strengths.get(right.planet_name, 1.0)
+                ) * 0.04,
+                reason_en=f"Major aspect pattern energizes {aethyr.name}.",
+                reason_zh=f"主要相位結構活化 {aethyr.name_zh}。",
+                connection_en=f"Aspect bridge: {left.planet_name} ↔ {right.planet_name}.",
+                connection_zh=f"相位橋接：{left.planet_zh} ↔ {right.planet_zh}。",
+            )
+        )
+    return evaluations
+
+
+def _rank_aethyrs(context: EnochianAethyrRecommendationContext) -> list:
+    """Rank all Aethyrs using the shared recommendation engine."""
+    ranked = rank_candidates(
+        AETHYRS,
+        context,
+        rules=[
+            RecommendationRule(
+                "planet_match",
+                1.0,
+                _evaluate_aethyr_planet_match,
+                group="planetary",
+            ),
+            RecommendationRule(
+                "adjacent_aethyr",
+                1.0,
+                _evaluate_aethyr_adjacent,
+                group="planetary",
+            ),
+            RecommendationRule(
+                "element_match",
+                1.0,
+                _evaluate_aethyr_element,
+                group="elemental",
+            ),
+            RecommendationRule(
+                "angle_bonus",
+                1.0,
+                _evaluate_aethyr_angular,
+                group="angular",
+            ),
+            RecommendationRule(
+                "ruler_bonus",
+                1.0,
+                _evaluate_aethyr_rulers,
+                group="planetary",
+            ),
+            RecommendationRule(
+                "aspect_resonance",
+                1.0,
+                _evaluate_aethyr_aspects,
+                group="aspectual",
+            ),
+        ],
+        top_n=len(AETHYRS),
+        profile=RecommendationProfile(
+            name="enochian_aethyr",
+            group_weights={
+                "planetary": 1.0,
+                "elemental": 0.95,
+                "angular": 1.05,
+                "aspectual": 0.85,
+            },
+        ),
+    )
+    max_score = max((item.raw_score for item in ranked), default=1.0)
+    if max_score <= 0:
+        return ranked
+    normalized_ranked = []
+    for item in ranked:
+        normalized_ranked.append(
+            type(item)(
+                item=item.item,
+                raw_score=item.raw_score,
+                normalized_score=min(1.0, item.raw_score / max_score),
+                evaluations=item.evaluations,
+                rule_scores=item.rule_scores,
+                group_scores=item.group_scores,
+                applied_weights=item.applied_weights,
+            )
+        )
+    return normalized_ranked
+
+
+def _build_aethyr_readings_from_ranked(ranked_aethyrs: list, top_n: int = 5) -> List[AethyrReading]:
+    """Build AethyrReading objects from ranked Aethyr results."""
+    readings: List[AethyrReading] = []
+    for ranked_candidate in ranked_aethyrs[:top_n]:
+        aethyr = ranked_candidate.item
+        activating_planets: List[str] = []
+        for _, evaluation in ranked_candidate.evaluations:
+            planet_name = str(evaluation.metadata.get("planet_name", ""))
+            if planet_name and planet_name not in activating_planets:
+                activating_planets.append(planet_name)
+        ritual_dir = aethyr.ritual_direction.lower().replace("above", "south")
+        template_key = f"{ritual_dir}_{aethyr.element.lower()}"
+        template = RITUAL_TEMPLATES.get(template_key, RITUAL_TEMPLATES["south_fire"])
+        planet_str = ", ".join(activating_planets) if activating_planets else "your natal chart"
+        planet_str_zh = "、".join(activating_planets) if activating_planets else "你的命盤"
+        readings.append(
+            AethyrReading(
+                aethyr=aethyr,
+                relevance_score=round(ranked_candidate.normalized_score, 3),
+                activating_planets=activating_planets,
+                key_themes_en=aethyr.keywords_en[:3],
+                key_themes_zh=aethyr.keywords_zh[:3],
+                work_needed_en=aethyr.meditation_en,
+                work_needed_zh=aethyr.meditation_zh,
+                ritual_suggestion_en=template["en"].format(
+                    planet=planet_str,
+                    sign="your chart",
+                    aethyr_name=aethyr.name,
+                ),
+                ritual_suggestion_zh=template["zh"].format(
+                    planet=planet_str_zh,
+                    sign="你的命盤",
+                    aethyr_name=aethyr.name_zh,
+                ),
+            )
+        )
+    return readings
 
 
 def _build_sigillum_nodes(
@@ -598,10 +1214,12 @@ def _build_dynamic_activation_angels(
     chart_ruler_planet: str,
     strongest_planet: str,
     asc_angel_name: str,
+    prioritized_angels: Optional[List[str]] = None,
 ) -> List[str]:
     angel_tables = load_angel_tables()
     activation = angel_tables.get("sigillum_activation_angels", {})
-    angels: List[str] = [asc_angel_name]
+    angels: List[str] = list(prioritized_angels or [])
+    angels.append(asc_angel_name)
     for planet in ("Sun", "Moon", chart_ruler_planet, strongest_planet):
         for row in activation.get(planet, []):
             angel = row.get("angel")
@@ -664,7 +1282,6 @@ def compute_enochian_chart(
         longitude=longitude,
         location_name=location_name,
     )
-    jd = float(western_chart.julian_day)
     house_cusps = [float(h.cusp) for h in western_chart.houses]
     asc_lon = float(western_chart.ascendant)
     mc_lon = float(western_chart.midheaven)
@@ -766,7 +1383,16 @@ def compute_enochian_chart(
     for i, cusp in enumerate(house_cusps):
         h_num = i + 1
         h_sign, h_sign_zh, _ = _get_sign(cusp)
-        h_data = HOUSE_ENOCHIAN.get(h_num, {"aethyr": 15, "watchtower": "East", "theme_en": "", "theme_zh": "", "call": 1})
+        h_data = HOUSE_ENOCHIAN.get(
+            h_num,
+            {
+                "aethyr": 15,
+                "watchtower": "East",
+                "theme_en": "",
+                "theme_zh": "",
+                "call": 1,
+            },
+        )
         h_aethyr_num = h_data.get("aethyr", 15)
         h_aethyr = AETHYR_BY_NUMBER.get(h_aethyr_num, AETHYRS[0])
         h_wt_dir = h_data.get("watchtower", "East")
@@ -790,38 +1416,84 @@ def compute_enochian_chart(
             active_planets=active_planets,
         ))
 
+    chart_ruler_raw = _normalize_western_planet_name(
+        getattr(western_chart, "chart_ruler", "Sun")
+    )
+    chart_ruler_planet = chart_ruler_raw if chart_ruler_raw in _SWE_IDS else "Sun"
+    strongest_planet = _compute_strongest_planet(western_chart)
+    planet_strengths = _compute_planet_strength_scores(western_chart)
+
     # 7. 計算守望塔強度和元素平衡
-    watchtower_scores = _score_watchtowers(planet_points)
-    element_scores = _score_elements(planet_points)
+    watchtower_scores = _score_watchtowers(planet_points, planet_strengths)
+    element_scores = _score_elements(planet_points, planet_strengths)
 
     dominant_watchtower = max(watchtower_scores, key=watchtower_scores.get)
     dominant_wt_obj = WATCHTOWERS.get(dominant_watchtower)
-    dominant_watchtower_zh = dominant_wt_obj.direction_zh + "方" if dominant_wt_obj else dominant_watchtower
+    dominant_watchtower_zh = (
+        dominant_wt_obj.direction_zh + "方"
+        if dominant_wt_obj
+        else dominant_watchtower
+    )
 
     dominant_element = max(element_scores, key=element_scores.get)
     el_data = ELEMENT_TABLE.get(dominant_element, {})
     dominant_element_zh = el_data.get("zh", dominant_element)
 
-    # 8. 確定主要以太層
-    primary_aethyr = _find_primary_aethyr(planet_points, asc_sign)
-    secondary_aethyrs_set = set()
-    secondary_aethyrs: List[AethyrData] = []
-    for pt in planet_points:
-        if pt.aethyr.number != primary_aethyr.number and pt.aethyr.number not in secondary_aethyrs_set:
-            secondary_aethyrs_set.add(pt.aethyr.number)
-            secondary_aethyrs.append(pt.aethyr)
-            if len(secondary_aethyrs) >= 3:
-                break
-
-    # 9. 生成 Aethyr 解讀
-    aethyr_readings = _build_aethyr_readings(planet_points, top_n=5)
-
-    # 10. 守護天使（動態）
     sun_point = next((p for p in planet_points if p.planet_name == "Sun"), None)
     moon_point = next((p for p in planet_points if p.planet_name == "Moon"), None)
+    chart_ruler_point = next(
+        (p for p in planet_points if p.planet_name == chart_ruler_planet),
+        sun_point,
+    )
+    strongest_planet_point = next(
+        (p for p in planet_points if p.planet_name == strongest_planet),
+        sun_point,
+    )
 
-    patron_angel = _build_patron_angel("Sun", sun_point, "Patron", asc_sign, source_role="Patron")
-    matron_angel = _build_patron_angel("Moon", moon_point, "Matron", asc_sign, source_role="Matron")
+    # 8. 確定主要以太層
+    ranked_aethyrs = _rank_aethyrs(
+        EnochianAethyrRecommendationContext(
+            planet_points=planet_points,
+            planet_strengths=planet_strengths,
+            watchtower_scores=watchtower_scores,
+            element_scores=element_scores,
+            chart_ruler_planet=chart_ruler_planet,
+            strongest_planet=strongest_planet,
+            dominant_watchtower=dominant_watchtower,
+            dominant_element=dominant_element,
+            aspect_pairs=_compute_major_aspect_pairs(planet_points),
+        )
+    )
+    primary_aethyr = (
+        ranked_aethyrs[0].item
+        if ranked_aethyrs
+        else (
+            sun_point.aethyr
+            if sun_point
+            else _find_primary_aethyr(planet_points, asc_sign)
+        )
+    )
+    secondary_aethyrs = [item.item for item in ranked_aethyrs[1:4]]
+
+    # 9. 生成 Aethyr 解讀
+    aethyr_readings = _build_aethyr_readings_from_ranked(ranked_aethyrs, top_n=5)
+
+    # 10. 守護天使（動態）
+    angel_candidates = _build_angel_candidates(planet_points, asc_sign)
+    patron_fallback = _build_patron_angel(
+        "Sun",
+        sun_point,
+        "Patron",
+        asc_sign,
+        source_role="Patron",
+    )
+    matron_fallback = _build_patron_angel(
+        "Moon",
+        moon_point,
+        "Matron",
+        asc_sign,
+        source_role="Matron",
+    )
 
     # 上升點天使：用上升點星座對應
     asc_sign_data = SIGN_ENOCHIAN.get(asc_sign, {})
@@ -842,30 +1514,132 @@ def compute_enochian_chart(
         primary_aethyr=asc_aethyr,
         attributes_en=["Guidance", "New Beginnings", "Soul Expression"],
         attributes_zh=["引導", "新的開始", "靈魂表達"],
-        invocation_en=f"I call upon {asc_angel_name}, guardian of my Ascendant, to guide my soul's expression.",
+        invocation_en=(
+            f"I call upon {asc_angel_name}, guardian of my Ascendant, "
+            f"to guide my soul's expression."
+        ),
         invocation_zh=f"我呼喚{asc_angel_zh}，我上升點的守護天使，引導我靈魂的表達。",
         source_role="Ascendant",
     )
-
-    chart_ruler_raw = _normalize_western_planet_name(getattr(western_chart, "chart_ruler", "Sun"))
-    chart_ruler_planet = chart_ruler_raw if chart_ruler_raw in _SWE_IDS else "Sun"
-    strongest_planet = _compute_strongest_planet(western_chart)
-    chart_ruler_point = next((p for p in planet_points if p.planet_name == chart_ruler_planet), sun_point)
-    strongest_planet_point = next((p for p in planet_points if p.planet_name == strongest_planet), sun_point)
-
-    chart_ruler_angel = _build_patron_angel(
+    chart_ruler_fallback = _build_patron_angel(
         chart_ruler_planet,
         chart_ruler_point,
         "ChartRuler",
         asc_sign,
         source_role="ChartRuler",
     )
-    strongest_planet_angel = _build_patron_angel(
+    strongest_fallback = _build_patron_angel(
         strongest_planet,
         strongest_planet_point,
         "StrongestPlanet",
         asc_sign,
         source_role="StrongestPlanet",
+    )
+    patron_angel = _select_guardian_angel(
+        angel_candidates,
+        EnochianAngelRecommendationContext(
+            watchtower_scores=watchtower_scores,
+            element_scores=element_scores,
+            focus_planets=("Sun", chart_ruler_planet),
+            focus_watchtower=sun_point.watchtower if sun_point else dominant_watchtower,
+            focus_element=sun_point.element if sun_point else dominant_element,
+            focus_aethyrs=(
+                sun_point.aethyr.number if sun_point else primary_aethyr.number,
+                primary_aethyr.number,
+            ),
+            asc_sign=asc_sign,
+        ),
+        role="Patron",
+        determined_by="Sun + natal emphasis",
+        determined_zh="太陽與命盤重心",
+        fallback=patron_fallback,
+    )
+    matron_angel = _select_guardian_angel(
+        angel_candidates,
+        EnochianAngelRecommendationContext(
+            watchtower_scores=watchtower_scores,
+            element_scores=element_scores,
+            focus_planets=("Moon", "Venus"),
+            focus_watchtower=moon_point.watchtower if moon_point else dominant_watchtower,
+            focus_element=moon_point.element if moon_point else dominant_element,
+            focus_aethyrs=(
+                moon_point.aethyr.number if moon_point else primary_aethyr.number,
+                primary_aethyr.number,
+            ),
+            asc_sign=asc_sign,
+        ),
+        role="Matron",
+        determined_by="Moon + elemental balance",
+        determined_zh="月亮與元素平衡",
+        fallback=matron_fallback,
+    )
+    asc_angel = _select_guardian_angel(
+        angel_candidates,
+        EnochianAngelRecommendationContext(
+            watchtower_scores=watchtower_scores,
+            element_scores=element_scores,
+            focus_planets=(chart_ruler_planet,),
+            focus_watchtower=asc_wt,
+            focus_element=str(asc_sign_data.get("element", dominant_element)),
+            focus_aethyrs=(asc_aethyr.number, primary_aethyr.number),
+            asc_sign=asc_sign,
+        ),
+        role="Ascendant",
+        determined_by="Ascendant + natal signature",
+        determined_zh="上升點與命盤特徵",
+        fallback=asc_angel,
+    )
+    chart_ruler_angel = _select_guardian_angel(
+        angel_candidates,
+        EnochianAngelRecommendationContext(
+            watchtower_scores=watchtower_scores,
+            element_scores=element_scores,
+            focus_planets=(chart_ruler_planet,),
+            focus_watchtower=(
+                chart_ruler_point.watchtower if chart_ruler_point else dominant_watchtower
+            ),
+            focus_element=(
+                chart_ruler_point.element if chart_ruler_point else dominant_element
+            ),
+            focus_aethyrs=(
+                chart_ruler_point.aethyr.number if chart_ruler_point else primary_aethyr.number,
+                primary_aethyr.number,
+            ),
+            asc_sign=asc_sign,
+        ),
+        role="ChartRuler",
+        determined_by=f"{chart_ruler_planet} + natal rulership",
+        determined_zh=f"{chart_ruler_planet}與命主星主導",
+        fallback=chart_ruler_fallback,
+    )
+    strongest_planet_angel = _select_guardian_angel(
+        angel_candidates,
+        EnochianAngelRecommendationContext(
+            watchtower_scores=watchtower_scores,
+            element_scores=element_scores,
+            focus_planets=(strongest_planet,),
+            focus_watchtower=(
+                strongest_planet_point.watchtower
+                if strongest_planet_point
+                else dominant_watchtower
+            ),
+            focus_element=(
+                strongest_planet_point.element
+                if strongest_planet_point
+                else dominant_element
+            ),
+            focus_aethyrs=(
+                strongest_planet_point.aethyr.number
+                if strongest_planet_point
+                else primary_aethyr.number,
+                primary_aethyr.number,
+            ),
+            asc_sign=asc_sign,
+        ),
+        role="StrongestPlanet",
+        determined_by=f"{strongest_planet} + strength weighting",
+        determined_zh=f"{strongest_planet}與行星強度",
+        fallback=strongest_fallback,
     )
 
     guardian_angel_cards = [
@@ -887,6 +1661,12 @@ def compute_enochian_chart(
         chart_ruler_planet=chart_ruler_planet,
         strongest_planet=strongest_planet,
         asc_angel_name=asc_angel.name,
+        prioritized_angels=[
+            patron_angel.name,
+            matron_angel.name,
+            chart_ruler_angel.name,
+            strongest_planet_angel.name,
+        ],
     )
     sigillum_personal_number = sigillum_idx + 1
     fallback_planet_angels = {p.planet_name: p.enochian_angel for p in planet_points}
