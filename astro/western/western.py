@@ -423,13 +423,24 @@ def _compute_fixed_star_conjunctions(planets, jd):
 # ============================================================
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def compute_western_chart(year, month, day, hour, minute, timezone,
-                          latitude, longitude, location_name="",
-                          sidereal=False):
+def compute_western_chart(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    timezone,
+    latitude,
+    longitude,
+    location_name="",
+    sidereal=False,
+    as_model=False,
+):
     """計算西洋占星排盤
 
     Args:
         sidereal: 若為 True，使用恆星黃道（Lahiri Ayanamsa）
+        as_model: 若為 True，返回統一的 Pydantic `WesternChartResult`
     """
     swe.set_ephe_path("")
 
@@ -542,7 +553,7 @@ def compute_western_chart(year, month, day, hour, minute, timezone,
     # Fixed Star Conjunctions
     fixed_star_conjunctions = _compute_fixed_star_conjunctions(planets, jd)
 
-    return WesternChart(
+    chart = WesternChart(
         year=year, month=month, day=day, hour=hour, minute=minute,
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name, julian_day=jd,
@@ -559,6 +570,11 @@ def compute_western_chart(year, month, day, hour, minute, timezone,
         sidereal_mode=sidereal,
         ayanamsa=ayanamsa,
     )
+    if as_model:
+        from astro.models import western_chart_to_result
+
+        return western_chart_to_result(chart)
+    return chart
 
 
 # ============================================================

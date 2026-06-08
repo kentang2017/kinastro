@@ -52,6 +52,48 @@
 
 ---
 
+## 🧱 統一模型層 | Unified Model Layer
+
+Phase 1 introduces a shared Pydantic v2 model layer in `astro/models.py` so
+systems can converge on one trustworthy interface without breaking existing
+Streamlit renderers.
+
+- `BirthData` validates date, time, timezone, latitude, longitude, and gender
+- `BaseChartResult` provides common chart fields and a `system_specific` escape
+  hatch for traditions that need richer custom payloads
+- `WesternChartResult` and `ZiweiChartResult` are the first unified adapters
+- `astro.compute_chart(system, birth_data)` is the new foundation entry point
+  for typed multi-system computation
+
+This layer is currently additive: legacy compute functions still work, while
+new integrations can opt into the unified models by calling the new entrypoint
+or using `as_model=True` on the adapted systems.
+
+---
+
+## 🌙 紫微曆法精度 | Ziwei Calendar Accuracy
+
+KinAstro now supports two Ziwei lunar-conversion paths:
+
+- **Legacy compatibility path**: the original lookup-table/approximation logic
+  remains available for existing UI flows and backward compatibility
+- **Astronomical model path**: `compute_ziwei_chart(..., as_model=True)` and
+  `astro.compute_chart("ziwei", BirthData(...))` use Swiss Ephemeris to derive
+  lunar months from precise new moons and principal solar terms (中氣)
+
+The astronomical path follows the standard Chinese lunisolar rule set:
+
+1. Consecutive new moons define lunar month boundaries
+2. The month containing the winter solstice is treated as lunar month 11
+3. If a solstice-to-solstice span contains 13 lunar months, the first month
+   without a principal term is marked as the leap month
+
+This path is the recommended basis for professional-grade Ziwei calculation.
+The current validation target is **1800–2200**; results outside that band are
+flagged for manual verification against an external almanac or ephemeris.
+
+---
+
 ## 🧭 體系總覽 | Systems at a Glance
 
 > 💡 體系按分類顯示：熱門 → 三式 → 中國 → 西方 → 印度 → 亞洲 → 中東 → 非洲 → 隱祕與原民傳統 → 古代文明 → 醫占 (含拜占庭占星) → 傳統卜卦占星 → 擇日占星；目前清單已與側邊欄同步，納入皇極經世（Huangji Jingshi）、伊諾克占星（Enochian Astrology）、所羅門占星（Goetia / Solomonic Astrology）、馬來伊斯蘭占星 Bintang Duabelas（十二星）、馬來 Ilmu Nujum、馬來七星五刻占卜 Kinketika、地占占星（Astronomical Geomancy）、伊特魯里亞占星（Etruscan Astrology）、吠陀風水（Vastu Shastra）、歐洲地占（European Geomancy）、弗拉德命運輪盤（Fludd Rota Simulator）、煉金占星（Alchemical Astrology）、衣索比亞 Bahre Hasab（Ethiopian Bahre Hasab）、亞美尼亞占星（Armenian Astrology）、拿破崙命運之書（Napoleon's Book of Fate）與運動占星（Sports Astrology）
@@ -1186,6 +1228,7 @@ kinastro/
 │   └── custom.css                  # 全域 CSS 樣式 / Global CSS styles
 ├── astro/
 │   ├── i18n.py                     # 中英雙語國際化 / Chinese-English i18n module
+│   ├── models.py                   # 統一 Pydantic 命盤模型 / Unified chart models
 │   ├── icons.py                    # 體系圖示與文化色彩 / System icons & colors
 │   ├── chart_theme.py              # 統一色彩主題 + 響應式 CSS / Unified theme + mobile CSS
 │   ├── chart_renderer_v2.py        # 文化風 SVG 渲染器 / Cultural SVG chart wrapper
@@ -1310,6 +1353,7 @@ kinastro/
 │   ├── test_calculator.py          # 計算模組單元測試 / Calculator unit tests
 │   ├── test_new_astrology.py       # 多體系測試 / Multi-system tests
 │   ├── test_advanced_features.py   # 進階功能測試 / Advanced feature tests
+│   ├── test_chart_models.py        # 統一模型與 adapter 測試 / Unified model tests
 │   ├── test_chinstar.py            # 萬化仙禽測試 / WanHua XianQin tests
 │   ├── test_astrocartography.py    # Astrocartography 測試 / Astrocartography tests
 │   └── test_twelve_ci.py           # 十二星次測試 / Twelve Ci tests
@@ -1333,6 +1377,7 @@ kinastro/
 | 星曆計算 Ephemeris | [pyswisseph](https://github.com/astrorigin/pyswisseph) ≥ 2.10 — 瑞士星曆表 |
 | AI 分析 AI Analysis | [Cerebras Cloud SDK](https://cerebras.ai/) — 快速推理 AI 命盤解讀 |
 | 視覺化 Visualization | [Plotly](https://plotly.com/) ≥ 6.0 — 互動式圖表；[svgwrite](https://github.com/mozman/svgwrite) — SVG 盤面 |
+| 資料模型 Data Models | [Pydantic v2](https://docs.pydantic.dev/latest/) — 統一 chart schema 與輸入驗證 |
 | PDF 匯出 Export | [fpdf2](https://py-pdf.github.io/fpdf2/) ≥ 2.7 — PDF 生成 |
 | 語言 Language | Python 3.9+ |
 | 黃道系統 Zodiac | 恆星黃道 (Lahiri) & 回歸黃道 / Sidereal & Tropical |

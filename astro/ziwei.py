@@ -257,6 +257,53 @@ _SYNODIC_MONTH = 29.5305891
 # 農曆以北京時間為準，日期邊界為午夜零時。
 _CST_OFFSET = 8.0 / 24.0
 
+_HIGH_ACCURACY_YEAR_MIN = 1800
+_HIGH_ACCURACY_YEAR_MAX = 2200
+_NEW_MOON_EPSILON = 1e-6
+
+_SOLAR_TERMS = [
+    ("立春", "Lichun", 315.0),
+    ("雨水", "Yushui", 330.0),
+    ("驚蟄", "Jingzhe", 345.0),
+    ("春分", "Chunfen", 0.0),
+    ("清明", "Qingming", 15.0),
+    ("穀雨", "Guyu", 30.0),
+    ("立夏", "Lixia", 45.0),
+    ("小滿", "Xiaoman", 60.0),
+    ("芒種", "Mangzhong", 75.0),
+    ("夏至", "Xiazhi", 90.0),
+    ("小暑", "Xiaoshu", 105.0),
+    ("大暑", "Dashu", 120.0),
+    ("立秋", "Liqiu", 135.0),
+    ("處暑", "Chushu", 150.0),
+    ("白露", "Bailu", 165.0),
+    ("秋分", "Qiufen", 180.0),
+    ("寒露", "Hanlu", 195.0),
+    ("霜降", "Shuangjiang", 210.0),
+    ("立冬", "Lidong", 225.0),
+    ("小雪", "Xiaoxue", 240.0),
+    ("大雪", "Daxue", 255.0),
+    ("冬至", "Dongzhi", 270.0),
+    ("小寒", "Xiaohan", 285.0),
+    ("大寒", "Dahan", 300.0),
+]
+
+_PRINCIPAL_TERM_LONGITUDES = tuple(float(index * 30) for index in range(12))
+
+
+@dataclass(frozen=True)
+class _LunarMonthPeriod:
+    """One astronomical Chinese lunar month between two consecutive new moons."""
+
+    start_jd: float
+    end_jd: float
+    start_day: int
+    end_day: int
+    lunar_month: int
+    lunar_year: int
+    is_leap: bool
+    has_principal_term: bool
+
 # ============================================================
 # 資料類 (Data Classes)
 # ============================================================
@@ -367,6 +414,210 @@ def _find_new_moon_near(jd_approx: float) -> float:
         if abs(diff) < 0.0001:
             break
     return jd
+
+
+def _solar_longitude(jd: float) -> float:
+    """Return apparent solar longitude in tropical zodiac degrees."""
+    result, _ = swe.calc_ut(jd, swe.SUN, swe.FLG_SWIEPH)
+    return _normalize(result[0])
+
+
+def solar_longitude_to_jieqi(longitude: float) -> tuple[int, str, str, float]:
+    """Map a solar longitude to the enclosing 24-solar-term sector.
+
+    The term list is expressed in the traditional order beginning with Lichun
+    (315°). This helper is mainly for traceability/debugging and for attaching
+    named Jie Qi information to the astronomical conversion.
+    """
+    normalized = _normalize(longitude)
+    for index, (name_zh, name_en, target_lon) in enumerate(_SOLAR_TERMS):
+        start = target_lon
+        end = _SOLAR_TERMS[(index + 1) % 24][2]
+        if start < end:
+            if start <= normalized < end:
+                return index, name_zh, name_en, target_lon
+            continue
+        if normalized >= start or normalized < end:
+            return index, name_zh, name_en, target_lon
+    name_zh, name_en, target_lon = _SOLAR_TERMS[0]
+    return 0, name_zh, name_en, target_lon
+
+
+def _find_solar_longitude_crossing(
+    target_longitude: float,
+    jd_start: float,
+) -> float:
+    """Find the next UT moment when the Sun crosses `target_longitude`."""
+    return swe.solcross_ut(_normalize(target_longitude), jd_start, swe.FLG_SWIEPH)
+
+
+def _find_winter_solstice(year: int) -> float:
+    """Return the UT Julian Day of the winter solstice for a Gregorian year."""
+    jd_start = swe.julday(year, 12, 1, 0.0)
+    return _find_solar_longitude_crossing(270.0, jd_start)
+
+
+def _find_new_moon_on_or_before(jd: float) -> float:
+    """Return the new moon nearest to and not later than `jd`."""
+    new_moon = _find_new_moon_near(jd)
+    while new_moon > jd + _NEW_MOON_EPSILON:
+        new_moon = _find_new_moon_near(new_moon - _SYNODIC_MONTH)
+    return new_moon
+
+
+def _find_next_new_moon(current_new_moon: float) -> float:
+    """Return the next new moon after `current_new_moon`."""
+    candidate = _find_new_moon_near(current_new_moon + _SYNODIC_MONTH)
+    while candidate <= current_new_moon + _NEW_MOON_EPSILON:
+        candidate = _find_new_moon_near(candidate + _SYNODIC_MONTH)
+    return candidate
+
+
+def _find_surrounding_winter_solstices(jd: float) -> tuple[float, float]:
+    """Return the winter solstices immediately bracketing `jd`."""
+    local_year = int(swe.revjul(jd + _CST_OFFSET)[0])
+    solstice_this_year = _find_winter_solstice(local_year)
+    if jd < solstice_this_year:
+        return _find_winter_solstice(local_year - 1), solstice_this_year
+    return solstice_this_year, _find_winter_solstice(local_year + 1)
+
+
+def _month_contains_principal_term(start_jd: float, end_jd: float) -> bool:
+    """Return whether a lunar month contains a principal solar term.
+
+    Astronomical Chinese leap months are determined by the absence of a
+    principal term (中氣), i.e. a solar longitude crossing at an exact multiple
+    of 30°. Swiss Ephemeris provides precise solar longitude crossing times via
+    ``swe.solcross_ut``; within one synodic month the Sun advances by about
+    29–30°, so at most one principal term is present.
+    """
+    for target_longitude in _PRINCIPAL_TERM_LONGITUDES:
+        crossing = _find_solar_longitude_crossing(target_longitude, start_jd)
+        if start_jd - _NEW_MOON_EPSILON <= crossing < end_jd - _NEW_MOON_EPSILON:
+            return True
+    return False
+
+
+def _to_china_day_number(jd: float) -> int:
+    """Convert a UT Julian Day into the corresponding China civil day number."""
+    return math.floor(jd + _CST_OFFSET + 0.5)
+
+
+def _build_astronomical_lunar_months(jd: float) -> list[_LunarMonthPeriod]:
+    """Build lunar months for the Chinese year cycle surrounding `jd`.
+
+    Method:
+    1. Find the winter solstices before and after the target date.
+    2. Find the new moon on or before each winter solstice; these anchor the
+       two month-11 boundaries used in the Chinese calendar.
+    3. Generate consecutive new-moon months between those boundaries.
+    4. If there are 13 months, mark the first month without a principal term as
+       the leap month.
+    5. Number months from 11, 12, 1, 2, ... and derive the lunar year from the
+       month-1 boundary.
+    """
+    prev_solstice, next_solstice = _find_surrounding_winter_solstices(jd)
+    month_11_start = _find_new_moon_on_or_before(prev_solstice)
+    next_month_11_start = _find_new_moon_on_or_before(next_solstice)
+
+    starts = [month_11_start]
+    while starts[-1] < next_month_11_start - _NEW_MOON_EPSILON:
+        starts.append(_find_next_new_moon(starts[-1]))
+
+    month_count = len(starts) - 1
+    leap_index = None
+    principal_terms = []
+    for index in range(month_count):
+        has_principal_term = _month_contains_principal_term(
+            starts[index],
+            starts[index + 1],
+        )
+        principal_terms.append(has_principal_term)
+        if month_count == 13 and leap_index is None and not has_principal_term:
+            leap_index = index
+
+    month_numbers: list[int] = []
+    current_month = 11
+    for index in range(month_count):
+        month_numbers.append(current_month)
+        next_is_leap = leap_index is not None and index + 1 == leap_index
+        if leap_index is not None and index == leap_index:
+            current_month = 1 if current_month == 12 else current_month + 1
+        elif not next_is_leap:
+            current_month = 1 if current_month == 12 else current_month + 1
+
+    month_one_index = next(
+        index
+        for index, month_number in enumerate(month_numbers)
+        if month_number == 1 and index != leap_index
+    )
+    month_one_local_year = int(swe.revjul(starts[month_one_index] + _CST_OFFSET)[0])
+
+    months: list[_LunarMonthPeriod] = []
+    for index in range(month_count):
+        months.append(
+            _LunarMonthPeriod(
+                start_jd=starts[index],
+                end_jd=starts[index + 1],
+                start_day=_to_china_day_number(starts[index]),
+                end_day=_to_china_day_number(starts[index + 1]),
+                lunar_month=month_numbers[index],
+                lunar_year=(
+                    month_one_local_year - 1 if index < month_one_index else month_one_local_year
+                ),
+                is_leap=index == leap_index,
+                has_principal_term=principal_terms[index],
+            )
+        )
+    return months
+
+
+def get_lunar_date(jd: float) -> tuple[int, int, int, bool]:
+    """Convert UT Julian Day to Chinese lunar date using astronomical rules.
+
+    This implementation follows the standard astronomical Chinese calendar
+    method:
+    - new moons define lunar month boundaries;
+    - the month containing the winter solstice is month 11;
+    - if a solstice-to-solstice cycle contains 13 lunar months, the first month
+      without a principal term (中氣, solar longitude multiple of 30°) is the
+      leap month.
+
+    The calculation uses Beijing civil date boundaries (UTC+8), which is the
+    convention used by traditional Chinese lunisolar calendars and Ziwei chart
+    construction.
+    """
+    china_day = _to_china_day_number(jd)
+    for month in _build_astronomical_lunar_months(jd):
+        if month.start_day <= china_day < month.end_day:
+            return (
+                month.lunar_year,
+                month.lunar_month,
+                china_day - month.start_day + 1,
+                month.is_leap,
+            )
+    raise RuntimeError("Failed to resolve astronomical lunar date for Ziwei chart")
+
+
+def is_leap_month(jd: float) -> bool:
+    """Return whether the UT Julian Day falls in an astronomical leap month."""
+    return get_lunar_date(jd)[3]
+
+
+def _solar_to_lunar_accurate(jd: float) -> tuple[int, int, int, bool]:
+    """Backward-friendly wrapper around the astronomical lunar conversion."""
+    return get_lunar_date(jd)
+
+
+def _ziwei_accuracy_warning(year: int) -> str | None:
+    """Return a warning message when outside the primary validated range."""
+    if _HIGH_ACCURACY_YEAR_MIN <= year <= _HIGH_ACCURACY_YEAR_MAX:
+        return None
+    return (
+        "Astronomical Ziwei lunar conversion is primarily validated for years "
+        f"{_HIGH_ACCURACY_YEAR_MIN}–{_HIGH_ACCURACY_YEAR_MAX}; results outside "
+        "that range should be checked against an external ephemeris or almanac."
+    )
 
 
 def _get_cny_jd(year: int) -> float:
@@ -794,9 +1045,17 @@ def compute_ziwei_chart(
     location_name: str = "",
     gender: str = "男",
     vietnam_mode: bool = False,
+    as_model: bool = False,
 ) -> ZiweiChart:
     """
     計算紫微斗數命盤。
+
+    Lunar conversion modes:
+        - ``as_model=False`` keeps the legacy lookup-table/month-approximation
+          path for strict backward compatibility with existing Streamlit flows.
+        - ``as_model=True`` switches to an astronomical lunisolar conversion
+          based on precise new moons and principal solar terms (中氣) computed
+          with Swiss Ephemeris.
 
     Parameters:
         year, month, day: 公曆出生日期
@@ -807,6 +1066,7 @@ def compute_ziwei_chart(
         location_name:    地點名稱
         gender:           性別（"男" or "女"）
         vietnam_mode:     是否啟用越南 Tử Vi 模式（以貓代兔等越南特色）
+        as_model:         若為 True，返回統一的 Pydantic `ZiweiChartResult`
 
     Returns:
         ZiweiChart: 命盤資料
@@ -817,7 +1077,10 @@ def compute_ziwei_chart(
     jd = swe.julday(year, month, day, decimal_hour)
 
     # 農曆轉換
-    lunar_year, lunar_month, lunar_day, is_leap = _solar_to_lunar(jd)
+    if as_model:
+        lunar_year, lunar_month, lunar_day, is_leap = get_lunar_date(jd)
+    else:
+        lunar_year, lunar_month, lunar_day, is_leap = _solar_to_lunar(jd)
 
     # 時辰地支
     hour_branch = _get_hour_branch(hour, minute)
@@ -868,7 +1131,7 @@ def compute_ziwei_chart(
         sihua, wu_xing_ju, is_yang_male_or_yin_female,
     )
 
-    return ZiweiChart(
+    chart = ZiweiChart(
         year=year, month=month, day=day, hour=hour, minute=minute,
         timezone=timezone, latitude=latitude, longitude=longitude,
         location_name=location_name, julian_day=jd,
@@ -883,6 +1146,30 @@ def compute_ziwei_chart(
         sihua=sihua, palaces=palaces, sanhe_groups=sanhe_groups,
         vietnam_mode=vietnam_mode,
     )
+    if as_model:
+        from astro.models import ziwei_chart_to_result
+
+        result = ziwei_chart_to_result(chart)
+        warning = _ziwei_accuracy_warning(year)
+        if warning:
+            return result.model_copy(
+                update={
+                    "warnings": [*result.warnings, warning],
+                    "metadata": {
+                        **result.metadata,
+                        "lunar_conversion_method": "astronomical_jieqi",
+                    },
+                }
+            )
+        return result.model_copy(
+            update={
+                "metadata": {
+                    **result.metadata,
+                    "lunar_conversion_method": "astronomical_jieqi",
+                }
+            }
+        )
+    return chart
 
 
 # ============================================================

@@ -1,0 +1,266 @@
+[
+  {
+    "id": "1900-cny-day1",
+    "description": "Chinese New Year 1900, first day of the lunar year.",
+    "input": {
+      "year": 1900,
+      "month": 1,
+      "day": 31,
+      "hour": 12,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 1900,
+      "lunar_month": 1,
+      "lunar_day": 1,
+      "is_leap_month": false,
+      "hour_branch": "午",
+      "ming_gong_branch": "申",
+      "wu_xing_ju": 2,
+      "ziwei_branch": "寅",
+      "major_stars": {
+        "紫微": "寅",
+        "天機": "丑",
+        "太陽": "亥",
+        "天府": "寅",
+        "太陰": "卯"
+      }
+    }
+  },
+  {
+    "id": "1984-cny-day1",
+    "description": "Chinese New Year 1984, first day of the lunar year.",
+    "input": {
+      "year": 1984,
+      "month": 2,
+      "day": 2,
+      "hour": 12,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 1984,
+      "lunar_month": 1,
+      "lunar_day": 1,
+      "is_leap_month": false,
+      "hour_branch": "午",
+      "ming_gong_branch": "申",
+      "wu_xing_ju": 4,
+      "ziwei_branch": "寅",
+      "major_stars": {
+        "紫微": "寅",
+        "天機": "丑",
+        "太陽": "亥",
+        "天府": "寅",
+        "太陰": "卯"
+      }
+    }
+  },
+  {
+    "id": "2000-month1-day10",
+    "description": "Lunar month 1 day 10 in year 2000 to vary main-star placement logic.",
+    "input": {
+      "year": 2000,
+      "month": 2,
+      "day": 14,
+      "hour": 6,
+      "minute": 30,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 2000,
+      "lunar_month": 1,
+      "lunar_day": 10,
+      "is_leap_month": false,
+      "hour_branch": "卯",
+      "ming_gong_branch": "亥",
+      "wu_xing_ju": 5,
+      "ziwei_branch": "寅",
+      "major_stars": {
+        "紫微": "寅",
+        "天機": "丑",
+        "太陽": "亥",
+        "天府": "寅",
+        "太陰": "卯"
+      }
+    }
+  },
+  {
+    "id": "2012-leap4-day10",
+    "description": "Leap fourth lunar month in 2012, day 10.",
+    "input": {
+      "year": 2012,
+      "month": 5,
+      "day": 30,
+      "hour": 9,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 2012,
+      "lunar_month": 4,
+      "lunar_day": 10,
+      "is_leap_month": true,
+      "hour_branch": "巳",
+      "ming_gong_branch": "子",
+      "wu_xing_ju": 3,
+      "ziwei_branch": "巳",
+      "major_stars": {
+        "紫微": "巳",
+        "天機": "辰",
+        "太陽": "寅",
+        "天府": "亥",
+        "太陰": "子"
+      }
+    }
+  },
+  {
+    "id": "2017-leap6-day10",
+    "description": "Leap sixth lunar month in 2017, day 10.",
+    "input": {
+      "year": 2017,
+      "month": 8,
+      "day": 1,
+      "hour": 14,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 2017,
+      "lunar_month": 6,
+      "lunar_day": 10,
+      "is_leap_month": true,
+      "hour_branch": "未",
+      "ming_gong_branch": "子",
+      "wu_xing_ju": 3,
+      "ziwei_branch": "巳",
+      "major_stars": {
+        "紫微": "巳",
+        "天機": "辰",
+        "太陽": "寅",
+        "天府": "亥",
+        "太陰": "子"
+      }
+    }
+  },
+  {
+    "id": "2020-leap4-day10",
+    "description": "Leap fourth lunar month in 2020, day 10.",
+    "input": {
+      "year": 2020,
+      "month": 6,
+      "day": 1,
+      "hour": 10,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 2020,
+      "lunar_month": 4,
+      "lunar_day": 10,
+      "is_leap_month": true,
+      "hour_branch": "巳",
+      "ming_gong_branch": "子",
+      "wu_xing_ju": 6,
+      "ziwei_branch": "子",
+      "major_stars": {
+        "紫微": "子",
+        "天機": "亥",
+        "太陽": "酉",
+        "天府": "辰",
+        "太陰": "巳"
+      }
+    }
+  },
+  {
+    "id": "2023-leap2-day10",
+    "description": "Leap second lunar month in 2023, day 10.",
+    "input": {
+      "year": 2023,
+      "month": 3,
+      "day": 31,
+      "hour": 8,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 2023,
+      "lunar_month": 2,
+      "lunar_day": 10,
+      "is_leap_month": true,
+      "hour_branch": "辰",
+      "ming_gong_branch": "亥",
+      "wu_xing_ju": 2,
+      "ziwei_branch": "巳",
+      "major_stars": {
+        "紫微": "巳",
+        "天機": "辰",
+        "太陽": "寅",
+        "天府": "亥",
+        "太陰": "子"
+      }
+    }
+  },
+  {
+    "id": "2049-month1-day10",
+    "description": "Early future-range check within the documented high-accuracy band.",
+    "input": {
+      "year": 2049,
+      "month": 2,
+      "day": 11,
+      "hour": 16,
+      "minute": 0,
+      "timezone": 8,
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "location_name": "Beijing",
+      "gender": "male"
+    },
+    "expected": {
+      "lunar_year": 2049,
+      "lunar_month": 1,
+      "lunar_day": 10,
+      "is_leap_month": false,
+      "hour_branch": "申",
+      "ming_gong_branch": "午",
+      "wu_xing_ju": 5,
+      "ziwei_branch": "寅",
+      "major_stars": {
+        "紫微": "寅",
+        "天機": "丑",
+        "太陽": "亥",
+        "天府": "寅",
+        "太陰": "卯"
+      }
+    }
+  }
+]
