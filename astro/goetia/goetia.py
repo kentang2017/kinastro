@@ -21,10 +21,15 @@ astro/goetia/goetia.py — Goetia / Solomonic Astrology 計算引擎
 from __future__ import annotations
 
 import math
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Dict, List, Optional, Tuple
 
 import swisseph as swe
+from astro.recommendation_engine import (
+    CriterionEvaluation,
+    RecommendationRule,
+    rank_candidates,
+)
 
 from .constants import (
     SIGNS_EN,
@@ -239,102 +244,197 @@ def _load_demon_objects() -> List[DemonData]:
 # 核心推薦邏輯 / Core Recommendation Logic
 # ============================================================
 
-def _score_demon(
+@dataclass(frozen=True)
+class GoetiaRecommendationContext:
+    """Dynamic recommendation context for Goetia ranking."""
+
+    planet_points: List[GoetiaPlanetPoint]
+    dominant_element: str
+    strongest_planet: str
+    asc_sign: str
+
+
+def _collect_unique_texts(
+    evaluations: List[tuple[str, CriterionEvaluation]],
+    attribute: str,
+    *,
+    limit: int = 3,
+) -> List[str]:
+    """Collect unique non-empty strings from ranked rule evaluations."""
+    values: List[str] = []
+    for _, evaluation in evaluations:
+        text = getattr(evaluation, attribute, "")
+        if text and text not in values:
+            values.append(text)
+        if len(values) >= limit:
+            break
+    return values
+
+
+def _evaluate_planet_matches(
     demon: DemonData,
-    planet_points: List[GoetiaPlanetPoint],
-    dominant_element: str,
-    strongest_planet: str,
-    asc_sign: str,
-) -> Tuple[float, List[str], List[str], List[str], List[str]]:
-    """
-    計算魔神與命盤的匹配分數及推薦理由。
-
-    Returns:
-        (score, reasons_en, reasons_zh, connections_en, connections_zh)
-    """
-    score = 0.0
-    reasons_en: List[str] = []
-    reasons_zh: List[str] = []
-    connections_en: List[str] = []
-    connections_zh: List[str] = []
-
-    for pp in planet_points:
-        # 行星匹配（最高權重）
-        if demon.planet == pp.planet_name:
-            planet_score = _PLANET_WEIGHTS.get(pp.planet_name, 1.0)
-            if pp.sign in _DOMICILE.get(pp.planet_name, []):
-                planet_score *= 1.5
-            score += planet_score
-            r_en, r_zh, c_en, c_zh = build_demon_recommendation_reason(
-                demon.name, demon.name_zh,
-                demon.planet, demon.planet_zh,
-                demon.element, demon.element_zh,
-                pp.planet_name, pp.planet_zh,
-                pp.sign, pp.sign_zh, pp.house,
+    context: GoetiaRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Score planetary resonance between a demon and natal points."""
+    evaluations: List[CriterionEvaluation] = []
+    for point in context.planet_points:
+        if demon.planet != point.planet_name:
+            continue
+        planet_score = _PLANET_WEIGHTS.get(point.planet_name, 1.0)
+        if point.sign in _DOMICILE.get(point.planet_name, []):
+            planet_score *= 1.5
+        reasons_en, reasons_zh, connections_en, connections_zh = (
+            build_demon_recommendation_reason(
+                demon.name,
+                demon.name_zh,
+                demon.planet,
+                demon.planet_zh,
+                demon.element,
+                demon.element_zh,
+                point.planet_name,
+                point.planet_zh,
+                point.sign,
+                point.sign_zh,
+                point.house,
                 "planet_match",
             )
-            reasons_en.extend(r_en); reasons_zh.extend(r_zh)
-            connections_en.extend(c_en); connections_zh.extend(c_zh)
+        )
+        evaluations.append(
+            CriterionEvaluation(
+                score=planet_score,
+                reason_en=" ".join(reasons_en),
+                reason_zh="".join(reasons_zh),
+                connection_en=" ".join(connections_en),
+                connection_zh="".join(connections_zh),
+            )
+        )
+    return evaluations
 
-        # 星座匹配
-        if demon.zodiac_sign == pp.sign:
-            score += 1.5
-            r_en, r_zh, c_en, c_zh = build_demon_recommendation_reason(
-                demon.name, demon.name_zh,
-                demon.planet, demon.planet_zh,
-                demon.element, demon.element_zh,
-                pp.planet_name, pp.planet_zh,
-                pp.sign, pp.sign_zh, pp.house,
+
+def _evaluate_sign_matches(
+    demon: DemonData,
+    context: GoetiaRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Score zodiac resonance between a demon and natal points."""
+    evaluations: List[CriterionEvaluation] = []
+    for point in context.planet_points:
+        if demon.zodiac_sign != point.sign:
+            continue
+        reasons_en, reasons_zh, connections_en, connections_zh = (
+            build_demon_recommendation_reason(
+                demon.name,
+                demon.name_zh,
+                demon.planet,
+                demon.planet_zh,
+                demon.element,
+                demon.element_zh,
+                point.planet_name,
+                point.planet_zh,
+                point.sign,
+                point.sign_zh,
+                point.house,
                 "sign_match",
             )
-            reasons_en.extend(r_en); reasons_zh.extend(r_zh)
-            connections_en.extend(c_en); connections_zh.extend(c_zh)
+        )
+        evaluations.append(
+            CriterionEvaluation(
+                score=1.5,
+                reason_en=" ".join(reasons_en),
+                reason_zh="".join(reasons_zh),
+                connection_en=" ".join(connections_en),
+                connection_zh="".join(connections_zh),
+            )
+        )
+    return evaluations
 
-        # 宮位親和性匹配
-        if pp.house in demon.house_affinity:
-            score += 0.8
-            r_en, r_zh, c_en, c_zh = build_demon_recommendation_reason(
-                demon.name, demon.name_zh,
-                demon.planet, demon.planet_zh,
-                demon.element, demon.element_zh,
-                pp.planet_name, pp.planet_zh,
-                pp.sign, pp.sign_zh, pp.house,
+
+def _evaluate_house_matches(
+    demon: DemonData,
+    context: GoetiaRecommendationContext,
+) -> List[CriterionEvaluation]:
+    """Score house affinity between a demon and natal points."""
+    evaluations: List[CriterionEvaluation] = []
+    for point in context.planet_points:
+        if point.house not in demon.house_affinity:
+            continue
+        reasons_en, reasons_zh, connections_en, connections_zh = (
+            build_demon_recommendation_reason(
+                demon.name,
+                demon.name_zh,
+                demon.planet,
+                demon.planet_zh,
+                demon.element,
+                demon.element_zh,
+                point.planet_name,
+                point.planet_zh,
+                point.sign,
+                point.sign_zh,
+                point.house,
                 "house_match",
             )
-            reasons_en.extend(r_en); reasons_zh.extend(r_zh)
-            connections_en.extend(c_en); connections_zh.extend(c_zh)
+        )
+        evaluations.append(
+            CriterionEvaluation(
+                score=0.8,
+                reason_en=" ".join(reasons_en),
+                reason_zh="".join(reasons_zh),
+                connection_en=" ".join(connections_en),
+                connection_zh="".join(connections_zh),
+            )
+        )
+    return evaluations
 
-    # 元素匹配（命盤主元素）
-    if demon.element == dominant_element:
-        score += 1.2
-        reasons_en.append(
+
+def _evaluate_element_match(
+    demon: DemonData,
+    context: GoetiaRecommendationContext,
+) -> CriterionEvaluation | None:
+    """Score dominant-element resonance."""
+    if demon.element != context.dominant_element:
+        return None
+    return CriterionEvaluation(
+        score=1.2,
+        reason_en=(
             f"{demon.name}'s {demon.element} nature matches your dominant natal element."
-        )
-        reasons_zh.append(
-            f"{demon.name_zh}的{demon.element_zh}本質與你命盤的主導元素相符。"
-        )
+        ),
+        reason_zh=f"{demon.name_zh}的{demon.element_zh}本質與你命盤的主導元素相符。",
+    )
 
-    # 最強行星匹配
-    if demon.planet == strongest_planet:
-        score += 1.0
 
-    # 上升星座匹配
-    if demon.zodiac_sign == asc_sign:
-        score += 0.8
-        reasons_en.append(
+def _evaluate_strongest_planet_match(
+    demon: DemonData,
+    context: GoetiaRecommendationContext,
+) -> CriterionEvaluation | None:
+    """Score strongest-planet resonance."""
+    if demon.planet != context.strongest_planet:
+        return None
+    return CriterionEvaluation(
+        score=1.0,
+        reason_en=(
+            f"{demon.name} resonates with your strongest natal planet, {context.strongest_planet}."
+        ),
+        reason_zh=f"{demon.name_zh}與你命盤中最強的行星{PLANET_ZH.get(context.strongest_planet, context.strongest_planet)}共鳴。",
+    )
+
+
+def _evaluate_asc_sign_match(
+    demon: DemonData,
+    context: GoetiaRecommendationContext,
+) -> CriterionEvaluation | None:
+    """Score rising-sign resonance."""
+    if demon.zodiac_sign != context.asc_sign:
+        return None
+    return CriterionEvaluation(
+        score=0.8,
+        reason_en=(
             f"{demon.name} rules {demon.zodiac_sign}, which is your rising sign — "
-            f"a direct link to your identity and outward expression."
-        )
-        reasons_zh.append(
+            "a direct link to your identity and outward expression."
+        ),
+        reason_zh=(
             f"{demon.name_zh}統治{demon.sign_zh}，即你的上升星座——"
-            f"與你的身份和外在表現有直接聯繫。"
-        )
-
-    # 去重（保持順序）
-    unique_reasons_en = list(dict.fromkeys(reasons_en))
-    unique_reasons_zh = list(dict.fromkeys(reasons_zh))
-
-    return score, unique_reasons_en[:3], unique_reasons_zh[:3], connections_en[:3], connections_zh[:3]
+            "與你的身份和外在表現有直接聯繫。"
+        ),
+    )
 
 
 def _score_label(score: float) -> str:
@@ -360,32 +460,63 @@ def _build_recommendations(
     top_n: int = 5,
 ) -> List[DemonRecommendation]:
     """評分所有 72 柱魔神並返回前 top_n 名推薦。"""
-    scored: List[Tuple[float, DemonData, List, List, List, List]] = []
-
-    for demon in demons:
-        score, r_en, r_zh, c_en, c_zh = _score_demon(
-            demon, planet_points, dominant_element, strongest_planet, asc_sign
-        )
-        scored.append((score, demon, r_en, r_zh, c_en, c_zh))
-
-    # 按分數降序排列
-    scored.sort(key=lambda x: x[0], reverse=True)
+    context = GoetiaRecommendationContext(
+        planet_points=planet_points,
+        dominant_element=dominant_element,
+        strongest_planet=strongest_planet,
+        asc_sign=asc_sign,
+    )
+    ranked = rank_candidates(
+        demons,
+        context,
+        rules=[
+            RecommendationRule("planet_match", 1.0, _evaluate_planet_matches),
+            RecommendationRule("sign_match", 1.0, _evaluate_sign_matches),
+            RecommendationRule("house_match", 1.0, _evaluate_house_matches),
+            RecommendationRule("element_match", 1.0, _evaluate_element_match),
+            RecommendationRule(
+                "strongest_planet_match",
+                1.0,
+                _evaluate_strongest_planet_match,
+            ),
+            RecommendationRule("asc_sign_match", 1.0, _evaluate_asc_sign_match),
+        ],
+        top_n=top_n,
+        normalize_score=lambda raw_score: min(1.0, raw_score / 12.0),
+    )
 
     recommendations: List[DemonRecommendation] = []
-    for score, demon, r_en, r_zh, c_en, c_zh in scored[:top_n]:
-        # 標準化分數到 0–1
-        normalized = min(1.0, score / 12.0)
+    for ranked_candidate in ranked:
+        demon = ranked_candidate.item
+        raw_score = ranked_candidate.raw_score
+        normalized = ranked_candidate.normalized_score
+        reasons_en = _collect_unique_texts(
+            ranked_candidate.evaluations,
+            "reason_en",
+        )
+        reasons_zh = _collect_unique_texts(
+            ranked_candidate.evaluations,
+            "reason_zh",
+        )
+        connections_en = _collect_unique_texts(
+            ranked_candidate.evaluations,
+            "connection_en",
+        )
+        connections_zh = _collect_unique_texts(
+            ranked_candidate.evaluations,
+            "connection_zh",
+        )
         best_purpose_en = ", ".join(demon.powers_en[:2]) if demon.powers_en else "general working"
         best_purpose_zh = "、".join(demon.powers_zh[:2]) if demon.powers_zh else "通用工作"
 
         recommendations.append(DemonRecommendation(
             demon=demon,
             score=normalized,
-            score_zh=_score_label(score),
-            reasons_en=r_en or [f"{demon.name} aligns with your natal {demon.planet} energy."],
-            reasons_zh=r_zh or [f"{demon.name_zh}與你命盤的{demon.planet_zh}能量相符。"],
-            natal_connections=c_en or [f"Planetary resonance through {demon.planet}."],
-            natal_connections_zh=c_zh or [f"透過{demon.planet_zh}的行星共鳴。"],
+            score_zh=_score_label(raw_score),
+            reasons_en=reasons_en or [f"{demon.name} aligns with your natal {demon.planet} energy."],
+            reasons_zh=reasons_zh or [f"{demon.name_zh}與你命盤的{demon.planet_zh}能量相符。"],
+            natal_connections=connections_en or [f"Planetary resonance through {demon.planet}."],
+            natal_connections_zh=connections_zh or [f"透過{demon.planet_zh}的行星共鳴。"],
             best_purpose_en=best_purpose_en,
             best_purpose_zh=best_purpose_zh,
         ))

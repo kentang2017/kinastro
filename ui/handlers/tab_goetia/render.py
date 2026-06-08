@@ -42,6 +42,7 @@ from astro.goetia.visualization import (
     render_recommendation_summary_svg,
 )
 from astro.i18n import t
+from astro.system_guides import get_system_guide
 
 # ============================================================
 # CSS 樣式
@@ -175,6 +176,41 @@ def _render_html(html: str, height: int) -> None:
     st.components.v1.html(html, height=height, scrolling=False)
 
 
+def _render_system_guide(system_id: str, is_zh: bool) -> None:
+    """Render shared educational guide content for the current system."""
+    guide = get_system_guide(system_id)
+    if guide is None:
+        return
+    expander_label = (
+        "🧭 體系原理與使用情境"
+        if is_zh
+        else "🧭 Principles, Use Cases, and Differences"
+    )
+    with st.expander(expander_label, expanded=False):
+        st.markdown(
+            f"**{'原理' if is_zh else 'Principle'}**\n\n"
+            f"{guide.principle_zh if is_zh else guide.principle_en}"
+        )
+        use_cases = guide.use_cases_zh if is_zh else guide.use_cases_en
+        if use_cases:
+            st.markdown(
+                f"**{'使用情境' if is_zh else 'Use Cases'}**\n\n- "
+                + "\n- ".join(use_cases)
+            )
+        differences = guide.differences_zh if is_zh else guide.differences_en
+        if differences:
+            st.markdown(
+                f"**{'與其他系統差異' if is_zh else 'How It Differs'}**\n\n- "
+                + "\n- ".join(differences)
+            )
+        related = guide.related_systems_zh if is_zh else guide.related_systems_en
+        if related:
+            st.caption(
+                ("相關體系：" if is_zh else "Related systems: ")
+                + " · ".join(related)
+            )
+
+
 # ============================================================
 # 主要渲染函式 / Main Render Function
 # ============================================================
@@ -199,6 +235,7 @@ def render_streamlit(chart: Optional[GoetiaChart] = None) -> None:
   <p>Lesser Key of Solomon · 72 Spirit System · Ars Goetia · 魔神召喚與占星整合</p>
 </div>
 """, unsafe_allow_html=True)
+    _render_system_guide("tab_goetia", is_zh)
 
     if chart is None:
         st.info(

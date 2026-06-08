@@ -230,6 +230,43 @@ class TestXXAstrology(unittest.TestCase):
 - 使用 `astro/i18n.py` 管理所有 UI 文字
 - 圖表主題使用 `astro/chart_theme.py` 中的統一色彩
 
+## 新體系模組標準
+
+建議新體系以「資料、計算、解讀、視覺化、UI」五層拆分，避免把所有邏輯塞進單一檔案。
+
+### 建議目錄結構
+
+```text
+astro/<system_name>/
+  __init__.py
+  constants.py          # dataclass、常數、靜態對應資料
+  data/__init__.py      # JSON / CSV 載入器（可快取）
+  <system_name>.py      # compute_* 純函式與核心規則
+  interpretations.py    # 解讀文字生成與推薦理由
+  visualization.py      # SVG / 結構化視覺輸出（純函式）
+```
+
+### 一致性要求
+
+1. `compute_*` 只接受基本型別參數，回傳 dataclass，方便 API、快取與測試。
+2. 視覺化函式輸出 SVG / HTML 字串，不直接依賴 Streamlit。
+3. 若體系需要推薦邏輯（天使、魔神、Aethyr、護符、remedy），優先重用 `astro/recommendation_engine.py`。
+4. 若體系需要教育性說明，請在 `astro/system_guides.py` 補上「原理／使用情境／差異／相關體系」內容。
+5. 若體系需要大型靜態表格或對應表，請放在 `data/` 並用快取載入，不要硬編碼在 render 層。
+
+## 新體系開發 Checklist
+
+- [ ] 在 `astro/system_registry.py` 註冊系統資料（名稱、分類、icon、tab_key、hint_key）
+- [ ] 在 `astro/data/i18n_translations.json` 補齊 `tab_*`、`desc_*`、`spinner_*`、`sys_hint_*`
+- [ ] 實作 `compute_*` 純函式與主要 dataclass
+- [ ] 將解讀文字放入 `interpretations.py`，避免混進 renderer
+- [ ] 將 SVG / 圖像輸出放入 `visualization.py`
+- [ ] 若有推薦／排序邏輯，重用 `astro/recommendation_engine.py`
+- [ ] 若要提高教育性，補上 `astro/system_guides.py`
+- [ ] 在 `ui/handlers/tab_<system>/render.py` 使用一致的區塊順序：標題 → 教育說明 → 核心結果 → 視覺化 → 對照 / 參考
+- [ ] 補齊最少一組基礎測試（資料載入、計算結果、關鍵輸出形狀）
+- [ ] 更新 `README.md` 的體系列表與說明
+
 ## 回報問題
 
 在 GitHub Issues 中提交問題時請附上：
