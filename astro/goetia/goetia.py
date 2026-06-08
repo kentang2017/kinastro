@@ -158,7 +158,10 @@ def _compute_houses(
 ) -> Tuple[List[float], float, float]:
     """計算 Placidus 宮位，返回 (宮首列表[12], ASC, MC)。"""
     cusps, ascmc = swe.houses(jd, lat, lon, b"P")
-    return list(cusps[1:13]), ascmc[0], ascmc[1]
+    house_cusps = list(cusps[:12])
+    if len(house_cusps) != 12:
+        raise ValueError(f"Expected 12 house cusps from swe.houses(), got {len(house_cusps)}")
+    return house_cusps, ascmc[0], ascmc[1]
 
 
 def _get_house(longitude: float, cusps: List[float]) -> int:

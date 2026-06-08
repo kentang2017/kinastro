@@ -13,6 +13,9 @@ Multi-System Astrology Chart Application
 
 共八十八種體系，使用 pyswisseph 進行天文計算。
 """
+# pylint: disable=wrong-import-position,invalid-name,import-outside-toplevel
+# pylint: disable=broad-exception-caught,too-many-locals,ungrouped-imports
+# pylint: disable=redefined-outer-name
 
 from __future__ import annotations
 
@@ -32,30 +35,15 @@ st.set_page_config(
 
 # ── Core UI modules ───────────────────────────────────────────────────────
 from ui.state import SessionKeys, init_session_state_defaults
-from ui.helpers import t, auto_cn
+from ui.helpers import t
 from ui.styles import inject_custom_css, inject_star_particles
 from ui.homepage import render_homepage
 from ui.sidebar import render_sidebar
-from ui.ai_chat import render_global_ai_chat, set_ai_context
 from ui.components.birth_form import BirthChartParams, build_birth_params
-from ui.components.overview_dashboard import render_overview_dashboard
 from ui.system_engine import EXECUTION_REGISTRY
-from ui.system_handlers.phase1_handlers import build_ziwei_handler
-from ui.system_handlers.dispatch import (
-    render_system as _dispatch_render_system,
-    render_system_title as _render_system_title,
-)
 
 # ── Compute helpers ───────────────────────────────────────────────────────
 from core.cached_computations import invalidate_chart_cache_if_birth_changed
-
-# ── System registry & ziwei (needed for EXECUTION_REGISTRY) ──────────────
-from astro.system_registry import get_system
-from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
-from astro.vietnam import (
-    compute_vietnam_tu_vi_chart,
-    render_streamlit as render_vietnam_tu_vi_chart,
-)
 
 # ── Page init ─────────────────────────────────────────────────────────────
 inject_custom_css()
@@ -74,6 +62,17 @@ _LANG_MAP = {
 }
 _LANG_LABEL_MAP = {v: k for k, v in _LANG_MAP.items()}
 _DEFAULT_LANG_LABEL = "繁體中文"
+_OVERVIEW_PARAM_KEYS = (
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "timezone",
+    "latitude",
+    "longitude",
+    "location_name",
+)
 
 
 def _sync_lang_from_selectbox() -> None:
@@ -146,10 +145,17 @@ def _load_from_query_params() -> bool:
     st.session_state["_custom_lon"] = lon
     st.session_state["_custom_tz"]  = tz
     st.session_state["_birth_confirmed"] = True
-    st.session_state["_confirmed_params"] = dict(
-        year=y, month=mo, day=d, hour=h, minute=mi,
-        timezone=tz, latitude=lat, longitude=lon, location_name="",
-    )
+    st.session_state["_confirmed_params"] = {
+        "year": y,
+        "month": mo,
+        "day": d,
+        "hour": h,
+        "minute": mi,
+        "timezone": tz,
+        "latitude": lat,
+        "longitude": lon,
+        "location_name": "",
+    }
     st.session_state["_confirmed_gender"] = "male"
     st.session_state["_qp_loaded"] = True
     return True
@@ -240,6 +246,8 @@ invalidate_chart_cache_if_birth_changed(_params)
 _is_calculated = True
 _selected_system = st.session_state.get(SessionKeys.SYSTEM_SELECT)
 if _selected_system:
+    from ui.system_handlers.dispatch import render_system_title as _render_system_title
+
     _render_system_title(_selected_system)
 
 # ── Status flash after chart submission ───────────────────────────────────
@@ -257,95 +265,131 @@ if _qp_restored and not st.session_state.get("_qp_notice_shown"):
 
 # ── Overview dashboard build helper ────────────────────────────────────────
 def build_overview_items(
-    params: dict[str, Any], gender: str, get_system_fn, t_fn
+    params: dict[str, Any],
+    birth_gender: str,
+    t_fn,
 ) -> list[dict[str, Any]]:
-    """Build overview cards for popular systems in priority order.
-    
-    延遲導入 compute 函數以加快啟動速度：
-    - astro.western.western: ~1.4s (最大瓶頸)
-    - astro.ziwei, astro.qizheng, astro.vedic: ~0.1s each
+    """Build overview cards for popular systems in priority order."""
+    from astro.system_registry import get_system
+
+    items: list[dict[str, Any]] = []
+    overview_metrics = _build_overview_metrics(
+        _freeze_overview_params(params),
+        birth_gender,
+    )
+    for item in overview_metrics:
+        system_id = item["system_id"]
+        system_meta = get_system(system_id)
+        if system_meta is None:
+            continue
+        items.append(
+            {
+                **item,
+                "icon": system_meta.icon,
+                "title": t_fn(system_meta.tab_key),
+                "accent": system_meta.accent_color,
+            }
+        )
+    return items
+
+
+def _freeze_overview_params(params: dict[str, Any]) -> tuple[tuple[str, Any], ...]:
+    """Return a stable, cacheable key for overview chart computations."""
+    return tuple((key, params.get(key)) for key in _OVERVIEW_PARAM_KEYS)
+
+
+@st.cache_data(show_spinner=False)
+def _build_overview_metrics(
+    frozen_params: tuple[tuple[str, Any], ...],
+    birth_gender: str,
+) -> list[dict[str, str]]:
+    """Compute cached overview metrics for the homepage dashboard.
+
+    Lazy imports keep initial app startup fast; caching prevents repeated
+    recalculation of the same overview charts on every rerun.
     """
-    items = []
-    
-    # 延遲導入 compute 函數 (僅在需要時載入)
-    from astro.western.western import compute_western_chart
-    from astro.ziwei import compute_ziwei_chart
+    # pylint: disable=import-outside-toplevel,broad-exception-caught
+    params = dict(frozen_params)
+    items: list[dict[str, str]] = []
+
     from astro.qizheng.calculator import compute_chart
     from astro.vedic.indian import compute_vedic_chart
+    from astro.western.western import compute_western_chart
+    from astro.ziwei import compute_ziwei_chart
 
-    # Western astrology
     try:
         west = compute_western_chart(**params)
         sun = next(
-            (p for p in getattr(west, "planets", []) if "Sun" in getattr(p, "name", "")),
+            (
+                planet
+                for planet in getattr(west, "planets", [])
+                if "Sun" in getattr(planet, "name", "")
+            ),
             None,
         )
-        sun_sign = (
-            getattr(sun, "sign_chinese", "")
-            or getattr(sun, "sign", "")
-            or "-"
-        )
+        sun_sign = getattr(sun, "sign_chinese", "") or getattr(sun, "sign", "") or "-"
         items.append(
             {
                 "system_id": "tab_western",
-                "icon": get_system_fn("tab_western").icon,
-                "title": t_fn(get_system_fn("tab_western").tab_key),
                 "metric_main": f"☉ {sun_sign}",
-                "metric_sub": f"P:{len(getattr(west, 'planets', []))} · A:{len(getattr(west, 'aspects', []))}",
-                "accent": get_system_fn("tab_western").accent_color,
+                "metric_sub": (
+                    f"P:{len(getattr(west, 'planets', []))} · "
+                    f"A:{len(getattr(west, 'aspects', []))}"
+                ),
             }
         )
     except Exception:
         pass
 
-    # Ziwei
     try:
-        ziwei = compute_ziwei_chart(**params, gender=gender)
+        ziwei = compute_ziwei_chart(**params, gender=birth_gender)
         items.append(
             {
                 "system_id": "tab_ziwei",
-                "icon": get_system_fn("tab_ziwei").icon,
-                "title": t_fn(get_system_fn("tab_ziwei").tab_key),
                 "metric_main": f"{getattr(ziwei, 'ming_zhu', '-')}",
-                "metric_sub": f"宮:{len(getattr(ziwei, 'palaces', []))} · 局:{getattr(ziwei, 'wu_xing_ju', '-')}",
-                "accent": get_system_fn("tab_ziwei").accent_color,
+                "metric_sub": (
+                    f"宮:{len(getattr(ziwei, 'palaces', []))} · "
+                    f"局:{getattr(ziwei, 'wu_xing_ju', '-')}"
+                ),
             }
         )
     except Exception:
         pass
 
-    # Chinese (Qizheng)
     try:
-        chinese = compute_chart(**params, gender=gender)
+        chinese = compute_chart(**params, gender=birth_gender)
         items.append(
             {
                 "system_id": "tab_chinese",
-                "icon": get_system_fn("tab_chinese").icon,
-                "title": t_fn(get_system_fn("tab_chinese").tab_key),
                 "metric_main": f"{getattr(chinese, 'solar_month', '-')}",
-                "metric_sub": f"P:{len(getattr(chinese, 'planets', []))} · H:{len(getattr(chinese, 'houses', []))}",
-                "accent": get_system_fn("tab_chinese").accent_color,
+                "metric_sub": (
+                    f"P:{len(getattr(chinese, 'planets', []))} · "
+                    f"H:{len(getattr(chinese, 'houses', []))}"
+                ),
             }
         )
     except Exception:
         pass
 
-    # Vedic
     try:
         vedic = compute_vedic_chart(**params)
         moon = next(
-            (p for p in getattr(vedic, "planets", []) if "Chandra" in getattr(p, "name", "")),
+            (
+                planet
+                for planet in getattr(vedic, "planets", [])
+                if "Chandra" in getattr(planet, "name", "")
+            ),
             None,
         )
-        nak = getattr(moon, "nakshatra", "-")
+        nakshatra = getattr(moon, "nakshatra", "-")
         items.append(
             {
                 "system_id": "tab_indian",
-                "icon": get_system_fn("tab_indian").icon,
-                "title": t_fn(get_system_fn("tab_indian").tab_key),
-                "metric_main": f"☾ {nak}",
-                "metric_sub": f"P:{len(getattr(vedic, 'planets', []))} · H:{len(getattr(vedic, 'houses', []))}",
-                "accent": get_system_fn("tab_indian").accent_color,
+                "metric_main": f"☾ {nakshatra}",
+                "metric_sub": (
+                    f"P:{len(getattr(vedic, 'planets', []))} · "
+                    f"H:{len(getattr(vedic, 'houses', []))}"
+                ),
             }
         )
     except Exception:
@@ -356,8 +400,10 @@ def build_overview_items(
 
 # ── Overview dashboard (when no system selected yet) ─────────────────────
 if not _selected_system:
+    from ui.components.overview_dashboard import render_overview_dashboard
+
     with st.spinner(t("overview_dashboard_loading")):
-        _overview_items = build_overview_items(_params, gender, get_system, t)
+        _overview_items = build_overview_items(_params, gender, t)
     render_overview_dashboard(
         st_module=st,
         t=t,
@@ -390,6 +436,14 @@ with _natal_tab:
 def _init_execution_registry_once() -> None:
     if EXECUTION_REGISTRY.has_handler("tab_ziwei"):
         return
+    from astro.vietnam import (
+        compute_vietnam_tu_vi_chart,
+        render_streamlit as render_vietnam_tu_vi_chart,
+    )
+    from astro.ziwei import compute_ziwei_chart, render_ziwei_chart
+    from ui.ai_chat import set_ai_context
+    from ui.system_handlers.phase1_handlers import build_ziwei_handler
+
     EXECUTION_REGISTRY.register(
         build_ziwei_handler(
             compute_ziwei_chart=compute_ziwei_chart,
@@ -449,6 +503,8 @@ with _natal_tab:
                     unsafe_allow_html=True,
                 )
 
+    from astro.system_registry import get_system
+
     _meta = get_system(_selected_system or "")
     _spinner_key = _meta.spinner_key if _meta else "info_calc_prompt"
 
@@ -468,19 +524,31 @@ with _natal_tab:
 # ── Fallback: dispatch to modular system handler files ────────────────────
 if not _engine_handled:
     try:
+        from ui.system_handlers.dispatch import render_system as _dispatch_render_system
+
         _handled = _dispatch_render_system(_selected_system or "")
     except Exception as _dispatch_err:
         _sys_label = _selected_system or "unknown"
         _is_zh = st.session_state.get("lang", "zh") in ("zh", "zh_cn")
-        _err_prefix = f"體系 **{_sys_label}** 起盤時發生錯誤：" if _is_zh else f"System **{_sys_label}** raised an error: "
+        _err_prefix = (
+            f"體系 **{_sys_label}** 起盤時發生錯誤："
+            if _is_zh
+            else f"System **{_sys_label}** raised an error: "
+        )
         st.error(f"{_err_prefix}`{type(_dispatch_err).__name__}: {_dispatch_err}`")
         st.exception(_dispatch_err)
         _handled = True
     if not _handled and _selected_system:
+        unknown_label = (
+            "未知體系"
+            if st.session_state.get("lang", "zh") in ("zh", "zh_cn")
+            else "Unknown system"
+        )
         st.warning(
-            f"{'未知體系' if st.session_state.get('lang','zh') in ('zh','zh_cn') else 'Unknown system'}: "
-            f"`{_selected_system}`"
+            f"{unknown_label}: `{_selected_system}`"
         )
 
 # ── Global AI chatbox — fixed at the bottom of every page ─────────────────
+from ui.ai_chat import render_global_ai_chat
+
 render_global_ai_chat()
