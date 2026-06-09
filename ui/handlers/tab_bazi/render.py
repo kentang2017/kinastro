@@ -24,6 +24,8 @@ from astro.i18n import auto_cn, t
 from astro.bazi.calculator import BaziChart, DayunStep, compute_bazi, _get_kongwang
 from astro.bazi.constants import (
     SHISHEN_COLORS,
+    SHISHEN_RELATIONS_F,
+    SHISHEN_RELATIONS_M,
     SVG_BORDER_COLOR,
     SVG_INK_DARK,
     SVG_PAPER_BG,
@@ -571,6 +573,149 @@ def _get_kongwang_for_chart(chart: BaziChart) -> tuple:
     return _get_kongwang(chart.day_pillar.ganzhi)
 
 
+def _normalize_gender(gender: str) -> str:
+    """Normalize chart gender labels for UI hints."""
+    raw = str(gender or "").strip().lower()
+    if "女" in raw or raw.startswith("f"):
+        return "female"
+    return "male"
+
+
+def _pillar_records(chart: BaziChart) -> list[dict[str, str]]:
+    """Build lightweight UI records for the four pillars."""
+    records: list[dict[str, str]] = []
+    for label, pillar in (
+        (auto_cn("年柱", "Year Pillar"), chart.year_pillar),
+        (auto_cn("月柱", "Month Pillar"), chart.month_pillar),
+        (auto_cn("日柱", "Day Pillar"), chart.day_pillar),
+        (auto_cn("時柱", "Hour Pillar"), chart.hour_pillar),
+    ):
+        records.append(
+            {
+                "label": label,
+                "ganzhi": pillar.ganzhi,
+                "stem": pillar.stem,
+                "branch": pillar.branch,
+                "stem_wuxing": pillar.wuxing_stem,
+                "branch_wuxing": pillar.wuxing_branch,
+                "shishen": pillar.shishen,
+                "canggan": "、".join(pillar.canggan),
+                "canggan_shishen": "、".join(pillar.canggan_shishen),
+                "changsheng": pillar.changsheng,
+            }
+        )
+    return records
+
+
+def _render_ten_god_legend() -> None:
+    """Render grouped Ten-God color legend."""
+    legend_items = [
+        (auto_cn("比劫", "Companions"), "比肩／劫財", SHISHEN_COLORS["比肩"]),
+        (auto_cn("食傷", "Output"), "食神／傷官", SHISHEN_COLORS["食神"]),
+        (auto_cn("財", "Wealth"), "偏財／正財", SHISHEN_COLORS["偏財"]),
+        (auto_cn("官殺", "Authority"), "七殺／正官", SHISHEN_COLORS["七殺"]),
+        (auto_cn("印", "Resource"), "偏印／正印", SHISHEN_COLORS["偏印"]),
+    ]
+    chips = []
+    for title, members, color in legend_items:
+        chips.append(
+            f"<span style='display:inline-flex;align-items:center;gap:6px;"
+            f"padding:6px 10px;margin:0 8px 8px 0;border-radius:999px;"
+            f"background:{color}18;color:{color};font-weight:600;"
+            f"border:1px solid {color}55;'>"
+            f"<span style='width:10px;height:10px;border-radius:50%;background:{color};display:inline-block;'></span>"
+            f"{title}<span style='opacity:.75;font-weight:500;'>· {members}</span></span>"
+        )
+    st.markdown("".join(chips), unsafe_allow_html=True)
+
+
+def _render_pillar_cards(chart: BaziChart) -> None:
+    """Render four pillar summary cards with Ten-God colors and explanations."""
+    relation_map = (
+        SHISHEN_RELATIONS_F if _normalize_gender(chart.gender) == "female"
+        else SHISHEN_RELATIONS_M
+    )
+    for col, record in zip(st.columns(4), _pillar_records(chart)):
+        color = SHISHEN_COLORS.get(record["shishen"], SHISHEN_COLORS["日主"])
+        with col:
+            st.markdown(
+                f"""
+                <div style="
+                    height: 100%;
+                    padding: 14px 16px;
+                    border-radius: 14px;
+                    border: 1px solid {color}33;
+                    background: linear-gradient(180deg, #fffdf7 0%, #f8f1e3 100%);
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+                ">
+                    <div style="font-size: 0.9rem; color: #7a6a58; font-weight: 600;">
+                        {record["label"]}
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 700; color: #2a1a0a; margin: 6px 0 10px 0;">
+                        {record["ganzhi"]}
+                    </div>
+                    <div style="
+                        display: inline-block;
+                        padding: 4px 10px;
+                        border-radius: 999px;
+                        background: {color}18;
+                        color: {color};
+                        font-weight: 700;
+                        border: 1px solid {color}44;
+                        margin-bottom: 10px;
+                    ">
+                        {record["shishen"]}
+                    </div>
+                    <div style="font-size: 0.92rem; color: #4d3d2d; line-height: 1.7;">
+                        <div>{auto_cn("天干", "Stem")}：{record["stem"]}（{record["stem_wuxing"]}）</div>
+                        <div>{auto_cn("地支", "Branch")}：{record["branch"]}（{record["branch_wuxing"]}）</div>
+                        <div>{auto_cn("藏干", "Hidden stems")}：{record["canggan"] or "—"}</div>
+                        <div>{auto_cn("長生", "Growth stage")}：{record["changsheng"] or "—"}</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            with st.popover(auto_cn("詳細說明", "Details"), use_container_width=True):
+                st.markdown(
+                    f"**{record['label']}** · **{record['ganzhi']}**\n\n"
+                    f"- {auto_cn('十神', 'Ten God')}: **{record['shishen']}**\n"
+                    f"- {auto_cn('六親提示', 'Relation hint')}: "
+                    f"{relation_map.get(record['shishen'], auto_cn('以日主自觀', 'Viewed from the Day Master'))}\n"
+                    f"- {auto_cn('藏干十神', 'Hidden-stem Ten Gods')}: "
+                    f"{record['canggan_shishen'] or '—'}\n"
+                    f"- {auto_cn('十二長生', 'Twelve Growth Stages')}: "
+                    f"{record['changsheng'] or '—'}"
+                )
+
+
+def _render_wuxing_balance(chart: BaziChart) -> None:
+    """Render a first-pass wuxing balance chart from visible stems and branches."""
+    import pandas as pd
+
+    counts = {wx: 0 for wx in WUXING_COLORS}
+    for pillar in (chart.year_pillar, chart.month_pillar, chart.day_pillar, chart.hour_pillar):
+        counts[pillar.wuxing_stem] = counts.get(pillar.wuxing_stem, 0) + 1
+        counts[pillar.wuxing_branch] = counts.get(pillar.wuxing_branch, 0) + 1
+
+    chart_df = pd.DataFrame(
+        [
+            {
+                auto_cn("五行", "Element"): wx,
+                auto_cn("數量", "Count"): count,
+            }
+            for wx, count in counts.items()
+        ]
+    ).set_index(auto_cn("五行", "Element"))
+    st.bar_chart(chart_df[auto_cn("數量", "Count")], width="stretch")
+    st.caption(
+        auto_cn(
+            "此版本先以四柱顯性干支做五行平衡概覽；後續可再加入月令、藏干與調候權重。",
+            "This first pass shows visible stem/branch balance; a later step can add seasonal, hidden-stem, and climate weighting.",
+        )
+    )
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Streamlit 渲染（Streamlit Renderer）
 # ──────────────────────────────────────────────────────────────────────────────
@@ -615,28 +760,46 @@ def render_streamlit(chart: BaziChart) -> None:
         st.metric(auto_cn("用神"), chart.yongshen,
                   help=auto_cn(f"忌神：{chart.jishen}"))
 
-    # ── 四柱詳細表格
-    st.subheader(auto_cn("🏛 四柱干支詳表", "Four Pillars Detail"))
     yp, mp, dp, hp = chart.year_pillar, chart.month_pillar, chart.day_pillar, chart.hour_pillar
-    pillars_data = []
-    for label, p in [("年柱", yp), ("月柱", mp), ("日柱", dp), ("時柱", hp)]:
-        pillars_data.append({
-            auto_cn("柱"): label,
-            auto_cn("天干"): p.stem,
-            auto_cn("地支"): p.branch,
-            auto_cn("干五行"): p.wuxing_stem,
-            auto_cn("支五行"): p.wuxing_branch,
-            auto_cn("十神"): p.shishen,
-            auto_cn("藏干"): "、".join(p.canggan),
-            auto_cn("藏干十神"): "、".join(p.canggan_shishen),
-            auto_cn("長生"): p.changsheng,
-        })
-    df_pillars = pd.DataFrame(pillars_data)
-    st.dataframe(df_pillars, width="stretch")
+    main_tabs = st.tabs(
+        [
+            auto_cn("基本命盤", "Core Chart"),
+            auto_cn("格局用神與神煞", "Pattern, Use God & Shen Sha"),
+            auto_cn("大運與流年", "Great Luck & Annual Flow"),
+            auto_cn("盲派論斷", "Blind School"),
+            auto_cn("詳細解讀報告", "Detailed Reading"),
+        ]
+    )
 
-    # ── 日主強弱分析
-    st.subheader(auto_cn("⚖️ 日主強弱分析", "Day Master Strength Analysis"))
-    st.markdown(f"""
+    with main_tabs[0]:
+        st.subheader(auto_cn("🏛 四柱命盤總覽", "Four Pillars Overview"))
+        _render_ten_god_legend()
+        _render_pillar_cards(chart)
+
+        pillars_data = []
+        for label, p in [("年柱", yp), ("月柱", mp), ("日柱", dp), ("時柱", hp)]:
+            pillars_data.append({
+                auto_cn("柱"): auto_cn(label, label.replace("柱", " Pillar")),
+                auto_cn("干支"): p.ganzhi,
+                auto_cn("天干"): p.stem,
+                auto_cn("地支"): p.branch,
+                auto_cn("干五行"): p.wuxing_stem,
+                auto_cn("支五行"): p.wuxing_branch,
+                auto_cn("十神"): p.shishen,
+                auto_cn("藏干"): "、".join(p.canggan),
+                auto_cn("藏干十神"): "、".join(p.canggan_shishen),
+                auto_cn("長生"): p.changsheng,
+            })
+        df_pillars = pd.DataFrame(pillars_data)
+        with st.expander(auto_cn("查看四柱結構化表格", "View structured pillar table"), expanded=True):
+            st.dataframe(df_pillars, width="stretch")
+
+        st.subheader(auto_cn("⚖️ 五行平衡概覽", "Wuxing Balance Overview"))
+        _render_wuxing_balance(chart)
+
+    with main_tabs[1]:
+        st.subheader(auto_cn("⚖️ 日主強弱分析", "Day Master Strength Analysis"))
+        st.markdown(f"""
 **{auto_cn('日主')}：** {chart.day_master}（{chart.day_master_wuxing}）　
 **{auto_cn('月令')}：** {chart.month_pillar.branch}（{chart.day_master_vitality}）　
 **{auto_cn('強弱')}：** {chart.day_master_strength}（{auto_cn('分值')} {chart.day_master_strength_score}）
@@ -644,240 +807,235 @@ def render_streamlit(chart: BaziChart) -> None:
 > *《滴天髓》云：「先觀月令，再察四柱，以定日主強弱。」*
 """)
 
-    # ── 格局用神
-    st.subheader(auto_cn("🎯 格局與用神", "Pattern & Use God"))
+        st.subheader(auto_cn("🎯 格局與用神", "Pattern & Use God"))
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown(f"**{auto_cn('格局')}：** {chart.pattern}（{chart.pattern_type}）")
+            st.caption(chart.pattern_description_zh)
+        with col_b:
+            st.markdown(
+                f"**{auto_cn('用神')}：** `{chart.yongshen}` ｜ "
+                f"**{auto_cn('喜神')}：** `{chart.xishen}` ｜ "
+                f"**{auto_cn('忌神')}：** `{chart.jishen}` ｜ "
+                f"**{auto_cn('仇神')}：** `{chart.jiaoshen}`"
+            )
+            st.caption(f"{auto_cn('調候用神')}：{chart.tiaohoushen}")
+            st.caption(chart.yongshen_description_zh)
 
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.markdown(f"**{auto_cn('格局')}：** {chart.pattern}（{chart.pattern_type}）")
-        st.caption(chart.pattern_description_zh)
-    with col_b:
-        st.markdown(
-            f"**{auto_cn('用神')}：** `{chart.yongshen}` ｜ "
-            f"**{auto_cn('喜神')}：** `{chart.xishen}` ｜ "
-            f"**{auto_cn('忌神')}：** `{chart.jishen}` ｜ "
-            f"**{auto_cn('仇神')}：** `{chart.jiaoshen}`"
+        st.subheader(auto_cn("✨ 神煞列表", "Shen Sha Stars"))
+        if chart.shensha_list:
+            shensha_data = []
+            for ss in chart.shensha_list:
+                shensha_data.append({
+                    auto_cn("神煞"): ss.name,
+                    "English": ss.name_en,
+                    auto_cn("所在柱"): ss.pillar,
+                    auto_cn("地支"): ss.branch,
+                    auto_cn("吉/凶"): "✅ 吉" if ss.is_auspicious else "⚠️ 凶",
+                    auto_cn("說明"): ss.description_zh,
+                })
+            df_ss = pd.DataFrame(shensha_data)
+            st.dataframe(df_ss, width="stretch")
+        else:
+            st.caption(auto_cn("無顯著神煞"))
+
+        st.subheader(auto_cn("⚡ 沖合刑害", "Branch Interactions"))
+        inter = chart.interactions
+        cols = st.columns(3)
+        with cols[0]:
+            if inter.liuhe:
+                st.markdown(f"**{auto_cn('六合')}**")
+                for a, b, wx in inter.liuhe:
+                    st.write(f"  {a} ＋ {b} → {wx}")
+            if inter.tiangan_he:
+                st.markdown(f"**{auto_cn('天干相合')}**")
+                for a, b, wx in inter.tiangan_he:
+                    st.write(f"  {a} ＋ {b} → {wx}")
+        with cols[1]:
+            if inter.sanhe:
+                st.markdown(f"**{auto_cn('三合')}**")
+                for bs, wx in inter.sanhe:
+                    st.write(f"  {''.join(bs)} → {wx}")
+            if inter.sanhui:
+                st.markdown(f"**{auto_cn('三會')}**")
+                for bs, wx in inter.sanhui:
+                    st.write(f"  {''.join(bs)} → {wx}")
+        with cols[2]:
+            if inter.liuchong:
+                st.markdown(f"**{auto_cn('六冲')}**")
+                for a, b in inter.liuchong:
+                    st.write(f"  {a} ↔ {b}")
+            if inter.liuhai:
+                st.markdown(f"**{auto_cn('六害')}**")
+                for a, b in inter.liuhai:
+                    st.write(f"  {a} ✕ {b}")
+            if inter.sanxing:
+                st.markdown(f"**{auto_cn('三刑')}**")
+                for bs, xtype in inter.sanxing:
+                    st.write(f"  {''.join(bs)}（{xtype}）")
+        if not any([inter.liuhe, inter.sanhe, inter.sanhui,
+                    inter.liuchong, inter.liuhai, inter.sanxing,
+                    inter.tiangan_he]):
+            st.caption(auto_cn("四柱間無顯著沖合刑害"))
+
+    with main_tabs[2]:
+        st.subheader(auto_cn("📅 大運排例", "Great Fortune Cycles"))
+        kw1, kw2 = _get_kongwang_for_chart(chart)
+        st.caption(
+            f"{auto_cn('大運方向')}：{chart.dayun_direction}　"
+            f"{auto_cn('起運歲數')}：約 **{chart.dayun_start_age}** 歲　"
+            f"{auto_cn('起運日期')}：{chart.dayun_start_date}　"
+            f"{auto_cn('旬空')}：{kw1}、{kw2}"
         )
-        st.caption(f"{auto_cn('調候用神')}：{chart.tiaohoushen}")
-        st.caption(chart.yongshen_description_zh)
-
-    # ── 大運
-    st.subheader(auto_cn("📅 大運排例", "Great Fortune Cycles"))
-    kw1, kw2 = _get_kongwang_for_chart(chart)
-    st.caption(
-        f"{auto_cn('大運方向')}：{chart.dayun_direction}　"
-        f"{auto_cn('起運歲數')}：約 **{chart.dayun_start_age}** 歲　"
-        f"{auto_cn('起運日期')}：{chart.dayun_start_date}　"
-        f"{auto_cn('旬空')}：{kw1}、{kw2}"
-    )
-    dayun_data = []
-    for step in chart.dayun_steps:
-        is_current = (chart.current_dayun and step.ganzhi == chart.current_dayun.ganzhi)
-        marker = " ◄ 當運" if is_current else ""
-        dayun_data.append({
-            auto_cn("大運"): step.ganzhi + marker,
-            auto_cn("天干"): step.stem,
-            auto_cn("地支"): step.branch,
-            auto_cn("干十神"): step.shishen_stem,
-            auto_cn("支藏干十神"): step.shishen_branch,
-            auto_cn("年齡"): f"{step.age_start:.0f}–{step.age_end:.0f}",
-            auto_cn("起運年份"): step.year_start,
-        })
-    df_dayun = pd.DataFrame(dayun_data)
-    st.dataframe(df_dayun, width="stretch")
-
-    # 當前流年
-    st.info(
-        f"🗓️ **{auto_cn('當前流年')}：** {chart.current_liunian_year} 年　"
-        f"流年干支：**{chart.current_liunian}**　｜　"
-        f"{auto_cn('當前大運')}：**{chart.current_dayun.ganzhi if chart.current_dayun else '—'}**"
-    )
-
-    # ── 神煞
-    st.subheader(auto_cn("✨ 神煞列表", "Shen Sha Stars"))
-    if chart.shensha_list:
-        shensha_data = []
-        for ss in chart.shensha_list:
-            shensha_data.append({
-                auto_cn("神煞"): ss.name,
-                "English": ss.name_en,
-                auto_cn("所在柱"): ss.pillar,
-                auto_cn("地支"): ss.branch,
-                auto_cn("吉/凶"): "✅ 吉" if ss.is_auspicious else "⚠️ 凶",
-                auto_cn("說明"): ss.description_zh,
+        dayun_data = []
+        for step in chart.dayun_steps:
+            is_current = (chart.current_dayun and step.ganzhi == chart.current_dayun.ganzhi)
+            marker = " ◄ 當運" if is_current else ""
+            dayun_data.append({
+                auto_cn("大運"): step.ganzhi + marker,
+                auto_cn("天干"): step.stem,
+                auto_cn("地支"): step.branch,
+                auto_cn("干十神"): step.shishen_stem,
+                auto_cn("支藏干十神"): step.shishen_branch,
+                auto_cn("年齡"): f"{step.age_start:.0f}–{step.age_end:.0f}",
+                auto_cn("起運年份"): step.year_start,
             })
-        df_ss = pd.DataFrame(shensha_data)
-        st.dataframe(df_ss, width="stretch")
-    else:
-        st.caption(auto_cn("無顯著神煞"))
+        df_dayun = pd.DataFrame(dayun_data)
+        st.dataframe(df_dayun, width="stretch")
 
-    # ── 沖合刑害
-    st.subheader(auto_cn("⚡ 沖合刑害", "Branch Interactions"))
-    inter = chart.interactions
-    cols = st.columns(3)
-    with cols[0]:
-        if inter.liuhe:
-            st.markdown(f"**{auto_cn('六合')}**")
-            for a, b, wx in inter.liuhe:
-                st.write(f"  {a} ＋ {b} → {wx}")
-        if inter.tiangan_he:
-            st.markdown(f"**{auto_cn('天干相合')}**")
-            for a, b, wx in inter.tiangan_he:
-                st.write(f"  {a} ＋ {b} → {wx}")
-    with cols[1]:
-        if inter.sanhe:
-            st.markdown(f"**{auto_cn('三合')}**")
-            for bs, wx in inter.sanhe:
-                st.write(f"  {''.join(bs)} → {wx}")
-        if inter.sanhui:
-            st.markdown(f"**{auto_cn('三會')}**")
-            for bs, wx in inter.sanhui:
-                st.write(f"  {''.join(bs)} → {wx}")
-    with cols[2]:
-        if inter.liuchong:
-            st.markdown(f"**{auto_cn('六冲')}**")
-            for a, b in inter.liuchong:
-                st.write(f"  {a} ↔ {b}")
-        if inter.liuhai:
-            st.markdown(f"**{auto_cn('六害')}**")
-            for a, b in inter.liuhai:
-                st.write(f"  {a} ✕ {b}")
-        if inter.sanxing:
-            st.markdown(f"**{auto_cn('三刑')}**")
-            for bs, xtype in inter.sanxing:
-                st.write(f"  {''.join(bs)}（{xtype}）")
-    if not any([inter.liuhe, inter.sanhe, inter.sanhui,
-                inter.liuchong, inter.liuhai, inter.sanxing,
-                inter.tiangan_he]):
-        st.caption(auto_cn("四柱間無顯著沖合刑害"))
-
-    # ── 盲派八字
-    st.subheader(auto_cn("🕯️ 盲派八字分析", "Blind School Bazi Analysis"))
-    blind_report = getattr(chart, "blind_school_report", None) or {}
-    if not blind_report:
-        # 後備路徑：兼容由舊版快取或外部程式建立、尚未附帶 blind_school_report 的 chart。
-        try:
-            from .bazi_blind_school_logic import BlindSchoolBazi
-            blind_report = BlindSchoolBazi.from_bazi_chart(chart).full_report()
-        except (ImportError, ValueError, AttributeError, TypeError, KeyError) as e:
-            blind_report = {}
-            st.caption(auto_cn(f"盲派分析暫不可用：{e}", f"Blind-school analysis unavailable: {e}"))
-
-    if blind_report:
-        st.markdown(f"**{auto_cn('命局總述')}：** {blind_report.get('summary', '—')}")
-        illness_raw = blind_report.get("illness", {})
-        use_god_raw = blind_report.get("use_god", {})
-        illness = illness_raw if isinstance(illness_raw, dict) else {}
-        use_god = use_god_raw if isinstance(use_god_raw, dict) else {}
-        col_bs1, col_bs2 = st.columns(2)
-        with col_bs1:
-            st.caption(auto_cn("病處", "Illness"))
-            st.write(illness.get("總述", "—"))
-        with col_bs2:
-            st.caption(auto_cn("以病取用", "Use-God Recommendation"))
-            st.write(use_god.get("總結", "—"))
-        with st.expander(auto_cn("查看完整盲派結構化報告", "View Full Blind-School Structured Report")):
-            tab_vis, tab_struct, tab_raw = st.tabs([
-                auto_cn("視覺總覽", "Visual Overview"),
-                auto_cn("分項結構", "Structured Sections"),
-                auto_cn("原始 JSON", "Raw JSON"),
-            ])
-
-            with tab_vis:
-                def _list_count(key: str) -> int:
-                    value = illness.get(key, [])
-                    return len(value) if isinstance(value, list) else 0
-
-                risk_counts = {
-                    auto_cn("穿破", "Pierce/Break"): _list_count("穿破"),
-                    auto_cn("入墓", "Tomb"): _list_count("入墓"),
-                    auto_cn("偏枯", "Element Bias"): _list_count("五行偏枯"),
-                    auto_cn("三刑", "Punishment"): _list_count("三刑"),
-                }
-                col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-                with col_m1:
-                    st.metric(auto_cn("穿破", "Pierce/Break"), risk_counts[auto_cn("穿破", "Pierce/Break")])
-                with col_m2:
-                    st.metric(auto_cn("入墓", "Tomb"), risk_counts[auto_cn("入墓", "Tomb")])
-                with col_m3:
-                    st.metric(auto_cn("偏枯", "Element Bias"), risk_counts[auto_cn("偏枯", "Element Bias")])
-                with col_m4:
-                    st.metric(auto_cn("三刑", "Punishment"), risk_counts[auto_cn("三刑", "Punishment")])
-
-                risks_df = pd.DataFrame(
-                    [{auto_cn("項目", "Category"): k, auto_cn("數量", "Count"): v} for k, v in risk_counts.items()]
-                )
-                st.bar_chart(risks_df.set_index(auto_cn("項目", "Category"))[auto_cn("數量", "Count")])
-
-                st.caption(auto_cn("病情分級", "Severity"))
-                st.write(illness.get("病情輕重", "—"))
-
-            with tab_struct:
-                pb_details = blind_report.get("pierce_break_detail", [])
-                if isinstance(pb_details, list) and pb_details:
-                    st.markdown(f"**{auto_cn('穿破明細', 'Pierce/Break Details')}**")
-                    st.dataframe(pd.DataFrame(pb_details), width="stretch")
-
-                limits = blind_report.get("limits", [])
-                if isinstance(limits, list) and limits:
-                    st.markdown(f"**{auto_cn('盲派大限', 'Blind-School Limits')}**")
-                    limits_df = pd.DataFrame(limits)
-                    desired_cols = [
-                        auto_cn("限段", "Segment"),
-                        auto_cn("虛歲", "Age"),
-                        auto_cn("限干支", "Pillar"),
-                        auto_cn("十神", "Ten God"),
-                        auto_cn("運勢初判", "Preliminary Fortune"),
-                    ]
-                    show_cols = [c for c in desired_cols if c in limits_df.columns]
-                    st.dataframe(limits_df[show_cols] if show_cols else limits_df, width="stretch")
-
-                marriage = blind_report.get("marriage", {})
-                wealth = blind_report.get("wealth", {})
-                liunian = blind_report.get("liunian_framework", {})
-                six_qin = blind_report.get("six_qin_palaces", {})
-
-                col_s1, col_s2 = st.columns(2)
-                with col_s1:
-                    st.markdown(f"**{auto_cn('婚姻總評', 'Marriage Summary')}**")
-                    st.write(marriage.get("總評", "—") if isinstance(marriage, dict) else "—")
-                with col_s2:
-                    st.markdown(f"**{auto_cn('財運總評', 'Wealth Summary')}**")
-                    st.write(wealth.get("總評", "—") if isinstance(wealth, dict) else "—")
-
-                if isinstance(liunian, dict):
-                    rules = liunian.get("應期規則", [])
-                    if isinstance(rules, list) and rules:
-                        st.markdown(f"**{auto_cn('流年應期規則', 'Annual Timing Rules')}**")
-                        for r in rules:
-                            st.write(f"• {r}")
-
-                if isinstance(six_qin, dict) and six_qin:
-                    st.markdown(f"**{auto_cn('六親宮位重點', 'Six-Kin Palace Highlights')}**")
-                    for palace, detail in six_qin.items():
-                        with st.expander(str(palace)):
-                            if isinstance(detail, dict):
-                                st.write(f"{auto_cn('宮位職司', 'Role')}: {detail.get('宮位職司', '—')}")
-                                st.write(f"{auto_cn('干支', 'Pillar')}: {detail.get('干支', '—')}")
-                                notes = detail.get("注意事項", [])
-                                if isinstance(notes, list):
-                                    for note in notes:
-                                        st.write(f"• {note}")
-                            else:
-                                st.write(detail)
-
-            with tab_raw:
-                st.json(blind_report)
-
-    # ── 文字解讀
-    st.subheader(auto_cn("📖 古典命盤解讀", "Classical Bazi Interpretation"))
-    tab_zh, tab_en = st.tabs([auto_cn("中文古典解讀"), "English Reading"])
-    with tab_zh:
-        st.markdown(
-            f'<div style="font-family:\'Noto Serif SC\',serif;line-height:2;'
-            f'color:#2A1A0A;background:#FDFAF3;padding:20px;border-radius:8px;'
-            f'border-left:4px solid #C41E3A;">{chart.reading_zh.replace(chr(10), "<br/>")}</div>',
-            unsafe_allow_html=True,
+        st.info(
+            f"🗓️ **{auto_cn('當前流年')}：** {chart.current_liunian_year} 年　"
+            f"流年干支：**{chart.current_liunian}**　｜　"
+            f"{auto_cn('當前大運')}：**{chart.current_dayun.ganzhi if chart.current_dayun else '—'}**"
         )
-    with tab_en:
-        st.text(chart.reading_en)
+
+    with main_tabs[3]:
+        st.subheader(auto_cn("🕯️ 盲派八字分析", "Blind School Bazi Analysis"))
+        blind_report = getattr(chart, "blind_school_report", None) or {}
+        if not blind_report:
+            # 後備路徑：兼容由舊版快取或外部程式建立、尚未附帶 blind_school_report 的 chart。
+            try:
+                from .bazi_blind_school_logic import BlindSchoolBazi
+                blind_report = BlindSchoolBazi.from_bazi_chart(chart).full_report()
+            except (ImportError, ValueError, AttributeError, TypeError, KeyError) as e:
+                blind_report = {}
+                st.caption(auto_cn(f"盲派分析暫不可用：{e}", f"Blind-school analysis unavailable: {e}"))
+
+        if blind_report:
+            st.markdown(f"**{auto_cn('命局總述')}：** {blind_report.get('summary', '—')}")
+            illness_raw = blind_report.get("illness", {})
+            use_god_raw = blind_report.get("use_god", {})
+            illness = illness_raw if isinstance(illness_raw, dict) else {}
+            use_god = use_god_raw if isinstance(use_god_raw, dict) else {}
+            col_bs1, col_bs2 = st.columns(2)
+            with col_bs1:
+                st.caption(auto_cn("病處", "Illness"))
+                st.write(illness.get("總述", "—"))
+            with col_bs2:
+                st.caption(auto_cn("以病取用", "Use-God Recommendation"))
+                st.write(use_god.get("總結", "—"))
+            with st.expander(auto_cn("查看完整盲派結構化報告", "View Full Blind-School Structured Report")):
+                tab_vis, tab_struct, tab_raw = st.tabs([
+                    auto_cn("視覺總覽", "Visual Overview"),
+                    auto_cn("分項結構", "Structured Sections"),
+                    auto_cn("原始 JSON", "Raw JSON"),
+                ])
+
+                with tab_vis:
+                    def _list_count(key: str) -> int:
+                        value = illness.get(key, [])
+                        return len(value) if isinstance(value, list) else 0
+
+                    risk_counts = {
+                        auto_cn("穿破", "Pierce/Break"): _list_count("穿破"),
+                        auto_cn("入墓", "Tomb"): _list_count("入墓"),
+                        auto_cn("偏枯", "Element Bias"): _list_count("五行偏枯"),
+                        auto_cn("三刑", "Punishment"): _list_count("三刑"),
+                    }
+                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                    with col_m1:
+                        st.metric(auto_cn("穿破", "Pierce/Break"), risk_counts[auto_cn("穿破", "Pierce/Break")])
+                    with col_m2:
+                        st.metric(auto_cn("入墓", "Tomb"), risk_counts[auto_cn("入墓", "Tomb")])
+                    with col_m3:
+                        st.metric(auto_cn("偏枯", "Element Bias"), risk_counts[auto_cn("偏枯", "Element Bias")])
+                    with col_m4:
+                        st.metric(auto_cn("三刑", "Punishment"), risk_counts[auto_cn("三刑", "Punishment")])
+
+                    risks_df = pd.DataFrame(
+                        [{auto_cn("項目", "Category"): k, auto_cn("數量", "Count"): v} for k, v in risk_counts.items()]
+                    )
+                    st.bar_chart(risks_df.set_index(auto_cn("項目", "Category"))[auto_cn("數量", "Count")])
+
+                    st.caption(auto_cn("病情分級", "Severity"))
+                    st.write(illness.get("病情輕重", "—"))
+
+                with tab_struct:
+                    pb_details = blind_report.get("pierce_break_detail", [])
+                    if isinstance(pb_details, list) and pb_details:
+                        st.markdown(f"**{auto_cn('穿破明細', 'Pierce/Break Details')}**")
+                        st.dataframe(pd.DataFrame(pb_details), width="stretch")
+
+                    limits = blind_report.get("limits", [])
+                    if isinstance(limits, list) and limits:
+                        st.markdown(f"**{auto_cn('盲派大限', 'Blind-School Limits')}**")
+                        limits_df = pd.DataFrame(limits)
+                        desired_cols = [
+                            auto_cn("限段", "Segment"),
+                            auto_cn("虛歲", "Age"),
+                            auto_cn("限干支", "Pillar"),
+                            auto_cn("十神", "Ten God"),
+                            auto_cn("運勢初判", "Preliminary Fortune"),
+                        ]
+                        show_cols = [c for c in desired_cols if c in limits_df.columns]
+                        st.dataframe(limits_df[show_cols] if show_cols else limits_df, width="stretch")
+
+                    marriage = blind_report.get("marriage", {})
+                    wealth = blind_report.get("wealth", {})
+                    liunian = blind_report.get("liunian_framework", {})
+                    six_qin = blind_report.get("six_qin_palaces", {})
+
+                    col_s1, col_s2 = st.columns(2)
+                    with col_s1:
+                        st.markdown(f"**{auto_cn('婚姻總評', 'Marriage Summary')}**")
+                        st.write(marriage.get("總評", "—") if isinstance(marriage, dict) else "—")
+                    with col_s2:
+                        st.markdown(f"**{auto_cn('財運總評', 'Wealth Summary')}**")
+                        st.write(wealth.get("總評", "—") if isinstance(wealth, dict) else "—")
+
+                    if isinstance(liunian, dict):
+                        rules = liunian.get("應期規則", [])
+                        if isinstance(rules, list) and rules:
+                            st.markdown(f"**{auto_cn('流年應期規則', 'Annual Timing Rules')}**")
+                            for r in rules:
+                                st.write(f"• {r}")
+
+                    if isinstance(six_qin, dict) and six_qin:
+                        st.markdown(f"**{auto_cn('六親宮位重點', 'Six-Kin Palace Highlights')}**")
+                        for palace, detail in six_qin.items():
+                            with st.expander(str(palace)):
+                                if isinstance(detail, dict):
+                                    st.write(f"{auto_cn('宮位職司', 'Role')}: {detail.get('宮位職司', '—')}")
+                                    st.write(f"{auto_cn('干支', 'Pillar')}: {detail.get('干支', '—')}")
+                                    notes = detail.get("注意事項", [])
+                                    if isinstance(notes, list):
+                                        for note in notes:
+                                            st.write(f"• {note}")
+                                else:
+                                    st.write(detail)
+
+                with tab_raw:
+                    st.json(blind_report)
+
+    with main_tabs[4]:
+        st.subheader(auto_cn("📖 古典命盤解讀", "Classical Bazi Interpretation"))
+        tab_zh, tab_en = st.tabs([auto_cn("中文古典解讀"), "English Reading"])
+        with tab_zh:
+            st.markdown(
+                f'<div style="font-family:\'Noto Serif SC\',serif;line-height:2;'
+                f'color:#2A1A0A;background:#FDFAF3;padding:20px;border-radius:8px;'
+                f'border-left:4px solid #C41E3A;">{chart.reading_zh.replace(chr(10), "<br/>")}</div>',
+                unsafe_allow_html=True,
+            )
+        with tab_en:
+            st.text(chart.reading_en)
