@@ -1545,6 +1545,23 @@ def render_tab_liuren() -> None:
                 _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
             )
             render_lunming_report(_lunming_report)
+            st.divider()
+            from astro.annual.render import render_annual_sr_timeline_panel
+            from astro.models import BirthData
+
+            _annual_birth = BirthData(
+                year=_p["year"],
+                month=_p["month"],
+                day=_p["day"],
+                hour=_p["hour"],
+                minute=_p["minute"],
+                timezone=_p.get("timezone", 8.0),
+                latitude=_p.get("latitude", 25.033),
+                longitude=_p.get("longitude", 121.565),
+                location_name=_p.get("location_name", ""),
+                gender=gender,
+            )
+            render_annual_sr_timeline_panel(_annual_birth)
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)

@@ -42,6 +42,7 @@ __all__ = [
     "WesternChartResult",
     "ZiweiChartResult",
     "chart_result_from_legacy",
+    "compute_solar_return_flowyear_timeline",
 ]
 
 
@@ -52,6 +53,10 @@ _LAZY_MAP: dict[str, tuple[str, str]] = {
     "WesternChartResult": (".models", "WesternChartResult"),
     "ZiweiChartResult": (".models", "ZiweiChartResult"),
     "chart_result_from_legacy": (".models", "chart_result_from_legacy"),
+    "compute_solar_return_flowyear_timeline": (
+        ".annual.timeline",
+        "compute_solar_return_flowyear_timeline",
+    ),
     "compute_lao_chart": (".laos", "compute_lao_chart"),
     "create_lao_horasat": (".laos", "create_lao_horasat"),
     "render_lao_horasat": (".laos", "render_lao_horasat"),

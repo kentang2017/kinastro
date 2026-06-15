@@ -1,0 +1,1 @@
+"""Scoring engines for annual solar-return timelines."""

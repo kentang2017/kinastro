@@ -1679,6 +1679,62 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+class AnnualTimelineParams(ChineseParams):
+    """Solar-return annual multi-system timeline request."""
+
+    start_year: int = Field(..., ge=1900, le=2200, description="First solar-return year")
+    end_year: int = Field(..., ge=1900, le=2200, description="Last solar-return year")
+    include_systems: list[str] = Field(
+        default_factory=lambda: ["western", "liuren", "ziwei", "bazi", "qizheng"],
+        description="Systems to include in each annual year",
+    )
+
+
+@app.post("/api/v1/annual/solar-return-timeline", tags=["Annual"])
+async def solar_return_timeline(params: AnnualTimelineParams) -> dict[str, Any]:
+    """Compute a multi-year solar-return annual flow timeline."""
+    if params.end_year < params.start_year:
+        raise HTTPException(status_code=400, detail="end_year must be >= start_year")
+    if params.end_year - params.start_year > 60:
+        raise HTTPException(status_code=400, detail="Year range cannot exceed 60 years")
+    try:
+        from astro.annual import compute_solar_return_flowyear_timeline
+        from astro.models import BirthData
+
+        birth = BirthData(
+            year=params.year,
+            month=params.month,
+            day=params.day,
+            hour=params.hour,
+            minute=params.minute,
+            timezone=params.timezone,
+            latitude=params.latitude,
+            longitude=params.longitude,
+            location_name=params.location_name,
+            gender=params.gender,
+        )
+        from astro.annual.cache import compute_annual_timeline_cached
+
+        timeline = compute_annual_timeline_cached(
+            birth,
+            params.start_year,
+            params.end_year,
+            include_systems=params.include_systems,
+        )
+        payload = timeline.model_dump(mode="json")
+        for year_item in payload.get("years", []):
+            year_item.pop("liuren_chart", None)
+            year_item.pop("liuren_lunming", None)
+            if year_item.get("western_sr_chart") is not None:
+                year_item["western_sr_chart"] = None
+        return {"system": "annual_sr_timeline", "data": payload}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Solar-return annual timeline failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.get("/api/systems", tags=["Meta"])
 async def list_systems() -> dict[str, list[str]]:
     """List all supported astrology systems."""
@@ -1706,6 +1762,7 @@ async def list_systems() -> dict[str, list[str]]:
             "horary_western",
             "horary_vedic",
             "astronomical_geomancy",
+            "annual_sr_timeline",
         ]
     }
 

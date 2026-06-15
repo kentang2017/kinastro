@@ -208,6 +208,39 @@ def compute_western_transits_cached(
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
+def compute_annual_sr_timeline_cached(
+    birth_sig: tuple[Any, ...],
+    start_year: int,
+    end_year: int,
+    systems_sig: tuple[str, ...],
+    gender: str = "male",
+    age_kind: str = "virtual",
+):
+    from astro.annual.timeline import compute_solar_return_flowyear_timeline
+    from astro.models import BirthData
+
+    year, month, day, hour, minute, latitude, longitude, timezone = birth_sig
+    birth = BirthData(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        gender=gender,
+    )
+    return compute_solar_return_flowyear_timeline(
+        birth,
+        start_year,
+        end_year,
+        include_systems=list(systems_sig),
+        age_kind=age_kind,
+    )
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def compute_solar_return_cached(
     sun_longitude: float,
     return_year: int,

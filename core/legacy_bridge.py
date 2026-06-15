@@ -352,6 +352,10 @@ def compute_lunming(*args, **kwargs):
     return _call("astro.sanshi.liuren", "compute_lunming", *args, **kwargs)
 
 
+def compute_annual_sr_timeline(*args, **kwargs):
+    return _call("astro.annual.timeline", "compute_solar_return_flowyear_timeline", *args, **kwargs)
+
+
 def compute_twelve_ci_chart(*args, **kwargs):
     return _call("astro.twelve_ci", "compute_twelve_ci_chart", *args, **kwargs)
 

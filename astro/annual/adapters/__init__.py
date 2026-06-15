@@ -1,0 +1,1 @@
+"""System adapters for solar-return annual flow years."""

@@ -386,6 +386,7 @@ higher-quality PDF workflow for professional consultation delivery.
 | **本命盤 Natal** | 星盤輪圖、恆星合相（25 顆古典恆星）、小行星（Chiron、Ceres、Pallas、Juno、Vesta）、匯出 TXT/CSV/PDF |
 | **行星過運 Transit** | 即時過運行星與本命盤的相位分析 |
 | **太陽回歸 Solar Return** | Newton-Raphson 精密太陽回歸盤計算 |
+| **SR 流年時間軸 Annual SR Timeline** | 以太陽回歸精確時刻起大六壬祿命 + 紫微/八字/七政/西洋多體系獨立評分（見 `astro/annual/`） |
 | **合盤比較 Synastry** | 雙人交叉相位、和諧分數、元素相容性分析 |
 | **Ptolemy 尊貴 Dignity** | 行星本質尊貴表（廟、旺、界、三分、面） |
 </details>
@@ -1329,6 +1330,14 @@ kinastro/
 │   │   ├── western.py              # 本命盤 / Natal chart
 │   │   ├── western_transit.py      # 行星過運 / Transit analysis
 │   │   ├── western_return.py       # 太陽回歸 / Solar & Lunar Return
+│   │   ├── solar_return_core.py    # 太陽回歸核心（無 Streamlit）
+│   ├── annual/                     # 太陽回歸流年多體系時間軸
+│   │   ├── timeline.py             # 主編排器
+│   │   ├── models.py               # Pydantic 模型
+│   │   ├── cache.py                # LRU 快取
+│   │   ├── adapters/               # 六壬/紫微/七政適配器
+│   │   ├── scoring/                # 各體系獨立評分引擎
+│   │   └── render/                 # Streamlit / PDF 輸出
 │   │   ├── western_synastry.py     # 合盤比較 / Synastry
 │   │   ├── fixed_stars.py          # 恆星合相 / Fixed star conjunctions
 │   │   ├── asteroids.py            # 小行星 / Asteroids (Chiron, Ceres…)
