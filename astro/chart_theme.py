@@ -63,6 +63,78 @@ CHART_GRID_LINE = "#2a2a5a"
 CHART_TEXT_COLOR = "#e0e0ff"
 FONT_FAMILY = "'Space Grotesk', 'Inter', 'Noto Sans TC', Arial, Helvetica, sans-serif"
 
+# Fixed sidebar width (px). Collapse / expand toggle remains native Streamlit UI.
+SIDEBAR_FIXED_WIDTH_PX = 400
+
+
+def build_sidebar_fixed_layout_markup(width_px: int | None = None) -> str:
+    """Return CSS/JS to lock sidebar width while preserving hide/unhide."""
+    width = int(width_px or SIDEBAR_FIXED_WIDTH_PX)
+    return f"""<style>
+:root {{
+    --ka-sidebar-width: {width}px;
+}}
+section[data-testid="stSidebar"][aria-expanded="true"] {{
+    width: var(--ka-sidebar-width) !important;
+    min-width: var(--ka-sidebar-width) !important;
+    max-width: var(--ka-sidebar-width) !important;
+    flex: 0 0 var(--ka-sidebar-width) !important;
+    transform: translateX(0) !important;
+    visibility: visible !important;
+}}
+section[data-testid="stSidebar"][aria-expanded="false"] {{
+    transform: translateX(-100%) !important;
+}}
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
+section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {{
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}}
+[data-testid="stSidebarResizeHandle"],
+button[data-testid="stSidebarResizeHandle"] {{
+    display: none !important;
+    width: 0 !important;
+    pointer-events: none !important;
+}}
+</style>
+<script>
+(function() {{
+    const W = {width};
+    const doc = window.parent.document;
+    function lockSidebar() {{
+        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+        if (!sidebar) return;
+        const expanded = sidebar.getAttribute('aria-expanded') === 'true';
+        if (expanded) {{
+            sidebar.style.setProperty('width', W + 'px', 'important');
+            sidebar.style.setProperty('min-width', W + 'px', 'important');
+            sidebar.style.setProperty('max-width', W + 'px', 'important');
+            sidebar.style.setProperty('transform', 'translateX(0)', 'important');
+            sidebar.style.setProperty('visibility', 'visible', 'important');
+        }} else {{
+            sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+        }}
+        doc.querySelectorAll('[data-testid="stSidebarResizeHandle"]').forEach((el) => {{
+            el.style.display = 'none';
+            el.style.pointerEvents = 'none';
+        }});
+    }}
+    lockSidebar();
+    const root = doc.querySelector('.stApp') || doc.body;
+    if (root) {{
+        new MutationObserver(lockSidebar).observe(root, {{
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['aria-expanded', 'style', 'class'],
+        }});
+    }}
+    window.addEventListener('resize', lockSidebar);
+}})();
+</script>"""
+
+
 # ── Mobile responsive CSS ───────────────────────────────────────
 MOBILE_CSS = """<style>
 /* ── Google Fonts ────────────────────────────────────── */

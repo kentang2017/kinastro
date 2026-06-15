@@ -25,6 +25,9 @@
     --ka-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     --ka-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
+    /* Sidebar layout */
+    --ka-sidebar-width: 400px;
+
     /* Border radius */
     --ka-radius-sm: 10px;
     --ka-radius-md: 16px;
@@ -674,12 +677,16 @@ section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-pr
         overflow: hidden;
     }
     section[data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(-100%);
+        transform: translateX(-100%) !important;
         visibility: hidden;
         overflow: hidden;
     }
     section[data-testid="stSidebar"][aria-expanded="true"] {
-        transform: translateX(0);
+        width: min(var(--ka-sidebar-width), 92vw) !important;
+        min-width: min(var(--ka-sidebar-width), 92vw) !important;
+        max-width: min(var(--ka-sidebar-width), 92vw) !important;
+        flex: 0 0 min(var(--ka-sidebar-width), 92vw) !important;
+        transform: translateX(0) !important;
         visibility: visible;
     }
 

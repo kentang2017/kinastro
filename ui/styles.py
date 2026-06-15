@@ -11,7 +11,7 @@ import random
 
 import streamlit as st
 
-from astro.chart_theme import MOBILE_CSS
+from astro.chart_theme import MOBILE_CSS, build_sidebar_fixed_layout_markup
 
 
 @st.cache_data(show_spinner=False)
@@ -39,6 +39,7 @@ def inject_custom_css() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(MOBILE_CSS, unsafe_allow_html=True)
+    st.markdown(build_sidebar_fixed_layout_markup(), unsafe_allow_html=True)
     _custom = _load_custom_css()
     if _custom:
         st.markdown(f"<style>{_custom}</style>", unsafe_allow_html=True)
