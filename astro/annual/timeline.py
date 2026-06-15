@@ -6,6 +6,8 @@ from datetime import date, datetime
 from typing import Iterable
 
 from astro.annual.adapters.liuren import compute_liuren_at_sr
+from astro.annual.adapters.qimen import compute_qimen_at_sr
+from astro.annual.adapters.taiyi import compute_taiyi_at_sr
 from astro.annual.models import (
     AnnualFlowYear,
     ReturnLocation,
@@ -33,7 +35,7 @@ from astro.western.solar_return_core import compute_solar_return_core
 from astro.western.western import compute_western_chart
 from astro.ziwei import compute_ziwei_chart
 
-SUPPORTED_SYSTEMS = {"western", "liuren", "ziwei", "bazi", "qizheng"}
+SUPPORTED_SYSTEMS = {"western", "liuren", "ziwei", "bazi", "qizheng", "taiyi", "qimen"}
 CAUTION_THRESHOLD = 45.0
 
 
@@ -192,8 +194,45 @@ def _compute_single_year(
         flow_year.other_chinese_systems["qizheng"] = snapshot
         flow_year.system_scores["qizheng"] = snapshot.score
 
+    if "taiyi" in include_systems:
+        gender = birth.legacy_gender or "male"
+        flow_year.taiyi_chart = compute_taiyi_at_sr(
+            sr_local,
+            return_location.timezone,
+            gender,
+        )
+
+    if "qimen" in include_systems:
+        flow_year.qimen_chart = compute_qimen_at_sr(sr_local)
+
     flow_year.integrated_interpretation = _build_integrated_summary(flow_year)
     return flow_year
+
+
+def compute_sr_liuren_for_virtual_age(
+    birth_data: BirthData,
+    virtual_age_years: int,
+    *,
+    return_location: ReturnLocation | None = None,
+    benming_zhi: str | None = None,
+    age_kind: str = "virtual",
+) -> AnnualFlowYear:
+    """Compute a single solar-return Liu Ren year for the given virtual age."""
+    if virtual_age_years < 1 or virtual_age_years > 120:
+        raise ValueError("virtual age must be between 1 and 120")
+    sr_year = birth_data.year + virtual_age_years - 1
+    timeline = compute_solar_return_flowyear_timeline(
+        birth_data,
+        sr_year,
+        sr_year,
+        return_location=return_location,
+        include_systems=["liuren"],
+        benming_zhi=benming_zhi,
+        age_kind=age_kind,
+    )
+    if not timeline.years:
+        raise ValueError(f"no solar-return year computed for virtual age {virtual_age_years}")
+    return timeline.years[0]
 
 
 def compute_solar_return_flowyear_timeline(
@@ -286,6 +325,11 @@ def compute_solar_return_flowyear_timeline(
         trend_summary = (
             f"共 {len(years)} 年，大六壬平均 {avg:.1f} 分；"
             f"最高 {max(liuren_scores):.0f}，最低 {min(liuren_scores):.0f}。"
+        )
+    elif years and systems <= {"liuren", "taiyi", "qimen"}:
+        trend_summary = (
+            f"共 {len(years)} 個太陽回歸時刻，"
+            f"自 {years[0].year} 至 {years[-1].year} 年（虛歲 {years[0].age}–{years[-1].age}）。"
         )
 
     return SolarReturnTimeline(

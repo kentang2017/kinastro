@@ -236,7 +236,36 @@ def compute_annual_sr_timeline_cached(
         start_year,
         end_year,
         include_systems=list(systems_sig),
-        age_kind=age_kind,
+        age_kind=age_kind,  # type: ignore[arg-type]
+    )
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def compute_sr_liuren_age_cached(
+    birth_sig: tuple[Any, ...],
+    virtual_age_years: int,
+    benming_zhi: str,
+    gender: str = "male",
+):
+    from astro.annual.timeline import compute_sr_liuren_for_virtual_age
+    from astro.models import BirthData
+
+    year, month, day, hour, minute, latitude, longitude, timezone = birth_sig
+    birth = BirthData(
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        timezone=timezone,
+        latitude=latitude,
+        longitude=longitude,
+        gender=gender,
+    )
+    return compute_sr_liuren_for_virtual_age(
+        birth,
+        virtual_age_years,
+        benming_zhi=benming_zhi,
     )
 
 

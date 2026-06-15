@@ -111,6 +111,31 @@ class TestAnnualTimeline:
             year.exact_sr_datetime_local.month >= 1
         )
 
+    def test_sanshi_sr_charts_present(self):
+        timeline = compute_solar_return_flowyear_timeline(
+            BIRTH,
+            start_year=2024,
+            end_year=2024,
+            include_systems=["liuren", "taiyi", "qimen"],
+        )
+        year = timeline.years[0]
+        assert year.liuren_chart
+        assert year.liuren_lunming
+        assert year.taiyi_chart
+        assert year.qimen_chart
+        assert timeline.trend_summary
+
+    def test_birth_year_to_current_span(self):
+        timeline = compute_solar_return_flowyear_timeline(
+            BIRTH,
+            start_year=BIRTH.year,
+            end_year=1992,
+            include_systems=["liuren", "taiyi", "qimen"],
+        )
+        assert len(timeline.years) == 1992 - 1990 + 1
+        assert timeline.years[0].year == 1990
+        assert timeline.years[-1].year == 1992
+
     def test_invalid_system_raises(self):
         with pytest.raises(ValueError, match="Unsupported systems"):
             compute_solar_return_flowyear_timeline(

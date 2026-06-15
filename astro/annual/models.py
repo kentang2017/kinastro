@@ -123,6 +123,8 @@ class AnnualFlowYear(KinAstroModel):
     liuren_chart: dict[str, Any] = Field(default_factory=dict)
     liuren_jixiong: LiurenJixiong | None = None
     liuren_lunming: dict[str, Any] = Field(default_factory=dict)
+    taiyi_chart: dict[str, Any] = Field(default_factory=dict)
+    qimen_chart: dict[str, Any] = Field(default_factory=dict)
     other_chinese_systems: dict[str, ChineseSystemSnapshot] = Field(default_factory=dict)
 
     system_scores: dict[str, float] = Field(default_factory=dict)
@@ -149,8 +151,8 @@ class SolarReturnTimelineRequest(KinAstroModel):
         start = info.data.get("start_year")
         if start is not None and value < start:
             raise ValueError("end_year must be >= start_year")
-        if start is not None and value - start > 60:
-            raise ValueError("year range cannot exceed 60 years")
+        if start is not None and value - start > 100:
+            raise ValueError("year range cannot exceed 100 years")
         return value
 
 

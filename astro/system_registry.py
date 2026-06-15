@@ -226,9 +226,14 @@ _reg(System(
     desc_key="desc_liuren",
     spinner_key="spinner_liuren",
     hint_key="sys_hint_liuren",
+    sub_tabs=[
+        SubTab("liuren_subtab_natal", "natal"),
+        SubTab("liuren_subtab_sr_annual", "solar_return"),
+    ],
     tags=["六壬", "三式", "liuren", "divination", "chinese", "timekeeping"],
     maturity="core",
     accent_color=_a("cat_sanshi"),
+    supports_return=True,
     origin_culture="Chinese",
     tradition_period="Han Dynasty",
     ai_persona_key="info_liuren_prompt",
@@ -269,7 +274,6 @@ _reg(System(
     tradition_period="Tang–Song Dynasty",
     ai_persona_key="info_qimen_luming_prompt",
 ))
-
 
 # ═════════════════════════════════════════════════════════════════════════════
 # cat_chinese — 中華傳統 🏮

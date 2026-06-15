@@ -1524,31 +1524,13 @@ def render_tab_liuren() -> None:
     if _is_calculated:
         try:
             _p = st.session_state["_calc_params"]
-            with st.spinner(t("spinner_liuren")):
-                _liuren_chart = compute_liuren_chart(**_p)
-            # 從生年推算本命地支（年支）
             import sxtwl as _sxtwl_lr
+            from astro.annual.render.liuren_sr_subtab import render_liuren_sr_annual_subtab
+            from astro.models import BirthData
+
             _lr_day = _sxtwl_lr.fromSolar(_p["year"], _p["month"], _p["day"])
             _lr_year_gz = _lr_day.getYearGZ()
             _lr_benming = list("子丑寅卯辰巳午未申酉戌亥")[_lr_year_gz.dz]
-            render_liuren_chart(
-                _liuren_chart,
-                after_chart_hook=lambda: _render_ai_button(
-                    "tab_liuren", _liuren_chart, btn_key="liuren"
-                ),
-                benming_zhi=_lr_benming,
-            )
-            # ── 論命分析 ──
-            st.divider()
-            # 本命與流年均取自排盤年份的年支
-            _lunming_report = compute_lunming(
-                _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
-            )
-            render_lunming_report(_lunming_report)
-            st.divider()
-            from astro.annual.render import render_annual_sr_timeline_panel
-            from astro.models import BirthData
-
             _annual_birth = BirthData(
                 year=_p["year"],
                 month=_p["month"],
@@ -1561,7 +1543,29 @@ def render_tab_liuren() -> None:
                 location_name=_p.get("location_name", ""),
                 gender=gender,
             )
-            render_annual_sr_timeline_panel(_annual_birth)
+
+            tab_natal, tab_sr_annual = st.tabs(
+                [t("liuren_subtab_natal"), t("liuren_subtab_sr_annual")]
+            )
+
+            with tab_natal:
+                with st.spinner(t("spinner_liuren")):
+                    _liuren_chart = compute_liuren_chart(**_p)
+                render_liuren_chart(
+                    _liuren_chart,
+                    after_chart_hook=lambda: _render_ai_button(
+                        "tab_liuren", _liuren_chart, btn_key="liuren"
+                    ),
+                    benming_zhi=_lr_benming,
+                )
+                st.divider()
+                _lunming_report = compute_lunming(
+                    _liuren_chart, _lr_benming, liunian_zhi=_lr_benming,
+                )
+                render_lunming_report(_lunming_report)
+
+            with tab_sr_annual:
+                render_liuren_sr_annual_subtab(_annual_birth, _lr_benming)
         except Exception as _e:
             st.error(f"{t('error_tab_compute')}：{_e}")
             st.exception(_e)

@@ -3479,6 +3479,15 @@
     "th": "**Qimen Destiny Analysis**\n\nThis method uses the Qi Men Dun Jia chart cast at the time of birth to analyze one's destiny. The year stem's palace becomes the Life Palace, and the Five Elements relationships with other stems reveal the Six Relations (parents, siblings, children, career, spouse/wealth, health), combined with Eight Doors, Eight Gods, and pattern analysis for a comprehensive life reading.",
     "zh_cn": "**Qimen Destiny Analysis**\n\nThis method uses the Qi Men Dun Jia chart cast at the time of birth to analyze one's destiny. The year stem's palace becomes the Life Palace, and the Five Elements relationships with other stems reveal the Six Relations (parents, siblings, children, career, spouse/wealth, health), combined with Eight Doors, Eight Gods, and pattern analysis for a comprehensive life reading."
   },
+  "desc_sr_sanshi": {
+    "en": "**Sanshi Solar Return Annual Charts**\n\nFrom your birth year to the present, each year's exact solar return moment at your birth location is used to cast Da Liu Ren, Taiyi Life Method, and Qimen Destiny charts — one set of Three Formulae boards per return year.",
+    "zh": "**三式太陽回歸流年**\n\n依您輸入的出生年月日時分與出生地，逐年計算太陽回歸的精確時刻（預設於出生地觀測），並以該時刻起盤：\n\n- **大六壬**：太陽回歸課式 + 祿命論年\n- **太乙命法**：以回歸時刻排太乙命盤\n- **奇門祿命**：以回歸時刻排奇門局\n\n可一次瀏覽自出生年至今年的全部流年盤，或自訂年份區間。",
+    "ko": "**Sanshi Solar Return Annual Charts**\n\nFrom your birth year to the present, each year's exact solar return moment at your birth location is used to cast Da Liu Ren, Taiyi Life Method, and Qimen Destiny charts — one set of Three Formulae boards per return year.",
+    "ja": "**Sanshi Solar Return Annual Charts**\n\nFrom your birth year to the present, each year's exact solar return moment at your birth location is used to cast Da Liu Ren, Taiyi Life Method, and Qimen Destiny charts — one set of Three Formulae boards per return year.",
+    "vi": "**Sanshi Solar Return Annual Charts**\n\nFrom your birth year to the present, each year's exact solar return moment at your birth location is used to cast Da Liu Ren, Taiyi Life Method, and Qimen Destiny charts — one set of Three Formulae boards per return year.",
+    "th": "**Sanshi Solar Return Annual Charts**\n\nFrom your birth year to the present, each year's exact solar return moment at your birth location is used to cast Da Liu Ren, Taiyi Life Method, and Qimen Destiny charts — one set of Three Formulae boards per return year.",
+    "zh_cn": "**三式太阳回归流年**\n\n依您输入的出生年月日时分与出生地，逐年计算太阳回归的精确时刻（默认于出生地观测），并以该时刻起盘：大六壬、太乙命法、奇门禄命。可一次浏览自出生年至今年的全部流年盘。"
+  },
   "desc_rectification": {
     "en": "🔮 **Birth Chart Rectification** — Combines Primary Directions, Solar Arcs, Secondary Progressions, Annual Profections, Zodiacal Releasing, and Transits with weighted scoring to rank candidate birth times. Based on Vettius Valens' Anthology and Lilly's Christian Astrology.",
     "zh": "🔮 **出生時間校正** — 結合初級方向（Primary Directions）、太陽弧（Solar Arcs）、次進法（Secondary Progressions）、流年小限（Annual Profections）、黃道釋放（Zodiacal Releasing）及行星過境（Transits）六大技術，以加權評分算法對候選出生時間進行排名。依據 Vettius Valens《Anthology》、William Lilly《Christian Astrology》等古典文獻。",
@@ -6791,6 +6800,15 @@
     "th": "Computing Da Liu Ren chart…",
     "zh_cn": "正在计算大六壬排盤…"
   },
+  "spinner_liuren_sr_annual": {
+    "en": "Computing solar-return Liu Ren chart for selected age…",
+    "zh": "正在計算所選虛歲的太陽回歸六壬盤…",
+    "ko": "Computing solar-return Liu Ren chart for selected age…",
+    "ja": "Computing solar-return Liu Ren chart for selected age…",
+    "vi": "Computing solar-return Liu Ren chart for selected age…",
+    "th": "Computing solar-return Liu Ren chart for selected age…",
+    "zh_cn": "正在计算所选虚岁的太阳回归六壬盘…"
+  },
   "spinner_liuyao_lifetime": {
     "en": "Computing Lifetime Liu Yao hexagram…",
     "zh": "計算六爻終身卦…",
@@ -6931,6 +6949,15 @@
     "vi": "Computing Qimen Destiny…",
     "th": "Computing Qimen Destiny…",
     "zh_cn": "正在计算奇門祿命…"
+  },
+  "spinner_sr_sanshi": {
+    "en": "Computing solar-return annual charts for Liu Ren, Taiyi, and Qimen…",
+    "zh": "正在計算三式太陽回歸流年盤（大六壬、太乙、奇門）…",
+    "ko": "Computing solar-return annual charts for Liu Ren, Taiyi, and Qimen…",
+    "ja": "Computing solar-return annual charts for Liu Ren, Taiyi, and Qimen…",
+    "vi": "Computing solar-return annual charts for Liu Ren, Taiyi, and Qimen…",
+    "th": "Computing solar-return annual charts for Liu Ren, Taiyi, and Qimen…",
+    "zh_cn": "正在计算三式太阳回归流年盘（大六壬、太乙、奇门）…"
   },
   "spinner_rectification": {
     "en": "Running rectification, please wait…",
@@ -7736,6 +7763,15 @@
     "th": "Qimen Dunjia destiny analysis based on birth chart",
     "zh_cn": "Qimen Dunjia destiny analysis based on birth chart"
   },
+  "sys_hint_sr_sanshi": {
+    "en": "Annual Liu Ren, Taiyi, and Qimen charts at each solar return",
+    "zh": "自出生年起，每年太陽回歸時刻起大六壬、太乙、奇門流年盤",
+    "ko": "Annual Liu Ren, Taiyi, and Qimen charts at each solar return",
+    "ja": "Annual Liu Ren, Taiyi, and Qimen charts at each solar return",
+    "vi": "Annual Liu Ren, Taiyi, and Qimen charts at each solar return",
+    "th": "Annual Liu Ren, Taiyi, and Qimen charts at each solar return",
+    "zh_cn": "自出生年起，每年太阳回归时刻起大六壬、太乙、奇门流年盘"
+  },
   "sys_hint_rectification": {
     "en": "Multi-technique classical rectification: Primary Dirs · Solar Arcs · Progressions",
     "zh": "多技術古典校正：初級方向 · 太陽弧 · 次進法 · 小限 · 黃道釋放",
@@ -8533,6 +8569,15 @@
     "vi": "🔮 Qimen Destiny",
     "th": "🔮 Qimen Destiny",
     "zh_cn": "🔮 Qimen Destiny"
+  },
+  "tab_sr_sanshi": {
+    "en": "🌞 Sanshi Solar Return Years",
+    "zh": "🌞 三式太陽回歸流年",
+    "ko": "🌞 Sanshi Solar Return Years",
+    "ja": "🌞 Sanshi Solar Return Years",
+    "vi": "🌞 Sanshi Solar Return Years",
+    "th": "🌞 Sanshi Solar Return Years",
+    "zh_cn": "🌞 三式太阳回归流年"
   },
   "tab_rectification": {
     "en": "🔮 Rectification",
@@ -9822,6 +9867,24 @@
     "vi": "Daxian / Liunian",
     "th": "Daxian / Liunian",
     "zh_cn": "Daxian / Liunian"
+  },
+  "liuren_subtab_natal": {
+    "en": "Natal Destiny",
+    "zh": "本命祿命",
+    "ko": "Natal Destiny",
+    "ja": "Natal Destiny",
+    "vi": "Natal Destiny",
+    "th": "Natal Destiny",
+    "zh_cn": "本命禄命"
+  },
+  "liuren_subtab_sr_annual": {
+    "en": "Solar Return Years",
+    "zh": "太陽回歸流年",
+    "ko": "Solar Return Years",
+    "ja": "Solar Return Years",
+    "vi": "Solar Return Years",
+    "th": "Solar Return Years",
+    "zh_cn": "太阳回归流年"
   },
   "ziwei_subtab_natal": {
     "en": "Natal",
