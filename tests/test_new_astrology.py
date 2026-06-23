@@ -2595,7 +2595,8 @@ class TestShenSha:
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)  # 1990-01-01 04:00 UTC
-        result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
+        result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6,
+                                 birth_year=1990, birth_month=1, birth_day=1)
         assert result is not None
         assert len(result.items) > 0
         assert isinstance(result.branch_map, dict)
@@ -2606,7 +2607,8 @@ class TestShenSha:
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)
-        result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
+        result = compute_shensha(year=1990, solar_month=11, julian_day=jd, hour_branch=6,
+                                 birth_year=1990, birth_month=1, birth_day=1)
         all_names = [item.name for item in result.items]
         assert "驛馬" in all_names
         assert "桃花" in all_names  # sub-star of 咸池
@@ -2622,7 +2624,8 @@ class TestShenSha:
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1985, 8, 26, -2.167)  # ~ UTC+8
-        result = compute_shensha(year=1985, solar_month=7, julian_day=jd, hour_branch=1)
+        result = compute_shensha(year=1985, solar_month=7, julian_day=jd, hour_branch=1,
+                                 birth_year=1985, birth_month=8, birth_day=26)
         for item in result.items:
             assert 0 <= item.branch <= 11, f"{item.name} has invalid branch {item.branch}"
 
@@ -2632,7 +2635,8 @@ class TestShenSha:
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(2000, 6, 15, 4.0)
-        result = compute_shensha(year=2000, solar_month=5, julian_day=jd, hour_branch=6)
+        result = compute_shensha(year=2000, solar_month=5, julian_day=jd, hour_branch=6,
+                                 birth_year=2000, birth_month=6, birth_day=15)
         for item in result.items:
             assert item.category in ("吉", "凶", "中"), f"{item.name} has invalid category {item.category}"
 
@@ -2642,9 +2646,10 @@ class TestShenSha:
         import swisseph as swe
         swe.set_ephe_path("")
         jd = swe.julday(1990, 1, 1, 4.0)
-        bazi = get_bazi_stems_branches(year=1990, solar_month=11, julian_day=jd, hour_branch=6)
-        # Year pillar for 1990 = 庚午
-        assert bazi["year_pillar"] == "庚午"
+        # 1990-01-01 立春前，應為 己巳年（sxtwl 精確年干支）
+        bazi = get_bazi_stems_branches(year=1990, solar_month=11, julian_day=jd, hour_branch=6,
+                                       birth_year=1990, birth_month=1, birth_day=1)
+        assert bazi["year_pillar"] == "己巳"
         # Validate structure
         assert "year_stem" in bazi
         assert "day_pillar" in bazi
@@ -2661,6 +2666,7 @@ class TestShenSha:
         bazi = get_bazi_stems_branches(
             year=1985, solar_month=7, julian_day=jd,
             hour_branch=1, timezone=tz,
+            birth_year=1985, birth_month=8, birth_day=26,
         )
         assert bazi["year_pillar"] == "乙丑"
         assert bazi["month_pillar"] == "甲申"
@@ -2668,11 +2674,14 @@ class TestShenSha:
         assert bazi["hour_pillar"] == "辛丑"
 
     def test_year_stem_branch(self):
-        """Test year stem and branch calculation."""
+        """Test year stem and branch calculation (sxtwl preferred)."""
         from astro.qizheng.shensha import get_year_stem, get_year_branch
-        # 1984 = 甲子
-        assert get_year_stem(1984) == 0   # 甲
-        assert get_year_branch(1984) == 0  # 子
+        # 1984-07-01 = 甲子 (立春後)
+        assert get_year_stem(1984, 7, 1) == 0   # 甲
+        assert get_year_branch(1984, 7, 1) == 0  # 子
+        # 1989-01-18 = 戊辰 (立春前仍屬前一年)
+        assert get_year_stem(1989, 1, 18) == 4   # 戊
+        assert get_year_branch(1989, 1, 18) == 4  # 辰
         # 2024 = 甲辰
         assert get_year_stem(2024) == 0   # 甲
         assert get_year_branch(2024) == 4  # 辰

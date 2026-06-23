@@ -17,6 +17,12 @@
 from core.cache import cache_data, cache_resource
 from dataclasses import dataclass, field
 
+try:
+    from sxtwl import fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
+
 # ============================================================
 # 天干地支
 # ============================================================
@@ -28,6 +34,41 @@ EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳",
 SIXTY_JIAZI = [
     HEAVENLY_STEMS[i % 10] + EARTHLY_BRANCHES[i % 12] for i in range(60)
 ]
+
+
+def _get_accurate_pillars(year: int, month: int, day: int) -> tuple[int, int, int, int, int, int]:
+    """使用 sxtwl 取得準確年月日干支。
+    Returns: (ys, yb, ms, mb, ds, db)
+    年柱使用立春分界 (getYearGZ(False))，月柱依節氣，與 bazi 模組一致。
+    """
+    if _HAS_SXTWL:
+        try:
+            c = fromSolar(year, month, day)
+            ygz = c.getYearGZ(False)
+            mgz = c.getMonthGZ()
+            dgz = c.getDayGZ()
+            return ygz.tg, ygz.dz, mgz.tg, mgz.dz, dgz.tg, dgz.dz
+        except Exception:
+            pass
+    # Fallback to legacy naive (approximate)
+    ys = (year - 4) % 10
+    yb = (year - 4) % 12
+    mb = ((year % 12) + 1) % 12
+    ms = (2 * (ys % 5) + 2 + (mb - 2 + 12) % 12) % 10
+    # naive day offset (old behavior base)
+    ds = ((year - 2001) * 365 + (month - 1) * 30 + (day - 1)) % 10
+    db = ((year - 2001) * 365 + (month - 1) * 30 + (day - 1)) % 12
+    return ys, yb, ms, mb, ds, db
+
+
+def _get_accurate_year_stem_branch(year: int, month: int, day: int) -> tuple[int, int]:
+    ys, yb, _, _, _, _ = _get_accurate_pillars(year, month, day)
+    return ys, yb
+
+
+def _get_accurate_day_stem_branch(year: int, month: int, day: int) -> tuple[int, int]:
+    _, _, _, _, ds, db = _get_accurate_pillars(year, month, day)
+    return ds, db
 
 
 def gz_index(stem: int, branch: int) -> int:
@@ -346,14 +387,23 @@ def compute_twelve_life_stages(year_stem: int, year_branch: int = 0):
 # 主要計算函數
 # ============================================================
 
-def get_year_stem(year: int) -> int:
-    """取得年干索引 (甲=0 ... 癸=9)"""
-    return (year - 4) % 10
+def get_year_stem(year: int, month: int | None = None, day: int | None = None) -> int:
+    """取得年干索引 (甲=0 ... 癸=9)。優先使用 sxtwl 精確計算。"""
+    if month is not None and day is not None:
+        ys, _ = _get_accurate_year_stem_branch(year, month, day)
+        return ys
+    # legacy: mid-year representative to better align with 立春 convention for year calls
+    ys, _ = _get_accurate_year_stem_branch(year, 7, 1)
+    return ys
 
 
-def get_year_branch(year: int) -> int:
-    """取得年支索引 (子=0 ... 亥=11)"""
-    return (year - 4) % 12
+def get_year_branch(year: int, month: int | None = None, day: int | None = None) -> int:
+    """取得年支索引 (子=0 ... 亥=11)。優先使用 sxtwl 精確計算。"""
+    if month is not None and day is not None:
+        _, yb = _get_accurate_year_stem_branch(year, month, day)
+        return yb
+    _, yb = _get_accurate_year_stem_branch(year, 7, 1)
+    return yb
 
 
 def get_month_branch(solar_month: int) -> int:
@@ -363,23 +413,22 @@ def get_month_branch(solar_month: int) -> int:
     return (solar_month + 1) % 12
 
 
-def get_day_stem_branch(jd: float, timezone: float = 0.0):
+def get_day_stem_branch(jd: float = None, timezone: float = 0.0, year: int = None, month: int = None, day: int = None):
     """
-    由儒略日計算日干支。
-
-    以 2001-01-01 (JDN 2451911) = 甲子日 為基準。
-
-    Parameters:
-        jd: 儒略日 (UT)
-        timezone: 時區偏移 (小時), 用於將 UT 轉換為當地時間以確定日期
+    取得日干支。優先使用 sxtwl 由公曆 ymd 精確計算（推薦傳 year/month/day）。
+    保留 jd 參數供舊呼叫相容（但不推薦）。
     """
-    local_jd = jd + timezone / 24.0
-    day_num = int(local_jd + 0.5)
-    base_jd = 2451911  # 2001-01-01
-    diff = day_num - base_jd
-    day_stem = (0 + diff) % 10
-    day_branch = (0 + diff) % 12
-    return day_stem, day_branch
+    if year is not None and month is not None and day is not None:
+        ds, db = _get_accurate_day_stem_branch(year, month, day)
+        return ds, db
+    # jd fallback (legacy approximate)
+    if jd is not None:
+        local_jd = jd + timezone / 24.0
+        day_num = int(local_jd + 0.5)
+        base_jd = 2451911  # 2001-01-01
+        diff = day_num - base_jd
+        return (0 + diff) % 10, (0 + diff) % 12
+    return 0, 0
 
 
 def get_hour_stem(day_stem: int, hour_branch: int) -> int:
@@ -400,25 +449,31 @@ def compute_shensha(
     hour_branch: int,
     timezone: float = 0.0,
     ming_gong_branch: int | None = None,
+    birth_year: int | None = None,
+    birth_month: int | None = None,
+    birth_day: int | None = None,
 ) -> ShenShaResult:
     """
     計算神煞 (對齊 MOIRA_chinese_astrology)。
 
+    使用 sxtwl 計算年干支以確保干支起盤正確（例如 1989-01-18 = 戊辰年）。
+
     Parameters:
-        year: 西曆年份
+        year: 西曆年份 (fallback)
         solar_month: 節氣月 (1-12)
         julian_day: 儒略日
         hour_branch: 時辰地支索引 (0-11)
         timezone: 時區偏移 (小時)
         ming_gong_branch: 命宮地支索引 (0-11)。保留向後兼容, 目前未使用。
-
-    Returns:
-        ShenShaResult: 包含所有神煞及其宮位分配
+        birth_year, birth_month, birth_day: 公曆出生日期，用於 sxtwl 精確干支計算（推薦）。
     """
-    year_stem = get_year_stem(year)
-    year_branch = get_year_branch(year)
+    by = birth_year if birth_year is not None else year
+    bm = birth_month if birth_month is not None else 7
+    bd = birth_day if birth_day is not None else 1
+    year_stem, year_branch = _get_accurate_year_stem_branch(by, bm, bd)
     month_branch = get_month_branch(solar_month)
-    day_stem, day_branch = get_day_stem_branch(julian_day, timezone)
+    # day not required for shensha logic itself, but fetch for completeness
+    day_stem, day_branch = get_day_stem_branch(julian_day, timezone, by, bm, bd)
     gzi = gz_index(year_stem, year_branch)
 
     items: list[ShenShaItem] = []
@@ -548,22 +603,26 @@ def get_bazi_stems_branches(
     julian_day: float,
     hour_branch: int,
     timezone: float = 0.0,
+    birth_year: int | None = None,
+    birth_month: int | None = None,
+    birth_day: int | None = None,
 ):
     """
-    計算八字四柱天干地支。
+    計算八字四柱天干地支。使用 sxtwl 精確干支起盤（年以立春、月以節氣、日精確）。
 
     Returns:
         dict with keys: year_stem, year_branch, month_stem, month_branch,
                         day_stem, day_branch, hour_stem, hour_branch
               and their corresponding name strings.
     """
-    ys = get_year_stem(year)
-    yb = get_year_branch(year)
-    mb = get_month_branch(solar_month)
-    # 月干 = 年干 * 2 + 月支偏移 (虎月起法)
-    yin_stem = (2 * (ys % 5) + 2) % 10
-    ms = (yin_stem + (mb - 2 + 12) % 12) % 10
-    ds, db = get_day_stem_branch(julian_day, timezone)
+    by = birth_year if birth_year is not None else year
+    bm = birth_month if birth_month is not None else 7
+    bd = birth_day if birth_day is not None else 15
+
+    # Prefer sxtwl pillars (年月日)
+    ys, yb, ms, mb, ds, db = _get_accurate_pillars(by, bm, bd)
+
+    # 時干依日干 + 時支
     hs = get_hour_stem(ds, hour_branch)
 
     return {
@@ -576,3 +635,55 @@ def get_bazi_stems_branches(
         "day_pillar": HEAVENLY_STEMS[ds] + EARTHLY_BRANCHES[db],
         "hour_pillar": HEAVENLY_STEMS[hs] + EARTHLY_BRANCHES[hour_branch],
     }
+
+
+LUNAR_MONTH_NAME = {
+    1: "正", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六",
+    7: "七", 8: "八", 9: "九", 10: "十", 11: "十一", 12: "臘",
+}
+
+
+def get_lunar_date_info(year: int, month: int, day: int) -> dict:
+    """使用 sxtwl 回傳農曆日期與干支資訊。
+    回傳包含:
+      lunar_year, lunar_month, lunar_day, is_leap,
+      lunar_str (如 '戊辰年臘月十一日'),
+      year_pillar, month_pillar, day_pillar
+    """
+    if not _HAS_SXTWL:
+        # fallback rough
+        return {
+            "lunar_str": f"{year}年{month}月{day}日",
+            "year_pillar": get_bazi_stems_branches(year, 6, 0, 0, birth_year=year, birth_month=month, birth_day=day)["year_pillar"],
+            "month_pillar": "",
+            "day_pillar": "",
+        }
+    try:
+        c = fromSolar(year, month, day)
+        ly = c.getLunarYear()
+        lm = abs(c.getLunarMonth())
+        ld = c.getLunarDay()
+        leap = c.isLeapMonth()
+        mname = LUNAR_MONTH_NAME.get(lm, str(lm))
+        if leap:
+            mname = "閏" + mname
+        ygz = c.getYearGZ(False)
+        mgz = c.getMonthGZ()
+        dgz = c.getDayGZ()
+        y_p = HEAVENLY_STEMS[ygz.tg] + EARTHLY_BRANCHES[ygz.dz]
+        m_p = HEAVENLY_STEMS[mgz.tg] + EARTHLY_BRANCHES[mgz.dz]
+        d_p = HEAVENLY_STEMS[dgz.tg] + EARTHLY_BRANCHES[dgz.dz]
+        lunar_str = f"{y_p}年{mname}月{ld}日"
+        return {
+            "lunar_year": ly,
+            "lunar_month": lm,
+            "lunar_day": ld,
+            "is_leap": leap,
+            "lunar_str": lunar_str,
+            "year_pillar": y_p,
+            "month_pillar": m_p,
+            "day_pillar": d_p,
+        }
+    except Exception:
+        b = get_bazi_stems_branches(year, month, 0.0, 0, birth_year=year, birth_month=month, birth_day=day)
+        return {"lunar_str": f"{b['year_pillar']}年{month}月{day}日", "year_pillar": b["year_pillar"], "month_pillar": b["month_pillar"], "day_pillar": b["day_pillar"]}

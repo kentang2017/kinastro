@@ -23,7 +23,7 @@ from astro.qizheng.constants import (
     FIVE_ELEMENTS, ZODIAC_SIGN_ELEMENTS,
 )
 from astro.qizheng.shensha import (
-    ShenShaResult, compute_shensha, get_bazi_stems_branches,
+    ShenShaResult, compute_shensha, get_bazi_stems_branches, get_lunar_date_info,
     HEAVENLY_STEMS, TWELVE_LIFE_STAGES,
 )
 from astro.qizheng.qizheng_dasha import (
@@ -166,6 +166,9 @@ def render_chart_grid(chart: ChartData):
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
         ming_gong_branch=chart.ming_gong_branch,
+        birth_year=chart.year,
+        birth_month=chart.month,
+        birth_day=chart.day,
     )
 
     # 方盤排列 (外圈12格，按固定地支位置排列)
@@ -374,6 +377,9 @@ def render_bazi(chart: ChartData):
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
+        birth_year=chart.year,
+        birth_month=chart.month,
+        birth_day=chart.day,
     )
     st.subheader("📜 八字四柱")
     header = "| 柱 | 天干 | 地支 | 干支 |"
@@ -638,6 +644,9 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
         ming_gong_branch=chart.ming_gong_branch,
+        birth_year=chart.year,
+        birth_month=chart.month,
+        birth_day=chart.day,
     )
 
     # Compute dasha for year ring
@@ -657,6 +666,9 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
+        birth_year=chart.year,
+        birth_month=chart.month,
+        birth_day=chart.day,
     )
 
     # Compute sun/moon rise/set
@@ -1267,6 +1279,9 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
         julian_day=chart.julian_day,
         hour_branch=chart.hour_branch,
         timezone=chart.timezone,
+        birth_year=chart.year,
+        birth_month=chart.month,
+        birth_day=chart.day,
     )
     current_year = datetime.now().year
     dasha = compute_dasha(
@@ -1281,9 +1296,13 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
     )
     is_night = _is_night_birth(chart)
 
-    # Lunar date approximation from bazi
-    lunar_year_pillar = bazi["year_pillar"]
-    lunar_month_branch = EARTHLY_BRANCHES[bazi["month_branch"]]
+    # Lunar date using sxtwl for accurate 干支起盤 & 農曆
+    lunar_info = get_lunar_date_info(chart.year, chart.month, chart.day)
+    lunar_str = lunar_info.get("lunar_str", bazi["year_pillar"] + "年")
+    # also show (月柱 日柱) as in traditional qizheng style
+    extra_pillar = ""
+    if lunar_info.get("month_pillar") and lunar_info.get("day_pillar"):
+        extra_pillar = f" ({lunar_info['month_pillar']}月 {lunar_info['day_pillar']}日)"
     hour_branch_name = EARTHLY_BRANCHES[chart.hour_branch]
     night_day = "夜" if is_night else "晝"
     gender_label = "男命" if chart.gender == "male" else "女命"
@@ -1296,7 +1315,7 @@ def render_chart_info_panel(chart: ChartData, transit: TransitData | None = None
     with tab_base:
         st.markdown("#### 本命信息")
         st.markdown(
-            f"- **農曆：** {lunar_year_pillar}年 · {hour_branch_name}時（{night_day}）\n"
+            f"- **農曆：** {lunar_str}{extra_pillar} · {hour_branch_name}時（{night_day}）\n"
             f"- **生日：** {chart.year}-{chart.month:02d}-{chart.day:02d} "
             f"{chart.hour:02d}:{chart.minute:02d}:00\n"
             f"- **時區：** UTC{chart.timezone:+.1f}\n"

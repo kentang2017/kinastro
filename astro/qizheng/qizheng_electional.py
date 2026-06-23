@@ -6,6 +6,12 @@ Date selection based on heavenly stems/branches and divine stars.
 import swisseph as swe
 from dataclasses import dataclass, field
 
+try:
+    from sxtwl import fromSolar as _fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
+
 HEAVENLY_STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 WEEKDAY_CN = ["一", "二", "三", "四", "五", "六", "日"]
@@ -40,8 +46,17 @@ class ElectionalResult:
     best_date: str = ""
 
 
-def _day_stem_branch(jd):
-    ref_jd = 2451911.0  # 2001-01-07 is 甲子 day
+def _day_stem_branch(jd, y=None, m=None, d=None):
+    """精確日干支。優先用 sxtwl。"""
+    if _HAS_SXTWL and y is not None and m is not None and d is not None:
+        try:
+            c = _fromSolar(int(y), int(m), int(d))
+            g = c.getDayGZ()
+            return g.tg, g.dz
+        except Exception:
+            pass
+    # legacy jd approx
+    ref_jd = 2451911.0
     day_num = int(jd + 0.5) - int(ref_jd + 0.5)
     stem = day_num % 10
     branch = day_num % 12
@@ -62,9 +77,10 @@ def find_auspicious_dates(start_year, start_month, start_day,
 
     for d in range(max_days):
         jd = start_jd + d
-        stem_idx, branch_idx = _day_stem_branch(jd)
         y, m, day, h = swe.revjul(jd + timezone / 24.0)
-        date_str = f"{int(y):04d}-{int(m):02d}-{int(day):02d}"
+        y, m, day = int(y), int(m), int(day)
+        date_str = f"{y:04d}-{m:02d}-{day:02d}"
+        stem_idx, branch_idx = _day_stem_branch(jd, y, m, day)
         wd_idx = int(jd + 1.5) % 7
         weekday = f"週{WEEKDAY_CN[wd_idx]}"
         sb = HEAVENLY_STEMS[stem_idx] + EARTHLY_BRANCHES[branch_idx]

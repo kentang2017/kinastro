@@ -154,12 +154,16 @@ def compute_shensha_cached(
     hour_branch: str,
     timezone: float,
     ming_gong_branch: str,
+    birth_year: int | None = None,
+    birth_month: int | None = None,
+    birth_day: int | None = None,
 ):
     from astro.qizheng.shensha import compute_shensha as _fn
     _ = chart_key
     return _fn(
         year=year, solar_month=solar_month, julian_day=julian_day,
         hour_branch=hour_branch, timezone=timezone, ming_gong_branch=ming_gong_branch,
+        birth_year=birth_year, birth_month=birth_month, birth_day=birth_day,
     )
 
 

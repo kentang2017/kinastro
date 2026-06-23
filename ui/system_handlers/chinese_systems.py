@@ -157,6 +157,9 @@ def render_tab_chinese() -> None:
                     hour_branch=chart.hour_branch,
                     timezone=chart.timezone,
                     ming_gong_branch=chart.ming_gong_branch,
+                    birth_year=chart.year,
+                    birth_month=chart.month,
+                    birth_day=chart.day,
                 )
                 render_shensha(chart, _shensha)
 
