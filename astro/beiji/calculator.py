@@ -114,10 +114,11 @@ def get_year_ganzhi(year: int) -> tuple[str, str]:
     """
     try:
         from sxtwl import fromSolar
-        # sxtwl 以農曆年干支為準；以1月1日對應年份取得大致干支
-        day = fromSolar(year, 6, 1)  # 取6月1日避免年初歲末邊界問題
-        stem = TIANGAN[day.getLunarYear(False).tg]
-        branch = DIZHI[day.getLunarYear(False).dz]
+        # 使用 getYearGZ(False) 以立春為準（與 bazi 等一致）
+        d = fromSolar(year, 6, 1)
+        ygz = d.getYearGZ(False)
+        stem = TIANGAN[ygz.tg]
+        branch = DIZHI[ygz.dz]
         return stem, branch
     except Exception:
         pass

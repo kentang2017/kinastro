@@ -18,6 +18,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Optional, Tuple
 
+try:
+    from sxtwl import fromSolar as _fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
+
 from astro.shaozi.constants import (
     HEAVENLY_STEMS,
     EARTHLY_BRANCHES,
@@ -162,44 +168,55 @@ class ShaoziTiaowenDatabase:
 # 干支計算工具
 # ============================================================================
 
-def _year_ganzhi(year: int) -> str:
-    """從西元年份計算年柱干支（以甲子 1984 為基準）"""
-    base = 1984  # 甲子年
+def _year_ganzhi(year: int, month: int = 7, day: int = 1) -> str:
+    """sxtwl 精確年柱（立春）。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(year, month, day)
+            y = c.getYearGZ(False)
+            return HEAVENLY_STEMS[y.tg] + EARTHLY_BRANCHES[y.dz]
+        except Exception:
+            pass
+    base = 1984
     stem_idx = (year - base) % 10
     branch_idx = (year - base) % 12
     return HEAVENLY_STEMS[stem_idx] + EARTHLY_BRANCHES[branch_idx]
 
 
-def _month_ganzhi(year: int, month: int) -> str:
-    """
-    計算月柱干支（簡化版，以節氣月份為準）
-    月支：寅(2月) 卯(3月) … 丑(1月)  index = month % 12
-    月干：由年干推算，甲己年從丙寅起
-    """
+def _month_ganzhi(year: int, month: int, day: int = 15) -> str:
+    """sxtwl 精確月柱。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(year, month, day)
+            m = c.getMonthGZ()
+            return HEAVENLY_STEMS[m.tg] + EARTHLY_BRANCHES[m.dz]
+        except Exception:
+            pass
     year_stem_idx = (year - 1984) % 10
-    # 月干循環：甲己年→丙寅起 (stem_base=2)；每年差2
     stem_base = ((year_stem_idx % 5) * 2 + 2) % 10
-    # 月支：二月(2) → 寅(2), 三月(3) → 卯(3), …, 八月(8) → 申(8), …, 一月(1) → 丑(1)
     month_branch_idx = month % 12
     month_stem_idx = (stem_base + month - 2) % 10
     return HEAVENLY_STEMS[month_stem_idx] + EARTHLY_BRANCHES[month_branch_idx]
 
 
 def _day_ganzhi(year: int, month: int, day: int) -> str:
-    """
-    計算日柱干支（Julian Day Number 法）
-    參考點：2000-01-01 (JD=2451545) = 戊午日
-    """
+    """sxtwl 精確日柱。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(year, month, day)
+            d = c.getDayGZ()
+            return HEAVENLY_STEMS[d.tg] + EARTHLY_BRANCHES[d.dz]
+        except Exception:
+            pass
     if month <= 2:
         year -= 1
         month += 12
     a = year // 100
     b = 2 - a + a // 4
     jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + b - 1524
-    # 2451545 = 2000-01-01 = 戊午：stem 戊(4), branch 午(6)
     ref_jd = 2451545
-    ref_stem = 4    # 戊
-    ref_branch = 6  # 午
+    ref_stem = 4
+    ref_branch = 6
     delta = jd - ref_jd
     stem_idx = (ref_stem + delta) % 10
     branch_idx = (ref_branch + delta) % 12
@@ -220,8 +237,8 @@ def _hour_ganzhi(day_stem: str, hour: int) -> str:
 
 def calculate_ganzhi_from_datetime(birth_dt: datetime) -> Dict[str, str]:
     """從西曆日期時間計算四柱干支"""
-    year_gz = _year_ganzhi(birth_dt.year)
-    month_gz = _month_ganzhi(birth_dt.year, birth_dt.month)
+    year_gz = _year_ganzhi(birth_dt.year, birth_dt.month, birth_dt.day)
+    month_gz = _month_ganzhi(birth_dt.year, birth_dt.month, birth_dt.day)
     day_gz = _day_ganzhi(birth_dt.year, birth_dt.month, birth_dt.day)
     hour_gz = _hour_ganzhi(day_gz[0], birth_dt.hour)
     return {

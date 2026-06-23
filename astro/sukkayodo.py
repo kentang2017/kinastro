@@ -10,6 +10,12 @@ import math
 
 import streamlit as st
 
+try:
+    from sxtwl import fromSolar as _fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
+
 # 七曜名稱索引對照 (lord index → name string)
 GRAHA_NAMES_BY_INDEX = [
     "Ketu", "Venus", "Sun", "Moon", "Mars",
@@ -255,7 +261,18 @@ def render_sukkayodo_chart(chart, after_chart_hook=None):
     st.markdown("\n".join(rows), unsafe_allow_html=True)
 
     # 三九秘宿法面板
-    sansanju_result = _get_sansanju_table(chart.month, chart.day)
+    # 優先用 sxtwl 農曆月做三九表起盤（更貼近傳統）
+    sm = chart.month
+    sd = chart.day
+    if _HAS_SXTWL:
+        try:
+            cc = _fromSolar(getattr(chart, 'year', 2000), chart.month, chart.day)
+            lm = abs(cc.getLunarMonth())
+            if 1 <= lm <= 12:
+                sm = lm
+        except Exception:
+            pass
+    sansanju_result = _get_sansanju_table(sm, sd)
     _render_sansanju_panel(chart, sansanju_result)
 
 
@@ -798,9 +815,17 @@ def _render_sansanju_panel(chart, result):
     """渲染三九秘宿法面板"""
     st.markdown("### 三九秘宿法")
 
-    # 基本說明
+    # 基本說明 (使用 sxtwl 農曆月若可用，符合干支/農曆起盤精神)
     birth_month = chart.month
     birth_day = chart.day
+    if _HAS_SXTWL:
+        try:
+            cc = _fromSolar(getattr(chart, "year", 2000), chart.month, chart.day)
+            lm = abs(cc.getLunarMonth())
+            if 1 <= lm <= 12:
+                birth_month = lm
+        except Exception:
+            pass
 
     mansions_27 = []
     start_27 = SANSANJU_MONTH_STARTS[birth_month - 1]

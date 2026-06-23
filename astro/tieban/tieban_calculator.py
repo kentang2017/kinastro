@@ -87,13 +87,18 @@ class Ganzhi:
         )
     
     @staticmethod
-    def from_year(year: int) -> 'Ganzhi':
-        """從西元年份計算年柱"""
-        # 1984 年為甲子年
-        base_year = 1984
-        stem_idx = (year - base_year) % 10
-        branch_idx = (year - base_year) % 12
-        return Ganzhi(HEAVENLY_STEMS[stem_idx], EARTHLY_BRANCHES[branch_idx])
+    def from_year(year: int, month: int = 7, day: int = 1) -> 'Ganzhi':
+        """從西元年份計算年柱 (sxtwl 優先)"""
+        try:
+            from sxtwl import fromSolar
+            c = fromSolar(year, month, day)
+            y = c.getYearGZ(False)
+            return Ganzhi(HEAVENLY_STEMS[y.tg], EARTHLY_BRANCHES[y.dz])
+        except Exception:
+            base_year = 1984
+            stem_idx = (year - base_year) % 10
+            branch_idx = (year - base_year) % 12
+            return Ganzhi(HEAVENLY_STEMS[stem_idx], EARTHLY_BRANCHES[branch_idx])
 
 
 @dataclass
@@ -1559,16 +1564,21 @@ class TieBanShenShu:
         完整版需結合節氣精確計算月柱、時柱
         此處為簡化實現
         """
-        year_gz = Ganzhi.from_year(birth_dt.year)
+        year_gz = Ganzhi.from_year(birth_dt.year, birth_dt.month, birth_dt.day)
         
-        # 月柱簡化（實際需按節氣）
-        month_idx = (birth_dt.month - 1) % 12
-        month_stem_idx = (year_gz.stem_index * 2 + birth_dt.month) % 10
-        month_gz = Ganzhi(HEAVENLY_STEMS[month_stem_idx], EARTHLY_BRANCHES[month_idx])
-        
-        # 日柱（實際需查萬年曆或天文計算）
-        # 此處簡化示例
-        day_gz = Ganzhi('戊', '辰')  # 示例
+        # 月柱、日柱使用 sxtwl
+        try:
+            from sxtwl import fromSolar
+            c = fromSolar(birth_dt.year, birth_dt.month, birth_dt.day)
+            mg = c.getMonthGZ()
+            dg = c.getDayGZ()
+            month_gz = Ganzhi(HEAVENLY_STEMS[mg.tg], EARTHLY_BRANCHES[mg.dz])
+            day_gz = Ganzhi(HEAVENLY_STEMS[dg.tg], EARTHLY_BRANCHES[dg.dz])
+        except Exception:
+            month_idx = (birth_dt.month - 1) % 12
+            month_stem_idx = (year_gz.stem_index * 2 + birth_dt.month) % 10
+            month_gz = Ganzhi(HEAVENLY_STEMS[month_stem_idx], EARTHLY_BRANCHES[month_idx])
+            day_gz = Ganzhi('戊', '辰')  # fallback 示例
         
         # 時柱
         hour_idx = birth_dt.hour // 2

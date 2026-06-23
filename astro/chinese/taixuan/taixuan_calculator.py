@@ -17,6 +17,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional, Dict, List, Tuple
 
+try:
+    from sxtwl import fromSolar as _fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
+
 # ── 載入太玄字典 ────────────────────────────────────────────
 try:
     from taixuanshifa.taixuanshifa import qigua as _taixuan_qigua, qigua_number as _taixuan_qigua_number
@@ -151,30 +157,48 @@ def _hour_to_sishi(hour: int) -> str:
         return "夜中"
 
 
-def _ganzhi_year(year: int) -> Tuple[str, str]:
-    """計算某年的天干地支"""
+def _ganzhi_year(year: int, month: int = 7, day: int = 1) -> Tuple[str, str]:
+    """使用 sxtwl 計算年干支（立春分界）。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(year, month, day)
+            y = c.getYearGZ(False)
+            return TIANGAN[y.tg], DIZHI[y.dz]
+        except Exception:
+            pass
     tg_idx = (year - 4) % 10
     dz_idx = (year - 4) % 12
     return TIANGAN[tg_idx], DIZHI[dz_idx]
 
 
-def _ganzhi_month(year: int, month: int) -> Tuple[str, str]:
-    """計算農曆月的天干地支（簡化節氣法）"""
-    # 地支：寅月對應 calendar month 2，申月對應 calendar month 8，以此類推
-    dz_idx = month % 12
-    # 月干取決於年干；五虎遁年起月法：甲/己年起丙寅，乙/庚年起戊寅，以此類推
+def _ganzhi_month(year: int, month: int, day: int = 15) -> Tuple[str, str]:
+    """使用 sxtwl 計算月干支（節氣）。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(year, month, day)
+            m = c.getMonthGZ()
+            return TIANGAN[m.tg], DIZHI[m.dz]
+        except Exception:
+            pass
+    # fallback approx
+    dz_idx = (month + 1) % 12   # rough
     year_tg_idx = (year - 4) % 10
-    tg_base = ((year_tg_idx % 5) * 2 + 2) % 10  # 寅月干支起始天干
-    month_idx = (month - 2) % 12               # 距寅月的月數（0-based）
-    tg_idx = (tg_base + month_idx) % 10
+    tg_base = ((year_tg_idx % 5) * 2 + 2) % 10
+    tg_idx = (tg_base + (month - 2) % 12) % 10
     return TIANGAN[tg_idx], DIZHI[dz_idx]
 
 
 def _ganzhi_day(year: int, month: int, day: int) -> Tuple[str, str]:
-    """計算日柱天干地支"""
+    """使用 sxtwl 計算日干支。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(year, month, day)
+            d = c.getDayGZ()
+            return TIANGAN[d.tg], DIZHI[d.dz]
+        except Exception:
+            pass
+    # old jd fallback
     jd = _julian_day(year, month, day)
-    # _julian_day 回傳的儒略日以正午為起點，午夜值帶 .5 小數；
-    # 加 0.5 後取整可得整數儒略日（以午夜為基準）。
     idx = int(jd + 0.5) + 49
     tg_idx = idx % 10
     dz_idx = idx % 12
@@ -353,8 +377,8 @@ class TaiXuanCalculator:
         # 7. 取首資料（含星宿度數）
         shou = self._build_shou(serial, sishi, zhan_idx, days_precise)
         # 8. 干支四柱
-        year_tg, year_dz = _ganzhi_year(self.year)
-        month_tg, month_dz = _ganzhi_month(self.year, self.month)
+        year_tg, year_dz = _ganzhi_year(self.year, self.month, self.day)
+        month_tg, month_dz = _ganzhi_month(self.year, self.month, self.day)
         day_tg, day_dz = _ganzhi_day(self.year, self.month, self.day)
         hour_tg, hour_dz = _ganzhi_hour(self.hour, day_tg)
         # 9. 行年大限（未來 81 年，每 4.5 年一首）
@@ -503,7 +527,7 @@ class TaiXuanCalculator:
             if key and key in _TAIXUAN_DICT:
                 gua_dict = _TAIXUAN_DICT[key].get("卦", {})
                 gua_title = next(iter(gua_dict.keys()), "——")
-            year_tg, year_dz = _ganzhi_year(year)
+            year_tg, year_dz = _ganzhi_year(year, month, day)
             result.append({
                 "年份": year,
                 "年齡": offset,

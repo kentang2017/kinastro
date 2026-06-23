@@ -293,9 +293,14 @@ class WanHuaXianQin:
         """
         return ((hour + 1) // 2) % 12
 
-    def get_branch_idx(self, year: int) -> int:
-        """年支索引（子=0）"""
-        return (year - 4) % 12
+    def get_branch_idx(self, year: int, month: int = 7, day: int = 1) -> int:
+        """年支索引（子=0），優先 sxtwl。"""
+        try:
+            from sxtwl import fromSolar
+            c = fromSolar(year, month, day)
+            return c.getYearGZ(False).dz
+        except Exception:
+            return (year - 4) % 12
 
     def get_host_idx(self, qin: str) -> int:
         """取禽對應的宿序號（0-27）"""
@@ -346,7 +351,7 @@ class WanHuaXianQin:
         Returns:
             胎宮地支索引 0=子 … 11=亥
         """
-        branch_idx = self.get_branch_idx(year)
+        branch_idx = self.get_branch_idx(year, month, day)
         pos = branch_idx
         pos = (pos + month - 1) % 12
         pos = (pos + day - 1) % 12

@@ -427,25 +427,23 @@ def _build_jiazi_cycle():
 
 JIAZI_CYCLE = _build_jiazi_cycle()
 
-def get_ganzhi(year: int) -> tuple:
+def get_ganzhi(year: int, month: int = 7, day: int = 1) -> tuple:
     """
-    從西曆年份取得干支年
-
-    參數：
-        year (int): 西曆年份（如2024）
-
-    回傳：
-        (str, str, str): (天干, 地支, 干支組合) 如 ("甲", "子", "甲子")
-
-    算法：
-        甲子年 = 公元4年（甲子紀年基準）
+    使用 sxtwl 精確取得干支年（立春分界）。
+    """
+    try:
+        from sxtwl import fromSolar
+        c = fromSolar(year, month, day)
+        y = c.getYearGZ(False)
+        tg = TIANGAN[y.tg]
+        dz = DIZHI[y.dz]
+        return tg, dz, tg + dz
+    except Exception:
         offset = (year - 4) % 60
-    """
-    offset = (year - 4) % 60
-    gz = JIAZI_CYCLE[offset]
-    tg = gz[0]
-    dz = gz[1]
-    return tg, dz, gz
+        gz = JIAZI_CYCLE[offset]
+        tg = gz[0]
+        dz = gz[1]
+        return tg, dz, gz
 
 # ============================================================
 # 五步運氣節氣邊界（精確近似值，以天為單位，從大寒起計）

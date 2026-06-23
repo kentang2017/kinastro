@@ -15,6 +15,12 @@ import math
 
 import swisseph as swe
 import streamlit as st
+
+try:
+    from sxtwl import fromSolar as _fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
 from dataclasses import dataclass, field
 
 from astro.ziwei_vietnamese import (
@@ -699,19 +705,25 @@ def _solar_to_lunar(jd: float) -> tuple[int, int, int, bool]:
     return lunar_year, month, lunar_day, is_leap
 
 
-def _get_year_stem(lunar_year: int) -> int:
-    """
-    取得農曆年的天干索引（甲=0, 乙=1, ..., 癸=9）。
-    公式：(year - 4) % 10
-    """
+def _get_year_stem(lunar_year: int, month: int = 7, day: int = 1) -> int:
+    """使用 sxtwl 取得準確年干（立春分界）。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(lunar_year, month, day)
+            return c.getYearGZ(False).tg
+        except Exception:
+            pass
     return (lunar_year - 4) % 10
 
 
-def _get_year_branch(lunar_year: int) -> int:
-    """
-    取得農曆年的地支索引（子=0, 丑=1, ..., 亥=11）。
-    公式：(year - 4) % 12
-    """
+def _get_year_branch(lunar_year: int, month: int = 7, day: int = 1) -> int:
+    """使用 sxtwl 取得準確年支。"""
+    if _HAS_SXTWL:
+        try:
+            c = _fromSolar(lunar_year, month, day)
+            return c.getYearGZ(False).dz
+        except Exception:
+            pass
     return (lunar_year - 4) % 12
 
 
@@ -1085,9 +1097,9 @@ def compute_ziwei_chart(
     # 時辰地支
     hour_branch = _get_hour_branch(hour, minute)
 
-    # 農曆年天干地支
-    year_stem = _get_year_stem(lunar_year)
-    year_branch = _get_year_branch(lunar_year)
+    # 農曆年天干地支 (sxtwl 精確，使用出生公曆日期取得對應年柱)
+    year_stem = _get_year_stem(year, month, day)
+    year_branch = _get_year_branch(year, month, day)
 
     # 命宮 / 身宮
     ming_gong_branch = _get_ming_gong_branch(lunar_month, hour_branch)

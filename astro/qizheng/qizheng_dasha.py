@@ -147,9 +147,15 @@ def compute_dasha(
             current_period_idx = idx
             break
 
-    # 計算流年 (flow year)：
-    # 流年地支 = 流年太歲地支 = (year - 4) % 12
-    flow_year_branch = (current_year - 4) % 12 if current_year else -1
+    # 計算流年 (flow year)：使用 sxtwl 精確年支
+    flow_year_branch = -1
+    if current_year:
+        try:
+            from sxtwl import fromSolar
+            c = fromSolar(current_year, 7, 1)
+            flow_year_branch = c.getYearGZ(False).dz
+        except Exception:
+            flow_year_branch = (current_year - 4) % 12
     flow_year_palace = ""
     if flow_year_branch >= 0:
         fh = branch_to_house.get(flow_year_branch)

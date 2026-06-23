@@ -62,112 +62,50 @@ def load_patterns_data() -> Dict[str, Any]:
 def get_gangzhi(year: int, month: int, day: int, hour: int) -> Dict[str, str]:
     """
     取得年月日時干支
-    使用 sxtwl 計算，月柱按節氣推算（五虎遁）
+    強制使用 sxtwl 精確計算（立春分年、節氣分月）。
+    時柱使用五鼠遁。
     """
-    try:
-        import sxtwl
-        d = sxtwl.fromSolar(year, month, day)
-        
-        # 年柱
-        year_gz_obj = d.getYearGZ()
-        year_gz = TIANGAN[year_gz_obj.tg] + DIZHI[year_gz_obj.dz]
-        year_tg = year_gz_obj.tg
-        
-        # 日柱
-        day_gz_obj = d.getDayGZ()
-        day_gz = TIANGAN[day_gz_obj.tg] + DIZHI[day_gz_obj.dz]
-        day_tg = day_gz_obj.tg
-        
-        # 月柱：根據公曆日期判斷節氣月（地支），再用五虎遁求月干
-        # 節氣對應（近似日期）：寅月 (2/4 立春)、卯月 (3/6 驚蟄)、辰月 (4/5 清明)、巳月 (5/6 立夏)
-        #                      午月 (6/6 芒種)、未月 (7/7 小暑)、申月 (8/8 立秋)、酉月 (9/8 白露)
-        #                      戌月 (10/8 寒露)、亥月 (11/7 立冬)、子月 (12/7 大雪)、丑月 (1/6 小寒)
-        # 節氣月以「節」為界，例如 8/8 立秋後為申月
-        
-        # 判斷當前屬於哪個節氣月（從最後一個節氣開始往前找）
-        # 1985 年 8 月 26 日：在 8/8 立秋之後，9/8 白露之前 → 申月 (索引 8)
-        if month < 2 or (month == 2 and day < 4):
-            month_zhi_idx = 1  # 丑月 (1 月小寒前)
-        elif month < 3 or (month == 3 and day < 6):
-            month_zhi_idx = 2  # 寅月 (立春)
-        elif month < 4 or (month == 4 and day < 5):
-            month_zhi_idx = 3  # 卯月 (驚蟄)
-        elif month < 5 or (month == 5 and day < 6):
-            month_zhi_idx = 4  # 辰月 (清明)
-        elif month < 6 or (month == 6 and day < 6):
-            month_zhi_idx = 5  # 巳月 (立夏)
-        elif month < 7 or (month == 7 and day < 7):
-            month_zhi_idx = 6  # 午月 (芒種)
-        elif month < 8 or (month == 8 and day < 8):
-            month_zhi_idx = 7  # 未月 (小暑)
-        elif month < 9 or (month == 9 and day < 8):
-            month_zhi_idx = 8  # 申月 (立秋)
-        elif month < 10 or (month == 10 and day < 8):
-            month_zhi_idx = 9  # 酉月 (白露)
-        elif month < 11 or (month == 11 and day < 7):
-            month_zhi_idx = 10  # 戌月 (寒露)
-        elif month < 12 or (month == 12 and day < 7):
-            month_zhi_idx = 11  # 亥月 (立冬)
-        else:
-            month_zhi_idx = 0  # 子月 (大雪)
-        
-        # 五虎遁：甲己之年丙作首，乙庚之歲戊為頭，丙辛之年尋庚上，丁壬壬寅順水流，戊癸之年甲寅起
-        if year_tg in (0, 5):  # 甲己
-            month_tg_start = 2  # 丙寅
-        elif year_tg in (1, 6):  # 乙庚
-            month_tg_start = 4  # 戊寅
-        elif year_tg in (2, 7):  # 丙辛
-            month_tg_start = 6  # 庚寅
-        elif year_tg in (3, 8):  # 丁壬
-            month_tg_start = 8  # 壬寅
-        else:  # 戊癸 (4, 9)
-            month_tg_start = 0  # 甲寅
-        
-        # 從寅月 (索引 2) 開始數，月干 = (起始干 + 月支 - 2) % 10
-        month_tg = (month_tg_start + month_zhi_idx - 2) % 10
-        month_gz = TIANGAN[month_tg] + DIZHI[month_zhi_idx]
-        
-        # 時干支（五鼠遁：根據日干推算時干）
-        # 甲己還加甲，乙庚丙作初，丙辛從戊起，丁壬庚子居，戊癸何方發，壬子是真途
-        hour_zhi_idx = (hour + 1) // 2 % 12
-        if day_tg in (0, 5):  # 甲己
-            hour_tg_start = 0  # 甲子
-        elif day_tg in (1, 6):  # 乙庚
-            hour_tg_start = 2  # 丙子
-        elif day_tg in (2, 7):  # 丙辛
-            hour_tg_start = 4  # 戊子
-        elif day_tg in (3, 8):  # 丁壬
-            hour_tg_start = 6  # 庚子
-        else:  # 戊癸 (4, 9)
-            hour_tg_start = 8  # 壬子
-        
-        hour_tg = (hour_tg_start + hour_zhi_idx) % 10
-        hour_gz = TIANGAN[hour_tg] + DIZHI[hour_zhi_idx]
-        
-        return {
-            "year_gz": year_gz,
-            "month_gz": month_gz,
-            "day_gz": day_gz,
-            "hour_gz": hour_gz
-        }
-    except Exception as e:
-        # 簡化版本（粗略估算）
-        year_gz = TIANGAN[(year - 4) % 10] + DIZHI[(year - 4) % 12]
-        # 月干支（粗略，實際需考慮節氣）
-        month_gan_idx = ((year % 10) * 2 + (month - 1)) % 10
-        month_gz = TIANGAN[month_gan_idx] + DIZHI[month - 1 + 2]  # 寅月為正月
-        # 日干支（需要曆法計算，此處簡化）
-        day_gz = TIANGAN[day % 10] + DIZHI[day % 12]
-        # 時干支
-        hour_gan_idx = ((day % 10) * 2 + hour // 2) % 10
-        hour_gz = TIANGAN[hour_gan_idx] + DIZHI[hour // 2 + 1]
-        
-        return {
-            "year_gz": year_gz,
-            "month_gz": month_gz,
-            "day_gz": day_gz,
-            "hour_gz": hour_gz
-        }
+    import sxtwl
+    d = sxtwl.fromSolar(year, month, day)
+
+    # 年柱：使用 False 以立春為歲首（與 bazi / 七政四餘 一致）
+    year_gz_obj = d.getYearGZ(False)
+    year_gz = TIANGAN[year_gz_obj.tg] + DIZHI[year_gz_obj.dz]
+    year_tg = year_gz_obj.tg
+
+    # 月柱：sxtwl 直接給正確節氣月干支
+    month_gz_obj = d.getMonthGZ()
+    month_gz = TIANGAN[month_gz_obj.tg] + DIZHI[month_gz_obj.dz]
+
+    # 日柱
+    day_gz_obj = d.getDayGZ()
+    day_gz = TIANGAN[day_gz_obj.tg] + DIZHI[day_gz_obj.dz]
+    day_tg = day_gz_obj.tg
+
+    # 時干支（五鼠遁：根據日干推算時干）
+    hour_zhi_idx = (hour + 1) // 2 % 12
+    if day_tg in (0, 5):  # 甲己
+        hour_tg_start = 0  # 甲子
+    elif day_tg in (1, 6):  # 乙庚
+        hour_tg_start = 2  # 丙子
+    elif day_tg in (2, 7):  # 丙辛
+        hour_tg_start = 4  # 戊子
+    elif day_tg in (3, 8):  # 丁壬
+        hour_tg_start = 6  # 庚子
+    else:  # 戊癸 (4, 9)
+        hour_tg_start = 8  # 壬子
+
+    hour_tg = (hour_tg_start + hour_zhi_idx) % 10
+    hour_gz = TIANGAN[hour_tg] + DIZHI[hour_zhi_idx]
+
+    return {
+        "year_gz": year_gz,
+        "month_gz": month_gz,
+        "day_gz": day_gz,
+        "hour_gz": hour_gz,
+        "year_tg_idx": year_tg,
+        "day_tg_idx": day_tg,
+    }
 
 
 def get_preheaven_number(gz: str) -> int:

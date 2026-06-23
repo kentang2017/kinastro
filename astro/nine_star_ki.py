@@ -26,6 +26,12 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Optional
 
+try:
+    from sxtwl import fromSolar as _sxtwl_fromSolar
+    _HAS_SXTWL = True
+except Exception:
+    _HAS_SXTWL = False
+
 # ============================================================
 # 九星定義 (Nine Star Definitions)
 # ============================================================
@@ -191,22 +197,19 @@ def _fly_star_ccw(start: int, steps: int) -> int:
 # ============================================================
 
 def _li_chun_date(year: int) -> date:
-    """Approximate Li Chun (立春) date for *year*.
-
-    Li Chun falls on Feb 3, 4, or 5 each year. The exact date shifts
-    slightly due to the tropical year. This approximation uses a simple
-    formula that is accurate within ±1 day for 1901–2100.
-    """
-    # Standard approximation: Feb 4 or 5 depending on the year's position
-    # in the 4-year cycle (leap year offsets)
-    # More precise: JDE ≈ 2451623.80984 + 365.242189623 * (Y - 2000 + 0/12)
-    # For Li Chun (315° ecliptic lon), offset from Spring equinox ~ -44.7 days
-    # Simple empirical formula (accurate to ±1 day 1901-2100):
-    #   day = int(4.6295 + 0.2422 * (year - 1900) - int((year - 1900) / 4))
-    # But we clamp to [3, 5] and use Feb 4 as default fallback.
+    """Li Chun (立春) date. Uses sxtwl for precision when available."""
+    if _HAS_SXTWL:
+        try:
+            for dtry in range(3, 6):
+                dd = _sxtwl_fromSolar(year, 2, dtry)
+                if dd.hasJieQi() and dd.getJieQi() == 3:  # 立春
+                    return date(year, 2, dtry)
+            # If not exact match in scan, fall to sxtwl-based effective year logic later
+        except Exception:
+            pass
+    # Fallback approx (good enough)
     offset = 4.6295 + 0.2422 * (year - 1900) - (year - 1900) // 4
-    day = int(offset)
-    day = max(3, min(5, day))
+    day = max(3, min(5, int(offset)))
     return date(year, 2, day)
 
 
@@ -266,28 +269,35 @@ _SOLAR_TERM_STARTS: list[tuple[int, int]] = [
 
 
 def _solar_month_index(d: date) -> int:
-    """Return the solar month index (0–11) for date *d*.
+    """Return the solar month index (0–11) for date *d* using sxtwl when available.
 
-    Index 0 = 寅月 (starts ~Feb 4, Li Chun).
-    Index 11 = 丑月 (starts ~Jan 6).
+    Index 0 = 寅月 (立春), matches getMonthGZ().dz convention in project.
     """
-    # Try matching from month 11 (January) down to find the current 節
-    # We need to find which solar month the date falls in.
-    # Build a list of (date, index) for the current and surrounding years
+    if _HAS_SXTWL:
+        try:
+            c = _sxtwl_fromSolar(d.year, d.month, d.day)
+            mgz = c.getMonthGZ()
+            # dz: 0=子 ... but project solar month often 寅=2 mapped. 
+            # For nine star, the _YEAR... expects index aligned to their list.
+            # Their list _SOLAR_TERM_STARTS[0] = 寅 (Feb)
+            # sxtwl month branch: 寅 usually dz=2
+            # Map: common in bazi month_gz.dz 寅=2 -> our solar 0
+            dz = mgz.dz
+            # 寅=2 -> 0, 卯=3->1, ..., 丑=1 ->11
+            return (dz - 2) % 12
+        except Exception:
+            pass
+    # Fallback to old approx logic
     year = d.year
     boundaries = []
     for idx, (m, day) in enumerate(_SOLAR_TERM_STARTS):
         if m == 1:
-            # 丑月 starts in January — belongs to the current year's cycle
             boundaries.append((date(year, 1, day), idx))
         else:
             boundaries.append((date(year, m, day), idx))
-        # Also add previous year's December (子月) boundary
-    # Add next year January too
     boundaries.append((date(year + 1, 1, _SOLAR_TERM_STARTS[11][1]), 11))
-    # Sort and find the latest boundary ≤ d
     boundaries.sort()
-    result = 11  # default 丑月
+    result = 11
     for bd, idx in boundaries:
         if d >= bd:
             result = idx
