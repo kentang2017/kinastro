@@ -12,6 +12,7 @@ from ui.handlers.tab_kaiyuan.render import (
     _collect_live_omens,
     _compute_live_observations,
     _has_live_chart_params,
+    _load_five_planet_data,
 )
 
 
@@ -165,3 +166,12 @@ def test_collect_live_omens_reads_planet_and_moon_entries() -> None:
     assert rows[0]["omen"] == {"開元占經": "月犯角，主朝廷有憂。"}
     assert rows[1]["label"] == "歲星（木）"
     assert rows[1]["omen"] == {"開元占經": "歲星入房，主德令行。"}
+
+
+def test_load_five_planet_data_uses_repo_kaiyuan_json_files() -> None:
+    _load_five_planet_data.cache_clear()
+
+    data = _load_five_planet_data()
+
+    assert "歲星（木）" in data
+    assert "房" in data["歲星（木）"]

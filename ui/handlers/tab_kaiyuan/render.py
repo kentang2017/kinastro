@@ -37,7 +37,22 @@ _SUBTITLE = "#6b5e4e"
 _BORDER = "#c4a882"
 _GOLD = "#b8860b"
 
-_DATA_DIR = pathlib.Path(__file__).parent
+_UI_DATA_DIR = pathlib.Path(__file__).resolve().parent
+_REPO_ROOT = _UI_DATA_DIR.parents[3]
+_DATA_DIR_CANDIDATES = (
+    _UI_DATA_DIR,
+    _REPO_ROOT / "astro" / "kaiyuan",
+)
+
+
+def _resolve_data_dir() -> pathlib.Path:
+    for candidate in _DATA_DIR_CANDIDATES:
+        if (candidate / "wood_star.json").exists():
+            return candidate
+    return _UI_DATA_DIR
+
+
+_DATA_DIR = _resolve_data_dir()
 
 
 @dataclass(frozen=True)
