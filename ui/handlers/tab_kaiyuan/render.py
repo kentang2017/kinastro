@@ -38,7 +38,7 @@ _BORDER = "#c4a882"
 _GOLD = "#b8860b"
 
 _UI_DATA_DIR = pathlib.Path(__file__).resolve().parent
-_REPO_ROOT = _UI_DATA_DIR.parents[3]
+_REPO_ROOT = _UI_DATA_DIR.parents[2]
 _DATA_DIR_CANDIDATES = (
     _UI_DATA_DIR,
     _REPO_ROOT / "astro" / "kaiyuan",
