@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import types
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -257,3 +258,99 @@ def test_price_forecast_profile_detects_sideways_regime(financial_modules):
     assert forecast["regime_zh"] == "橫行整理"
     assert any(price > 100.0 for price in prices)
     assert any(price < 100.0 for price in prices)
+
+
+def test_stock_wheel_svg_uses_natal_chart_style(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    planets = [
+        SimpleNamespace(name="太陽", longitude=15.0, sign_degree=15.0, retrograde=False),
+        SimpleNamespace(name="太陰", longitude=18.0, sign_degree=18.0, retrograde=False),
+        SimpleNamespace(name="木星", longitude=120.0, sign_degree=0.0, retrograde=True),
+        SimpleNamespace(name="土星", longitude=195.0, sign_degree=15.0, retrograde=False),
+    ]
+
+    svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="AAPL 上市盤 / IPO Chart")
+    legend = stock_renderer._build_stock_wheel_legend_html(planets)
+
+    assert svg.startswith("<svg")
+    assert "IPO Birth Wheel" in svg
+    assert "十一曜黃道分佈" in svg
+    assert "AAPL 上市盤 / IPO Chart" in svg
+    assert "白羊" in svg
+    assert 'filter="url(#stock-wheel-glow)"' in svg
+    assert ">日</text>" in svg
+    assert "木星 ℞" in svg
+    assert 'stroke="#F97316"' in svg
+    assert legend.count("border-radius:50%") == len(planets)
+
+
+def test_stock_wheel_svg_handles_wraparound_clusters(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    planets = [
+        SimpleNamespace(name="太陽", longitude=358.0, sign_degree=28.0, retrograde=False),
+        SimpleNamespace(name="太陰", longitude=2.0, sign_degree=2.0, retrograde=False),
+        SimpleNamespace(name="木星", longitude=120.0, sign_degree=0.0, retrograde=False),
+    ]
+
+    svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="Wraparound Cluster")
+    layout = stock_renderer._build_stock_wheel_layout(planets)
+    layout_by_name = {item["planet"].name: item for item in layout}
+
+    assert "Wraparound Cluster" in svg
+    assert "太陽" in svg
+    assert "太陰" in svg
+    assert svg.count('filter="url(#stock-wheel-glow)"') == len(planets)
+    assert layout_by_name["太陽"]["radius"] != layout_by_name["太陰"]["radius"]
+
+
+def test_stock_wheel_svg_escapes_title_and_planet_names(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    planets = [
+        SimpleNamespace(name="火<星>&", longitude=15.0, sign_degree=15.0, retrograde=False),
+        SimpleNamespace(name="木>星", longitude=120.0, sign_degree=0.0, retrograde=False),
+    ]
+
+    svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="A&B <IPO> Chart")
+    legend = stock_renderer._build_stock_wheel_legend_html(planets)
+
+    assert "A&amp;B &lt;IPO&gt; Chart" in svg
+    assert "火&lt;星&gt;&amp;" in svg
+    assert "木&gt;星" in svg
+    assert "#FB7185" in svg
+    assert "#FB7185" in legend
+    assert "火星" in legend
+
+
+def test_stock_wheel_aspect_selection_prefers_closest_match(financial_modules, monkeypatch):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    monkeypatch.setattr(stock_renderer, "_STOCK_WHEEL_ASPECTS", (
+        ("較遠相位", 8.0, 8.0, "#000000"),
+        ("較近相位", 5.0, 8.0, "#FFFFFF"),
+    ))
+
+    match = stock_renderer._stock_wheel_match_aspect(5.5)
+
+    assert match["aspect"] == "較近相位"
+    assert match["color"] == "#FFFFFF"
+
+
+def test_render_zodiac_wheel_shows_info_when_no_planets(financial_modules, monkeypatch):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    calls = {"info": [], "markdown": []}
+
+    monkeypatch.setattr(
+        stock_renderer,
+        "st",
+        SimpleNamespace(
+            info=lambda message: calls["info"].append(message),
+            markdown=lambda *args, **kwargs: calls["markdown"].append((args, kwargs)),
+        ),
+    )
+
+    stock_renderer._render_zodiac_wheel([], title="Empty Wheel")
+
+    assert calls["info"] == ["無星曜資料可繪製。 / No planetary positions available."]
+    assert calls["markdown"] == []
