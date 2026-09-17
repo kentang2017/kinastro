@@ -282,3 +282,20 @@ def test_stock_wheel_svg_uses_natal_chart_style(financial_modules):
     assert ">日</text>" in svg
     assert "木星 ℞" in svg
     assert legend.count("border-radius:50%") == len(planets)
+
+
+def test_stock_wheel_svg_handles_wraparound_clusters(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    planets = [
+        SimpleNamespace(name="太陽", longitude=358.0, sign_degree=28.0, retrograde=False),
+        SimpleNamespace(name="太陰", longitude=2.0, sign_degree=2.0, retrograde=False),
+        SimpleNamespace(name="木星", longitude=120.0, sign_degree=0.0, retrograde=False),
+    ]
+
+    svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="Wraparound Cluster")
+
+    assert "Wraparound Cluster" in svg
+    assert "太陽" in svg
+    assert "太陰" in svg
+    assert svg.count('filter="url(#stock-wheel-glow)"') == len(planets)

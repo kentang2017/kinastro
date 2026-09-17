@@ -103,6 +103,22 @@ def _safe_float(value: object) -> float:
         return 0.0
 
 
+def _stock_wheel_planet_color(name: str) -> str:
+    if name in ("木星", "紫氣", "太陽"):
+        return "#FFD166"
+    if name in ("火星", "計都", "月孛"):
+        return "#FB7185"
+    if name == "土星":
+        return "#94A3B8"
+    if name == "羅睺":
+        return "#C084FC"
+    return "#60A5FA"
+
+
+def _stock_wheel_planet_label(name: str) -> str:
+    return _STOCK_WHEEL_PLANET_LABELS.get(name, name[:1])
+
+
 # ============================================================
 # 主要渲染入口
 # ============================================================
@@ -535,20 +551,6 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             f"A {r_in:.1f},{r_in:.1f} 0 {large},0 {x2i:.1f},{y2i:.1f} Z"
         )
 
-    def _planet_color(name: str) -> str:
-        if name in ("木星", "紫氣", "太陽"):
-            return "#FFD166"
-        if name in ("火星", "計都", "月孛"):
-            return "#FB7185"
-        if name == "土星":
-            return "#94A3B8"
-        if name == "羅睺":
-            return "#C084FC"
-        return "#60A5FA"
-
-    def _planet_label(name: str) -> str:
-        return _STOCK_WHEEL_PLANET_LABELS.get(name, name[:1])
-
     def _cluster_planets(sorted_planets: list) -> list[list]:
         if not sorted_planets:
             return []
@@ -574,8 +576,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
                     deviation = abs(diff - angle)
                     if deviation <= orb:
                         lines.append({
-                            "planet1": p1.name,
-                            "planet2": p2.name,
+                            "planet1": p1,
+                            "planet2": p2,
                             "aspect": aspect_name,
                             "orb": deviation,
                             "color": color,
@@ -603,11 +605,11 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
                 "label_y": label_y,
                 "degree_x": degree_x,
                 "degree_y": degree_y,
-                "color": _planet_color(planet.name),
-                "label": _planet_label(planet.name),
+                "color": _stock_wheel_planet_color(planet.name),
+                "label": _stock_wheel_planet_label(planet.name),
             })
 
-    position_lookup = {item["planet"].name: item for item in positioned_planets}
+    position_lookup = {id(item["planet"]): item for item in positioned_planets}
     safe_title = escape(title or "IPO Birth Chart")
     svg = [
         f'<svg viewBox="0 0 {size} {size}" xmlns="http://www.w3.org/2000/svg" '
@@ -670,8 +672,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             )
 
     for aspect in _aspect_lines():
-        p1 = position_lookup.get(aspect["planet1"])
-        p2 = position_lookup.get(aspect["planet2"])
+        p1 = position_lookup.get(id(aspect["planet1"]))
+        p2 = position_lookup.get(id(aspect["planet2"]))
         if p1 is None or p2 is None:
             continue
         x1, y1 = polar(aspect_r, p1["angle"])
@@ -728,14 +730,8 @@ def _build_stock_wheel_legend_html(planets) -> str:
     """Render a compact legend for the stock zodiac wheel."""
     items = []
     for planet in planets:
-        label = _STOCK_WHEEL_PLANET_LABELS.get(planet.name, planet.name[:1])
-        color = (
-            "#FFD166" if planet.name in ("木星", "紫氣", "太陽")
-            else "#FB7185" if planet.name in ("火星", "計都", "月孛")
-            else "#94A3B8" if planet.name == "土星"
-            else "#C084FC" if planet.name == "羅睺"
-            else "#60A5FA"
-        )
+        label = _stock_wheel_planet_label(planet.name)
+        color = _stock_wheel_planet_color(planet.name)
         items.append(
             f'<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;'
             'border-radius:999px;background:rgba(255,255,255,0.04);'
