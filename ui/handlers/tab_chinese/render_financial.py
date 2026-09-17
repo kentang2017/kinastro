@@ -136,7 +136,8 @@ def _stock_wheel_planet_color(name: str) -> str:
 
 
 def _stock_wheel_planet_label(name: str) -> str:
-    return _STOCK_WHEEL_PLANET_LABELS.get(name, name[:1])
+    canonical_name = _stock_wheel_canonical_name(name)
+    return _STOCK_WHEEL_PLANET_LABELS.get(canonical_name, canonical_name[:1])
 
 
 def _stock_wheel_canonical_name(name: str) -> str:

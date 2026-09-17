@@ -281,6 +281,7 @@ def test_stock_wheel_svg_uses_natal_chart_style(financial_modules):
     assert 'filter="url(#stock-wheel-glow)"' in svg
     assert ">日</text>" in svg
     assert "木星 ℞" in svg
+    assert 'stroke="#F97316"' in svg
     assert legend.count("border-radius:50%") == len(planets)
 
 
