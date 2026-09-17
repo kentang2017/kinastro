@@ -299,3 +299,20 @@ def test_stock_wheel_svg_handles_wraparound_clusters(financial_modules):
     assert "太陽" in svg
     assert "太陰" in svg
     assert svg.count('filter="url(#stock-wheel-glow)"') == len(planets)
+
+
+def test_stock_wheel_svg_escapes_title_and_planet_names(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    planets = [
+        SimpleNamespace(name="火<星>&", longitude=15.0, sign_degree=15.0, retrograde=False),
+        SimpleNamespace(name="木>星", longitude=120.0, sign_degree=0.0, retrograde=False),
+    ]
+
+    svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="A&B <IPO> Chart")
+    legend = stock_renderer._build_stock_wheel_legend_html(planets)
+
+    assert "A&amp;B &lt;IPO&gt; Chart" in svg
+    assert "火&lt;星&gt;&amp;" in svg
+    assert "木&gt;星" in svg
+    assert "火&lt;星&gt;&amp;" in legend

@@ -700,7 +700,7 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             'fill="#140F22" font-size="12" font-weight="800" font-family="sans-serif">'
             f'{item["label"]}</text>'
         )
-        degree_text = f'{planet.sign_degree:.1f}°'
+        degree_text = f'{(planet.longitude % 30.0):.1f}°'
         svg.append(
             f'<text x="{item["degree_x"]:.1f}" y="{item["degree_y"]:.1f}" text-anchor="middle" dominant-baseline="central" '
             f'fill="{item["color"]}" font-size="9.5" font-family="sans-serif">{degree_text}</text>'
