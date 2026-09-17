@@ -20,7 +20,7 @@ from astro.qizheng.constants import (
     PLANET_COLORS, TWELVE_PALACES, TWENTY_EIGHT_MANSIONS,
     TWENTY_EIGHT_MANSIONS_ANCIENT, TWENTY_EIGHT_MANSIONS_LIMING,
     TWELVE_SIGNS_CHINESE, TWELVE_SIGNS_WESTERN, EARTHLY_BRANCHES,
-    FIVE_ELEMENTS, ZODIAC_SIGN_ELEMENTS,
+    ZODIAC_SIGN_ELEMENTS,
 )
 from astro.qizheng.shensha import (
     ShenShaResult, compute_shensha, get_bazi_stems_branches, get_lunar_date_info,
@@ -43,6 +43,20 @@ _WESTERN_ABBR = [
 _ELEMENT_COLORS = {
     "木": "#228B22", "金": "#FFD700", "土": "#8B4513",
     "日": "#FF4500", "月": "#C0C0C0", "火": "#DC143C", "水": "#4169E1",
+}
+
+_PLANET_SHORT_LABELS = {
+    "太陽": "日",
+    "太陰": "月",
+    "水星": "水",
+    "金星": "金",
+    "火星": "火",
+    "木星": "木",
+    "土星": "土",
+    "羅睺": "羅",
+    "計都": "計",
+    "月孛": "孛",
+    "紫氣": "紫",
 }
 
 # 用度/恩用難仇 — 五行生剋對應表（依命度所在二十八宿元素）
@@ -71,6 +85,10 @@ def render_chart_info(chart: ChartData):
         st.write(f"**地點：** {chart.location_name}")
         st.write(f"**經度：** {chart.longitude:.4f}°")
         st.write(f"**緯度：** {chart.latitude:.4f}°")
+
+
+def _planet_short_label(name: str) -> str:
+    return _PLANET_SHORT_LABELS.get(name, name[:1])
 
 
 def render_planet_table(chart: ChartData):
@@ -1012,13 +1030,12 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
             x_t, y_t = polar(R_PLANET - 18, a)
             rot = text_rotation(a)
             retro = "℞" if p.retrograde else ""
-            elem = FIVE_ELEMENTS.get(p.name, "")
             svg.append(
                 f'<text x="{x_t:.1f}" y="{y_t:.1f}" text-anchor="middle" '
                 f'dominant-baseline="central" fill="{color}" '
                 f'font-size="10" font-weight="bold" font-family="serif" '
                 f'transform="rotate({rot:.1f},{x_t:.1f},{y_t:.1f})">'
-                f'{elem}·{p.name}{retro}</text>'
+                f'{_planet_short_label(p.name)}{retro}</text>'
             )
             # Degree label
             deg_str = f"{_degree_to_sign_degree(lon):.1f}°"
@@ -1097,7 +1114,7 @@ def render_mansion_ring(chart: ChartData, transit: TransitData | None = None):
                     f'dominant-baseline="central" fill="{color}" '
                     f'font-size="9" font-family="serif" opacity="0.8" '
                     f'transform="rotate({rot:.1f},{x_t:.1f},{y_t:.1f})">'
-                    f'{p.name}{retro}</text>'
+                    f'{_planet_short_label(p.name)}{retro}</text>'
                 )
 
     # === 中央資訊 (center info) ===
@@ -1704,4 +1721,3 @@ def render_mansion_text_panel(chart: ChartData):
                     f"| {r['sign_text']} | {alt_str} | {retro} |"
                 )
             st.markdown("\n".join(md_rows), unsafe_allow_html=True)
-
