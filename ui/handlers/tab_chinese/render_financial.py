@@ -12,6 +12,7 @@ Streamlit UI，包含：
 from __future__ import annotations
 
 import math
+import re
 from html import escape
 from datetime import date, datetime, timezone as tz_cls, timedelta
 from typing import Optional
@@ -104,19 +105,28 @@ def _safe_float(value: object) -> float:
 
 
 def _stock_wheel_planet_color(name: str) -> str:
-    if name in ("木星", "紫氣", "太陽"):
+    canonical_name = _stock_wheel_canonical_name(name)
+    if canonical_name in ("木星", "紫氣", "太陽"):
         return "#FFD166"
-    if name in ("火星", "計都", "月孛"):
+    if canonical_name in ("火星", "計都", "月孛"):
         return "#FB7185"
-    if name == "土星":
+    if canonical_name == "土星":
         return "#94A3B8"
-    if name == "羅睺":
+    if canonical_name == "羅睺":
         return "#C084FC"
     return "#60A5FA"
 
 
 def _stock_wheel_planet_label(name: str) -> str:
     return _STOCK_WHEEL_PLANET_LABELS.get(name, name[:1])
+
+
+def _stock_wheel_canonical_name(name: str) -> str:
+    normalized_name = re.sub(r"[^\u4e00-\u9fffA-Za-z0-9]", "", name or "")
+    for canonical_name in _STOCK_WHEEL_PLANET_LABELS:
+        if canonical_name == normalized_name or canonical_name in normalized_name:
+            return canonical_name
+    return name
 
 
 def _build_stock_wheel_layout(planets) -> list[dict]:
@@ -712,7 +722,9 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             'fill="#140F22" font-size="12" font-weight="800" font-family="sans-serif">'
             f'{item["label"]}</text>'
         )
-        sign_degree = getattr(planet, "sign_degree", planet.longitude % 30.0)
+        sign_degree = getattr(planet, "sign_degree", None)
+        if sign_degree is None:
+            sign_degree = planet.longitude % 30.0
         degree_text = f'{sign_degree:.1f}°'
         svg.append(
             f'<text x="{item["degree_x"]:.1f}" y="{item["degree_y"]:.1f}" text-anchor="middle" dominant-baseline="central" '
