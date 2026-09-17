@@ -19,6 +19,8 @@ from typing import Optional
 
 import streamlit as st
 
+from astro.qizheng.constants import TWENTY_EIGHT_MANSIONS, TWELVE_SIGNS_WESTERN
+
 
 # Maximum length for bad-planets display string
 _MAX_BAD_PLANETS_STR_LEN = 60
@@ -116,10 +118,12 @@ _STOCK_WHEEL_ASPECTS = (
 _STOCK_WHEEL_SIZE = 860
 _STOCK_WHEEL_CENTER = _STOCK_WHEEL_SIZE / 2
 _STOCK_WHEEL_OUTER_R = 342
-_STOCK_WHEEL_ZODIAC_OUTER_R = 320
-_STOCK_WHEEL_ZODIAC_INNER_R = 252
-_STOCK_WHEEL_DEGREE_OUTER_R = 244
-_STOCK_WHEEL_DEGREE_INNER_R = 232
+_STOCK_WHEEL_MANSION_OUTER_R = 320      # 28宿環外沿
+_STOCK_WHEEL_MANSION_INNER_R = 280      # 28宿環內沿
+_STOCK_WHEEL_ZODIAC_OUTER_R = 280       # 十二星次環外沿
+_STOCK_WHEEL_ZODIAC_INNER_R = 245       # 十二星次環內沿
+_STOCK_WHEEL_DEGREE_OUTER_R = 244       # 度數刻度環外沿
+_STOCK_WHEEL_DEGREE_INNER_R = 232       # 度數刻度環內沿
 _STOCK_WHEEL_ASPECT_R = 150
 
 
@@ -174,7 +178,11 @@ def _build_stock_wheel_layout(planets) -> list[dict]:
     """Compute wheel coordinates for IPO planets, including wraparound clustering."""
 
     def ecl_to_chart(ecl_deg: float) -> float:
-        return (90.0 - ecl_deg) % 360.0
+        """Convert ecliptic longitude to SVG chart angle.
+        
+        Matches render.py's orientation: 午(South) at top, 子(North) at bottom.
+        """
+        return (45.0 - ecl_deg) % 360.0
 
     def _cluster_planets(sorted_planets: list[tuple[int, object]]) -> list[list[tuple[int, object]]]:
         if not sorted_planets:
@@ -603,10 +611,12 @@ def _render_zodiac_wheel(planets, title: str = ""):
 
 
 def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
-    """Build a natal-chart-style SVG wheel for stock IPO planets."""
+    """Build a natal-chart-style SVG wheel for stock IPO planets with 28 mansions."""
     size = _STOCK_WHEEL_SIZE
     cx = cy = _STOCK_WHEEL_CENTER
     outer_r = _STOCK_WHEEL_OUTER_R
+    mansion_outer_r = _STOCK_WHEEL_MANSION_OUTER_R
+    mansion_inner_r = _STOCK_WHEEL_MANSION_INNER_R
     zodiac_outer_r = _STOCK_WHEEL_ZODIAC_OUTER_R
     zodiac_inner_r = _STOCK_WHEEL_ZODIAC_INNER_R
     degree_outer_r = _STOCK_WHEEL_DEGREE_OUTER_R
@@ -634,6 +644,13 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             f"L {x1i:.1f},{y1i:.1f} "
             f"A {r_in:.1f},{r_in:.1f} 0 {large},0 {x2i:.1f},{y2i:.1f} Z"
         )
+
+    def ecl_to_chart(ecl_deg: float) -> float:
+        """Convert ecliptic longitude to SVG chart angle.
+        
+        Matches render.py's orientation: 午(South) at top, 子(North) at bottom.
+        """
+        return (45.0 - ecl_deg) % 360.0
 
     def _aspect_lines() -> list[dict]:
         lines: list[dict] = []
@@ -693,18 +710,54 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{aspect_r:.1f}" fill="#100C23" fill-opacity="0.88" stroke="#FFD166" stroke-opacity="0.18" stroke-width="1"/>',
     ]
 
+    # === 28 Mansions Ring (28宿環) ===
+    num_mansions = len(TWENTY_EIGHT_MANSIONS)
+    for i in range(num_mansions):
+        mansion = TWENTY_EIGHT_MANSIONS[i]
+        next_mansion = TWENTY_EIGHT_MANSIONS[(i + 1) % num_mansions]
+        
+        start_lon = mansion["start_lon"]
+        end_lon = next_mansion["start_lon"]
+        if end_lon <= start_lon:
+            end_lon += 360.0
+        
+        chart_start = ecl_to_chart(end_lon)
+        chart_end = ecl_to_chart(start_lon)
+        
+        # Alternate mansion background colors
+        fill_color = "#3d2a5a" if i % 2 == 0 else "#2a1f45"
+        fill_opacity = "0.22" if i % 2 == 0 else "0.18"
+        
+        svg.append(
+            f'<path d="{annular_sector(mansion_inner_r, mansion_outer_r, chart_start, chart_end)}" '
+            f'fill="{fill_color}" fill-opacity="{fill_opacity}" stroke="#6b5b95" stroke-opacity="0.25" stroke-width="0.8"/>'
+        )
+        
+        # Mansion label
+        mid_lon = (start_lon + end_lon) / 2.0
+        mid_angle = ecl_to_chart(mid_lon)
+        tx, ty = polar((mansion_inner_r + mansion_outer_r) / 2, mid_angle)
+        mansion_name = mansion.get("name", f"宿{i+1}")
+        svg.append(
+            f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="central" '
+            'fill="#9FB3D9" font-size="8" font-family="sans-serif" opacity="0.8">'
+            f"{mansion_name}</text>"
+        )
+
+    # === Zodiac Signs Ring (十二星次環) ===
     for idx, sign_name in enumerate(_STOCK_WHEEL_SIGN_NAMES):
         start_ecl = idx * 30.0
         end_ecl = start_ecl + 30.0
-        chart_start = (90.0 - end_ecl) % 360.0
-        chart_end = (90.0 - start_ecl) % 360.0
+        chart_start = ecl_to_chart(end_ecl)
+        chart_end = ecl_to_chart(start_ecl)
         fill_color = "#5837A8" if idx % 2 == 0 else "#22144E"
         fill_opacity = "0.16" if idx % 2 == 0 else "0.26"
         svg.append(
             f'<path d="{annular_sector(zodiac_inner_r, zodiac_outer_r, chart_start, chart_end)}" '
             f'fill="{fill_color}" fill-opacity="{fill_opacity}" stroke="#FFD166" stroke-opacity="0.18" stroke-width="1"/>'
         )
-        mid_angle = (90.0 - (start_ecl + 15.0)) % 360.0
+        mid_ecl = start_ecl + 15.0
+        mid_angle = ecl_to_chart(mid_ecl)
         tx, ty = polar((zodiac_inner_r + zodiac_outer_r) / 2, mid_angle)
         svg.append(
             f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="central" '
@@ -764,9 +817,9 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         f'<text x="{cx:.1f}" y="{cy - 4:.1f}" text-anchor="middle" fill="#D6C69B" '
         f'font-size="14" font-family="serif">{safe_title}</text>',
         f'<text x="{cx:.1f}" y="{cy + 22:.1f}" text-anchor="middle" fill="#9FB3D9" '
-        'font-size="11" font-family="sans-serif">十一曜黃道分佈 · 七政四餘上市本命盤</text>',
+        'font-size="11" font-family="sans-serif">十一曜黃道分佈 · 28宿分佈 · 七政四餘上市本命盤</text>',
         f'<text x="{cx:.1f}" y="{cy + 44:.1f}" text-anchor="middle" fill="#B88CF3" '
-        'font-size="10" font-family="sans-serif">Aspect geometry · zodiac houses · degree ring</text>',
+        'font-size="10" font-family="sans-serif">Mansion ring · Zodiac houses · Aspect geometry · Degree ring</text>',
         "</svg>",
     ])
     return "".join(svg)
