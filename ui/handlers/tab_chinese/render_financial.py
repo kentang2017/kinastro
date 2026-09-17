@@ -114,6 +114,14 @@ _STOCK_WHEEL_ASPECTS = (
     ("拱", 120.0, 5.0, "#86EFAC"),
     ("沖", 180.0, 6.0, "#F97316"),
 )
+_STOCK_WHEEL_SIZE = 860
+_STOCK_WHEEL_CENTER = _STOCK_WHEEL_SIZE / 2
+_STOCK_WHEEL_OUTER_R = 342
+_STOCK_WHEEL_ZODIAC_OUTER_R = 320
+_STOCK_WHEEL_ZODIAC_INNER_R = 252
+_STOCK_WHEEL_DEGREE_OUTER_R = 244
+_STOCK_WHEEL_DEGREE_INNER_R = 232
+_STOCK_WHEEL_ASPECT_R = 150
 
 
 def _safe_float(value: object) -> float:
@@ -597,14 +605,14 @@ def _render_zodiac_wheel(planets, title: str = ""):
 
 def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
     """Build a natal-chart-style SVG wheel for stock IPO planets."""
-    size = 860
-    cx = cy = size / 2
-    outer_r = 342
-    zodiac_outer_r = 320
-    zodiac_inner_r = 252
-    degree_outer_r = 244
-    degree_inner_r = 232
-    aspect_r = 150
+    size = _STOCK_WHEEL_SIZE
+    cx = cy = _STOCK_WHEEL_CENTER
+    outer_r = _STOCK_WHEEL_OUTER_R
+    zodiac_outer_r = _STOCK_WHEEL_ZODIAC_OUTER_R
+    zodiac_inner_r = _STOCK_WHEEL_ZODIAC_INNER_R
+    degree_outer_r = _STOCK_WHEEL_DEGREE_OUTER_R
+    degree_inner_r = _STOCK_WHEEL_DEGREE_INNER_R
+    aspect_r = _STOCK_WHEEL_ASPECT_R
 
     def polar(radius: float, angle_deg: float) -> tuple[float, float]:
         rad = math.radians(angle_deg)
@@ -705,7 +713,7 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             f"{sign_name}</text>"
         )
 
-    svg.append(_build_stock_degree_ring_svg(cx, cy, degree_inner_r, degree_outer_r))
+    svg.append(_build_stock_degree_ring_svg())
 
     for aspect in _aspect_lines():
         p1 = position_lookup.get(aspect["planet1_index"])
@@ -793,9 +801,12 @@ def _build_stock_wheel_legend_html(planets) -> str:
     )
 
 
-@lru_cache(maxsize=8)
-def _build_stock_degree_ring_svg(cx: float, cy: float, degree_inner_r: float, degree_outer_r: float) -> str:
+@lru_cache(maxsize=1)
+def _build_stock_degree_ring_svg() -> str:
     """Build static degree-ring SVG markup once and reuse it across renders."""
+    cx = cy = _STOCK_WHEEL_CENTER
+    degree_inner_r = _STOCK_WHEEL_DEGREE_INNER_R
+    degree_outer_r = _STOCK_WHEEL_DEGREE_OUTER_R
 
     def polar(radius: float, angle_deg: float) -> tuple[float, float]:
         rad = math.radians(angle_deg)
