@@ -320,3 +320,4 @@ def test_stock_wheel_svg_escapes_title_and_planet_names(financial_modules):
     assert "木&gt;星" in svg
     assert "火&lt;星&gt;&amp;" in legend
     assert "#FB7185" in svg
+    assert "#FB7185" in legend

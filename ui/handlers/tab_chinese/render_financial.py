@@ -126,7 +126,7 @@ def _stock_wheel_canonical_name(name: str) -> str:
     for canonical_name in _STOCK_WHEEL_PLANET_LABELS:
         if canonical_name == normalized_name or canonical_name in normalized_name:
             return canonical_name
-    return name
+    return normalized_name or name
 
 
 def _build_stock_wheel_layout(planets) -> list[dict]:
