@@ -11,6 +11,7 @@ def test_mansion_ring_uses_compact_planet_labels(monkeypatch):
     monkeypatch.setitem(sys.modules, "streamlit", streamlit_stub)
 
     from astro.qizheng.calculator import compute_chart
+    from astro.qizheng.qizheng_transit import compute_transit
     from ui.handlers.tab_chinese import render as qizheng_render
 
     chart = compute_chart(
@@ -18,9 +19,14 @@ def test_mansion_ring_uses_compact_planet_labels(monkeypatch):
         timezone=8.0, latitude=22.3193, longitude=114.1694,
         location_name="Hong Kong", gender="male",
     )
+    transit = compute_transit(
+        year=2026, month=4, day=10,
+        hour=10, minute=30, timezone=8.0,
+    )
 
-    svg = qizheng_render.render_mansion_ring(chart)
+    svg = qizheng_render.render_mansion_ring(chart, transit=transit)
 
-    assert re.search(r">木(?:℞)?<", svg)
+    assert re.search(r'font-size="10"[^>]*>木(?:℞)?</text>', svg)
+    assert re.search(r'font-size="9"[^>]*>木(?:℞)?</text>', svg)
     assert ">木星<" not in svg
     assert "木·木星" not in svg
