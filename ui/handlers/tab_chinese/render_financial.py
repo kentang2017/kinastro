@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 import re
+from functools import lru_cache
 from html import escape
 from datetime import date, datetime, timezone as tz_cls, timedelta
 from typing import Optional
@@ -580,12 +581,11 @@ def _render_ipo_planets(stock_data, stock, go):
     st.plotly_chart(fig, width="stretch")
 
     # 七政四餘輪形分佈圖（360° 黃道圓圈散點）
-    _render_zodiac_wheel(planets, go, title=f"{name} 上市盤 / IPO Chart")
+    _render_zodiac_wheel(planets, title=f"{name} 上市盤 / IPO Chart")
 
 
-def _render_zodiac_wheel(planets, go, title: str = ""):
+def _render_zodiac_wheel(planets, title: str = ""):
     """渲染接近本命盤樣式的黃道輪形行星分佈圖。"""
-    del go
     if not planets:
         st.info("無星曜資料可繪製。 / No planetary positions available.")
         return
@@ -705,41 +705,7 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             f"{sign_name}</text>"
         )
 
-    for degree in range(360):
-        angle = (90.0 - float(degree)) % 360.0
-        if degree % 30 == 0:
-            tick_inner = degree_inner_r + 4
-            tick_outer = degree_outer_r + 8
-            stroke = "rgba(255,209,102,0.55)"
-            stroke_width = "1.8"
-        elif degree % 10 == 0:
-            tick_inner = degree_inner_r + 1
-            tick_outer = degree_outer_r + 5
-            stroke = "rgba(255,209,102,0.35)"
-            stroke_width = "1.0"
-        elif degree % 5 == 0:
-            tick_inner = degree_inner_r
-            tick_outer = degree_outer_r + 3
-            stroke = "rgba(255,209,102,0.24)"
-            stroke_width = "0.75"
-        else:
-            tick_inner = degree_inner_r
-            tick_outer = degree_outer_r + 1.5
-            stroke = "rgba(255,209,102,0.14)"
-            stroke_width = "0.45"
-        x1, y1 = polar(tick_inner, angle)
-        x2, y2 = polar(tick_outer, angle)
-        svg.append(
-            f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-            f'stroke="{stroke}" stroke-width="{stroke_width}"/>'
-        )
-        if degree % 30 == 0:
-            label_x, label_y = polar(degree_outer_r + 18, angle)
-            svg.append(
-                f'<text x="{label_x:.1f}" y="{label_y:.1f}" text-anchor="middle" dominant-baseline="central" '
-                'fill="#C8A96A" font-size="9" font-family="sans-serif">'
-                f"{degree}°</text>"
-            )
+    svg.append(_build_stock_degree_ring_svg(cx, cy, degree_inner_r, degree_outer_r))
 
     for aspect in _aspect_lines():
         p1 = position_lookup.get(aspect["planet1_index"])
@@ -825,6 +791,57 @@ def _build_stock_wheel_legend_html(planets) -> str:
         + "".join(items)
         + "</div>"
     )
+
+
+@lru_cache(maxsize=1)
+def _build_stock_degree_ring_svg(cx: float, cy: float, degree_inner_r: float, degree_outer_r: float) -> str:
+    """Build static degree-ring SVG markup once and reuse it across renders."""
+
+    def polar(radius: float, angle_deg: float) -> tuple[float, float]:
+        rad = math.radians(angle_deg)
+        return cx + radius * math.cos(rad), cy + radius * math.sin(rad)
+
+    parts = []
+    for degree in range(360):
+        angle = (90.0 - float(degree)) % 360.0
+        if degree % 30 == 0:
+            tick_inner = degree_inner_r + 4
+            tick_outer = degree_outer_r + 8
+            stroke = "#FFD166"
+            stroke_opacity = "0.55"
+            stroke_width = "1.8"
+        elif degree % 10 == 0:
+            tick_inner = degree_inner_r + 1
+            tick_outer = degree_outer_r + 5
+            stroke = "#FFD166"
+            stroke_opacity = "0.35"
+            stroke_width = "1.0"
+        elif degree % 5 == 0:
+            tick_inner = degree_inner_r
+            tick_outer = degree_outer_r + 3
+            stroke = "#FFD166"
+            stroke_opacity = "0.24"
+            stroke_width = "0.75"
+        else:
+            tick_inner = degree_inner_r
+            tick_outer = degree_outer_r + 1.5
+            stroke = "#FFD166"
+            stroke_opacity = "0.14"
+            stroke_width = "0.45"
+        x1, y1 = polar(tick_inner, angle)
+        x2, y2 = polar(tick_outer, angle)
+        parts.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="{stroke}" stroke-opacity="{stroke_opacity}" stroke-width="{stroke_width}"/>'
+        )
+        if degree % 30 == 0:
+            label_x, label_y = polar(degree_outer_r + 18, angle)
+            parts.append(
+                f'<text x="{label_x:.1f}" y="{label_y:.1f}" text-anchor="middle" dominant-baseline="central" '
+                'fill="#C8A96A" font-size="9" font-family="sans-serif">'
+                f"{degree}°</text>"
+            )
+    return "".join(parts)
 
 
 def _render_daily_fortune(stock_data, go, query_date: date, query_hour: int):

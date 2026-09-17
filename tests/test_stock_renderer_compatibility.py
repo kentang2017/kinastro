@@ -324,17 +324,14 @@ def test_stock_wheel_svg_escapes_title_and_planet_names(financial_modules):
     assert "火星" in legend
 
 
-def test_stock_wheel_aspect_selection_prefers_closest_match(financial_modules):
+def test_stock_wheel_aspect_selection_prefers_closest_match(financial_modules, monkeypatch):
     stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
-    original_aspects = stock_renderer._STOCK_WHEEL_ASPECTS
-    stock_renderer._STOCK_WHEEL_ASPECTS = (
+    monkeypatch.setattr(stock_renderer, "_STOCK_WHEEL_ASPECTS", (
         ("較遠相位", 8.0, 8.0, "#000000"),
         ("較近相位", 5.0, 8.0, "#FFFFFF"),
-    )
-    try:
-        match = stock_renderer._stock_wheel_match_aspect(5.5)
-    finally:
-        stock_renderer._STOCK_WHEEL_ASPECTS = original_aspects
+    ))
+
+    match = stock_renderer._stock_wheel_match_aspect(5.5)
 
     assert match["aspect"] == "較近相位"
     assert match["color"] == "#FFFFFF"
