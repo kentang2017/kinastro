@@ -145,6 +145,23 @@ def _stock_wheel_canonical_name(name: str) -> str:
     return _STOCK_WHEEL_PLANET_ALIASES.get(normalized_name, normalized_name or name)
 
 
+def _stock_wheel_match_aspect(diff: float) -> Optional[dict]:
+    matches = []
+    for aspect_name, angle, orb, color in _STOCK_WHEEL_ASPECTS:
+        deviation = abs(diff - angle)
+        if deviation <= orb:
+            matches.append({
+                "aspect": aspect_name,
+                "angle": angle,
+                "orb": orb,
+                "deviation": deviation,
+                "color": color,
+            })
+    if not matches:
+        return None
+    return min(matches, key=lambda item: (item["deviation"], item["orb"], item["angle"]))
+
+
 def _build_stock_wheel_layout(planets) -> list[dict]:
     """Compute wheel coordinates for IPO planets, including wraparound clustering."""
 
@@ -619,17 +636,15 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
                 diff = abs(p1.longitude - p2.longitude) % 360.0
                 if diff > 180.0:
                     diff = 360.0 - diff
-                for aspect_name, angle, orb, color in _STOCK_WHEEL_ASPECTS:
-                    deviation = abs(diff - angle)
-                    if deviation <= orb:
-                        lines.append({
-                            "planet1_index": idx,
-                            "planet2_index": idx2,
-                            "aspect": aspect_name,
-                            "orb": deviation,
-                            "color": color,
-                        })
-                        break
+                aspect = _stock_wheel_match_aspect(diff)
+                if aspect is not None:
+                    lines.append({
+                        "planet1_index": idx,
+                        "planet2_index": idx2,
+                        "aspect": aspect["aspect"],
+                        "orb": aspect["deviation"],
+                        "color": aspect["color"],
+                    })
         return lines
 
     positioned_planets = []
