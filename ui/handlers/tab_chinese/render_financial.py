@@ -178,7 +178,11 @@ def _build_stock_wheel_layout(planets) -> list[dict]:
     """Compute wheel coordinates for IPO planets, including wraparound clustering."""
 
     def ecl_to_chart(ecl_deg: float) -> float:
-        return (90.0 - ecl_deg) % 360.0
+        """Convert ecliptic longitude to SVG chart angle.
+        
+        Matches render.py's orientation: 午(South) at top, 子(North) at bottom.
+        """
+        return (45.0 - ecl_deg) % 360.0
 
     def _cluster_planets(sorted_planets: list[tuple[int, object]]) -> list[list[tuple[int, object]]]:
         if not sorted_planets:
@@ -642,8 +646,11 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         )
 
     def ecl_to_chart(ecl_deg: float) -> float:
-        """Convert ecliptic longitude to SVG chart angle."""
-        return (90.0 - ecl_deg) % 360.0
+        """Convert ecliptic longitude to SVG chart angle.
+        
+        Matches render.py's orientation: 午(South) at top, 子(North) at bottom.
+        """
+        return (45.0 - ecl_deg) % 360.0
 
     def _aspect_lines() -> list[dict]:
         lines: list[dict] = []
@@ -741,15 +748,16 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
     for idx, sign_name in enumerate(_STOCK_WHEEL_SIGN_NAMES):
         start_ecl = idx * 30.0
         end_ecl = start_ecl + 30.0
-        chart_start = (90.0 - end_ecl) % 360.0
-        chart_end = (90.0 - start_ecl) % 360.0
+        chart_start = ecl_to_chart(end_ecl)
+        chart_end = ecl_to_chart(start_ecl)
         fill_color = "#5837A8" if idx % 2 == 0 else "#22144E"
         fill_opacity = "0.16" if idx % 2 == 0 else "0.26"
         svg.append(
             f'<path d="{annular_sector(zodiac_inner_r, zodiac_outer_r, chart_start, chart_end)}" '
             f'fill="{fill_color}" fill-opacity="{fill_opacity}" stroke="#FFD166" stroke-opacity="0.18" stroke-width="1"/>'
         )
-        mid_angle = (90.0 - (start_ecl + 15.0)) % 360.0
+        mid_ecl = start_ecl + 15.0
+        mid_angle = ecl_to_chart(mid_ecl)
         tx, ty = polar((zodiac_inner_r + zodiac_outer_r) / 2, mid_angle)
         svg.append(
             f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="central" '
