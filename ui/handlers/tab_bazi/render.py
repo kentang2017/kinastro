@@ -717,53 +717,280 @@ def _render_wuxing_balance(chart: BaziChart) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Professional 3-Column Layout Helpers
+# ──────────────────────────────────────────────────────────────────────────────
+
+def render_summary_cards(chart: BaziChart) -> None:
+    """Render professional top summary cards with key chart metrics.
+    
+    Displays Day Master, Strength, Pattern, Use God, and current fortune in
+    attractive dark-themed cards with gold/red accents.
+    
+    Args:
+        chart: BaziChart instance with computed chart data
+    """
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        dm_wuxing = chart.day_master_wuxing
+        dm_color = WUXING_COLORS.get(dm_wuxing, "#666")
+        st.markdown(
+            f"""
+            <div style="
+                padding: 16px 14px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 1px solid {dm_color}44;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                text-align: center;
+            ">
+                <div style="font-size: 0.85rem; color: #a0a0a0; margin-bottom: 8px; letter-spacing: 1px;">
+                    {auto_cn("日主", "Day Master")}
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 700; color: {dm_color}; margin-bottom: 6px;">
+                    {chart.day_master}
+                </div>
+                <div style="font-size: 0.75rem; color: {dm_color}88; letter-spacing: 0.5px;">
+                    {dm_wuxing}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    
+    with col2:
+        strength_is_strong = "強" in chart.day_master_strength
+        strength_color = "#C41E3A" if strength_is_strong else "#1565C0"
+        strength_bg = "#C41E3A22" if strength_is_strong else "#1565C022"
+        st.markdown(
+            f"""
+            <div style="
+                padding: 16px 14px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 1px solid {strength_color}44;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                text-align: center;
+            ">
+                <div style="font-size: 0.85rem; color: #a0a0a0; margin-bottom: 8px; letter-spacing: 1px;">
+                    {auto_cn("強弱", "Strength")}
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 700; color: {strength_color}; margin-bottom: 6px;">
+                    {chart.day_master_strength}
+                </div>
+                <div style="font-size: 0.75rem; color: #777; letter-spacing: 0.5px;">
+                    {auto_cn("月令", "Month")}：{chart.day_master_vitality}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    
+    with col3:
+        st.markdown(
+            f"""
+            <div style="
+                padding: 16px 14px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 1px solid #C41E3A44;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                text-align: center;
+            ">
+                <div style="font-size: 0.85rem; color: #a0a0a0; margin-bottom: 8px; letter-spacing: 1px;">
+                    {auto_cn("格局", "Pattern")}
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 700; color: #C41E3A; margin-bottom: 6px;">
+                    {chart.pattern[:3]}
+                </div>
+                <div style="font-size: 0.75rem; color: #777; letter-spacing: 0.5px;">
+                    {auto_cn(chart.pattern_type)}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    
+    with col4:
+        yong_wuxing = chart.yongshen  # Often a 五行 but can be 十神
+        # Try to get wuxing color; fall back to shishen color
+        yong_color = WUXING_COLORS.get(yong_wuxing, SHISHEN_COLORS.get(yong_wuxing, "#D4A017"))
+        st.markdown(
+            f"""
+            <div style="
+                padding: 16px 14px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 1px solid {yong_color}44;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                text-align: center;
+            ">
+                <div style="font-size: 0.85rem; color: #a0a0a0; margin-bottom: 8px; letter-spacing: 1px;">
+                    {auto_cn("用神", "Use God")}
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 700; color: {yong_color}; margin-bottom: 6px;">
+                    {chart.yongshen}
+                </div>
+                <div style="font-size: 0.75rem; color: #777; letter-spacing: 0.5px;">
+                    {auto_cn("忌", "Avoid")}：{chart.jishen}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def format_pillar_table_component(chart: BaziChart) -> None:
+    """Render the central pillar data table with 5 Elements color coding.
+    
+    Displays all 4 pillars (Year, Month, Day, Hour) in a compact,
+    information-dense grid format suitable for professional astrology work.
+    
+    Args:
+        chart: BaziChart instance with computed chart data
+    """
+    import pandas as pd
+    
+    pillars_data = []
+    for label, p in [
+        (auto_cn("年柱", "Year"), chart.year_pillar),
+        (auto_cn("月柱", "Month"), chart.month_pillar),
+        (auto_cn("日柱", "Day"), chart.day_pillar),
+        (auto_cn("時柱", "Hour"), chart.hour_pillar),
+    ]:
+        pillars_data.append({
+            auto_cn("柱", "Pillar"): label,
+            auto_cn("干支", "Ganzhi"): p.ganzhi,
+            auto_cn("天干", "Stem"): p.stem,
+            auto_cn("地支", "Branch"): p.branch,
+            auto_cn("干五行", "Stem El."): p.wuxing_stem,
+            auto_cn("支五行", "Branch El."): p.wuxing_branch,
+            auto_cn("十神", "Ten God"): p.shishen,
+            auto_cn("藏干", "Hidden"): "、".join(p.canggan),
+            auto_cn("長生", "Growth"): p.changsheng or "—",
+        })
+    
+    df_pillars = pd.DataFrame(pillars_data)
+    
+    # Use streamlit's default dataframe display with stretch
+    st.dataframe(df_pillars, width="stretch", use_container_width=True)
+
+
+def render_chart_section(chart: BaziChart, width: int = 500) -> None:
+    """Render the SVG chart in the right column.
+    
+    Displays the traditional ink-style Bazi chart with optimized sizing
+    for the 3-column layout. Adjusts width dynamically.
+    
+    Args:
+        chart: BaziChart instance
+        width: SVG width in pixels (default 500 for column fit)
+    """
+    svg_html = render_bazi_chart_svg(chart, width=width, height=650)
+    components.html(
+        f'<div style="background:#F5F0E0;padding:8px;border-radius:8px;'
+        f'height:100%;display:flex;align-items:center;justify-content:center;">'
+        f'{svg_html}</div>',
+        height=700,
+        scrolling=False,
+    )
+
+
+def render_sidebar_controls() -> None:
+    """Render the left sidebar control panel.
+    
+    Provides quick access to time/location adjustments and display toggles.
+    Compact layout suitable for narrow columns.
+    """
+    with st.expander(
+        auto_cn("⚙️ 命盤調整", "⚙️ Chart Adjustments"),
+        expanded=False
+    ):
+        st.info(
+            auto_cn(
+                "在主頁調整出生時間、地點或性別後，命盤將自動更新。"
+                "部分計算（大運、神煞等）需要重新計算時可能需要幾秒鐘。",
+                "Adjust birth time, location, or gender on the main page to update the chart. "
+                "Some calculations may take a few seconds to recompute.",
+            )
+        )
+        if st.button(auto_cn("📄 下載大運詳表", "📄 Download Dayun Table"), use_container_width=True):
+            st.info(auto_cn("下載功能開發中", "Download feature coming soon"))
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Streamlit 渲染（Streamlit Renderer）
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_streamlit(chart: BaziChart) -> None:
-    """在 Streamlit 中完整渲染子平八字命盤。
+    """在 Streamlit 中完整渲染子平八字命盤 —— 專業 3 欄設計。
 
     包含：
-    - 傳統水墨風格 SVG 命盤
-    - 四柱詳細表格
-    - 日主強弱分析
-    - 格局用神說明
-    - 大運詳細排例
-    - 神煞列表
-    - 沖合刑害分析
-    - 古典文字解讀（中英雙語）
+    - 頂部摘要卡片（日主、強弱、格局、用神）
+    - 3 欄主要內容區：左邊快速控制、中央四柱表格、右邊水墨命盤 SVG
+    - 多標籤分析頁面：基本命盤、格局用神、大運流年、盲派論斷、古典解讀
+    
+    Professional 3-column layout with:
+    - Top summary cards (Day Master, Strength, Pattern, Use God)
+    - 3-column main area: left sidebar, central pillar table, right SVG chart
+    - Multiple analysis tabs: Core Chart, Pattern/Use God, Dayun/Liunian, Blind School, Classical Reading
     """
     import pandas as pd
 
-    # ── SVG 命盤
-    st.subheader(auto_cn("📜 傳統水墨命盤", "Traditional Ink-Style Bazi Chart"))
-    svg_html = render_bazi_chart_svg(chart, width=900, height=780)
-    components.html(
-        f'<div style="overflow-x:auto;background:#F5F0E0;padding:10px;border-radius:8px;">{svg_html}</div>',
-        height=800,
-        scrolling=True,
-    )
-
-    # ── 命盤概覽
+    # ─────────────────────────────────────────────────────────────────────────
+    # 頂部摘要卡片區 (Top Summary Cards)
+    # ─────────────────────────────────────────────────────────────────────────
+    st.subheader(auto_cn("📊 命盤概覽", "Chart Overview"))
+    render_summary_cards(chart)
     st.divider()
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(auto_cn("日主"), chart.day_master,
-                  help=auto_cn(f"五行：{chart.day_master_wuxing}"))
-    with col2:
-        st.metric(auto_cn("強弱"), chart.day_master_strength,
-                  help=auto_cn(f"月令{chart.day_master_vitality}，分值{chart.day_master_strength_score}"))
-    with col3:
-        st.metric(auto_cn("格局"), chart.pattern,
-                  help=auto_cn(chart.pattern_type))
-    with col4:
-        st.metric(auto_cn("用神"), chart.yongshen,
-                  help=auto_cn(f"忌神：{chart.jishen}"))
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # 主要內容 3 欄區 (Main 3-Column Content)
+    # ─────────────────────────────────────────────────────────────────────────
+    st.subheader(auto_cn("🏛 四柱命盤", "Four Pillars Chart"))
+    
+    # Create 3-column layout: left (controls), center (table), right (chart)
+    # Using 1:2:2 ratio for better balance (controls, data, visualization)
+    left_col, center_col, right_col = st.columns([0.8, 1.2, 1.2], gap="medium")
+    
+    with left_col:
+        render_sidebar_controls()
+        st.divider()
+        st.caption(auto_cn("圖例 | Legend"))
+        _render_ten_god_legend()
+    
+    with center_col:
+        st.markdown(
+            f"<div style='font-size:0.9rem; color:#888; margin-bottom:10px;'>"
+            f"{auto_cn('柱位結構', 'Pillar Structure')}</div>",
+            unsafe_allow_html=True
+        )
+        format_pillar_table_component(chart)
+    
+    with right_col:
+        st.markdown(
+            f"<div style='font-size:0.9rem; color:#888; margin-bottom:10px;'>"
+            f"{auto_cn('傳統水墨命盤', 'Traditional Ink-Style Chart')}</div>",
+            unsafe_allow_html=True
+        )
+        render_chart_section(chart, width=420)
+
+    st.divider()
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 四柱卡片展示 (Pillar Detail Cards)
+    # ─────────────────────────────────────────────────────────────────────────
+    st.subheader(auto_cn("🔍 四柱詳細", "Pillar Details"))
+    _render_pillar_cards(chart)
+
+    st.divider()
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 多標籤分析區 (Multi-Tab Analysis Area)
+    # ─────────────────────────────────────────────────────────────────────────
     yp, mp, dp, hp = chart.year_pillar, chart.month_pillar, chart.day_pillar, chart.hour_pillar
     main_tabs = st.tabs(
         [
-            auto_cn("基本命盤", "Core Chart"),
             auto_cn("格局用神與神煞", "Pattern, Use God & Shen Sha"),
             auto_cn("大運與流年", "Great Luck & Annual Flow"),
             auto_cn("盲派論斷", "Blind School"),
@@ -772,32 +999,6 @@ def render_streamlit(chart: BaziChart) -> None:
     )
 
     with main_tabs[0]:
-        st.subheader(auto_cn("🏛 四柱命盤總覽", "Four Pillars Overview"))
-        _render_ten_god_legend()
-        _render_pillar_cards(chart)
-
-        pillars_data = []
-        for label, p in [("年柱", yp), ("月柱", mp), ("日柱", dp), ("時柱", hp)]:
-            pillars_data.append({
-                auto_cn("柱"): auto_cn(label, label.replace("柱", " Pillar")),
-                auto_cn("干支"): p.ganzhi,
-                auto_cn("天干"): p.stem,
-                auto_cn("地支"): p.branch,
-                auto_cn("干五行"): p.wuxing_stem,
-                auto_cn("支五行"): p.wuxing_branch,
-                auto_cn("十神"): p.shishen,
-                auto_cn("藏干"): "、".join(p.canggan),
-                auto_cn("藏干十神"): "、".join(p.canggan_shishen),
-                auto_cn("長生"): p.changsheng,
-            })
-        df_pillars = pd.DataFrame(pillars_data)
-        with st.expander(auto_cn("查看四柱結構化表格", "View structured pillar table"), expanded=True):
-            st.dataframe(df_pillars, width="stretch")
-
-        st.subheader(auto_cn("⚖️ 五行平衡概覽", "Wuxing Balance Overview"))
-        _render_wuxing_balance(chart)
-
-    with main_tabs[1]:
         st.subheader(auto_cn("⚖️ 日主強弱分析", "Day Master Strength Analysis"))
         st.markdown(f"""
 **{auto_cn('日主')}：** {chart.day_master}（{chart.day_master_wuxing}）　
@@ -878,7 +1079,7 @@ def render_streamlit(chart: BaziChart) -> None:
                     inter.tiangan_he]):
             st.caption(auto_cn("四柱間無顯著沖合刑害"))
 
-    with main_tabs[2]:
+    with main_tabs[1]:
         st.subheader(auto_cn("📅 大運排例", "Great Fortune Cycles"))
         kw1, kw2 = _get_kongwang_for_chart(chart)
         st.caption(
@@ -909,7 +1110,7 @@ def render_streamlit(chart: BaziChart) -> None:
             f"{auto_cn('當前大運')}：**{chart.current_dayun.ganzhi if chart.current_dayun else '—'}**"
         )
 
-    with main_tabs[3]:
+    with main_tabs[2]:
         st.subheader(auto_cn("🕯️ 盲派八字分析", "Blind School Bazi Analysis"))
         blind_report = getattr(chart, "blind_school_report", None) or {}
         if not blind_report:
@@ -1027,7 +1228,7 @@ def render_streamlit(chart: BaziChart) -> None:
                 with tab_raw:
                     st.json(blind_report)
 
-    with main_tabs[4]:
+    with main_tabs[3]:
         st.subheader(auto_cn("📖 古典命盤解讀", "Classical Bazi Interpretation"))
         tab_zh, tab_en = st.tabs([auto_cn("中文古典解讀"), "English Reading"])
         with tab_zh:
