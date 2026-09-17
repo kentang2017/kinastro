@@ -125,27 +125,29 @@ def _build_stock_wheel_layout(planets) -> list[dict]:
     def ecl_to_chart(ecl_deg: float) -> float:
         return (90.0 - ecl_deg) % 360.0
 
-    def _cluster_planets(sorted_planets: list) -> list[list]:
+    def _cluster_planets(sorted_planets: list[tuple[int, object]]) -> list[list[tuple[int, object]]]:
         if not sorted_planets:
             return []
         clusters: list[list] = [[sorted_planets[0]]]
-        for planet in sorted_planets[1:]:
-            if planet.longitude - clusters[-1][-1].longitude <= 10.0:
-                clusters[-1].append(planet)
+        for source_index, planet in sorted_planets[1:]:
+            last_planet = clusters[-1][-1][1]
+            if planet.longitude - last_planet.longitude <= 10.0:
+                clusters[-1].append((source_index, planet))
             else:
-                clusters.append([planet])
-        if len(clusters) > 1 and ((sorted_planets[0].longitude + 360.0) - sorted_planets[-1].longitude) <= 10.0:
+                clusters.append([(source_index, planet)])
+        if len(clusters) > 1 and ((sorted_planets[0][1].longitude + 360.0) - sorted_planets[-1][1].longitude) <= 10.0:
             clusters[0] = clusters[-1] + clusters[0]
             clusters.pop()
         return clusters
 
-    sorted_planets = sorted(planets, key=lambda planet: planet.longitude)
+    sorted_planets = sorted(enumerate(planets), key=lambda item: item[1].longitude)
     positioned_planets: list[dict] = []
     planet_base_r = 206
     for cluster in _cluster_planets(sorted_planets):
         count = len(cluster)
-        for idx, planet in enumerate(cluster):
+        for idx, (source_index, planet) in enumerate(cluster):
             positioned_planets.append({
+                "source_index": source_index,
                 "planet": planet,
                 "angle": ecl_to_chart(planet.longitude),
                 "radius": planet_base_r - (idx - (count - 1) / 2) * 18,
@@ -586,7 +588,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
     def _aspect_lines() -> list[dict]:
         lines: list[dict] = []
         for idx, p1 in enumerate(planets):
-            for p2 in planets[idx + 1:]:
+            for idx2 in range(idx + 1, len(planets)):
+                p2 = planets[idx2]
                 diff = abs(p1.longitude - p2.longitude) % 360.0
                 if diff > 180.0:
                     diff = 360.0 - diff
@@ -594,8 +597,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
                     deviation = abs(diff - angle)
                     if deviation <= orb:
                         lines.append({
-                            "planet1": p1,
-                            "planet2": p2,
+                            "planet1_index": idx,
+                            "planet2_index": idx2,
                             "aspect": aspect_name,
                             "orb": deviation,
                             "color": color,
@@ -618,7 +621,7 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             "degree_y": degree_y,
         })
 
-    position_lookup = {id(item["planet"]): item for item in positioned_planets}
+    position_lookup = {item["source_index"]: item for item in positioned_planets}
     safe_title = escape(title or "IPO Birth Chart")
     svg = [
         f'<svg viewBox="0 0 {size} {size}" xmlns="http://www.w3.org/2000/svg" '
@@ -681,8 +684,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             )
 
     for aspect in _aspect_lines():
-        p1 = position_lookup.get(id(aspect["planet1"]))
-        p2 = position_lookup.get(id(aspect["planet2"]))
+        p1 = position_lookup.get(aspect["planet1_index"])
+        p2 = position_lookup.get(aspect["planet2_index"])
         if p1 is None or p2 is None:
             continue
         x1, y1 = polar(aspect_r, p1["angle"])
