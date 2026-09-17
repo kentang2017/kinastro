@@ -294,11 +294,14 @@ def test_stock_wheel_svg_handles_wraparound_clusters(financial_modules):
     ]
 
     svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="Wraparound Cluster")
+    layout = stock_renderer._build_stock_wheel_layout(planets)
+    layout_by_name = {item["planet"].name: item for item in layout}
 
     assert "Wraparound Cluster" in svg
     assert "太陽" in svg
     assert "太陰" in svg
     assert svg.count('filter="url(#stock-wheel-glow)"') == len(planets)
+    assert layout_by_name["太陽"]["radius"] != layout_by_name["太陰"]["radius"]
 
 
 def test_stock_wheel_svg_escapes_title_and_planet_names(financial_modules):

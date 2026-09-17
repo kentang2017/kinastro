@@ -119,6 +119,42 @@ def _stock_wheel_planet_label(name: str) -> str:
     return _STOCK_WHEEL_PLANET_LABELS.get(name, name[:1])
 
 
+def _build_stock_wheel_layout(planets) -> list[dict]:
+    """Compute wheel coordinates for IPO planets, including wraparound clustering."""
+
+    def ecl_to_chart(ecl_deg: float) -> float:
+        return (90.0 - ecl_deg) % 360.0
+
+    def _cluster_planets(sorted_planets: list) -> list[list]:
+        if not sorted_planets:
+            return []
+        clusters: list[list] = [[sorted_planets[0]]]
+        for planet in sorted_planets[1:]:
+            if planet.longitude - clusters[-1][-1].longitude <= 10.0:
+                clusters[-1].append(planet)
+            else:
+                clusters.append([planet])
+        if len(clusters) > 1 and ((sorted_planets[0].longitude + 360.0) - sorted_planets[-1].longitude) <= 10.0:
+            clusters[0] = clusters[-1] + clusters[0]
+            clusters.pop()
+        return clusters
+
+    sorted_planets = sorted(planets, key=lambda planet: planet.longitude)
+    positioned_planets: list[dict] = []
+    planet_base_r = 206
+    for cluster in _cluster_planets(sorted_planets):
+        count = len(cluster)
+        for idx, planet in enumerate(cluster):
+            positioned_planets.append({
+                "planet": planet,
+                "angle": ecl_to_chart(planet.longitude),
+                "radius": planet_base_r - (idx - (count - 1) / 2) * 18,
+                "color": _stock_wheel_planet_color(planet.name),
+                "label": _stock_wheel_planet_label(planet.name),
+            })
+    return positioned_planets
+
+
 # ============================================================
 # 主要渲染入口
 # ============================================================
@@ -524,14 +560,10 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
     degree_outer_r = 244
     degree_inner_r = 232
     aspect_r = 150
-    planet_base_r = 206
 
     def polar(radius: float, angle_deg: float) -> tuple[float, float]:
         rad = math.radians(angle_deg)
         return cx + radius * math.cos(rad), cy + radius * math.sin(rad)
-
-    def ecl_to_chart(ecl_deg: float) -> float:
-        return (90.0 - ecl_deg) % 360.0
 
     def annular_sector(r_in: float, r_out: float, a1: float, a2: float) -> str:
         a1r, a2r = math.radians(a1), math.radians(a2)
@@ -550,20 +582,6 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             f"L {x1i:.1f},{y1i:.1f} "
             f"A {r_in:.1f},{r_in:.1f} 0 {large},0 {x2i:.1f},{y2i:.1f} Z"
         )
-
-    def _cluster_planets(sorted_planets: list) -> list[list]:
-        if not sorted_planets:
-            return []
-        clusters: list[list] = [[sorted_planets[0]]]
-        for planet in sorted_planets[1:]:
-            if planet.longitude - clusters[-1][-1].longitude <= 10.0:
-                clusters[-1].append(planet)
-            else:
-                clusters.append([planet])
-        if len(clusters) > 1 and ((sorted_planets[0].longitude + 360.0) - sorted_planets[-1].longitude) <= 10.0:
-            clusters[0] = clusters[-1] + clusters[0]
-            clusters.pop()
-        return clusters
 
     def _aspect_lines() -> list[dict]:
         lines: list[dict] = []
@@ -585,29 +603,20 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
                         break
         return lines
 
-    sorted_planets = sorted(planets, key=lambda planet: planet.longitude)
-    positioned_planets: list[dict] = []
-    for cluster in _cluster_planets(sorted_planets):
-        count = len(cluster)
-        for idx, planet in enumerate(cluster):
-            radius = planet_base_r - (idx - (count - 1) / 2) * 18
-            angle = ecl_to_chart(planet.longitude)
-            x, y = polar(radius, angle)
-            label_x, label_y = polar(radius + 25, angle)
-            degree_x, degree_y = polar(radius - 23, angle)
-            positioned_planets.append({
-                "planet": planet,
-                "angle": angle,
-                "radius": radius,
-                "x": x,
-                "y": y,
-                "label_x": label_x,
-                "label_y": label_y,
-                "degree_x": degree_x,
-                "degree_y": degree_y,
-                "color": _stock_wheel_planet_color(planet.name),
-                "label": _stock_wheel_planet_label(planet.name),
-            })
+    positioned_planets = []
+    for layout in _build_stock_wheel_layout(planets):
+        x, y = polar(layout["radius"], layout["angle"])
+        label_x, label_y = polar(layout["radius"] + 25, layout["angle"])
+        degree_x, degree_y = polar(layout["radius"] - 23, layout["angle"])
+        positioned_planets.append({
+            **layout,
+            "x": x,
+            "y": y,
+            "label_x": label_x,
+            "label_y": label_y,
+            "degree_x": degree_x,
+            "degree_y": degree_y,
+        })
 
     position_lookup = {id(item["planet"]): item for item in positioned_planets}
     safe_title = escape(title or "IPO Birth Chart")
@@ -636,14 +645,14 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
     for idx, sign_name in enumerate(_STOCK_WHEEL_SIGN_NAMES):
         start_ecl = idx * 30.0
         end_ecl = start_ecl + 30.0
-        chart_start = ecl_to_chart(end_ecl)
-        chart_end = ecl_to_chart(start_ecl)
+        chart_start = (90.0 - end_ecl) % 360.0
+        chart_end = (90.0 - start_ecl) % 360.0
         fill = "rgba(88,55,168,0.16)" if idx % 2 == 0 else "rgba(34,20,78,0.26)"
         svg.append(
             f'<path d="{annular_sector(zodiac_inner_r, zodiac_outer_r, chart_start, chart_end)}" '
             f'fill="{fill}" stroke="rgba(255,209,102,0.18)" stroke-width="1"/>'
         )
-        mid_angle = ecl_to_chart(start_ecl + 15.0)
+        mid_angle = (90.0 - (start_ecl + 15.0)) % 360.0
         tx, ty = polar((zodiac_inner_r + zodiac_outer_r) / 2, mid_angle)
         svg.append(
             f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="central" '
@@ -652,7 +661,7 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         )
 
     for degree in range(0, 360, 5):
-        angle = ecl_to_chart(float(degree))
+        angle = (90.0 - float(degree)) % 360.0
         tick_inner = degree_inner_r + (4 if degree % 30 == 0 else 0)
         tick_outer = degree_outer_r + (8 if degree % 30 == 0 else 0)
         stroke = "rgba(255,209,102,0.55)" if degree % 30 == 0 else "rgba(255,209,102,0.22)"
@@ -700,7 +709,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             'fill="#140F22" font-size="12" font-weight="800" font-family="sans-serif">'
             f'{item["label"]}</text>'
         )
-        degree_text = f'{(planet.longitude % 30.0):.1f}°'
+        sign_degree = getattr(planet, "sign_degree", planet.longitude % 30.0)
+        degree_text = f'{sign_degree:.1f}°'
         svg.append(
             f'<text x="{item["degree_x"]:.1f}" y="{item["degree_y"]:.1f}" text-anchor="middle" dominant-baseline="central" '
             f'fill="{item["color"]}" font-size="9.5" font-family="sans-serif">{degree_text}</text>'
