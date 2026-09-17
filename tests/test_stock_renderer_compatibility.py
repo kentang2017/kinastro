@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import types
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -257,3 +258,27 @@ def test_price_forecast_profile_detects_sideways_regime(financial_modules):
     assert forecast["regime_zh"] == "橫行整理"
     assert any(price > 100.0 for price in prices)
     assert any(price < 100.0 for price in prices)
+
+
+def test_stock_wheel_svg_uses_natal_chart_style(financial_modules):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+
+    planets = [
+        SimpleNamespace(name="太陽", longitude=15.0, sign_degree=15.0, retrograde=False),
+        SimpleNamespace(name="太陰", longitude=18.0, sign_degree=18.0, retrograde=False),
+        SimpleNamespace(name="木星", longitude=120.0, sign_degree=0.0, retrograde=True),
+        SimpleNamespace(name="土星", longitude=195.0, sign_degree=15.0, retrograde=False),
+    ]
+
+    svg = stock_renderer._build_stock_zodiac_wheel_svg(planets, title="AAPL 上市盤 / IPO Chart")
+    legend = stock_renderer._build_stock_wheel_legend_html(planets)
+
+    assert svg.startswith("<svg")
+    assert "IPO Birth Wheel" in svg
+    assert "十一曜黃道分佈" in svg
+    assert "AAPL 上市盤 / IPO Chart" in svg
+    assert "白羊" in svg
+    assert 'filter="url(#stock-wheel-glow)"' in svg
+    assert ">日</text>" in svg
+    assert "木星 ℞" in svg
+    assert legend.count("border-radius:50%") == len(planets)
