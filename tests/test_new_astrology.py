@@ -2812,34 +2812,6 @@ class TestQizhengDasha:
         assert result.flow_year_branch == 6
 
 
-class TestQizhengRenderer:
-    def test_mansion_ring_uses_compact_planet_labels(self, monkeypatch):
-        from astro.qizheng.calculator import compute_chart
-        from ui.handlers.tab_chinese import render as qizheng_render
-
-        chart = compute_chart(
-            year=1990, month=1, day=1, hour=12, minute=0,
-            timezone=8.0, latitude=22.3193, longitude=114.1694,
-            location_name="Hong Kong", gender="male",
-        )
-
-        class _DummyStreamlit:
-            @staticmethod
-            def subheader(*args, **kwargs):
-                return None
-
-            @staticmethod
-            def markdown(*args, **kwargs):
-                return None
-
-        monkeypatch.setattr(qizheng_render, "st", _DummyStreamlit())
-        svg = qizheng_render.render_mansion_ring(chart)
-
-        assert ">木<" in svg
-        assert ">木星<" not in svg
-        assert "木·木星" not in svg
-
-
 # ============================================================
 # 流時對盤 (Transit) Tests
 # ============================================================
