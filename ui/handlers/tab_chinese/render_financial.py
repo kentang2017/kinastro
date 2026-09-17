@@ -73,6 +73,27 @@ _GRADE_ICONS = {
     "E": "⚠️",
     "F": "🔴",
 }
+_STOCK_WHEEL_SIGN_NAMES = ["白羊", "金牛", "雙子", "巨蟹", "獅子", "處女", "天秤", "天蠍", "射手", "摩羯", "水瓶", "雙魚"]
+_STOCK_WHEEL_PLANET_LABELS = {
+    "太陽": "日",
+    "太陰": "月",
+    "水星": "水",
+    "金星": "金",
+    "火星": "火",
+    "木星": "木",
+    "土星": "土",
+    "羅睺": "羅",
+    "計都": "計",
+    "月孛": "孛",
+    "紫氣": "紫",
+}
+_STOCK_WHEEL_ASPECTS = (
+    ("合", 0.0, 8.0, "#FFD166"),
+    ("六合", 60.0, 4.0, "#7DD3FC"),
+    ("刑", 90.0, 5.0, "#FB7185"),
+    ("拱", 120.0, 5.0, "#86EFAC"),
+    ("沖", 180.0, 6.0, "#F97316"),
+)
 
 
 def _safe_float(value: object) -> float:
@@ -466,80 +487,270 @@ def _render_ipo_planets(stock_data, stock, go):
 
 
 def _render_zodiac_wheel(planets, go, title: str = ""):
-    """渲染黃道輪形行星分佈圖"""
-    # 12 星次分隔線（每 30°）
-    angles_deg = [p.longitude for p in planets]
-    labels = [f"{p.name}<br>{p.sign_chinese}<br>{p.longitude:.1f}°" for p in planets]
-    colors = []
-    for p in planets:
-        if p.name in ("木星", "紫氣", "太陽"):
-            colors.append("#FFD700")
-        elif p.name in ("火星", "計都", "月孛"):
-            colors.append("#f87171")
-        elif p.name in ("土星",):
-            colors.append("#94a3b8")
-        elif p.name in ("羅睺",):
-            colors.append("#c084fc")
-        else:
-            colors.append("#60a5fa")
+    """渲染接近本命盤樣式的黃道輪形行星分佈圖。"""
+    del go
+    if not planets:
+        st.info("無星曜資料可繪製。 / No planetary positions available.")
+        return
 
-    fig = go.Figure()
+    svg = _build_stock_zodiac_wheel_svg(planets, title=title)
+    st.markdown(svg, unsafe_allow_html=True)
+    st.markdown(_build_stock_wheel_legend_html(planets), unsafe_allow_html=True)
 
-    # 黃道 12 宮分隔線
-    _ZH_SIGNS = ["白羊", "金牛", "雙子", "巨蟹", "獅子", "處女",
-                 "天秤", "天蠍", "射手", "摩羯", "水瓶", "雙魚"]
-    for i in range(12):
-        ang = i * 30
-        fig.add_shape(
-            type="line",
-            x0=0, y0=0,
-            x1=1.05 * math.cos(math.radians(90 - ang)),
-            y1=1.05 * math.sin(math.radians(90 - ang)),
-            line=dict(color="rgba(255,200,50,0.2)", width=1),
+
+def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
+    """Build a natal-chart-style SVG wheel for stock IPO planets."""
+    size = 860
+    cx = cy = size / 2
+    outer_r = 342
+    zodiac_outer_r = 320
+    zodiac_inner_r = 252
+    degree_outer_r = 244
+    degree_inner_r = 232
+    aspect_r = 150
+    planet_base_r = 206
+
+    def polar(radius: float, angle_deg: float) -> tuple[float, float]:
+        rad = math.radians(angle_deg)
+        return cx + radius * math.cos(rad), cy + radius * math.sin(rad)
+
+    def ecl_to_chart(ecl_deg: float) -> float:
+        return (90.0 - ecl_deg) % 360.0
+
+    def annular_sector(r_in: float, r_out: float, a1: float, a2: float) -> str:
+        a1r, a2r = math.radians(a1), math.radians(a2)
+        x1o = cx + r_out * math.cos(a1r)
+        y1o = cy + r_out * math.sin(a1r)
+        x2o = cx + r_out * math.cos(a2r)
+        y2o = cy + r_out * math.sin(a2r)
+        x1i = cx + r_in * math.cos(a2r)
+        y1i = cy + r_in * math.sin(a2r)
+        x2i = cx + r_in * math.cos(a1r)
+        y2i = cy + r_in * math.sin(a1r)
+        large = 1 if (a2 - a1) > 180 else 0
+        return (
+            f"M {x1o:.1f},{y1o:.1f} "
+            f"A {r_out:.1f},{r_out:.1f} 0 {large},1 {x2o:.1f},{y2o:.1f} "
+            f"L {x1i:.1f},{y1i:.1f} "
+            f"A {r_in:.1f},{r_in:.1f} 0 {large},0 {x2i:.1f},{y2i:.1f} Z"
         )
-        mid_ang = ang + 15
-        mx = 0.82 * math.cos(math.radians(90 - mid_ang))
-        my = 0.82 * math.sin(math.radians(90 - mid_ang))
-        fig.add_annotation(
-            x=mx, y=my, text=_ZH_SIGNS[i],
-            showarrow=False,
-            font=dict(size=8, color="rgba(255,200,50,0.5)"),
+
+    def _planet_color(name: str) -> str:
+        if name in ("木星", "紫氣", "太陽"):
+            return "#FFD166"
+        if name in ("火星", "計都", "月孛"):
+            return "#FB7185"
+        if name == "土星":
+            return "#94A3B8"
+        if name == "羅睺":
+            return "#C084FC"
+        return "#60A5FA"
+
+    def _planet_label(name: str) -> str:
+        return _STOCK_WHEEL_PLANET_LABELS.get(name, name[:1])
+
+    def _cluster_planets(sorted_planets: list) -> list[list]:
+        if not sorted_planets:
+            return []
+        clusters: list[list] = [[sorted_planets[0]]]
+        for planet in sorted_planets[1:]:
+            if planet.longitude - clusters[-1][-1].longitude <= 10.0:
+                clusters[-1].append(planet)
+            else:
+                clusters.append([planet])
+        if len(clusters) > 1 and ((sorted_planets[0].longitude + 360.0) - sorted_planets[-1].longitude) <= 10.0:
+            clusters[0] = clusters[-1] + clusters[0]
+            clusters.pop()
+        return clusters
+
+    def _aspect_lines() -> list[dict]:
+        lines: list[dict] = []
+        for idx, p1 in enumerate(planets):
+            for p2 in planets[idx + 1:]:
+                diff = abs(p1.longitude - p2.longitude) % 360.0
+                if diff > 180.0:
+                    diff = 360.0 - diff
+                for aspect_name, angle, orb, color in _STOCK_WHEEL_ASPECTS:
+                    deviation = abs(diff - angle)
+                    if deviation <= orb:
+                        lines.append({
+                            "planet1": p1.name,
+                            "planet2": p2.name,
+                            "aspect": aspect_name,
+                            "orb": deviation,
+                            "color": color,
+                        })
+                        break
+        return lines
+
+    sorted_planets = sorted(planets, key=lambda planet: planet.longitude)
+    positioned_planets: list[dict] = []
+    for cluster in _cluster_planets(sorted_planets):
+        count = len(cluster)
+        for idx, planet in enumerate(cluster):
+            radius = planet_base_r - (idx - (count - 1) / 2) * 18
+            angle = ecl_to_chart(planet.longitude)
+            x, y = polar(radius, angle)
+            label_x, label_y = polar(radius + 25, angle)
+            degree_x, degree_y = polar(radius - 23, angle)
+            positioned_planets.append({
+                "planet": planet,
+                "angle": angle,
+                "radius": radius,
+                "x": x,
+                "y": y,
+                "label_x": label_x,
+                "label_y": label_y,
+                "degree_x": degree_x,
+                "degree_y": degree_y,
+                "color": _planet_color(planet.name),
+                "label": _planet_label(planet.name),
+            })
+
+    position_lookup = {item["planet"].name: item for item in positioned_planets}
+    safe_title = escape(title or "IPO Birth Chart")
+    svg = [
+        f'<svg viewBox="0 0 {size} {size}" xmlns="http://www.w3.org/2000/svg" '
+        'style="width:100%;max-width:860px;height:auto;display:block;margin:0 auto 10px;'
+        'background:radial-gradient(circle at center,#221347 0%,#120b2d 48%,#08071a 100%);'
+        'border:1px solid rgba(255,209,102,0.28);border-radius:18px;box-shadow:0 16px 48px rgba(0,0,0,0.28);">',
+        "<defs>",
+        '<filter id="stock-wheel-glow" x="-40%" y="-40%" width="180%" height="180%">'
+        '<feGaussianBlur stdDeviation="3.2" result="blur"/>'
+        '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>'
+        "</filter>",
+        '<linearGradient id="stock-wheel-ring" x1="0%" y1="0%" x2="100%" y2="100%">'
+        '<stop offset="0%" stop-color="#FFE29A" stop-opacity="0.95"/>'
+        '<stop offset="50%" stop-color="#D4A94D" stop-opacity="0.6"/>'
+        '<stop offset="100%" stop-color="#FFF1BF" stop-opacity="0.9"/>'
+        "</linearGradient>",
+        "</defs>",
+        f'<rect x="0" y="0" width="{size}" height="{size}" rx="18" fill="#0B0A1C"/>',
+        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{outer_r:.1f}" fill="none" stroke="url(#stock-wheel-ring)" stroke-width="2"/>',
+        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{zodiac_inner_r:.1f}" fill="rgba(9,8,24,0.98)" stroke="rgba(255,209,102,0.28)" stroke-width="1.1"/>',
+        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{aspect_r:.1f}" fill="rgba(16,12,35,0.88)" stroke="rgba(255,209,102,0.18)" stroke-width="1"/>',
+    ]
+
+    for idx, sign_name in enumerate(_STOCK_WHEEL_SIGN_NAMES):
+        start_ecl = idx * 30.0
+        end_ecl = start_ecl + 30.0
+        chart_start = ecl_to_chart(end_ecl)
+        chart_end = ecl_to_chart(start_ecl)
+        fill = "rgba(88,55,168,0.16)" if idx % 2 == 0 else "rgba(34,20,78,0.26)"
+        svg.append(
+            f'<path d="{annular_sector(zodiac_inner_r, zodiac_outer_r, chart_start, chart_end)}" '
+            f'fill="{fill}" stroke="rgba(255,209,102,0.18)" stroke-width="1"/>'
+        )
+        mid_angle = ecl_to_chart(start_ecl + 15.0)
+        tx, ty = polar((zodiac_inner_r + zodiac_outer_r) / 2, mid_angle)
+        svg.append(
+            f'<text x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle" dominant-baseline="central" '
+            'fill="#F8E6A6" font-size="17" font-weight="700" font-family="serif">'
+            f"{sign_name}</text>"
         )
 
-    # 外圈
-    theta_list = [90 - a for a in angles_deg]
-    x_pts = [0.68 * math.cos(math.radians(t)) for t in theta_list]
-    y_pts = [0.68 * math.sin(math.radians(t)) for t in theta_list]
+    for degree in range(0, 360, 5):
+        angle = ecl_to_chart(float(degree))
+        tick_inner = degree_inner_r + (4 if degree % 30 == 0 else 0)
+        tick_outer = degree_outer_r + (8 if degree % 30 == 0 else 0)
+        stroke = "rgba(255,209,102,0.55)" if degree % 30 == 0 else "rgba(255,209,102,0.22)"
+        stroke_width = "1.8" if degree % 30 == 0 else ("1.0" if degree % 10 == 0 else "0.65")
+        x1, y1 = polar(tick_inner, angle)
+        x2, y2 = polar(tick_outer, angle)
+        svg.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="{stroke}" stroke-width="{stroke_width}"/>'
+        )
+        if degree % 30 == 0:
+            label_x, label_y = polar(degree_outer_r + 18, angle)
+            svg.append(
+                f'<text x="{label_x:.1f}" y="{label_y:.1f}" text-anchor="middle" dominant-baseline="central" '
+                'fill="#C8A96A" font-size="9" font-family="sans-serif">'
+                f"{degree}°</text>"
+            )
 
-    fig.add_trace(go.Scatter(
-        x=x_pts, y=y_pts,
-        mode="markers+text",
-        marker=dict(size=14, color=colors,
-                    line=dict(width=1.5, color="rgba(255,200,50,0.6)")),
-        text=[p.name for p in planets],
-        textposition="top center",
-        hovertext=labels,
-        hoverinfo="text",
-        textfont=dict(size=9, color="#FFD700"),
-    ))
+    for aspect in _aspect_lines():
+        p1 = position_lookup.get(aspect["planet1"])
+        p2 = position_lookup.get(aspect["planet2"])
+        if p1 is None or p2 is None:
+            continue
+        x1, y1 = polar(aspect_r, p1["angle"])
+        x2, y2 = polar(aspect_r, p2["angle"])
+        opacity = 0.55 if aspect["orb"] <= 2.0 else 0.32
+        svg.append(
+            f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
+            f'stroke="{aspect["color"]}" stroke-width="1.3" opacity="{opacity:.2f}"/>'
+        )
 
-    fig.update_layout(
-        height=380,
-        margin=dict(l=20, r=20, t=40, b=20),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(20,10,60,0.4)",
-        title=dict(text=title, font=dict(color="#FFD700", size=13)),
-        xaxis=dict(showticklabels=False, showgrid=False, zeroline=False, range=[-1.15, 1.15]),
-        yaxis=dict(showticklabels=False, showgrid=False, zeroline=False,
-                   scaleanchor="x", range=[-1.15, 1.15]),
-        shapes=[dict(
-            type="circle",
-            xref="x", yref="y",
-            x0=-1, y0=-1, x1=1, y1=1,
-            line=dict(color="rgba(255,200,50,0.25)", width=1),
-        )],
+    for item in positioned_planets:
+        planet = item["planet"]
+        anchor_x, anchor_y = polar(degree_inner_r - 2, item["angle"])
+        svg.append(
+            f'<line x1="{anchor_x:.1f}" y1="{anchor_y:.1f}" x2="{item["x"]:.1f}" y2="{item["y"]:.1f}" '
+            'stroke="rgba(255,209,102,0.28)" stroke-width="0.9"/>'
+        )
+        svg.append(
+            f'<circle cx="{item["x"]:.1f}" cy="{item["y"]:.1f}" r="13.5" fill="{item["color"]}" '
+            'stroke="rgba(255,246,214,0.95)" stroke-width="1.6" filter="url(#stock-wheel-glow)"/>'
+        )
+        svg.append(
+            f'<text x="{item["x"]:.1f}" y="{item["y"] + 0.6:.1f}" text-anchor="middle" dominant-baseline="central" '
+            'fill="#140F22" font-size="12" font-weight="800" font-family="sans-serif">'
+            f'{item["label"]}</text>'
+        )
+        degree_text = f'{planet.sign_degree:.1f}°'
+        svg.append(
+            f'<text x="{item["degree_x"]:.1f}" y="{item["degree_y"]:.1f}" text-anchor="middle" dominant-baseline="central" '
+            f'fill="{item["color"]}" font-size="9.5" font-family="sans-serif">{degree_text}</text>'
+        )
+        retro_suffix = " ℞" if getattr(planet, "retrograde", False) else ""
+        label_text = escape(f'{planet.name}{retro_suffix}')
+        svg.append(
+            f'<text x="{item["label_x"]:.1f}" y="{item["label_y"]:.1f}" text-anchor="middle" dominant-baseline="central" '
+            f'fill="{item["color"]}" font-size="11.5" font-weight="700" font-family="serif">{label_text}</text>'
+        )
+
+    svg.extend([
+        f'<text x="{cx:.1f}" y="{cy - 28:.1f}" text-anchor="middle" fill="#FFE29A" '
+        'font-size="20" font-weight="700" font-family="serif">IPO Birth Wheel</text>',
+        f'<text x="{cx:.1f}" y="{cy - 4:.1f}" text-anchor="middle" fill="#D6C69B" '
+        f'font-size="14" font-family="serif">{safe_title}</text>',
+        f'<text x="{cx:.1f}" y="{cy + 22:.1f}" text-anchor="middle" fill="#9FB3D9" '
+        'font-size="11" font-family="sans-serif">十一曜黃道分佈 · 七政四餘上市本命盤</text>',
+        f'<text x="{cx:.1f}" y="{cy + 44:.1f}" text-anchor="middle" fill="#B88CF3" '
+        'font-size="10" font-family="sans-serif">Aspect geometry · zodiac houses · degree ring</text>',
+        "</svg>",
+    ])
+    return "".join(svg)
+
+
+def _build_stock_wheel_legend_html(planets) -> str:
+    """Render a compact legend for the stock zodiac wheel."""
+    items = []
+    for planet in planets:
+        label = _STOCK_WHEEL_PLANET_LABELS.get(planet.name, planet.name[:1])
+        color = (
+            "#FFD166" if planet.name in ("木星", "紫氣", "太陽")
+            else "#FB7185" if planet.name in ("火星", "計都", "月孛")
+            else "#94A3B8" if planet.name == "土星"
+            else "#C084FC" if planet.name == "羅睺"
+            else "#60A5FA"
+        )
+        items.append(
+            f'<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;'
+            'border-radius:999px;background:rgba(255,255,255,0.04);'
+            'border:1px solid rgba(255,209,102,0.12);">'
+            f'<span style="display:inline-flex;align-items:center;justify-content:center;'
+            f'width:18px;height:18px;border-radius:50%;background:{color};'
+            f'color:#140F22;font-size:11px;font-weight:800;">{escape(label)}</span>'
+            f'<span style="color:#d9cba4;font-size:0.83rem;">{escape(planet.name)}</span>'
+            '</span>'
+        )
+    return (
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0 18px;">'
+        + "".join(items)
+        + "</div>"
     )
-    st.plotly_chart(fig, width="stretch")
 
 
 def _render_daily_fortune(stock_data, go, query_date: date, query_hour: int):
