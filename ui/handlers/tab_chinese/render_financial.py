@@ -88,6 +88,24 @@ _STOCK_WHEEL_PLANET_LABELS = {
     "月孛": "孛",
     "紫氣": "紫",
 }
+_STOCK_WHEEL_PLANET_ALIASES = {
+    "太陽": "太陽",
+    "太阳": "太陽",
+    "太陰": "太陰",
+    "太阴": "太陰",
+    "水星": "水星",
+    "金星": "金星",
+    "火星": "火星",
+    "木星": "木星",
+    "土星": "土星",
+    "羅睺": "羅睺",
+    "罗睺": "羅睺",
+    "計都": "計都",
+    "计都": "計都",
+    "月孛": "月孛",
+    "紫氣": "紫氣",
+    "紫气": "紫氣",
+}
 _STOCK_WHEEL_ASPECTS = (
     ("合", 0.0, 8.0, "#FFD166"),
     ("六合", 60.0, 4.0, "#7DD3FC"),
@@ -123,10 +141,7 @@ def _stock_wheel_planet_label(name: str) -> str:
 
 def _stock_wheel_canonical_name(name: str) -> str:
     normalized_name = re.sub(r"[^\u4e00-\u9fffA-Za-z0-9]", "", name or "")
-    for canonical_name in _STOCK_WHEEL_PLANET_LABELS:
-        if canonical_name == normalized_name or canonical_name in normalized_name:
-            return canonical_name
-    return normalized_name or name
+    return _STOCK_WHEEL_PLANET_ALIASES.get(normalized_name, normalized_name or name)
 
 
 def _build_stock_wheel_layout(planets) -> list[dict]:
@@ -673,12 +688,28 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
             f"{sign_name}</text>"
         )
 
-    for degree in range(0, 360, 5):
+    for degree in range(360):
         angle = (90.0 - float(degree)) % 360.0
-        tick_inner = degree_inner_r + (4 if degree % 30 == 0 else 0)
-        tick_outer = degree_outer_r + (8 if degree % 30 == 0 else 0)
-        stroke = "rgba(255,209,102,0.55)" if degree % 30 == 0 else "rgba(255,209,102,0.22)"
-        stroke_width = "1.8" if degree % 30 == 0 else ("1.0" if degree % 10 == 0 else "0.65")
+        if degree % 30 == 0:
+            tick_inner = degree_inner_r + 4
+            tick_outer = degree_outer_r + 8
+            stroke = "rgba(255,209,102,0.55)"
+            stroke_width = "1.8"
+        elif degree % 10 == 0:
+            tick_inner = degree_inner_r + 1
+            tick_outer = degree_outer_r + 5
+            stroke = "rgba(255,209,102,0.35)"
+            stroke_width = "1.0"
+        elif degree % 5 == 0:
+            tick_inner = degree_inner_r
+            tick_outer = degree_outer_r + 3
+            stroke = "rgba(255,209,102,0.24)"
+            stroke_width = "0.75"
+        else:
+            tick_inner = degree_inner_r
+            tick_outer = degree_outer_r + 1.5
+            stroke = "rgba(255,209,102,0.14)"
+            stroke_width = "0.45"
         x1, y1 = polar(tick_inner, angle)
         x2, y2 = polar(tick_outer, angle)
         svg.append(
@@ -754,9 +785,14 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
 def _build_stock_wheel_legend_html(planets) -> str:
     """Render a compact legend for the stock zodiac wheel."""
     items = []
+    seen_planets: set[str] = set()
     for planet in planets:
-        label = _stock_wheel_planet_label(planet.name)
-        color = _stock_wheel_planet_color(planet.name)
+        canonical_name = _stock_wheel_canonical_name(planet.name)
+        if canonical_name in seen_planets:
+            continue
+        seen_planets.add(canonical_name)
+        label = _stock_wheel_planet_label(canonical_name)
+        color = _stock_wheel_planet_color(canonical_name)
         items.append(
             f'<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;'
             'border-radius:999px;background:rgba(255,255,255,0.04);'
@@ -764,7 +800,7 @@ def _build_stock_wheel_legend_html(planets) -> str:
             f'<span style="display:inline-flex;align-items:center;justify-content:center;'
             f'width:18px;height:18px;border-radius:50%;background:{color};'
             f'color:#140F22;font-size:11px;font-weight:800;">{escape(label)}</span>'
-            f'<span style="color:#d9cba4;font-size:0.83rem;">{escape(planet.name)}</span>'
+            f'<span style="color:#d9cba4;font-size:0.83rem;">{escape(canonical_name)}</span>'
             '</span>'
         )
     return (
