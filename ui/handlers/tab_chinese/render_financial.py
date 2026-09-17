@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import math
 import re
-from functools import lru_cache
 from html import escape
 from datetime import date, datetime, timezone as tz_cls, timedelta
 from typing import Optional
@@ -801,7 +800,6 @@ def _build_stock_wheel_legend_html(planets) -> str:
     )
 
 
-@lru_cache(maxsize=1)
 def _build_stock_degree_ring_svg() -> str:
     """Build static degree-ring SVG markup once and reuse it across renders."""
     cx = cy = _STOCK_WHEEL_CENTER
