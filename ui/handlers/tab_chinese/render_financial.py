@@ -682,8 +682,8 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         "</defs>",
         f'<rect x="0" y="0" width="{size}" height="{size}" rx="18" fill="#0B0A1C"/>',
         f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{outer_r:.1f}" fill="none" stroke="url(#stock-wheel-ring)" stroke-width="2"/>',
-        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{zodiac_inner_r:.1f}" fill="rgba(9,8,24,0.98)" stroke="rgba(255,209,102,0.28)" stroke-width="1.1"/>',
-        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{aspect_r:.1f}" fill="rgba(16,12,35,0.88)" stroke="rgba(255,209,102,0.18)" stroke-width="1"/>',
+        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{zodiac_inner_r:.1f}" fill="#090818" fill-opacity="0.98" stroke="#FFD166" stroke-opacity="0.28" stroke-width="1.1"/>',
+        f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{aspect_r:.1f}" fill="#100C23" fill-opacity="0.88" stroke="#FFD166" stroke-opacity="0.18" stroke-width="1"/>',
     ]
 
     for idx, sign_name in enumerate(_STOCK_WHEEL_SIGN_NAMES):
@@ -691,10 +691,11 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         end_ecl = start_ecl + 30.0
         chart_start = (90.0 - end_ecl) % 360.0
         chart_end = (90.0 - start_ecl) % 360.0
-        fill = "rgba(88,55,168,0.16)" if idx % 2 == 0 else "rgba(34,20,78,0.26)"
+        fill_color = "#5837A8" if idx % 2 == 0 else "#22144E"
+        fill_opacity = "0.16" if idx % 2 == 0 else "0.26"
         svg.append(
             f'<path d="{annular_sector(zodiac_inner_r, zodiac_outer_r, chart_start, chart_end)}" '
-            f'fill="{fill}" stroke="rgba(255,209,102,0.18)" stroke-width="1"/>'
+            f'fill="{fill_color}" fill-opacity="{fill_opacity}" stroke="#FFD166" stroke-opacity="0.18" stroke-width="1"/>'
         )
         mid_angle = (90.0 - (start_ecl + 15.0)) % 360.0
         tx, ty = polar((zodiac_inner_r + zodiac_outer_r) / 2, mid_angle)
@@ -758,11 +759,11 @@ def _build_stock_zodiac_wheel_svg(planets, title: str = "") -> str:
         anchor_x, anchor_y = polar(degree_inner_r - 2, item["angle"])
         svg.append(
             f'<line x1="{anchor_x:.1f}" y1="{anchor_y:.1f}" x2="{item["x"]:.1f}" y2="{item["y"]:.1f}" '
-            'stroke="rgba(255,209,102,0.28)" stroke-width="0.9"/>'
+            'stroke="#FFD166" stroke-opacity="0.28" stroke-width="0.9"/>'
         )
         svg.append(
             f'<circle cx="{item["x"]:.1f}" cy="{item["y"]:.1f}" r="13.5" fill="{item["color"]}" '
-            'stroke="rgba(255,246,214,0.95)" stroke-width="1.6" filter="url(#stock-wheel-glow)"/>'
+            'stroke="#FFF6D6" stroke-opacity="0.95" stroke-width="1.6" filter="url(#stock-wheel-glow)"/>'
         )
         svg.append(
             f'<text x="{item["x"]:.1f}" y="{item["y"] + 0.6:.1f}" text-anchor="middle" dominant-baseline="central" '
