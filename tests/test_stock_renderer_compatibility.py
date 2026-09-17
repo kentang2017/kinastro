@@ -335,3 +335,22 @@ def test_stock_wheel_aspect_selection_prefers_closest_match(financial_modules, m
 
     assert match["aspect"] == "較近相位"
     assert match["color"] == "#FFFFFF"
+
+
+def test_render_zodiac_wheel_shows_info_when_no_planets(financial_modules, monkeypatch):
+    stock_renderer = financial_modules["astro.qizheng.financial.stock_renderer"]
+    calls = {"info": [], "markdown": []}
+
+    monkeypatch.setattr(
+        stock_renderer,
+        "st",
+        SimpleNamespace(
+            info=lambda message: calls["info"].append(message),
+            markdown=lambda *args, **kwargs: calls["markdown"].append((args, kwargs)),
+        ),
+    )
+
+    stock_renderer._render_zodiac_wheel([], title="Empty Wheel")
+
+    assert calls["info"] == ["無星曜資料可繪製。 / No planetary positions available."]
+    assert calls["markdown"] == []

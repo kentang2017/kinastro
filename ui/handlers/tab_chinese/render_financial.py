@@ -793,7 +793,7 @@ def _build_stock_wheel_legend_html(planets) -> str:
     )
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=None)
 def _build_stock_degree_ring_svg(cx: float, cy: float, degree_inner_r: float, degree_outer_r: float) -> str:
     """Build static degree-ring SVG markup once and reuse it across renders."""
 
