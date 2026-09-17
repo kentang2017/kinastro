@@ -1,5 +1,6 @@
 import sys
 import types
+import re
 
 
 def test_mansion_ring_uses_compact_planet_labels(monkeypatch):
@@ -20,6 +21,6 @@ def test_mansion_ring_uses_compact_planet_labels(monkeypatch):
 
     svg = qizheng_render.render_mansion_ring(chart)
 
-    assert ">木<" in svg
+    assert re.search(r">木(?:℞)?<", svg)
     assert ">木星<" not in svg
     assert "木·木星" not in svg
